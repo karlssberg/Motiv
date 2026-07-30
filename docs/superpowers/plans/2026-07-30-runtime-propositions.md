@@ -670,7 +670,7 @@ public class DocumentReferencesTests
     public void Should_find_the_reference_in_a_single_leaf()
     {
         // Act
-        var references = ReferencesOf("""{ "spec": "is-active" }""");
+        var references = ReferencesOf("""{ "rule": { "spec": "is-active" } }""");
 
         // Assert
         references.ShouldBe(["is-active"]);
@@ -681,7 +681,7 @@ public class DocumentReferencesTests
     {
         // Act
         var references = ReferencesOf(
-            """{ "and": [ { "spec": "customer.is-active" }, { "spec": "customer.is-adult" } ] }""");
+            """{ "rule": { "and": [ { "spec": "customer.is-active" }, { "spec": "customer.is-adult" } ] } }""");
 
         // Assert
         references.ShouldBe(["customer.is-active", "customer.is-adult"]);
@@ -691,7 +691,7 @@ public class DocumentReferencesTests
     public void Should_find_references_beneath_a_negation()
     {
         // Act
-        var references = ReferencesOf("""{ "not": { "spec": "is-active" } }""");
+        var references = ReferencesOf("""{ "rule": { "not": { "spec": "is-active" } } }""");
 
         // Assert
         references.ShouldBe(["is-active"]);
@@ -702,7 +702,7 @@ public class DocumentReferencesTests
     {
         // Act — the quantified child is a real edge: editing is-large-order changes this document's meaning
         var references = ReferencesOf(
-            """{ "asAllSatisfied": { "path": "orders", "rule": { "spec": "is-large-order" } } }""");
+            """{ "rule": { "asAllSatisfied": { "spec": "is-large-order" }, "path": "orders" } }""");
 
         // Assert
         references.ShouldBe(["is-large-order"]);
@@ -713,7 +713,7 @@ public class DocumentReferencesTests
     {
         // Arrange — the graph needs a set of edges, not a bag
         var json = """
-            { "or": [ { "spec": "is-active" }, { "and": [ { "spec": "is-active" }, { "spec": "is-adult" } ] } ] }
+            { "rule": { "or": [ { "spec": "is-active" }, { "and": [ { "spec": "is-active" }, { "spec": "is-adult" } ] } ] } }
             """;
 
         // Act
@@ -727,7 +727,7 @@ public class DocumentReferencesTests
     public void Should_report_no_references_for_a_document_with_no_spec_leaves()
     {
         // Act
-        var references = ReferencesOf("""{ "expression": "n > 0" }""");
+        var references = ReferencesOf("""{ "rule": { "expression": "n > 0" } }""");
 
         // Assert
         references.ShouldBeEmpty();
@@ -1322,7 +1322,7 @@ namespace Motiv.Serialization.Tests.Propositions;
 public class InMemoryPropositionStoreTests
 {
     private static StoredProposition Stored(string name, int version = 1) =>
-        new(name, "customer", $$"""{ "spec": "is-active", "name": "{{name}}" }""", version, null);
+        new(name, "customer", $$"""{ "rule": { "spec": "is-active", "name": "{{name}}" } }""", version, null);
 
     [Fact]
     public void Should_start_empty()
@@ -2212,7 +2212,7 @@ public class PropositionSetCreateTests
 
         // Act
         var result = set.Create(
-            "customer.is-eligible", "customer", """{ "spec": "customer.is-active" }""", "Eligibility");
+            "customer.is-eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", "Eligibility");
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Created);
@@ -2226,7 +2226,7 @@ public class PropositionSetCreateTests
         var (set, scope, _) = NewSet();
 
         // Act
-        set.Create("customer.is-eligible", "customer", """{ "spec": "customer.is-active" }""", null);
+        set.Create("customer.is-eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
 
         // Assert
         var entry = scope.Source.Find("customer.is-eligible");
@@ -2241,10 +2241,10 @@ public class PropositionSetCreateTests
     {
         // Arrange
         var (set, scope, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "spec": "customer.is-active" }""", null);
+        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
 
         // Act
-        var result = set.Create("customer.b", "customer", """{ "not": { "spec": "customer.a" } }""", null);
+        var result = set.Create("customer.b", "customer", """{ "rule": { "not": { "spec": "customer.a" } } }""", null);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Created);
@@ -2258,7 +2258,7 @@ public class PropositionSetCreateTests
         var (set, scope, _) = NewSet();
 
         // Act
-        set.Create("customer.screened", "customer", """{ "spec": "customer.passes-check" }""", null);
+        set.Create("customer.screened", "customer", """{ "rule": { "spec": "customer.passes-check" } }""", null);
 
         // Assert
         scope.Source.Find("customer.screened")!.IsAsync.ShouldBeTrue();
@@ -2269,10 +2269,10 @@ public class PropositionSetCreateTests
     {
         // Arrange — b references a, which is async; b must be async too
         var (set, scope, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "spec": "customer.passes-check" }""", null);
+        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.passes-check" } }""", null);
 
         // Act
-        set.Create("customer.b", "customer", """{ "not": { "spec": "customer.a" } }""", null);
+        set.Create("customer.b", "customer", """{ "rule": { "not": { "spec": "customer.a" } } }""", null);
 
         // Assert
         scope.Source.Find("customer.b")!.IsAsync.ShouldBeTrue();
@@ -2285,7 +2285,7 @@ public class PropositionSetCreateTests
         var (set, _, store) = NewSet();
 
         // Act
-        set.Create("customer.is-eligible", "customer", """{ "spec": "customer.is-active" }""", "why");
+        set.Create("customer.is-eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", "why");
 
         // Assert
         var stored = store.Load();
@@ -2303,7 +2303,7 @@ public class PropositionSetCreateTests
         var (set, _, _) = NewSet();
 
         // Act
-        var result = set.Create("customer..bad", "customer", """{ "spec": "customer.is-active" }""", null);
+        var result = set.Create("customer..bad", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Invalid);
@@ -2315,10 +2315,10 @@ public class PropositionSetCreateTests
     {
         // Arrange
         var (set, _, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "spec": "customer.is-active" }""", null);
+        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
 
         // Act
-        var result = set.Create("customer.a", "customer", """{ "spec": "customer.is-active" }""", null);
+        var result = set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.NameTaken);
@@ -2332,7 +2332,7 @@ public class PropositionSetCreateTests
 
         // Act
         var result = set.Create(
-            "customer.is-active", "customer", """{ "not": { "spec": "customer.passes-check" } }""", null);
+            "customer.is-active", "customer", """{ "rule": { "not": { "spec": "customer.passes-check" } } }""", null);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Created);
@@ -2349,7 +2349,7 @@ public class PropositionSetCreateTests
         var (set, _, _) = NewSet();
 
         // Act
-        var result = set.Create("customer.a", "customer", """{ "spec": "customer.a" }""", null);
+        var result = set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Invalid);
@@ -2363,7 +2363,7 @@ public class PropositionSetCreateTests
         var (set, _, _) = NewSet();
 
         // Act
-        var result = set.Create("customer.a", "customer", """{ "spec": "nope" }""", null);
+        var result = set.Create("customer.a", "customer", """{ "rule": { "spec": "nope" } }""", null);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Invalid);
@@ -2377,7 +2377,7 @@ public class PropositionSetCreateTests
         var (set, _, _) = NewSet();
 
         // Act
-        var result = set.Create("order.a", "order", """{ "spec": "customer.is-active" }""", null);
+        var result = set.Create("order.a", "order", """{ "rule": { "spec": "customer.is-active" } }""", null);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Invalid);
@@ -2391,7 +2391,7 @@ public class PropositionSetCreateTests
         var (set, scope, store) = NewSet();
 
         // Act
-        set.Create("customer.a", "customer", """{ "spec": "nope" }""", null);
+        set.Create("customer.a", "customer", """{ "rule": { "spec": "nope" } }""", null);
 
         // Assert
         store.Load().ShouldBeEmpty();
@@ -2404,7 +2404,7 @@ public class PropositionSetCreateTests
     {
         // Arrange
         var (set, _, _) = NewSet();
-        set.Create("customer.is-eligible", "customer", """{ "spec": "customer.is-active" }""", null);
+        set.Create("customer.is-eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
 
         // Act
         var listed = set.Propositions.ToDictionary(entry => entry.Name);
@@ -2423,7 +2423,7 @@ public class PropositionSetCreateTests
     {
         // Arrange
         var (set, _, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "spec": "customer.is-active" }""", null);
+        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
 
         // Act & Assert
         set.DocumentJsonOf("customer.a").ShouldNotBeNull();
@@ -2833,10 +2833,10 @@ public class PropositionSetUpdateTests
     {
         // Arrange
         var (set, _, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "spec": "customer.is-active" }""", null);
+        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
 
         // Act
-        var result = set.Update("customer.a", """{ "spec": "customer.is-adult" }""", 1);
+        var result = set.Update("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Updated);
@@ -2848,13 +2848,13 @@ public class PropositionSetUpdateTests
     {
         // Arrange — this is the feature's central claim: b is never re-saved, yet its meaning follows a
         var (set, scope, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "spec": "customer.is-active" }""", null);
-        set.Create("customer.b", "customer", """{ "spec": "customer.a" }""", null);
+        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        set.Create("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
         var inactiveAdult = new Customer(IsActive: false, Age: 30);
         Evaluate(scope, "customer.b", inactiveAdult).ShouldBeFalse();
 
         // Act — a now means "is an adult" instead of "is active"
-        set.Update("customer.a", """{ "spec": "customer.is-adult" }""", 1);
+        set.Update("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Assert
         Evaluate(scope, "customer.b", inactiveAdult).ShouldBeTrue();
@@ -2865,11 +2865,11 @@ public class PropositionSetUpdateTests
     {
         // Arrange — bumping it would invalidate every colleague's open draft on an unrelated edit
         var (set, _, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "spec": "customer.is-active" }""", null);
-        set.Create("customer.b", "customer", """{ "spec": "customer.a" }""", null);
+        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        set.Create("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
 
         // Act
-        set.Update("customer.a", """{ "spec": "customer.is-adult" }""", 1);
+        set.Update("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Assert
         set.Find("customer.b")!.Version.ShouldBe(1);
@@ -2880,13 +2880,13 @@ public class PropositionSetUpdateTests
     {
         // Arrange — a <- b <- c, so editing a must reach c
         var (set, scope, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "spec": "customer.is-active" }""", null);
-        set.Create("customer.b", "customer", """{ "spec": "customer.a" }""", null);
-        set.Create("customer.c", "customer", """{ "spec": "customer.b" }""", null);
+        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        set.Create("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
+        set.Create("customer.c", "customer", """{ "rule": { "spec": "customer.b" } }""", null);
         var inactiveAdult = new Customer(IsActive: false, Age: 30);
 
         // Act
-        set.Update("customer.a", """{ "spec": "customer.is-adult" }""", 1);
+        set.Update("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Assert
         Evaluate(scope, "customer.c", inactiveAdult).ShouldBeTrue();
@@ -2897,11 +2897,11 @@ public class PropositionSetUpdateTests
     {
         // Arrange
         var (set, _, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "spec": "customer.is-active" }""", null);
-        set.Update("customer.a", """{ "spec": "customer.is-adult" }""", 1);
+        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        set.Update("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Act — a second editor still holding version 1
-        var result = set.Update("customer.a", """{ "spec": "customer.is-active" }""", 1);
+        var result = set.Update("customer.a", """{ "rule": { "spec": "customer.is-active" } }""", 1);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.VersionConflict);
@@ -2915,7 +2915,7 @@ public class PropositionSetUpdateTests
         var (set, _, _) = NewSet();
 
         // Act
-        var result = set.Update("customer.is-active", """{ "spec": "customer.is-adult" }""", 1);
+        var result = set.Update("customer.is-active", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.NotFound);
@@ -2926,11 +2926,11 @@ public class PropositionSetUpdateTests
     {
         // Arrange — b references a; pointing a at b closes the loop
         var (set, _, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "spec": "customer.is-active" }""", null);
-        set.Create("customer.b", "customer", """{ "spec": "customer.a" }""", null);
+        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        set.Create("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
 
         // Act
-        var result = set.Update("customer.a", """{ "spec": "customer.b" }""", 1);
+        var result = set.Update("customer.a", """{ "rule": { "spec": "customer.b" } }""", 1);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Invalid);
@@ -2942,7 +2942,7 @@ public class PropositionSetUpdateTests
     {
         // Arrange — a stubbed dependent stands in for a sync rule that cannot bind the new definition
         var (set, scope, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "spec": "customer.is-active" }""", null);
+        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
         scope.Locked(() =>
         {
             scope.Enrol(new AlwaysBreaks(NodeId.Rule("can-checkout")));
@@ -2951,7 +2951,7 @@ public class PropositionSetUpdateTests
         });
 
         // Act
-        var result = set.Update("customer.a", """{ "spec": "customer.is-adult" }""", 1);
+        var result = set.Update("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Invalid);
@@ -2965,7 +2965,7 @@ public class PropositionSetUpdateTests
     {
         // Arrange
         var (set, scope, store) = NewSet();
-        set.Create("customer.a", "customer", """{ "spec": "customer.is-active" }""", null);
+        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
         scope.Locked(() =>
         {
             scope.Enrol(new AlwaysBreaks(NodeId.Rule("can-checkout")));
@@ -2975,7 +2975,7 @@ public class PropositionSetUpdateTests
         var inactiveAdult = new Customer(IsActive: false, Age: 30);
 
         // Act
-        set.Update("customer.a", """{ "spec": "customer.is-adult" }""", 1);
+        set.Update("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Assert — version, binding and persisted document all unmoved
         set.Find("customer.a")!.Version.ShouldBe(1);
@@ -2988,7 +2988,7 @@ public class PropositionSetUpdateTests
     {
         // Arrange — override is-active with something that inverts it
         var (set, scope, store) = NewSet();
-        set.Create("customer.is-active", "customer", """{ "not": { "spec": "customer.is-adult" } }""", null);
+        set.Create("customer.is-active", "customer", """{ "rule": { "not": { "spec": "customer.is-adult" } } }""", null);
         var inactiveAdult = new Customer(IsActive: false, Age: 30);
         Evaluate(scope, "customer.is-active", inactiveAdult).ShouldBeFalse();
 
@@ -3006,8 +3006,8 @@ public class PropositionSetUpdateTests
     {
         // Arrange — referrers keep resolving, to the compiled spec beneath
         var (set, scope, _) = NewSet();
-        set.Create("customer.is-active", "customer", """{ "not": { "spec": "customer.is-adult" } }""", null);
-        set.Create("customer.b", "customer", """{ "spec": "customer.is-active" }""", null);
+        set.Create("customer.is-active", "customer", """{ "rule": { "not": { "spec": "customer.is-adult" } } }""", null);
+        set.Create("customer.b", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
 
         // Act
         var result = set.Withdraw("customer.is-active", 1);
@@ -3022,8 +3022,8 @@ public class PropositionSetUpdateTests
     {
         // Arrange — nothing lies beneath, so removal would leave b dangling
         var (set, _, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "spec": "customer.is-active" }""", null);
-        set.Create("customer.b", "customer", """{ "spec": "customer.a" }""", null);
+        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        set.Create("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
 
         // Act
         var result = set.Withdraw("customer.a", 1);
@@ -3038,7 +3038,7 @@ public class PropositionSetUpdateTests
     {
         // Arrange
         var (set, scope, store) = NewSet();
-        set.Create("customer.a", "customer", """{ "spec": "customer.is-active" }""", null);
+        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
 
         // Act
         var result = set.Withdraw("customer.a", 1);
@@ -3055,8 +3055,8 @@ public class PropositionSetUpdateTests
     {
         // Arrange
         var (set, _, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "spec": "customer.is-active" }""", null);
-        set.Update("customer.a", """{ "spec": "customer.is-adult" }""", 1);
+        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        set.Update("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Act
         var result = set.Withdraw("customer.a", 1);
@@ -3084,12 +3084,12 @@ public class PropositionSetUpdateTests
     {
         // Arrange — a stale participant rebinding after removal would resurrect it
         var (set, scope, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "spec": "customer.is-active" }""", null);
-        set.Create("customer.b", "customer", """{ "spec": "customer.a" }""", null);
+        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        set.Create("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
         set.Withdraw("customer.b", 1);
 
         // Act
-        var result = set.Update("customer.a", """{ "spec": "customer.is-adult" }""", 1);
+        var result = set.Update("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Updated);
@@ -3101,9 +3101,9 @@ public class PropositionSetUpdateTests
     {
         // Arrange — a <- b <- c, for the UI's blast-radius strip
         var (set, _, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "spec": "customer.is-active" }""", null);
-        set.Create("customer.b", "customer", """{ "spec": "customer.a" }""", null);
-        set.Create("customer.c", "customer", """{ "spec": "customer.b" }""", null);
+        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        set.Create("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
+        set.Create("customer.c", "customer", """{ "rule": { "spec": "customer.b" } }""", null);
 
         // Act
         var dependents = set.Dependents("customer.a");
@@ -3328,13 +3328,13 @@ public class RuleCascadeTests
     {
         // Arrange — the feature's central claim, now across the rule boundary
         var (propositions, rules, rule) = NewHost();
-        propositions.Create("customer.eligible", "customer", """{ "spec": "customer.is-active" }""", null);
-        rules.Update("can-checkout", """{ "spec": "customer.eligible" }""", 1);
+        propositions.Create("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        rules.Update("can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1);
         var inactiveAdult = new Customer(IsActive: false, Age: 30);
         rule.Evaluate(inactiveAdult).Satisfied.ShouldBeFalse();
 
         // Act — the rule is never touched again
-        propositions.Update("customer.eligible", """{ "spec": "customer.is-adult" }""", 1);
+        propositions.Update("customer.eligible", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Assert
         rule.Evaluate(inactiveAdult).Satisfied.ShouldBeTrue();
@@ -3345,12 +3345,12 @@ public class RuleCascadeTests
     {
         // Arrange
         var (propositions, rules, rule) = NewHost();
-        propositions.Create("customer.eligible", "customer", """{ "spec": "customer.is-active" }""", null);
-        rules.Update("can-checkout", """{ "spec": "customer.eligible" }""", 1);
+        propositions.Create("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        rules.Update("can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1);
         var versionBefore = rule.Version;
 
         // Act
-        propositions.Update("customer.eligible", """{ "spec": "customer.is-adult" }""", 1);
+        propositions.Update("customer.eligible", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Assert — its document did not change, so neither does its version
         rule.Version.ShouldBe(versionBefore);
@@ -3365,12 +3365,12 @@ public class RuleCascadeTests
     {
         // Arrange
         var (propositions, rules, rule) = NewHost();
-        propositions.Create("customer.eligible", "customer", """{ "spec": "customer.is-active" }""", null);
-        rules.Update("can-checkout", """{ "spec": "customer.eligible" }""", 1);
+        propositions.Create("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        rules.Update("can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1);
 
         // Act — the new definition is perfectly valid on its own, but async
         var result = propositions.Update(
-            "customer.eligible", """{ "spec": "customer.passes-check" }""", 1);
+            "customer.eligible", """{ "rule": { "spec": "customer.passes-check" } }""", 1);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Invalid);
@@ -3386,12 +3386,12 @@ public class RuleCascadeTests
     {
         // Arrange
         var (propositions, rules, rule) = NewHost();
-        propositions.Create("customer.eligible", "customer", """{ "spec": "customer.is-active" }""", null);
-        rules.Update("can-checkout", """{ "spec": "customer.eligible" }""", 1);
+        propositions.Create("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        rules.Update("can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1);
         var inactiveAdult = new Customer(IsActive: false, Age: 30);
 
         // Act
-        propositions.Update("customer.eligible", """{ "spec": "customer.passes-check" }""", 1);
+        propositions.Update("customer.eligible", """{ "rule": { "spec": "customer.passes-check" } }""", 1);
 
         // Assert
         propositions.Find("customer.eligible")!.Version.ShouldBe(1);
@@ -3403,8 +3403,8 @@ public class RuleCascadeTests
     {
         // Arrange
         var (propositions, rules, _) = NewHost();
-        propositions.Create("customer.eligible", "customer", """{ "spec": "customer.is-active" }""", null);
-        rules.Update("can-checkout", """{ "spec": "customer.eligible" }""", 1);
+        propositions.Create("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        rules.Update("can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1);
 
         // Act
         var dependents = propositions.Dependents("customer.eligible");
@@ -3420,8 +3420,8 @@ public class RuleCascadeTests
     {
         // Arrange
         var (propositions, rules, _) = NewHost();
-        propositions.Create("customer.eligible", "customer", """{ "spec": "customer.is-active" }""", null);
-        rules.Update("can-checkout", """{ "spec": "customer.eligible" }""", 1);
+        propositions.Create("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        rules.Update("can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1);
 
         // Act
         var result = propositions.Withdraw("customer.eligible", 1);
@@ -3436,8 +3436,8 @@ public class RuleCascadeTests
     {
         // Arrange — a compiled default references nothing, so the rule leaves the graph
         var (propositions, rules, _) = NewHost();
-        propositions.Create("customer.eligible", "customer", """{ "spec": "customer.is-active" }""", null);
-        rules.Update("can-checkout", """{ "spec": "customer.eligible" }""", 1);
+        propositions.Create("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        rules.Update("can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1);
 
         // Act
         rules.Revert("can-checkout", 2);
@@ -3458,7 +3458,7 @@ public class RuleCascadeTests
         var rules = new RuleSet(registry).Add(rule);
 
         // Assert
-        rules.Update("can-checkout", """{ "spec": "customer.is-active" }""", 1)
+        rules.Update("can-checkout", """{ "rule": { "spec": "customer.is-active" } }""", 1)
             .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
         rule.Evaluate(new Customer(IsActive: true, Age: 30)).Satisfied.ShouldBeTrue();
     }
@@ -3772,7 +3772,7 @@ public class PropositionSetLoadTests
     public void Should_bind_a_stored_proposition()
     {
         // Act
-        var (set, scope) = Load(Stored("customer.a", """{ "spec": "customer.is-active" }"""));
+        var (set, scope) = Load(Stored("customer.a", """{ "rule": { "spec": "customer.is-active" } }"""));
 
         // Assert
         scope.Source.Find("customer.a").ShouldNotBeNull();
@@ -3783,7 +3783,7 @@ public class PropositionSetLoadTests
     public void Should_preserve_the_stored_version()
     {
         // Act
-        var (set, _) = Load(Stored("customer.a", """{ "spec": "customer.is-active" }""", version: 7));
+        var (set, _) = Load(Stored("customer.a", """{ "rule": { "spec": "customer.is-active" } }""", version: 7));
 
         // Assert — versions must survive a restart or every reader's next save would conflict
         set.Find("customer.a")!.Version.ShouldBe(7);
@@ -3795,8 +3795,8 @@ public class PropositionSetLoadTests
         // Arrange — b depends on a, deliberately stored first
         var stored = new[]
         {
-            Stored("customer.b", """{ "spec": "customer.a" }"""),
-            Stored("customer.a", """{ "spec": "customer.is-active" }"""),
+            Stored("customer.b", """{ "rule": { "spec": "customer.a" } }"""),
+            Stored("customer.a", """{ "rule": { "spec": "customer.is-active" } }"""),
         };
 
         // Act
@@ -3812,7 +3812,7 @@ public class PropositionSetLoadTests
     {
         // Arrange — the redeploy case: the C# spec this document referenced was renamed away
         // Act
-        var (set, scope) = Load(Stored("customer.a", """{ "spec": "customer.removed-in-a-redeploy" }"""));
+        var (set, scope) = Load(Stored("customer.a", """{ "rule": { "spec": "customer.removed-in-a-redeploy" } }"""));
 
         // Assert
         var entry = set.Find("customer.a").ShouldNotBeNull();
@@ -3824,7 +3824,7 @@ public class PropositionSetLoadTests
     public void Should_keep_the_document_of_a_quarantined_proposition_for_repair()
     {
         // Act
-        var (set, _) = Load(Stored("customer.a", """{ "spec": "gone" }"""));
+        var (set, _) = Load(Stored("customer.a", """{ "rule": { "spec": "gone" } }"""));
 
         // Assert
         set.DocumentJsonOf("customer.a").ShouldNotBeNull();
@@ -3836,8 +3836,8 @@ public class PropositionSetLoadTests
         // Arrange
         var stored = new[]
         {
-            Stored("customer.a", """{ "spec": "gone" }"""),
-            Stored("customer.b", """{ "spec": "customer.a" }"""),
+            Stored("customer.a", """{ "rule": { "spec": "gone" } }"""),
+            Stored("customer.b", """{ "rule": { "spec": "customer.a" } }"""),
         };
 
         // Act
@@ -3853,7 +3853,7 @@ public class PropositionSetLoadTests
     {
         // Arrange — a broken override must reveal the compiled spec, not a hole
         // Act
-        var (set, scope) = Load(Stored("customer.is-active", """{ "spec": "gone" }"""));
+        var (set, scope) = Load(Stored("customer.is-active", """{ "rule": { "spec": "gone" } }"""));
 
         // Assert
         set.Find("customer.is-active")!.Quarantine.ShouldNotBeEmpty();
@@ -3867,8 +3867,8 @@ public class PropositionSetLoadTests
         // Arrange — one bad row must not cost the whole store
         var stored = new[]
         {
-            Stored("customer.broken", """{ "spec": "gone" }"""),
-            Stored("customer.fine", """{ "spec": "customer.is-active" }"""),
+            Stored("customer.broken", """{ "rule": { "spec": "gone" } }"""),
+            Stored("customer.fine", """{ "rule": { "spec": "customer.is-active" } }"""),
         };
 
         // Act
@@ -3900,10 +3900,10 @@ public class PropositionSetLoadTests
     public void Should_allow_repairing_a_quarantined_proposition_by_updating_it()
     {
         // Arrange
-        var (set, scope) = Load(Stored("customer.a", """{ "spec": "gone" }""", version: 3));
+        var (set, scope) = Load(Stored("customer.a", """{ "rule": { "spec": "gone" } }""", version: 3));
 
         // Act
-        var result = set.Update("customer.a", """{ "spec": "customer.is-active" }""", 3);
+        var result = set.Update("customer.a", """{ "rule": { "spec": "customer.is-active" } }""", 3);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Updated);
@@ -3915,7 +3915,7 @@ public class PropositionSetLoadTests
     public void Should_allow_deleting_a_quarantined_proposition()
     {
         // Arrange
-        var (set, _) = Load(Stored("customer.a", """{ "spec": "gone" }""", version: 2));
+        var (set, _) = Load(Stored("customer.a", """{ "rule": { "spec": "gone" } }""", version: 2));
 
         // Act
         var result = set.Withdraw("customer.a", 2);
@@ -4148,7 +4148,7 @@ public class PropositionCatalogTests
         var rules = provider.GetRequiredService<RuleSet>();
 
         // Assert — a shared scope is what makes the cascade atomic across both
-        propositions.Create("customer.derived", "customer", """{ "spec": "customer.is-active" }""", null)
+        propositions.Create("customer.derived", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null)
             .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
         rules.ShouldNotBeNull();
     }
@@ -4165,7 +4165,7 @@ public class PropositionCatalogTests
 
         // Act
         var result = provider.GetRequiredService<PropositionSet>()
-            .Create("customer.derived", "customer", """{ "spec": "customer.is-active" }""", null);
+            .Create("customer.derived", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Created);
@@ -4178,7 +4178,7 @@ public class PropositionCatalogTests
         // if propositions loaded first, so this pins the startup ordering.
         var store = new InMemoryPropositionStore();
         store.Save(new StoredProposition(
-            "customer.derived", "customer", """{ "spec": "customer.is-active" }""", 1, null));
+            "customer.derived", "customer", """{ "rule": { "spec": "customer.is-active" } }""", 1, null));
 
         var services = new ServiceCollection();
         var registry = new SpecRegistry().Register("customer.is-active", IsActive);
@@ -4210,7 +4210,7 @@ public class PropositionCatalogTests
         try
         {
             app.Services.GetRequiredService<PropositionSet>()
-                .Create("customer.derived", "customer", """{ "spec": "customer.is-active" }""", null);
+                .Create("customer.derived", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
 
             // Act
             using var client = new HttpClient { BaseAddress = new Uri(app.Urls.First()) };
@@ -4242,7 +4242,7 @@ public class PropositionCatalogTests
         try
         {
             app.Services.GetRequiredService<PropositionSet>()
-                .Create("customer.derived", "customer", """{ "spec": "customer.is-active" }""", null);
+                .Create("customer.derived", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
 
             // Act
             using var client = new HttpClient { BaseAddress = new Uri(app.Urls.First()) };
@@ -4264,7 +4264,7 @@ public class PropositionCatalogTests
     private sealed record SpecPeek(string Name, string Origin);
 
     private sealed class DerivedRule() : Rule<Customer, string>(
-        "derived-rule", RuleDocuments.Json("""{ "spec": "customer.derived" }"""));
+        "derived-rule", RuleDocuments.Json("""{ "rule": { "spec": "customer.derived" } }"""));
 
     private sealed record Customer(bool IsActive);
 }
@@ -4531,7 +4531,7 @@ public class PropositionEndpointTests : IAsyncLifetime
     public async Task Should_create_a_proposition_with_201()
     {
         // Act
-        var response = await Create("customer.derived", """{ "spec": "customer.is-active" }""");
+        var response = await Create("customer.derived", """{ "rule": { "spec": "customer.is-active" } }""");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
@@ -4543,10 +4543,10 @@ public class PropositionEndpointTests : IAsyncLifetime
     public async Task Should_reject_a_duplicate_name_with_409()
     {
         // Arrange
-        await Create("customer.derived", """{ "spec": "customer.is-active" }""");
+        await Create("customer.derived", """{ "rule": { "spec": "customer.is-active" } }""");
 
         // Act
-        var response = await Create("customer.derived", """{ "spec": "customer.is-adult" }""");
+        var response = await Create("customer.derived", """{ "rule": { "spec": "customer.is-adult" } }""");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
@@ -4556,7 +4556,7 @@ public class PropositionEndpointTests : IAsyncLifetime
     public async Task Should_accept_creating_an_override_of_a_compiled_spec()
     {
         // Act — "taken" means an authored document exists, not that the name is known at all
-        var response = await Create("customer.is-active", """{ "spec": "customer.is-adult" }""");
+        var response = await Create("customer.is-active", """{ "rule": { "spec": "customer.is-adult" } }""");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
@@ -4566,7 +4566,7 @@ public class PropositionEndpointTests : IAsyncLifetime
     public async Task Should_reject_an_invalid_document_with_400_and_typed_errors()
     {
         // Act
-        var response = await Create("customer.derived", """{ "spec": "nope" }""");
+        var response = await Create("customer.derived", """{ "rule": { "spec": "nope" } }""");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -4578,7 +4578,7 @@ public class PropositionEndpointTests : IAsyncLifetime
     public async Task Should_list_compiled_and_authored_propositions_with_their_origin()
     {
         // Arrange
-        await Create("customer.derived", """{ "spec": "customer.is-active" }""");
+        await Create("customer.derived", """{ "rule": { "spec": "customer.is-active" } }""");
 
         // Act
         var listed = await _client.GetFromJsonAsync<List<PropositionListEntry>>("/api/rules/propositions");
@@ -4594,7 +4594,7 @@ public class PropositionEndpointTests : IAsyncLifetime
     public async Task Should_get_an_authored_propositions_document()
     {
         // Arrange
-        await Create("customer.derived", """{ "spec": "customer.is-active" }""");
+        await Create("customer.derived", """{ "rule": { "spec": "customer.is-active" } }""");
 
         // Act
         var body = await _client.GetFromJsonAsync<PropositionGetResponse>("/api/rules/propositions/customer.derived");
@@ -4632,10 +4632,10 @@ public class PropositionEndpointTests : IAsyncLifetime
     public async Task Should_update_a_proposition_and_return_the_new_version()
     {
         // Arrange
-        await Create("customer.derived", """{ "spec": "customer.is-active" }""");
+        await Create("customer.derived", """{ "rule": { "spec": "customer.is-active" } }""");
 
         // Act
-        var response = await Put("customer.derived", """{ "spec": "customer.is-adult" }""", 1);
+        var response = await Put("customer.derived", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -4646,11 +4646,11 @@ public class PropositionEndpointTests : IAsyncLifetime
     public async Task Should_reject_a_stale_base_version_with_409()
     {
         // Arrange
-        await Create("customer.derived", """{ "spec": "customer.is-active" }""");
-        await Put("customer.derived", """{ "spec": "customer.is-adult" }""", 1);
+        await Create("customer.derived", """{ "rule": { "spec": "customer.is-active" } }""");
+        await Put("customer.derived", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Act
-        var response = await Put("customer.derived", """{ "spec": "customer.is-active" }""", 1);
+        var response = await Put("customer.derived", """{ "rule": { "spec": "customer.is-active" } }""", 1);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
@@ -4662,10 +4662,10 @@ public class PropositionEndpointTests : IAsyncLifetime
     public async Task Should_reject_a_non_positive_base_version_with_400()
     {
         // Arrange
-        await Create("customer.derived", """{ "spec": "customer.is-active" }""");
+        await Create("customer.derived", """{ "rule": { "spec": "customer.is-active" } }""");
 
         // Act
-        var response = await Put("customer.derived", """{ "spec": "customer.is-adult" }""", 0);
+        var response = await Put("customer.derived", """{ "rule": { "spec": "customer.is-adult" } }""", 0);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -4675,10 +4675,10 @@ public class PropositionEndpointTests : IAsyncLifetime
     public async Task Should_report_document_errors_for_an_invalid_edit()
     {
         // Arrange
-        await Create("customer.a", """{ "spec": "customer.is-active" }""");
+        await Create("customer.a", """{ "rule": { "spec": "customer.is-active" } }""");
 
         // Act
-        var response = await Put("customer.a", """{ "spec": "nope" }""", 1);
+        var response = await Put("customer.a", """{ "rule": { "spec": "nope" } }""", 1);
 
         // Assert — the HTTP-level job here is proving a rejected edit returns typed errors rather
         // than an empty 400 body. The cascade-break path (a sync rule that can no longer bind) is
@@ -4693,9 +4693,9 @@ public class PropositionEndpointTests : IAsyncLifetime
     public async Task Should_report_the_transitive_dependents_of_a_proposition()
     {
         // Arrange
-        await Create("customer.a", """{ "spec": "customer.is-active" }""");
-        await Create("customer.b", """{ "spec": "customer.a" }""");
-        await Create("customer.c", """{ "spec": "customer.b" }""");
+        await Create("customer.a", """{ "rule": { "spec": "customer.is-active" } }""");
+        await Create("customer.b", """{ "rule": { "spec": "customer.a" } }""");
+        await Create("customer.c", """{ "rule": { "spec": "customer.b" } }""");
 
         // Act
         var body = await _client.GetFromJsonAsync<DependentsResponse>(
@@ -4710,7 +4710,7 @@ public class PropositionEndpointTests : IAsyncLifetime
     public async Task Should_delete_an_unreferenced_proposition()
     {
         // Arrange
-        await Create("customer.derived", """{ "spec": "customer.is-active" }""");
+        await Create("customer.derived", """{ "rule": { "spec": "customer.is-active" } }""");
 
         // Act
         var response = await _client.DeleteAsync("/api/rules/propositions/customer.derived?baseVersion=1");
@@ -4725,8 +4725,8 @@ public class PropositionEndpointTests : IAsyncLifetime
     public async Task Should_refuse_to_delete_a_referenced_proposition_with_409_listing_referrers()
     {
         // Arrange
-        await Create("customer.a", """{ "spec": "customer.is-active" }""");
-        await Create("customer.b", """{ "spec": "customer.a" }""");
+        await Create("customer.a", """{ "rule": { "spec": "customer.is-active" } }""");
+        await Create("customer.b", """{ "rule": { "spec": "customer.a" } }""");
 
         // Act
         var response = await _client.DeleteAsync("/api/rules/propositions/customer.a?baseVersion=1");
@@ -4741,7 +4741,7 @@ public class PropositionEndpointTests : IAsyncLifetime
     public async Task Should_revert_an_override_to_its_compiled_spec()
     {
         // Arrange
-        await Create("customer.is-active", """{ "spec": "customer.is-adult" }""");
+        await Create("customer.is-active", """{ "rule": { "spec": "customer.is-adult" } }""");
 
         // Act
         var response = await _client.DeleteAsync("/api/rules/propositions/customer.is-active?baseVersion=1");
@@ -5024,7 +5024,7 @@ public class JsonFilePropositionStoreTests : IDisposable
     }
 
     private static StoredProposition Stored(string name, int version = 1) =>
-        new(name, "customer", """{ "spec": "is-active" }""", version, "a description");
+        new(name, "customer", """{ "rule": { "spec": "is-active" } }""", version, "a description");
 
     [Fact]
     public void Should_report_no_propositions_when_the_file_is_absent()
@@ -5425,7 +5425,7 @@ Append to `ui/packages/rules-core/test/client.test.ts` inside the existing `desc
 
     const result = await client.createProposition({
       name: 'customer.derived', modelType: 'customer',
-      document: { spec: 'customer.is-active' }, description: null,
+      document: { rule: { spec: 'customer.is-active' } }, description: null,
     });
 
     expect(result).toEqual({ outcome: 'saved', version: 1 });
@@ -5438,7 +5438,7 @@ Append to `ui/packages/rules-core/test/client.test.ts` inside the existing `desc
 
     const result = await client.createProposition({
       name: 'customer.derived', modelType: 'customer',
-      document: { spec: 'customer.is-active' }, description: null,
+      document: { rule: { spec: 'customer.is-active' } }, description: null,
     });
 
     expect(result.outcome).toBe('nameTaken');
@@ -5448,7 +5448,7 @@ Append to `ui/packages/rules-core/test/client.test.ts` inside the existing `desc
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ currentVersion: 3 }, 409));
     const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock });
 
-    const result = await client.putProposition('customer.a', { spec: 'customer.is-active' }, 1);
+    const result = await client.putProposition('customer.a', { rule: { spec: 'customer.is-active' } }, 1);
 
     expect(result).toEqual({ outcome: 'conflict', currentVersion: 3 });
   });
@@ -5462,7 +5462,7 @@ Append to `ui/packages/rules-core/test/client.test.ts` inside the existing `desc
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse(body, 400));
     const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock });
 
-    const result = await client.putProposition('customer.a', { spec: 'customer.is-active' }, 1);
+    const result = await client.putProposition('customer.a', { rule: { spec: 'customer.is-active' } }, 1);
 
     expect(result.outcome).toBe('invalid');
     if (result.outcome !== 'invalid') throw new Error('unreachable');
@@ -6942,7 +6942,7 @@ function stubClient(overrides: Record<string, unknown> = {}) {
       entry({ name: 'customer.derived' }),
     ]),
     getProposition: vi.fn().mockResolvedValue({
-      document: { spec: 'customer.is-active' }, version: 1,
+      document: { rule: { spec: 'customer.is-active' } }, version: 1,
       origin: 'Authored', hasCompiledDefault: false,
     }),
     getDependents: vi.fn().mockResolvedValue([]),
@@ -7104,7 +7104,7 @@ describe('PropositionsPage', () => {
     await userEvent.click(screen.getByRole('button', { name: /create/i }));
 
     await waitFor(() => expect(client.createProposition).toHaveBeenCalledWith(expect.objectContaining({
-      document: { spec: 'customer.derived' },
+      document: { rule: { spec: 'customer.derived' } },
     })));
   });
 
@@ -7420,7 +7420,7 @@ export function PropositionsPage(props: {
   const create = async (values: {
     name: string; modelType: string; description: string | null;
   }): Promise<void> => {
-    const document = dialog?.deriveFrom ? { spec: dialog.deriveFrom } : state.document;
+    const document = dialog?.deriveFrom ? { rule: { spec: dialog.deriveFrom } } : state.document;
     const result = await props.client.createProposition({ ...values, document });
 
     if (result.outcome !== 'saved') {
