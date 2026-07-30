@@ -397,7 +397,16 @@ In `src/Motiv.Serialization/SpecRegistry.cs`, change the class declaration (line
 public sealed class SpecRegistry : ISpecSource
 ```
 
-`Find` is already public with the right signature and satisfies the interface. `FindCollection<TParent>` is already `internal` with the right signature (line 86) — an internal interface member implemented by an internal method needs no change.
+`Find` is already public with the right signature and satisfies the interface implicitly.
+
+`FindCollection<TParent>` does **not**: an *implicit* interface implementation must be public no matter how the interface itself is declared, so leaving the existing `internal` method to satisfy the member fails with **CS0737**. Add an explicit interface implementation forwarding to it, and leave the internal method's own signature untouched so its direct callers keep working:
+
+```csharp
+    // An implicit implementation would have to be public; forwarding explicitly keeps the
+    // collection lookup internal while still satisfying the seam.
+    CollectionBinding<TParent>? ISpecSource.FindCollection<TParent>(string path) =>
+        FindCollection<TParent>(path);
+```
 
 - [ ] **Step 5: Run test to verify it passes**
 
