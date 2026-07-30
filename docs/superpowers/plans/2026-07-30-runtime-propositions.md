@@ -254,21 +254,15 @@ In `src/Motiv.Serialization/RuleErrorCode.cs`, append inside the enum (after `Po
     InvalidSpecName,
 
     /// <summary>Publishing the document would create a reference cycle.</summary>
-    CycleDetected,
-
-    /// <summary>A proposition is already authored under the requested name.</summary>
-    PropositionNameTaken,
-
-    /// <summary>The proposition cannot be removed because other documents reference it.</summary>
-    PropositionReferenced
+    CycleDetected
 ```
 
-**Deviation from the spec, deliberately:** the spec lists all four as `RuleErrorCode` members, but only
-`InvalidSpecName` and `CycleDetected` end up attached to a `RuleError`. "Name taken" and "referenced"
-are whole-request outcomes, not faults at a path inside a document, so they are carried by
-`PropositionUpdateOutcome` (Task 6) and their own response shapes (Task 13) instead. Add all four
-anyway — the two unused ones give a host a stable code to switch on if it wants to surface these as
-errors — but expect the `code-simplifier` pass in Task 21 to query them. Keep them, and say why.
+**Only these two.** The spec's error-code table also lists `PropositionNameTaken` and
+`PropositionReferenced`, but neither is ever attached to a `RuleError`: they are whole-request
+outcomes, not faults at a path inside a document, and are carried by `PropositionUpdateOutcome`
+(Task 6) plus their own response shapes (Task 13). Adding them would be dead code. **Also update the
+spec's error-code table** in `docs/superpowers/specs/2026-07-30-runtime-propositions-design.md` to
+list only these two, so spec and code agree.
 
 - [ ] **Step 6: Run tests to verify they pass**
 
@@ -4669,20 +4663,21 @@ public class PropositionEndpointTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Should_report_broken_dependents_when_an_edit_would_break_one()
+    public async Task Should_report_document_errors_for_an_invalid_edit()
     {
-        // Arrange — b depends on a, then a is pointed at a name that does not exist
+        // Arrange
         await Create("customer.a", """{ "spec": "customer.is-active" }""");
-        await Create("customer.b", """{ "spec": "customer.a" }""");
 
-        // Act — a valid-looking edit that breaks a's own binding surfaces as document errors;
-        // to break a *dependent*, remove what it relies on via a cycle-free async switch instead.
+        // Act
         var response = await Put("customer.a", """{ "spec": "nope" }""", 1);
 
-        // Assert
+        // Assert — the HTTP-level job here is proving a rejected edit returns typed errors rather
+        // than an empty 400 body. The cascade-break path (a sync rule that can no longer bind) is
+        // covered at the unit level by RuleCascadeTests in Task 10.
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         var body = await response.Content.ReadFromJsonAsync<CascadeFailureResponse>();
-        body!.Errors.ShouldNotBeEmpty();
+        body!.Errors.ShouldContain(error => error.Code == RuleErrorCode.UnknownSpec);
+        body.BrokenDependents.ShouldBeEmpty();
     }
 
     [Fact]
@@ -5979,408 +5974,7 @@ git commit -m "feat(rules-core): project dotted names into a searchable namespac
 
 ## Phase 5 — The demo UI
 
-### Task 18: Hash routing and the page shell
-
-Behaviour-preserving refactor plus routing. The Rules page must look and behave exactly as it does today when this task ends.
-
-**Files:**
-- Create: `ui/apps/demo/src/routing/useHashRoute.ts`
-- Create: `ui/apps/demo/src/panes/AppBar.tsx`
-- Create: `ui/apps/demo/src/panes/RulesPage.tsx`
-- Modify: `ui/apps/demo/src/App.tsx`
-- Modify: `ui/apps/demo/src/panes/RuleHeader.tsx`
-- Modify: `ui/apps/demo/src/styles/app.css`
-- Test: `ui/apps/demo/test/routing/useHashRoute.test.ts` (create), `ui/apps/demo/test/App.test.tsx`
-
-**Interfaces:**
-- Consumes: nothing new.
-- Produces:
-  ```typescript
-  // routing/useHashRoute.ts
-  export type Page = 'rules' | 'propositions';
-  export interface Route { page: Page; name: string | null }
-  export function parseHash(hash: string): Route;
-  export function formatHash(route: Route): string;
-  export function useHashRoute(): [Route, (route: Route) => void];
-
-  // panes/AppBar.tsx
-  export function AppBar(props: { page: Page; onNavigate: (page: Page) => void; controls?: ReactNode; children?: ReactNode }): JSX.Element;
-
-  // panes/RulesPage.tsx
-  export function RulesPage(props: { client: RulesApiClient; page: Page; onNavigate: (page: Page) => void }): JSX.Element;
-  ```
-
-- [ ] **Step 1: Write the failing routing tests**
-
-Create `ui/apps/demo/test/routing/useHashRoute.test.ts`:
-
-```typescript
-import { describe, it, expect } from 'vitest';
-import { parseHash, formatHash } from '../../src/routing/useHashRoute.js';
-
-describe('parseHash', () => {
-  it('defaults to the rules page with no selection', () => {
-    expect(parseHash('')).toEqual({ page: 'rules', name: null });
-    expect(parseHash('#')).toEqual({ page: 'rules', name: null });
-    expect(parseHash('#/')).toEqual({ page: 'rules', name: null });
-  });
-
-  it('reads a rule route', () => {
-    expect(parseHash('#/rules/can-checkout')).toEqual({ page: 'rules', name: 'can-checkout' });
-  });
-
-  it('reads a proposition route with a dotted name', () => {
-    expect(parseHash('#/propositions/customer.eligibility.is-active'))
-      .toEqual({ page: 'propositions', name: 'customer.eligibility.is-active' });
-  });
-
-  it('reads a page with no selection', () => {
-    expect(parseHash('#/propositions')).toEqual({ page: 'propositions', name: null });
-  });
-
-  it('decodes a percent-encoded name', () => {
-    expect(parseHash('#/rules/a%20b')).toEqual({ page: 'rules', name: 'a b' });
-  });
-
-  it('falls back to rules for an unknown page', () => {
-    expect(parseHash('#/nonsense/x')).toEqual({ page: 'rules', name: null });
-  });
-});
-
-describe('formatHash', () => {
-  it('formats a page with no selection', () => {
-    expect(formatHash({ page: 'propositions', name: null })).toBe('#/propositions');
-  });
-
-  it('formats a selection', () => {
-    expect(formatHash({ page: 'rules', name: 'can-checkout' })).toBe('#/rules/can-checkout');
-  });
-
-  it('leaves dots unescaped so the hash stays readable', () => {
-    expect(formatHash({ page: 'propositions', name: 'customer.is-active' }))
-      .toBe('#/propositions/customer.is-active');
-  });
-
-  it('round-trips every route it formats', () => {
-    for (const route of [
-      { page: 'rules', name: null },
-      { page: 'propositions', name: 'customer.a.b' },
-      { page: 'rules', name: 'can-checkout' },
-    ] as const) {
-      expect(parseHash(formatHash(route))).toEqual(route);
-    }
-  });
-});
-```
-
-- [ ] **Step 2: Run tests to verify they fail**
-
-```bash
-cd ui && pnpm --filter @motiv/rules-demo test
-```
-
-Expected: FAIL — cannot resolve `../../src/routing/useHashRoute.js`.
-
-- [ ] **Step 3: Write the router**
-
-Create `ui/apps/demo/src/routing/useHashRoute.ts`:
-
-```typescript
-import { useCallback, useEffect, useState } from 'react';
-
-/** The two pages the demo shell switches between. */
-export type Page = 'rules' | 'propositions';
-
-/** Where the user is: which page, and what is selected on it. */
-export interface Route {
-  page: Page;
-  name: string | null;
-}
-
-const PAGES: readonly Page[] = ['rules', 'propositions'];
-const DEFAULT_ROUTE: Route = { page: 'rules', name: null };
-
-/**
- * Reads a route out of a location hash. Hash routing rather than history routing so a fork needs no
- * server-side fallback to make deep links work — the demo's host happens to have one, but the
- * skeleton should not depend on it.
- */
-export function parseHash(hash: string): Route {
-  const [page, ...rest] = hash.replace(/^#\/?/, '').split('/');
-  if (!page || !PAGES.includes(page as Page)) return DEFAULT_ROUTE;
-  const name = rest.join('/');
-  return { page: page as Page, name: name === '' ? null : decodeURIComponent(name) };
-}
-
-/** The hash for a route. Dots are left unescaped, so a namespaced name stays readable in the bar. */
-export function formatHash(route: Route): string {
-  return route.name === null
-    ? `#/${route.page}`
-    : `#/${route.page}/${encodeURIComponent(route.name)}`;
-}
-
-/**
- * The current route, and a setter that writes it to the address bar. Listens on `hashchange`, so the
- * back button and a hand-edited URL both work without a router dependency.
- */
-export function useHashRoute(): [Route, (route: Route) => void] {
-  const [route, setRoute] = useState<Route>(() => parseHash(window.location.hash));
-
-  useEffect(() => {
-    const onHashChange = (): void => setRoute(parseHash(window.location.hash));
-    window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
-  }, []);
-
-  // Writing the hash fires `hashchange`, which is what actually updates the state — so the address
-  // bar stays the single source of truth and a manual edit behaves identically to a click.
-  const navigate = useCallback((next: Route): void => {
-    window.location.hash = formatHash(next);
-  }, []);
-
-  return [route, navigate];
-}
-```
-
-- [ ] **Step 4: Extract `AppBar`**
-
-Create `ui/apps/demo/src/panes/AppBar.tsx`:
-
-```typescript
-import type { ReactNode } from 'react';
-import type { Page } from '../routing/useHashRoute.js';
-
-/** The pages, in the order they are offered. */
-const PAGES: ReadonlyArray<{ id: Page; label: string }> = [
-  { id: 'rules', label: 'Rules' },
-  { id: 'propositions', label: 'Propositions' },
-];
-
-/**
- * The shell's top bar: brand, page tabs, then whatever breadcrumb trail the current page supplies,
- * and its controls on the right. Extracted from RuleHeader so both pages share one chrome rather
- * than growing two that drift apart.
- */
-export function AppBar(props: {
-  page: Page;
-  onNavigate: (page: Page) => void;
-  controls?: ReactNode;
-  children?: ReactNode;
-}) {
-  return (
-    <header className="appbar">
-      <div className="appbar-brand">
-        <span className="appbar-mark" aria-hidden="true">M</span>
-        <span className="appbar-wordmark">Motiv</span>
-      </div>
-      <div className="page-tabs" role="tablist" aria-label="Page">
-        {PAGES.map(({ id, label }) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={props.page === id}
-            className={props.page === id ? 'tab active' : 'tab'}
-            onClick={() => props.onNavigate(id)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-      {props.children}
-      <div className="appbar-fill" />
-      <div className="appbar-controls">{props.controls}</div>
-    </header>
-  );
-}
-```
-
-- [ ] **Step 5: Rebuild `RuleHeader` on top of it**
-
-In `ui/apps/demo/src/panes/RuleHeader.tsx`, keep every piece of state and both `load`/`save` exactly as they are. Replace only the returned markup (lines 75-121) with:
-
-```typescript
-  return (
-    <>
-      <AppBar
-        page={props.page}
-        onNavigate={props.onNavigate}
-        controls={
-          <>
-            {loaded && (
-              <span className="rule-version">
-                v{loaded.version}
-                {loaded.isCodeDefault && <em> — code-defined default (builder starts fresh)</em>}
-              </span>
-            )}
-            <button type="button" className="btn" disabled={!loaded || saving} onClick={() => void save()}>
-              Save
-            </button>
-          </>
-        }
-      >
-        <span className="breadcrumb-sep">/</span>
-        <span className="breadcrumb-item">Eligibility rules</span>
-        <span className="breadcrumb-sep">/</span>
-        {/* The trail's leaf is the rule picker: the crumb already names the rule in force, so a
-            separate control alongside it would be the same fact stated twice. */}
-        <ListboxPicker
-          options={options}
-          value={loaded?.name ?? LOCAL_DRAFT.value}
-          onChoose={(name) => void load(name)}
-          open={picking}
-          setOpen={setPicking}
-          triggerName="rule"
-          listLabel="rules"
-          triggerClassName="breadcrumb-current"
-          listClassName="breadcrumb-menu"
-        />
-        <span className="model-pill" title="Model type the rule is validated and evaluated against">
-          {MODEL_TYPE}
-        </span>
-      </AppBar>
-      {conflict !== null && loaded && (
-        <div role="alert" className="conflict-banner">
-          Someone else saved version {conflict} of “{loaded.name}”.
-          <button type="button" className="btn" onClick={() => void load(loaded.name)}>
-            Reload latest
-          </button>
-        </div>
-      )}
-    </>
-  );
-```
-
-Widen its props to `{ client: RulesApiClient; page: Page; onNavigate: (page: Page) => void }` and add the imports for `AppBar` and `Page`.
-
-- [ ] **Step 6: Extract `RulesPage` and route in `App`**
-
-Create `ui/apps/demo/src/panes/RulesPage.tsx`:
-
-```typescript
-import type { RulesApiClient } from '@motiv/rules-core';
-import type { Page } from '../routing/useHashRoute.js';
-import { RuleHeader } from './RuleHeader.js';
-import { EditorPane } from './EditorPane.js';
-import { JsonPane } from './JsonPane.js';
-import { EvaluatePane } from './EvaluatePane.js';
-import { CheckoutPane } from './CheckoutPane.js';
-
-/** The rules page: today's shell, unchanged, now behind a route. */
-export function RulesPage(props: {
-  client: RulesApiClient;
-  page: Page;
-  onNavigate: (page: Page) => void;
-}) {
-  return (
-    <>
-      <RuleHeader client={props.client} page={props.page} onNavigate={props.onNavigate} />
-      {/*
-        Each pane below fetches GET /catalog on mount (EditorPane and EvaluatePane
-        via useCatalog, CheckoutPane directly) — and EditorPane's builder surface
-        fetches once more of its own, so up to four requests for the same static
-        payload. Deduping would mean lifting the catalog here and passing it down,
-        but each pane's self-contained wiring is a deliberate seam this demo exists
-        to show, so the duplicate requests are accepted.
-      */}
-      <div className="shell-body">
-        <EditorPane client={props.client} />
-        <JsonPane />
-        <EvaluatePane client={props.client} />
-      </div>
-      <CheckoutPane client={props.client} />
-    </>
-  );
-}
-```
-
-Then replace the returned markup of `ui/apps/demo/src/App.tsx` (lines 33-55) with:
-
-```typescript
-  const [route, navigate] = useHashRoute();
-
-  return (
-    // Seam: the store hookup. RuleEditorProvider exposes the single RuleEditorStore
-    // to every builder component (useRuleEditorStore / useRuleNode) below it.
-    <RuleEditorProvider store={store}>
-      <main className="app">
-        {route.page === 'propositions'
-          ? (
-            <PropositionsPage
-              client={client}
-              page={route.page}
-              selected={route.name}
-              onNavigate={(page) => navigate({ page, name: null })}
-              onSelect={(name) => navigate({ page: 'propositions', name })}
-            />
-          )
-          : <RulesPage client={client} page={route.page} onNavigate={(page) => navigate({ page, name: null })} />}
-      </main>
-    </RuleEditorProvider>
-  );
-```
-
-`PropositionsPage` arrives in Task 20. **Until then**, render `<RulesPage …/>` for both branches so the app compiles and this task's tests can pass — replace the placeholder in Task 20 Step 5.
-
-- [ ] **Step 7: Style the page tabs**
-
-Append to `ui/apps/demo/src/styles/app.css`, in the appbar section near `.appbar-brand` (around line 69):
-
-```css
-/* Page tabs: the Rules/Propositions switch in the appbar. Reuses `.tab` from the surface tabs so
-   both switches read as the same control at two altitudes. */
-.page-tabs {
-  display: flex;
-  gap: 2px;
-  margin-left: var(--space-3);
-  padding: 2px;
-  border-radius: var(--radius-2);
-  background: var(--sh-inset);
-}
-```
-
-If `--sh-inset` or `--space-3` are not defined in `tokens.css`, substitute the nearest existing token — check `tokens.css` rather than inventing names.
-
-- [ ] **Step 8: Add a routing test to the app test**
-
-Append to `ui/apps/demo/test/App.test.tsx`, following the file's existing render helpers:
-
-```typescript
-  it('shows the rules page by default', async () => {
-    window.location.hash = '';
-    renderApp();
-
-    expect(await screen.findByRole('tab', { name: 'Rules', selected: true })).toBeTruthy();
-  });
-
-  it('switches page when a tab is clicked', async () => {
-    window.location.hash = '';
-    renderApp();
-
-    await userEvent.click(await screen.findByRole('tab', { name: 'Propositions' }));
-
-    expect(window.location.hash).toBe('#/propositions');
-  });
-```
-
-- [ ] **Step 9: Run the demo tests and typecheck**
-
-```bash
-cd ui && pnpm --filter @motiv/rules-demo test && pnpm --filter @motiv/rules-demo typecheck
-```
-
-Expected: PASS. Every pre-existing demo test must still pass — this task changes structure, not behaviour. A failing pane test means the extraction dropped a prop.
-
-- [ ] **Step 10: Commit**
-
-```bash
-git add ui/apps/demo/src ui/apps/demo/test
-git commit -m "feat(demo): route between pages on the hash and share one appbar"
-```
-
----
-
-### Task 19: The proposition explorer
+### Task 18: The proposition explorer
 
 **Files:**
 - Create: `ui/apps/demo/src/explorer/PropositionExplorer.tsx`
@@ -6891,17 +6485,417 @@ git commit -m "feat(demo): searchable namespaced proposition explorer"
 
 ---
 
-### Task 20: The propositions page
+### Task 19: Routing, the page shell, and the propositions page
+
+Behaviour-preserving refactor plus routing. The Rules page must look and behave exactly as it does today when this task ends.
 
 **Files:**
+- Create: `ui/apps/demo/src/routing/useHashRoute.ts`
+- Create: `ui/apps/demo/src/panes/AppBar.tsx`
+- Create: `ui/apps/demo/src/panes/RulesPage.tsx`
+- Modify: `ui/apps/demo/src/App.tsx`
+- Modify: `ui/apps/demo/src/panes/RuleHeader.tsx`
+- Modify: `ui/apps/demo/src/styles/app.css`
+- Test: `ui/apps/demo/test/routing/useHashRoute.test.ts` (create), `ui/apps/demo/test/App.test.tsx`
+
+**Interfaces:**
+- Consumes: nothing new.
+- Produces:
+  ```typescript
+  // routing/useHashRoute.ts
+  export type Page = 'rules' | 'propositions';
+  export interface Route { page: Page; name: string | null }
+  export function parseHash(hash: string): Route;
+  export function formatHash(route: Route): string;
+  export function useHashRoute(): [Route, (route: Route) => void];
+
+  // panes/AppBar.tsx
+  export function AppBar(props: { page: Page; onNavigate: (page: Page) => void; controls?: ReactNode; children?: ReactNode }): JSX.Element;
+
+  // panes/RulesPage.tsx
+  export function RulesPage(props: { client: RulesApiClient; page: Page; onNavigate: (page: Page) => void }): JSX.Element;
+  ```
+
+- [ ] **Step 1: Write the failing routing tests**
+
+Create `ui/apps/demo/test/routing/useHashRoute.test.ts`:
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import { parseHash, formatHash } from '../../src/routing/useHashRoute.js';
+
+describe('parseHash', () => {
+  it('defaults to the rules page with no selection', () => {
+    expect(parseHash('')).toEqual({ page: 'rules', name: null });
+    expect(parseHash('#')).toEqual({ page: 'rules', name: null });
+    expect(parseHash('#/')).toEqual({ page: 'rules', name: null });
+  });
+
+  it('reads a rule route', () => {
+    expect(parseHash('#/rules/can-checkout')).toEqual({ page: 'rules', name: 'can-checkout' });
+  });
+
+  it('reads a proposition route with a dotted name', () => {
+    expect(parseHash('#/propositions/customer.eligibility.is-active'))
+      .toEqual({ page: 'propositions', name: 'customer.eligibility.is-active' });
+  });
+
+  it('reads a page with no selection', () => {
+    expect(parseHash('#/propositions')).toEqual({ page: 'propositions', name: null });
+  });
+
+  it('decodes a percent-encoded name', () => {
+    expect(parseHash('#/rules/a%20b')).toEqual({ page: 'rules', name: 'a b' });
+  });
+
+  it('falls back to rules for an unknown page', () => {
+    expect(parseHash('#/nonsense/x')).toEqual({ page: 'rules', name: null });
+  });
+});
+
+describe('formatHash', () => {
+  it('formats a page with no selection', () => {
+    expect(formatHash({ page: 'propositions', name: null })).toBe('#/propositions');
+  });
+
+  it('formats a selection', () => {
+    expect(formatHash({ page: 'rules', name: 'can-checkout' })).toBe('#/rules/can-checkout');
+  });
+
+  it('leaves dots unescaped so the hash stays readable', () => {
+    expect(formatHash({ page: 'propositions', name: 'customer.is-active' }))
+      .toBe('#/propositions/customer.is-active');
+  });
+
+  it('round-trips every route it formats', () => {
+    for (const route of [
+      { page: 'rules', name: null },
+      { page: 'propositions', name: 'customer.a.b' },
+      { page: 'rules', name: 'can-checkout' },
+    ] as const) {
+      expect(parseHash(formatHash(route))).toEqual(route);
+    }
+  });
+});
+```
+
+- [ ] **Step 2: Run tests to verify they fail**
+
+```bash
+cd ui && pnpm --filter @motiv/rules-demo test
+```
+
+Expected: FAIL — cannot resolve `../../src/routing/useHashRoute.js`.
+
+- [ ] **Step 3: Write the router**
+
+Create `ui/apps/demo/src/routing/useHashRoute.ts`:
+
+```typescript
+import { useCallback, useEffect, useState } from 'react';
+
+/** The two pages the demo shell switches between. */
+export type Page = 'rules' | 'propositions';
+
+/** Where the user is: which page, and what is selected on it. */
+export interface Route {
+  page: Page;
+  name: string | null;
+}
+
+const PAGES: readonly Page[] = ['rules', 'propositions'];
+const DEFAULT_ROUTE: Route = { page: 'rules', name: null };
+
+/**
+ * Reads a route out of a location hash. Hash routing rather than history routing so a fork needs no
+ * server-side fallback to make deep links work — the demo's host happens to have one, but the
+ * skeleton should not depend on it.
+ */
+export function parseHash(hash: string): Route {
+  const [page, ...rest] = hash.replace(/^#\/?/, '').split('/');
+  if (!page || !PAGES.includes(page as Page)) return DEFAULT_ROUTE;
+  const name = rest.join('/');
+  return { page: page as Page, name: name === '' ? null : decodeURIComponent(name) };
+}
+
+/** The hash for a route. Dots are left unescaped, so a namespaced name stays readable in the bar. */
+export function formatHash(route: Route): string {
+  return route.name === null
+    ? `#/${route.page}`
+    : `#/${route.page}/${encodeURIComponent(route.name)}`;
+}
+
+/**
+ * The current route, and a setter that writes it to the address bar. Listens on `hashchange`, so the
+ * back button and a hand-edited URL both work without a router dependency.
+ */
+export function useHashRoute(): [Route, (route: Route) => void] {
+  const [route, setRoute] = useState<Route>(() => parseHash(window.location.hash));
+
+  useEffect(() => {
+    const onHashChange = (): void => setRoute(parseHash(window.location.hash));
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  // Writing the hash fires `hashchange`, which is what actually updates the state — so the address
+  // bar stays the single source of truth and a manual edit behaves identically to a click.
+  const navigate = useCallback((next: Route): void => {
+    window.location.hash = formatHash(next);
+  }, []);
+
+  return [route, navigate];
+}
+```
+
+- [ ] **Step 4: Extract `AppBar`**
+
+Create `ui/apps/demo/src/panes/AppBar.tsx`:
+
+```typescript
+import type { ReactNode } from 'react';
+import type { Page } from '../routing/useHashRoute.js';
+
+/** The pages, in the order they are offered. */
+const PAGES: ReadonlyArray<{ id: Page; label: string }> = [
+  { id: 'rules', label: 'Rules' },
+  { id: 'propositions', label: 'Propositions' },
+];
+
+/**
+ * The shell's top bar: brand, page tabs, then whatever breadcrumb trail the current page supplies,
+ * and its controls on the right. Extracted from RuleHeader so both pages share one chrome rather
+ * than growing two that drift apart.
+ */
+export function AppBar(props: {
+  page: Page;
+  onNavigate: (page: Page) => void;
+  controls?: ReactNode;
+  children?: ReactNode;
+}) {
+  return (
+    <header className="appbar">
+      <div className="appbar-brand">
+        <span className="appbar-mark" aria-hidden="true">M</span>
+        <span className="appbar-wordmark">Motiv</span>
+      </div>
+      <div className="page-tabs" role="tablist" aria-label="Page">
+        {PAGES.map(({ id, label }) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={props.page === id}
+            className={props.page === id ? 'tab active' : 'tab'}
+            onClick={() => props.onNavigate(id)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {props.children}
+      <div className="appbar-fill" />
+      <div className="appbar-controls">{props.controls}</div>
+    </header>
+  );
+}
+```
+
+- [ ] **Step 5: Rebuild `RuleHeader` on top of it**
+
+In `ui/apps/demo/src/panes/RuleHeader.tsx`, keep every piece of state and both `load`/`save` exactly as they are. Replace only the returned markup (lines 75-121) with:
+
+```typescript
+  return (
+    <>
+      <AppBar
+        page={props.page}
+        onNavigate={props.onNavigate}
+        controls={
+          <>
+            {loaded && (
+              <span className="rule-version">
+                v{loaded.version}
+                {loaded.isCodeDefault && <em> — code-defined default (builder starts fresh)</em>}
+              </span>
+            )}
+            <button type="button" className="btn" disabled={!loaded || saving} onClick={() => void save()}>
+              Save
+            </button>
+          </>
+        }
+      >
+        <span className="breadcrumb-sep">/</span>
+        <span className="breadcrumb-item">Eligibility rules</span>
+        <span className="breadcrumb-sep">/</span>
+        {/* The trail's leaf is the rule picker: the crumb already names the rule in force, so a
+            separate control alongside it would be the same fact stated twice. */}
+        <ListboxPicker
+          options={options}
+          value={loaded?.name ?? LOCAL_DRAFT.value}
+          onChoose={(name) => void load(name)}
+          open={picking}
+          setOpen={setPicking}
+          triggerName="rule"
+          listLabel="rules"
+          triggerClassName="breadcrumb-current"
+          listClassName="breadcrumb-menu"
+        />
+        <span className="model-pill" title="Model type the rule is validated and evaluated against">
+          {MODEL_TYPE}
+        </span>
+      </AppBar>
+      {conflict !== null && loaded && (
+        <div role="alert" className="conflict-banner">
+          Someone else saved version {conflict} of “{loaded.name}”.
+          <button type="button" className="btn" onClick={() => void load(loaded.name)}>
+            Reload latest
+          </button>
+        </div>
+      )}
+    </>
+  );
+```
+
+Widen its props to `{ client: RulesApiClient; page: Page; onNavigate: (page: Page) => void }` and add the imports for `AppBar` and `Page`.
+
+- [ ] **Step 6: Extract `RulesPage` and route in `App`**
+
+Create `ui/apps/demo/src/panes/RulesPage.tsx`:
+
+```typescript
+import type { RulesApiClient } from '@motiv/rules-core';
+import type { Page } from '../routing/useHashRoute.js';
+import { RuleHeader } from './RuleHeader.js';
+import { EditorPane } from './EditorPane.js';
+import { JsonPane } from './JsonPane.js';
+import { EvaluatePane } from './EvaluatePane.js';
+import { CheckoutPane } from './CheckoutPane.js';
+
+/** The rules page: today's shell, unchanged, now behind a route. */
+export function RulesPage(props: {
+  client: RulesApiClient;
+  page: Page;
+  onNavigate: (page: Page) => void;
+}) {
+  return (
+    <>
+      <RuleHeader client={props.client} page={props.page} onNavigate={props.onNavigate} />
+      {/*
+        Each pane below fetches GET /catalog on mount (EditorPane and EvaluatePane
+        via useCatalog, CheckoutPane directly) — and EditorPane's builder surface
+        fetches once more of its own, so up to four requests for the same static
+        payload. Deduping would mean lifting the catalog here and passing it down,
+        but each pane's self-contained wiring is a deliberate seam this demo exists
+        to show, so the duplicate requests are accepted.
+      */}
+      <div className="shell-body">
+        <EditorPane client={props.client} />
+        <JsonPane />
+        <EvaluatePane client={props.client} />
+      </div>
+      <CheckoutPane client={props.client} />
+    </>
+  );
+}
+```
+
+Then replace the returned markup of `ui/apps/demo/src/App.tsx` (lines 33-55) with:
+
+```typescript
+  const [route, navigate] = useHashRoute();
+
+  return (
+    // Seam: the store hookup. RuleEditorProvider exposes the single RuleEditorStore
+    // to every builder component (useRuleEditorStore / useRuleNode) below it.
+    <RuleEditorProvider store={store}>
+      <main className="app">
+        {route.page === 'propositions'
+          ? (
+            <PropositionsPage
+              client={client}
+              page={route.page}
+              selected={route.name}
+              onNavigate={(page) => navigate({ page, name: null })}
+              onSelect={(name) => navigate({ page: 'propositions', name })}
+            />
+          )
+          : <RulesPage client={client} page={route.page} onNavigate={(page) => navigate({ page, name: null })} />}
+      </main>
+    </RuleEditorProvider>
+  );
+```
+
+`PropositionsPage` is built later in **this same task** (Steps 13-16), so write this routing markup exactly as shown and add the import then. Routing, the shell split and the propositions page are one task precisely so no intermediate commit contains a branch pointing at the wrong page.
+
+- [ ] **Step 7: Style the page tabs**
+
+Append to `ui/apps/demo/src/styles/app.css`, in the appbar section near `.appbar-brand` (around line 69):
+
+```css
+/* Page tabs: the Rules/Propositions switch in the appbar. Reuses `.tab` from the surface tabs so
+   both switches read as the same control at two altitudes. */
+.page-tabs {
+  display: flex;
+  gap: 2px;
+  margin-left: var(--space-3);
+  padding: 2px;
+  border-radius: var(--radius-2);
+  background: var(--sh-inset);
+}
+```
+
+If `--sh-inset` or `--space-3` are not defined in `tokens.css`, substitute the nearest existing token — check `tokens.css` rather than inventing names.
+
+- [ ] **Step 8: Add a routing test to the app test**
+
+Append to `ui/apps/demo/test/App.test.tsx`, following the file's existing render helpers:
+
+```typescript
+  it('shows the rules page by default', async () => {
+    window.location.hash = '';
+    renderApp();
+
+    expect(await screen.findByRole('tab', { name: 'Rules', selected: true })).toBeTruthy();
+  });
+
+  it('switches page when a tab is clicked', async () => {
+    window.location.hash = '';
+    renderApp();
+
+    await userEvent.click(await screen.findByRole('tab', { name: 'Propositions' }));
+
+    expect(window.location.hash).toBe('#/propositions');
+  });
+```
+
+- [ ] **Step 9: Run the demo tests and typecheck**
+
+```bash
+cd ui && pnpm --filter @motiv/rules-demo test && pnpm --filter @motiv/rules-demo typecheck
+```
+
+Expected: PASS. Every pre-existing demo test must still pass — this task changes structure, not behaviour. A failing pane test means the extraction dropped a prop.
+
+- [ ] **Step 10: Commit**
+
+```bash
+git add ui/apps/demo/src ui/apps/demo/test
+git commit -m "feat(demo): route between pages on the hash and share one appbar"
+```
+
+---
+
+
+**Files (continued):**
 - Create: `ui/apps/demo/src/explorer/PropositionDialog.tsx`
 - Create: `ui/apps/demo/src/explorer/DependentsStrip.tsx`
 - Create: `ui/apps/demo/src/panes/PropositionsPage.tsx`
-- Modify: `ui/apps/demo/src/App.tsx` (replace the Task 18 placeholder)
+- Modify: `ui/apps/demo/src/App.tsx` (import the page built in this task)
 - Modify: `ui/apps/demo/src/styles/app.css`
 - Test: `ui/apps/demo/test/panes/PropositionsPage.test.tsx` (create)
 
-**Interfaces:**
+**Interfaces (continued):**
 - Consumes: `PropositionExplorer`, `ExplorerActions`, the client methods from Task 16, `RuleEditorStore`.
 - Produces:
   ```typescript
@@ -6911,7 +6905,7 @@ git commit -m "feat(demo): searchable namespaced proposition explorer"
   export function PropositionsPage(props: { client: RulesApiClient; page: Page; selected: string | null; onNavigate: (page: Page) => void; onSelect: (name: string | null) => void }): JSX.Element;
   ```
 
-- [ ] **Step 1: Write the failing tests**
+- [ ] **Step 11: Write the failing tests**
 
 Create `ui/apps/demo/test/panes/PropositionsPage.test.tsx`. Read `ui/apps/demo/test/support/` first and reuse its existing fake-client / store helpers rather than hand-rolling a fetch mock.
 
@@ -7147,7 +7141,7 @@ describe('PropositionsPage', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [ ] **Step 12: Run tests to verify they fail**
 
 ```bash
 cd ui && pnpm --filter @motiv/rules-demo test
@@ -7155,7 +7149,7 @@ cd ui && pnpm --filter @motiv/rules-demo test
 
 Expected: FAIL — cannot resolve `PropositionsPage.js`.
 
-- [ ] **Step 3: Write the dialog**
+- [ ] **Step 13: Write the dialog**
 
 Create `ui/apps/demo/src/explorer/PropositionDialog.tsx`:
 
@@ -7240,7 +7234,7 @@ export function PropositionDialog(props: {
 }
 ```
 
-- [ ] **Step 4: Write the dependents strip**
+- [ ] **Step 14: Write the dependents strip**
 
 Create `ui/apps/demo/src/explorer/DependentsStrip.tsx`:
 
@@ -7279,7 +7273,7 @@ export function DependentsStrip(props: { dependents: DependentEntry[] }) {
 }
 ```
 
-- [ ] **Step 5: Write the page**
+- [ ] **Step 15: Write the page**
 
 Create `ui/apps/demo/src/panes/PropositionsPage.tsx`:
 
@@ -7521,11 +7515,11 @@ export function PropositionsPage(props: {
 }
 ```
 
-- [ ] **Step 6: Wire it into `App`**
+- [ ] **Step 16: Wire it into `App`**
 
-In `ui/apps/demo/src/App.tsx`, replace the Task 18 placeholder so the `propositions` branch renders `PropositionsPage`, and add its import. The routing markup from Task 18 Step 6 is already written against the real props, so only the placeholder substitution and the import change.
+In `ui/apps/demo/src/App.tsx`, add the `PropositionsPage` import. The routing markup written in Step 6 is already expressed against the real props, so nothing else changes — this is the step that makes it resolve.
 
-- [ ] **Step 7: Style the dialog and strip**
+- [ ] **Step 17: Style the dialog and strip**
 
 Append to `ui/apps/demo/src/styles/app.css`:
 
@@ -7600,9 +7594,9 @@ Append to `ui/apps/demo/src/styles/app.css`:
 }
 ```
 
-Substitute real token names as in Task 19 Step 4 — check `tokens.css`.
+Substitute real token names as in Task 18 Step 4 — check `tokens.css`.
 
-- [ ] **Step 8: Run tests and typecheck**
+- [ ] **Step 18: Run tests and typecheck**
 
 ```bash
 cd ui && pnpm --filter @motiv/rules-demo test && pnpm --filter @motiv/rules-demo typecheck
@@ -7612,7 +7606,7 @@ Expected: PASS, fifteen tests.
 
 If `seeds the dialog from the derived-from node` reports an empty value, the seed is being computed from `props.selected` rather than the node passed to `onDerive` — they agree here but will not once derivation is offered from a non-selected node.
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 19: Commit**
 
 ```bash
 git add ui/apps/demo/src ui/apps/demo/test
@@ -7621,7 +7615,7 @@ git commit -m "feat(demo): author, derive and cascade propositions from a dedica
 
 ---
 
-### Task 21: End-to-end proof, full verification, and simplification
+### Task 20: End-to-end proof, full verification, and simplification
 
 The single test that proves the feature's central claim, then the checks CLAUDE.md requires before this can be called done.
 

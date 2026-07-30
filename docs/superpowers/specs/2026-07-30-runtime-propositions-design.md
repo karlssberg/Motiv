@@ -379,8 +379,10 @@ loop, untouched. New `RuleErrorCode` members:
 |---|---|
 | `InvalidSpecName` | name violates the dotted grammar |
 | `CycleDetected` | message carries the cycle path |
-| `PropositionNameTaken` | 409 on create |
-| `PropositionReferenced` | 409 on delete; lists referrers |
+
+"Name taken" and "referenced" get **no** error code. They are whole-request outcomes rather than
+faults at a path inside a document, so they are carried by `PropositionUpdateOutcome` and their own
+response shapes — a `RuleError` for either would be a code nothing ever constructs.
 
 Cascade failures get their own response shape rather than being forced into
 `RuleError`, whose `path` is a JSON pointer into *this* document and cannot
