@@ -2190,7 +2190,7 @@ public class PropositionSetCreateTests
         Spec.Build((Customer c) => c.IsActive).WhenTrue("active").WhenFalse("inactive").Create();
 
     private static AsyncSpecBase<Customer, string> PassesCheck { get; } =
-        Spec.Build(async (Customer c) => { await Task.Yield(); return c.IsActive; })
+        Spec.BuildAsync(async (Customer c) => { await Task.Yield(); return c.IsActive; })
             .WhenTrue("passes").WhenFalse("fails").Create();
 
     private static (PropositionSet Set, BindingScope Scope, InMemoryPropositionStore Store) NewSet()
@@ -2728,10 +2728,12 @@ public sealed class PropositionSet
 
             var isAsync = References.Any(reference => prospective.Find(reference) is { IsAsync: true });
             var entry = model.Bind(prospective, Name, Description, document, isAsync, errors);
-            return entry is null ? null : new Commit(this, entry);
+            return entry is null ? null : new RebindCommit(this, entry);
         }
 
-        private sealed class Commit(Authored authored, SpecRegistryEntry entry) : IRebindCommit
+        // Named RebindCommit rather than Commit: a nested type may not share its name with a member
+        // it declares, and this one declares Commit() (CS0542).
+        private sealed class RebindCommit(Authored authored, SpecRegistryEntry entry) : IRebindCommit
         {
             public SpecRegistryEntry? OverlayEntry => entry;
 
@@ -3305,7 +3307,7 @@ public class RuleCascadeTests
         Spec.Build((Customer c) => c.Age >= 18).WhenTrue("adult").WhenFalse("minor").Create();
 
     private static AsyncSpecBase<Customer, string> PassesCheck { get; } =
-        Spec.Build(async (Customer c) => { await Task.Yield(); return c.IsActive; })
+        Spec.BuildAsync(async (Customer c) => { await Task.Yield(); return c.IsActive; })
             .WhenTrue("passes").WhenFalse("fails").Create();
 
     private sealed class CanCheckoutRule() : Rule<Customer, string>("can-checkout", IsActive);
