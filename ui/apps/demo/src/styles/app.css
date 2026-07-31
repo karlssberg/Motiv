@@ -1160,3 +1160,132 @@ button.node-dsl {
   color: var(--faint);
 }
 .node-insert:hover { color: var(--accent); }
+
+/* ---------------------------------------------------------------------------
+   Proposition explorer — the namespaced tree rail on the propositions page.
+   Indentation is driven by a --depth custom property set per node, so nesting
+   needs no per-level selectors.
+
+   Surfaces reuse the app's existing tokens rather than adding a parallel scale:
+   --sh-inset is the resting/hover fill (as in .tab.active), --accent-weak the
+   "this one" tint (as in .dsl-badge), and --danger the single problem colour
+   (as in .error) — there is no separate warning tier.
+   --------------------------------------------------------------------------- */
+.explorer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+  min-width: 0;
+  padding: calc(var(--space) * 1.5);
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+}
+
+.explorer-header {
+  display: flex;
+  gap: var(--space);
+}
+
+.explorer-search {
+  flex: 1;
+  min-width: 0;
+}
+
+.explorer-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--space) / 2);
+}
+
+.explorer-count {
+  margin-left: auto;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+/* A model chip that is filtering. Selected on the ARIA attribute the button already carries, so
+   the toggled state is stated once — the same approach as .node-select[aria-pressed='true']. */
+.model-pill[aria-pressed='true'] {
+  background: var(--accent-weak);
+  border-color: var(--accent);
+}
+
+.explorer-tree,
+.explorer-tree ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.explorer-node {
+  --depth: 0;
+}
+
+.explorer-leaf,
+.explorer-namespace {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) / 2);
+  padding: 2px calc(var(--space) / 2);
+  padding-left: calc(var(--space) / 2 + var(--depth) * var(--space) * 1.5);
+  border-radius: var(--radius);
+}
+
+.explorer-leaf {
+  cursor: pointer;
+}
+
+.explorer-leaf:hover {
+  background: var(--sh-inset);
+}
+
+.explorer-namespace {
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.explorer-node[aria-selected='true'] > .explorer-leaf {
+  background: var(--accent-weak);
+}
+
+.origin-badge,
+.quarantine-badge {
+  font-size: 0.7rem;
+  padding: 0 4px;
+  border-radius: var(--radius);
+  opacity: 0.75;
+}
+
+/* Quarantine reads as a problem and stacks with the origin badge rather than replacing it —
+   an overridden proposition can also be quarantined. */
+.quarantine-badge {
+  background: color-mix(in srgb, var(--danger) 15%, transparent);
+  color: var(--danger);
+  opacity: 1;
+}
+
+.explorer-empty {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.explorer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space);
+  margin-top: auto;
+  padding-top: var(--space);
+  border-top: 1px solid var(--border);
+}
+
+/* The propositions page adds a rail ahead of the three panes. */
+.shell-body.with-rail {
+  grid-template-columns: minmax(14rem, 20rem) repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 60rem) {
+  .shell-body.with-rail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
