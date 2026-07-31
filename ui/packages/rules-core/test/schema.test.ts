@@ -58,7 +58,7 @@ const customerModelSchema: JsonSchema = {
 describe('Catalog schema maps typing', () => {
   it('a catalog carries metadataTypes and modelTypes keyed by existing names', () => {
     const catalog: Catalog = {
-      specs: [{ name: 'is-adult', modelType: 'customer', metadataType: 'Verdict', isAsync: false }],
+      specs: [{ name: 'is-adult', modelType: 'customer', metadataType: 'Verdict', isAsync: false, origin: 'Compiled' }],
       collections: [],
       metadataTypes: { String: stringMetadataSchema, Verdict: verdictMetadataSchema },
       modelTypes: { customer: customerModelSchema },

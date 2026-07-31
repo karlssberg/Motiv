@@ -179,4 +179,104 @@ describe('RulesApiClient', () => {
       globalThis.fetch = original;
     }
   });
+
+  it('lists propositions', async () => {
+    const entries = [{
+      name: 'customer.is-active', modelType: 'customer', metadataType: 'String',
+      isAsync: false, origin: 'Compiled', version: 0, description: null, quarantine: [],
+    }];
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(entries));
+    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock });
+
+    const result = await client.listPropositions();
+
+    expect(result).toEqual(entries);
+    expect(fetchMock).toHaveBeenCalledWith('/api/rules/propositions', { method: 'GET' });
+  });
+
+  it('encodes a dotted name in the path', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({
+      document: null, version: 0, origin: 'Compiled', hasCompiledDefault: true,
+    }));
+    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock });
+
+    await client.getProposition('customer.eligibility.is-active');
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/rules/propositions/customer.eligibility.is-active', { method: 'GET' });
+  });
+
+  it('creates a proposition and reports the new version', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ version: 1 }, 201));
+    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock });
+
+    const result = await client.createProposition({
+      name: 'customer.derived', modelType: 'customer',
+      document: { rule: { spec: 'customer.is-active' } }, description: null,
+    });
+
+    expect(result).toEqual({ outcome: 'saved', version: 1 });
+  });
+
+  it('reports a duplicate name as a typed outcome rather than throwing', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({ error: "A proposition is already authored under 'customer.derived'." }, 409));
+    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock });
+
+    const result = await client.createProposition({
+      name: 'customer.derived', modelType: 'customer',
+      document: { rule: { spec: 'customer.is-active' } }, description: null,
+    });
+
+    expect(result.outcome).toBe('nameTaken');
+  });
+
+  it('reports a stale base version as a conflict', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ currentVersion: 3 }, 409));
+    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock });
+
+    const result = await client.putProposition('customer.a', { rule: { spec: 'customer.is-active' } }, 1);
+
+    expect(result).toEqual({ outcome: 'conflict', currentVersion: 3 });
+  });
+
+  it('reports broken dependents separately from document errors', async () => {
+    const body = {
+      errors: [],
+      brokenDependents: [{ name: 'can-checkout', kind: 'rule', errors: [
+        { path: '$', code: 'AsyncSpecInSyncLoad', message: 'would not bind' }] }],
+    };
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(body, 400));
+    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock });
+
+    const result = await client.putProposition('customer.a', { rule: { spec: 'customer.is-active' } }, 1);
+
+    expect(result.outcome).toBe('invalid');
+    if (result.outcome !== 'invalid') throw new Error('unreachable');
+    expect(result.brokenDependents[0]!.name).toBe('can-checkout');
+    expect(result.errors).toEqual([]);
+  });
+
+  it('reports referrers blocking a delete', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ referrers: ['customer.b'] }, 409));
+    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock });
+
+    const result = await client.deleteProposition('customer.a', 1);
+
+    expect(result.outcome).toBe('referenced');
+    if (result.outcome !== 'referenced') throw new Error('unreachable');
+    expect(result.referrers).toEqual(['customer.b']);
+  });
+
+  it('gets the transitive dependents of a proposition', async () => {
+    const dependents = [{ name: 'customer.b', kind: 'proposition' }];
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ dependents }));
+    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock });
+
+    const result = await client.getDependents('customer.a');
+
+    expect(result).toEqual(dependents);
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/rules/propositions/customer.a/dependents', { method: 'GET' });
+  });
 });

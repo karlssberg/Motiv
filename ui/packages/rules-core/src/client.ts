@@ -1,5 +1,6 @@
 import type {
-  Catalog, ErrorResponse, EvaluateRequest, EvaluationResult,
+  BrokenDependent, Catalog, DependentEntry, ErrorResponse, EvaluateRequest, EvaluationResult,
+  PropositionCreateRequest, PropositionGetResponse, PropositionListEntry, PropositionSaveResult,
   RuleError, RuleGetResponse, RuleListEntry, RuleSaveResult,
   ValidateRequest, ValidationResponse,
 } from './contracts.js';
@@ -87,6 +88,93 @@ export class RulesApiClient {
       { method: 'DELETE' },
     );
     return this.#readSaveResult(response);
+  }
+
+  /** GET {baseUrl}/propositions */
+  async listPropositions(): Promise<PropositionListEntry[]> {
+    const response = await this.#fetch(`${this.#baseUrl}/propositions`, { method: 'GET' });
+    return this.#read<PropositionListEntry[]>(response);
+  }
+
+  /** GET {baseUrl}/propositions/{name} */
+  async getProposition(name: string): Promise<PropositionGetResponse> {
+    const response = await this.#fetch(
+      `${this.#baseUrl}/propositions/${encodeURIComponent(name)}`, { method: 'GET' });
+    return this.#read<PropositionGetResponse>(response);
+  }
+
+  /** POST {baseUrl}/propositions — 400/409 return typed outcomes rather than throwing. */
+  async createProposition(request: PropositionCreateRequest): Promise<PropositionSaveResult> {
+    return this.#readPropositionResult(await this.#post('/propositions', request));
+  }
+
+  /** PUT {baseUrl}/propositions/{name} — 400/409 return typed outcomes rather than throwing. */
+  async putProposition(
+    name: string, document: RuleDocument, baseVersion: number,
+  ): Promise<PropositionSaveResult> {
+    const response = await this.#fetch(
+      `${this.#baseUrl}/propositions/${encodeURIComponent(name)}`,
+      {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ document, baseVersion }),
+      },
+    );
+    return this.#readPropositionResult(response);
+  }
+
+  /**
+   * DELETE {baseUrl}/propositions/{name}?baseVersion=N — reverts to the compiled spec when one
+   * exists, otherwise removes the proposition (refused while anything references it).
+   *
+   * The 200 response is `{"version":0}` in both cases and does not say which happened; call
+   * `getProposition(name)` first and check `hasCompiledDefault` to know which outcome to expect.
+   */
+  async deleteProposition(name: string, baseVersion: number): Promise<PropositionSaveResult> {
+    const response = await this.#fetch(
+      `${this.#baseUrl}/propositions/${encodeURIComponent(name)}?baseVersion=${baseVersion}`,
+      { method: 'DELETE' },
+    );
+    return this.#readPropositionResult(response);
+  }
+
+  /** GET {baseUrl}/propositions/{name}/dependents */
+  async getDependents(name: string): Promise<DependentEntry[]> {
+    const response = await this.#fetch(
+      `${this.#baseUrl}/propositions/${encodeURIComponent(name)}/dependents`, { method: 'GET' });
+    return (await this.#read<{ dependents: DependentEntry[] }>(response)).dependents;
+  }
+
+  async #readPropositionResult(response: Response): Promise<PropositionSaveResult> {
+    if (response.ok) {
+      const body = (await response.json()) as { version: number };
+      return { outcome: 'saved', version: body.version };
+    }
+
+    const body = (await response.json().catch(() => undefined)) as
+      | { currentVersion?: number; referrers?: string[]; errors?: RuleError[];
+          brokenDependents?: BrokenDependent[]; error?: string }
+      | undefined;
+
+    if (response.status === 409) {
+      // Three different 409s share the status but not the shape, so they are told apart by body.
+      if (body && typeof body.currentVersion === 'number') {
+        return { outcome: 'conflict', currentVersion: body.currentVersion };
+      }
+      if (body?.referrers) return { outcome: 'referenced', referrers: body.referrers };
+      return { outcome: 'nameTaken' };
+    }
+
+    if (response.status === 400 && body && ('errors' in body || 'brokenDependents' in body)) {
+      return {
+        outcome: 'invalid',
+        errors: body.errors ?? [],
+        brokenDependents: body.brokenDependents ?? [],
+      };
+    }
+
+    const message = body?.error ?? `Request failed (${response.status}).`;
+    throw new RulesApiError(response.status, message);
   }
 
   #post(path: string, body: unknown): Promise<Response> {
