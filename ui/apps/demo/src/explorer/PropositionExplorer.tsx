@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties, type MouseEvent } from 'react';
+import { useMemo, useState, type CSSProperties, type KeyboardEvent, type MouseEvent } from 'react';
 import {
   buildNamespaceTree, countLeaves, filterTree,
   type NamespaceNode, type PropositionListEntry,
@@ -8,6 +8,7 @@ import {
 export interface ExplorerActions {
   onSelect: (name: string) => void;
   onDerive: (name: string) => void;
+  onOverride: (name: string) => void;
   onNew: () => void;
   onDelete: (entry: PropositionListEntry) => void;
 }
@@ -42,6 +43,13 @@ export function PropositionExplorer(props: {
   );
 
   const selectedEntry = entries.find((entry) => entry.name === selected);
+
+  // Override composes from another spec over the same model — UI propositions are
+  // composition-only, so a compiled spec whose model has no *other* spec offers nothing to build
+  // an override from, and the action must not be offered as if it did.
+  const canOverride = selectedEntry !== undefined
+    && selectedEntry.origin === 'Compiled'
+    && entries.some((entry) => entry.modelType === selectedEntry.modelType && entry.name !== selectedEntry.name);
 
   const toggleModel = (model: string): void =>
     setModels((current) =>
@@ -100,6 +108,11 @@ export function PropositionExplorer(props: {
           <button type="button" className="btn" onClick={() => actions.onDerive(selectedEntry.name)}>
             Derive from this
           </button>
+          {canOverride && (
+            <button type="button" className="btn" onClick={() => actions.onOverride(selectedEntry.name)}>
+              Override
+            </button>
+          )}
           {selectedEntry.origin !== 'Compiled' && (
             <button type="button" className="btn" onClick={() => actions.onDelete(selectedEntry)}>
               {selectedEntry.origin === 'Overridden' ? 'Revert to compiled' : 'Delete'}
@@ -114,6 +127,10 @@ export function PropositionExplorer(props: {
 /**
  * One node. A node can be both a namespace and a proposition — `customer` may be a name in its own
  * right — so the entry and the children are rendered independently rather than as an either/or.
+ *
+ * Keyboard support is intentionally minimal: Enter/Space activates the focused row, matching a
+ * click. This is not full WAI-ARIA tree navigation — there is no arrow-key movement, type-ahead,
+ * or roving tabindex — so the gap is recorded here rather than implied by the `role="tree"`.
  */
 function TreeNode(props: {
   node: NamespaceNode;
@@ -126,31 +143,59 @@ function TreeNode(props: {
   const quarantine = entry?.quarantine ?? [];
   const quarantined = quarantine.length > 0;
 
-  // The click handler lives on the treeitem itself (not a descendant span): a click event bubbles
-  // from its target up through ancestors, never down into children, so a handler placed only on an
-  // inner span would never fire when the treeitem element is the click target. Only a node that
-  // *is* a proposition is selectable; a bare namespace is scaffolding, so its handler must be
-  // `undefined` — not a no-op — so nothing runs at all. `stopPropagation` keeps a node that is both
-  // a namespace and a proposition from also re-triggering an ancestor's handler when one of its own
-  // descendants is clicked.
-  const select = entry
-    ? (event: MouseEvent<HTMLLIElement>): void => { event.stopPropagation(); onSelect(entry.name); }
-    : undefined;
+  // Only a node that *is* a proposition is selectable; a bare namespace is scaffolding.
+  const activate = (): void => {
+    if (entry) onSelect(entry.name);
+  };
+
+  // The click handler always lives on the treeitem itself (not a descendant span) and always
+  // stops propagation, even when this node has no entry. A click event bubbles from its target up
+  // through ancestors, never down into children, so a handler placed only on a descendant span
+  // would never fire when the treeitem element itself is the click target. And if a bare-namespace
+  // row simply carried no handler at all, an unhandled click would keep bubbling past it into
+  // whichever ancestor *does* have one — e.g. a dual-role namespace/proposition further up the
+  // tree — silently selecting that ancestor instead of doing nothing. Always stopping propagation
+  // here, then deciding separately whether to call `onSelect`, preserves both: nothing is selected
+  // for a bare namespace, and no click leaks past it either.
+  const handleClick = (event: MouseEvent<HTMLLIElement>): void => {
+    event.stopPropagation();
+    activate();
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLLIElement>): void => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault(); // Space must not scroll the page
+      activate();
+    }
+  };
+
+  // The accessible name is composed from this node's own segment plus its origin/quarantine state
+  // — not the segment alone — because those badges (compiled/overridden/authored, quarantined)
+  // are this task's whole deliverable, and an explicit `aria-label` overrides element content
+  // entirely in ARIA name computation. Without this, a screen reader announces only the segment
+  // and never the state the visible badges carry. (Scoping the name to this node at all — rather
+  // than leaving it to default content-based computation — is still necessary: without it, a
+  // treeitem's accessible name aggregates its whole subtree, so a namespace's name would include
+  // every leaf nested beneath it and collide with queries for those leaves.)
+  const accessibleName = entry
+    ? [node.segment, ORIGIN_LABEL[entry.origin], quarantined ? 'quarantined' : null]
+        .filter((part): part is string => part !== null)
+        .join(' ')
+    : node.segment;
 
   return (
     <li
       role="treeitem"
-      // Without this, a treeitem's accessible name aggregates its entire subtree's text (the
-      // ARIA name-from-content computation walks descendants), so a namespace node's name would
-      // include every leaf nested beneath it and collide with queries for those leaves. Scoping
-      // the name to this node's own segment is the standard remedy, not a structural change.
-      aria-label={node.segment}
+      aria-label={accessibleName}
       aria-selected={entry?.name === selected}
       aria-expanded={node.children.length > 0 ? true : undefined}
+      // Only a proposition is focusable; a bare namespace stays out of the tab order entirely.
+      tabIndex={entry ? 0 : undefined}
       className="explorer-node"
       style={{ '--depth': depth } as CSSProperties}
       title={quarantined ? quarantine.map((error) => error.message).join('\n') : undefined}
-      onClick={select}
+      onClick={handleClick}
+      onKeyDown={entry ? handleKeyDown : undefined}
     >
       <span className={entry ? 'explorer-leaf' : 'explorer-namespace'}>
         <span className="explorer-segment">{node.segment}</span>

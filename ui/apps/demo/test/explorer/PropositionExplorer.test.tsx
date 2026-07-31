@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { PropositionListEntry } from '@motiv/rules-core';
 import { PropositionExplorer } from '../../src/explorer/PropositionExplorer.js';
@@ -20,7 +20,9 @@ const ENTRIES = [
 ];
 
 function renderExplorer(overrides: Partial<Parameters<typeof PropositionExplorer>[0]> = {}) {
-  const actions = { onSelect: vi.fn(), onDerive: vi.fn(), onNew: vi.fn(), onDelete: vi.fn() };
+  const actions = {
+    onSelect: vi.fn(), onDerive: vi.fn(), onOverride: vi.fn(), onNew: vi.fn(), onDelete: vi.fn(),
+  };
   render(
     <PropositionExplorer entries={ENTRIES} selected={null} actions={actions} {...overrides} />,
   );
@@ -154,5 +156,98 @@ describe('PropositionExplorer', () => {
     await userEvent.type(screen.getByRole('searchbox', { name: /filter/i }), 'zzz');
 
     expect(screen.getByText(/no propositions match/i)).toBeTruthy();
+  });
+
+  it('does not let a click on an unselectable middle row bubble into a selectable ancestor', async () => {
+    // customer (dual role: namespace AND proposition) > customer.risk (bare namespace, no entry
+    // of its own) > customer.risk.is-fraudulent (leaf). Clicking the *middle* row must not select
+    // the ancestor — an unhandled click on a bare namespace must not bubble into whichever
+    // ancestor happens to have a handler.
+    const actions = renderExplorer({
+      entries: [
+        entry({ name: 'customer', modelType: 'customer' }),
+        entry({ name: 'customer.risk.is-fraudulent' }),
+      ],
+    });
+
+    await userEvent.click(screen.getByRole('treeitem', { name: /^risk/ }));
+
+    expect(actions.onSelect).not.toHaveBeenCalled();
+  });
+
+  it('composes the accessible name from segment, origin and quarantine state', () => {
+    // aria-label overrides content in ARIA name computation, so origin/quarantine — the badges
+    // that are this task's whole deliverable — must be composed into the name explicitly, or an
+    // assistive-tech user gets none of it.
+    renderExplorer({
+      entries: [entry({
+        name: 'customer.eligibility.is-active',
+        origin: 'Overridden',
+        quarantine: [{ path: '$', code: 'UnknownSpec', message: 'gone' }],
+      })],
+    });
+
+    const leaf = screen.getByRole('treeitem', { name: /is-active/ });
+    expect(leaf.getAttribute('aria-label')).toContain('overridden');
+    expect(leaf.getAttribute('aria-label')).toContain('quarantined');
+  });
+
+  it('activates a focused leaf via Enter', () => {
+    const actions = renderExplorer();
+    const leaf = screen.getByRole('treeitem', { name: /is-fraudulent/ });
+
+    leaf.focus();
+    fireEvent.keyDown(leaf, { key: 'Enter' });
+
+    expect(actions.onSelect).toHaveBeenCalledWith('customer.risk.is-fraudulent');
+  });
+
+  it('activates a focused leaf via Space, and prevents the page from scrolling', () => {
+    const actions = renderExplorer();
+    const leaf = screen.getByRole('treeitem', { name: /is-fraudulent/ });
+    leaf.focus();
+
+    // fireEvent returns false exactly when preventDefault() was called on the dispatched event.
+    const notPrevented = fireEvent.keyDown(leaf, { key: ' ' });
+
+    expect(actions.onSelect).toHaveBeenCalledWith('customer.risk.is-fraudulent');
+    expect(notPrevented).toBe(false);
+  });
+
+  it('keeps a bare namespace out of the tab order', () => {
+    renderExplorer();
+
+    const namespaceNode = screen.getByRole('treeitem', { name: /^customer/ });
+    expect(namespaceNode.getAttribute('tabindex')).toBeNull();
+  });
+
+  it('puts a selectable leaf in the tab order', () => {
+    renderExplorer();
+
+    const leaf = screen.getByRole('treeitem', { name: /is-fraudulent/ });
+    expect(leaf.getAttribute('tabindex')).toBe('0');
+  });
+
+  it('offers Override for a compiled entry whose model has a sibling spec', () => {
+    renderExplorer({ selected: 'customer.eligibility.is-active' });
+
+    expect(screen.getByRole('button', { name: /^override/i })).toBeTruthy();
+  });
+
+  it('does not offer Override for a compiled entry that is the only spec of its model', () => {
+    renderExplorer({
+      entries: [entry({ name: 'order.is-large', modelType: 'order', origin: 'Compiled', version: 0 })],
+      selected: 'order.is-large',
+    });
+
+    expect(screen.queryByRole('button', { name: /^override/i })).toBeNull();
+  });
+
+  it('calls onOverride with the selected name', async () => {
+    const actions = renderExplorer({ selected: 'customer.eligibility.is-active' });
+
+    await userEvent.click(screen.getByRole('button', { name: /^override/i }));
+
+    expect(actions.onOverride).toHaveBeenCalledWith('customer.eligibility.is-active');
   });
 });
