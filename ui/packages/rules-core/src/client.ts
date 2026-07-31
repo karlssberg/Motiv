@@ -14,6 +14,15 @@ export interface RulesApiClientOptions {
   fetch?: typeof fetch;
 }
 
+/** The union of shapes a failed proposition write's body can take (see `#readPropositionResult`). */
+interface PropositionErrorBody {
+  currentVersion?: number;
+  referrers?: string[];
+  errors?: RuleError[];
+  brokenDependents?: BrokenDependent[];
+  error?: string;
+}
+
 /** Thrown when the API returns a non-2xx response. */
 export class RulesApiError extends Error {
   readonly status: number;
@@ -99,13 +108,16 @@ export class RulesApiClient {
   /** GET {baseUrl}/propositions/{name} */
   async getProposition(name: string): Promise<PropositionGetResponse> {
     const response = await this.#fetch(
-      `${this.#baseUrl}/propositions/${encodeURIComponent(name)}`, { method: 'GET' });
+      `${this.#baseUrl}/propositions/${encodeURIComponent(name)}`,
+      { method: 'GET' },
+    );
     return this.#read<PropositionGetResponse>(response);
   }
 
   /** POST {baseUrl}/propositions — 400/409 return typed outcomes rather than throwing. */
   async createProposition(request: PropositionCreateRequest): Promise<PropositionSaveResult> {
-    return this.#readPropositionResult(await this.#post('/propositions', request));
+    const response = await this.#post('/propositions', request);
+    return this.#readPropositionResult(response);
   }
 
   /** PUT {baseUrl}/propositions/{name} — 400/409 return typed outcomes rather than throwing. */
@@ -141,40 +153,10 @@ export class RulesApiClient {
   /** GET {baseUrl}/propositions/{name}/dependents */
   async getDependents(name: string): Promise<DependentEntry[]> {
     const response = await this.#fetch(
-      `${this.#baseUrl}/propositions/${encodeURIComponent(name)}/dependents`, { method: 'GET' });
+      `${this.#baseUrl}/propositions/${encodeURIComponent(name)}/dependents`,
+      { method: 'GET' },
+    );
     return (await this.#read<{ dependents: DependentEntry[] }>(response)).dependents;
-  }
-
-  async #readPropositionResult(response: Response): Promise<PropositionSaveResult> {
-    if (response.ok) {
-      const body = (await response.json()) as { version: number };
-      return { outcome: 'saved', version: body.version };
-    }
-
-    const body = (await response.json().catch(() => undefined)) as
-      | { currentVersion?: number; referrers?: string[]; errors?: RuleError[];
-          brokenDependents?: BrokenDependent[]; error?: string }
-      | undefined;
-
-    if (response.status === 409) {
-      // Three different 409s share the status but not the shape, so they are told apart by body.
-      if (body && typeof body.currentVersion === 'number') {
-        return { outcome: 'conflict', currentVersion: body.currentVersion };
-      }
-      if (body?.referrers) return { outcome: 'referenced', referrers: body.referrers };
-      return { outcome: 'nameTaken' };
-    }
-
-    if (response.status === 400 && body && ('errors' in body || 'brokenDependents' in body)) {
-      return {
-        outcome: 'invalid',
-        errors: body.errors ?? [],
-        brokenDependents: body.brokenDependents ?? [],
-      };
-    }
-
-    const message = body?.error ?? `Request failed (${response.status}).`;
-    throw new RulesApiError(response.status, message);
   }
 
   #post(path: string, body: unknown): Promise<Response> {
@@ -209,6 +191,35 @@ export class RulesApiClient {
       throw new RulesApiError(response.status, message);
     }
     return this.#read<never>(response); // 404 etc. → RulesApiError as elsewhere
+  }
+
+  async #readPropositionResult(response: Response): Promise<PropositionSaveResult> {
+    if (response.ok) {
+      const body = (await response.json()) as { version: number };
+      return { outcome: 'saved', version: body.version };
+    }
+
+    const body = (await response.json().catch(() => undefined)) as PropositionErrorBody | undefined;
+
+    if (response.status === 409) {
+      // Three different 409s share the status but not the shape, so they are told apart by body.
+      if (body && typeof body.currentVersion === 'number') {
+        return { outcome: 'conflict', currentVersion: body.currentVersion };
+      }
+      if (body?.referrers) return { outcome: 'referenced', referrers: body.referrers };
+      return { outcome: 'nameTaken' };
+    }
+
+    if (response.status === 400 && body && 'errors' in body) {
+      return {
+        outcome: 'invalid',
+        errors: body.errors ?? [],
+        brokenDependents: body.brokenDependents ?? [],
+      };
+    }
+
+    const message = body?.error ?? `Request failed (${response.status}).`;
+    throw new RulesApiError(response.status, message);
   }
 
   async #read<T>(response: Response): Promise<T> {
