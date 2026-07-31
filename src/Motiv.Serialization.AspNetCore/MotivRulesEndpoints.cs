@@ -38,15 +38,6 @@ public static class MotivRulesEndpoints
         var json = options.JsonSerializerOptions;
         var group = endpoints.MapGroup(basePath);
 
-        var specs = registry.Entries
-            .Select(entry => new CatalogEntry(
-                entry.Name,
-                options.ResolveModelId(entry.ModelType),
-                entry.MetadataType.Name,
-                entry.IsAsync,
-                entry.Description))
-            .ToArray();
-
         var collections = registry.Collections
             .Select(collection => new CatalogCollection(
                 collection.Path,
@@ -69,9 +60,35 @@ public static class MotivRulesEndpoints
             .OrderBy(binding => binding.Id, StringComparer.Ordinal)
             .ToDictionary(binding => binding.Id, binding => ToSchema(json, binding.ModelType));
 
-        var catalog = new CatalogResponse(specs, collections, metadataTypes, modelTypes);
+        // Built per request rather than closed over: authoring a proposition changes the effective
+        // spec list, and a constant catalog would hide every new proposition until restart.
+        var propositions = endpoints.ServiceProvider.GetService<PropositionSet>();
 
-        group.MapGet("/catalog", () => Results.Json(catalog, json));
+        group.MapGet("/catalog", () => Results.Json(
+            new CatalogResponse(EffectiveSpecs(), collections, metadataTypes, modelTypes), json));
+
+        IReadOnlyList<CatalogEntry> EffectiveSpecs()
+        {
+            if (propositions is null)
+            {
+                return [.. registry.Entries.Select(entry => new CatalogEntry(
+                    entry.Name,
+                    options.ResolveModelId(entry.ModelType),
+                    entry.MetadataType.Name,
+                    entry.IsAsync,
+                    entry.Description,
+                    PropositionOrigin.Compiled))];
+            }
+
+            // PropositionSet.Propositions is already the layered view: compiled, overridden and
+            // authored folded into one effective listing, with quarantined entries reported as the
+            // compiled spec still resolving beneath them.
+            return [.. propositions.Propositions
+                .Where(entry => entry.Quarantine.Count == 0 || entry.Origin == PropositionOrigin.Overridden)
+                .Select(entry => new CatalogEntry(
+                    entry.Name, entry.ModelType, entry.MetadataType, entry.IsAsync,
+                    entry.Description, entry.Origin))];
+        }
 
         group.MapPost("/validate", (ValidateRequest request) =>
         {

@@ -8,6 +8,7 @@ public sealed class MotivRulesOptions
 {
     private readonly Dictionary<string, ModelBinding> _bindings = new(StringComparer.Ordinal);
     private readonly Dictionary<Type, string> _idByType = new();
+    private readonly List<Action<PropositionSet>> _propositionModels = [];
 
     /// <summary>
     /// JSON options used to read sample models and write all responses. Defaults to web (camelCase)
@@ -83,6 +84,10 @@ public sealed class MotivRulesOptions
             }
         };
         _idByType[typeof(TModel)] = id;
+
+        // Recorded as a closure so PropositionSet.AddModel<TModel> is reached with TModel intact —
+        // the alternative would be reflecting over the Type, which this codebase avoids on principle.
+        _propositionModels.Add(propositions => propositions.AddModel<TModel>(id));
         return this;
     }
 
@@ -91,6 +96,9 @@ public sealed class MotivRulesOptions
 
     /// <summary>All registered model bindings.</summary>
     internal IEnumerable<ModelBinding> ModelBindings => _bindings.Values;
+
+    /// <summary>Replays each AddModel call onto a PropositionSet, preserving the generic argument.</summary>
+    internal IEnumerable<Action<PropositionSet>> PropositionModelRegistrations => _propositionModels;
 
     /// <summary>Resolves a spec's model type to its registered id, falling back to the CLR type name.</summary>
     internal string ResolveModelId(Type modelType) =>

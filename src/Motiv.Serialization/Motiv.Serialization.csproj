@@ -19,6 +19,7 @@
 
     <ItemGroup>
         <InternalsVisibleTo Include="$(AssemblyName).Tests" />
+        <InternalsVisibleTo Include="Motiv.Serialization.AspNetCore" />
     </ItemGroup>
 
     <ItemGroup>
