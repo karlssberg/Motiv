@@ -8,13 +8,23 @@ public class PropositionCatalogTests
     /// <summary>The document authored as <c>customer.derived</c>, referencing the compiled spec.</summary>
     private const string DerivedDocument = """{ "rule": { "spec": "customer.is-active" } }""";
 
+    /// <summary>A rule document referencing the authored proposition <c>customer.derived</c>.</summary>
+    private const string DerivedRuleDocument = """{ "rule": { "spec": "customer.derived" } }""";
+
     private sealed record Customer(bool IsActive);
 
     private static SpecBase<Customer, string> IsActive { get; } =
         Spec.Build((Customer c) => c.IsActive).WhenTrue("active").WhenFalse("inactive").Create();
 
     private sealed class DerivedRule() : Rule<Customer, string>(
-        "derived-rule", RuleDocuments.FromJson("""{ "rule": { "spec": "customer.derived" } }"""));
+        "derived-rule", RuleDocuments.FromJson(DerivedRuleDocument));
+
+    /// <summary>
+    /// Enrolled on a compiled default so it binds at startup even before anything is authored;
+    /// <see cref="Should_resolve_a_proposition_set_sharing_the_rule_sets_scope"/> updates it at
+    /// runtime to reference an authored proposition.
+    /// </summary>
+    private sealed class PlaceholderRule() : Rule<Customer, string>("placeholder-rule", IsActive);
 
     private static PropositionUpdateResult AuthorDerived(IServiceProvider services) =>
         services.GetRequiredService<PropositionSet>()
@@ -39,16 +49,22 @@ public class PropositionCatalogTests
     [Fact]
     public async Task Should_resolve_a_proposition_set_sharing_the_rule_sets_scope()
     {
-        // Arrange
-        await using var app = await StartAsync(rules => rules.AddPropositions());
+        // Arrange — a rule enrolled on a compiled default (so startup never sees "customer.derived").
+        // Updating it afterward to reference a proposition authored at runtime only binds if
+        // RuleSet and PropositionSet publish into the very same BindingScope overlay — a private,
+        // unshared scope would leave "customer.derived" invisible to the RuleSet's serializer and
+        // the update would fail as an unknown spec, not merely "not throw".
+        await using var app = await StartAsync(rules => rules.AddPropositions().AddRule<PlaceholderRule>());
+        var ruleSet = app.Services.GetRequiredService<RuleSet>();
+        AuthorDerived(app.Services).Outcome.ShouldBe(PropositionUpdateOutcome.Created);
 
         // Act
-        var ruleSet = app.Services.GetRequiredService<RuleSet>();
-        var authored = AuthorDerived(app.Services);
+        var update = ruleSet.Update("placeholder-rule", DerivedRuleDocument, expectedVersion: 1);
 
-        // Assert — a shared scope is what makes the cascade atomic across both
-        authored.Outcome.ShouldBe(PropositionUpdateOutcome.Created);
-        ruleSet.ShouldNotBeNull();
+        // Assert — resolves, and the live rule now evaluates through the shared scope
+        update.Outcome.ShouldBe(RuleUpdateOutcome.Updated);
+        app.Services.GetRequiredService<PlaceholderRule>()
+            .Evaluate(new Customer(true)).Satisfied.ShouldBeTrue();
     }
 
     [Fact]
