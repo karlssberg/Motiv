@@ -1,11 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { RuleEditorStore, RulesApiClient, createValidationController } from '@motiv/rules-core';
 import { RuleEditorProvider } from '@motiv/rules-react';
-import { RuleHeader } from './panes/RuleHeader.js';
-import { EditorPane } from './panes/EditorPane.js';
-import { JsonPane } from './panes/JsonPane.js';
-import { EvaluatePane } from './panes/EvaluatePane.js';
-import { CheckoutPane } from './panes/CheckoutPane.js';
+import { useHashRoute } from './routing/useHashRoute.js';
+import { RulesPage } from './panes/RulesPage.js';
 
 const MODEL_TYPE = 'customer';
 
@@ -32,26 +29,19 @@ export function App(props: { client?: RulesApiClient; store?: RuleEditorStore })
     [store, client, isAsync],
   );
 
+  const [route, navigate] = useHashRoute();
+
   return (
     // Seam: the store hookup. RuleEditorProvider exposes the single RuleEditorStore
     // to every builder component (useRuleEditorStore / useRuleNode) below it.
     <RuleEditorProvider store={store}>
       <main className="app">
-        <RuleHeader client={client} onLoaded={(entry) => setIsAsync(entry?.isAsync ?? false)} />
-        {/*
-          Each pane below fetches GET /catalog on mount (EditorPane and EvaluatePane
-          via useCatalog, CheckoutPane directly) — and EditorPane's builder surface
-          fetches once more of its own, so up to four requests for the same static
-          payload. Deduping would mean lifting the catalog here and passing it down,
-          but each pane's self-contained wiring is a deliberate seam this demo exists
-          to show, so the duplicate requests are accepted.
-        */}
-        <div className="shell-body">
-          <EditorPane client={client} />
-          <JsonPane />
-          <EvaluatePane client={client} />
-        </div>
-        <CheckoutPane client={client} />
+        <RulesPage
+          client={client}
+          page={route.page}
+          onNavigate={(page) => navigate({ page, name: null })}
+          onLoaded={(entry) => setIsAsync(entry?.isAsync ?? false)}
+        />
       </main>
     </RuleEditorProvider>
   );

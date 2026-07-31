@@ -3,6 +3,8 @@ import type { RuleListEntry, RulesApiClient } from '@motiv/rules-core';
 import { useRuleEditor, useRuleEditorStore } from '@motiv/rules-react';
 import { ListboxPicker } from '../builder/ListboxPicker.js';
 import { MODEL_TYPE } from '../App.js';
+import type { Page } from '../routing/useHashRoute.js';
+import { AppBar } from './AppBar.js';
 
 /**
  * The picker's first entry: nothing loaded from the server, so nothing to save back to it. The
@@ -27,6 +29,8 @@ interface LoadedRule {
 export function RuleHeader(props: {
   client: RulesApiClient;
   onLoaded?: (entry: RuleListEntry | null) => void;
+  page: Page;
+  onNavigate: (page: Page) => void;
 }) {
   const store = useRuleEditorStore();
   const state = useRuleEditor(store);
@@ -82,42 +86,44 @@ export function RuleHeader(props: {
   };
 
   return (
-    <header className="appbar">
-      <div className="appbar-brand">
-        <span className="appbar-mark" aria-hidden="true">M</span>
-        <span className="appbar-wordmark">Motiv</span>
-      </div>
-      <span className="breadcrumb-sep">/</span>
-      <span className="breadcrumb-item">Eligibility rules</span>
-      <span className="breadcrumb-sep">/</span>
-      {/* The trail's leaf is the rule picker: the crumb already names the rule in force, so a
-          separate control alongside it would be the same fact stated twice. */}
-      <ListboxPicker
-        options={options}
-        value={loaded?.name ?? LOCAL_DRAFT.value}
-        onChoose={(name) => void load(name)}
-        open={picking}
-        setOpen={setPicking}
-        triggerName="rule"
-        listLabel="rules"
-        triggerClassName="breadcrumb-current"
-        listClassName="breadcrumb-menu"
-      />
-      <span className="model-pill" title="Model type the rule is validated and evaluated against">
-        {MODEL_TYPE}
-      </span>
-      <div className="appbar-fill" />
-      <div className="appbar-controls">
-        {loaded && (
-          <span className="rule-version">
-            v{loaded.version}
-            {loaded.isCodeDefault && <em> — code-defined default (builder starts fresh)</em>}
-          </span>
-        )}
-        <button type="button" className="btn" disabled={!loaded || saving} onClick={() => void save()}>
-          Save
-        </button>
-      </div>
+    <>
+      <AppBar
+        page={props.page}
+        onNavigate={props.onNavigate}
+        controls={
+          <>
+            {loaded && (
+              <span className="rule-version">
+                v{loaded.version}
+                {loaded.isCodeDefault && <em> — code-defined default (builder starts fresh)</em>}
+              </span>
+            )}
+            <button type="button" className="btn" disabled={!loaded || saving} onClick={() => void save()}>
+              Save
+            </button>
+          </>
+        }
+      >
+        <span className="breadcrumb-sep">/</span>
+        <span className="breadcrumb-item">Eligibility rules</span>
+        <span className="breadcrumb-sep">/</span>
+        {/* The trail's leaf is the rule picker: the crumb already names the rule in force, so a
+            separate control alongside it would be the same fact stated twice. */}
+        <ListboxPicker
+          options={options}
+          value={loaded?.name ?? LOCAL_DRAFT.value}
+          onChoose={(name) => void load(name)}
+          open={picking}
+          setOpen={setPicking}
+          triggerName="rule"
+          listLabel="rules"
+          triggerClassName="breadcrumb-current"
+          listClassName="breadcrumb-menu"
+        />
+        <span className="model-pill" title="Model type the rule is validated and evaluated against">
+          {MODEL_TYPE}
+        </span>
+      </AppBar>
       {conflict !== null && loaded && (
         <div role="alert" className="conflict-banner">
           Someone else saved version {conflict} of “{loaded.name}”.
@@ -126,6 +132,6 @@ export function RuleHeader(props: {
           </button>
         </div>
       )}
-    </header>
+    </>
   );
 }

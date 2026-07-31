@@ -91,6 +91,18 @@ body {
   letter-spacing: -0.01em;
 }
 
+/* Page tabs: the Rules/Propositions switch in the appbar. Reuses `.tab` from the surface tabs so
+   both switches read as the same control at two altitudes. */
+.page-tabs {
+  display: flex;
+  gap: 2px;
+  margin-left: var(--space);
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--sh-inset);
+  border: 1px solid var(--border);
+}
+
 .breadcrumb-sep {
   color: var(--faint);
   font-size: 13px;
@@ -143,9 +155,15 @@ body {
   white-space: nowrap;
 }
 
-/* Conflict banner: another writer saved a newer version */
+/*
+  Conflict banner: another writer saved a newer version. It sits below the app bar rather than
+  wrapping inside it — both pages raise it, and the propositions page's own strip sits in the same
+  place — so it is inset to the app bar's inline padding rather than being full-bleed, which keeps
+  it reading as part of the header block it belongs to.
+*/
 .conflict-banner {
-  flex-basis: 100%;
+  flex: none;
+  margin: var(--space) 14px 0;
   display: flex;
   align-items: center;
   gap: var(--space);
