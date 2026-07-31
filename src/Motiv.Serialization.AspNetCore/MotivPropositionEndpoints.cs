@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -41,6 +42,9 @@ internal static class MotivPropositionEndpoints
                 return EndpointResponses.MissingDocument(json);
             if (string.IsNullOrWhiteSpace(request.Name))
                 return Results.Json(new ErrorResponse("The request must include a name."), json, statusCode: 400);
+            if (string.IsNullOrWhiteSpace(request.ModelType))
+                return Results.Json(
+                    new ErrorResponse("The request must include a modelType."), json, statusCode: 400);
 
             var result = propositions.Create(
                 request.Name, request.ModelType, request.Document.GetRawText(), request.Description);
@@ -92,8 +96,10 @@ internal static class MotivPropositionEndpoints
             PropositionUpdateOutcome.Referenced =>
                 Results.Json(new PropositionReferencedResponse(result.Referrers), json, statusCode: 409),
             PropositionUpdateOutcome.NotFound => Unknown(name, json),
-            _ => Results.Json(
-                new CascadeFailureResponse(result.Errors, result.BrokenDependents), json, statusCode: 400)
+            PropositionUpdateOutcome.Invalid => Results.Json(
+                new CascadeFailureResponse(result.Errors, result.BrokenDependents), json, statusCode: 400),
+            _ => throw new UnreachableException(
+                $"Unhandled {nameof(PropositionUpdateOutcome)}: {result.Outcome}")
         };
 
     private static IResult Unknown(string name, JsonSerializerOptions json) =>

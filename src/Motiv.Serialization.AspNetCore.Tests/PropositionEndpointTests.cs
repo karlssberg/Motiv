@@ -77,8 +77,11 @@ public class PropositionEndpointTests
         // Act
         var response = await Create(client, "customer.derived", """{ "rule": { "spec": "customer.is-adult" } }""");
 
-        // Assert
+        // Assert — the distinguishing shape of this 409 (plain ErrorResponse, unlike the
+        // RuleConflictResponse/PropositionReferencedResponse shapes the other two 409s carry)
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        var body = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        body!.Error.ShouldContain("customer.derived");
     }
 
     [Fact]
@@ -93,6 +96,29 @@ public class PropositionEndpointTests
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task Should_reject_a_missing_model_type_with_400()
+    {
+        // Arrange — modelType omitted entirely (not merely empty), the one shape the non-required
+        // reference-type property lets through as null past model binding
+        await using var app = await StartAsync();
+        var client = app.GetTestClient();
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/rules/propositions", new
+        {
+            name = "customer.derived",
+            document = JsonDocument.Parse("""{ "rule": { "spec": "customer.is-active" } }""").RootElement,
+            description = (string?)null,
+        });
+
+        // Assert — a typed 400, not the 500 an unguarded null modelType reaching
+        // Dictionary.TryGetValue(null) inside PropositionSet.Create would produce
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        var body = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        body!.Error.ShouldContain("modelType");
     }
 
     [Fact]
@@ -307,6 +333,13 @@ public class PropositionEndpointTests
         await using var app = await StartAsync();
         var client = app.GetTestClient();
         await Create(client, "customer.is-active", """{ "rule": { "spec": "customer.is-adult" } }""");
+
+        // Assert (pre-condition) — the override is what deleting is about to revert, and
+        // HasCompiledDefault is the field a UI reads to know DELETE will revert rather than remove
+        var before = await client.GetFromJsonAsync<PropositionGetResponse>(
+            "/api/rules/propositions/customer.is-active");
+        before!.Origin.ShouldBe("Overridden");
+        before.HasCompiledDefault.ShouldBeTrue();
 
         // Act
         var response = await client.DeleteAsync("/api/rules/propositions/customer.is-active?baseVersion=1");
