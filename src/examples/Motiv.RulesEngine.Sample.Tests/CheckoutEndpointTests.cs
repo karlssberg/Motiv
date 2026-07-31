@@ -57,7 +57,7 @@ public class CheckoutEndpointTests : IClassFixture<WebApplicationFactory<Program
         var customer = new { age = 30, isActive = true, orderCount = 0 };
         (await CheckoutAsync(client, customer)).GetProperty("approved").GetBoolean().ShouldBeTrue();
         var document = JsonDocument.Parse(
-            """{ "rule": { "and": [ { "spec": "is-active" }, { "spec": "has-orders" } ] } }""").RootElement;
+            """{ "rule": { "and": [ { "spec": "customer.is-active" }, { "spec": "customer.has-orders" } ] } }""").RootElement;
 
         // Act
         var put = await client.PutAsJsonAsync("/api/rules/rules/can-checkout", new { document, baseVersion = 1 });

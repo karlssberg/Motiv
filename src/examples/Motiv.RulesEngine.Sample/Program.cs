@@ -6,28 +6,28 @@ using Motiv.Serialization.AspNetCore;
 // reference specs by these names. Descriptions surface in the /catalog response.
 var registry = new SpecRegistry()
     .Register(
-        "is-active",
+        "customer.is-active",
         Spec.Build((Customer c) => c.IsActive)
             .WhenTrue("customer is active")
             .WhenFalse("customer is inactive")
             .Create(),
         "Whether the customer account is active")
     .Register(
-        "is-adult",
+        "customer.is-adult",
         Spec.Build((Customer c) => c.Age >= 18)
             .WhenTrue("customer is an adult")
             .WhenFalse("customer is a minor")
             .Create(),
         "Whether the customer is 18 or older")
     .Register(
-        "has-orders",
+        "customer.has-orders",
         Spec.Build((Customer c) => c.OrderCount > 0)
             .WhenTrue("customer has orders")
             .WhenFalse("customer has no orders")
             .Create(),
         "Whether the customer has placed at least one order")
     .Register(
-        "is-large-order",
+        "order.is-large",
         Spec.Build((Order o) => o.Total >= 100m)
             .WhenTrue("order is large")
             .WhenFalse("order is small")
@@ -36,7 +36,7 @@ var registry = new SpecRegistry()
     // Seam: async specs register like sync ones; documents referencing them load via async
     // rules. The same spec instance also serves as FraudScreeningRule's compiled default.
     .Register(
-        "passes-credit-check",
+        "customer.passes-credit-check",
         DefaultSpecs.PassesCreditCheck,
         "Simulated async credit-bureau check");
 
@@ -65,10 +65,17 @@ if (!string.IsNullOrWhiteSpace(assignedPort) && string.IsNullOrWhiteSpace(builde
     builder.WebHost.UseUrls($"http://localhost:{assignedPort}");
 }
 
+// Seam: authored propositions. AddPropositions enables the propositions endpoints and points them
+// at a store. Propositions load before rule defaults bind, so a rule's default document may
+// reference one. The path is configurable so a container can mount it on a volume.
+var propositionsPath = builder.Configuration["Propositions:Path"]
+    ?? Path.Combine(builder.Environment.ContentRootPath, "propositions.json");
+
 // Seam: live rules. Each AddRule enrolls a sealed rule class as a DI singleton and in the
 // RuleSet behind GET/PUT/DELETE /api/rules/rules — the app executes the same instances the
 // UI hot-swaps, with optimistic-concurrency protection on writes.
 builder.Services.AddMotivRules(registry, options)
+    .AddPropositions(new JsonFilePropositionStore(propositionsPath))
     .AddRule<CanCheckoutRule>()
     .AddRule<FraudScreeningRule>()
     .AddRule<LoyaltyDiscountRule>();
