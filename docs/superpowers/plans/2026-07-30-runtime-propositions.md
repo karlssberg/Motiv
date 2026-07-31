@@ -5358,7 +5358,35 @@ cd ui && pnpm --filter @motiv/rules-core test
 
 Expected: PASS, including every pre-existing lexer, parser and printer test.
 
-- [ ] **Step 5: Typecheck**
+- [ ] **Step 5: Finish the sample rename in the demo**
+
+Task 14 renamed the sample's registered specs to dotted names but deliberately left the demo and its e2e specs alone, because until this task the lexer could not tokenize a dotted name as one word — renaming them earlier would have broken the DSL editor. **This is the step where that rename can finally be completed**, and until it is, the demo references specs the sample no longer registers.
+
+```bash
+grep -rn "is-active\|is-adult\|has-orders\|is-large-order\|passes-credit-check" ui/apps/demo/src ui/apps/demo/test ui/apps/demo/e2e
+```
+
+Update every hit that refers to the **sample's catalog** to its new name:
+
+| Old | New |
+|---|---|
+| `is-active` | `customer.is-active` |
+| `is-adult` | `customer.is-adult` |
+| `has-orders` | `customer.has-orders` |
+| `is-large-order` | `order.is-large` |
+| `passes-credit-check` | `customer.passes-credit-check` |
+
+Leave alone any hit that is an **independent fixture** — several unit tests define their own catalogs and are unrelated to the sample. Judge by whether the name is registered by that test's own fixture or expected to come from the sample host.
+
+Then run the demo's own suites, since this touches them directly:
+
+```bash
+cd ui && pnpm --filter @motiv/rules-demo test && pnpm --filter @motiv/rules-demo typecheck
+```
+
+The Playwright specs are exercised in Task 20; note here which e2e files you changed so that task knows what to expect.
+
+- [ ] **Step 6: Typecheck**
 
 ```bash
 cd ui && pnpm --filter @motiv/rules-core exec tsc --noEmit
@@ -5366,10 +5394,10 @@ cd ui && pnpm --filter @motiv/rules-core exec tsc --noEmit
 
 Expected: no output.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add ui/packages/rules-core/src/dsl/lexer.ts ui/packages/rules-core/test/
+git add ui/packages/rules-core/src/dsl/lexer.ts ui/packages/rules-core/test/ ui/apps/demo/
 git commit -m "feat(rules-core): lex dotted spec names as single words"
 ```
 
