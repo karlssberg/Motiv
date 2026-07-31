@@ -5,6 +5,9 @@ namespace Motiv.Serialization.AspNetCore.Tests;
 
 public class PropositionCatalogTests
 {
+    /// <summary>The document authored as <c>customer.derived</c>, referencing the compiled spec.</summary>
+    private const string DerivedDocument = """{ "rule": { "spec": "customer.is-active" } }""";
+
     private sealed record Customer(bool IsActive);
 
     private static SpecBase<Customer, string> IsActive { get; } =
@@ -12,6 +15,10 @@ public class PropositionCatalogTests
 
     private sealed class DerivedRule() : Rule<Customer, string>(
         "derived-rule", RuleDocuments.FromJson("""{ "rule": { "spec": "customer.derived" } }"""));
+
+    private static PropositionUpdateResult AuthorDerived(IServiceProvider services) =>
+        services.GetRequiredService<PropositionSet>()
+            .Create("customer.derived", "customer", DerivedDocument, null);
 
     private static (SpecRegistry Registry, MotivRulesOptions Options) Fixture() =>
         (new SpecRegistry().Register("customer.is-active", IsActive),
@@ -36,12 +43,11 @@ public class PropositionCatalogTests
         await using var app = await StartAsync(rules => rules.AddPropositions());
 
         // Act
-        var propositions = app.Services.GetRequiredService<PropositionSet>();
         var ruleSet = app.Services.GetRequiredService<RuleSet>();
+        var authored = AuthorDerived(app.Services);
 
         // Assert — a shared scope is what makes the cascade atomic across both
-        propositions.Create("customer.derived", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null)
-            .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
+        authored.Outcome.ShouldBe(PropositionUpdateOutcome.Created);
         ruleSet.ShouldNotBeNull();
     }
 
@@ -52,8 +58,7 @@ public class PropositionCatalogTests
         await using var app = await StartAsync(rules => rules.AddPropositions());
 
         // Act
-        var result = app.Services.GetRequiredService<PropositionSet>()
-            .Create("customer.derived", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        var result = AuthorDerived(app.Services);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Created);
@@ -65,8 +70,7 @@ public class PropositionCatalogTests
         // Arrange — a rule whose *default* document references an authored proposition only binds
         // if propositions loaded first, so this pins the startup ordering.
         var store = new InMemoryPropositionStore();
-        store.Save(new StoredProposition(
-            "customer.derived", "customer", """{ "rule": { "spec": "customer.is-active" } }""", 1, null));
+        store.Save(new StoredProposition("customer.derived", "customer", DerivedDocument, 1, null));
 
         var (registry, options) = Fixture();
         var services = new ServiceCollection();
@@ -88,9 +92,7 @@ public class PropositionCatalogTests
         // Arrange — the regression guard for the catalog being a closed-over constant
         await using var app = await StartAsync(rules => rules.AddPropositions());
         var client = app.GetTestClient();
-
-        app.Services.GetRequiredService<PropositionSet>()
-            .Create("customer.derived", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        AuthorDerived(app.Services);
 
         // Act
         var catalog = await client.GetFromJsonAsync<CatalogPeek>("/api/rules/catalog");
@@ -106,9 +108,7 @@ public class PropositionCatalogTests
         // Arrange
         await using var app = await StartAsync(rules => rules.AddPropositions());
         var client = app.GetTestClient();
-
-        app.Services.GetRequiredService<PropositionSet>()
-            .Create("customer.derived", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        AuthorDerived(app.Services);
 
         // Act
         var catalog = await client.GetFromJsonAsync<CatalogPeek>("/api/rules/catalog");

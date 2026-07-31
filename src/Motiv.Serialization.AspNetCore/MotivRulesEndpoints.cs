@@ -38,57 +38,8 @@ public static class MotivRulesEndpoints
         var json = options.JsonSerializerOptions;
         var group = endpoints.MapGroup(basePath);
 
-        var collections = registry.Collections
-            .Select(collection => new CatalogCollection(
-                collection.Path,
-                options.ResolveModelId(collection.ParentType),
-                options.ResolveModelId(collection.ElementType)))
-            .ToArray();
-
-        // Each schema is generated with the options its type is actually deserialized with —
-        // metadata payloads bind with the metadata options, models with the response options —
-        // so schema property names match real binding behavior by construction.
-        var metadataJson = options.SerializerOptions?.MetadataJsonOptions ?? JsonSerializerOptions.Default;
-
-        var metadataTypes = registry.Entries.Select(entry => entry.MetadataType)
-            .Concat(rules?.Rules.Select(rule => rule.MetadataType) ?? [])
-            .Distinct()
-            .OrderBy(type => type.Name, StringComparer.Ordinal)
-            .ToDictionary(type => type.Name, type => ToSchema(metadataJson, type));
-
-        var modelTypes = options.ModelBindings
-            .OrderBy(binding => binding.Id, StringComparer.Ordinal)
-            .ToDictionary(binding => binding.Id, binding => ToSchema(json, binding.ModelType));
-
-        // Built per request rather than closed over: authoring a proposition changes the effective
-        // spec list, and a constant catalog would hide every new proposition until restart.
-        var propositions = endpoints.ServiceProvider.GetService<PropositionSet>();
-
-        group.MapGet("/catalog", () => Results.Json(
-            new CatalogResponse(EffectiveSpecs(), collections, metadataTypes, modelTypes), json));
-
-        IReadOnlyList<CatalogEntry> EffectiveSpecs()
-        {
-            if (propositions is null)
-            {
-                return [.. registry.Entries.Select(entry => new CatalogEntry(
-                    entry.Name,
-                    options.ResolveModelId(entry.ModelType),
-                    entry.MetadataType.Name,
-                    entry.IsAsync,
-                    entry.Description,
-                    PropositionOrigin.Compiled))];
-            }
-
-            // PropositionSet.Propositions is already the layered view: compiled, overridden and
-            // authored folded into one effective listing, with quarantined entries reported as the
-            // compiled spec still resolving beneath them.
-            return [.. propositions.Propositions
-                .Where(entry => entry.Quarantine.Count == 0 || entry.Origin == PropositionOrigin.Overridden)
-                .Select(entry => new CatalogEntry(
-                    entry.Name, entry.ModelType, entry.MetadataType, entry.IsAsync,
-                    entry.Description, entry.Origin))];
-        }
+        MapCatalogEndpoint(
+            group, registry, options, rules, endpoints.ServiceProvider.GetService<PropositionSet>(), json);
 
         group.MapPost("/validate", (ValidateRequest request) =>
         {
@@ -164,6 +115,79 @@ public static class MotivRulesEndpoints
         // fails here, at startup, rather than at first request.
         return endpoints.MapMotivRules(basePath, registry, options, services.GetRequiredService<RuleSet>());
     }
+
+    /// <summary>
+    /// Maps <c>GET /catalog</c>. The collection, metadata and model listings are fixed at startup,
+    /// but the spec listing is rebuilt per request: authoring a proposition changes the effective
+    /// spec list, and a constant catalog would hide every new proposition until restart.
+    /// </summary>
+    private static void MapCatalogEndpoint(
+        RouteGroupBuilder group,
+        SpecRegistry registry,
+        MotivRulesOptions options,
+        RuleSet? rules,
+        PropositionSet? propositions,
+        JsonSerializerOptions json)
+    {
+        var collections = registry.Collections
+            .Select(collection => new CatalogCollection(
+                collection.Path,
+                options.ResolveModelId(collection.ParentType),
+                options.ResolveModelId(collection.ElementType)))
+            .ToArray();
+
+        // Each schema is generated with the options its type is actually deserialized with —
+        // metadata payloads bind with the metadata options, models with the response options —
+        // so schema property names match real binding behavior by construction.
+        var metadataJson = options.SerializerOptions?.MetadataJsonOptions ?? JsonSerializerOptions.Default;
+
+        var metadataTypes = registry.Entries.Select(entry => entry.MetadataType)
+            .Concat(rules?.Rules.Select(rule => rule.MetadataType) ?? [])
+            .Distinct()
+            .OrderBy(type => type.Name, StringComparer.Ordinal)
+            .ToDictionary(type => type.Name, type => ToSchema(metadataJson, type));
+
+        var modelTypes = options.ModelBindings
+            .OrderBy(binding => binding.Id, StringComparer.Ordinal)
+            .ToDictionary(binding => binding.Id, binding => ToSchema(json, binding.ModelType));
+
+        group.MapGet("/catalog", () => Results.Json(
+            new CatalogResponse(
+                propositions is null ? CompiledSpecs(registry, options) : EffectiveSpecs(propositions),
+                collections,
+                metadataTypes,
+                modelTypes),
+            json));
+    }
+
+    /// <summary>The compiled registry as catalog entries — the listing when propositions are not enabled.</summary>
+    private static IReadOnlyList<CatalogEntry> CompiledSpecs(SpecRegistry registry, MotivRulesOptions options) =>
+        [.. registry.Entries.Select(entry => new CatalogEntry(
+            entry.Name,
+            options.ResolveModelId(entry.ModelType),
+            entry.MetadataType.Name,
+            entry.IsAsync,
+            entry.Description,
+            PropositionOrigin.Compiled))];
+
+    /// <summary>
+    /// The layered listing: <see cref="PropositionSet.Propositions"/> already folds compiled,
+    /// overridden and authored definitions into one effective set.
+    /// </summary>
+    private static IReadOnlyList<CatalogEntry> EffectiveSpecs(PropositionSet propositions) =>
+        [.. propositions.Propositions
+            .Where(Resolves)
+            .Select(entry => new CatalogEntry(
+                entry.Name, entry.ModelType, entry.MetadataType, entry.IsAsync,
+                entry.Description, entry.Origin))];
+
+    /// <summary>
+    /// Whether a proposition still resolves to a spec. A quarantined authored proposition resolves
+    /// to nothing, so it is not listed; a quarantined override is, reported as the compiled spec
+    /// still resolving beneath it.
+    /// </summary>
+    private static bool Resolves(PropositionEntry entry) =>
+        entry.Quarantine.Count == 0 || entry.Origin != PropositionOrigin.Authored;
 
     private static void MapRuleEndpoints(RouteGroupBuilder group, RuleSet rules, MotivRulesOptions options, JsonSerializerOptions json)
     {

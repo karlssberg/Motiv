@@ -52,7 +52,7 @@ public sealed class MotivRulesBuilder
     /// <returns>This builder, to allow chained registration.</returns>
     public MotivRulesBuilder AddPropositions(IPropositionStore? store = null)
     {
-        Services.AddSingleton(store ?? new InMemoryPropositionStore());
+        Services.AddSingleton<IPropositionStore>(store ?? new InMemoryPropositionStore());
         Services.AddSingleton(provider =>
         {
             var options = provider.GetRequiredService<MotivRulesOptions>();
@@ -103,8 +103,9 @@ public static class MotivRulesServiceCollectionExtensions
             var resolvedOptions = provider.GetRequiredService<MotivRulesOptions>();
 
             // Propositions load first: a rule's *default* document may reference an authored
-            // proposition, and Add binds that default immediately.
-            provider.GetService<PropositionSet>();
+            // proposition, and Add binds that default immediately. Resolved for that side effect
+            // alone — the RuleSet reaches the same propositions through the shared BindingScope.
+            _ = provider.GetService<PropositionSet>();
 
             var rules = new RuleSet(
                 provider.GetRequiredService<BindingScope>(),
