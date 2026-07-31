@@ -9,7 +9,6 @@ export interface Route {
   name: string | null;
 }
 
-const PAGES: readonly Page[] = ['rules', 'propositions'];
 const DEFAULT_ROUTE: Route = { page: 'rules', name: null };
 
 /**
@@ -19,9 +18,11 @@ const DEFAULT_ROUTE: Route = { page: 'rules', name: null };
  */
 export function parseHash(hash: string): Route {
   const [page, ...rest] = hash.replace(/^#\/?/, '').split('/');
-  if (!page || !PAGES.includes(page as Page)) return DEFAULT_ROUTE;
+  // Compared literally rather than looked up in a list, which narrows the type on the way through
+  // and so needs no cast — an unknown page (the empty string included) falls back.
+  if (page !== 'rules' && page !== 'propositions') return DEFAULT_ROUTE;
   const name = rest.join('/');
-  return { page: page as Page, name: name === '' ? null : decodeURIComponent(name) };
+  return { page, name: name === '' ? null : decodeURIComponent(name) };
 }
 
 /** The hash for a route. Dots are left unescaped, so a namespaced name stays readable in the bar. */

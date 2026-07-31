@@ -25,18 +25,21 @@ export function AppBar(props: {
         <span className="appbar-wordmark">Motiv</span>
       </div>
       <div className="page-tabs" role="tablist" aria-label="Page">
-        {PAGES.map(({ id, label }) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={props.page === id}
-            className={props.page === id ? 'tab active' : 'tab'}
-            onClick={() => props.onNavigate(id)}
-          >
-            {label}
-          </button>
-        ))}
+        {PAGES.map(({ id, label }) => {
+          const active = props.page === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              className={active ? 'tab active' : 'tab'}
+              onClick={() => props.onNavigate(id)}
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
       {props.children}
       <div className="appbar-fill" />

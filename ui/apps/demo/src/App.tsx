@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { RuleEditorStore, RulesApiClient, createValidationController } from '@motiv/rules-core';
 import { RuleEditorProvider } from '@motiv/rules-react';
-import { useHashRoute } from './routing/useHashRoute.js';
+import { useHashRoute, type Page } from './routing/useHashRoute.js';
 import { RulesPage } from './panes/RulesPage.js';
+import { PropositionsPage } from './panes/PropositionsPage.js';
 
 const MODEL_TYPE = 'customer';
 
@@ -30,18 +31,32 @@ export function App(props: { client?: RulesApiClient; store?: RuleEditorStore })
   );
 
   const [route, navigate] = useHashRoute();
+  // Switching page always drops the selection: a rule name means nothing on the propositions page.
+  const goToPage = (page: Page): void => navigate({ page, name: null });
 
   return (
     // Seam: the store hookup. RuleEditorProvider exposes the single RuleEditorStore
     // to every builder component (useRuleEditorStore / useRuleNode) below it.
     <RuleEditorProvider store={store}>
       <main className="app">
-        <RulesPage
-          client={client}
-          page={route.page}
-          onNavigate={(page) => navigate({ page, name: null })}
-          onLoaded={(entry) => setIsAsync(entry?.isAsync ?? false)}
-        />
+        {route.page === 'propositions'
+          ? (
+            <PropositionsPage
+              client={client}
+              page={route.page}
+              selected={route.name}
+              onNavigate={goToPage}
+              onSelect={(name) => navigate({ page: 'propositions', name })}
+            />
+          )
+          : (
+            <RulesPage
+              client={client}
+              page={route.page}
+              onNavigate={goToPage}
+              onLoaded={(entry) => setIsAsync(entry?.isAsync ?? false)}
+            />
+          )}
       </main>
     </RuleEditorProvider>
   );

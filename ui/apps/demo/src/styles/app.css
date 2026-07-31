@@ -1297,13 +1297,93 @@ button.node-dsl {
   border-top: 1px solid var(--border);
 }
 
-/* The propositions page adds a rail ahead of the three panes. */
-.shell-body.with-rail {
-  grid-template-columns: minmax(14rem, 20rem) repeat(3, minmax(0, 1fr));
+/*
+  The propositions page adds a rail ahead of the three panes. `.shell-body` is a flex row (the
+  panes each take `flex: 1` from `.pane`), so the rail is sized by a flex basis rather than a grid
+  column — a `grid-template-columns` here would be inert on a flex container. It stacks at the
+  same 900px `.shell-body`/`.pane` already collapse at, so the rail and the columns it leads never
+  disagree about when the shell is narrow, and its divider moves with theirs from right to bottom.
+*/
+.shell-body.with-rail > .explorer {
+  flex: 0 0 clamp(14rem, 24%, 20rem);
 }
 
-@media (max-width: 60rem) {
-  .shell-body.with-rail {
-    grid-template-columns: minmax(0, 1fr);
+@media (max-width: 900px) {
+  .shell-body.with-rail > .explorer {
+    flex: none;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
   }
+}
+
+/* ---------------------------------------------------------------------------
+   New/Derive/Override dialog and the dependents strip.
+   --------------------------------------------------------------------------- */
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgb(0 0 0 / 45%);
+  z-index: 10;
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 1.5);
+  width: min(28rem, calc(100vw - 2rem));
+  padding: calc(var(--space) * 2);
+  border-radius: var(--radius);
+  background: var(--sh-panel);
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
+}
+
+.dialog-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.dialog-field,
+.dialog-field label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dialog-field small {
+  color: var(--muted);
+}
+
+.dialog-error {
+  margin: 0;
+  color: var(--danger);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space);
+}
+
+/* Kept in view while editing rather than sprung at save time. */
+.dependents-strip {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space);
+  padding: var(--space) 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+
+.dependents-strip ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }

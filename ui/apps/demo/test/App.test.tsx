@@ -11,6 +11,10 @@ function testClient(): RulesApiClient {
     evaluate: vi.fn(),
     listRules: vi.fn().mockResolvedValue([]),
     listPropositions: vi.fn().mockResolvedValue([]),
+    getProposition: vi.fn().mockResolvedValue({
+      document: null, version: 0, origin: 'Compiled', hasCompiledDefault: true,
+    }),
+    getDependents: vi.fn().mockResolvedValue([]),
   } as unknown as RulesApiClient;
 }
 
@@ -81,5 +85,12 @@ describe('App', () => {
 
     expect(window.location.hash).toBe('#/propositions');
     expect(await screen.findByRole('tab', { name: 'Propositions', selected: true })).toBeTruthy();
+  });
+
+  it('opens straight onto the propositions page from a deep link', async () => {
+    window.location.hash = '#/propositions/customer.is-active';
+    renderApp();
+
+    expect(await screen.findByRole('complementary', { name: 'Propositions' })).toBeTruthy();
   });
 });
