@@ -6,6 +6,7 @@ import {
 } from '@codemirror/language';
 import type { StreamParser, StringStream } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
+import { PARAM_REST_CHARS, WORD_REST_CHARS, WORD_START_CHARS } from '@motiv/rules-core';
 
 /** The DSL's reserved words, in the order they are offered for completion. */
 export const DSL_KEYWORDS = ['param', 'in', 'as'] as const;
@@ -18,9 +19,17 @@ export const DSL_TYPES = ['integer', 'number', 'string', 'boolean'] as const;
 const KEYWORD_LIKE: ReadonlySet<string> = new Set([...DSL_KEYWORDS, ...DSL_QUANTIFIERS]);
 const TYPES: ReadonlySet<string> = new Set(DSL_TYPES);
 
-/** Word shapes, mirroring the core lexer: a letter or `_`, then letters, digits, `-` or `_`. */
-const WORD_START = /[A-Za-z_]/;
-const WORD_REST = /[A-Za-z0-9_-]/;
+/**
+ * Word shapes, built from the core lexer's exported character classes rather than hand-copied —
+ * a hand-copy is exactly how this stream parser drifted out of sync with `tokenize` before: dots
+ * were admitted to spec words in `@motiv/rules-core`'s lexer, and this file's own copies of
+ * `WORD_START`/`WORD_REST` silently kept the old, non-dotted shape.
+ */
+const WORD_START = new RegExp(`[${WORD_START_CHARS}]`);
+const WORD_REST = new RegExp(`[${WORD_REST_CHARS}]`);
+/** A parameter reference's continuation — narrower than {@link WORD_REST}, same reasoning as the
+ * core lexer's `PARAM_REST`: parameters aren't namespaced, so a dot after one is not part of it. */
+const PARAM_REST = new RegExp(`[${PARAM_REST_CHARS}]`);
 const DIGIT = /[0-9]/;
 
 /** Consumes the rest of a delimited literal; an unterminated one simply runs to end-of-line. */
@@ -57,7 +66,7 @@ export const motivStreamParser: StreamParser<unknown> = {
     if (char === ':' || char === '=') return 'punctuation';
     if (char === '"') { skipDelimited(stream, '"'); return 'string'; }
     if (char === '`') { skipDelimited(stream, '`'); return 'string.special'; }
-    if (char === '@') { stream.eatWhile(WORD_REST); return 'variableName.special'; }
+    if (char === '@') { stream.eatWhile(PARAM_REST); return 'variableName.special'; }
 
     // A `-` starts a number only when a digit follows; elsewhere it is part of a spec word
     // (consumed whole below) or an unrecognised character.

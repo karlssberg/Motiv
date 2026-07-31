@@ -5,12 +5,32 @@ const TYPES = new Set(['integer', 'number', 'string', 'boolean']);
 const QUANTIFIERS = new Set(['all', 'any', 'exactly', 'atLeast', 'atMost']);
 
 /**
+ * Character classes (as `[...]`-ready fragments, no brackets) for a DSL word. Exported so that
+ * anything outside this module needing to recognise or complete a word — the demo's CodeMirror
+ * stream parser and its completion source, currently — composes its own regex from these instead
+ * of hand-copying the character classes. That copying is exactly how they drifted out of sync
+ * with this lexer when dots were admitted below: both `WORD_START`/`WORD_REST` and their demo
+ * duplicates needed the same edit, and only one side got it.
+ */
+export const WORD_START_CHARS = 'A-Za-z_';
+/**
  * Words are spec-shaped: a letter followed by letters, digits, hyphens or underscores — plus dots,
  * which namespace a spec name (`customer.eligibility.is-active`). A dot cannot be stolen from a
  * numeric literal, because numbers are lexed before words.
  */
-const WORD_START = /[A-Za-z_]/;
-const WORD_REST = /[A-Za-z0-9_.-]/;
+export const WORD_REST_CHARS = 'A-Za-z0-9_.-';
+/**
+ * A parameter reference's continuation, deliberately narrower than {@link WORD_REST_CHARS}:
+ * parameters aren't namespaced, so `@minOrders.foo` is a paramRef followed by a syntax error, not
+ * one dotted reference. Giving it this separate class (rather than reusing `WORD_REST_CHARS`, as
+ * this lexer once did) keeps that a decision instead of an accidental widening that rides along
+ * whenever the spec-word class changes.
+ */
+export const PARAM_REST_CHARS = 'A-Za-z0-9_-';
+
+const WORD_START = new RegExp(`[${WORD_START_CHARS}]`);
+const WORD_REST = new RegExp(`[${WORD_REST_CHARS}]`);
+const PARAM_REST = new RegExp(`[${PARAM_REST_CHARS}]`);
 const DIGIT = /[0-9]/;
 
 function wordKind(word: string): TokenKind {
@@ -64,7 +84,7 @@ export function tokenize(text: string): Token[] {
 
     if (char === '@') {
       let j = i + 1;
-      while (j < text.length && WORD_REST.test(text[j]!)) j++;
+      while (j < text.length && PARAM_REST.test(text[j]!)) j++;
       push('paramRef', i, j); i = j; continue;
     }
 

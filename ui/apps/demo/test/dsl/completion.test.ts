@@ -9,6 +9,7 @@ const CATALOG: Catalog = {
     { name: 'is-active', modelType: 'customer', metadataType: 'String', isAsync: false, description: 'Currently active.' },
     { name: 'is-positive', modelType: 'order', metadataType: 'String', isAsync: false, description: 'Above zero.' },
     { name: 'is-premium', modelType: 'customer', metadataType: 'String', isAsync: true, description: 'Premium tier.' },
+    { name: 'customer.has-orders', modelType: 'customer', metadataType: 'String', isAsync: false, description: 'Has placed an order.' },
   ],
   collections: [{ path: 'orders', parentModelType: 'customer', elementModelType: 'order' }],
 };
@@ -66,5 +67,14 @@ describe('createMotivCompletion', () => {
 
   it('returns null when there is no word to complete', () => {
     expect(complete('is-active ')).toBeNull();
+  });
+
+  it('offers a dotted spec once the prefix continues past its namespace dot', () => {
+    const labels = complete('customer.has-')?.options.map((o) => o.label);
+    expect(labels).toContain('customer.has-orders');
+  });
+
+  it('anchors a dotted completion at the start of the whole dotted word', () => {
+    expect(complete('customer.has-')?.from).toBe(0);
   });
 });

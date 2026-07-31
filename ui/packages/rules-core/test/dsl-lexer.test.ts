@@ -141,4 +141,17 @@ describe('tokenize', () => {
 
     expect(tokens.map((token) => token.kind)).toEqual(['quantifier', 'spec']);
   });
+
+  it('does not let a parameter reference admit a dot', () => {
+    // Params aren't namespaced, so a dot after one is a syntax error, not a continuation —
+    // admitting it here would be an accidental widening riding along on the shared word
+    // character class rather than a deliberate grammar decision.
+    const tokens = tokenize('@minOrders.foo');
+
+    expect(tokens.map((token) => [token.kind, token.value])).toEqual([
+      ['paramRef', '@minOrders'],
+      ['error', '.'],
+      ['spec', 'foo'],
+    ]);
+  });
 });

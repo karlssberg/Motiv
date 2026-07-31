@@ -111,6 +111,20 @@ describe('motivStreamParser', () => {
     expect(tagOf('#')).toBe('invalid');
   });
 
+  it('tags a dotted spec name as one token with no invalid tagging', () => {
+    expect(classify('customer.is-active')).toEqual([
+      { text: 'customer.is-active', tag: 'variableName' },
+    ]);
+  });
+
+  it('does not let a parameter reference admit a dot', () => {
+    expect(classify('@minOrders.foo')).toEqual([
+      { text: '@minOrders', tag: 'variableName.special' },
+      { text: '.', tag: 'invalid' },
+      { text: 'foo', tag: 'variableName' },
+    ]);
+  });
+
   it('tokenises a whole parameter declaration', () => {
     expect(classify('param minOrders: integer = 3')).toEqual([
       { text: 'param', tag: 'keyword' },
