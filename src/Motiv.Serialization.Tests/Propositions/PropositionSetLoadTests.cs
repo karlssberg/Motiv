@@ -7,6 +7,9 @@ public class PropositionSetLoadTests
     private static SpecBase<Customer, string> IsActive { get; } =
         Spec.Build((Customer c) => c.IsActive).WhenTrue("active").WhenFalse("inactive").Create();
 
+    private static SpecBase<Customer, string> IsEligible { get; } =
+        Spec.Build((Customer c) => c.IsActive).WhenTrue("eligible").WhenFalse("not eligible").Create();
+
     private static StoredProposition Stored(string name, string documentJson, int version = 1) =>
         new(name, "customer", documentJson, version, null);
 
@@ -177,6 +180,62 @@ public class PropositionSetLoadTests
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Removed);
         set.Find("customer.a").ShouldBeNull();
+    }
+
+    [Fact]
+    public void Should_quarantine_both_members_of_a_cycle_in_the_store()
+    {
+        // Arrange — a hand-edited store can contain a reference cycle that Create/Update, which run
+        // DependencyGraph.FindCycle, would have rejected outright
+        var store = new InMemoryPropositionStore();
+        store.Save(Stored("customer.is-active", """{ "rule": { "spec": "customer.is-eligible" } }"""));
+        store.Save(Stored("customer.is-eligible", """{ "rule": { "spec": "customer.is-active" } }"""));
+
+        var scope = new BindingScope(new SpecRegistry()
+            .Register("customer.is-active", IsActive)
+            .Register("customer.is-eligible", IsEligible));
+        var set = new PropositionSet(scope, store).AddModel<Customer>("customer");
+
+        // Act
+        set.Load();
+
+        // Assert — both are quarantined for the real reason, and the compiled spec beneath each
+        // name is what resolves, not a hole and not the other cyclic document
+        set.Find("customer.is-active")!.Quarantine.ShouldContain(error => error.Code == RuleErrorCode.CycleDetected);
+        set.Find("customer.is-eligible")!.Quarantine.ShouldContain(error => error.Code == RuleErrorCode.CycleDetected);
+        scope.Source.Find("customer.is-active")!.Spec.ShouldBeSameAs(IsActive);
+        scope.Source.Find("customer.is-eligible")!.Spec.ShouldBeSameAs(IsEligible);
+    }
+
+    [Fact]
+    public void Should_never_throw_when_a_stored_document_is_null()
+    {
+        // Arrange — System.Text.Json will happily populate this non-nullable property with `null`
+        // from a `"documentJson": null` row; JsonDocument.Parse(null, ...) then throws
+        // ArgumentNullException, which is not a JsonException and is not caught inside Parse itself
+        var store = new InMemoryPropositionStore();
+        store.Save(Stored("customer.a", null!));
+        var scope = new BindingScope(new SpecRegistry().Register("customer.is-active", IsActive));
+        var set = new PropositionSet(scope, store).AddModel<Customer>("customer");
+
+        // Act
+        var load = () => set.Load();
+
+        // Assert
+        load.ShouldNotThrow();
+        set.Find("customer.a")!.Quarantine.ShouldNotBeEmpty();
+    }
+
+    [Fact]
+    public void Should_quarantine_a_stored_proposition_with_an_invalid_name()
+    {
+        // Arrange — a hand-edited store is not bound by the grammar Create enforces
+        // Act
+        var (set, scope) = Load(Stored("1bad", """{ "rule": { "spec": "customer.is-active" } }"""));
+
+        // Assert
+        set.Find("1bad")!.Quarantine.ShouldContain(error => error.Code == RuleErrorCode.InvalidSpecName);
+        scope.Source.Find("1bad").ShouldBeNull();
     }
 
     private sealed record Customer(bool IsActive);

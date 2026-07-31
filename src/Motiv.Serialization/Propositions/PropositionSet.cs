@@ -246,35 +246,58 @@ public sealed class PropositionSet
     /// failing to bind is an operational reality — a redeploy renames a C# spec a saved proposition
     /// referenced — and refusing to boot would turn a stale row into an outage. Call once, before
     /// rules are added, so a rule's default document may reference an authored proposition.
+    /// Repairing a quarantined proposition via <see cref="Update"/> does not retroactively
+    /// un-quarantine anything that depended on it while it was broken — quarantine leaves no graph
+    /// edges, so those dependents are not tracked as needing a rebind and stay quarantined until they
+    /// are themselves updated.
     /// </remarks>
     public void Load() =>
         _scope.Locked(() =>
         {
             var stored = new Dictionary<string, StoredProposition>(StringComparer.Ordinal);
             var references = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
-            var parseErrors = new Dictionary<string, List<RuleError>>(StringComparer.Ordinal);
+            var quarantineErrors = new Dictionary<string, List<RuleError>>(StringComparer.Ordinal);
 
             foreach (var proposition in _store.Load())
             {
                 stored[proposition.Name] = proposition;
 
-                // Parsed up front purely to order the binding; parse failures are carried forward so
-                // the document is still listed, quarantined, rather than silently dropped.
+                // Parsed up front purely to order the binding; name and parse failures are carried
+                // forward so the document is still listed, quarantined, rather than silently dropped.
                 var errors = new List<RuleError>();
+                if (ValidateName(proposition.Name) is { } nameError)
+                    errors.Add(nameError);
+
                 var document = SafeParse(proposition.DocumentJson, errors);
                 references[proposition.Name] = document is null ? [] : DocumentReferences.From(document);
-                if (document is null || errors.Count > 0)
-                    parseErrors[proposition.Name] = errors;
+                if (errors.Count > 0)
+                    quarantineErrors[proposition.Name] = errors;
             }
 
-            foreach (var name in OrderByDependency(stored.Keys, references))
-                LoadOne(stored[name], references[name], parseErrors.GetValueOrDefault(name));
+            // A hand-edited store can contain a reference cycle that Create/Update would have
+            // rejected outright — nothing here goes through DependencyGraph.FindCycle. Every member
+            // of a detected cycle is quarantined with the real reason instead of being bound.
+            var cycles = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+            var ordered = OrderByDependency(stored.Keys, references, cycles);
+
+            foreach (var (name, cycle) in cycles)
+            {
+                if (!quarantineErrors.TryGetValue(name, out var errors))
+                    quarantineErrors[name] = errors = [];
+
+                errors.Add(new RuleError("$", RuleErrorCode.CycleDetected,
+                    $"the stored proposition '{name}' cannot be bound: {string.Join(" → ", cycle)} " +
+                    "forms a reference cycle"));
+            }
+
+            foreach (var name in ordered)
+                LoadOne(stored[name], references[name], quarantineErrors.GetValueOrDefault(name));
 
             return 0;
         });
 
     /// <summary>Binds one stored proposition, publishing it or quarantining it.</summary>
-    private void LoadOne(StoredProposition stored, IReadOnlyList<string> references, List<RuleError>? parseErrors)
+    private void LoadOne(StoredProposition stored, IReadOnlyList<string> references, List<RuleError>? quarantineErrors)
     {
         var authored = new Authored(
             this, stored.Name, stored.ModelType, stored.DocumentJson, stored.Version, stored.Description)
@@ -284,9 +307,12 @@ public sealed class PropositionSet
 
         _authored[stored.Name] = authored;
 
-        if (parseErrors is { Count: > 0 })
+        if (quarantineErrors is { Count: > 0 })
         {
-            authored.Quarantine = parseErrors;
+            // A name failure, a parse failure or a cycle already rules out binding — attempting it
+            // anyway could only succeed by resolving through a name that is itself unresolvable or
+            // by binding on top of an unresolved cyclic reference, neither of which is a real bind.
+            authored.Quarantine = quarantineErrors;
             return;
         }
 
@@ -314,6 +340,12 @@ public sealed class PropositionSet
         {
             return new RuleDocumentParser(_options).Parse(documentJson, errors);
         }
+        // JsonException from malformed JSON text is already caught and reported inside Parse itself.
+        // This catch exists for what Parse does *not* guard: most notably a `null` DocumentJson —
+        // a hand-edited or serialized-with-nulls store can produce one even though the property is
+        // typed non-nullable — which reaches JsonDocument.Parse and throws ArgumentNullException,
+        // an exception Parse's own catch does not cover. Without this catch, that null would crash
+        // startup, defeating the entire point of Load.
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
             errors.Add(new RuleError("$", RuleErrorCode.InvalidNode,
@@ -323,15 +355,25 @@ public sealed class PropositionSet
     }
 
     /// <summary>
-    /// Orders stored names so a proposition follows every stored proposition it references. Names
-    /// outside the store (compiled specs, or references that no longer resolve) are simply not edges.
+    /// Orders stored names so a proposition follows every stored proposition it references, and
+    /// records every name that participates in a reference cycle in <paramref name="cycles"/>,
+    /// keyed by name, with the full cycle path as its value. Names outside the store (compiled
+    /// specs, or references that no longer resolve) are simply not edges.
     /// </summary>
+    /// <remarks>
+    /// Cycle membership does not exclude a name from the returned order — a cyclic name is going to
+    /// be quarantined by the caller regardless of where it falls, so its position is irrelevant, and
+    /// leaving it in keeps this method a single pass instead of two.
+    /// </remarks>
     private static IReadOnlyList<string> OrderByDependency(
-        IEnumerable<string> names, IReadOnlyDictionary<string, IReadOnlyList<string>> references)
+        IEnumerable<string> names,
+        IReadOnlyDictionary<string, IReadOnlyList<string>> references,
+        Dictionary<string, IReadOnlyList<string>> cycles)
     {
         var ordered = new List<string>();
         var visited = new HashSet<string>(StringComparer.Ordinal);
-        var visiting = new HashSet<string>(StringComparer.Ordinal);
+        var path = new List<string>();
+        var onPath = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var name in names)
             Visit(name);
@@ -340,18 +382,32 @@ public sealed class PropositionSet
 
         void Visit(string name)
         {
-            // `visiting` guards a cycle in the *stored* data, which the live graph would have
-            // rejected but a hand-edited store can still contain.
-            if (!visited.Add(name) || !visiting.Add(name))
+            if (visited.Contains(name))
                 return;
 
+            if (!onPath.Add(name))
+            {
+                // A back edge to a node still on the current path is a genuine cycle: extract it from
+                // the path so every member can be quarantined with the real reason, rather than just
+                // refusing to recurse and letting the incidental UnknownSpec from an unresolved
+                // forward reference stand in for it.
+                var start = path.IndexOf(name);
+                var cycle = (IReadOnlyList<string>)[.. path.Skip(start), name];
+                foreach (var member in cycle.Distinct())
+                    cycles[member] = cycle;
+                return;
+            }
+
+            path.Add(name);
             foreach (var reference in references.GetValueOrDefault(name, []))
             {
                 if (references.ContainsKey(reference))
                     Visit(reference);
             }
+            path.RemoveAt(path.Count - 1);
+            onPath.Remove(name);
 
-            visiting.Remove(name);
+            visited.Add(name);
             ordered.Add(name);
         }
     }
