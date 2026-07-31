@@ -21,6 +21,11 @@
 - **Dependents never get a version bump.** Version tracks the *document*, not the binding.
 - **Every rule and proposition in the store binds, at all times.** An edit breaking a dependent is rejected whole.
 - **Test commands must pin a runnable TFM.** `net472` cannot run on macOS. Always `-f net10.0`.
+- **But BUILD every target.** `-f net10.0` pins which framework *runs the tests*; it does not excuse the library from compiling for the rest. `Motiv.Serialization` multi-targets `net8.0;net9.0;netstandard2.0;net10.0`, and `netstandard2.0` has no `IsExternalInit`, no `RequiredMemberAttribute` and no `CompilerFeatureRequiredAttribute` — so positional `record`s, `init` setters and `required` members all fail there without polyfills. Before committing any task that adds a type to `Motiv.Serialization`, run:
+  ```bash
+  dotnet build src/Motiv.Serialization -f netstandard2.0
+  ```
+  This was missed until Task 12 and left the target broken from Task 5 onward.
 - **Shell prelude for every `dotnet` command:**
   ```bash
   export DOTNET_ROOT=$HOME/.dotnet; export PATH=$HOME/.dotnet:$PATH
