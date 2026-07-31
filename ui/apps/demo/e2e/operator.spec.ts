@@ -11,7 +11,7 @@ test('an operator can be changed from the keyboard alone', async ({ page }) => {
 
   await page.getByRole('button', { name: 'edit expression at $.rule' }).click();
   await page.keyboard.press('ControlOrMeta+a');
-  await page.keyboard.type('is-active & is-adult');
+  await page.keyboard.type('customer.is-active & customer.is-adult');
   await page.keyboard.press('Enter');
 
   const badge = page.getByRole('combobox', { name: /^operator at \$\.rule/ });

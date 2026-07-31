@@ -12,7 +12,7 @@ const MODEL_TYPE = 'customer';
 /** The demo shell: owns the store + client, runs debounced validation, and lays out the three panes. */
 export function App(props: { client?: RulesApiClient; store?: RuleEditorStore }) {
   const store = useMemo(
-    () => props.store ?? new RuleEditorStore({ rule: { spec: 'is-active' } }),
+    () => props.store ?? new RuleEditorStore({ rule: { spec: 'customer.is-active' } }),
     [props.store],
   );
   // Seam: the transport. A RulesApiClient is the only thing that talks to the

@@ -4,7 +4,7 @@ import { test, expect, type Locator, type Page } from '@playwright/test';
 async function rootRow(page: Page): Promise<Locator> {
   await page.goto('/');
   const row = page.getByRole('button', { name: 'edit expression at $.rule' });
-  await expect(row).toHaveText('is-active');
+  await expect(row).toHaveText('customer.is-active');
   return row;
 }
 
@@ -65,20 +65,21 @@ test('focusing a row for editing leaves its text exactly where it was', async ({
 test('clicking a row places the caret where you clicked', async ({ page }) => {
   const row = await rootRow(page);
 
-  // The boundary between "is-" and "active", measured on the static text — the coordinate a user
-  // aiming at that gap would click, not a position derived from the editor that replaces it.
+  // The boundary between "customer.is-" and "active", measured on the static text — the
+  // coordinate a user aiming at that gap would click, not a position derived from the editor
+  // that replaces it.
   const gap = await row.locator('.tok-spec').evaluate((element, upTo: number) => {
     const range = document.createRange();
     range.setStart(element.firstChild!, 0);
     range.setEnd(element.firstChild!, upTo);
     const box = range.getBoundingClientRect();
     return { x: box.right, y: box.top + box.height / 2 };
-  }, 'is-'.length);
+  }, 'customer.is-'.length);
   await page.mouse.click(gap.x, gap.y);
 
   await expect(rowEditor(page)).toBeFocused();
   await page.keyboard.type('X');
-  await expect(rowEditor(page)).toHaveText('is-Xactive');
+  await expect(rowEditor(page)).toHaveText('customer.is-Xactive');
 });
 
 /**
@@ -97,7 +98,7 @@ test('committing by clicking the caret leaves the new subtree revealed', async (
   await page.keyboard.press('ControlOrMeta+a');
   // `insertText`, not `type`: a paste lands atomically and raises no completion popup, which is
   // both how this was reported and what keeps the caret click below the first commit of the row.
-  await page.keyboard.insertText('is-active & (is-active | is-adult)');
+  await page.keyboard.insertText('customer.is-active & (customer.is-active | customer.is-adult)');
 
   // Named by its accessible name rather than by class, which also asserts the premise: at the
   // moment of the press this row is still a leaf, so the caret is its detail toggle.

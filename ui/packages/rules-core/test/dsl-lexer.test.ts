@@ -100,4 +100,45 @@ describe('tokenize', () => {
       ['number', '1.2'], ['error', '.'], ['number', '3'],
     ]);
   });
+
+  it('lexes a dotted spec name as one token', () => {
+    const tokens = tokenize('customer.eligibility.is-active');
+
+    expect(tokens).toHaveLength(1);
+    expect(tokens[0]!.kind).toBe('spec');
+    expect(tokens[0]!.value).toBe('customer.eligibility.is-active');
+  });
+
+  it('lexes dotted names either side of an operator', () => {
+    const tokens = tokenize('customer.is-active & customer.is-adult');
+
+    expect(tokens.map((token) => token.value)).toEqual([
+      'customer.is-active',
+      '&',
+      'customer.is-adult',
+    ]);
+  });
+
+  it('still lexes a decimal number rather than a dotted word', () => {
+    const tokens = tokenize('2.5');
+
+    expect(tokens).toHaveLength(1);
+    expect(tokens[0]!.kind).toBe('number');
+    expect(tokens[0]!.value).toBe('2.5');
+  });
+
+  it('does not let a dotted word swallow a following number', () => {
+    const tokens = tokenize('customer.is-active 2');
+
+    expect(tokens.map((token) => [token.kind, token.value])).toEqual([
+      ['spec', 'customer.is-active'],
+      ['number', '2'],
+    ]);
+  });
+
+  it('keeps a quantifier a quantifier and a dotted word a spec', () => {
+    const tokens = tokenize('all all.things');
+
+    expect(tokens.map((token) => token.kind)).toEqual(['quantifier', 'spec']);
+  });
 });

@@ -22,15 +22,15 @@ test('the DSL surface shows the rule as text, and editing the text drives the do
   await page.goto('/');
   const content = await openDsl(page);
 
-  await expect(content).toHaveText('is-active');
+  await expect(content).toHaveText('customer.is-active');
 
-  await replaceBuffer(content, 'is-active && is-adult');
+  await replaceBuffer(content, 'customer.is-active && customer.is-adult');
 
   // The buffer debounce-commits into the store, so the JSON pane follows the text.
   // `&&` is the short-circuiting operator, so it prints as `andAlso`.
   const document = page.getByLabel('rule document');
   await expect(document).toContainText('"andAlso"');
-  await expect(document).toContainText('"is-adult"');
+  await expect(document).toContainText('"customer.is-adult"');
 });
 
 test('an unknown spec is reported as a lint diagnostic', async ({ page }) => {
@@ -48,8 +48,8 @@ test('Format reprints the buffer canonically', async ({ page }) => {
   await page.goto('/');
   const content = await openDsl(page);
 
-  await replaceBuffer(content, 'is-active     &&      is-adult');
+  await replaceBuffer(content, 'customer.is-active     &&      customer.is-adult');
   await page.getByRole('button', { name: 'Format' }).click();
 
-  await expect(content).toHaveText('is-active && is-adult');
+  await expect(content).toHaveText('customer.is-active && customer.is-adult');
 });

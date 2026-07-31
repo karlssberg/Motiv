@@ -4,9 +4,13 @@ const KEYWORDS = new Set(['param', 'in', 'as']);
 const TYPES = new Set(['integer', 'number', 'string', 'boolean']);
 const QUANTIFIERS = new Set(['all', 'any', 'exactly', 'atLeast', 'atMost']);
 
-/** Words are spec-shaped: a letter followed by letters, digits, hyphens or underscores. */
+/**
+ * Words are spec-shaped: a letter followed by letters, digits, hyphens or underscores — plus dots,
+ * which namespace a spec name (`customer.eligibility.is-active`). A dot cannot be stolen from a
+ * numeric literal, because numbers are lexed before words.
+ */
 const WORD_START = /[A-Za-z_]/;
-const WORD_REST = /[A-Za-z0-9_-]/;
+const WORD_REST = /[A-Za-z0-9_.-]/;
 const DIGIT = /[0-9]/;
 
 function wordKind(word: string): TokenKind {
