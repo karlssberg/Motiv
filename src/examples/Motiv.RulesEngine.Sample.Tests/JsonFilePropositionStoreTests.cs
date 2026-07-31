@@ -71,7 +71,7 @@ public class JsonFilePropositionStoreTests : IDisposable
     }
 
     [Fact]
-    public void Should_treat_an_unreadable_file_as_empty_rather_than_throwing()
+    public void Should_treat_a_malformed_file_as_empty_rather_than_throwing()
     {
         // Arrange — a hand-edited file must not stop the sample booting
         File.WriteAllText(_path, "{ not json");
@@ -81,5 +81,30 @@ public class JsonFilePropositionStoreTests : IDisposable
 
         // Assert
         load.ShouldNotThrow().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Should_treat_a_file_it_cannot_read_as_empty_rather_than_throwing()
+    {
+        // Arrange — a permission-denied state file must not stop the host booting. Unix-only:
+        // Windows permissions are not expressible this way and the guard skips rather than fails.
+        if (OperatingSystem.IsWindows()) return;
+
+        File.WriteAllText(_path, "[]");
+        File.SetUnixFileMode(_path, UnixFileMode.None);
+
+        try
+        {
+            // Act
+            var load = () => new JsonFilePropositionStore(_path).Load();
+
+            // Assert
+            load.ShouldNotThrow().ShouldBeEmpty();
+        }
+        finally
+        {
+            // Restore so Dispose can delete it.
+            File.SetUnixFileMode(_path, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+        }
     }
 }
