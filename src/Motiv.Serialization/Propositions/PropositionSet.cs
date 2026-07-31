@@ -144,20 +144,20 @@ public sealed class PropositionSet
                 return PropositionUpdateResult.VersionConflict(current.Version);
 
             var prepared = Prepare(name, current.ModelTypeId, documentJson, current.Description);
-            if (prepared.Errors.Count > 0)
+            if (prepared.Entry is not { } entry)
                 return PropositionUpdateResult.Invalid(prepared.Errors);
 
             var replacement = new Authored(
                 this, name, current.ModelTypeId, documentJson, current.Version + 1, current.Description)
             {
-                Bound = prepared.Entry,
+                Bound = entry,
                 References = prepared.References
             };
 
             // Bind the closure against a prospective overlay carrying the replacement, so a dependent
             // is checked against what it *would* resolve rather than what it resolves today.
             var prospective = new PropositionOverlay(_scope.Overlay);
-            prospective.Set(prepared.Entry!);
+            prospective.Set(entry);
 
             var commits = new List<IRebindCommit>();
             var broken = _scope.PrepareClosure(name, prospective, commits);
@@ -168,8 +168,8 @@ public sealed class PropositionSet
             foreach (var commit in commits)
             {
                 commit.Commit();
-                if (commit.OverlayEntry is { } entry)
-                    _scope.Overlay.Set(entry);
+                if (commit.OverlayEntry is { } commitEntry)
+                    _scope.Overlay.Set(commitEntry);
             }
 
             return PropositionUpdateResult.Updated(replacement.Version);
@@ -193,6 +193,7 @@ public sealed class PropositionSet
                 return PropositionUpdateResult.VersionConflict(current.Version);
 
             var compiled = _scope.Registry.Find(name);
+            var commits = new List<IRebindCommit>();
 
             if (compiled is null)
             {
@@ -208,24 +209,27 @@ public sealed class PropositionSet
                 var prospective = new PropositionOverlay(_scope.Overlay);
                 prospective.Remove(name);
 
-                var commits = new List<IRebindCommit>();
                 var broken = _scope.PrepareClosure(name, prospective, commits);
                 if (broken.Count > 0)
                     return PropositionUpdateResult.BreaksDependents(broken);
+            }
 
-                foreach (var commit in commits)
-                {
-                    commit.Commit();
-                    if (commit.OverlayEntry is { } entry)
-                        _scope.Overlay.Set(entry);
-                }
+            // The store is the only step in this method that can fail, so it runs first — as Publish
+            // does — keeping "all of it, or none" true even though there is no explicit rollback for
+            // the in-memory mutations, including dependent commits, that follow.
+            _store.Delete(name);
+
+            foreach (var commit in commits)
+            {
+                commit.Commit();
+                if (commit.OverlayEntry is { } entry)
+                    _scope.Overlay.Set(entry);
             }
 
             _authored.Remove(name);
             _scope.Overlay.Remove(name);
             _scope.Graph.Remove(current.Node);
             _scope.Withdraw(current.Node);
-            _store.Delete(name);
 
             return PropositionUpdateResult.Removed();
         });

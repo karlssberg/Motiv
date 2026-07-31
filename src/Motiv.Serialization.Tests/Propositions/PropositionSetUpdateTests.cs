@@ -211,6 +211,7 @@ public class PropositionSetUpdateTests
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Removed);
         set.Find("customer.is-active")!.Origin.ShouldBe(PropositionOrigin.Compiled);
         store.Load().ShouldBeEmpty();
+        Evaluate(scope, "customer.is-active", new Customer(IsActive: true, Age: 30)).ShouldBeTrue();
     }
 
     [Fact]
@@ -224,9 +225,33 @@ public class PropositionSetUpdateTests
         // Act
         var result = set.Withdraw("customer.is-active", 1);
 
-        // Assert
+        // Assert — compiled "is active" says true; the withdrawn override (not is-adult) says false,
+        // so this only passes if b genuinely rebound to the compiled spec
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Removed);
-        Evaluate(scope, "customer.b", new Customer(IsActive: true, Age: 10)).ShouldBeTrue();
+        Evaluate(scope, "customer.b", new Customer(IsActive: true, Age: 30)).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Should_reject_a_revert_that_would_break_a_dependent()
+    {
+        // Arrange — reverting to the compiled spec is still an edit, so it takes the same
+        // transactional check: the compiled spec may not satisfy every dependent.
+        var (set, scope, _) = NewSet();
+        set.Create("customer.is-active", "customer", """{ "rule": { "not": { "spec": "customer.is-adult" } } }""", null);
+        scope.Locked(() =>
+        {
+            scope.Enrol(new AlwaysBreaks(NodeId.Rule("can-checkout")));
+            scope.Graph.Set(NodeId.Rule("can-checkout"), ["customer.is-active"]);
+            return 0;
+        });
+
+        // Act
+        var result = set.Withdraw("customer.is-active", 1);
+
+        // Assert — nothing withdrawn
+        result.Outcome.ShouldBe(PropositionUpdateOutcome.Invalid);
+        result.BrokenDependents.Count.ShouldBe(1);
+        set.Find("customer.is-active")!.Origin.ShouldBe(PropositionOrigin.Overridden);
     }
 
     [Fact]
