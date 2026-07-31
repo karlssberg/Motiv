@@ -6,10 +6,10 @@ import type { Catalog } from '@motiv/rules-core';
 
 const CATALOG: Catalog = {
   specs: [
-    { name: 'is-active', modelType: 'customer', metadataType: 'String', isAsync: false, description: 'Currently active.' },
-    { name: 'is-positive', modelType: 'order', metadataType: 'String', isAsync: false, description: 'Above zero.' },
-    { name: 'is-premium', modelType: 'customer', metadataType: 'String', isAsync: true, description: 'Premium tier.' },
-    { name: 'customer.has-orders', modelType: 'customer', metadataType: 'String', isAsync: false, description: 'Has placed an order.' },
+    { name: 'is-active', modelType: 'customer', metadataType: 'String', isAsync: false, description: 'Currently active.', origin: 'Compiled' },
+    { name: 'is-positive', modelType: 'order', metadataType: 'String', isAsync: false, description: 'Above zero.', origin: 'Compiled' },
+    { name: 'is-premium', modelType: 'customer', metadataType: 'String', isAsync: true, description: 'Premium tier.', origin: 'Compiled' },
+    { name: 'customer.has-orders', modelType: 'customer', metadataType: 'String', isAsync: false, description: 'Has placed an order.', origin: 'Compiled' },
   ],
   collections: [{ path: 'orders', parentModelType: 'customer', elementModelType: 'order' }],
 };

@@ -13,6 +13,7 @@ const catalog: Catalog = {
       metadataType: 'String',
       isAsync: false,
       description: 'Whether the customer account is active',
+      origin: 'Compiled',
     },
   ],
   collections: [],

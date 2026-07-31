@@ -194,7 +194,7 @@ describe('RulesApiClient', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/rules/propositions', { method: 'GET' });
   });
 
-  it('encodes a dotted name in the path', async () => {
+  it('passes a dotted name through the path unmangled', async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({
       document: null, version: 0, origin: 'Compiled', hasCompiledDefault: true,
     }));
@@ -202,8 +202,22 @@ describe('RulesApiClient', () => {
 
     await client.getProposition('customer.eligibility.is-active');
 
+    // encodeURIComponent leaves '.' untouched — this proves dots survive rather than
+    // getting escaped to %2E, not that encoding happens at all (see the next test for that).
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/rules/propositions/customer.eligibility.is-active', { method: 'GET' });
+  });
+
+  it('encodes a name containing a character that requires escaping', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({
+      document: null, version: 0, origin: 'Compiled', hasCompiledDefault: true,
+    }));
+    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock });
+
+    await client.getProposition('customer is-active');
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/rules/propositions/customer%20is-active', { method: 'GET' });
   });
 
   it('creates a proposition and reports the new version', async () => {
@@ -215,6 +229,13 @@ describe('RulesApiClient', () => {
       document: { rule: { spec: 'customer.is-active' } }, description: null,
     });
 
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(url).toBe('/api/rules/propositions');
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body)).toEqual({
+      name: 'customer.derived', modelType: 'customer',
+      document: { rule: { spec: 'customer.is-active' } }, description: null,
+    });
     expect(result).toEqual({ outcome: 'saved', version: 1 });
   });
 
@@ -237,6 +258,12 @@ describe('RulesApiClient', () => {
 
     const result = await client.putProposition('customer.a', { rule: { spec: 'customer.is-active' } }, 1);
 
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(url).toBe('/api/rules/propositions/customer.a');
+    expect(init.method).toBe('PUT');
+    expect(JSON.parse(init.body)).toEqual({
+      document: { rule: { spec: 'customer.is-active' } }, baseVersion: 1,
+    });
     expect(result).toEqual({ outcome: 'conflict', currentVersion: 3 });
   });
 
@@ -258,11 +285,17 @@ describe('RulesApiClient', () => {
   });
 
   it('reports referrers blocking a delete', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ referrers: ['customer.b'] }, 409));
-    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock });
+    let requested: string | undefined;
+    const fetchSpy: typeof fetch = async (input, init) => {
+      requested = String(input);
+      expect(init?.method).toBe('DELETE');
+      return jsonResponse({ referrers: ['customer.b'] }, 409);
+    };
+    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchSpy });
 
     const result = await client.deleteProposition('customer.a', 1);
 
+    expect(requested).toBe('/api/rules/propositions/customer.a?baseVersion=1');
     expect(result.outcome).toBe('referenced');
     if (result.outcome !== 'referenced') throw new Error('unreachable');
     expect(result.referrers).toEqual(['customer.b']);

@@ -7,7 +7,7 @@ describe('useCatalog', () => {
   it('loads the catalog and reports ready', async () => {
     const catalog: Catalog = {
       specs: [
-        { name: 'is-active', modelType: 'customer', metadataType: 'String', isAsync: false, description: null },
+        { name: 'is-active', modelType: 'customer', metadataType: 'String', isAsync: false, description: null, origin: 'Compiled' },
       ],
       collections: [
         { path: 'orders', parentModelType: 'customer', elementModelType: 'order' },
