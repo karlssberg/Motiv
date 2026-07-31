@@ -33,3 +33,19 @@ internal interface IRebindCommit
     /// <summary>Publishes the prepared binding. Must not fail.</summary>
     void Commit();
 }
+
+/// <summary>
+/// The commit for a node that had nothing to rebind — a rule on its compiled default, which
+/// references nothing. Shared rather than duplicated per closed generic rule type, since it
+/// carries no rule-specific state.
+/// </summary>
+internal sealed class NoRebindCommit : IRebindCommit
+{
+    public static NoRebindCommit Instance { get; } = new();
+
+    public SpecRegistryEntry? OverlayEntry => null;
+
+    public void Commit()
+    {
+    }
+}

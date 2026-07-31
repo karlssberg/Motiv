@@ -120,6 +120,45 @@ public class Rule<TModel, TMetadata> : RuleBase
         return (snapshot.Version, snapshot.DocumentJson);
     }
 
+    internal sealed override IRebindCommit? PrepareRebind(RuleSerializer serializer, List<RuleError> errors)
+    {
+        var current = Snapshot();
+
+        // A compiled default resolves no names, so there is nothing to rebind.
+        if (current.DocumentJson is null)
+            return NoRebindCommit.Instance;
+
+        SpecBase<TModel, TMetadata> spec;
+        try
+        {
+            spec = Bind(serializer, current.DocumentJson);
+        }
+        catch (RuleSerializationException exception)
+        {
+            errors.AddRange(exception.Errors);
+            return null;
+        }
+
+        if (RequirePolicy(spec) is { } policyError)
+        {
+            errors.Add(policyError);
+            return null;
+        }
+
+        // The version is carried across unchanged: the document did not change, only what it resolves
+        // to, so bumping it would spuriously conflict with an editor's open draft.
+        return new RebindCommit(this, new State(current.DocumentJson, current.Version, spec));
+    }
+
+    /// <summary>A prepared rebind of this rule, published by swapping its state snapshot.</summary>
+    private sealed class RebindCommit(Rule<TModel, TMetadata> rule, State replacement) : IRebindCommit
+    {
+        // A rule is not referenceable from a document, so it contributes nothing to the overlay.
+        public SpecRegistryEntry? OverlayEntry => null;
+
+        public void Commit() => Volatile.Write(ref rule._state, replacement);
+    }
+
     private RuleUpdateResult Publish(State expected, State replacement)
     {
         var witnessed = Interlocked.CompareExchange(ref _state, replacement, expected);

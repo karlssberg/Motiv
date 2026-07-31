@@ -53,6 +53,13 @@ public abstract class RuleBase
     /// <summary>CAS-publishes the default back over <paramref name="expectedVersion"/>, bumping the version.</summary>
     internal abstract RuleUpdateResult TryRevert(RuleSerializer serializer, int expectedVersion);
 
+    /// <summary>
+    /// Binds the rule's current document against a prospective source without publishing, so a
+    /// proposition edit can discover that this rule would stop binding while nothing has moved yet.
+    /// Returns a no-op commit for a rule on its compiled default, which references nothing.
+    /// </summary>
+    internal abstract IRebindCommit? PrepareRebind(RuleSerializer serializer, List<RuleError> errors);
+
     /// <summary>Reads the version and document from one snapshot, so the pair is always coherent.</summary>
     internal abstract (int Version, string? DocumentJson) VersionedDocument();
 }

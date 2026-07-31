@@ -146,50 +146,27 @@ public class RuleTests
         rule.Version.ShouldBe(2);
     }
 
-    private sealed class BlockingBindRule() : Rule<Customer, string>("blocking-rule", IsActive)
-    {
-        public SemaphoreSlim BindEntered { get; } = new(0, 1);
-        public SemaphoreSlim ResumeBind { get; } = new(0, 1);
-        public volatile bool BlockNextBind;
-
-        private protected override SpecBase<Customer, string> Bind(RuleSerializer serializer, string documentJson)
-        {
-            if (BlockNextBind)
-            {
-                BlockNextBind = false;
-                BindEntered.Release();
-                ResumeBind.Wait();
-            }
-
-            return base.Bind(serializer, documentJson);
-        }
-    }
-
     [Fact]
-    public async Task Should_report_a_version_conflict_when_a_publish_loses_the_cas_race()
+    public void Should_report_a_version_conflict_when_the_expected_version_is_stale()
     {
-        // Arrange — update A passes the version precheck, then blocks inside Bind while
-        // update B publishes underneath; A's CAS must lose and report B's version.
-        var rule = new BlockingBindRule();
+        // Arrange — B saves first, so A's version-1 expectation is stale by the time it arrives.
+        // Writes serialize under the BindingScope lock, so the two can no longer interleave
+        // mid-Bind; the guarantee that matters — a stale save is refused, and told the current
+        // version — is unchanged, and is what this asserts.
+        var rule = new ActiveRule();
         var rules = new RuleSet(Registry()).Add(rule);
-        rule.BlockNextBind = true;
 
-        var updateA = Task.Run(() =>
-            rules.Update("blocking-rule", """{ "rule": { "spec": "is-active" } }""", 1));
-        await rule.BindEntered.WaitAsync();
-
-        rules.Update("blocking-rule", """{ "rule": { "not": { "spec": "is-active" } } }""", 1)
+        rules.Update("is-active-rule", """{ "rule": { "not": { "spec": "is-active" } } }""", 1)
             .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
 
         // Act
-        rule.ResumeBind.Release();
-        var outcome = await updateA;
+        var outcome = rules.Update("is-active-rule", """{ "rule": { "spec": "is-active" } }""", 1);
 
         // Assert
         outcome.Outcome.ShouldBe(RuleUpdateOutcome.VersionConflict);
         outcome.Version.ShouldBe(2);
         rule.Version.ShouldBe(2);
-        rule.Evaluate(new Customer(true)).Satisfied.ShouldBeFalse();   // B's negated document won
+        rule.Evaluate(new Customer(true)).Satisfied.ShouldBeFalse();   // B's negated document still in force
     }
 
     private sealed class FailingRevertRule() : Rule<Customer, string>(
