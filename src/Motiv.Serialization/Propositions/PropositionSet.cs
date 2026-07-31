@@ -127,6 +127,110 @@ public sealed class PropositionSet
         });
 
     /// <summary>
+    /// Replaces an authored proposition's document, rebinding everything that references it. Either
+    /// the whole closure rebinds and the new document is published, or nothing moves at all.
+    /// </summary>
+    /// <param name="name">The dot-separated name.</param>
+    /// <param name="documentJson">The replacement document.</param>
+    /// <param name="expectedVersion">The version the caller last observed.</param>
+    /// <returns>The outcome, carrying the dependents that broke when that is why it was rejected.</returns>
+    public PropositionUpdateResult Update(string name, string documentJson, int expectedVersion) =>
+        _scope.Locked(() =>
+        {
+            if (!_authored.TryGetValue(name, out var current))
+                return PropositionUpdateResult.NotFound();
+
+            if (current.Version != expectedVersion)
+                return PropositionUpdateResult.VersionConflict(current.Version);
+
+            var prepared = Prepare(name, current.ModelTypeId, documentJson, current.Description);
+            if (prepared.Errors.Count > 0)
+                return PropositionUpdateResult.Invalid(prepared.Errors);
+
+            var replacement = new Authored(
+                this, name, current.ModelTypeId, documentJson, current.Version + 1, current.Description)
+            {
+                Bound = prepared.Entry,
+                References = prepared.References
+            };
+
+            // Bind the closure against a prospective overlay carrying the replacement, so a dependent
+            // is checked against what it *would* resolve rather than what it resolves today.
+            var prospective = new PropositionOverlay(_scope.Overlay);
+            prospective.Set(prepared.Entry!);
+
+            var commits = new List<IRebindCommit>();
+            var broken = _scope.PrepareClosure(name, prospective, commits);
+            if (broken.Count > 0)
+                return PropositionUpdateResult.BreaksDependents(broken);
+
+            Publish(replacement);
+            foreach (var commit in commits)
+            {
+                commit.Commit();
+                if (commit.OverlayEntry is { } entry)
+                    _scope.Overlay.Set(entry);
+            }
+
+            return PropositionUpdateResult.Updated(replacement.Version);
+        });
+
+    /// <summary>
+    /// Withdraws an authored document. When a compiled spec lies beneath the name this reverts to it
+    /// — permitted even while referenced, because referrers keep resolving. When nothing lies beneath,
+    /// this removes the proposition outright, which is refused while anything references it.
+    /// </summary>
+    /// <param name="name">The dot-separated name.</param>
+    /// <param name="expectedVersion">The version the caller last observed.</param>
+    /// <returns>The outcome.</returns>
+    public PropositionUpdateResult Withdraw(string name, int expectedVersion) =>
+        _scope.Locked(() =>
+        {
+            if (!_authored.TryGetValue(name, out var current))
+                return PropositionUpdateResult.NotFound();
+
+            if (current.Version != expectedVersion)
+                return PropositionUpdateResult.VersionConflict(current.Version);
+
+            var compiled = _scope.Registry.Find(name);
+
+            if (compiled is null)
+            {
+                // Removal would leave referrers pointing at nothing, so direct referrers block it.
+                var referrers = _scope.Graph.Referrers(name);
+                if (referrers.Count > 0)
+                    return PropositionUpdateResult.Referenced([.. referrers.Select(node => node.Name)]);
+            }
+            else
+            {
+                // Reverting changes what referrers resolve, so it takes the same transactional check
+                // as any other edit — the compiled spec may not satisfy every dependent.
+                var prospective = new PropositionOverlay(_scope.Overlay);
+                prospective.Remove(name);
+
+                var commits = new List<IRebindCommit>();
+                var broken = _scope.PrepareClosure(name, prospective, commits);
+                if (broken.Count > 0)
+                    return PropositionUpdateResult.BreaksDependents(broken);
+
+                foreach (var commit in commits)
+                {
+                    commit.Commit();
+                    if (commit.OverlayEntry is { } entry)
+                        _scope.Overlay.Set(entry);
+                }
+            }
+
+            _authored.Remove(name);
+            _scope.Overlay.Remove(name);
+            _scope.Graph.Remove(current.Node);
+            _scope.Withdraw(current.Node);
+            _store.Delete(name);
+
+            return PropositionUpdateResult.Removed();
+        });
+
+    /// <summary>
     /// Validates the name against the registry's own grammar rather than a second copy of it — the
     /// two must agree exactly, because a document references the authored name the same way it
     /// references a compiled one.
