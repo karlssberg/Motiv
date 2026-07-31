@@ -1,6 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { buildNamespaceTree, filterTree, countLeaves } from '../src/namespaceTree.js';
+import type { NamespaceNode } from '../src/namespaceTree.js';
 import type { PropositionListEntry } from '../src/contracts.js';
+
+/** Collects the `path` of every node that carries a proposition entry. */
+function entryPaths(nodes: NamespaceNode[]): string[] {
+  return nodes.flatMap((node) => [
+    ...(node.entry ? [node.path] : []),
+    ...entryPaths(node.children),
+  ]);
+}
 
 function entry(name: string, modelType = 'customer'): PropositionListEntry {
   return {
@@ -60,6 +69,16 @@ describe('buildNamespaceTree', () => {
 
   it('returns nothing for no entries', () => {
     expect(buildNamespaceTree([])).toEqual([]);
+  });
+
+  it('gives a leading-dot name a path distinct from a same-tailed root name', () => {
+    // A leading empty segment (from a quarantined, hand-edited `.foo` name) must not collapse
+    // onto the unrelated root-level `foo` — each entry's path must uniquely identify it.
+    const tree = buildNamespaceTree([entry('.foo'), entry('foo')]);
+
+    const paths = entryPaths(tree);
+    expect(paths).toHaveLength(2);
+    expect(new Set(paths).size).toBe(2);
   });
 });
 

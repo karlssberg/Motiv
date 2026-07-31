@@ -24,15 +24,19 @@ export function buildNamespaceTree(entries: PropositionListEntry[]): NamespaceNo
   for (const entry of entries) {
     const segments = entry.name.split('.');
     let siblings = roots;
-    let path = '';
 
     for (const [index, segment] of segments.entries()) {
-      path = path === '' ? segment : `${path}.${segment}`;
+      // Built from the segments directly rather than accumulated onto a `''`-means-"nothing-yet"
+      // sentinel — that sentinel is indistinguishable from a genuinely empty leading segment (a
+      // name like `.foo`, reachable via a quarantined hand-edited store), which would otherwise
+      // collide with an unrelated root-level `foo`.
+      const path = segments.slice(0, index + 1).join('.');
       let node = siblings.find((candidate) => candidate.segment === segment);
       if (!node) {
         node = { segment, path, children: [] };
         siblings.push(node);
       }
+      // Last entry for a given name wins if the listing ever contains duplicates.
       if (index === segments.length - 1) node.entry = entry;
       siblings = node.children;
     }
@@ -45,6 +49,11 @@ export function buildNamespaceTree(entries: PropositionListEntry[]): NamespaceNo
  * Narrows the tree to nodes matching `query` (substring of the full dotted path, case-insensitive)
  * and, when `models` is non-empty, to leaves of those model types. A matching leaf keeps its
  * ancestors so its position stays legible; a namespace with no surviving descendant is dropped.
+ *
+ * When there is no filter to apply (empty `query` and no `models`), this returns the input array
+ * *by reference* rather than a copy — every other path allocates fresh nodes. A caller that holds
+ * onto a previously filtered tree across renders should be aware `filterTree(tree, '') === tree`
+ * while any other call produces a new structure.
  */
 export function filterTree(
   nodes: NamespaceNode[], query: string, models: string[] = [],
