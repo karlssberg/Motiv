@@ -37,14 +37,14 @@ public static class MotivRulesEndpoints
         var resultSerializer = new ResultSerializer();
         var json = options.JsonSerializerOptions;
         var group = endpoints.MapGroup(basePath);
+        var propositions = endpoints.ServiceProvider.GetService<PropositionSet>();
 
-        MapCatalogEndpoint(
-            group, registry, options, rules, endpoints.ServiceProvider.GetService<PropositionSet>(), json);
+        MapCatalogEndpoint(group, registry, options, rules, propositions, json);
 
         group.MapPost("/validate", (ValidateRequest request) =>
         {
             if (request.Document.ValueKind == JsonValueKind.Undefined)
-                return MissingDocument(json);
+                return EndpointResponses.MissingDocument(json);
 
             if (!options.TryGetBinding(request.ModelType, out var binding))
                 return UnknownModelType(request.ModelType, json);
@@ -59,7 +59,7 @@ public static class MotivRulesEndpoints
         group.MapPost("/evaluate", (EvaluateRequest request) =>
         {
             if (request.Document.ValueKind == JsonValueKind.Undefined)
-                return MissingDocument(json);
+                return EndpointResponses.MissingDocument(json);
 
             if (request.Model.ValueKind == JsonValueKind.Undefined)
                 return Results.Json(
@@ -86,6 +86,9 @@ public static class MotivRulesEndpoints
 
         if (rules is not null)
             MapRuleEndpoints(group, rules, options, json);
+
+        if (propositions is not null)
+            MotivPropositionEndpoints.MapPropositionEndpoints(group, propositions, json);
 
         return endpoints;
     }
@@ -207,32 +210,26 @@ public static class MotivRulesEndpoints
         {
             // FindEntry serves document and version from a single coherent snapshot.
             if (rules.FindEntry(name) is not { } entry)
-                return Results.Json(new ErrorResponse($"Unknown rule '{name}'."), json, statusCode: 404);
+                return UnknownRule(name, json);
 
-            JsonElement? document = null;
-            if (entry.DocumentJson is not null)
-            {
-                using var parsed = JsonDocument.Parse(entry.DocumentJson);
-                document = parsed.RootElement.Clone();
-            }
-
-            return Results.Json(new RuleGetResponse(document, entry.Version), json);
+            return Results.Json(
+                new RuleGetResponse(EndpointResponses.DocumentElement(entry.DocumentJson), entry.Version), json);
         });
 
         group.MapPut("/rules/{name}", (string name, RulePutRequest request) =>
         {
             if (request.Document.ValueKind == JsonValueKind.Undefined)
-                return MissingDocument(json);
+                return EndpointResponses.MissingDocument(json);
 
             if (request.BaseVersion <= 0)
-                return NonPositiveBaseVersion(json);
+                return EndpointResponses.NonPositiveBaseVersion(json);
 
             return ToResult(rules.Update(name, request.Document.GetRawText(), request.BaseVersion), name, json);
         });
 
         group.MapDelete("/rules/{name}", (string name, int baseVersion) =>
             baseVersion <= 0
-                ? NonPositiveBaseVersion(json)
+                ? EndpointResponses.NonPositiveBaseVersion(json)
                 : ToResult(rules.Revert(name, baseVersion), name, json));
     }
 
@@ -242,7 +239,7 @@ public static class MotivRulesEndpoints
             RuleUpdateOutcome.Updated => Results.Json(new RulePutResponse(outcome.Version), json),
             RuleUpdateOutcome.VersionConflict => Results.Json(new RuleConflictResponse(outcome.Version), json, statusCode: 409),
             RuleUpdateOutcome.Invalid => Results.Json(new ValidationResponse(outcome.Errors), json, statusCode: 400),
-            _ => Results.Json(new ErrorResponse($"Unknown rule '{name}'."), json, statusCode: 404)
+            _ => UnknownRule(name, json)
         };
 
     private static JsonElement ToSchema(JsonSerializerOptions options, Type type)
@@ -259,11 +256,6 @@ public static class MotivRulesEndpoints
     private static IResult UnknownModelType(string modelType, JsonSerializerOptions json) =>
         Results.Json(new ErrorResponse($"Unknown model type '{modelType}'."), json, statusCode: 400);
 
-    private static IResult MissingDocument(JsonSerializerOptions json) =>
-        Results.Json(new ErrorResponse("The request must include a document."), json, statusCode: 400);
-
-    private static IResult NonPositiveBaseVersion(JsonSerializerOptions json) =>
-        Results.Json(
-            new ErrorResponse("baseVersion must be a positive integer; versions start at 1."),
-            json, statusCode: 400);
+    private static IResult UnknownRule(string name, JsonSerializerOptions json) =>
+        Results.Json(new ErrorResponse($"Unknown rule '{name}'."), json, statusCode: 404);
 }
