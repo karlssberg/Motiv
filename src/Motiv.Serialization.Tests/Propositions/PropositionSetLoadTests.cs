@@ -1,0 +1,183 @@
+using Motiv.Serialization;
+
+namespace Motiv.Serialization.Tests.Propositions;
+
+public class PropositionSetLoadTests
+{
+    private static SpecBase<Customer, string> IsActive { get; } =
+        Spec.Build((Customer c) => c.IsActive).WhenTrue("active").WhenFalse("inactive").Create();
+
+    private static StoredProposition Stored(string name, string documentJson, int version = 1) =>
+        new(name, "customer", documentJson, version, null);
+
+    private static (PropositionSet Set, BindingScope Scope) Load(params StoredProposition[] stored)
+    {
+        var store = new InMemoryPropositionStore();
+        foreach (var proposition in stored)
+            store.Save(proposition);
+
+        var scope = new BindingScope(new SpecRegistry().Register("customer.is-active", IsActive));
+        var set = new PropositionSet(scope, store).AddModel<Customer>("customer");
+        set.Load();
+        return (set, scope);
+    }
+
+    [Fact]
+    public void Should_bind_a_stored_proposition()
+    {
+        // Act
+        var (set, scope) = Load(Stored("customer.a", """{ "rule": { "spec": "customer.is-active" } }"""));
+
+        // Assert
+        scope.Source.Find("customer.a").ShouldNotBeNull();
+        set.Find("customer.a")!.Quarantine.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Should_preserve_the_stored_version()
+    {
+        // Act
+        var (set, _) = Load(Stored("customer.a", """{ "rule": { "spec": "customer.is-active" } }""", version: 7));
+
+        // Assert — versions must survive a restart or every reader's next save would conflict
+        set.Find("customer.a")!.Version.ShouldBe(7);
+    }
+
+    [Fact]
+    public void Should_bind_dependencies_before_dependents_regardless_of_store_order()
+    {
+        // Arrange — b depends on a, deliberately stored first
+        var stored = new[]
+        {
+            Stored("customer.b", """{ "rule": { "spec": "customer.a" } }"""),
+            Stored("customer.a", """{ "rule": { "spec": "customer.is-active" } }"""),
+        };
+
+        // Act
+        var (set, scope) = Load(stored);
+
+        // Assert
+        scope.Source.Find("customer.b").ShouldNotBeNull();
+        set.Find("customer.b")!.Quarantine.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Should_quarantine_a_document_referencing_a_spec_that_no_longer_exists()
+    {
+        // Arrange — the redeploy case: the C# spec this document referenced was renamed away
+        // Act
+        var (set, scope) = Load(Stored("customer.a", """{ "rule": { "spec": "customer.removed-in-a-redeploy" } }"""));
+
+        // Assert
+        var entry = set.Find("customer.a").ShouldNotBeNull();
+        entry.Quarantine.ShouldContain(error => error.Code == RuleErrorCode.UnknownSpec);
+        scope.Source.Find("customer.a").ShouldBeNull();
+    }
+
+    [Fact]
+    public void Should_keep_the_document_of_a_quarantined_proposition_for_repair()
+    {
+        // Act
+        var (set, _) = Load(Stored("customer.a", """{ "rule": { "spec": "gone" } }"""));
+
+        // Assert
+        set.DocumentJsonOf("customer.a").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void Should_quarantine_a_dependent_of_a_quarantined_proposition()
+    {
+        // Arrange
+        var stored = new[]
+        {
+            Stored("customer.a", """{ "rule": { "spec": "gone" } }"""),
+            Stored("customer.b", """{ "rule": { "spec": "customer.a" } }"""),
+        };
+
+        // Act
+        var (set, scope) = Load(stored);
+
+        // Assert
+        set.Find("customer.b")!.Quarantine.ShouldNotBeEmpty();
+        scope.Source.Find("customer.b").ShouldBeNull();
+    }
+
+    [Fact]
+    public void Should_let_a_compiled_spec_resolve_beneath_a_quarantined_override()
+    {
+        // Arrange — a broken override must reveal the compiled spec, not a hole
+        // Act
+        var (set, scope) = Load(Stored("customer.is-active", """{ "rule": { "spec": "gone" } }"""));
+
+        // Assert
+        set.Find("customer.is-active")!.Quarantine.ShouldNotBeEmpty();
+        var entry = scope.Source.Find("customer.is-active").ShouldNotBeNull();
+        entry.Spec.ShouldBeSameAs(IsActive);
+    }
+
+    [Fact]
+    public void Should_load_the_healthy_propositions_alongside_the_quarantined_ones()
+    {
+        // Arrange — one bad row must not cost the whole store
+        var stored = new[]
+        {
+            Stored("customer.broken", """{ "rule": { "spec": "gone" } }"""),
+            Stored("customer.fine", """{ "rule": { "spec": "customer.is-active" } }"""),
+        };
+
+        // Act
+        var (set, scope) = Load(stored);
+
+        // Assert
+        scope.Source.Find("customer.fine").ShouldNotBeNull();
+        scope.Source.Find("customer.broken").ShouldBeNull();
+    }
+
+    [Fact]
+    public void Should_never_throw_on_a_malformed_stored_document()
+    {
+        // Arrange — a hand-edited JSON file must not stop the application booting
+        var store = new InMemoryPropositionStore();
+        store.Save(Stored("customer.a", "{ not json"));
+        var scope = new BindingScope(new SpecRegistry().Register("customer.is-active", IsActive));
+        var set = new PropositionSet(scope, store).AddModel<Customer>("customer");
+
+        // Act
+        var load = () => set.Load();
+
+        // Assert
+        load.ShouldNotThrow();
+        set.Find("customer.a")!.Quarantine.ShouldNotBeEmpty();
+    }
+
+    [Fact]
+    public void Should_allow_repairing_a_quarantined_proposition_by_updating_it()
+    {
+        // Arrange
+        var (set, scope) = Load(Stored("customer.a", """{ "rule": { "spec": "gone" } }""", version: 3));
+
+        // Act
+        var result = set.Update("customer.a", """{ "rule": { "spec": "customer.is-active" } }""", 3);
+
+        // Assert
+        result.Outcome.ShouldBe(PropositionUpdateOutcome.Updated);
+        set.Find("customer.a")!.Quarantine.ShouldBeEmpty();
+        scope.Source.Find("customer.a").ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void Should_allow_deleting_a_quarantined_proposition()
+    {
+        // Arrange
+        var (set, _) = Load(Stored("customer.a", """{ "rule": { "spec": "gone" } }""", version: 2));
+
+        // Act
+        var result = set.Withdraw("customer.a", 2);
+
+        // Assert
+        result.Outcome.ShouldBe(PropositionUpdateOutcome.Removed);
+        set.Find("customer.a").ShouldBeNull();
+    }
+
+    private sealed record Customer(bool IsActive);
+}

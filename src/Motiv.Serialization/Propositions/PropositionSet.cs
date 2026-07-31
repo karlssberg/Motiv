@@ -235,6 +235,128 @@ public sealed class PropositionSet
         });
 
     /// <summary>
+    /// Reads every persisted proposition and binds it, in dependency order. A document that fails to
+    /// bind — or that depends on one which did — is *quarantined* rather than fatal: it is excluded
+    /// from the effective set with its errors recorded, its document retained for repair, and any
+    /// compiled spec beneath the name left to resolve in its place.
+    /// </summary>
+    /// <remarks>
+    /// This is deliberately asymmetric with <see cref="RuleSet.Add"/>, which fails fast. A compiled
+    /// default failing to bind is a developer error and should stop startup. A persisted document
+    /// failing to bind is an operational reality — a redeploy renames a C# spec a saved proposition
+    /// referenced — and refusing to boot would turn a stale row into an outage. Call once, before
+    /// rules are added, so a rule's default document may reference an authored proposition.
+    /// </remarks>
+    public void Load() =>
+        _scope.Locked(() =>
+        {
+            var stored = new Dictionary<string, StoredProposition>(StringComparer.Ordinal);
+            var references = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+            var parseErrors = new Dictionary<string, List<RuleError>>(StringComparer.Ordinal);
+
+            foreach (var proposition in _store.Load())
+            {
+                stored[proposition.Name] = proposition;
+
+                // Parsed up front purely to order the binding; parse failures are carried forward so
+                // the document is still listed, quarantined, rather than silently dropped.
+                var errors = new List<RuleError>();
+                var document = SafeParse(proposition.DocumentJson, errors);
+                references[proposition.Name] = document is null ? [] : DocumentReferences.From(document);
+                if (document is null || errors.Count > 0)
+                    parseErrors[proposition.Name] = errors;
+            }
+
+            foreach (var name in OrderByDependency(stored.Keys, references))
+                LoadOne(stored[name], references[name], parseErrors.GetValueOrDefault(name));
+
+            return 0;
+        });
+
+    /// <summary>Binds one stored proposition, publishing it or quarantining it.</summary>
+    private void LoadOne(StoredProposition stored, IReadOnlyList<string> references, List<RuleError>? parseErrors)
+    {
+        var authored = new Authored(
+            this, stored.Name, stored.ModelType, stored.DocumentJson, stored.Version, stored.Description)
+        {
+            References = references
+        };
+
+        _authored[stored.Name] = authored;
+
+        if (parseErrors is { Count: > 0 })
+        {
+            authored.Quarantine = parseErrors;
+            return;
+        }
+
+        var errors = new List<RuleError>();
+        var commit = authored.PrepareRebind(_scope.Source, errors);
+
+        if (commit is null)
+        {
+            // Quarantined: no overlay entry and no graph edges, so nothing resolves *to* it and
+            // nothing is rebound *because* of it. Any compiled spec under the name still resolves.
+            authored.Quarantine = errors;
+            return;
+        }
+
+        commit.Commit();
+        _scope.Overlay.Set(authored.Bound!);
+        _scope.Graph.Set(authored.Node, references);
+        _scope.Enrol(authored);
+    }
+
+    /// <summary>Parses without letting malformed JSON escape — a hand-edited store must not stop startup.</summary>
+    private RuleDocument? SafeParse(string documentJson, List<RuleError> errors)
+    {
+        try
+        {
+            return new RuleDocumentParser(_options).Parse(documentJson, errors);
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            errors.Add(new RuleError("$", RuleErrorCode.InvalidNode,
+                $"the stored document could not be read: {exception.Message}"));
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Orders stored names so a proposition follows every stored proposition it references. Names
+    /// outside the store (compiled specs, or references that no longer resolve) are simply not edges.
+    /// </summary>
+    private static IReadOnlyList<string> OrderByDependency(
+        IEnumerable<string> names, IReadOnlyDictionary<string, IReadOnlyList<string>> references)
+    {
+        var ordered = new List<string>();
+        var visited = new HashSet<string>(StringComparer.Ordinal);
+        var visiting = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var name in names)
+            Visit(name);
+
+        return ordered;
+
+        void Visit(string name)
+        {
+            // `visiting` guards a cycle in the *stored* data, which the live graph would have
+            // rejected but a hand-edited store can still contain.
+            if (!visited.Add(name) || !visiting.Add(name))
+                return;
+
+            foreach (var reference in references.GetValueOrDefault(name, []))
+            {
+                if (references.ContainsKey(reference))
+                    Visit(reference);
+            }
+
+            visiting.Remove(name);
+            ordered.Add(name);
+        }
+    }
+
+    /// <summary>
     /// Validates the name against the registry's own grammar rather than a second copy of it — the
     /// two must agree exactly, because a document references the authored name the same way it
     /// references a compiled one.
