@@ -14,7 +14,31 @@ public class RuleCascadeTests
         Spec.BuildAsync(async (Customer c) => { await Task.Yield(); return c.IsActive; })
             .WhenTrue("passes").WhenFalse("fails").Create();
 
+    private static AsyncSpecBase<Customer, string> PassesAdultCheck { get; } =
+        Spec.BuildAsync(async (Customer c) => { await Task.Yield(); return c.Age >= 18; })
+            .WhenTrue("adult-check-passes").WhenFalse("adult-check-fails").Create();
+
+    private static PolicyBase<Customer, string> IsActivePolicy { get; } =
+        Spec.Build((Customer c) => c.IsActive).WhenTrue("active").WhenFalse("inactive").Create();
+
+    // Composition returns a Spec, not a Policy (CLAUDE.md's "Policy Preservation" rule), so this
+    // is a non-policy a PolicyRule must refuse to rebind to.
+    private static SpecBase<Customer, string> ComposedNonPolicy { get; } = IsActive & IsAdult;
+
+    private static AsyncPolicyBase<Customer, string> PassesCheckPolicy { get; } =
+        Spec.BuildAsync(async (Customer c) => { await Task.Yield(); return c.IsActive; })
+            .WhenTrue("passes").WhenFalse("fails").Create();
+
+    private static AsyncSpecBase<Customer, string> ComposedAsyncNonPolicy { get; } = PassesCheck & PassesAdultCheck;
+
     private sealed class CanCheckoutRule() : Rule<Customer, string>("can-checkout", IsActive);
+
+    private sealed class CanCheckoutAsyncRule() : AsyncRule<Customer, string>("can-checkout-async", PassesCheck);
+
+    private sealed class CanCheckoutPolicyRule() : PolicyRule<Customer, string>("can-checkout-policy", IsActivePolicy);
+
+    private sealed class CanCheckoutAsyncPolicyRule()
+        : AsyncPolicyRule<Customer, string>("can-checkout-async-policy", PassesCheckPolicy);
 
     private static (PropositionSet Propositions, RuleSet Rules, CanCheckoutRule Rule) NewHost()
     {
@@ -44,6 +68,97 @@ public class RuleCascadeTests
 
         // Assert
         rule.Evaluate(inactiveAdult).Satisfied.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Should_rebind_an_async_rule_when_a_proposition_it_references_changes()
+    {
+        // Arrange — the cascade must reach async rules too, not just sync ones
+        var registry = new SpecRegistry()
+            .Register("customer.passes-check", PassesCheck)
+            .Register("customer.passes-adult-check", PassesAdultCheck);
+        var scope = new BindingScope(registry);
+        var propositions = new PropositionSet(scope, new InMemoryPropositionStore()).AddModel<Customer>("customer");
+        var rule = new CanCheckoutAsyncRule();
+        var rules = new RuleSet(scope).Add(rule);
+
+        propositions.Create("customer.eligible-async", "customer", """{ "rule": { "spec": "customer.passes-check" } }""", null);
+        rules.Update("can-checkout-async", """{ "rule": { "spec": "customer.eligible-async" } }""", 1);
+        var inactiveAdult = new Customer(IsActive: false, Age: 30);
+        (await rule.EvaluateAsync(inactiveAdult)).Satisfied.ShouldBeFalse();
+
+        // Act — the rule is never touched again
+        propositions.Update("customer.eligible-async", """{ "rule": { "spec": "customer.passes-adult-check" } }""", 1);
+
+        // Assert
+        (await rule.EvaluateAsync(inactiveAdult)).Satisfied.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// <see cref="PolicyRule{TModel,TMetadata}.Evaluate"/> does an unchecked cast to
+    /// <c>PolicyBase&lt;TModel,TMetadata&gt;</c>. If a cascade ever let a policy rule bind to a
+    /// plain spec, every later evaluation of the live rule would throw
+    /// <see cref="InvalidCastException"/> instead of the cascade refusing the edit up front — so
+    /// this guards the check that stands between a bad rebind and a crash on the hot path.
+    /// </summary>
+    [Fact]
+    public void Should_reject_a_cascade_rebind_that_would_turn_a_policy_rule_into_a_spec()
+    {
+        // Arrange
+        var registry = new SpecRegistry()
+            .Register("customer.is-active-policy", IsActivePolicy)
+            .Register("customer.composed", ComposedNonPolicy);
+        var scope = new BindingScope(registry);
+        var propositions = new PropositionSet(scope, new InMemoryPropositionStore()).AddModel<Customer>("customer");
+        var rule = new CanCheckoutPolicyRule();
+        var rules = new RuleSet(scope).Add(rule);
+
+        propositions.Create("customer.eligible-policy", "customer", """{ "rule": { "spec": "customer.is-active-policy" } }""", null);
+        rules.Update("can-checkout-policy", """{ "rule": { "spec": "customer.eligible-policy" } }""", 1)
+            .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
+
+        // Act — eligible-policy now resolves to a non-policy spec; can-checkout-policy requires a policy
+        var result = propositions.Update("customer.eligible-policy", """{ "rule": { "spec": "customer.composed" } }""", 1);
+
+        // Assert
+        result.Outcome.ShouldBe(PropositionUpdateOutcome.Invalid);
+        result.BrokenDependents.Count.ShouldBe(1);
+        result.BrokenDependents[0].Name.ShouldBe("can-checkout-policy");
+        result.BrokenDependents[0].Errors.ShouldContain(error => error.Code == RuleErrorCode.PolicyRequired);
+
+        // The rule itself is untouched, and still bound to a policy
+        rule.Version.ShouldBe(2);
+        rule.Evaluate(new Customer(IsActive: true, Age: 30)).Satisfied.ShouldBeTrue();
+    }
+
+    /// <summary>The async counterpart: <see cref="AsyncPolicyRule{TModel,TMetadata}.EvaluateAsync"/> carries the same unchecked cast.</summary>
+    [Fact]
+    public void Should_reject_a_cascade_rebind_that_would_turn_an_async_policy_rule_into_a_spec()
+    {
+        // Arrange
+        var registry = new SpecRegistry()
+            .Register("customer.passes-check-policy", PassesCheckPolicy)
+            .Register("customer.composed-async", ComposedAsyncNonPolicy);
+        var scope = new BindingScope(registry);
+        var propositions = new PropositionSet(scope, new InMemoryPropositionStore()).AddModel<Customer>("customer");
+        var rule = new CanCheckoutAsyncPolicyRule();
+        var rules = new RuleSet(scope).Add(rule);
+
+        propositions.Create("customer.eligible-async-policy", "customer", """{ "rule": { "spec": "customer.passes-check-policy" } }""", null);
+        rules.Update("can-checkout-async-policy", """{ "rule": { "spec": "customer.eligible-async-policy" } }""", 1)
+            .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
+
+        // Act — eligible-async-policy now resolves to a non-policy async spec
+        var result = propositions.Update("customer.eligible-async-policy", """{ "rule": { "spec": "customer.composed-async" } }""", 1);
+
+        // Assert
+        result.Outcome.ShouldBe(PropositionUpdateOutcome.Invalid);
+        result.BrokenDependents.Count.ShouldBe(1);
+        result.BrokenDependents[0].Name.ShouldBe("can-checkout-async-policy");
+        result.BrokenDependents[0].Errors.ShouldContain(error => error.Code == RuleErrorCode.PolicyRequired);
+
+        // The rule itself is untouched, and still bound to a policy
+        rule.Version.ShouldBe(2);
     }
 
     [Fact]

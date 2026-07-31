@@ -79,19 +79,23 @@ public class RuleTests
     [Fact]
     public void Should_report_a_version_conflict_for_a_stale_expected_version()
     {
-        // Arrange
+        // Arrange — B saves first, so A's version-1 expectation is stale by the time it arrives.
+        // Writes serialize under the BindingScope lock, so the two can no longer interleave
+        // mid-Bind; the guarantee that matters — a stale save is refused, and told the current
+        // version — is unchanged, and is what this asserts.
         var rule = new ActiveRule();
         var rules = new RuleSet(Registry()).Add(rule);
         rules.Update("is-active-rule", """{ "rule": { "spec": "is-active" } }""", 1)
             .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
 
         // Act — second writer still believes version 1
-        var outcome = rules.Update("is-active-rule", """{ "rule": { "spec": "is-active" } }""", 1);
+        var outcome = rules.Update("is-active-rule", """{ "rule": { "not": { "spec": "is-active" } } }""", 1);
 
         // Assert
         outcome.Outcome.ShouldBe(RuleUpdateOutcome.VersionConflict);
         outcome.Version.ShouldBe(2);
         rule.Version.ShouldBe(2);
+        rule.Evaluate(new Customer(true)).Satisfied.ShouldBeTrue();   // A's rejected document never took
     }
 
     [Fact]
@@ -144,29 +148,6 @@ public class RuleTests
         outcome.Outcome.ShouldBe(RuleUpdateOutcome.VersionConflict);
         outcome.Version.ShouldBe(2);
         rule.Version.ShouldBe(2);
-    }
-
-    [Fact]
-    public void Should_report_a_version_conflict_when_the_expected_version_is_stale()
-    {
-        // Arrange — B saves first, so A's version-1 expectation is stale by the time it arrives.
-        // Writes serialize under the BindingScope lock, so the two can no longer interleave
-        // mid-Bind; the guarantee that matters — a stale save is refused, and told the current
-        // version — is unchanged, and is what this asserts.
-        var rule = new ActiveRule();
-        var rules = new RuleSet(Registry()).Add(rule);
-
-        rules.Update("is-active-rule", """{ "rule": { "not": { "spec": "is-active" } } }""", 1)
-            .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
-
-        // Act
-        var outcome = rules.Update("is-active-rule", """{ "rule": { "spec": "is-active" } }""", 1);
-
-        // Assert
-        outcome.Outcome.ShouldBe(RuleUpdateOutcome.VersionConflict);
-        outcome.Version.ShouldBe(2);
-        rule.Version.ShouldBe(2);
-        rule.Evaluate(new Customer(true)).Satisfied.ShouldBeFalse();   // B's negated document still in force
     }
 
     private sealed class FailingRevertRule() : Rule<Customer, string>(

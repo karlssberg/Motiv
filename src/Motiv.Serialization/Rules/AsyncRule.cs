@@ -166,6 +166,12 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
 
     private RuleUpdateResult Publish(State expected, State replacement)
     {
+        // Defensive rather than load-bearing: RuleSet.Update/Revert (the only public callers that
+        // reach here) and RebindCommit's direct Volatile.Write both run under the same
+        // BindingScope write lock, so no second writer can ever be in flight and the CAS-miss arm
+        // below is unreachable through the public API. Kept as a CAS regardless — cheap, and it
+        // fails safe rather than silently overwriting a concurrent write if that invariant is
+        // ever broken.
         var witnessed = Interlocked.CompareExchange(ref _state, replacement, expected);
         return ReferenceEquals(witnessed, expected)
             ? RuleUpdateResult.Updated(replacement.Version)
