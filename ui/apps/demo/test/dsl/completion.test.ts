@@ -77,4 +77,13 @@ describe('createMotivCompletion', () => {
   it('anchors a dotted completion at the start of the whole dotted word', () => {
     expect(complete('customer.has-')?.from).toBe(0);
   });
+
+  it('offers nothing after a dot typed onto a parameter reference', () => {
+    // Parameters are not namespaced, so `@minOrders.` cannot continue into anything. `WORD`'s two
+    // alternatives both bear on this: the `@…` branch stops at the dot, and the identifier branch
+    // then matches the bare `minOrders.` — which takes the *spec* path with that as its prefix and
+    // matches no spec. The outcome is right either way, but only by way of that second branch, so
+    // it is pinned rather than left to alternation order.
+    expect(complete('param minOrders: integer = 3\n\natLeast(@minOrders.')).toBeNull();
+  });
 });

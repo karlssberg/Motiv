@@ -1267,6 +1267,18 @@ button.node-dsl {
   background: var(--accent-weak);
 }
 
+/* The focusable element is the <li>, and an <li> wraps its whole nested subtree — so the UA's
+   default ring lands around every descendant row rather than the one that has focus. Drawn on the
+   row instead, the same shape the selected rule above already uses for the same reason. */
+.explorer-node:focus-visible {
+  outline: none;
+}
+
+.explorer-node:focus-visible > .explorer-leaf {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
 .origin-badge,
 .quarantine-badge {
   font-size: 0.7rem;

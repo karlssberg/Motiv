@@ -48,13 +48,19 @@ describe('buildNamespaceTree', () => {
     expect(tree[0]!.children.map((node) => node.segment)).toEqual(['is-active', 'is-adult']);
   });
 
-  it('sorts namespaces before leaves, each alphabetically', () => {
+  it('sorts namespaces before leaves, each alphabetically, at every depth', () => {
     const tree = buildNamespaceTree([
       entry('customer.zeta'),
       entry('customer.alpha'),
       entry('customer.nested.thing'),
+      entry('zulu'),
+      entry('alpha-root'),
     ]);
 
+    // The root array is sorted by the same rule as any other level — `alpha-root` sorts before
+    // `customer` alphabetically, so it is only the namespaces-first rule that puts `customer` head
+    // of the list.
+    expect(tree.map((node) => node.segment)).toEqual(['customer', 'alpha-root', 'zulu']);
     expect(tree[0]!.children.map((node) => node.segment)).toEqual(['nested', 'alpha', 'zeta']);
   });
 
@@ -84,6 +90,9 @@ describe('buildNamespaceTree', () => {
 
 describe('filterTree', () => {
   const tree = buildNamespaceTree([
+    // `customer` is deliberately a proposition *and* a namespace: a node kept only because a
+    // descendant matched must not also be counted as a match in its own right.
+    entry('customer'),
     entry('customer.eligibility.is-active'),
     entry('customer.eligibility.is-adult'),
     entry('customer.risk.is-fraudulent'),
@@ -91,7 +100,7 @@ describe('filterTree', () => {
   ]);
 
   it('returns the whole tree for an empty query', () => {
-    expect(countLeaves(filterTree(tree, ''))).toBe(4);
+    expect(countLeaves(filterTree(tree, ''))).toBe(5);
   });
 
   it('keeps only matching leaves, with their ancestors', () => {
@@ -101,6 +110,16 @@ describe('filterTree', () => {
     expect(filtered[0]!.segment).toBe('customer');
     expect(filtered[0]!.children[0]!.segment).toBe('risk');
     expect(filtered[0]!.children[0]!.children[0]!.path).toBe('customer.risk.is-fraudulent');
+  });
+
+  it('does not keep a retained ancestor’s own entry when the ancestor did not match', () => {
+    // `customer` is both a proposition and a namespace. Searching "fraud" keeps it only as the
+    // path to the leaf that matched — carrying its entry across would make the count claim two
+    // things matched when one did.
+    const filtered = filterTree(tree, 'fraud');
+
+    expect(filtered[0]!.entry).toBeUndefined();
+    expect(countLeaves(filtered)).toBe(1);
   });
 
   it('matches against the full dotted path, not just the leaf segment', () => {
@@ -128,7 +147,7 @@ describe('filterTree', () => {
   });
 
   it('treats an empty model list as no model filter', () => {
-    expect(countLeaves(filterTree(tree, '', []))).toBe(4);
+    expect(countLeaves(filterTree(tree, '', []))).toBe(5);
   });
 
   it('drops a namespace whose only matching descendant was filtered out by model', () => {

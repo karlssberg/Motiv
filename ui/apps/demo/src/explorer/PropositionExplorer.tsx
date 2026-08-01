@@ -55,6 +55,13 @@ export function PropositionExplorer(props: {
     setModels((current) =>
       current.includes(model) ? current.filter((kept) => kept !== model) : [...current, model]);
 
+  // Two different emptinesses. Nothing *matched* is a statement about the query, and with no query
+  // there is no query to blame — which is also the state of the very first paint, before the
+  // listing has arrived, and of a catalog that is genuinely empty.
+  const emptyMessage = query.trim() === ''
+    ? 'No propositions yet.'
+    : `No propositions match “${query}”.`;
+
   return (
     <aside className="explorer" aria-label="Propositions">
       <div className="explorer-header">
@@ -88,7 +95,7 @@ export function PropositionExplorer(props: {
       </div>
 
       {shown === 0
-        ? <p className="explorer-empty">No propositions match “{query}”.</p>
+        ? <p className="explorer-empty">{emptyMessage}</p>
         : (
           <ul className="explorer-tree" role="tree" aria-label="Proposition namespaces">
             {filtered.map((node) => (
@@ -187,7 +194,9 @@ function TreeNode(props: {
     <li
       role="treeitem"
       aria-label={accessibleName}
-      aria-selected={entry?.name === selected}
+      // `aria-selected="false"` means "selectable, but not selected" — a claim a bare namespace
+      // must not make. Omitting it is what says "not selectable", matching the absent tabindex.
+      aria-selected={entry ? entry.name === selected : undefined}
       aria-expanded={node.children.length > 0 ? true : undefined}
       // Only a proposition is focusable; a bare namespace stays out of the tab order entirely.
       tabIndex={entry ? 0 : undefined}

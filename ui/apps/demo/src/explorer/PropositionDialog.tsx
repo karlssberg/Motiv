@@ -26,6 +26,17 @@ export interface DialogSeed {
  */
 const NO_SOURCE_ID = 'dialog-no-source';
 
+/**
+ * Whether a reference to this entry would still resolve. Quarantine is not a fourth origin, so
+ * "anything quarantined" would be the wrong test: a quarantined *override* still has its compiled
+ * default serving the name, and `Overridden` means precisely that a compiled spec exists as well as
+ * the authored overlay — so a reference to it resolves. A quarantined `Authored` proposition is the
+ * only case with nothing left behind it.
+ */
+function isReferenceable(entry: PropositionListEntry): boolean {
+  return entry.quarantine.length === 0 || entry.origin !== 'Authored';
+}
+
 /** The values a create is built from. `startsFrom` is the spec the new document references. */
 export interface DialogValues {
   name: string;
@@ -39,6 +50,13 @@ export interface DialogValues {
  * concepts, so there is no second persistence shape and no lineage to keep — the reference graph
  * already records exactly what a "derived from" edge would, and layering records the override.
  * What separates them is only how much of the form is already answered.
+ *
+ * `aria-modal` here is a claim the markup does not keep: the backdrop blocks pointer events but not
+ * focus, so Tab leaves the dialog and lands in the page behind it, and Escape does nothing. The
+ * intended fix is the native `<dialog>` element with `showModal()`, which brings the focus trap,
+ * Escape-to-close and inertness of the rest of the document at no dependency cost — a larger change
+ * than this pass, and independent of the `key` the page mounts this with, which addresses only the
+ * stale-state consequence rather than the reachability that exposes it.
  */
 export function PropositionDialog(props: {
   seed: DialogSeed;
@@ -66,9 +84,12 @@ export function PropositionDialog(props: {
   // A source has to be over the same model to bind, and cannot be the name being defined — that
   // would be a reference straight back onto itself. Only the direct case is excluded here; a chosen
   // source that reaches the name being defined further along is the server's to reject, and
-  // `describeFailure` surfaces that rejection.
+  // `describeFailure` surfaces that rejection. What is left out on top of that — an entry nothing
+  // is serving any more — is `isReferenceable` above.
   const sourceNames = props.sources
-    .filter((entry) => entry.modelType === modelType && entry.name !== trimmedName)
+    .filter((entry) => entry.modelType === modelType
+      && entry.name !== trimmedName
+      && isReferenceable(entry))
     .map((entry) => entry.name)
     .sort();
 

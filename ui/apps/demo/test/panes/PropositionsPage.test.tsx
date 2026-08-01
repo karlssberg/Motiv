@@ -1,7 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { RuleEditorStore, type PropositionListEntry, type RuleDocument } from '@motiv/rules-core';
+import {
+  RuleEditorStore, RulesApiError, type PropositionListEntry, type RuleDocument,
+} from '@motiv/rules-core';
 import { RuleEditorProvider } from '@motiv/rules-react';
 import { PropositionsPage } from '../../src/panes/PropositionsPage.js';
 
@@ -115,6 +117,10 @@ describe('PropositionsPage', () => {
     renderPage(client, 'customer.derived');
 
     expect(await screen.findByText(/1 rule and 1 proposition/i)).toBeTruthy();
+    // The same count rides on the Save button, so the blast radius is legible from the control
+    // that would cause it without having to read the strip. Every other test stubs the dependents
+    // empty and matches `/^save$/i`, which is exactly the label this suffix replaces.
+    expect(await screen.findByRole('button', { name: 'Save (2)' })).toBeTruthy();
   });
 
   it('saves the edited document with the loaded version', async () => {
@@ -131,13 +137,156 @@ describe('PropositionsPage', () => {
   it('does not offer Save for a name that is only served by a compiled spec', async () => {
     const client = stubClient({ getProposition: vi.fn().mockResolvedValue(COMPILED) });
     renderPage(client, 'customer.is-active');
-    await waitFor(() => expect(client.getProposition).toHaveBeenCalled());
+
+    // Gated on the load becoming *observable* — the badge renders only once `loaded` is truthy —
+    // rather than on the button being disabled at some tick. `waitFor` resolves on the first tick
+    // where its condition holds, and `!loaded` already disables the button at tick zero, so
+    // waiting for "disabled" would pass without the version guard ever being consulted.
+    await screen.findByText('v0');
 
     // Version 0 is the contract's "purely compiled": there is no overlay document for a PUT to
     // update, and `baseVersion` is required to be positive, so saving could only ever fail.
     // Override is the affordance that authors one.
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: /^save$/i }).hasAttribute('disabled')).toBe(true));
+    expect(screen.getByRole('button', { name: /^save$/i }).hasAttribute('disabled')).toBe(true);
+  });
+
+  it('surfaces a thrown listing failure rather than rendering an empty catalog', async () => {
+    const client = stubClient({
+      listPropositions: vi.fn().mockRejectedValue(new RulesApiError(500, 'listing exploded')),
+    });
+    renderPage(client);
+
+    expect((await screen.findByRole('alert')).textContent).toContain('listing exploded');
+  });
+
+  it('surfaces a thrown load failure instead of leaving the previous name in the breadcrumb', async () => {
+    // `describeFailure` covers every *typed* outcome; a 404 or a 500 arrives as a thrown
+    // RulesApiError and escapes it entirely. Left unhandled, a deep link to a name that is gone
+    // leaves the breadcrumb naming whatever was loaded before — the page then says one thing and
+    // the address bar another.
+    const client = stubClient({
+      getProposition: vi.fn()
+        .mockResolvedValueOnce({
+          document: { rule: { spec: 'customer.is-active' } }, version: 1,
+          origin: 'Authored', hasCompiledDefault: false,
+        })
+        .mockRejectedValue(new RulesApiError(404, 'No proposition named customer.gone.')),
+    });
+    const { select } = renderPage(client, 'customer.derived');
+    await screen.findByText('v1');
+
+    select('customer.gone');
+
+    expect((await screen.findByRole('alert')).textContent).toContain('No proposition named');
+    expect(document.querySelector('.breadcrumb-current')).toBeNull();
+  });
+
+  it('surfaces a thrown save failure rather than leaving Save silently dead', async () => {
+    // The `finally` re-enables the button and nothing else happens: without this the user clicks
+    // Save, watches it flicker, and is told nothing at all.
+    const client = stubClient({
+      putProposition: vi.fn().mockRejectedValue(new RulesApiError(500, 'save exploded')),
+    });
+    renderPage(client, 'customer.derived');
+    await screen.findByText('v1');
+
+    await userEvent.click(screen.getByRole('button', { name: /^save$/i }));
+
+    expect((await screen.findByRole('alert')).textContent).toContain('save exploded');
+    expect(screen.getByRole('button', { name: /^save$/i }).hasAttribute('disabled')).toBe(false);
+  });
+
+  it('surfaces a thrown delete failure', async () => {
+    const client = stubClient({
+      deleteProposition: vi.fn().mockRejectedValue(new RulesApiError(500, 'delete exploded')),
+    });
+    const { onSelect } = renderPage(client, 'customer.derived');
+    await screen.findByText('v1');
+
+    await userEvent.click(await screen.findByRole('button', { name: /^delete$/i }));
+
+    expect((await screen.findByRole('alert')).textContent).toContain('delete exploded');
+    // A delete that threw removed nothing, so the selection must stand.
+    expect(onSelect).not.toHaveBeenCalledWith(null);
+  });
+
+  it('surfaces a thrown create failure in the dialog that raised it', async () => {
+    const client = stubClient({
+      createProposition: vi.fn().mockRejectedValue(new RulesApiError(500, 'create exploded')),
+    });
+    renderPage(client);
+    await screen.findByRole('treeitem', { name: /is-active/ });
+
+    await userEvent.click(screen.getByRole('button', { name: /^new$/i }));
+    await userEvent.type(screen.getByLabelText('Name'), 'customer.fresh');
+    await userEvent.click(screen.getByRole('button', { name: /create/i }));
+
+    // The dialog stays open with its own error: the form is where the failed input still lives.
+    expect((await screen.findByRole('alert')).textContent).toContain('create exploded');
+    expect(screen.getByRole('dialog')).toBeTruthy();
+  });
+
+  it('does not let a save continuation overwrite a newer selection', async () => {
+    // `saving` disables Save but nothing disables the tree, so a click in the explorer lands while
+    // the PUT is still in flight. The save's continuation must not then rewrite the breadcrumb and
+    // the Save target back to the proposition it was about.
+    let settle = (): void => {};
+    const client = stubClient({
+      putProposition: vi.fn().mockReturnValue(new Promise<{ outcome: string; version: number }>(
+        (resolve) => { settle = () => resolve({ outcome: 'saved', version: 9 }); })),
+    });
+    const { select } = renderPage(client, 'customer.derived');
+    await screen.findByText('v1');
+
+    await userEvent.click(screen.getByRole('button', { name: /^save$/i }));
+    select('customer.overridden');
+    await screen.findByText('v1'); // the second load lands, still version 1 from the stub
+    settle();
+
+    await waitFor(() => expect(document.querySelector('.breadcrumb-current')?.textContent)
+      .toBe('overridden'));
+    // Version 9 belonged to the *other* proposition's save; showing it here would be a lie about
+    // what a subsequent Save is going to send.
+    expect(screen.queryByText('v9')).toBeNull();
+  });
+
+  it('does not let a save continuation raise a banner about a proposition no longer shown', async () => {
+    let settle = (): void => {};
+    const client = stubClient({
+      putProposition: vi.fn().mockReturnValue(new Promise<{ outcome: string; currentVersion: number }>(
+        (resolve) => { settle = () => resolve({ outcome: 'conflict', currentVersion: 5 }); })),
+    });
+    const { select } = renderPage(client, 'customer.derived');
+    await screen.findByText('v1');
+
+    await userEvent.click(screen.getByRole('button', { name: /^save$/i }));
+    select('customer.overridden');
+    settle();
+
+    // A conflict banner is a claim about the proposition that was saved. Raised over a different
+    // selection it reads as a claim about that one, and is false.
+    await waitFor(() => expect(client.putProposition).toHaveBeenCalled());
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('does not let a delete continuation navigate away from a newer selection', async () => {
+    // Nothing disables the tree while the DELETE is in flight, so the user can move on before it
+    // lands. Dropping the selection then would drag them off the proposition they just opened, on
+    // behalf of one they are no longer looking at.
+    let settle = (): void => {};
+    const client = stubClient({
+      deleteProposition: vi.fn().mockReturnValue(new Promise<{ outcome: string; version: number }>(
+        (resolve) => { settle = () => resolve({ outcome: 'saved', version: 0 }); })),
+    });
+    const { onSelect, select } = renderPage(client, 'customer.derived');
+    await screen.findByText('v1');
+
+    await userEvent.click(await screen.findByRole('button', { name: /^delete$/i }));
+    select('customer.overridden');
+    settle();
+
+    await waitFor(() => expect(client.deleteProposition).toHaveBeenCalled());
+    expect(onSelect).not.toHaveBeenCalled();
   });
 
   it('surfaces a conflict when the version was stale', async () => {
@@ -340,6 +489,51 @@ describe('PropositionsPage', () => {
       name: 'customer.is-active',
       document: { rule: { spec: 'customer.overridden' } },
     })));
+  });
+
+  it('starts a fresh form when one flow replaces another without closing the dialog', async () => {
+    // The dialog seeds four `useState` calls and never resyncs them, so replacing `dialog` while
+    // it is mounted would leave the heading describing one flow and the fields holding the last
+    // one's answers — and the create would go out with the wrong `startsFrom`. The explorer's
+    // New/Derive/Override buttons are reachable this way: the backdrop blocks pointer events but
+    // not focus, and there is no focus trap, so Tab out of the dialog wraps straight into them.
+    const client = stubClient();
+    renderPage(client, 'customer.overridden');
+    await screen.findByText('v1');
+
+    await userEvent.click(await screen.findByRole('button', { name: /derive/i }));
+    expect((screen.getByLabelText('Name') as HTMLInputElement).value).toBe('customer.');
+
+    await userEvent.click(screen.getByRole('button', { name: /^new$/i }));
+
+    expect(screen.getByRole('dialog').getAttribute('aria-label')).toBe('New proposition');
+    expect((screen.getByLabelText('Name') as HTMLInputElement).value).toBe('');
+  });
+
+  it('does not offer a quarantined authored proposition as a source', async () => {
+    // A quarantined *authored* proposition is not in the effective set at all, so a reference to
+    // it would not resolve. A quarantined *override* is different: the compiled default still
+    // serves the name, so referencing it does resolve — which is why the filter turns on origin
+    // rather than on quarantine alone.
+    const client = stubClient({
+      listPropositions: vi.fn().mockResolvedValue([
+        entry({ name: 'customer.sound' }),
+        entry({
+          name: 'customer.broken',
+          quarantine: [{ path: '$', code: 'UnknownSpec', message: 'unknown spec' }],
+        }),
+        entry({
+          name: 'customer.shadowed', origin: 'Overridden', version: 2,
+          quarantine: [{ path: '$', code: 'UnknownSpec', message: 'unknown spec' }],
+        }),
+      ]),
+    });
+    renderPage(client);
+    await screen.findByRole('treeitem', { name: /sound/ });
+
+    await userEvent.click(screen.getByRole('button', { name: /^new$/i }));
+
+    expect(optionsOf(/starts from/i)).toEqual(['customer.shadowed', 'customer.sound']);
   });
 
   it('reports a name already taken', async () => {

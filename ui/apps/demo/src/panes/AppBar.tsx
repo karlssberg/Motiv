@@ -24,6 +24,16 @@ export function AppBar(props: {
         <span className="appbar-mark" aria-hidden="true">M</span>
         <span className="appbar-wordmark">Motiv</span>
       </div>
+      {/*
+        These are page *navigation*, not tabs: activating one changes the route, and there is no
+        tabpanel here for a tab to control. `role="tablist"` is a knowing approximation — the
+        honest markup is a <nav> of anchors, whose hrefs would also give middle-click, open-in-new-
+        tab, and a visible destination for free. Recorded rather than done because the swap changes
+        behaviour the e2e suite and App.test.tsx both assert on. Note the divergence from
+        EditorPane, one file over, which does implement the full pattern — its tabs really do
+        switch a panel, so each carries `aria-controls` and the panel carries `aria-labelledby`;
+        neither has any counterpart to point at from here.
+      */}
       <div className="page-tabs" role="tablist" aria-label="Page">
         {PAGES.map(({ id, label }) => {
           const active = props.page === id;

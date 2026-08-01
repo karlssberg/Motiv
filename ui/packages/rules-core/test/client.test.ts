@@ -301,6 +301,29 @@ describe('RulesApiClient', () => {
     expect(result.referrers).toEqual(['customer.b']);
   });
 
+  it('does not report a delete refused by an unrecognised 409 as a duplicate name', async () => {
+    // `nameTaken` is a *create* outcome. A DELETE that came back 409 without `currentVersion` or
+    // `referrers` is some other conflict entirely, and answering "already authored under that
+    // name" would tell the user the exact opposite of what happened.
+    // A fresh Response per call: a body stream can only be read once.
+    const fetchMock = vi.fn(async () => jsonResponse({ error: 'Still in use.' }, 409));
+    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock as never });
+
+    const failure = await client.deleteProposition('customer.a', 1).catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(RulesApiError);
+    expect((failure as RulesApiError).status).toBe(409);
+    expect((failure as RulesApiError).message).toBe('Still in use.');
+  });
+
+  it('does not report an update refused by an unrecognised 409 as a duplicate name', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({}, 409));
+    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock });
+
+    await expect(client.putProposition('customer.a', { rule: { spec: 'x' } }, 1))
+      .rejects.toThrow(RulesApiError);
+  });
+
   it('gets the transitive dependents of a proposition', async () => {
     const dependents = [{ name: 'customer.b', kind: 'proposition' }];
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ dependents }));
@@ -311,5 +334,14 @@ describe('RulesApiClient', () => {
     expect(result).toEqual(dependents);
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/rules/propositions/customer.a/dependents', { method: 'GET' });
+  });
+
+  it('answers no dependents when a 200 body omits the field', async () => {
+    // A `undefined` here reaches the caller as `dependents.length` during render and blanks the
+    // page — an empty list is the only honest reading of a body that names none.
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({}));
+    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock });
+
+    expect(await client.getDependents('customer.a')).toEqual([]);
   });
 });

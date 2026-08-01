@@ -117,7 +117,9 @@ export class RulesApiClient {
   /** POST {baseUrl}/propositions — 400/409 return typed outcomes rather than throwing. */
   async createProposition(request: PropositionCreateRequest): Promise<PropositionSaveResult> {
     const response = await this.#post('/propositions', request);
-    return this.#readPropositionResult(response);
+    // Only a create can collide with an existing name, so only a create reads an otherwise
+    // unrecognised 409 that way.
+    return this.#readPropositionResult(response, { unmatchedConflictIsNameTaken: true });
   }
 
   /** PUT {baseUrl}/propositions/{name} — 400/409 return typed outcomes rather than throwing. */
@@ -156,7 +158,10 @@ export class RulesApiClient {
       `${this.#baseUrl}/propositions/${encodeURIComponent(name)}/dependents`,
       { method: 'GET' },
     );
-    return (await this.#read<{ dependents: DependentEntry[] }>(response)).dependents;
+    // `?? []` rather than trusting the shape: an absent field would otherwise reach the caller as
+    // `undefined` and only fail at `dependents.length`, during render, with the page blanked.
+    const body = await this.#read<{ dependents?: DependentEntry[] }>(response);
+    return body.dependents ?? [];
   }
 
   #post(path: string, body: unknown): Promise<Response> {
@@ -193,7 +198,18 @@ export class RulesApiClient {
     return this.#read<never>(response); // 404 etc. → RulesApiError as elsewhere
   }
 
-  async #readPropositionResult(response: Response): Promise<PropositionSaveResult> {
+  /**
+   * The shared reader for POST / PUT / DELETE on a proposition.
+   *
+   * `unmatchedConflictIsNameTaken` is what separates them: a 409 carrying neither `currentVersion`
+   * nor `referrers` is a duplicate name only when something was being *created*. Reading it that
+   * way for an update or a delete would answer "a proposition is already authored under that name"
+   * to an operation where that sentence is not merely unhelpful but the opposite of what happened.
+   */
+  async #readPropositionResult(
+    response: Response,
+    options: { unmatchedConflictIsNameTaken?: boolean } = {},
+  ): Promise<PropositionSaveResult> {
     if (response.ok) {
       const body = (await response.json()) as { version: number };
       return { outcome: 'saved', version: body.version };
@@ -207,7 +223,7 @@ export class RulesApiClient {
         return { outcome: 'conflict', currentVersion: body.currentVersion };
       }
       if (body?.referrers) return { outcome: 'referenced', referrers: body.referrers };
-      return { outcome: 'nameTaken' };
+      if (options.unmatchedConflictIsNameTaken) return { outcome: 'nameTaken' };
     }
 
     if (response.status === 400 && body && 'errors' in body) {

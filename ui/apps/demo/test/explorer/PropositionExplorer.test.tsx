@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { PropositionListEntry } from '@motiv/rules-core';
 import { PropositionExplorer } from '../../src/explorer/PropositionExplorer.js';
@@ -40,8 +40,16 @@ describe('PropositionExplorer', () => {
   it('groups leaves under their namespace', () => {
     renderExplorer();
 
-    expect(screen.getByRole('treeitem', { name: /^customer/ })).toBeTruthy();
-    expect(screen.getByRole('treeitem', { name: /^order/ })).toBeTruthy();
+    const customer = screen.getByRole('treeitem', { name: /^customer/ });
+    const order = screen.getByRole('treeitem', { name: /^order/ });
+
+    // That both rows exist says nothing about grouping — the payoff is the *nesting*, so the
+    // owned `role="group"` and the rows inside it are what is asserted. `getAllByRole` because
+    // `customer` holds a group per namespace level; the first in document order is its own.
+    const customerGroup = within(customer).getAllByRole('group')[0]!;
+    expect(within(customerGroup).getByRole('treeitem', { name: /^risk/ })).toBeTruthy();
+    expect(within(order).getAllByRole('group')[0]).toBeTruthy();
+    expect(within(order).getByRole('treeitem', { name: /is-large/ })).toBeTruthy();
   });
 
   it('filters as you type, matching the full dotted path', async () => {
@@ -158,6 +166,15 @@ describe('PropositionExplorer', () => {
     expect(screen.getByText(/no propositions match/i)).toBeTruthy();
   });
 
+  it('does not blame an empty query for an empty catalog', () => {
+    // "No propositions match ''" is what a listing shows before it has arrived, and what a
+    // genuinely empty catalog shows forever. Neither is a failed search.
+    renderExplorer({ entries: [] });
+
+    expect(screen.queryByText(/no propositions match/i)).toBeNull();
+    expect(screen.getByText(/no propositions yet/i)).toBeTruthy();
+  });
+
   it('does not let a click on an unselectable middle row bubble into a selectable ancestor', async () => {
     // customer (dual role: namespace AND proposition) > customer.risk (bare namespace, no entry
     // of its own) > customer.risk.is-fraudulent (leaf). Clicking the *middle* row must not select
@@ -173,6 +190,24 @@ describe('PropositionExplorer', () => {
     await userEvent.click(screen.getByRole('treeitem', { name: /^risk/ }));
 
     expect(actions.onSelect).not.toHaveBeenCalled();
+  });
+
+  it('selects only the leaf when the leaf sits directly under a selectable ancestor', async () => {
+    // customer (dual role: namespace AND proposition) > customer.is-fraudulent (leaf), with no
+    // bare namespace between them to absorb the bubble. Every treeitem in the chain carries a
+    // handler, so a click allowed to bubble is handled again by the ancestor — and the ancestor
+    // runs *last*, so it would win and quietly replace the selection the user made.
+    const actions = renderExplorer({
+      entries: [
+        entry({ name: 'customer', modelType: 'customer' }),
+        entry({ name: 'customer.is-fraudulent' }),
+      ],
+    });
+
+    await userEvent.click(screen.getByRole('treeitem', { name: /is-fraudulent/ }));
+
+    expect(actions.onSelect).toHaveBeenCalledTimes(1);
+    expect(actions.onSelect).toHaveBeenCalledWith('customer.is-fraudulent');
   });
 
   it('composes the accessible name from segment, origin and quarantine state', () => {
@@ -214,6 +249,16 @@ describe('PropositionExplorer', () => {
     expect(notPrevented).toBe(false);
   });
 
+  it('leaves aria-selected off a bare namespace entirely', () => {
+    // In ARIA `aria-selected="false"` means *selectable, not currently selected* — the opposite of
+    // what a bare namespace is. Omission is what says "not selectable", exactly as the absent
+    // tabindex one line down already does.
+    renderExplorer();
+
+    const namespaceNode = screen.getByRole('treeitem', { name: /^customer/ });
+    expect(namespaceNode.getAttribute('aria-selected')).toBeNull();
+  });
+
   it('keeps a bare namespace out of the tab order', () => {
     renderExplorer();
 
@@ -238,6 +283,27 @@ describe('PropositionExplorer', () => {
     renderExplorer({
       entries: [entry({ name: 'order.is-large', modelType: 'order', origin: 'Compiled', version: 0 })],
       selected: 'order.is-large',
+    });
+
+    expect(screen.queryByRole('button', { name: /^override/i })).toBeNull();
+  });
+
+  it('does not offer Override for an already-authored entry', async () => {
+    // Override mints the overlay for a name served *only* by a compiled spec. Offered for an
+    // authored one it would POST against a name that already has an overlay, which can only come
+    // back `nameTaken`.
+    renderExplorer({ selected: 'customer.eligibility.is-adult' });
+
+    expect(screen.queryByRole('button', { name: /^override/i })).toBeNull();
+  });
+
+  it('does not offer Override for an entry that is already overridden', async () => {
+    renderExplorer({
+      entries: [
+        entry({ name: 'customer.eligibility.is-active', origin: 'Overridden', version: 2 }),
+        entry({ name: 'customer.eligibility.is-adult' }),
+      ],
+      selected: 'customer.eligibility.is-active',
     });
 
     expect(screen.queryByRole('button', { name: /^override/i })).toBeNull();

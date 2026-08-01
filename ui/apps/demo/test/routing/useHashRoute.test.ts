@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { parseHash, formatHash } from '../../src/routing/useHashRoute.js';
+import { describe, it, expect, afterEach } from 'vitest';
+import { act, renderHook } from '@testing-library/react';
+import { parseHash, formatHash, useHashRoute } from '../../src/routing/useHashRoute.js';
 
 describe('parseHash', () => {
   it('defaults to the rules page with no selection', () => {
@@ -64,5 +65,51 @@ describe('formatHash', () => {
     ] as const) {
       expect(parseHash(formatHash(route))).toEqual(route);
     }
+  });
+});
+
+describe('useHashRoute', () => {
+  afterEach(() => { window.history.replaceState(null, '', '#'); });
+
+  it('reads the route out of the hash', () => {
+    window.history.replaceState(null, '', '#/propositions/customer.is-active');
+
+    const { result } = renderHook(() => useHashRoute());
+
+    expect(result.current[0]).toEqual({ page: 'propositions', name: 'customer.is-active' });
+  });
+
+  it('resyncs to a hash that moved after the seed was read', () => {
+    // The seed comes from a `useState` initialiser, and the listener is only attached once the
+    // effect runs. Anything that moves the hash in between — a same-tick navigation, or React
+    // 18 StrictMode double-invoking the initialiser — fires a `hashchange` that reaches nobody,
+    // and the hook would go on reporting a route the address bar has already left.
+    // `replaceState` is used deliberately: it changes the hash *without* firing `hashchange`, so
+    // nothing but the effect's own resync can make this pass.
+    window.history.replaceState(null, '', '#/rules');
+    let moved = false;
+
+    const { result } = renderHook(() => {
+      const route = useHashRoute();
+      if (!moved) {
+        moved = true;
+        window.history.replaceState(null, '', '#/propositions/customer.is-active');
+      }
+      return route;
+    });
+
+    expect(result.current[0]).toEqual({ page: 'propositions', name: 'customer.is-active' });
+  });
+
+  it('writes the route it is asked to navigate to into the address bar', () => {
+    // The write is all `navigate` does: the `hashchange` it fires is what updates the state, and
+    // jsdom queues that as a task rather than firing it inline — so this asserts the bar, and the
+    // resync above covers the reading half.
+    window.history.replaceState(null, '', '#/rules');
+    const { result } = renderHook(() => useHashRoute());
+
+    act(() => { result.current[1]({ page: 'propositions', name: 'customer.a' }); });
+
+    expect(window.location.hash).toBe('#/propositions/customer.a');
   });
 });
