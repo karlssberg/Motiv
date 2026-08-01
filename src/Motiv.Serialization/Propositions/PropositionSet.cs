@@ -165,12 +165,7 @@ public sealed class PropositionSet
                 return PropositionUpdateResult.BreaksDependents(broken);
 
             Publish(replacement);
-            foreach (var commit in commits)
-            {
-                commit.Commit();
-                if (commit.OverlayEntry is { } commitEntry)
-                    _scope.Overlay.Set(commitEntry);
-            }
+            _scope.CommitClosure(commits);
 
             return PropositionUpdateResult.Updated(replacement.Version);
         });
@@ -218,13 +213,7 @@ public sealed class PropositionSet
             // does — keeping "all of it, or none" true even though there is no explicit rollback for
             // the in-memory mutations, including dependent commits, that follow.
             _store.Delete(name);
-
-            foreach (var commit in commits)
-            {
-                commit.Commit();
-                if (commit.OverlayEntry is { } entry)
-                    _scope.Overlay.Set(entry);
-            }
+            _scope.CommitClosure(commits);
 
             _authored.Remove(name);
             _scope.Overlay.Remove(name);
@@ -254,14 +243,10 @@ public sealed class PropositionSet
     public void Load() =>
         _scope.Locked(() =>
         {
-            var stored = new Dictionary<string, StoredProposition>(StringComparer.Ordinal);
-            var references = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
-            var quarantineErrors = new Dictionary<string, List<RuleError>>(StringComparer.Ordinal);
+            var candidates = new Dictionary<string, LoadCandidate>(StringComparer.Ordinal);
 
             foreach (var proposition in _store.Load())
             {
-                stored[proposition.Name] = proposition;
-
                 // Parsed up front purely to order the binding; name and parse failures are carried
                 // forward so the document is still listed, quarantined, rather than silently dropped.
                 var errors = new List<RuleError>();
@@ -269,50 +254,45 @@ public sealed class PropositionSet
                     errors.Add(nameError);
 
                 var document = SafeParse(proposition.DocumentJson, errors);
-                references[proposition.Name] = document is null ? [] : DocumentReferences.From(document);
-                if (errors.Count > 0)
-                    quarantineErrors[proposition.Name] = errors;
+                candidates[proposition.Name] = new LoadCandidate(
+                    proposition, document is null ? [] : DocumentReferences.From(document), errors);
             }
 
             // A hand-edited store can contain a reference cycle that Create/Update would have
             // rejected outright — nothing here goes through DependencyGraph.FindCycle. Every member
             // of a detected cycle is quarantined with the real reason instead of being bound.
             var cycles = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
-            var ordered = OrderByDependency(stored.Keys, references, cycles);
+            var ordered = OrderByDependency(candidates, cycles);
 
             foreach (var (name, cycle) in cycles)
             {
-                if (!quarantineErrors.TryGetValue(name, out var errors))
-                    quarantineErrors[name] = errors = [];
-
-                errors.Add(new RuleError("$", RuleErrorCode.CycleDetected,
+                candidates[name].Errors.Add(new RuleError("$", RuleErrorCode.CycleDetected,
                     $"the stored proposition '{name}' cannot be bound: {string.Join(" → ", cycle)} " +
                     "forms a reference cycle"));
             }
 
             foreach (var name in ordered)
-                LoadOne(stored[name], references[name], quarantineErrors.GetValueOrDefault(name));
-
-            return 0;
+                LoadOne(candidates[name]);
         });
 
     /// <summary>Binds one stored proposition, publishing it or quarantining it.</summary>
-    private void LoadOne(StoredProposition stored, IReadOnlyList<string> references, List<RuleError>? quarantineErrors)
+    private void LoadOne(LoadCandidate candidate)
     {
+        var stored = candidate.Stored;
         var authored = new Authored(
             this, stored.Name, stored.ModelType, stored.DocumentJson, stored.Version, stored.Description)
         {
-            References = references
+            References = candidate.References
         };
 
         _authored[stored.Name] = authored;
 
-        if (quarantineErrors is { Count: > 0 })
+        if (candidate.Errors.Count > 0)
         {
             // A name failure, a parse failure or a cycle already rules out binding — attempting it
             // anyway could only succeed by resolving through a name that is itself unresolvable or
             // by binding on top of an unresolved cyclic reference, neither of which is a real bind.
-            authored.Quarantine = quarantineErrors;
+            authored.Quarantine = candidate.Errors;
             return;
         }
 
@@ -329,7 +309,7 @@ public sealed class PropositionSet
 
         commit.Commit();
         _scope.Overlay.Set(authored.Bound!);
-        _scope.Graph.Set(authored.Node, references);
+        _scope.Graph.Set(authored.Node, candidate.References);
         _scope.Enrol(authored);
     }
 
@@ -366,8 +346,7 @@ public sealed class PropositionSet
     /// leaving it in keeps this method a single pass instead of two.
     /// </remarks>
     private static IReadOnlyList<string> OrderByDependency(
-        IEnumerable<string> names,
-        IReadOnlyDictionary<string, IReadOnlyList<string>> references,
+        IReadOnlyDictionary<string, LoadCandidate> candidates,
         Dictionary<string, IReadOnlyList<string>> cycles)
     {
         var ordered = new List<string>();
@@ -375,7 +354,7 @@ public sealed class PropositionSet
         var path = new List<string>();
         var onPath = new HashSet<string>(StringComparer.Ordinal);
 
-        foreach (var name in names)
+        foreach (var name in candidates.Keys)
             Visit(name);
 
         return ordered;
@@ -399,9 +378,9 @@ public sealed class PropositionSet
             }
 
             path.Add(name);
-            foreach (var reference in references.GetValueOrDefault(name, []))
+            foreach (var reference in candidates[name].References)
             {
-                if (references.ContainsKey(reference))
+                if (candidates.ContainsKey(reference))
                     Visit(reference);
             }
             path.RemoveAt(path.Count - 1);
@@ -522,6 +501,15 @@ public sealed class PropositionSet
     /// <summary>The outcome of a prepare: the bound entry, its edges, and any errors.</summary>
     private readonly record struct Prepared(
         SpecRegistryEntry? Entry, IReadOnlyList<string> References, List<RuleError> Errors);
+
+    /// <summary>
+    /// One stored proposition on its way through <see cref="Load"/>: the row itself, the edges read
+    /// from its document, and the reasons found so far to quarantine it rather than bind it. Kept as
+    /// one record rather than three name-keyed dictionaries so the three can never disagree about a
+    /// name, and so the cycle pass has an error list to append to unconditionally.
+    /// </summary>
+    private sealed record LoadCandidate(
+        StoredProposition Stored, IReadOnlyList<string> References, List<RuleError> Errors);
 
     /// <summary>
     /// One authored proposition's live state, and its participation in the rebind transaction.

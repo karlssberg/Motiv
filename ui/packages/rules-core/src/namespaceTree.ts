@@ -61,10 +61,21 @@ export function filterTree(
   const needle = query.trim().toLowerCase();
   if (needle === '' && models.length === 0) return nodes;
 
+  return keepMatching(nodes, needle, models);
+}
+
+/**
+ * The walk itself, over an already-normalized needle. Split from `filterTree` so the query is
+ * trimmed and lower-cased once for the whole tree rather than once per node, and so the
+ * return-by-reference shortcut stays a property of the entry point alone.
+ */
+function keepMatching(
+  nodes: NamespaceNode[], needle: string, models: string[],
+): NamespaceNode[] {
   const kept: NamespaceNode[] = [];
 
   for (const node of nodes) {
-    const children = filterTree(node.children, query, models);
+    const children = keepMatching(node.children, needle, models);
     const selfMatches = node.entry !== undefined
       && node.path.toLowerCase().includes(needle)
       && (models.length === 0 || models.includes(node.entry.modelType));

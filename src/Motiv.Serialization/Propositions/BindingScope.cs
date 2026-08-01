@@ -57,6 +57,16 @@ internal sealed class BindingScope
     }
 
     /// <summary>
+    /// Runs an action holding the write lock. The companion to <see cref="Locked{T}"/> for the
+    /// callers that produce no value, which would otherwise have to invent one to return.
+    /// </summary>
+    public void Locked(Action action)
+    {
+        lock (_gate)
+            action();
+    }
+
+    /// <summary>
     /// Prepares every node transitively affected by republishing <paramref name="propositionName"/>,
     /// in dependency order, folding each prepared entry into <paramref name="prospective"/> so later
     /// members resolve the new definitions. Commits nothing.
@@ -101,5 +111,23 @@ internal sealed class BindingScope
         }
 
         return broken;
+    }
+
+    /// <summary>
+    /// Publishes commits prepared earlier by <see cref="PrepareClosure"/>, folding each one's entry
+    /// into the live overlay so the closure resolves to what it was rebound against. Deliberately
+    /// separate from <see cref="PrepareClosure"/> — preparing every member before committing any of
+    /// them is what makes a publish all-or-nothing — and called only once the caller has confirmed
+    /// nothing broke. Commits cannot fail, so this cannot be interrupted part-way.
+    /// </summary>
+    /// <remarks>Runs under the write lock, like every other publish step, via the caller's <see cref="Locked{T}"/>.</remarks>
+    public void CommitClosure(IReadOnlyList<IRebindCommit> commits)
+    {
+        foreach (var commit in commits)
+        {
+            commit.Commit();
+            if (commit.OverlayEntry is { } entry)
+                Overlay.Set(entry);
+        }
     }
 }
