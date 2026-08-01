@@ -241,6 +241,36 @@ concurrency (`409` on a stale `baseVersion`), and `DELETE` reverts to the
 default. Available via the `Motiv.Serialization` and
 `Motiv.Serialization.AspNetCore` packages.
 
+### Runtime Propositions
+
+Propositions are the building blocks rules are made of. Register them in C#, or
+author them at runtime and persist them server-side — either way a rule document
+references them by name:
+
+```csharp
+builder.Services.AddMotivRules(registry, options)
+    .AddPropositions(new JsonFilePropositionStore("propositions.json"))
+    .AddRule<CanCheckoutRule>();
+```
+
+```jsonc
+// POST /api/rules/propositions
+{
+  "name": "customer.eligibility.is-eligible",
+  "modelType": "customer",
+  "document": {
+    "rule": { "andAlso": [{ "spec": "customer.is-active" }, { "spec": "customer.is-adult" }] }
+  }
+}
+```
+
+Names are namespaced with dots, an authored document may override a compiled spec
+(and `DELETE` reverts to it), and editing a proposition rebinds every rule and
+proposition that references it — transactionally, so an edit that would break a
+dependent is refused whole. Authored propositions are *composition only*: they
+combine specs that already exist, because new primitive facts still come from C#.
+See [Runtime Propositions](./docs/propositions/index.md).
+
 ## Quick Start
 
 Install the Motiv NuGet package:

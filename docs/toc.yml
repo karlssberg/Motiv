@@ -20,4 +20,6 @@ items:
     href: observability/toc.yml
   - name: Live Rules
     href: live-rules/toc.yml
+  - name: Runtime Propositions
+    href: propositions/toc.yml
 
