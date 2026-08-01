@@ -18,10 +18,40 @@ public sealed class RuleSet
     private readonly RuleSerializerOptions _options;
 
     /// <summary>Creates a rule set whose documents bind against the given registry.</summary>
+    /// <remarks>
+    /// For a host that also authors propositions, build the rule set from the
+    /// <see cref="PropositionSet"/> instead — see
+    /// <see cref="RuleSet(PropositionSet, RuleSerializerOptions)"/>. This overload opens a binding
+    /// scope of its own, which a proposition set built from the same registry could never see into.
+    /// </remarks>
     /// <param name="registry">The registry rule documents resolve spec references against.</param>
     /// <param name="options">Options forwarded to the underlying serializer, or null for defaults.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="registry"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">
+    /// A <see cref="PropositionSet"/> was already built from <paramref name="registry"/>, so this set
+    /// could only ever be invisible to it.
+    /// </exception>
     public RuleSet(SpecRegistry registry, RuleSerializerOptions? options = null)
-        : this(new BindingScope(registry ?? throw new ArgumentNullException(nameof(registry))), options)
+        : this(BindingScope.For(registry, ScopeClaim.Rules), options)
+    {
+    }
+
+    /// <summary>
+    /// Creates a rule set paired with a <see cref="PropositionSet"/>: the two share one binding
+    /// scope, so a proposition edit and a rule update cannot interleave, and republishing a
+    /// proposition rebinds every rule here that references it — all of them, or none.
+    /// </summary>
+    /// <remarks>
+    /// This is the supported way to run rules and authored propositions together. Construct the
+    /// proposition set first, register its models and <see cref="PropositionSet.Load"/> it, then
+    /// build the rule set from it — <see cref="Add"/> binds a rule's default immediately, so any
+    /// proposition that default references must already be live.
+    /// </remarks>
+    /// <param name="propositions">The proposition set these rules resolve authored propositions from.</param>
+    /// <param name="options">Options forwarded to the underlying serializer, or null for defaults.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="propositions"/> is null.</exception>
+    public RuleSet(PropositionSet propositions, RuleSerializerOptions? options = null)
+        : this((propositions ?? throw new ArgumentNullException(nameof(propositions))).Scope, options)
     {
     }
 
@@ -161,6 +191,8 @@ public sealed class RuleSet
         if (references.Count == 0)
         {
             Scope.Graph.Remove(node);
+            // Defensive rather than load-bearing: a rule is only ever enrolled by the branch below,
+            // which is also what put the graph edges there, so the two always come and go together.
             Scope.Withdraw(node);
             return;
         }

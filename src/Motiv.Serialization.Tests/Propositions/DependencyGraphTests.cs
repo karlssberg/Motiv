@@ -235,6 +235,38 @@ public class DependencyGraphTests
     }
 
     [Fact]
+    public void Should_forget_a_removed_nodes_outgoing_edges_too()
+    {
+        // Arrange — the reverse index alone is not enough: FindCycle walks forward, over the
+        // outgoing edges, so a removed node left with its own edges still closes phantom cycles
+        var graph = new DependencyGraph();
+        graph.Set(NodeId.Proposition("b"), ["a"]);
+
+        // Act
+        graph.Remove(NodeId.Proposition("b"));
+
+        // Assert — b is gone, so pointing a at b cannot close a loop back to a
+        graph.FindCycle("a", ["b"]).ShouldBeNull();
+    }
+
+    [Fact]
+    public void Should_not_track_later_mutations_of_the_reference_list_it_was_given()
+    {
+        // Arrange — the graph must own its edges. Storing the caller's list by reference leaves the
+        // forward walk reading edges that were never recorded: the reverse index would not know
+        // about them, but FindCycle would follow them and report a cycle that does not exist.
+        var graph = new DependencyGraph();
+        var references = new List<string> { "x" };
+        graph.Set(NodeId.Proposition("b"), references);
+
+        // Act
+        references.Add("a");
+
+        // Assert — b's recorded edges are still just ["x"], so pointing a at b closes nothing
+        graph.FindCycle("a", ["b"]).ShouldBeNull();
+    }
+
+    [Fact]
     public void Should_replace_a_nodes_edges_when_set_again()
     {
         // Arrange

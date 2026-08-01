@@ -16,6 +16,13 @@ internal enum NodeKind
 /// </summary>
 internal readonly record struct NodeId(NodeKind Kind, string Name)
 {
+    /// <summary>
+    /// How the kind is spelled on the wire, in <c>PropositionDependent.Kind</c> and
+    /// <c>BrokenDependent.Kind</c>. One producer, because it is one contract: clients switch on
+    /// these strings, so two independent copies of the mapping is one copy too many.
+    /// </summary>
+    public string KindLabel => Kind == NodeKind.Rule ? "rule" : "proposition";
+
     public static NodeId Proposition(string name) => new(NodeKind.Proposition, name);
 
     public static NodeId Rule(string name) => new(NodeKind.Rule, name);

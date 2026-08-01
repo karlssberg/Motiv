@@ -17,8 +17,13 @@ internal sealed class DependencyGraph
     public void Set(NodeId node, IReadOnlyList<string> references)
     {
         Detach(node);
-        _outgoing[node] = references;
-        foreach (var reference in references)
+        // Copied, not aliased, and the reverse index below is built from the copy: the two indexes
+        // have to agree, and a caller that went on mutating its list would leave the forward walk
+        // following edges the reverse index never recorded — FindCycle would then report cycles
+        // that do not exist.
+        string[] edges = [.. references];
+        _outgoing[node] = edges;
+        foreach (var reference in edges)
         {
             if (!_incoming.TryGetValue(reference, out var referrers))
                 _incoming[reference] = referrers = [];

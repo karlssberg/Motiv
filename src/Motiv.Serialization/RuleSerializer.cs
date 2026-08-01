@@ -1,8 +1,9 @@
 namespace Motiv.Serialization;
 
 /// <summary>
-/// Loads externalized JSON rule documents into Motiv specs, resolving leaf references against a
-/// <see cref="SpecRegistry" />.
+/// Loads externalized JSON rule documents into Motiv specs, resolving leaf references against an
+/// <see cref="ISpecSource" /> — a <see cref="SpecRegistry" /> on its own, or a layered source in
+/// which runtime-authored propositions shadow and extend the compiled catalog.
 /// </summary>
 public sealed class RuleSerializer
 {

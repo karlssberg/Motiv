@@ -40,6 +40,11 @@ public class RuleCascadeTests
     private sealed class CanCheckoutAsyncPolicyRule()
         : AsyncPolicyRule<Customer, string>("can-checkout-async-policy", PassesCheckPolicy);
 
+    private sealed class AuthoredDefaultRule()
+        : Rule<Customer, string>(
+            "can-checkout-authored",
+            RuleDocuments.FromJson("""{ "rule": { "spec": "customer.eligible" } }"""));
+
     private static (PropositionSet Propositions, RuleSet Rules, CanCheckoutRule Rule) NewHost()
     {
         var registry = new SpecRegistry()
@@ -65,6 +70,35 @@ public class RuleCascadeTests
 
         // Act — the rule is never touched again
         propositions.Update("customer.eligible", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
+
+        // Assert
+        rule.Evaluate(inactiveAdult).Satisfied.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// A rule registered with a *document* default already references propositions the moment it is
+    /// added, so registration — not just <see cref="RuleSet.Update"/> — has to record its edges.
+    /// Every other cascade test starts from a compiled default, which references nothing.
+    /// </summary>
+    [Fact]
+    public void Should_track_a_rule_whose_default_document_references_a_proposition()
+    {
+        // Arrange — the proposition has to exist before the rule's default can bind against it
+        var registry = new SpecRegistry()
+            .Register("customer.is-active", IsActive)
+            .Register("customer.is-adult", IsAdult);
+        var scope = new BindingScope(registry);
+        var propositions = new PropositionSet(scope, new InMemoryPropositionStore()).AddModel<Customer>("customer");
+        propositions.Create("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+
+        var rule = new AuthoredDefaultRule();
+        new RuleSet(scope).Add(rule);
+        var inactiveAdult = new Customer(IsActive: false, Age: 30);
+        rule.Evaluate(inactiveAdult).Satisfied.ShouldBeFalse();
+
+        // Act — the rule is never updated; only the proposition beneath it moves
+        propositions.Update("customer.eligible", """{ "rule": { "spec": "customer.is-adult" } }""", 1)
+            .Outcome.ShouldBe(PropositionUpdateOutcome.Updated);
 
         // Assert
         rule.Evaluate(inactiveAdult).Satisfied.ShouldBeTrue();
@@ -133,7 +167,7 @@ public class RuleCascadeTests
 
     /// <summary>The async counterpart: <see cref="AsyncPolicyRule{TModel,TMetadata}.EvaluateAsync"/> carries the same unchecked cast.</summary>
     [Fact]
-    public void Should_reject_a_cascade_rebind_that_would_turn_an_async_policy_rule_into_a_spec()
+    public async Task Should_reject_a_cascade_rebind_that_would_turn_an_async_policy_rule_into_a_spec()
     {
         // Arrange
         var registry = new SpecRegistry()
@@ -157,8 +191,11 @@ public class RuleCascadeTests
         result.BrokenDependents[0].Name.ShouldBe("can-checkout-async-policy");
         result.BrokenDependents[0].Errors.ShouldContain(error => error.Code == RuleErrorCode.PolicyRequired);
 
-        // The rule itself is untouched, and still bound to a policy
+        // The rule itself is untouched, and still bound to a policy — the unchecked cast inside
+        // EvaluateAsync is precisely what a bad rebind would have turned into a crash, so actually
+        // evaluating is the assertion this test exists to make
         rule.Version.ShouldBe(2);
+        (await rule.EvaluateAsync(new Customer(IsActive: true, Age: 30))).Satisfied.ShouldBeTrue();
     }
 
     [Fact]

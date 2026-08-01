@@ -100,8 +100,10 @@ public class PropositionSetLoadTests
         // Act
         var (set, scope) = Load(stored);
 
-        // Assert
-        set.Find("customer.b")!.Quarantine.ShouldNotBeEmpty();
+        // Assert — b is quarantined for the right reason: a never bound, so it never reached the
+        // overlay, and b's own reference to it is what fails to resolve
+        set.Find("customer.b")!.Quarantine.ShouldContain(error =>
+            error.Code == RuleErrorCode.UnknownSpec && error.Message.Contains("customer.a"));
         scope.Source.Find("customer.b").ShouldBeNull();
     }
 
@@ -207,23 +209,124 @@ public class PropositionSetLoadTests
         scope.Source.Find("customer.is-eligible")!.Spec.ShouldBeSameAs(IsEligible);
     }
 
+    /// <summary>
+    /// A document with no <c>rule</c> at all parses to a <see cref="RuleDocument"/> with a null root,
+    /// and Load reads its references *outside* SafeParse's try/catch — so
+    /// <c>DocumentReferences.From</c>'s null-root guard is the only thing between a <c>{}</c> row and
+    /// a NullReferenceException out of startup.
+    /// </summary>
     [Fact]
-    public void Should_never_throw_when_a_stored_document_is_null()
+    public void Should_quarantine_a_stored_document_with_no_rule()
     {
-        // Arrange — System.Text.Json will happily populate this non-nullable property with `null`
-        // from a `"documentJson": null` row; JsonDocument.Parse(null, ...) then throws
-        // ArgumentNullException, which is not a JsonException and is not caught inside Parse itself
-        var store = new InMemoryPropositionStore();
-        store.Save(Stored("customer.a", null!));
+        // Act
+        var (set, scope) = Load(Stored("customer.a", "{ }"));
+
+        // Assert
+        set.Find("customer.a")!.Quarantine.ShouldContain(error => error.Code == RuleErrorCode.InvalidNode);
+        scope.Source.Find("customer.a").ShouldBeNull();
+    }
+
+    /// <summary>The shapes a hand-edited or null-serialized store row can arrive in.</summary>
+    public enum MalformedStore
+    {
+        /// <summary>Load() itself returns null.</summary>
+        NullList,
+
+        /// <summary>A null element in the list — <c>Deserialize&lt;List&lt;StoredProposition&gt;&gt;("[null]")</c>.</summary>
+        NullRow,
+
+        /// <summary>A row whose name is null, so it cannot even be keyed by name.</summary>
+        NullName,
+
+        /// <summary>A row whose model-type id is null.</summary>
+        NullModelType,
+
+        /// <summary>A row whose document JSON is null.</summary>
+        NullDocument
+    }
+
+    /// <summary>A store that hands back exactly what it was given, nulls included.</summary>
+    private sealed class RawStore(IReadOnlyList<StoredProposition>? rows) : IPropositionStore
+    {
+        public IReadOnlyList<StoredProposition> Load() => rows!;
+
+        public void Save(StoredProposition proposition) { }
+
+        public void Delete(string name) { }
+    }
+
+    [Theory]
+    [InlineData(MalformedStore.NullList)]
+    [InlineData(MalformedStore.NullRow)]
+    [InlineData(MalformedStore.NullName)]
+    [InlineData(MalformedStore.NullModelType)]
+    [InlineData(MalformedStore.NullDocument)]
+    public void Should_never_throw_when_the_store_yields_a_malformed_row(MalformedStore shape)
+    {
+        // Arrange — quarantine exists so one bad row is never fatal, and a hand-edited store is not
+        // bound by the non-nullable property types. `Deserialize<List<StoredProposition>>("[null]")`
+        // really does yield a one-element list holding null, and a `"documentJson": null` row
+        // reaches JsonDocument.Parse(null, ...), which throws ArgumentNullException rather than the
+        // JsonException Parse itself guards against.
+        const string document = """{ "rule": { "spec": "customer.is-active" } }""";
+        IReadOnlyList<StoredProposition>? rows = shape switch
+        {
+            MalformedStore.NullList => null,
+            MalformedStore.NullRow => [null!],
+            MalformedStore.NullName => [new StoredProposition(null!, "customer", document, 1, null)],
+            MalformedStore.NullModelType => [new StoredProposition("customer.a", null!, document, 1, null)],
+            MalformedStore.NullDocument => [new StoredProposition("customer.a", "customer", null!, 1, null)],
+            _ => throw new ArgumentOutOfRangeException(nameof(shape))
+        };
+
         var scope = new BindingScope(new SpecRegistry().Register("customer.is-active", IsActive));
-        var set = new PropositionSet(scope, store).AddModel<Customer>("customer");
+        var set = new PropositionSet(scope, new RawStore(rows)).AddModel<Customer>("customer");
 
         // Act
         var load = () => set.Load();
 
-        // Assert
+        // Assert — none of these may stop the host booting
         load.ShouldNotThrow();
-        set.Find("customer.a")!.Quarantine.ShouldNotBeEmpty();
+
+        // A row carrying a usable name is recorded, quarantined, so it can be found and repaired.
+        // The two rows with no usable name have nowhere to be recorded, so they are simply skipped.
+        switch (shape)
+        {
+            case MalformedStore.NullModelType:
+                set.Find("customer.a")!.Quarantine
+                    .ShouldContain(error => error.Code == RuleErrorCode.ModelTypeMismatch);
+                break;
+            case MalformedStore.NullDocument:
+                set.Find("customer.a")!.Quarantine
+                    .ShouldContain(error => error.Code == RuleErrorCode.InvalidNode);
+                break;
+            default:
+                set.Propositions.ShouldAllBe(entry => entry.Origin == PropositionOrigin.Compiled);
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Load is a startup step, not an idempotent refresh. A second call cannot re-run cleanly: a row
+    /// that quarantines the second time round has already had its overlay entry and its graph edges
+    /// written by the first, and the quarantine path clears neither — so the catalog would report the
+    /// proposition broken while the evaluator carried on resolving the stale binding.
+    /// </summary>
+    [Fact]
+    public void Should_refuse_a_second_load()
+    {
+        // Arrange
+        var (set, scope) = Load(Stored("customer.a", """{ "rule": { "spec": "customer.is-active" } }"""));
+
+        // Act
+        var second = () => set.Load();
+
+        // Assert
+        second.ShouldThrow<InvalidOperationException>();
+
+        // The first load stands: refusing the second must not have disturbed it
+        scope.Source.Find("customer.a").ShouldNotBeNull();
+        set.Find("customer.a")!.Quarantine.ShouldBeEmpty();
     }
 
     [Fact]

@@ -41,7 +41,7 @@ public class PropositionSetUpdateTests
     }
 
     [Fact]
-    public void Should_update_a_document_and_bump_only_its_own_version()
+    public void Should_bump_the_version_of_an_updated_document()
     {
         // Arrange
         var (set, _, _) = NewSet();
@@ -102,6 +102,30 @@ public class PropositionSetUpdateTests
 
         // Assert
         Evaluate(scope, "customer.c", inactiveAdult).ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// Publishing re-enrols the dependent as a rebind participant, so a later cascade rebinds it
+    /// from the document it currently has. An enrol-if-absent that kept the *first* participant
+    /// would rebind b from its superseded document — b would silently revert on someone else's edit.
+    /// </summary>
+    [Fact]
+    public void Should_rebind_an_updated_dependent_from_its_current_document()
+    {
+        // Arrange — b is edited to mean "not a" before a itself is edited
+        var (set, scope, _) = NewSet();
+        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        set.Create("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
+        set.Update("customer.b", """{ "rule": { "not": { "spec": "customer.a" } } }""", 1)
+            .Outcome.ShouldBe(PropositionUpdateOutcome.Updated);
+        var inactiveAdult = new Customer(IsActive: false, Age: 30);
+
+        // Act — a now means "is an adult", which the adult satisfies
+        set.Update("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
+
+        // Assert — b means "not a", so it must now be false. Rebinding b's superseded document
+        // would make it a plain "a" again and report true.
+        Evaluate(scope, "customer.b", inactiveAdult).ShouldBeFalse();
     }
 
     [Fact]

@@ -8,18 +8,65 @@ namespace Motiv.Serialization;
 /// </summary>
 public sealed class PropositionSet
 {
-    private readonly BindingScope _scope;
     private readonly IPropositionStore _store;
     private readonly RuleSerializerOptions _options;
     private readonly Dictionary<string, PropositionModelBinding> _models = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Authored> _authored = new(StringComparer.Ordinal);
+    private bool _loaded;
 
+    /// <summary>
+    /// Creates a proposition set whose documents bind against the given registry, persisting to the
+    /// given store.
+    /// </summary>
+    /// <remarks>
+    /// Mirrors <see cref="RuleSet(SpecRegistry, RuleSerializerOptions)"/>, and opens a binding scope
+    /// of its own over the registry. Rules that are to see these propositions must therefore be built
+    /// from *this set* — <see cref="RuleSet(PropositionSet, RuleSerializerOptions)"/> — not from the
+    /// registry a second time; the registry refuses the latter rather than let the two drift apart
+    /// unnoticed. The intended order is: construct, <see cref="AddModel{TModel}"/>,
+    /// <see cref="Load"/>, then build the rule set, so a rule's default document may reference an
+    /// authored proposition.
+    /// </remarks>
+    /// <param name="registry">The registry proposition documents resolve spec references against.</param>
+    /// <param name="store">Where authored propositions persist.</param>
+    /// <param name="options">Options forwarded to the document parser and binder, or null for defaults.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="registry"/> or <paramref name="store"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">
+    /// A <see cref="RuleSet"/> was already built from <paramref name="registry"/>, so this set could
+    /// only ever be invisible to it.
+    /// </exception>
+    public PropositionSet(SpecRegistry registry, IPropositionStore store, RuleSerializerOptions? options = null)
+        : this(ScopeOver(registry, store), store, options)
+    {
+    }
+
+    /// <summary>
+    /// Opens the scope the public constructor chains through, having first checked the arguments
+    /// that constructor would otherwise only reach afterwards. Claiming a registry mutates an object
+    /// the caller owns and keeps, so a construction that is going to throw must not leave a claim
+    /// behind — the caller would be left holding a registry marked as backing a proposition set that
+    /// does not exist.
+    /// </summary>
+    private static BindingScope ScopeOver(SpecRegistry registry, IPropositionStore store)
+    {
+        if (store is null) throw new ArgumentNullException(nameof(store));
+
+        return BindingScope.For(registry, ScopeClaim.Propositions);
+    }
+
+    /// <summary>
+    /// Creates a proposition set sharing an existing <see cref="BindingScope"/>, so its edits reach
+    /// whatever else publishes under that scope.
+    /// </summary>
     internal PropositionSet(BindingScope scope, IPropositionStore store, RuleSerializerOptions? options = null)
     {
-        _scope = scope ?? throw new ArgumentNullException(nameof(scope));
+        Scope = scope ?? throw new ArgumentNullException(nameof(scope));
         _store = store ?? throw new ArgumentNullException(nameof(store));
         _options = options ?? new RuleSerializerOptions();
     }
+
+    /// <summary>The coordinator this set publishes under, and what a paired <see cref="RuleSet"/> joins.</summary>
+    internal BindingScope Scope { get; }
 
     /// <summary>
     /// Registers a model type authored propositions may be written against, capturing
@@ -29,7 +76,7 @@ public sealed class PropositionSet
     /// <param name="modelTypeId">The stable id clients pass as <c>modelType</c>.</param>
     /// <returns>This set, to allow chained registration.</returns>
     public PropositionSet AddModel<TModel>(string modelTypeId) =>
-        _scope.Locked(() =>
+        Scope.Locked(() =>
         {
             _models[modelTypeId] = new PropositionModelBinding
             {
@@ -58,11 +105,11 @@ public sealed class PropositionSet
     /// Every proposition in scope — compiled, overridden and authored — as one effective listing.
     /// </summary>
     public IReadOnlyCollection<PropositionEntry> Propositions =>
-        _scope.Locked(() =>
+        Scope.Locked(() =>
         {
             var entries = new Dictionary<string, PropositionEntry>(StringComparer.Ordinal);
 
-            foreach (var compiled in _scope.Registry.Entries)
+            foreach (var compiled in Scope.Registry.Entries)
                 entries[compiled.Name] = ToEntry(compiled);
 
             foreach (var authored in _authored.Values)
@@ -73,24 +120,23 @@ public sealed class PropositionSet
 
     /// <summary>One proposition's listing, or null when the name is unknown.</summary>
     public PropositionEntry? Find(string name) =>
-        _scope.Locked<PropositionEntry?>(() =>
+        Scope.Locked<PropositionEntry?>(() =>
         {
             if (_authored.TryGetValue(name, out var authored))
                 return ToEntry(authored);
 
-            return _scope.Registry.Find(name) is { } compiled ? ToEntry(compiled) : null;
+            return Scope.Registry.Find(name) is { } compiled ? ToEntry(compiled) : null;
         });
 
     /// <summary>The authored document behind a name, or null when the name has no authored document.</summary>
     public string? DocumentJsonOf(string name) =>
-        _scope.Locked(() => _authored.TryGetValue(name, out var authored) ? authored.DocumentJson : null);
+        Scope.Locked(() => _authored.TryGetValue(name, out var authored) ? authored.DocumentJson : null);
 
     /// <summary>The nodes that reference the given proposition, transitively, in rebind order.</summary>
     public IReadOnlyList<PropositionDependent> Dependents(string name) =>
-        _scope.Locked(() => (IReadOnlyList<PropositionDependent>)
-            [.. _scope.Graph.DependentClosure(name)
-                .Select(node => new PropositionDependent(
-                    node.Name, node.Kind == NodeKind.Rule ? "rule" : "proposition"))]);
+        Scope.Locked(() => (IReadOnlyList<PropositionDependent>)
+            [.. Scope.Graph.DependentClosure(name)
+                .Select(node => new PropositionDependent(node.Name, node.KindLabel))]);
 
     /// <summary>
     /// Authors a new proposition. A name already carrying an authored document is a conflict; a name
@@ -103,7 +149,7 @@ public sealed class PropositionSet
     /// <returns>The outcome. Nothing is published or persisted unless it is <c>Created</c>.</returns>
     public PropositionUpdateResult Create(
         string name, string modelTypeId, string documentJson, string? description) =>
-        _scope.Locked(() =>
+        Scope.Locked(() =>
         {
             if (_authored.ContainsKey(name))
                 return PropositionUpdateResult.NameTaken();
@@ -135,7 +181,7 @@ public sealed class PropositionSet
     /// <param name="expectedVersion">The version the caller last observed.</param>
     /// <returns>The outcome, carrying the dependents that broke when that is why it was rejected.</returns>
     public PropositionUpdateResult Update(string name, string documentJson, int expectedVersion) =>
-        _scope.Locked(() =>
+        Scope.Locked(() =>
         {
             if (!_authored.TryGetValue(name, out var current))
                 return PropositionUpdateResult.NotFound();
@@ -156,16 +202,16 @@ public sealed class PropositionSet
 
             // Bind the closure against a prospective overlay carrying the replacement, so a dependent
             // is checked against what it *would* resolve rather than what it resolves today.
-            var prospective = new PropositionOverlay(_scope.Overlay);
+            var prospective = new PropositionOverlay(Scope.Overlay);
             prospective.Set(entry);
 
             var commits = new List<IRebindCommit>();
-            var broken = _scope.PrepareClosure(name, prospective, commits);
+            var broken = Scope.PrepareClosure(name, prospective, commits);
             if (broken.Count > 0)
                 return PropositionUpdateResult.BreaksDependents(broken);
 
             Publish(replacement);
-            _scope.CommitClosure(commits);
+            Scope.CommitClosure(commits);
 
             return PropositionUpdateResult.Updated(replacement.Version);
         });
@@ -179,7 +225,7 @@ public sealed class PropositionSet
     /// <param name="expectedVersion">The version the caller last observed.</param>
     /// <returns>The outcome.</returns>
     public PropositionUpdateResult Withdraw(string name, int expectedVersion) =>
-        _scope.Locked(() =>
+        Scope.Locked(() =>
         {
             if (!_authored.TryGetValue(name, out var current))
                 return PropositionUpdateResult.NotFound();
@@ -187,13 +233,13 @@ public sealed class PropositionSet
             if (current.Version != expectedVersion)
                 return PropositionUpdateResult.VersionConflict(current.Version);
 
-            var compiled = _scope.Registry.Find(name);
+            var compiled = Scope.Registry.Find(name);
             var commits = new List<IRebindCommit>();
 
             if (compiled is null)
             {
                 // Removal would leave referrers pointing at nothing, so direct referrers block it.
-                var referrers = _scope.Graph.Referrers(name);
+                var referrers = Scope.Graph.Referrers(name);
                 if (referrers.Count > 0)
                     return PropositionUpdateResult.Referenced([.. referrers.Select(node => node.Name)]);
             }
@@ -201,10 +247,10 @@ public sealed class PropositionSet
             {
                 // Reverting changes what referrers resolve, so it takes the same transactional check
                 // as any other edit — the compiled spec may not satisfy every dependent.
-                var prospective = new PropositionOverlay(_scope.Overlay);
+                var prospective = new PropositionOverlay(Scope.Overlay);
                 prospective.Remove(name);
 
-                var broken = _scope.PrepareClosure(name, prospective, commits);
+                var broken = Scope.PrepareClosure(name, prospective, commits);
                 if (broken.Count > 0)
                     return PropositionUpdateResult.BreaksDependents(broken);
             }
@@ -213,12 +259,14 @@ public sealed class PropositionSet
             // does — keeping "all of it, or none" true even though there is no explicit rollback for
             // the in-memory mutations, including dependent commits, that follow.
             _store.Delete(name);
-            _scope.CommitClosure(commits);
+            Scope.CommitClosure(commits);
 
             _authored.Remove(name);
-            _scope.Overlay.Remove(name);
-            _scope.Graph.Remove(current.Node);
-            _scope.Withdraw(current.Node);
+            Scope.Overlay.Remove(name);
+            Scope.Graph.Remove(current.Node);
+            // Defensive rather than load-bearing: a proposition is only ever enrolled by Publish,
+            // which is also what put the graph edges above, so the two always come and go together.
+            Scope.Withdraw(current.Node);
 
             return PropositionUpdateResult.Removed();
         });
@@ -240,23 +288,25 @@ public sealed class PropositionSet
     /// edges, so those dependents are not tracked as needing a rebind and stay quarantined until they
     /// are themselves updated.
     /// </remarks>
+    /// <exception cref="InvalidOperationException">Load has already been called on this set.</exception>
     public void Load() =>
-        _scope.Locked(() =>
+        Scope.Locked(() =>
         {
-            var candidates = new Dictionary<string, LoadCandidate>(StringComparer.Ordinal);
+            // "Call once" is a precondition, not advice. A second pass cannot re-run cleanly: a row
+            // that binds the first time and quarantines the second has already had its overlay entry
+            // and its graph edges written, and the quarantine path clears neither — leaving the
+            // catalog reporting it broken while the evaluator still resolves the stale binding. A
+            // refresh would have to be a whole rebuild, so refuse rather than half-do it.
+            if (_loaded)
+                throw new InvalidOperationException(
+                    "Load has already been called on this PropositionSet. It reads the store once, " +
+                    "at startup, before rules are added; it is not a refresh.");
 
-            foreach (var proposition in _store.Load())
-            {
-                // Parsed up front purely to order the binding; name and parse failures are carried
-                // forward so the document is still listed, quarantined, rather than silently dropped.
-                var errors = new List<RuleError>();
-                if (ValidateName(proposition.Name) is { } nameError)
-                    errors.Add(nameError);
-
-                var document = SafeParse(proposition.DocumentJson, errors);
-                candidates[proposition.Name] = new LoadCandidate(
-                    proposition, document is null ? [] : DocumentReferences.From(document), errors);
-            }
+            // Set only once the store has actually been read. Reading is the one step here that can
+            // throw rather than quarantine, and it mutates nothing — so a store that was briefly
+            // unreachable leaves the set in its pre-load state and genuinely may be loaded again.
+            var candidates = ReadCandidates();
+            _loaded = true;
 
             // A hand-edited store can contain a reference cycle that Create/Update would have
             // rejected outright — nothing here goes through DependencyGraph.FindCycle. Every member
@@ -274,6 +324,38 @@ public sealed class PropositionSet
             foreach (var name in ordered)
                 LoadOne(candidates[name]);
         });
+
+    /// <summary>
+    /// Reads every stored row into a candidate keyed by name, parsing each document up front purely
+    /// to order the binding. Name and parse failures are carried forward on the candidate rather
+    /// than thrown, so the document is still listed, quarantined, rather than silently dropped.
+    /// </summary>
+    private Dictionary<string, LoadCandidate> ReadCandidates()
+    {
+        var candidates = new Dictionary<string, LoadCandidate>(StringComparer.Ordinal);
+
+        // A store is a dumb sink, so a hand-edited or null-serialized one can hand back a null list
+        // as readily as a null row — `Deserialize<List<StoredProposition>>("[null]")` yields exactly
+        // that. Neither may be fatal: quarantine exists so a bad row costs its own row.
+        foreach (var proposition in _store.Load() ?? [])
+        {
+            // A quarantine entry is keyed by name, so a row with no usable name has nowhere to be
+            // recorded and skipping it is the only non-fatal option. Every other malformed shape
+            // carries a name and is quarantined instead, staying visible for repair.
+            if (proposition?.Name is null)
+                continue;
+
+            var errors = new List<RuleError>();
+            if (ValidateName(proposition.Name) is { } nameError)
+                errors.Add(nameError);
+
+            var document = SafeParse(proposition.DocumentJson, errors);
+            candidates[proposition.Name] = new LoadCandidate(
+                proposition, document is null ? [] : DocumentReferences.From(document), errors);
+        }
+
+        return candidates;
+    }
 
     /// <summary>Binds one stored proposition, publishing it or quarantining it.</summary>
     private void LoadOne(LoadCandidate candidate)
@@ -297,7 +379,7 @@ public sealed class PropositionSet
         }
 
         var errors = new List<RuleError>();
-        var commit = authored.PrepareRebind(_scope.Source, errors);
+        var commit = authored.PrepareRebind(Scope.Source, errors);
 
         if (commit is null)
         {
@@ -307,10 +389,12 @@ public sealed class PropositionSet
             return;
         }
 
+        // The same three steps Publish takes to go live, minus the store write — this row came
+        // *from* the store, so saving it back would be a no-op at best.
         commit.Commit();
-        _scope.Overlay.Set(authored.Bound!);
-        _scope.Graph.Set(authored.Node, candidate.References);
-        _scope.Enrol(authored);
+        Scope.Overlay.Set(authored.Bound!);
+        Scope.Graph.Set(authored.Node, authored.References);
+        Scope.Enrol(authored);
     }
 
     /// <summary>Parses without letting malformed JSON escape — a hand-edited store must not stop startup.</summary>
@@ -404,11 +488,14 @@ public sealed class PropositionSet
                 "start with an ASCII letter and contain only ASCII letters, digits, '-' or '_'");
 
     /// <summary>
-    /// The binder registered for a model-type id, or null once the mismatch has been recorded.
+    /// The binder registered for a model-type id, or null once the mismatch has been recorded. The
+    /// id is typed nullable because a stored row really can carry one — the property that holds it
+    /// is non-nullable, but a hand-edited or null-serialized store is not bound by that — and an
+    /// unusable model type is a quarantine reason, never a reason to throw and fail startup.
     /// </summary>
-    private PropositionModelBinding? ResolveModel(string modelTypeId, List<RuleError> errors)
+    private PropositionModelBinding? ResolveModel(string? modelTypeId, List<RuleError> errors)
     {
-        if (_models.TryGetValue(modelTypeId, out var model))
+        if (modelTypeId is not null && _models.TryGetValue(modelTypeId, out var model))
             return model;
 
         errors.Add(new RuleError("$.modelType", RuleErrorCode.ModelTypeMismatch,
@@ -443,15 +530,15 @@ public sealed class PropositionSet
 
         var references = DocumentReferences.From(document);
 
-        if (_scope.Graph.FindCycle(name, references) is { } cycle)
+        if (Scope.Graph.FindCycle(name, references) is { } cycle)
         {
             errors.Add(new RuleError("$", RuleErrorCode.CycleDetected,
                 $"publishing '{name}' would create a reference cycle: {string.Join(" → ", cycle)}"));
             return new Prepared(null, references, errors);
         }
 
-        var isAsync = BindsAsync(_scope.Source, references);
-        var entry = model.Bind(_scope.Source, name, description, document, isAsync, errors);
+        var isAsync = BindsAsync(Scope.Source, references);
+        var entry = model.Bind(Scope.Source, name, description, document, isAsync, errors);
         return new Prepared(entry, references, errors);
     }
 
@@ -466,14 +553,14 @@ public sealed class PropositionSet
         _store.Save(new StoredProposition(
             authored.Name, authored.ModelTypeId, authored.DocumentJson, authored.Version, authored.Description));
         _authored[authored.Name] = authored;
-        _scope.Overlay.Set(authored.Bound!);
-        _scope.Graph.Set(authored.Node, authored.References);
-        _scope.Enrol(authored);
+        Scope.Overlay.Set(authored.Bound!);
+        Scope.Graph.Set(authored.Node, authored.References);
+        Scope.Enrol(authored);
     }
 
     private PropositionEntry ToEntry(Authored authored)
     {
-        var compiled = _scope.Registry.Find(authored.Name);
+        var compiled = Scope.Registry.Find(authored.Name);
         var origin = compiled is null ? PropositionOrigin.Authored : PropositionOrigin.Overridden;
 
         // A quarantined proposition has no binding of its own, so its shape is reported from the

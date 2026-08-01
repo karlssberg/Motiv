@@ -23,6 +23,25 @@ internal sealed class BindingScope
         Source = new LayeredSpecSource(Overlay, registry);
     }
 
+    /// <summary>
+    /// Opens a scope over a registry on behalf of a public constructor, recording the claim so the
+    /// one pairing that would fail silently is refused here instead — see
+    /// <see cref="SpecRegistry.ClaimScope"/> for which pairing, and why it has to be refused rather
+    /// than reported later. Claiming before constructing is deliberate: a refused claim then leaves
+    /// no half-built scope behind it.
+    /// </summary>
+    /// <param name="registry">The registry to open a scope over.</param>
+    /// <param name="claim">Which kind of set is opening it.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="registry"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">The registry is already claimed by the other kind.</exception>
+    public static BindingScope For(SpecRegistry registry, ScopeClaim claim)
+    {
+        if (registry is null) throw new ArgumentNullException(nameof(registry));
+
+        registry.ClaimScope(claim);
+        return new BindingScope(registry);
+    }
+
     /// <summary>The immutable compiled catalog.</summary>
     public SpecRegistry Registry { get; }
 
@@ -95,10 +114,7 @@ internal sealed class BindingScope
 
             if (commit is null)
             {
-                broken.Add(new BrokenDependent(
-                    node.Name,
-                    node.Kind == NodeKind.Rule ? "rule" : "proposition",
-                    errors));
+                broken.Add(new BrokenDependent(node.Name, node.KindLabel, errors));
                 // Keep going: reporting only the first break would make a wide failure take many
                 // round trips to diagnose.
                 continue;
@@ -130,4 +146,17 @@ internal sealed class BindingScope
                 Overlay.Set(entry);
         }
     }
+}
+
+/// <summary>Which kind of set opened a <see cref="BindingScope"/> over a <see cref="SpecRegistry"/>.</summary>
+internal enum ScopeClaim
+{
+    /// <summary>No public constructor has opened a scope over the registry yet.</summary>
+    None,
+
+    /// <summary>A <see cref="RuleSet"/> was built from the registry.</summary>
+    Rules,
+
+    /// <summary>A <see cref="PropositionSet"/> was built from the registry.</summary>
+    Propositions
 }

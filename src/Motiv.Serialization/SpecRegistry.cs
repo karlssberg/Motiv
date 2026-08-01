@@ -7,13 +7,15 @@ namespace Motiv.Serialization;
 /// <remarks>
 /// Registration is intended to happen once at startup, before any documents are loaded. The
 /// underlying dictionary is not synchronized: the registry is safe for concurrent reads (e.g.
-/// concurrent <see cref="Find"/> calls) once population has finished, but <see cref="Register{TModel,TMetadata}(string,SpecBase{TModel,TMetadata})"/>
-/// and its overload must not run concurrently with reads or with other registrations.
+/// concurrent <see cref="Find"/> calls) once population has finished, but
+/// <see cref="Register{TModel,TMetadata}(string,SpecBase{TModel,TMetadata},string)"/> and its
+/// overload must not run concurrently with reads or with other registrations.
 /// </remarks>
 public sealed class SpecRegistry : ISpecSource
 {
     private readonly Dictionary<string, SpecRegistryEntry> _entries = new(StringComparer.Ordinal);
     private readonly Dictionary<(Type Parent, string Path), object> _collections = new();
+    private ScopeClaim _claim = ScopeClaim.None;
 
     /// <summary>The number of registered specs.</summary>
     public int Count => _entries.Count;
@@ -104,6 +106,30 @@ public sealed class SpecRegistry : ISpecSource
     /// internal method must remain directly callable on <see cref="SpecRegistry"/> for existing callers.
     /// </summary>
     CollectionBinding<TParent>? ISpecSource.FindCollection<TParent>(string path) => FindCollection<TParent>(path);
+
+    /// <summary>
+    /// Records that a public constructor has opened a <see cref="BindingScope"/> over this registry,
+    /// and refuses the one pairing that fails silently: a <see cref="RuleSet"/> and a
+    /// <see cref="PropositionSet"/> built separately from the same registry hold a scope each, so
+    /// they are invisible to one another and every cascade quietly reaches nothing. Repeating the
+    /// same claim is fine — two rule sets over one registry never shared a scope to begin with.
+    /// </summary>
+    /// <param name="claim">Which kind of set is opening the scope.</param>
+    /// <exception cref="InvalidOperationException">The registry is already claimed by the other kind.</exception>
+    internal void ClaimScope(ScopeClaim claim)
+    {
+        if (_claim != ScopeClaim.None && _claim != claim)
+            throw new InvalidOperationException(
+                $"This {nameof(SpecRegistry)} already backs a {NameOf(_claim)}, so building a {NameOf(claim)} from " +
+                "it would open a second binding scope. The two would be invisible to each other: a proposition " +
+                "edit would never reach the rules that reference it, and nothing would report it. Construct the " +
+                $"{nameof(PropositionSet)} first, then pair the rules to it with new RuleSet(propositionSet).");
+
+        _claim = claim;
+    }
+
+    private static string NameOf(ScopeClaim claim) =>
+        claim == ScopeClaim.Rules ? nameof(RuleSet) : nameof(PropositionSet);
 
     private SpecRegistry Add(string name, object? spec, Type modelType, Type metadataType, bool isAsync, string? description)
     {
