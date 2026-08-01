@@ -10,7 +10,7 @@ import { EditorPane } from './EditorPane.js';
 import { JsonPane } from './JsonPane.js';
 import { EvaluatePane } from './EvaluatePane.js';
 import { PropositionExplorer } from '../explorer/PropositionExplorer.js';
-import { PropositionDialog, type DialogSeed } from '../explorer/PropositionDialog.js';
+import { PropositionDialog, type DialogSeed, type DialogValues } from '../explorer/PropositionDialog.js';
 import { DependentsStrip } from '../explorer/DependentsStrip.js';
 
 /** The loaded proposition's server identity: what Save must send back to avoid clobbering. */
@@ -142,11 +142,14 @@ export function PropositionsPage(props: {
     props.onSelect(null);
   };
 
-  const create = async (values: {
-    name: string; modelType: string; description: string | null;
-  }): Promise<void> => {
-    const document = dialog?.deriveFrom ? { rule: { spec: dialog.deriveFrom } } : state.document;
-    const result = await props.client.createProposition({ ...values, document });
+  // Every flow creates the same shape: a reference to one spec that already exists. UI-authored
+  // propositions are composition-only, so there is no emptier document to start from — and reading
+  // the editor's draft instead would make what gets created depend on which page was opened first.
+  const create = async ({ startsFrom, ...values }: DialogValues): Promise<void> => {
+    const result = await props.client.createProposition({
+      ...values,
+      document: { rule: { spec: startsFrom } },
+    });
 
     if (result.outcome !== 'saved') {
       setDialogError(describeFailure(result));
@@ -227,24 +230,24 @@ export function PropositionsPage(props: {
               // Prefilled to the source's namespace, so a derivation lands beside its origin.
               name: name.includes('.') ? `${name.slice(0, name.lastIndexOf('.'))}.` : '',
               modelType: modelTypeOf(name),
-              deriveFrom: name,
+              startsFrom: name,
               title: `Derive from ${name}`,
             }),
             onOverride: (name) => openDialog({
               // An override is authored under the compiled spec's *own* name — POST against a name
               // that exists only as a compiled spec is what mints the overlay entry. So the name is
-              // prefilled whole, and `deriveFrom` stays null: referencing the name being defined
-              // would be a cycle straight back onto itself. The body is what is in the editor,
-              // which is a composition over the same model.
+              // prefilled whole, and `startsFrom` stays null: referencing the name being defined
+              // would be a cycle straight back onto itself, so the dialog asks which of the model's
+              // *other* specs to compose the replacement from.
               name,
               modelType: modelTypeOf(name),
-              deriveFrom: null,
+              startsFrom: null,
               title: `Override ${name}`,
             }),
             onNew: () => openDialog({
               name: '',
               modelType: defaultModelType,
-              deriveFrom: null,
+              startsFrom: null,
               title: 'New proposition',
             }),
             onDelete: (entry) => void remove(entry),
@@ -258,7 +261,7 @@ export function PropositionsPage(props: {
       {dialog && (
         <PropositionDialog
           seed={dialog}
-          modelTypes={modelTypes.length > 0 ? modelTypes : [defaultModelType]}
+          sources={entries}
           error={dialogError}
           onCancel={() => { setDialog(null); setDialogError(null); }}
           onCreate={(values) => void create(values)}

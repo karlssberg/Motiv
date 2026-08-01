@@ -40,6 +40,11 @@ function stubClient(overrides: Record<string, unknown> = {}) {
   };
 }
 
+/** The values a `<select>` currently offers, in the order it offers them. */
+function optionsOf(label: string | RegExp): string[] {
+  return [...(screen.getByLabelText(label) as HTMLSelectElement).options].map((option) => option.value);
+}
+
 function renderPage(
   client: ReturnType<typeof stubClient>,
   selected: string | null = null,
@@ -189,41 +194,110 @@ describe('PropositionsPage', () => {
 
   it('creates a proposition from the new dialog', async () => {
     const client = stubClient();
-    renderPage(client);
+    // The store is shared with the Rules page, and on a freshly-opened Propositions page it still
+    // holds that page's draft. A create that copied it would depend on which page was visited
+    // first, so the fixture is deliberately a document no source in the listing could produce.
+    renderPage(client, null, { rule: { spec: 'customer.has-orders' } });
     await screen.findByRole('treeitem', { name: /is-active/ });
 
     await userEvent.click(screen.getByRole('button', { name: /^new$/i }));
     await userEvent.type(screen.getByLabelText('Name'), 'customer.fresh');
     await userEvent.click(screen.getByRole('button', { name: /create/i }));
 
+    // No source picked, so the create starts from the first one offered — not from the draft.
     await waitFor(() => expect(client.createProposition).toHaveBeenCalledWith(expect.objectContaining({
       name: 'customer.fresh',
       modelType: 'customer',
+      document: { rule: { spec: 'customer.derived' } },
     })));
+  });
+
+  it('starts a new proposition from whichever source is picked', async () => {
+    const client = stubClient();
+    renderPage(client, null, { rule: { spec: 'customer.has-orders' } });
+    await screen.findByRole('treeitem', { name: /is-active/ });
+
+    await userEvent.click(screen.getByRole('button', { name: /^new$/i }));
+    await userEvent.type(screen.getByLabelText('Name'), 'customer.fresh');
+    await userEvent.selectOptions(screen.getByLabelText(/starts from/i), 'customer.overridden');
+    await userEvent.click(screen.getByRole('button', { name: /create/i }));
+
+    await waitFor(() => expect(client.createProposition).toHaveBeenCalledWith(expect.objectContaining({
+      document: { rule: { spec: 'customer.overridden' } },
+    })));
+  });
+
+  it('offers only the sources belonging to the model type in force', async () => {
+    const client = stubClient({
+      listPropositions: vi.fn().mockResolvedValue([
+        entry({ name: 'customer.derived' }),
+        entry({ name: 'customer.overridden', origin: 'Overridden', version: 2 }),
+        entry({ name: 'order.is-paid', modelType: 'order' }),
+      ]),
+    });
+    renderPage(client);
+    await screen.findByRole('treeitem', { name: /derived/ });
+
+    await userEvent.click(screen.getByRole('button', { name: /^new$/i }));
+    await userEvent.type(screen.getByLabelText('Name'), 'order.fresh');
+    expect(optionsOf(/starts from/i)).toEqual(['customer.derived', 'customer.overridden']);
+
+    // Deliberately a source that is neither the default nor available under the model chosen next:
+    // the picker has to follow the model select, and a choice of another model would not bind, so
+    // it is replaced rather than left standing.
+    await userEvent.selectOptions(screen.getByLabelText(/starts from/i), 'customer.overridden');
+    await userEvent.selectOptions(screen.getByLabelText('Model type'), 'order');
+
+    expect(optionsOf(/starts from/i)).toEqual(['order.is-paid']);
+    await userEvent.click(screen.getByRole('button', { name: /create/i }));
+    await waitFor(() => expect(client.createProposition).toHaveBeenCalledWith(expect.objectContaining({
+      modelType: 'order',
+      document: { rule: { spec: 'order.is-paid' } },
+    })));
+  });
+
+  it('says why it cannot create when there is nothing to start from', async () => {
+    const client = stubClient({ listPropositions: vi.fn().mockResolvedValue([]) });
+    renderPage(client);
+    await waitFor(() => expect(client.listPropositions).toHaveBeenCalled());
+
+    await userEvent.click(screen.getByRole('button', { name: /^new$/i }));
+    await userEvent.type(screen.getByLabelText('Name'), 'customer.fresh');
+
+    // A UI-authored proposition is composition-only, so with nothing registered to compose over
+    // there is nothing to create. The button being dead is not an explanation, so it is said.
+    expect(screen.getByRole('button', { name: /create/i }).hasAttribute('disabled')).toBe(true);
+    expect(screen.getByText(/nothing to start from/i)).toBeTruthy();
   });
 
   it('seeds the dialog from the derived-from node', async () => {
     const client = stubClient();
-    renderPage(client, 'customer.derived');
+    // Not the first source alphabetically, so preselecting it cannot be confused with simply
+    // falling back to the head of the list.
+    renderPage(client, 'customer.overridden');
     await waitFor(() => expect(client.getProposition).toHaveBeenCalled());
 
     await userEvent.click(await screen.findByRole('button', { name: /derive/i }));
 
     // Prefilled to the source's namespace, so derivation lands beside what it came from
     expect((screen.getByLabelText('Name') as HTMLInputElement).value).toBe('customer.');
+    // …and the source it derives from is the one already picked out for it.
+    expect((screen.getByLabelText(/starts from/i) as HTMLSelectElement).value)
+      .toBe('customer.overridden');
   });
 
   it('creates a derived proposition whose document references its source', async () => {
     const client = stubClient();
-    renderPage(client, 'customer.derived');
+    renderPage(client, 'customer.overridden');
     await waitFor(() => expect(client.getProposition).toHaveBeenCalled());
 
     await userEvent.click(await screen.findByRole('button', { name: /derive/i }));
-    await userEvent.type(screen.getByLabelText('Name'), 'customer.onward');
+    await userEvent.type(screen.getByLabelText('Name'), 'onward');
     await userEvent.click(screen.getByRole('button', { name: /create/i }));
 
     await waitFor(() => expect(client.createProposition).toHaveBeenCalledWith(expect.objectContaining({
-      document: { rule: { spec: 'customer.derived' } },
+      name: 'customer.onward',
+      document: { rule: { spec: 'customer.overridden' } },
     })));
   });
 
@@ -239,20 +313,32 @@ describe('PropositionsPage', () => {
     expect(screen.getByRole('dialog').getAttribute('aria-label')).toContain('customer.is-active');
   });
 
-  it('creates the override over the edited document rather than a self-reference', async () => {
+  it('never offers the name being overridden as its own source', async () => {
     const client = stubClient({ getProposition: vi.fn().mockResolvedValue(COMPILED) });
-    // Deliberately *not* a reference to the overridden name: a document seeded from the name
-    // being defined would be a cycle straight back onto itself, and a fixture that already held
-    // that reference could not tell the two apart.
+    renderPage(client, 'customer.is-active');
+    await waitFor(() => expect(client.getProposition).toHaveBeenCalled());
+
+    await userEvent.click(await screen.findByRole('button', { name: /^override$/i }));
+
+    // An override is authored under the very name it overrides, so a reference back to that name
+    // is a cycle straight onto itself. The name being defined is excluded, whatever it is.
+    expect(optionsOf(/starts from/i)).toEqual(['customer.derived', 'customer.overridden']);
+  });
+
+  it('creates the override as a reference to its chosen source', async () => {
+    const client = stubClient({ getProposition: vi.fn().mockResolvedValue(COMPILED) });
+    // Deliberately *not* something the picker can produce: the create must come from the chosen
+    // source, not from whatever the shared editor draft happens to hold.
     renderPage(client, 'customer.is-active', { rule: { spec: 'customer.has-orders' } });
     await waitFor(() => expect(client.getProposition).toHaveBeenCalled());
 
     await userEvent.click(await screen.findByRole('button', { name: /^override$/i }));
+    await userEvent.selectOptions(screen.getByLabelText(/starts from/i), 'customer.overridden');
     await userEvent.click(screen.getByRole('button', { name: /create/i }));
 
     await waitFor(() => expect(client.createProposition).toHaveBeenCalledWith(expect.objectContaining({
       name: 'customer.is-active',
-      document: { rule: { spec: 'customer.has-orders' } },
+      document: { rule: { spec: 'customer.overridden' } },
     })));
   });
 

@@ -1356,6 +1356,11 @@ button.node-dsl {
   color: var(--muted);
 }
 
+/* A hint that is also the reason Create is unavailable, so it is not muted away like the others. */
+.dialog-field small.dialog-warning {
+  color: var(--danger);
+}
+
 .dialog-error {
   margin: 0;
   color: var(--danger);
