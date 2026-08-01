@@ -249,6 +249,7 @@ references them by name:
 
 ```csharp
 builder.Services.AddMotivRules(registry, options)
+    // JsonFilePropositionStore is the sample host's own IPropositionStore, not a library type
     .AddPropositions(new JsonFilePropositionStore("propositions.json"))
     .AddRule<CanCheckoutRule>();
 ```

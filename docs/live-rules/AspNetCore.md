@@ -12,6 +12,9 @@ MotivRulesBuilder AddMotivRules(this IServiceCollection services, SpecRegistry r
 MotivRulesBuilder AddRule<TRule>() where TRule : RuleBase, new();
 MotivRulesBuilder AddRule<TRule>(TRule rule) where TRule : RuleBase;
 
+// Options — registers a model under a stable id, the one clients pass as `modelType`
+MotivRulesOptions AddModel<TModel>(string modelTypeId);
+
 // Endpoints
 IEndpointRouteBuilder MapMotivRules(this IEndpointRouteBuilder endpoints, string basePath);
 IEndpointRouteBuilder MapMotivRules(this IEndpointRouteBuilder endpoints, string basePath,

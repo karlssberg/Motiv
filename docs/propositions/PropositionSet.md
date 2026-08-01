@@ -55,6 +55,9 @@ var gone = propositions.Withdraw("customer.eligibility.is-eligible", expectedVer
 `Create()` publishes version 1. A name already carrying an authored document is a conflict; a name
 carrying only a compiled spec is accepted and creates an override.
 
+The document must compose specs that already resolve &mdash; every leaf is a `spec` reference, never
+a new predicate. See [Composition Only](index.md#composition-only).
+
 `Withdraw()` means *revert* when a compiled spec lies beneath the name and *remove* when none does
 &mdash; the two differ in what they may do to referrers, so they are ruled separately. See
 [the integrity rules](index.md#removal-and-reverting).
@@ -111,3 +114,12 @@ proposition. See [Startup: quarantine, don't crash](index.md#startup-quarantine-
 - **The evaluation path is untouched.** A reference binds to the spec instance itself, so an
   evaluation of a proposition costs exactly what an evaluation of the equivalent compiled
   composition costs.
+
+## Next Steps
+
+- Serve `Create()`/`Update()`/`Withdraw()` over HTTP with
+  [ASP.NET Core Integration](AspNetCore.md).
+- Choose where authored documents persist with [`IPropositionStore`](IPropositionStore.md).
+- See the [Runtime Propositions overview](index.md) for the name grammar, the cascade, and startup
+  quarantine.
+- See [`RuleSet`](../live-rules/RuleSet.md) for the rule-side write path this mirrors.

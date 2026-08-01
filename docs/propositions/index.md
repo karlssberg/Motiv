@@ -4,10 +4,10 @@ description: Documentation for runtime propositions in Motiv — named, versione
 ---
 
 Propositions are the building blocks rules are made of. Compiled ones are registered in C# through a
-[`SpecRegistry`](../live-rules/AspNetCore.md); **runtime propositions** add named, versioned,
-persisted compositions authored while the application is running. Either kind is referenced from a
-rule document by name, and neither the binders nor the evaluation path can tell them apart &mdash; a
-reference compiles to the spec instance itself, so nothing is added to the hot path.
+`SpecRegistry`; **runtime propositions** add named, versioned, persisted compositions authored while
+the application is running. Either kind is referenced from a rule document by name, and neither the
+binders nor the evaluation path can tell them apart &mdash; a reference compiles to the spec
+instance itself, so nothing is added to the hot path.
 
 Editing a runtime proposition rebinds everything that references it &mdash; rules and other
 propositions, transitively &mdash; in one transaction: an edit that would break a dependent is
@@ -35,12 +35,10 @@ already registered:
 { "rule": { "expression": "Age >= 18" } }
 ```
 
-There is consequently **no such thing as an empty proposition** to start from. The demo UI's New /
-Derive / Override dialog reflects this literally: it carries a *Starts from* picker and keeps
-**Create disabled until a source is chosen**, because the smallest thing it can create is a
-reference to one existing spec. `Override` is likewise offered only where the compiled spec's model
-has at least one *other* spec available to compose from &mdash; a lone predicate over a scalar field
-has nothing to be rebuilt out of, and the UI must not imply otherwise.
+There is consequently **no such thing as an empty proposition** to start from &mdash; the smallest
+thing that can be authored is a reference to one existing spec. A builder UI has to reflect this: it
+must ask what a new proposition starts *from* before it can offer to create one, and it must not
+offer to override a compiled spec whose model has nothing else to compose from.
 
 New primitive facts continue to come only from C#. What runtime propositions add is the ability to
 name and reuse combinations of them.

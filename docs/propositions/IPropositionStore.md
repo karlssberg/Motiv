@@ -46,7 +46,9 @@ public sealed class JsonFilePropositionStore(string path) : IPropositionStore
 ```
 
 The sample host ships exactly this, with the `try`/`catch` and locking spelled out &mdash; see
-`src/examples/Motiv.RulesEngine.Sample/JsonFilePropositionStore.cs`.
+`src/examples/Motiv.RulesEngine.Sample/JsonFilePropositionStore.cs`. Note that it *reports* what it
+swallows: because `Save` rewrites the file from whatever `ReadAll` returned, an unreadable file that
+went unmentioned would be overwritten at the next save rather than kept for repair.
 
 ## Contract
 
@@ -62,3 +64,12 @@ The sample host ships exactly this, with the `try`/`catch` and locking spelled o
 - **`Save` and `Delete` must propagate failures.** The asymmetry with `Load` is deliberate: a write
   that silently failed would publish a proposition with no durable record of it, and the next restart
   would quietly lose the edit.
+
+## Next Steps
+
+- See [`PropositionSet`](PropositionSet.md) for the write path that calls `Save` and `Delete`, and
+  the `Load()` that reads this back at startup.
+- Wire a store in with [`AddPropositions()`](AspNetCore.md).
+- See the [Runtime Propositions overview](index.md) for what
+  [quarantine](index.md#startup-quarantine-dont-crash) does with a document that survives the round
+  trip but no longer binds.
