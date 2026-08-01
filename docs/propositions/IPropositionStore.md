@@ -33,17 +33,19 @@ public sealed class JsonFilePropositionStore(string path) : IPropositionStore
 {
     public IReadOnlyList<StoredProposition> Load() => ReadAll();
 
-    public void Save(StoredProposition proposition)
-    {
-        var all = ReadAll().Where(p => p.Name != proposition.Name).Append(proposition);
-        Write(all);
-    }
+    public void Save(StoredProposition proposition) =>
+        Write([.. ReadAll().Where(existing => existing.Name != proposition.Name), proposition]);
 
-    public void Delete(string name) => Write(ReadAll().Where(p => p.Name != name));
+    public void Delete(string name) =>
+        Write([.. ReadAll().Where(existing => existing.Name != name)]);
+
+    // Note the asymmetry: ReadAll swallows everything a filesystem can do (a missing,
+    // hand-edited or half-written file all read as "no propositions"), while Write lets
+    // failures out. See the contract below.
 }
 ```
 
-The sample host ships exactly this shape &mdash; see
+The sample host ships exactly this, with the `try`/`catch` and locking spelled out &mdash; see
 `src/examples/Motiv.RulesEngine.Sample/JsonFilePropositionStore.cs`.
 
 ## Contract

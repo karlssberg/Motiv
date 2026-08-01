@@ -269,7 +269,8 @@ Names are namespaced with dots, an authored document may override a compiled spe
 proposition that references it — transactionally, so an edit that would break a
 dependent is refused whole. Authored propositions are *composition only*: they
 combine specs that already exist, because new primitive facts still come from C#.
-See [Runtime Propositions](./docs/propositions/index.md).
+Available via the `Motiv.Serialization` and `Motiv.Serialization.AspNetCore`
+packages.
 
 ## Quick Start
 
