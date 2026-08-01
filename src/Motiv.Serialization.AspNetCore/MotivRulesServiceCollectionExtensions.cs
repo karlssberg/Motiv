@@ -50,8 +50,16 @@ public sealed class MotivRulesBuilder
     /// </summary>
     /// <param name="store">Where authored propositions persist, or null for in-memory.</param>
     /// <returns>This builder, to allow chained registration.</returns>
+    /// <exception cref="InvalidOperationException">Propositions are already enabled. DI is
+    /// last-wins, so a second call would silently discard the first store rather than layering
+    /// onto it — an argument quietly ignored is worse than a refusal.</exception>
     public MotivRulesBuilder AddPropositions(IPropositionStore? store = null)
     {
+        if (Services.Any(descriptor => descriptor.ServiceType == typeof(PropositionSet)))
+            throw new InvalidOperationException(
+                $"{nameof(AddPropositions)} has already been called. Call it once — a second call " +
+                "would silently replace the first store, as DI registration is last-wins.");
+
         Services.AddSingleton<IPropositionStore>(store ?? new InMemoryPropositionStore());
         Services.AddSingleton(provider =>
         {

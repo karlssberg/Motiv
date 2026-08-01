@@ -22,7 +22,9 @@ public sealed record PropositionListEntry(
 /// <param name="Document">The authored document, or null when the name is served by a compiled spec.</param>
 /// <param name="Version">The version; pass it back as <c>baseVersion</c> when updating. 0 when compiled.</param>
 /// <param name="Origin">Compiled, Overridden, or Authored.</param>
-/// <param name="HasCompiledDefault">Whether deleting would revert to a compiled spec rather than remove.</param>
+/// <param name="HasCompiledDefault">Whether a compiled spec lies beneath the name. When
+/// <paramref name="Origin"/> is <c>Overridden</c> this means DELETE reverts rather than removes;
+/// when it is <c>Compiled</c> there is nothing to delete and DELETE answers 404.</param>
 public sealed record PropositionGetResponse(
     JsonElement? Document, int Version, string Origin, bool HasCompiledDefault);
 

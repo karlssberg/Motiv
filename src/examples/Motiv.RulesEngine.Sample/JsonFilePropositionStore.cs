@@ -12,6 +12,14 @@ using Motiv.Serialization;
 /// this must stay quick. The trade-off this simplicity buys: a crash or full disk mid-write truncates
 /// the file, and the next <see cref="Load"/> then silently drops every proposition rather than just
 /// the one that was being written — acceptable for a sample, but worth knowing.
+/// <para>
+/// Because <see cref="Save"/> and <see cref="Delete"/> both rewrite whatever
+/// <c>ReadAll</c> returned, an unreadable file is not merely skipped — the next write replaces it
+/// with the contents read past it, and the original is gone. Unlike the library's quarantine, which
+/// retains a bad document for repair, nothing here retains a bad *file*. So the read failure is
+/// reported on <see cref="Console.Error"/> the moment it happens: a real store would log it, refuse
+/// to write over an unread file, or both.
+/// </para>
 /// </remarks>
 public sealed class JsonFilePropositionStore(string path) : IPropositionStore
 {
@@ -63,6 +71,14 @@ public sealed class JsonFilePropositionStore(string path) : IPropositionStore
             // (UnauthorizedAccessException) are the cases known to occur here, but the point of
             // "Load must never throw" is that the full set of things a filesystem can do is not
             // knowable in advance.
+            //
+            // Swallowed, but never silent — see the remarks for why an unreported read failure is
+            // destructive here. Console.Error keeps the sample free of a logging dependency; a real
+            // store would use ILogger.
+            Console.Error.WriteLine(
+                $"[JsonFilePropositionStore] Could not read '{path}': {exception.Message}\n" +
+                "  Continuing with no stored propositions. The next save will OVERWRITE this file — " +
+                "copy it aside now if you intend to repair it.");
             return [];
         }
     }

@@ -103,6 +103,23 @@ public class PropositionCatalogTests
     }
 
     [Fact]
+    public void Should_reject_a_second_AddPropositions_call()
+    {
+        // Arrange — DI is last-wins, so a second call would silently discard the first store:
+        // no double Load, no exception, an argument quietly ignored. MotivRulesOptions.AddModel
+        // already throws on a duplicate id; this is the same contract one layer up.
+        var (registry, options) = Fixture();
+        var builder = new ServiceCollection().AddMotivRules(registry, options);
+        builder.AddPropositions();
+
+        // Act
+        var second = () => builder.AddPropositions(new InMemoryPropositionStore());
+
+        // Assert
+        second.ShouldThrow<InvalidOperationException>();
+    }
+
+    [Fact]
     public async Task Should_include_authored_propositions_in_the_catalog()
     {
         // Arrange — the regression guard for the catalog being a closed-over constant

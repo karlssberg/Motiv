@@ -17,6 +17,10 @@ public static class MotivRulesEndpoints
     /// <see cref="RuleSet"/> is supplied, also maps <c>GET {basePath}/rules</c>,
     /// <c>GET {basePath}/rules/{{name}}</c>, <c>PUT {basePath}/rules/{{name}}</c>, and
     /// <c>DELETE {basePath}/rules/{{name}}</c> for live rule management with optimistic concurrency.
+    /// When a <see cref="PropositionSet"/> is resolvable from the endpoint route builder's service
+    /// provider (i.e. <see cref="MotivRulesBuilder.AddPropositions"/> was called), the
+    /// <c>{basePath}/propositions</c> endpoints are mapped against it as well. This overload cannot
+    /// substitute a different one, so pass the same registry and options it was built with.
     /// </summary>
     /// <param name="endpoints">The endpoint route builder to map onto.</param>
     /// <param name="basePath">The base path to mount under, e.g. <c>/api/rules</c>.</param>

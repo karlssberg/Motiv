@@ -309,6 +309,68 @@ public class PropositionEndpointTests
     }
 
     [Fact]
+    public async Task Should_reject_a_stale_base_version_on_delete_with_409_carrying_the_current_version()
+    {
+        // Arrange — Withdraw checks the version *before* the referrer check, so a stale baseVersion
+        // answers the version-conflict shape { currentVersion }, not { referrers }
+        await using var app = await StartAsync();
+        var client = app.GetTestClient();
+        await Create(client, "customer.derived", """{ "rule": { "spec": "customer.is-active" } }""");
+        await Put(client, "customer.derived", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
+
+        // Act
+        var response = await client.DeleteAsync("/api/rules/propositions/customer.derived?baseVersion=1");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        var body = await response.Content.ReadFromJsonAsync<RuleConflictResponse>();
+        body!.CurrentVersion.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task Should_return_404_when_updating_an_unknown_name()
+    {
+        // Arrange
+        await using var app = await StartAsync();
+        var client = app.GetTestClient();
+
+        // Act
+        var response = await Put(client, "absent", """{ "rule": { "spec": "customer.is-active" } }""", 1);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Should_return_404_when_deleting_an_unknown_name()
+    {
+        // Arrange — a name that exists only as a compiled spec has no authored document to
+        // withdraw, so it is 404 too, not a revert
+        await using var app = await StartAsync();
+        var client = app.GetTestClient();
+
+        // Act
+        var response = await client.DeleteAsync("/api/rules/propositions/customer.is-active?baseVersion=1");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Should_return_404_for_the_dependents_of_an_unknown_name()
+    {
+        // Arrange
+        await using var app = await StartAsync();
+        var client = app.GetTestClient();
+
+        // Act
+        var response = await client.GetAsync("/api/rules/propositions/absent/dependents");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
     public async Task Should_refuse_to_delete_a_referenced_proposition_with_409_listing_referrers()
     {
         // Arrange
