@@ -12,6 +12,21 @@ export interface Route {
 const DEFAULT_ROUTE: Route = { page: 'rules', name: null };
 
 /**
+ * `decodeURIComponent`, but a hash the user could have typed cannot be allowed to throw. A lone or
+ * truncated `%` (and a well-formed escape that is not valid UTF-8) raises `URIError`, and parsing
+ * happens inside a `useState` initialiser — so an unguarded throw happens *during render* and blanks
+ * the whole app. A name that will not decode is read literally instead: it names nothing, so the
+ * page shows "not found" rather than nothing at all.
+ */
+function decodeName(name: string): string {
+  try {
+    return decodeURIComponent(name);
+  } catch {
+    return name;
+  }
+}
+
+/**
  * Reads a route out of a location hash. Hash routing rather than history routing so a fork needs no
  * server-side fallback to make deep links work — the demo's host happens to have one, but the
  * skeleton should not depend on it.
@@ -22,7 +37,7 @@ export function parseHash(hash: string): Route {
   // and so needs no cast — an unknown page (the empty string included) falls back.
   if (page !== 'rules' && page !== 'propositions') return DEFAULT_ROUTE;
   const name = rest.join('/');
-  return { page, name: name === '' ? null : decodeURIComponent(name) };
+  return { page, name: name === '' ? null : decodeName(name) };
 }
 
 /** The hash for a route. Dots are left unescaped, so a namespaced name stays readable in the bar. */
