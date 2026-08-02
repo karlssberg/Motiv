@@ -1,4 +1,5 @@
 import { test, expect, type APIRequestContext, type Page } from '@playwright/test';
+import { chooseFromPalette, closeDocument, openDocument } from './shell.js';
 
 const RULE_URL = '/api/rules/rules/fraud-screening';
 
@@ -34,11 +35,10 @@ test('an async rule validates and saves a document referencing an async spec', a
 
   await page.goto('/');
 
-  // Load the async live rule from the breadcrumb's leaf: version + code-default note appear.
-  // Loading an async rule switches live validation to the async path (its default document is
-  // null, so nothing is validated on the sync controller before the flag flips).
-  await page.getByRole('combobox', { name: /^rule,/ }).click();
-  await page.getByRole('option', { name: 'fraud-screening' }).click();
+  // Load the async live rule from the palette: version + code-default note appear. Loading an
+  // async rule switches live validation to the async path (its default document is null, so
+  // nothing is validated on the sync controller before the flag flips).
+  await chooseFromPalette(page, 'Rules', 'fraud-screening');
   await expect(versionBadge(page, loadedVersion)).toBeVisible();
   await expect(page.getByText(/code-defined default/)).toBeVisible();
 
@@ -55,14 +55,20 @@ test('an async rule validates and saves a document referencing an async spec', a
       response.url().endsWith('/api/rules/validate') && response.request().method() === 'POST',
   );
   await page.keyboard.press('Enter');
-  await expect(page.getByLabel('rule document')).toContainText(ASYNC_SPEC);
+
+  // The document and the error list share the one modal now, so a single open proves both that
+  // the spec landed and that nothing was reported against it. Asserting the errors from outside
+  // the modal would pass on the list simply not being mounted.
+  const document = await openDocument(page);
+  await expect(document).toContainText(ASYNC_SPEC);
+  await expect(page.getByLabel('validation errors')).toBeHidden();
+  await closeDocument(page);
 
   // The request carried the async flag, so the server bound via the async path and returned
   // no AsyncSpecInSyncLoad red herring — the exact seam this proves.
   const response = await validated;
   expect(response.request().postDataJSON().isAsync).toBe(true);
   expect(((await response.json()) as { errors: unknown[] }).errors).toEqual([]);
-  await expect(page.getByLabel('validation errors')).toBeHidden();
 
   // And the save binds the async spec as the rule's live implementation.
   await page.getByRole('button', { name: 'Save', exact: true }).click();
