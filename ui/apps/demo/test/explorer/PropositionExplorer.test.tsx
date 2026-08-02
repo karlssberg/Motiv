@@ -113,6 +113,10 @@ describe('PropositionExplorer', () => {
 
     expect(screen.queryByRole('treeitem', { name: /is-large/ })).toBeTruthy();
     expect(screen.queryByRole('treeitem', { name: /is-adult/ })).toBeNull();
+    // The count is the only thing that says how much was narrowed away, and it is what the tree
+    // beside it cannot show — one of four survives here, so a count reporting the unfiltered total
+    // reads as "nothing was filtered" and is wrong by three.
+    expect(screen.getByText('1 of 4')).toBeTruthy();
   });
 
   it('selects a proposition when its leaf is clicked, and closes', async () => {
