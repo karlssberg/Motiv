@@ -203,13 +203,22 @@ test('the palette traps focus, closes on Escape, and makes the page behind it in
   await page.goto('/#/propositions');
   await openPalette(page, 'Propositions');
 
-  // Focus starts inside and stays inside: tabbing from the last control wraps to the first
-  // rather than escaping to the page behind.
+  // Focus starts on the search box, and shift-tabbing *backwards* off it wraps round to the last
+  // control in the dialog — Close — instead of reaching the page behind.
+  //
+  // Backwards on purpose. A forward Tab from the first control moves to the second whether or not
+  // any trap exists, since the palette has a browse tree, four footer buttons and a Close after
+  // this input; it would assert nothing, in the one test that exists to prove focus trapping.
+  // Backwards there is nothing before the input to reach, so the wrap is the whole answer: with
+  // the trap it comes round to Close, without one it walks into the toolbar behind.
+  //
+  // Two presses rather than one because Chromium routes the wrap through its own browser UI, and
+  // for exactly one press `document.activeElement` reports `body` — focus is out of the document
+  // but not yet back round. Measured, not assumed.
   await expect(palette(page, 'Propositions').getByRole('combobox')).toBeFocused();
-  await page.keyboard.press('Tab');
-  const inside = await page.evaluate(() =>
-    document.querySelector('dialog[open]')?.contains(document.activeElement) ?? false);
-  expect(inside).toBe(true);
+  await page.keyboard.press('Shift+Tab');
+  await page.keyboard.press('Shift+Tab');
+  await expect(palette(page, 'Propositions').getByRole('button', { name: 'Close' })).toBeFocused();
 
   // The page behind is inert: the toolbar button that opened this cannot take focus back, which is
   // the guarantee `showModal()` makes and an `aria-modal` div never did.

@@ -31,6 +31,23 @@ describe('Modal', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it('puts the close control last, so it is not what showModal focuses', () => {
+    // Structure, not behaviour — and deliberately so. `showModal()` runs the dialog focusing steps,
+    // which hand focus to the first focusable descendant unless one carries the `autofocus`
+    // *attribute*; React's `autoFocus` prop is not that attribute. With Close rendered first, every
+    // modal in the app opened with focus on Close instead of the palette's search box or the
+    // authoring dialog's Name field.
+    //
+    // jsdom's `showModal` shim sets `open` and moves no focus, so the *consequence* is only
+    // provable in a browser — `propositions.spec.ts › the palette traps focus…` does that. But the
+    // *cause* is one line of JSX ordering, and pinning it here is what stops a reorder reverting a
+    // production bug with nothing but the e2e suite to notice.
+    render(<Modal label="Propositions" onClose={() => {}}><button>inside</button></Modal>);
+
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.lastElementChild).toBe(screen.getByRole('button', { name: /close/i }));
+  });
+
   it('reports a click on the backdrop but not one inside the content', async () => {
     // A <dialog>'s backdrop is part of the dialog element, so a backdrop click targets the
     // dialog itself. A click on anything inside must not close it.
