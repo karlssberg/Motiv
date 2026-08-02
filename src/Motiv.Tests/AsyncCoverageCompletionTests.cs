@@ -255,9 +255,10 @@ public class AsyncCoverageCompletionTests
     [Fact]
     public void Should_expose_the_binary_traversal_surface_on_AsyncAndAlsoSpec()
     {
-        // Arrange
-        var left = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).Create("left");
-        var right = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).Create("right");
+        // Arrange — explicitly typed as AsyncSpecBase (not AsyncPolicyBase) so AndAlso resolves to the
+        // Spec-producing overload rather than the policy-preserving one
+        AsyncSpecBase<int, string> left = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).Create("left");
+        AsyncSpecBase<int, string> right = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).Create("right");
 
         // Act
         var spec = (AsyncAndAlsoSpec<int, string>)left.AndAlso(right);

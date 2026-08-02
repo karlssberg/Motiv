@@ -153,4 +153,60 @@ public class AndAlsoPolicyTests
         result.Value.ShouldBe("left-false");
         rightEvaluations.ShouldBe(0);
     }
+
+    private static AsyncPolicyBase<string, string> AsyncGate(bool satisfied, string name) =>
+        Spec.BuildAsync<string>(_ => new ValueTask<bool>(satisfied))
+            .WhenTrue($"{name}-true")
+            .WhenFalse($"{name}-false")
+            .Create(name);
+
+    [Fact]
+    public async Task Should_preserve_the_policy_when_combining_two_async_propositions()
+    {
+        // Arrange
+        var composed = AsyncGate(true, "left").AndAlso(AsyncGate(false, "right"));
+
+        // Act
+        var result = await composed.EvaluateAsync("model");
+
+        // Assert
+        result.Satisfied.ShouldBeFalse();
+        result.Value.ShouldBe("right-false");
+        result.Values.ShouldBe(["right-false"]);
+    }
+
+    [Fact]
+    public async Task Should_never_start_the_right_async_operand_when_the_left_is_unsatisfied()
+    {
+        // Arrange — the whole point of async short-circuiting: the right operand's I/O never begins.
+        var rightStarted = false;
+        var left = AsyncGate(false, "left");
+        var right = Spec
+            .BuildAsync<string>(_ => { rightStarted = true; return new ValueTask<bool>(true); })
+            .WhenTrue("right-true")
+            .WhenFalse("right-false")
+            .Create("right");
+
+        // Act
+        var result = await left.AndAlso(right).EvaluateAsync("model");
+
+        // Assert
+        result.Satisfied.ShouldBeFalse();
+        result.Value.ShouldBe("left-false");
+        rightStarted.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Should_lift_a_sync_policy_into_an_async_conjunction()
+    {
+        // Arrange
+        var composed = AsyncGate(true, "left").AndAlso(Gate(false, "right"));
+
+        // Act
+        var result = await composed.EvaluateAsync("model");
+
+        // Assert
+        result.Satisfied.ShouldBeFalse();
+        result.Value.ShouldBe("right-false");
+    }
 }
