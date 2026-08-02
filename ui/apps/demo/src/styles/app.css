@@ -1404,3 +1404,36 @@ button.node-dsl {
   padding: 0;
   list-style: none;
 }
+
+/* Native <dialog>. The element is display:none until opened, so `[open]` carries the layout. */
+.modal {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--sh-panel);
+  color: var(--text);
+  padding: 0;
+  box-shadow: 0 12px 40px rgb(0 0 0 / 22%);
+  max-width: min(680px, 92vw);
+  width: 100%;
+}
+
+.modal::backdrop {
+  background: rgb(15 18 22 / 42%);
+}
+
+.modal-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+@media (max-width: 900px) {
+  .modal-mobile-full {
+    max-width: none;
+    width: 100vw;
+    height: 100dvh;
+    max-height: none;
+    border: none;
+    border-radius: 0;
+  }
+}
