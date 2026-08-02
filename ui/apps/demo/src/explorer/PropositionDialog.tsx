@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { PropositionListEntry } from '@motiv/rules-core';
+import { Modal } from '../shell/Modal.js';
 
 /** What the New / Derive / Override flows start from. */
 export interface DialogSeed {
@@ -51,12 +52,10 @@ export interface DialogValues {
  * already records exactly what a "derived from" edge would, and layering records the override.
  * What separates them is only how much of the form is already answered.
  *
- * `aria-modal` here is a claim the markup does not keep: the backdrop blocks pointer events but not
- * focus, so Tab leaves the dialog and lands in the page behind it, and Escape does nothing. The
- * intended fix is the native `<dialog>` element with `showModal()`, which brings the focus trap,
- * Escape-to-close and inertness of the rest of the document at no dependency cost — a larger change
- * than this pass, and independent of the `key` the page mounts this with, which addresses only the
- * stale-state consequence rather than the reachability that exposes it.
+ * Rendered on `Modal`, which brings the focus trap, Escape-to-close and inertness of the rest of
+ * the document via the native `<dialog>` element's `showModal()` — this used to be a hand-rolled
+ * backdrop div with `aria-modal="true"` and none of those behaviours, which left a screen-reader
+ * user with focus on a button `aria-modal` had just told assistive technology to hide.
  */
 export function PropositionDialog(props: {
   seed: DialogSeed;
@@ -93,6 +92,8 @@ export function PropositionDialog(props: {
     .map((entry) => entry.name)
     .sort();
 
+  const nothingToStartFrom = sourceNames.length === 0;
+
   // Derived rather than corrected in an effect: changing the model type (or typing the name of the
   // very proposition picked) can invalidate the choice, and a selection that no longer appears in
   // the list must not be what a create is built from.
@@ -102,6 +103,8 @@ export function PropositionDialog(props: {
   // One statement of what makes the form submittable, shared by the Enter key and the button.
   const canCreate = trimmedName !== '' && selectedSource !== null;
 
+  // Guards itself rather than relying on the caller, so it is safe as the Create button's handler:
+  // `aria-disabled` — see below — does not stop a click reaching it.
   const submit = (): void => {
     // `canCreate` already covers both, and is restated only because the type-checker cannot narrow
     // `selectedSource` through it.
@@ -115,86 +118,88 @@ export function PropositionDialog(props: {
   };
 
   return (
-    <div className="dialog-backdrop" role="presentation">
-      <div className="dialog" role="dialog" aria-modal="true" aria-label={props.seed.title}>
-        <h2 className="dialog-title">{props.seed.title}</h2>
+    <Modal label={props.seed.title} onClose={props.onCancel} className="dialog" fullscreenOnMobile>
+      <h2 className="dialog-title">{props.seed.title}</h2>
 
-        {/* The hint sits outside the <label>: a label's whole text content becomes its control's
-            accessible name, so a sentence of guidance inside it is read out as part of the field's
-            name every time the field is reached. */}
-        <div className="dialog-field">
-          <label>
-            <span>Name</span>
-            <input
-              type="text"
-              value={name}
-              placeholder="customer.eligibility.is-eligible"
-              onChange={(event) => setName(event.target.value)}
-              onKeyDown={(event) => { if (event.key === 'Enter' && canCreate) submit(); }}
-            />
-          </label>
-          <small>Dots namespace the proposition; each segment starts with a letter.</small>
-        </div>
-
-        <div className="dialog-field">
-          <label>
-            <span>Model type</span>
-            <select value={modelType} onChange={(event) => setModelType(event.target.value)}>
-              {modelTypes.map((model) => <option key={model} value={model}>{model}</option>)}
-            </select>
-          </label>
-        </div>
-
-        {/* Left changeable even when the flow seeded it. Derive is a shortcut into ordinary
-            authoring, not a separate concept, so the same form answers it — picking the wrong node
-            to derive from should be a change of mind, not a cancel and start again. */}
-        <div className="dialog-field">
-          <label>
-            <span>Starts from</span>
-            <select
-              value={selectedSource ?? ''}
-              disabled={sourceNames.length === 0}
-              onChange={(event) => setStartsFrom(event.target.value)}
-            >
-              {sourceNames.map((sourceName) => (
-                <option key={sourceName} value={sourceName}>{sourceName}</option>
-              ))}
-            </select>
-          </label>
-          {sourceNames.length === 0
-            ? (
-              // Referenced from Create below: the select is disabled and so out of the tab order,
-              // which would leave the reason the button is dead unreachable from the button itself.
-              <small className="dialog-warning" id={NO_SOURCE_ID}>
-                Nothing to start from: an authored proposition is composed from ones that already
-                exist, and no other {modelType} proposition is registered.
-              </small>
-            )
-            : <small>The new proposition begins as a reference to this one; compose it from there.</small>}
-        </div>
-
-        <div className="dialog-field">
-          <label>
-            <span>Description</span>
-            <input type="text" value={description} onChange={(event) => setDescription(event.target.value)} />
-          </label>
-        </div>
-
-        {props.error !== null && <p className="dialog-error" role="alert">{props.error}</p>}
-
-        <div className="dialog-actions">
-          <button type="button" className="btn" onClick={props.onCancel}>Cancel</button>
-          <button
-            type="button"
-            className="btn"
-            disabled={!canCreate}
-            aria-describedby={sourceNames.length === 0 ? NO_SOURCE_ID : undefined}
-            onClick={submit}
-          >
-            Create
-          </button>
-        </div>
+      {/* The hint sits outside the <label>: a label's whole text content becomes its control's
+          accessible name, so a sentence of guidance inside it is read out as part of the field's
+          name every time the field is reached. */}
+      <div className="dialog-field">
+        <label>
+          <span>Name</span>
+          <input
+            type="text"
+            value={name}
+            placeholder="customer.eligibility.is-eligible"
+            onChange={(event) => setName(event.target.value)}
+            onKeyDown={(event) => { if (event.key === 'Enter' && canCreate) submit(); }}
+          />
+        </label>
+        <small>Dots namespace the proposition; each segment starts with a letter.</small>
       </div>
-    </div>
+
+      <div className="dialog-field">
+        <label>
+          <span>Model type</span>
+          <select value={modelType} onChange={(event) => setModelType(event.target.value)}>
+            {modelTypes.map((model) => <option key={model} value={model}>{model}</option>)}
+          </select>
+        </label>
+      </div>
+
+      {/* Left changeable even when the flow seeded it. Derive is a shortcut into ordinary
+          authoring, not a separate concept, so the same form answers it — picking the wrong node
+          to derive from should be a change of mind, not a cancel and start again. */}
+      <div className="dialog-field">
+        <label>
+          <span>Starts from</span>
+          <select
+            value={selectedSource ?? ''}
+            disabled={nothingToStartFrom}
+            onChange={(event) => setStartsFrom(event.target.value)}
+          >
+            {sourceNames.map((sourceName) => (
+              <option key={sourceName} value={sourceName}>{sourceName}</option>
+            ))}
+          </select>
+        </label>
+        {nothingToStartFrom
+          ? (
+            // Referenced from Create below: the select is disabled and so out of the tab order,
+            // which would leave the reason the button is dead unreachable from the button itself.
+            <small className="dialog-warning" id={NO_SOURCE_ID}>
+              Nothing to start from: an authored proposition is composed from ones that already
+              exist, and no other {modelType} proposition is registered.
+            </small>
+          )
+          : <small>The new proposition begins as a reference to this one; compose it from there.</small>}
+      </div>
+
+      <div className="dialog-field">
+        <label>
+          <span>Description</span>
+          <input type="text" value={description} onChange={(event) => setDescription(event.target.value)} />
+        </label>
+      </div>
+
+      {props.error !== null && <p className="dialog-error" role="alert">{props.error}</p>}
+
+      <div className="dialog-actions">
+        <button type="button" className="btn" onClick={props.onCancel}>Cancel</button>
+        {/* `aria-disabled`, not `disabled`: `disabled` removes the button from the tab order in
+            every major browser, which would leave a keyboard screen-reader user unable to reach it
+            and so unable to hear the `aria-describedby` explanation. Matches `Toolbar`'s pattern —
+            an unavailable control that stays focusable, and a handler that returns early. */}
+        <button
+          type="button"
+          className="btn"
+          aria-disabled={canCreate ? undefined : true}
+          aria-describedby={nothingToStartFrom ? NO_SOURCE_ID : undefined}
+          onClick={submit}
+        >
+          Create
+        </button>
+      </div>
+    </Modal>
   );
 }

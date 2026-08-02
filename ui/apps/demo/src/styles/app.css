@@ -1291,29 +1291,11 @@ button.node-dsl {
 /* ---------------------------------------------------------------------------
    New/Derive/Override dialog and the dependents strip.
    --------------------------------------------------------------------------- */
-.dialog-backdrop {
-  position: fixed;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background: rgb(0 0 0 / 45%);
-  z-index: 10;
-}
-
-.dialog {
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--space) * 1.5);
-  width: min(28rem, calc(100vw - 2rem));
-  padding: calc(var(--space) * 2);
-  border-radius: var(--radius);
-  background: var(--sh-panel);
-  border: 1px solid var(--border);
-  box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
-}
-
+/* Right padding keeps a long title ("Override some.long.name") clear of `Modal`'s close control,
+   which floats over the dialog's top-right corner. */
 .dialog-title {
   margin: 0;
+  padding-right: 24px;
   font-size: 1rem;
 }
 
@@ -1385,6 +1367,19 @@ button.node-dsl {
   position: absolute;
   top: 8px;
   right: 8px;
+}
+
+/* The New/Derive/Override dialog is a `Modal` variant — the surface (border, radius, background,
+   shadow) comes from `.modal`, so only the form's own measure and rhythm are stated here. It has
+   to follow `.modal` and precede the mobile rule below: all three are single-class selectors, so
+   source order is the whole of the cascade between them, and `.modal` would otherwise strip the
+   padding to 0. */
+.dialog {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 1.5);
+  width: min(28rem, calc(100vw - 2rem));
+  padding: calc(var(--space) * 2);
 }
 
 @media (max-width: 900px) {

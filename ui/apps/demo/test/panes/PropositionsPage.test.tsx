@@ -439,8 +439,29 @@ describe('PropositionsPage', () => {
 
     // A UI-authored proposition is composition-only, so with nothing registered to compose over
     // there is nothing to create. The button being dead is not an explanation, so it is said.
-    expect(screen.getByRole('button', { name: /create/i }).hasAttribute('disabled')).toBe(true);
+    // `aria-disabled`, not `disabled`: the latter drops the button from the tab order in every
+    // major browser, leaving a keyboard screen-reader user unable to reach it and so unable to
+    // hear the `aria-describedby` explanation this test also checks for.
+    const create = screen.getByRole('button', { name: /create/i });
+    expect(create.getAttribute('aria-disabled')).toBe('true');
+    expect(create.hasAttribute('disabled')).toBe(false);
     expect(screen.getByText(/nothing to start from/i)).toBeTruthy();
+  });
+
+  it('does not create when the Create button is aria-disabled', async () => {
+    const client = stubClient({ listPropositions: vi.fn().mockResolvedValue([]) });
+    renderPage(client);
+    await waitFor(() => expect(client.listPropositions).toHaveBeenCalled());
+
+    await openExplorer();
+    await userEvent.click(screen.getByRole('button', { name: /^new$/i }));
+    await userEvent.type(screen.getByLabelText('Name'), 'customer.fresh');
+
+    // `aria-disabled` alone does not stop a click from reaching the handler — the guard has to be
+    // in the handler itself, exactly like `Toolbar`'s early return.
+    await userEvent.click(screen.getByRole('button', { name: /create/i }));
+
+    expect(client.createProposition).not.toHaveBeenCalled();
   });
 
   it('seeds the dialog from the derived-from node', async () => {
