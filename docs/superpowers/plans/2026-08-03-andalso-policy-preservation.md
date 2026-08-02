@@ -1001,6 +1001,34 @@ grep -l "BinarySpecDescription" src/Motiv/AndAlso/*.cs   # must list 6 files
 grep -c "ExpressionAndAlsoPolicy" src/Motiv/AndAlso/*.cs # every one of the 6 must be >= 1
 ```
 
+- [ ] **Step 5b: Close the fourth hazard layer — the non-short-circuit `And` family**
+
+**Added after Task 4's review found this; the spec and the hazard table above both missed it.**
+
+The eager `And` composition classes also carry a collapsible predicate, and they must recognise the
+short-circuiting policy types — otherwise `a & (b.AndAlso(c))` silently fails to collapse the nested
+conjunction into the outer `&`'s justification tree. The `Or` family already does this; verify:
+
+```bash
+grep -A3 "operand is" src/Motiv/Or/OrSpec.cs src/Motiv/Or/AsyncOrSpec.cs | grep -o "OrElsePolicy<TModel, TMetadata>\|AsyncOrElsePolicy<TModel, TMetadata>\|ExpressionOrElsePolicy<TModel, TMetadata>" | sort -u
+```
+
+That prints all three `OrElse*Policy` types. The `And` equivalent currently prints nothing.
+
+Widen the collapsible predicate in **`src/Motiv/And/AndSpec.cs`** and **`src/Motiv/And/AsyncAndSpec.cs`**
+so each lists the same *shape* of `AndAlso*Policy` types that its `Or` counterpart lists of
+`OrElse*Policy` types. Read `src/Motiv/Or/OrSpec.cs` and `src/Motiv/Or/AsyncOrSpec.cs` first and mirror
+their lists exactly — do not assume which types belong in which file, since the sync and async
+predicates carry different sets.
+
+Confirm with:
+
+```bash
+grep -A3 "operand is" src/Motiv/And/AndSpec.cs src/Motiv/And/AsyncAndSpec.cs | grep -o "AndAlsoPolicy<TModel, TMetadata>\|AsyncAndAlsoPolicy<TModel, TMetadata>\|ExpressionAndAlsoPolicy<TModel, TMetadata>" | sort -u
+```
+
+This must now print the `AndAlso` counterpart of whatever the `Or` check printed.
+
 - [ ] **Step 6: Mirror the `ExpressionPolicyBase` overload set**
 
 Apply the changes you identified in Step 1. At minimum this means changing the existing
@@ -1274,6 +1302,17 @@ grep -c "AndAlsoPolicy" src/Motiv/AndAlso/*.cs
 ```
 
 Every carrier must be ≥ 1. Also confirm `AndAlsoBooleanResultDescription.cs` names `AndAlsoPolicyResult`.
+
+Finally, the fourth layer — the eager `And` family must recognise the short-circuiting policy types,
+symmetrically with how the `Or` family recognises theirs. These two commands must print
+corresponding sets:
+
+```bash
+grep -A3 "operand is" src/Motiv/Or/OrSpec.cs src/Motiv/Or/AsyncOrSpec.cs | grep -o "OrElsePolicy<TModel, TMetadata>\|AsyncOrElsePolicy<TModel, TMetadata>\|ExpressionOrElsePolicy<TModel, TMetadata>" | sort -u
+grep -A3 "operand is" src/Motiv/And/AndSpec.cs src/Motiv/And/AsyncAndSpec.cs | grep -o "AndAlsoPolicy<TModel, TMetadata>\|AsyncAndAlsoPolicy<TModel, TMetadata>\|ExpressionAndAlsoPolicy<TModel, TMetadata>" | sort -u
+```
+
+An empty second result means `a & (b.AndAlso(c))` will silently fail to collapse.
 
 - [ ] **Step 3: Confirm the Task 1 pin was never amended**
 
