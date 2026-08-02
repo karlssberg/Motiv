@@ -380,8 +380,13 @@ export function PropositionsPage(props: {
           // Keyed so that replacing the seed remounts rather than reuses: the dialog seeds its
           // fields from the seed once and never resyncs, so a reused instance would show the new
           // flow's heading over the previous flow's answers — including its `startsFrom`, which
-          // the create would then send. Robust whether or not the buttons that can do that stay
-          // reachable behind the backdrop.
+          // the create would then send.
+          //
+          // Defence in depth, and deliberately kept as such. No route reaches it any more: every
+          // flow is opened from the palette, `openDialog` dismisses the palette on the way in, and
+          // `onCancel` unmounts this — while ⌘K, which used to reopen the palette stacked above an
+          // open dialog, is now inert whenever a modal is showing (`useCommandKey`). The keying
+          // costs one prop and survives whoever reopens that route.
           key={dialog.title}
           seed={dialog}
           sources={entries}

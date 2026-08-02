@@ -541,30 +541,6 @@ describe('PropositionsPage', () => {
     })));
   });
 
-  it('starts a fresh form when one flow replaces another without closing the dialog', async () => {
-    // The dialog seeds four `useState` calls and never resyncs them, so replacing `dialog` while
-    // it is mounted would leave the heading describing one flow and the fields holding the last
-    // one's answers — and the create would go out with the wrong `startsFrom`. Opening a flow now
-    // dismisses the palette it was reached from, but that does not close this off: the dialog's
-    // focus trap does not stop the shortcut, because ⌘K is bound on `window` and a keydown inside
-    // a modal `<dialog>` still bubbles all the way there. The palette reopens stacked *above* this
-    // dialog in the top layer, and its New is one click away — replacing the seed of a dialog that
-    // never went away.
-    const client = stubClient();
-    renderPage(client, 'customer.overridden');
-    await screen.findByText('v1');
-
-    await openExplorer();
-    await userEvent.click(await screen.findByRole('button', { name: /derive/i }));
-    expect((screen.getByLabelText('Name') as HTMLInputElement).value).toBe('customer.');
-
-    await userEvent.keyboard('{Meta>}k{/Meta}');
-    await userEvent.click(screen.getByRole('button', { name: /^new$/i }));
-
-    expect(screen.getByRole('dialog').getAttribute('aria-label')).toBe('New proposition');
-    expect((screen.getByLabelText('Name') as HTMLInputElement).value).toBe('');
-  });
-
   it('keeps the whole form off the dialog element itself, where a click would dismiss it', async () => {
     // `Modal` reports a click whose target *is* the dialog as a backdrop click — the backdrop
     // belongs to the element, so there is no other node to compare against. That is only sound
@@ -691,6 +667,23 @@ describe('PropositionsPage', () => {
     await userEvent.keyboard('{Meta>}k{/Meta}');
 
     expect(screen.getByRole('dialog', { name: 'Propositions' })).toBeTruthy();
+  });
+
+  it('leaves ⌘K inert while the authoring dialog is open, rather than stacking a palette over it', async () => {
+    // The shortcut is bound on `window` so it works wherever focus is, and a keydown inside a
+    // modal <dialog> still bubbles there — so without a guard ⌘K mounts a second dialog on top of
+    // the first. `openDialog` already refuses to do that in the other direction, and this is the
+    // same rule from the other side: choosing a row in the stacked palette navigates the page
+    // underneath, discarding a form the user is part-way through filling in.
+    renderPage();
+    await openExplorer();
+    await userEvent.click(screen.getByRole('button', { name: 'New' }));
+    await screen.findByRole('dialog', { name: 'New proposition' });
+
+    await userEvent.keyboard('{Meta>}k{/Meta}');
+
+    expect(screen.queryByRole('dialog', { name: 'Propositions' })).toBeNull();
+    expect(screen.getByRole('dialog', { name: 'New proposition' })).toBeTruthy();
   });
 
   it('claims ⌘K from the browser rather than letting both fire', () => {

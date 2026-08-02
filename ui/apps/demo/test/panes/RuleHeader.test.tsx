@@ -216,4 +216,17 @@ describe('RuleHeader', () => {
     await userEvent.click(screen.getByRole('button', { name: 'JSON' }));
     expect(screen.getByRole('dialog', { name: /document/i })).toBeTruthy();
   });
+
+  it('leaves ⌘K inert while the document viewer is open, rather than stacking a palette over it', async () => {
+    // Both pages bind the chord through the one hook, so the guard belongs in the hook and not in
+    // either page — which is what this asserts from the second page. The propositions page proves
+    // the same rule against its authoring dialog.
+    renderHeader();
+    await userEvent.click(screen.getByRole('button', { name: 'JSON' }));
+    await screen.findByRole('dialog', { name: /document/i });
+
+    await userEvent.keyboard('{Meta>}k{/Meta}');
+
+    expect(screen.queryByRole('dialog', { name: 'Rules' })).toBeNull();
+  });
 });

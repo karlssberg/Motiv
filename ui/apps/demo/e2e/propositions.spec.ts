@@ -243,6 +243,19 @@ test('a click inside the authoring dialog keeps what was typed', async ({ page }
   await expect(nameField).toHaveValue(TYPED);
 });
 
+test('⌘K still opens the palette when nothing else is showing', async ({ page }) => {
+  // `useCommandKey` refuses the chord while any `dialog[open]` is in the document, which is what
+  // stops it stacking a palette over an open modal. jsdom can prove it blocks — the shim sets
+  // `open` — but not that it lets go, because jsdom only ever has the dialogs a test mounted. Only
+  // a browser rendering the whole app can say no *other* element carries `dialog[open]`, and if one
+  // ever did the shortcut would go quietly dead with every unit test still green.
+  await page.goto('/#/propositions');
+
+  await page.keyboard.press('ControlOrMeta+k');
+
+  await expect(palette(page, 'Propositions')).toBeVisible();
+});
+
 test('the palette traps focus, closes on Escape, and makes the page behind it inert', async ({ page }) => {
   await page.goto('/#/propositions');
   await openPalette(page, 'Propositions');
