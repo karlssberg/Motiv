@@ -107,3 +107,13 @@ Live rules (in the `Motiv.Serialization` and `Motiv.Serialization.AspNetCore` pa
 | [RuleDocuments](./live-rules/RuleDocuments.md)                            | `FromJson()` and `Embedded()` &mdash; rule-document sources for rule defaults.                    |
 | [ASP.NET Core Integration](./live-rules/AspNetCore.md)                    | `AddMotivRules()`, `AddRule()`, `MapMotivRules()`, and the `GET`/`PUT`/`DELETE` rule endpoints.   |
 | [DeserializeAsyncSpec()](./live-rules/DeserializeAsyncSpec.md)            | Loads rule documents into the async hierarchy, lifting sync references and enforcing the sync/async boundary. |
+
+## Runtime Propositions
+
+Runtime propositions (in the `Motiv.Serialization` and `Motiv.Serialization.AspNetCore` packages) are named, versioned, persisted compositions authored while the application runs. They resolve in a layer over the compiled `SpecRegistry`, so a document may override a compiled spec and revert to it, and rules reference either kind by the same dotted name. Editing one rebinds every rule and proposition that references it, transactionally &mdash; an edit that would break a dependent is refused whole. They are **composition only**: every authored proposition bottoms out in specs that already exist, because new primitive facts still come from C#. See [Runtime Propositions](./propositions/index.md) for the name grammar, the cascade, and startup quarantine.
+
+| Type / Method                                                            | Description                                                                                       |
+|---------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| [PropositionSet](./propositions/PropositionSet.md)                        | `AddModel()`, `Create()`, `Update()`, `Withdraw()`, `Load()`, `Dependents()` &mdash; the write path and its outcome contract. |
+| [IPropositionStore](./propositions/IPropositionStore.md)                  | The persistence seam, `StoredProposition`, and `InMemoryPropositionStore`.                        |
+| [ASP.NET Core Integration](./propositions/AspNetCore.md)                  | `AddPropositions()` and the six `/propositions` endpoints.                                        |

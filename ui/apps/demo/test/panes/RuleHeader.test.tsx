@@ -42,7 +42,12 @@ function renderHeader(
 ) {
   render(
     <RuleEditorProvider store={store}>
-      <RuleHeader client={client} {...(onLoaded ? { onLoaded } : {})} />
+      <RuleHeader
+        client={client}
+        page="rules"
+        onNavigate={vi.fn()}
+        {...(onLoaded ? { onLoaded } : {})}
+      />
     </RuleEditorProvider>,
   );
   return store;

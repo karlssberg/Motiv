@@ -4,10 +4,10 @@ internal static class RuleBinder
 {
     public static SpecBase<TModel, string>? Bind<TModel>(
         RuleDocument document,
-        SpecRegistry registry,
+        ISpecSource source,
         List<RuleError> errors)
     {
-        var root = BindNode<TModel>(document.Root!, registry, errors);
+        var root = BindNode<TModel>(document.Root!, source, errors);
         if (root is null)
             return null;
 
@@ -16,15 +16,15 @@ internal static class RuleBinder
 
     /// <summary>Binds a rule subtree against an element model type (used by higher-order collection binding).</summary>
     internal static SpecBase<TElement, string>? BindElement<TElement>(
-        RuleNode node, SpecRegistry registry, List<RuleError> errors) =>
-        BindNode<TElement>(node, registry, errors);
+        RuleNode node, ISpecSource source, List<RuleError> errors) =>
+        BindNode<TElement>(node, source, errors);
 
     public static SpecBase<TModel, string>? BindNode<TModel>(
         RuleNode node,
-        SpecRegistry registry,
+        ISpecSource source,
         List<RuleError> errors)
     {
-        var spec = BindOperator<TModel>(node, registry, errors);
+        var spec = BindOperator<TModel>(node, source, errors);
 
         // Reported independently of leaf/composition success, mirroring the parser's approach
         // of surfacing payload errors even when the operator subtree fails.
@@ -38,15 +38,15 @@ internal static class RuleBinder
 
     public static SpecBase<TModel, string>? BindOperator<TModel>(
         RuleNode node,
-        SpecRegistry registry,
+        ISpecSource source,
         List<RuleError> errors) =>
         node.Operator switch
         {
-            RuleOperator.Spec => BindSpecLeaf<TModel>(node, registry, errors),
+            RuleOperator.Spec => BindSpecLeaf<TModel>(node, source, errors),
             RuleOperator.Expression => BindExpressionLeaf<TModel>(node, errors),
-            RuleOperator.Not => BindNode<TModel>(node.Children[0], registry, errors)?.Not(),
-            _ when node.Operator.IsHigherOrder() => BindHigherOrder<TModel>(node, registry, errors),
-            _ => BindComposition<TModel>(node, registry, errors)
+            RuleOperator.Not => BindNode<TModel>(node.Children[0], source, errors)?.Not(),
+            _ when node.Operator.IsHigherOrder() => BindHigherOrder<TModel>(node, source, errors),
+            _ => BindComposition<TModel>(node, source, errors)
         };
 
     private static bool ReportObjectPayloadError(RuleNode node, List<RuleError> errors)
@@ -62,10 +62,10 @@ internal static class RuleBinder
 
     private static SpecBase<TModel, string>? BindSpecLeaf<TModel>(
         RuleNode node,
-        SpecRegistry registry,
+        ISpecSource source,
         List<RuleError> errors)
     {
-        var entry = registry.Find(node.SpecName!);
+        var entry = source.Find(node.SpecName!);
         if (entry is null)
         {
             errors.Add(new RuleError(node.Path, RuleErrorCode.UnknownSpec,
@@ -115,11 +115,11 @@ internal static class RuleBinder
 
     private static SpecBase<TModel, string>? BindComposition<TModel>(
         RuleNode node,
-        SpecRegistry registry,
+        ISpecSource source,
         List<RuleError> errors)
     {
         var children = node.Children
-            .Select(child => BindNode<TModel>(child, registry, errors))
+            .Select(child => BindNode<TModel>(child, source, errors))
             .ToArray();
 
         if (children.Any(child => child is null))
@@ -136,9 +136,9 @@ internal static class RuleBinder
     }
 
     private static SpecBase<TModel, string>? BindHigherOrder<TModel>(
-        RuleNode node, SpecRegistry registry, List<RuleError> errors)
+        RuleNode node, ISpecSource source, List<RuleError> errors)
     {
-        var binding = registry.FindCollection<TModel>(node.PathText!);
+        var binding = source.FindCollection<TModel>(node.PathText!);
         if (binding is null)
         {
             errors.Add(new RuleError(node.Path, RuleErrorCode.UnknownCollection,
@@ -146,6 +146,6 @@ internal static class RuleBinder
             return null;
         }
 
-        return binding.BindHigherOrder(node, registry, errors);
+        return binding.BindHigherOrder(node, source, errors);
     }
 }

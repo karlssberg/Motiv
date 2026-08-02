@@ -48,7 +48,7 @@ test('editing and saving a rule changes the next checkout, and stale saves confl
   // Make the rule impossible for the sample customer: negate it by typing into its row.
   await page.getByRole('button', { name: 'edit expression at $.rule' }).click();
   await page.keyboard.press('ControlOrMeta+a');
-  await page.keyboard.type('!is-active');
+  await page.keyboard.type('!customer.is-active');
   await page.keyboard.press('Enter');
   await expect(page.getByLabel('rule document')).toContainText('"not"');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
@@ -61,14 +61,14 @@ test('editing and saving a rule changes the next checkout, and stale saves confl
 
   // A writer holding a stale version gets a 409 (simulated second tab via the API).
   const stale = await request.put(RULE_URL, {
-    data: { document: { rule: { spec: 'is-active' } }, baseVersion: loadedVersion },
+    data: { document: { rule: { spec: 'customer.is-active' } }, baseVersion: loadedVersion },
   });
   expect(stale.status()).toBe(409);
   expect(((await stale.json()) as { currentVersion: number }).currentVersion).toBe(savedVersion);
 
   // And the UI path shows the banner: another writer wins, then the UI saves a stale version.
   const winner = await request.put(RULE_URL, {
-    data: { document: { rule: { spec: 'is-active' } }, baseVersion: savedVersion },
+    data: { document: { rule: { spec: 'customer.is-active' } }, baseVersion: savedVersion },
   });
   expect(winner.ok()).toBe(true);
   const winningVersion = savedVersion + 1;

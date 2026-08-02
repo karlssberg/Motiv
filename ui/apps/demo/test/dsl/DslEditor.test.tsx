@@ -9,8 +9,8 @@ import { editorText, editorView, replaceBuffer } from '../support/codemirror.js'
 
 const CATALOG: Catalog = {
   specs: [
-    { name: 'is-active', modelType: 'customer', metadataType: 'String', isAsync: false, description: 'Currently active.' },
-    { name: 'is-verified', modelType: 'customer', metadataType: 'String', isAsync: false },
+    { name: 'is-active', modelType: 'customer', metadataType: 'String', isAsync: false, description: 'Currently active.', origin: 'Compiled' },
+    { name: 'is-verified', modelType: 'customer', metadataType: 'String', isAsync: false, origin: 'Compiled' },
   ],
   collections: [],
 };

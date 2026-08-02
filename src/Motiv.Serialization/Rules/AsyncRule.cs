@@ -125,8 +125,53 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
         return (snapshot.Version, snapshot.DocumentJson);
     }
 
+    internal sealed override IRebindCommit? PrepareRebind(RuleSerializer serializer, List<RuleError> errors)
+    {
+        var current = Snapshot();
+
+        // A compiled default resolves no names, so there is nothing to rebind.
+        if (current.DocumentJson is null)
+            return NoRebindCommit.Instance;
+
+        AsyncSpecBase<TModel, TMetadata> spec;
+        try
+        {
+            spec = Bind(serializer, current.DocumentJson);
+        }
+        catch (RuleSerializationException exception)
+        {
+            errors.AddRange(exception.Errors);
+            return null;
+        }
+
+        if (RequirePolicy(spec) is { } policyError)
+        {
+            errors.Add(policyError);
+            return null;
+        }
+
+        // The version is carried across unchanged: the document did not change, only what it resolves
+        // to, so bumping it would spuriously conflict with an editor's open draft.
+        return new RebindCommit(this, new State(current.DocumentJson, current.Version, spec));
+    }
+
+    /// <summary>A prepared rebind of this rule, published by swapping its state snapshot.</summary>
+    private sealed class RebindCommit(AsyncRule<TModel, TMetadata> rule, State replacement) : IRebindCommit
+    {
+        // A rule is not referenceable from a document, so it contributes nothing to the overlay.
+        public SpecRegistryEntry? OverlayEntry => null;
+
+        public void Commit() => Volatile.Write(ref rule._state, replacement);
+    }
+
     private RuleUpdateResult Publish(State expected, State replacement)
     {
+        // Defensive rather than load-bearing: RuleSet.Update/Revert (the only public callers that
+        // reach here) and RebindCommit's direct Volatile.Write both run under the same
+        // BindingScope write lock, so no second writer can ever be in flight and the CAS-miss arm
+        // below is unreachable through the public API. Kept as a CAS regardless — cheap, and it
+        // fails safe rather than silently overwriting a concurrent write if that invariant is
+        // ever broken.
         var witnessed = Interlocked.CompareExchange(ref _state, replacement, expected);
         return ReferenceEquals(witnessed, expected)
             ? RuleUpdateResult.Updated(replacement.Version)

@@ -1,20 +1,30 @@
 namespace Motiv.Serialization;
 
 /// <summary>
-/// Loads externalized JSON rule documents into Motiv specs, resolving leaf references against a
-/// <see cref="SpecRegistry" />.
+/// Loads externalized JSON rule documents into Motiv specs, resolving leaf references against an
+/// <see cref="ISpecSource" /> — a <see cref="SpecRegistry" /> on its own, or a layered source in
+/// which runtime-authored propositions shadow and extend the compiled catalog.
 /// </summary>
 public sealed class RuleSerializer
 {
-    private readonly SpecRegistry _registry;
+    private readonly ISpecSource _source;
     private readonly RuleSerializerOptions _options;
 
     /// <summary>Creates a serializer that resolves spec references against the given registry.</summary>
     /// <param name="registry">The registry used to resolve spec references.</param>
     /// <param name="options">Options controlling validation and loading; defaults are used when omitted.</param>
     public RuleSerializer(SpecRegistry registry, RuleSerializerOptions? options = null)
+        : this((ISpecSource)(registry ?? throw new ArgumentNullException(nameof(registry))), options)
     {
-        _registry = registry ?? throw new ArgumentNullException(nameof(registry));
+    }
+
+    /// <summary>
+    /// Creates a serializer over a layered source, so runtime-authored propositions shadow and
+    /// extend the compiled registry without the binders distinguishing the two.
+    /// </summary>
+    internal RuleSerializer(ISpecSource source, RuleSerializerOptions? options = null)
+    {
+        _source = source ?? throw new ArgumentNullException(nameof(source));
         _options = options ?? new RuleSerializerOptions();
     }
 
@@ -71,7 +81,7 @@ public sealed class RuleSerializer
         var document = Prepare(json, parameters, errors);
         ThrowIfInvalid(errors);
 
-        var spec = RuleBinder.Bind<TModel>(document!, _registry, errors);
+        var spec = RuleBinder.Bind<TModel>(document!, _source, errors);
         ThrowIfInvalid(errors);
         return spec!;
     }
@@ -119,7 +129,7 @@ public sealed class RuleSerializer
         var document = Prepare(json, parameters, errors);
         ThrowIfInvalid(errors);
 
-        var spec = AsyncRuleBinder.Bind<TModel>(document!, _registry, errors);
+        var spec = AsyncRuleBinder.Bind<TModel>(document!, _source, errors);
         ThrowIfInvalid(errors);
         return spec!;
     }
@@ -170,7 +180,7 @@ public sealed class RuleSerializer
         var document = Prepare(json, parameters, errors);
         ThrowIfInvalid(errors);
 
-        var spec = new MetadataRuleBinder<TMetadata>(_registry, _options).Bind<TModel>(document!, errors);
+        var spec = new MetadataRuleBinder<TMetadata>(_source, _options).Bind<TModel>(document!, errors);
         ThrowIfInvalid(errors);
         return spec!;
     }
@@ -224,7 +234,7 @@ public sealed class RuleSerializer
         var document = Prepare(json, parameters, errors);
         ThrowIfInvalid(errors);
 
-        var spec = new AsyncMetadataRuleBinder<TMetadata>(_registry, _options).Bind<TModel>(document!, errors);
+        var spec = new AsyncMetadataRuleBinder<TMetadata>(_source, _options).Bind<TModel>(document!, errors);
         ThrowIfInvalid(errors);
         return spec!;
     }
@@ -243,7 +253,7 @@ public sealed class RuleSerializer
         var errors = new List<RuleError>();
         var document = PrepareForValidation(json, errors);
         if (document?.Root is not null && errors.Count == 0)
-            RuleBinder.Bind<TModel>(document, _registry, errors);
+            RuleBinder.Bind<TModel>(document, _source, errors);
         return errors;
     }
 
@@ -265,7 +275,7 @@ public sealed class RuleSerializer
         var errors = new List<RuleError>();
         var document = PrepareForValidation(json, errors);
         if (document?.Root is not null && errors.Count == 0)
-            new MetadataRuleBinder<TMetadata>(_registry, _options).Bind<TModel>(document, errors);
+            new MetadataRuleBinder<TMetadata>(_source, _options).Bind<TModel>(document, errors);
         return errors;
     }
 
@@ -283,7 +293,7 @@ public sealed class RuleSerializer
         var errors = new List<RuleError>();
         var document = PrepareForValidation(json, errors);
         if (document?.Root is not null && errors.Count == 0)
-            AsyncRuleBinder.Bind<TModel>(document, _registry, errors);
+            AsyncRuleBinder.Bind<TModel>(document, _source, errors);
         return errors;
     }
 
@@ -305,7 +315,7 @@ public sealed class RuleSerializer
         var errors = new List<RuleError>();
         var document = PrepareForValidation(json, errors);
         if (document?.Root is not null && errors.Count == 0)
-            new AsyncMetadataRuleBinder<TMetadata>(_registry, _options).Bind<TModel>(document, errors);
+            new AsyncMetadataRuleBinder<TMetadata>(_source, _options).Bind<TModel>(document, errors);
         return errors;
     }
 

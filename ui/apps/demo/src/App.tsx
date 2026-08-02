@@ -1,18 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { RuleEditorStore, RulesApiClient, createValidationController } from '@motiv/rules-core';
 import { RuleEditorProvider } from '@motiv/rules-react';
-import { RuleHeader } from './panes/RuleHeader.js';
-import { EditorPane } from './panes/EditorPane.js';
-import { JsonPane } from './panes/JsonPane.js';
-import { EvaluatePane } from './panes/EvaluatePane.js';
-import { CheckoutPane } from './panes/CheckoutPane.js';
+import { useHashRoute, type Page } from './routing/useHashRoute.js';
+import { RulesPage } from './panes/RulesPage.js';
+import { PropositionsPage } from './panes/PropositionsPage.js';
 
 const MODEL_TYPE = 'customer';
 
 /** The demo shell: owns the store + client, runs debounced validation, and lays out the three panes. */
 export function App(props: { client?: RulesApiClient; store?: RuleEditorStore }) {
   const store = useMemo(
-    () => props.store ?? new RuleEditorStore({ rule: { spec: 'is-active' } }),
+    () => props.store ?? new RuleEditorStore({ rule: { spec: 'customer.is-active' } }),
     [props.store],
   );
   // Seam: the transport. A RulesApiClient is the only thing that talks to the
@@ -32,26 +30,33 @@ export function App(props: { client?: RulesApiClient; store?: RuleEditorStore })
     [store, client, isAsync],
   );
 
+  const [route, navigate] = useHashRoute();
+  // Switching page always drops the selection: a rule name means nothing on the propositions page.
+  const goToPage = (page: Page): void => navigate({ page, name: null });
+
   return (
     // Seam: the store hookup. RuleEditorProvider exposes the single RuleEditorStore
     // to every builder component (useRuleEditorStore / useRuleNode) below it.
     <RuleEditorProvider store={store}>
       <main className="app">
-        <RuleHeader client={client} onLoaded={(entry) => setIsAsync(entry?.isAsync ?? false)} />
-        {/*
-          Each pane below fetches GET /catalog on mount (EditorPane and EvaluatePane
-          via useCatalog, CheckoutPane directly) — and EditorPane's builder surface
-          fetches once more of its own, so up to four requests for the same static
-          payload. Deduping would mean lifting the catalog here and passing it down,
-          but each pane's self-contained wiring is a deliberate seam this demo exists
-          to show, so the duplicate requests are accepted.
-        */}
-        <div className="shell-body">
-          <EditorPane client={client} />
-          <JsonPane />
-          <EvaluatePane client={client} />
-        </div>
-        <CheckoutPane client={client} />
+        {route.page === 'propositions'
+          ? (
+            <PropositionsPage
+              client={client}
+              page={route.page}
+              selected={route.name}
+              onNavigate={goToPage}
+              onSelect={(name) => navigate({ page: 'propositions', name })}
+            />
+          )
+          : (
+            <RulesPage
+              client={client}
+              page={route.page}
+              onNavigate={goToPage}
+              onLoaded={(entry) => setIsAsync(entry?.isAsync ?? false)}
+            />
+          )}
       </main>
     </RuleEditorProvider>
   );

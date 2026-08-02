@@ -1,6 +1,6 @@
 {
   "rule": {
-    "and": [ { "spec": "is-active" }, { "spec": "has-orders" } ],
+    "and": [ { "spec": "customer.is-active" }, { "spec": "customer.has-orders" } ],
     "name": "qualifies for loyalty discount"
   }
 }

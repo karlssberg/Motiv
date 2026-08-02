@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace Motiv.Serialization;
 
-internal sealed class MetadataRuleBinder<TMetadata>(SpecRegistry registry, RuleSerializerOptions options)
+internal sealed class MetadataRuleBinder<TMetadata>(ISpecSource source, RuleSerializerOptions options)
 {
     private static readonly MethodInfo BindHigherOrderCoreMethod = typeof(MetadataRuleBinder<TMetadata>)
         .GetMethod(nameof(BindHigherOrderCore), BindingFlags.NonPublic | BindingFlags.Instance)!;
@@ -55,7 +55,7 @@ internal sealed class MetadataRuleBinder<TMetadata>(SpecRegistry registry, RuleS
         var errorCountBefore = errors.Count;
         var whenTrue = DeserializePayload(node.WhenTrueElement!.Value, $"{node.Path}.whenTrue", errors);
         var whenFalse = DeserializePayload(node.WhenFalseElement!.Value, $"{node.Path}.whenFalse", errors);
-        var underlying = RuleBinder.BindOperator<TModel>(node, registry, errors);
+        var underlying = RuleBinder.BindOperator<TModel>(node, source, errors);
 
         if (underlying is null || errors.Count > errorCountBefore)
             return null;
@@ -65,7 +65,7 @@ internal sealed class MetadataRuleBinder<TMetadata>(SpecRegistry registry, RuleS
 
     private SpecBase<TModel, TMetadata>? BindSpecLeaf<TModel>(RuleNode node, List<RuleError> errors)
     {
-        var entry = registry.Find(node.SpecName!);
+        var entry = source.Find(node.SpecName!);
         if (entry is null)
         {
             errors.Add(new RuleError(node.Path, RuleErrorCode.UnknownSpec,
@@ -141,7 +141,7 @@ internal sealed class MetadataRuleBinder<TMetadata>(SpecRegistry registry, RuleS
             return null;
         }
 
-        var binding = registry.FindCollection<TModel>(node.PathText!);
+        var binding = source.FindCollection<TModel>(node.PathText!);
         if (binding is null)
         {
             errors.Add(new RuleError(node.Path, RuleErrorCode.UnknownCollection,
@@ -166,7 +166,7 @@ internal sealed class MetadataRuleBinder<TMetadata>(SpecRegistry registry, RuleS
             var errorCountBefore = errors.Count;
             var whenTrue = DeserializePayload(node.WhenTrueElement!.Value, $"{node.Path}.whenTrue", errors);
             var whenFalse = DeserializePayload(node.WhenFalseElement!.Value, $"{node.Path}.whenFalse", errors);
-            var inner = RuleBinder.BindNode<TElement>(node.Children[0], registry, errors);
+            var inner = RuleBinder.BindNode<TElement>(node.Children[0], source, errors);
 
             if (inner is null || errors.Count > errorCountBefore)
                 return null;

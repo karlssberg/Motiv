@@ -10,9 +10,9 @@ public static class DefaultSpecs
 {
     /// <summary>
     /// The compiled default for <see cref="CanCheckoutRule"/>: active AND adult.
-    /// Deliberately duplicates the registry's "is-active"/"is-adult" specs rather than
-    /// composing them — the compiled default stays self-contained, exactly as a rule
-    /// document saved from the UI would rebuild it.
+    /// Deliberately duplicates the registry's "customer.is-active"/"customer.is-adult" specs
+    /// rather than composing them — the compiled default stays self-contained, exactly as a
+    /// rule document saved from the UI would rebuild it.
     /// </summary>
     public static SpecBase<Customer, string> CanCheckout { get; } =
         Spec.Build((Customer c) => c.IsActive)
@@ -22,7 +22,7 @@ public static class DefaultSpecs
 
     /// <summary>
     /// The simulated credit check. This single instance is shared: registered in the spec
-    /// catalog as "passes-credit-check" and used as the compiled default for
+    /// catalog as "customer.passes-credit-check" and used as the compiled default for
     /// <see cref="FraudScreeningRule"/>.
     /// </summary>
     public static AsyncSpecBase<Customer, string> PassesCreditCheck { get; } =

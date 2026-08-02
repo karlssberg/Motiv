@@ -42,6 +42,41 @@ public sealed class MotivRulesBuilder
         Services.AddSingleton<RuleBase>(rule);
         return this;
     }
+
+    /// <summary>
+    /// Enables runtime-authored propositions, backed by the given store (in-memory when omitted).
+    /// The <see cref="PropositionSet"/> shares the <see cref="RuleSet"/>'s coordinator, so a
+    /// proposition edit and a rule update can never interleave.
+    /// </summary>
+    /// <param name="store">Where authored propositions persist, or null for in-memory.</param>
+    /// <returns>This builder, to allow chained registration.</returns>
+    /// <exception cref="InvalidOperationException">Propositions are already enabled. DI is
+    /// last-wins, so a second call would silently discard the first store rather than layering
+    /// onto it — an argument quietly ignored is worse than a refusal.</exception>
+    public MotivRulesBuilder AddPropositions(IPropositionStore? store = null)
+    {
+        if (Services.Any(descriptor => descriptor.ServiceType == typeof(PropositionSet)))
+            throw new InvalidOperationException(
+                $"{nameof(AddPropositions)} has already been called. Call it once — a second call " +
+                "would silently replace the first store, as DI registration is last-wins.");
+
+        Services.AddSingleton<IPropositionStore>(store ?? new InMemoryPropositionStore());
+        Services.AddSingleton(provider =>
+        {
+            var options = provider.GetRequiredService<MotivRulesOptions>();
+            var propositions = new PropositionSet(
+                provider.GetRequiredService<BindingScope>(),
+                provider.GetRequiredService<IPropositionStore>(),
+                options.SerializerOptions);
+
+            foreach (var register in options.PropositionModelRegistrations)
+                register(propositions);
+
+            propositions.Load();
+            return propositions;
+        });
+        return this;
+    }
 }
 
 /// <summary>DI registration for the Motiv rules endpoints and live rules.</summary>
@@ -67,14 +102,21 @@ public static class MotivRulesServiceCollectionExtensions
     {
         services.AddSingleton(registry);
         services.AddSingleton(options);
+        services.AddSingleton(provider => new BindingScope(provider.GetRequiredService<SpecRegistry>()));
         services.AddSingleton(provider =>
         {
             // Resolve from the provider rather than closing over the parameters, so the
             // RuleSet always shares whatever registry/options the endpoints resolve —
             // even if a later registration shadowed the ones passed here.
             var resolvedOptions = provider.GetRequiredService<MotivRulesOptions>();
+
+            // Propositions load first: a rule's *default* document may reference an authored
+            // proposition, and Add binds that default immediately. Resolved for that side effect
+            // alone — the RuleSet reaches the same propositions through the shared BindingScope.
+            _ = provider.GetService<PropositionSet>();
+
             var rules = new RuleSet(
-                provider.GetRequiredService<SpecRegistry>(),
+                provider.GetRequiredService<BindingScope>(),
                 resolvedOptions.SerializerOptions);
             foreach (var rule in provider.GetServices<RuleBase>())
                 rules.Add(rule);

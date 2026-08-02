@@ -31,3 +31,6 @@ node_modules/
 
 .superpowers/
 .memsearch/
+
+# Sample host state: the file-backed proposition store's data, not source.
+src/examples/Motiv.RulesEngine.Sample/propositions.json

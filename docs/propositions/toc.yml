@@ -1,0 +1,8 @@
+### YamlMime:ManagedReference
+items:
+  - name: PropositionSet
+    href: PropositionSet.md
+  - name: IPropositionStore
+    href: IPropositionStore.md
+  - name: ASP.NET Core Integration
+    href: AspNetCore.md

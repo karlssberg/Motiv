@@ -1,5 +1,6 @@
 import type {
-  Catalog, ErrorResponse, EvaluateRequest, EvaluationResult,
+  BrokenDependent, Catalog, DependentEntry, ErrorResponse, EvaluateRequest, EvaluationResult,
+  PropositionCreateRequest, PropositionGetResponse, PropositionListEntry, PropositionSaveResult,
   RuleError, RuleGetResponse, RuleListEntry, RuleSaveResult,
   ValidateRequest, ValidationResponse,
 } from './contracts.js';
@@ -11,6 +12,15 @@ export interface RulesApiClientOptions {
   baseUrl: string;
   /** Injectable fetch implementation; defaults to the global fetch. */
   fetch?: typeof fetch;
+}
+
+/** The union of shapes a failed proposition write's body can take (see `#readPropositionResult`). */
+interface PropositionErrorBody {
+  currentVersion?: number;
+  referrers?: string[];
+  errors?: RuleError[];
+  brokenDependents?: BrokenDependent[];
+  error?: string;
 }
 
 /** Thrown when the API returns a non-2xx response. */
@@ -89,6 +99,71 @@ export class RulesApiClient {
     return this.#readSaveResult(response);
   }
 
+  /** GET {baseUrl}/propositions */
+  async listPropositions(): Promise<PropositionListEntry[]> {
+    const response = await this.#fetch(`${this.#baseUrl}/propositions`, { method: 'GET' });
+    return this.#read<PropositionListEntry[]>(response);
+  }
+
+  /** GET {baseUrl}/propositions/{name} */
+  async getProposition(name: string): Promise<PropositionGetResponse> {
+    const response = await this.#fetch(
+      `${this.#baseUrl}/propositions/${encodeURIComponent(name)}`,
+      { method: 'GET' },
+    );
+    return this.#read<PropositionGetResponse>(response);
+  }
+
+  /** POST {baseUrl}/propositions — 400/409 return typed outcomes rather than throwing. */
+  async createProposition(request: PropositionCreateRequest): Promise<PropositionSaveResult> {
+    const response = await this.#post('/propositions', request);
+    // Only a create can collide with an existing name, so only a create reads an otherwise
+    // unrecognised 409 that way.
+    return this.#readPropositionResult(response, { unmatchedConflictIsNameTaken: true });
+  }
+
+  /** PUT {baseUrl}/propositions/{name} — 400/409 return typed outcomes rather than throwing. */
+  async putProposition(
+    name: string, document: RuleDocument, baseVersion: number,
+  ): Promise<PropositionSaveResult> {
+    const response = await this.#fetch(
+      `${this.#baseUrl}/propositions/${encodeURIComponent(name)}`,
+      {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ document, baseVersion }),
+      },
+    );
+    return this.#readPropositionResult(response);
+  }
+
+  /**
+   * DELETE {baseUrl}/propositions/{name}?baseVersion=N — reverts to the compiled spec when one
+   * exists, otherwise removes the proposition (refused while anything references it).
+   *
+   * The 200 response is `{"version":0}` in both cases and does not say which happened; call
+   * `getProposition(name)` first and check `hasCompiledDefault` to know which outcome to expect.
+   */
+  async deleteProposition(name: string, baseVersion: number): Promise<PropositionSaveResult> {
+    const response = await this.#fetch(
+      `${this.#baseUrl}/propositions/${encodeURIComponent(name)}?baseVersion=${baseVersion}`,
+      { method: 'DELETE' },
+    );
+    return this.#readPropositionResult(response);
+  }
+
+  /** GET {baseUrl}/propositions/{name}/dependents */
+  async getDependents(name: string): Promise<DependentEntry[]> {
+    const response = await this.#fetch(
+      `${this.#baseUrl}/propositions/${encodeURIComponent(name)}/dependents`,
+      { method: 'GET' },
+    );
+    // `?? []` rather than trusting the shape: an absent field would otherwise reach the caller as
+    // `undefined` and only fail at `dependents.length`, during render, with the page blanked.
+    const body = await this.#read<{ dependents?: DependentEntry[] }>(response);
+    return body.dependents ?? [];
+  }
+
   #post(path: string, body: unknown): Promise<Response> {
     return this.#fetch(`${this.#baseUrl}${path}`, {
       method: 'POST',
@@ -121,6 +196,46 @@ export class RulesApiClient {
       throw new RulesApiError(response.status, message);
     }
     return this.#read<never>(response); // 404 etc. → RulesApiError as elsewhere
+  }
+
+  /**
+   * The shared reader for POST / PUT / DELETE on a proposition.
+   *
+   * `unmatchedConflictIsNameTaken` is what separates them: a 409 carrying neither `currentVersion`
+   * nor `referrers` is a duplicate name only when something was being *created*. Reading it that
+   * way for an update or a delete would answer "a proposition is already authored under that name"
+   * to an operation where that sentence is not merely unhelpful but the opposite of what happened.
+   */
+  async #readPropositionResult(
+    response: Response,
+    options: { unmatchedConflictIsNameTaken?: boolean } = {},
+  ): Promise<PropositionSaveResult> {
+    if (response.ok) {
+      const body = (await response.json()) as { version: number };
+      return { outcome: 'saved', version: body.version };
+    }
+
+    const body = (await response.json().catch(() => undefined)) as PropositionErrorBody | undefined;
+
+    if (response.status === 409) {
+      // Three different 409s share the status but not the shape, so they are told apart by body.
+      if (body && typeof body.currentVersion === 'number') {
+        return { outcome: 'conflict', currentVersion: body.currentVersion };
+      }
+      if (body?.referrers) return { outcome: 'referenced', referrers: body.referrers };
+      if (options.unmatchedConflictIsNameTaken) return { outcome: 'nameTaken' };
+    }
+
+    if (response.status === 400 && body && 'errors' in body) {
+      return {
+        outcome: 'invalid',
+        errors: body.errors ?? [],
+        brokenDependents: body.brokenDependents ?? [],
+      };
+    }
+
+    const message = body?.error ?? `Request failed (${response.status}).`;
+    throw new RulesApiError(response.status, message);
   }
 
   async #read<T>(response: Response): Promise<T> {

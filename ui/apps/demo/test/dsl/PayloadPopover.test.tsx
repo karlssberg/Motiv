@@ -7,8 +7,8 @@ import { PayloadPopover } from '../../src/dsl/PayloadPopover.js';
 
 const CATALOG: Catalog = {
   specs: [
-    { name: 'is-active', modelType: 'customer', metadataType: 'String', isAsync: false, description: 'Currently active.' },
-    { name: 'is-tiered', modelType: 'customer', metadataType: 'Tier', isAsync: false, description: 'Tiered.' },
+    { name: 'is-active', modelType: 'customer', metadataType: 'String', isAsync: false, description: 'Currently active.', origin: 'Compiled' },
+    { name: 'is-tiered', modelType: 'customer', metadataType: 'Tier', isAsync: false, description: 'Tiered.', origin: 'Compiled' },
   ],
   collections: [],
   metadataTypes: {

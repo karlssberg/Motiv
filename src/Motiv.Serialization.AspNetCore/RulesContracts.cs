@@ -8,7 +8,9 @@ namespace Motiv.Serialization.AspNetCore;
 /// <param name="MetadataType">The metadata type name (e.g. String).</param>
 /// <param name="IsAsync">Whether the spec evaluates asynchronously.</param>
 /// <param name="Description">An optional human-readable description.</param>
-public sealed record CatalogEntry(string Name, string ModelType, string MetadataType, bool IsAsync, string? Description);
+/// <param name="Origin">Whether the spec is compiled, overridden by an authored document, or authored.</param>
+public sealed record CatalogEntry(
+    string Name, string ModelType, string MetadataType, bool IsAsync, string? Description, PropositionOrigin Origin);
 
 /// <summary>A catalog listing for one registered collection projection.</summary>
 /// <param name="Path">The path higher-order nodes reference the collection by.</param>

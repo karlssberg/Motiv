@@ -9,7 +9,7 @@ test('build a rule, then evaluate it end to end', async ({ page }) => {
   // Build a composite by typing it: the row is where structure is authored.
   await page.getByRole('button', { name: 'edit expression at $.rule' }).click();
   await page.keyboard.press('ControlOrMeta+a');
-  await page.keyboard.type('is-active & is-adult');
+  await page.keyboard.type('customer.is-active & customer.is-adult');
   await page.keyboard.press('Enter');
 
   // The JSON pane reflects the composite document.

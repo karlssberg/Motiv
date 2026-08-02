@@ -9,14 +9,14 @@ async function typeExpression(page: Page, path: string, dsl: string): Promise<vo
   await page.keyboard.press('Enter');
 }
 
-/** Builds `is-adult & all in orders { is-large-order }` through the builder's rows. */
+/** Builds `customer.is-adult & all in orders { order.is-large }` through the builder's rows. */
 async function buildHigherOrderRule(page: Page): Promise<void> {
   await page.goto('/');
 
   // root row present (catalog loaded)
   await expect(page.getByRole('button', { name: 'edit expression at $.rule' })).toBeVisible();
 
-  await typeExpression(page, '$.rule', 'is-adult & all in orders { is-large-order }');
+  await typeExpression(page, '$.rule', 'customer.is-adult & all in orders { order.is-large }');
 
   // the document reflects the higher-order node over the orders collection
   await expect(page.getByLabel('rule document')).toContainText('asAllSatisfied');

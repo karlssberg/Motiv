@@ -7,6 +7,8 @@ export interface CatalogEntry {
   metadataType: string;
   isAsync: boolean;
   description?: string | null;
+  /** Whether the spec is compiled, overridden by an authored document, or authored. */
+  origin: PropositionOrigin;
 }
 
 /** One catalog listing for a registered collection projection. */
@@ -126,3 +128,67 @@ export type RuleSaveResult =
   | { outcome: 'updated'; version: number }
   | { outcome: 'conflict'; currentVersion: number }
   | { outcome: 'invalid'; errors: RuleError[] };
+
+/** Where a proposition's current definition comes from. */
+export type PropositionOrigin = 'Compiled' | 'Overridden' | 'Authored';
+
+/** One proposition in scope, compiled or authored. */
+export interface PropositionListEntry {
+  name: string;
+  modelType: string;
+  metadataType: string;
+  isAsync: boolean;
+  origin: PropositionOrigin;
+  version: number;
+  description: string | null;
+  /**
+   * Binding errors that excluded an authored document from the effective set; empty when it bound.
+   * Orthogonal to `origin` — an overridden or an authored proposition can each be quarantined.
+   */
+  quarantine: RuleError[];
+}
+
+/** One proposition's authored document and version. */
+export interface PropositionGetResponse {
+  /** Null when the name is served by a compiled spec. */
+  document: RuleDocument | null;
+  /** 0 when the proposition is purely compiled. */
+  version: number;
+  origin: PropositionOrigin;
+  /** Whether deleting reverts to a compiled spec rather than removing outright. */
+  hasCompiledDefault: boolean;
+}
+
+/** A request to author a new proposition. */
+export interface PropositionCreateRequest {
+  name: string;
+  modelType: string;
+  document: RuleDocument;
+  description: string | null;
+}
+
+/** One node that would be rebound by editing a proposition. */
+export interface DependentEntry {
+  name: string;
+  kind: 'rule' | 'proposition';
+}
+
+/**
+ * The outcome of a proposition write. Every expected failure is a value rather than a throw, so the
+ * UI can render it — `errors` are faults in the submitted document, `brokenDependents` are the
+ * dependents the edit would have stopped binding, and the two are distinct because an error's path
+ * points into *this* document and cannot address a break elsewhere.
+ */
+export type PropositionSaveResult =
+  | { outcome: 'saved'; version: number }
+  | { outcome: 'conflict'; currentVersion: number }
+  | { outcome: 'invalid'; errors: RuleError[]; brokenDependents: BrokenDependent[] }
+  | { outcome: 'nameTaken' }
+  | { outcome: 'referenced'; referrers: string[] };
+
+/** A dependent an attempted edit would have stopped binding. */
+export interface BrokenDependent {
+  name: string;
+  kind: 'rule' | 'proposition';
+  errors: RuleError[];
+}

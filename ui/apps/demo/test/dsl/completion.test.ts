@@ -6,9 +6,10 @@ import type { Catalog } from '@motiv/rules-core';
 
 const CATALOG: Catalog = {
   specs: [
-    { name: 'is-active', modelType: 'customer', metadataType: 'String', isAsync: false, description: 'Currently active.' },
-    { name: 'is-positive', modelType: 'order', metadataType: 'String', isAsync: false, description: 'Above zero.' },
-    { name: 'is-premium', modelType: 'customer', metadataType: 'String', isAsync: true, description: 'Premium tier.' },
+    { name: 'is-active', modelType: 'customer', metadataType: 'String', isAsync: false, description: 'Currently active.', origin: 'Compiled' },
+    { name: 'is-positive', modelType: 'order', metadataType: 'String', isAsync: false, description: 'Above zero.', origin: 'Compiled' },
+    { name: 'is-premium', modelType: 'customer', metadataType: 'String', isAsync: true, description: 'Premium tier.', origin: 'Compiled' },
+    { name: 'customer.has-orders', modelType: 'customer', metadataType: 'String', isAsync: false, description: 'Has placed an order.', origin: 'Compiled' },
   ],
   collections: [{ path: 'orders', parentModelType: 'customer', elementModelType: 'order' }],
 };
@@ -66,5 +67,23 @@ describe('createMotivCompletion', () => {
 
   it('returns null when there is no word to complete', () => {
     expect(complete('is-active ')).toBeNull();
+  });
+
+  it('offers a dotted spec once the prefix continues past its namespace dot', () => {
+    const labels = complete('customer.has-')?.options.map((o) => o.label);
+    expect(labels).toContain('customer.has-orders');
+  });
+
+  it('anchors a dotted completion at the start of the whole dotted word', () => {
+    expect(complete('customer.has-')?.from).toBe(0);
+  });
+
+  it('offers nothing after a dot typed onto a parameter reference', () => {
+    // Parameters are not namespaced, so `@minOrders.` cannot continue into anything. `WORD`'s two
+    // alternatives both bear on this: the `@…` branch stops at the dot, and the identifier branch
+    // then matches the bare `minOrders.` — which takes the *spec* path with that as its prefix and
+    // matches no spec. The outcome is right either way, but only by way of that second branch, so
+    // it is pinned rather than left to alternation order.
+    expect(complete('param minOrders: integer = 3\n\natLeast(@minOrders.')).toBeNull();
   });
 });

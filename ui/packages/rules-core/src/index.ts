@@ -9,3 +9,4 @@ export * from './validation.js';
 export * from './explanation.js';
 export * from './plan.js';
 export * from './dsl/index.js';
+export * from './namespaceTree.js';

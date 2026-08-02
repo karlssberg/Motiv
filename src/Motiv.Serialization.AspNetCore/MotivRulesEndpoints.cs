@@ -17,6 +17,10 @@ public static class MotivRulesEndpoints
     /// <see cref="RuleSet"/> is supplied, also maps <c>GET {basePath}/rules</c>,
     /// <c>GET {basePath}/rules/{{name}}</c>, <c>PUT {basePath}/rules/{{name}}</c>, and
     /// <c>DELETE {basePath}/rules/{{name}}</c> for live rule management with optimistic concurrency.
+    /// When a <see cref="PropositionSet"/> is resolvable from the endpoint route builder's service
+    /// provider (i.e. <see cref="MotivRulesBuilder.AddPropositions"/> was called), the
+    /// <c>{basePath}/propositions</c> endpoints are mapped against it as well. This overload cannot
+    /// substitute a different one, so pass the same registry and options it was built with.
     /// </summary>
     /// <param name="endpoints">The endpoint route builder to map onto.</param>
     /// <param name="basePath">The base path to mount under, e.g. <c>/api/rules</c>.</param>
@@ -37,46 +41,14 @@ public static class MotivRulesEndpoints
         var resultSerializer = new ResultSerializer();
         var json = options.JsonSerializerOptions;
         var group = endpoints.MapGroup(basePath);
+        var propositions = endpoints.ServiceProvider.GetService<PropositionSet>();
 
-        var specs = registry.Entries
-            .Select(entry => new CatalogEntry(
-                entry.Name,
-                options.ResolveModelId(entry.ModelType),
-                entry.MetadataType.Name,
-                entry.IsAsync,
-                entry.Description))
-            .ToArray();
-
-        var collections = registry.Collections
-            .Select(collection => new CatalogCollection(
-                collection.Path,
-                options.ResolveModelId(collection.ParentType),
-                options.ResolveModelId(collection.ElementType)))
-            .ToArray();
-
-        // Each schema is generated with the options its type is actually deserialized with —
-        // metadata payloads bind with the metadata options, models with the response options —
-        // so schema property names match real binding behavior by construction.
-        var metadataJson = options.SerializerOptions?.MetadataJsonOptions ?? JsonSerializerOptions.Default;
-
-        var metadataTypes = registry.Entries.Select(entry => entry.MetadataType)
-            .Concat(rules?.Rules.Select(rule => rule.MetadataType) ?? [])
-            .Distinct()
-            .OrderBy(type => type.Name, StringComparer.Ordinal)
-            .ToDictionary(type => type.Name, type => ToSchema(metadataJson, type));
-
-        var modelTypes = options.ModelBindings
-            .OrderBy(binding => binding.Id, StringComparer.Ordinal)
-            .ToDictionary(binding => binding.Id, binding => ToSchema(json, binding.ModelType));
-
-        var catalog = new CatalogResponse(specs, collections, metadataTypes, modelTypes);
-
-        group.MapGet("/catalog", () => Results.Json(catalog, json));
+        MapCatalogEndpoint(group, registry, options, rules, propositions, json);
 
         group.MapPost("/validate", (ValidateRequest request) =>
         {
             if (request.Document.ValueKind == JsonValueKind.Undefined)
-                return MissingDocument(json);
+                return EndpointResponses.MissingDocument(json);
 
             if (!options.TryGetBinding(request.ModelType, out var binding))
                 return UnknownModelType(request.ModelType, json);
@@ -91,7 +63,7 @@ public static class MotivRulesEndpoints
         group.MapPost("/evaluate", (EvaluateRequest request) =>
         {
             if (request.Document.ValueKind == JsonValueKind.Undefined)
-                return MissingDocument(json);
+                return EndpointResponses.MissingDocument(json);
 
             if (request.Model.ValueKind == JsonValueKind.Undefined)
                 return Results.Json(
@@ -118,6 +90,9 @@ public static class MotivRulesEndpoints
 
         if (rules is not null)
             MapRuleEndpoints(group, rules, options, json);
+
+        if (propositions is not null)
+            MotivPropositionEndpoints.MapPropositionEndpoints(group, propositions, json);
 
         return endpoints;
     }
@@ -148,6 +123,79 @@ public static class MotivRulesEndpoints
         return endpoints.MapMotivRules(basePath, registry, options, services.GetRequiredService<RuleSet>());
     }
 
+    /// <summary>
+    /// Maps <c>GET /catalog</c>. The collection, metadata and model listings are fixed at startup,
+    /// but the spec listing is rebuilt per request: authoring a proposition changes the effective
+    /// spec list, and a constant catalog would hide every new proposition until restart.
+    /// </summary>
+    private static void MapCatalogEndpoint(
+        RouteGroupBuilder group,
+        SpecRegistry registry,
+        MotivRulesOptions options,
+        RuleSet? rules,
+        PropositionSet? propositions,
+        JsonSerializerOptions json)
+    {
+        var collections = registry.Collections
+            .Select(collection => new CatalogCollection(
+                collection.Path,
+                options.ResolveModelId(collection.ParentType),
+                options.ResolveModelId(collection.ElementType)))
+            .ToArray();
+
+        // Each schema is generated with the options its type is actually deserialized with —
+        // metadata payloads bind with the metadata options, models with the response options —
+        // so schema property names match real binding behavior by construction.
+        var metadataJson = options.SerializerOptions?.MetadataJsonOptions ?? JsonSerializerOptions.Default;
+
+        var metadataTypes = registry.Entries.Select(entry => entry.MetadataType)
+            .Concat(rules?.Rules.Select(rule => rule.MetadataType) ?? [])
+            .Distinct()
+            .OrderBy(type => type.Name, StringComparer.Ordinal)
+            .ToDictionary(type => type.Name, type => ToSchema(metadataJson, type));
+
+        var modelTypes = options.ModelBindings
+            .OrderBy(binding => binding.Id, StringComparer.Ordinal)
+            .ToDictionary(binding => binding.Id, binding => ToSchema(json, binding.ModelType));
+
+        group.MapGet("/catalog", () => Results.Json(
+            new CatalogResponse(
+                propositions is null ? CompiledSpecs(registry, options) : EffectiveSpecs(propositions),
+                collections,
+                metadataTypes,
+                modelTypes),
+            json));
+    }
+
+    /// <summary>The compiled registry as catalog entries — the listing when propositions are not enabled.</summary>
+    private static IReadOnlyList<CatalogEntry> CompiledSpecs(SpecRegistry registry, MotivRulesOptions options) =>
+        [.. registry.Entries.Select(entry => new CatalogEntry(
+            entry.Name,
+            options.ResolveModelId(entry.ModelType),
+            entry.MetadataType.Name,
+            entry.IsAsync,
+            entry.Description,
+            PropositionOrigin.Compiled))];
+
+    /// <summary>
+    /// The layered listing: <see cref="PropositionSet.Propositions"/> already folds compiled,
+    /// overridden and authored definitions into one effective set.
+    /// </summary>
+    private static IReadOnlyList<CatalogEntry> EffectiveSpecs(PropositionSet propositions) =>
+        [.. propositions.Propositions
+            .Where(Resolves)
+            .Select(entry => new CatalogEntry(
+                entry.Name, entry.ModelType, entry.MetadataType, entry.IsAsync,
+                entry.Description, entry.Origin))];
+
+    /// <summary>
+    /// Whether a proposition still resolves to a spec. A quarantined authored proposition resolves
+    /// to nothing, so it is not listed; a quarantined override is, reported as the compiled spec
+    /// still resolving beneath it.
+    /// </summary>
+    private static bool Resolves(PropositionEntry entry) =>
+        entry.Quarantine.Count == 0 || entry.Origin != PropositionOrigin.Authored;
+
     private static void MapRuleEndpoints(RouteGroupBuilder group, RuleSet rules, MotivRulesOptions options, JsonSerializerOptions json)
     {
         group.MapGet("/rules", () =>
@@ -166,32 +214,26 @@ public static class MotivRulesEndpoints
         {
             // FindEntry serves document and version from a single coherent snapshot.
             if (rules.FindEntry(name) is not { } entry)
-                return Results.Json(new ErrorResponse($"Unknown rule '{name}'."), json, statusCode: 404);
+                return UnknownRule(name, json);
 
-            JsonElement? document = null;
-            if (entry.DocumentJson is not null)
-            {
-                using var parsed = JsonDocument.Parse(entry.DocumentJson);
-                document = parsed.RootElement.Clone();
-            }
-
-            return Results.Json(new RuleGetResponse(document, entry.Version), json);
+            return Results.Json(
+                new RuleGetResponse(EndpointResponses.DocumentElement(entry.DocumentJson), entry.Version), json);
         });
 
         group.MapPut("/rules/{name}", (string name, RulePutRequest request) =>
         {
             if (request.Document.ValueKind == JsonValueKind.Undefined)
-                return MissingDocument(json);
+                return EndpointResponses.MissingDocument(json);
 
             if (request.BaseVersion <= 0)
-                return NonPositiveBaseVersion(json);
+                return EndpointResponses.NonPositiveBaseVersion(json);
 
             return ToResult(rules.Update(name, request.Document.GetRawText(), request.BaseVersion), name, json);
         });
 
         group.MapDelete("/rules/{name}", (string name, int baseVersion) =>
             baseVersion <= 0
-                ? NonPositiveBaseVersion(json)
+                ? EndpointResponses.NonPositiveBaseVersion(json)
                 : ToResult(rules.Revert(name, baseVersion), name, json));
     }
 
@@ -201,7 +243,7 @@ public static class MotivRulesEndpoints
             RuleUpdateOutcome.Updated => Results.Json(new RulePutResponse(outcome.Version), json),
             RuleUpdateOutcome.VersionConflict => Results.Json(new RuleConflictResponse(outcome.Version), json, statusCode: 409),
             RuleUpdateOutcome.Invalid => Results.Json(new ValidationResponse(outcome.Errors), json, statusCode: 400),
-            _ => Results.Json(new ErrorResponse($"Unknown rule '{name}'."), json, statusCode: 404)
+            _ => UnknownRule(name, json)
         };
 
     private static JsonElement ToSchema(JsonSerializerOptions options, Type type)
@@ -218,11 +260,6 @@ public static class MotivRulesEndpoints
     private static IResult UnknownModelType(string modelType, JsonSerializerOptions json) =>
         Results.Json(new ErrorResponse($"Unknown model type '{modelType}'."), json, statusCode: 400);
 
-    private static IResult MissingDocument(JsonSerializerOptions json) =>
-        Results.Json(new ErrorResponse("The request must include a document."), json, statusCode: 400);
-
-    private static IResult NonPositiveBaseVersion(JsonSerializerOptions json) =>
-        Results.Json(
-            new ErrorResponse("baseVersion must be a positive integer; versions start at 1."),
-            json, statusCode: 400);
+    private static IResult UnknownRule(string name, JsonSerializerOptions json) =>
+        Results.Json(new ErrorResponse($"Unknown rule '{name}'."), json, statusCode: 404);
 }

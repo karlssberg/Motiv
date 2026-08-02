@@ -137,7 +137,20 @@ const DOCUMENTS: Array<{ label: string; document: RuleDocument }> = [
   },
 ];
 
+/** Parses DSL text and reprints it, for asserting a composed rule's text survives unchanged. */
+function roundTrip(text: string): string {
+  const result = parse(text);
+  expect(result.errors).toEqual([]);
+  return printInline(result.document!.rule);
+}
+
 describe('DSL round-trip', () => {
+  it('round-trips a composition of dotted names', () => {
+    const text = 'customer.is-active & !order.is-large';
+
+    expect(roundTrip(text)).toBe(text);
+  });
+
   it.each(DOCUMENTS)('parse(print(doc)) preserves $label', ({ document }) => {
     const text = print(document);
     const result = parse(text);

@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace Motiv.Serialization;
 
-internal sealed class AsyncMetadataRuleBinder<TMetadata>(SpecRegistry registry, RuleSerializerOptions options)
+internal sealed class AsyncMetadataRuleBinder<TMetadata>(ISpecSource source, RuleSerializerOptions options)
 {
     public AsyncSpecBase<TModel, TMetadata>? Bind<TModel>(RuleDocument document, List<RuleError> errors)
     {
@@ -51,7 +51,7 @@ internal sealed class AsyncMetadataRuleBinder<TMetadata>(SpecRegistry registry, 
         var errorCountBefore = errors.Count;
         var whenTrue = DeserializePayload(node.WhenTrueElement!.Value, $"{node.Path}.whenTrue", errors);
         var whenFalse = DeserializePayload(node.WhenFalseElement!.Value, $"{node.Path}.whenFalse", errors);
-        var underlying = AsyncRuleBinder.BindOperator<TModel>(node, registry, errors);
+        var underlying = AsyncRuleBinder.BindOperator<TModel>(node, source, errors);
 
         if (underlying is null || errors.Count > errorCountBefore)
             return null;
@@ -61,7 +61,7 @@ internal sealed class AsyncMetadataRuleBinder<TMetadata>(SpecRegistry registry, 
 
     private AsyncSpecBase<TModel, TMetadata>? BindSpecLeaf<TModel>(RuleNode node, List<RuleError> errors)
     {
-        var entry = registry.Find(node.SpecName!);
+        var entry = source.Find(node.SpecName!);
         if (entry is null)
         {
             errors.Add(new RuleError(node.Path, RuleErrorCode.UnknownSpec,
@@ -145,7 +145,7 @@ internal sealed class AsyncMetadataRuleBinder<TMetadata>(SpecRegistry registry, 
         // the sync metadata binder (which also enforces its name-or-payload rule) and lifts. An
         // async leaf inside it is therefore a distinct, actionable error.
         var errorCountBefore = errors.Count;
-        var spec = new MetadataRuleBinder<TMetadata>(registry, options).BindNode<TModel>(node, errors);
+        var spec = new MetadataRuleBinder<TMetadata>(source, options).BindNode<TModel>(node, errors);
 
         for (var i = errorCountBefore; i < errors.Count; i++)
         {

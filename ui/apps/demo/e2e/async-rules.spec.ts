@@ -2,6 +2,9 @@ import { test, expect, type APIRequestContext, type Page } from '@playwright/tes
 
 const RULE_URL = '/api/rules/rules/fraud-screening';
 
+/** The registered async spec, under the namespaced name the sample's catalog serves it as. */
+const ASYNC_SPEC = 'customer.passes-credit-check';
+
 async function currentVersion(request: APIRequestContext): Promise<number> {
   const response = await request.get(RULE_URL);
   expect(response.ok()).toBe(true);
@@ -39,10 +42,12 @@ test('an async rule validates and saves a document referencing an async spec', a
   await expect(versionBadge(page, loadedVersion)).toBeVisible();
   await expect(page.getByText(/code-defined default/)).toBeVisible();
 
-  // Point the draft at the registered async spec by typing it into the node's DSL row.
+  // Point the draft at the registered async spec by typing it into the node's DSL row. The
+  // catalog is namespaced, so the async spec answers to `customer.passes-credit-check` — the bare
+  // leaf is not a registered name and would be rejected as UnknownSpec.
   await page.getByRole('button', { name: 'edit expression at $.rule' }).click();
   await page.keyboard.press('ControlOrMeta+a');
-  await page.keyboard.type('passes-credit-check');
+  await page.keyboard.type(ASYNC_SPEC);
 
   // Capture the validation the commit triggers, then commit.
   const validated = page.waitForResponse(
@@ -50,7 +55,7 @@ test('an async rule validates and saves a document referencing an async spec', a
       response.url().endsWith('/api/rules/validate') && response.request().method() === 'POST',
   );
   await page.keyboard.press('Enter');
-  await expect(page.getByLabel('rule document')).toContainText('passes-credit-check');
+  await expect(page.getByLabel('rule document')).toContainText(ASYNC_SPEC);
 
   // The request carried the async flag, so the server bound via the async path and returned
   // no AsyncSpecInSyncLoad red herring — the exact seam this proves.

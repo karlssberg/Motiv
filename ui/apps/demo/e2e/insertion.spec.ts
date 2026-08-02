@@ -39,8 +39,9 @@ test('the strip scrolls the hovered mark into view', async ({ page }) => {
 
   // Alternating the two customer specs keeps the DSL valid while making it long enough — twenty
   // repeats prints well over a thousand characters, far wider than the strip's card.
-  const longExpression = Array.from({ length: 20 }, (_, i) => (i % 2 === 0 ? 'is-active' : 'is-adult'))
-    .join(' & ');
+  const longExpression = Array.from(
+    { length: 20 }, (_, i) => (i % 2 === 0 ? 'customer.is-active' : 'customer.is-adult'),
+  ).join(' & ');
   await buildRootExpression(page, longExpression);
   await expect(page.getByLabel('rule document')).toContainText('"and"');
 
@@ -70,7 +71,8 @@ test('the strip scrolls the hovered mark into view', async ({ page }) => {
  * meant to make a post-teardown commit a no-op) used to be cleared only inside the mount effect's
  * *cleanup*, which — because the effect is a plain `useEffect`, not a `useLayoutEffect` — runs as a
  * deferred passive effect, later than this synchronous blur. So the guard was still `true` when the
- * second commit landed, inserting the node twice (`is-active & has-orders & has-orders & is-adult`).
+ * second commit landed, inserting the node twice
+ * (`customer.is-active & customer.has-orders & customer.has-orders & customer.is-adult`).
  * `commit` now disarms the guard itself, before delegating, rather than relying on effect-cleanup
  * timing — see `useInlineDslEditor.ts` for the fix. No jsdom test caught the original bug because
  * jsdom does not reliably fire a synchronous native `blur` when a focused element is removed from
@@ -78,21 +80,21 @@ test('the strip scrolls the hovered mark into view', async ({ page }) => {
  */
 test('inserting an operand round-trips into the DSL pane', async ({ page }) => {
   await page.goto('/');
-  await buildRootExpression(page, 'is-active & is-adult');
+  await buildRootExpression(page, 'customer.is-active & customer.is-adult');
   await expect(page.getByLabel('rule document')).toContainText('"and"');
 
   await page.getByRole('button', { name: 'insert after $.rule.and[0]', exact: true }).click();
   await expect(pendingContent(page)).toBeFocused();
-  await page.keyboard.type('has-orders');
+  await page.keyboard.type('customer.has-orders');
   await page.keyboard.press('Enter');
 
   // The phantom row is gone once the commit lands — the insertion applied to the document.
   await expect(page.locator('.node-row-pending')).toHaveCount(0);
-  await expect(page.getByLabel('rule document')).toContainText('has-orders');
+  await expect(page.getByLabel('rule document')).toContainText('customer.has-orders');
 
   await page.getByRole('tab', { name: 'DSL' }).click();
   const content = page.locator('.cm-content');
-  await expect(content).toHaveText('is-active & has-orders & is-adult');
+  await expect(content).toHaveText('customer.is-active & customer.has-orders & customer.is-adult');
 });
 
 /**
@@ -102,7 +104,7 @@ test('inserting an operand round-trips into the DSL pane', async ({ page }) => {
  * committed) buffer still sitting in the doc, silently inserting the very node the user just
  * cancelled. `cancel()` in `useInlineDslEditor.ts` now shares the same guard as `commit()`.
  *
- * Escape is pressed twice: a fully-typed spec name like `has-orders` is also a live completion
+ * Escape is pressed twice: a fully-typed spec name like `customer.has-orders` is also a live completion
  * match, and CodeMirror's own autocomplete extension claims the first Escape to dismiss that
  * completion state (no visible popup renders in that same tick, so nothing else in this suite
  * observes it) — a pre-existing, unrelated characteristic of the shared editor hook, not something
@@ -121,12 +123,12 @@ test('inserting an operand round-trips into the DSL pane', async ({ page }) => {
  */
 test('blurring a parseable slot by clicking elsewhere commits it exactly once', async ({ page }) => {
   await page.goto('/');
-  await buildRootExpression(page, 'is-active & is-adult');
+  await buildRootExpression(page, 'customer.is-active & customer.is-adult');
   await expect(page.getByLabel('rule document')).toContainText('"and"');
 
   await page.getByRole('button', { name: 'insert after $.rule.and[0]', exact: true }).click();
   await expect(pendingContent(page)).toBeFocused();
-  await page.keyboard.type('has-orders');
+  await page.keyboard.type('customer.has-orders');
 
   // A neutral area of the page — the DSL strip's inert "rule" caption — to blur the editor
   // without triggering any other row's own insertion or edit affordance.
@@ -134,30 +136,30 @@ test('blurring a parseable slot by clicking elsewhere commits it exactly once', 
 
   await expect(page.locator('.node-row-pending')).toHaveCount(0);
   const document = page.getByLabel('rule document');
-  await expect(document).toContainText('has-orders');
+  await expect(document).toContainText('customer.has-orders');
   // Exactly one insertion: not the pre-fix double-commit, and not a silently dropped one. A
   // `text=` locator would only prove the substring appears *somewhere* in the one `<pre>`
   // element, not how many times — so count occurrences in the raw text instead.
   await expect.poll(async () => {
     const text = await document.textContent();
-    return (text?.match(/"has-orders"/g) ?? []).length;
+    return (text?.match(/"customer\.has-orders"/g) ?? []).length;
   }).toBe(1);
 });
 
 test('cancelling with Escape does not insert the cancelled buffer', async ({ page }) => {
   await page.goto('/');
-  await buildRootExpression(page, 'is-active & is-adult');
+  await buildRootExpression(page, 'customer.is-active & customer.is-adult');
   await expect(page.getByLabel('rule document')).toContainText('"and"');
 
   await page.getByRole('button', { name: 'insert after $.rule.and[0]', exact: true }).click();
   await expect(pendingContent(page)).toBeFocused();
-  await page.keyboard.type('has-orders');
+  await page.keyboard.type('customer.has-orders');
   await page.keyboard.press('Escape');
   await page.keyboard.press('Escape');
 
   await expect(page.locator('.node-row-pending')).toHaveCount(0);
   const document = page.getByLabel('rule document');
-  await expect(document).not.toContainText('has-orders');
-  await expect(document).toContainText('"is-active"');
-  await expect(document).toContainText('"is-adult"');
+  await expect(document).not.toContainText('customer.has-orders');
+  await expect(document).toContainText('"customer.is-active"');
+  await expect(document).toContainText('"customer.is-adult"');
 });

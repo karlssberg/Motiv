@@ -91,6 +91,18 @@ body {
   letter-spacing: -0.01em;
 }
 
+/* Page tabs: the Rules/Propositions switch in the appbar. Reuses `.tab` from the surface tabs so
+   both switches read as the same control at two altitudes. */
+.page-tabs {
+  display: flex;
+  gap: 2px;
+  margin-left: var(--space);
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--sh-inset);
+  border: 1px solid var(--border);
+}
+
 .breadcrumb-sep {
   color: var(--faint);
   font-size: 13px;
@@ -143,9 +155,15 @@ body {
   white-space: nowrap;
 }
 
-/* Conflict banner: another writer saved a newer version */
+/*
+  Conflict banner: another writer saved a newer version. It sits below the app bar rather than
+  wrapping inside it — both pages raise it, and the propositions page's own strip sits in the same
+  place — so it is inset to the app bar's inline padding rather than being full-bleed, which keeps
+  it reading as part of the header block it belongs to.
+*/
 .conflict-banner {
-  flex-basis: 100%;
+  flex: none;
+  margin: var(--space) 14px 0;
   display: flex;
   align-items: center;
   gap: var(--space);
@@ -1160,3 +1178,229 @@ button.node-dsl {
   color: var(--faint);
 }
 .node-insert:hover { color: var(--accent); }
+
+/* ---------------------------------------------------------------------------
+   Proposition explorer — the namespaced tree rail on the propositions page.
+   Indentation is driven by a --depth custom property set per node, so nesting
+   needs no per-level selectors.
+
+   Surfaces reuse the app's existing tokens rather than adding a parallel scale:
+   --sh-inset is the resting/hover fill (as in .tab.active), --accent-weak the
+   "this one" tint (as in .dsl-badge), and --danger the single problem colour
+   (as in .error) — there is no separate warning tier.
+   --------------------------------------------------------------------------- */
+.explorer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+  min-width: 0;
+  padding: calc(var(--space) * 1.5);
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+}
+
+.explorer-header {
+  display: flex;
+  gap: var(--space);
+}
+
+.explorer-search {
+  flex: 1;
+  min-width: 0;
+}
+
+.explorer-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--space) / 2);
+}
+
+.explorer-count {
+  margin-left: auto;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+/* A model chip that is filtering. Selected on the ARIA attribute the button already carries, so
+   the toggled state is stated once — the same approach as .node-select[aria-pressed='true']. */
+.model-pill[aria-pressed='true'] {
+  background: var(--accent-weak);
+  border-color: var(--accent);
+}
+
+.explorer-tree,
+.explorer-tree ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.explorer-node {
+  --depth: 0;
+}
+
+.explorer-leaf,
+.explorer-namespace {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) / 2);
+  padding: 2px calc(var(--space) / 2);
+  padding-left: calc(var(--space) / 2 + var(--depth) * var(--space) * 1.5);
+  border-radius: var(--radius);
+}
+
+.explorer-leaf {
+  cursor: pointer;
+}
+
+.explorer-leaf:hover {
+  background: var(--sh-inset);
+}
+
+.explorer-namespace {
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.explorer-node[aria-selected='true'] > .explorer-leaf {
+  background: var(--accent-weak);
+}
+
+/* The focusable element is the <li>, and an <li> wraps its whole nested subtree — so the UA's
+   default ring lands around every descendant row rather than the one that has focus. Drawn on the
+   row instead, the same shape the selected rule above already uses for the same reason. */
+.explorer-node:focus-visible {
+  outline: none;
+}
+
+.explorer-node:focus-visible > .explorer-leaf {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.origin-badge,
+.quarantine-badge {
+  font-size: 0.7rem;
+  padding: 0 4px;
+  border-radius: var(--radius);
+  opacity: 0.75;
+}
+
+/* Quarantine reads as a problem and stacks with the origin badge rather than replacing it —
+   an overridden proposition can also be quarantined. */
+.quarantine-badge {
+  background: color-mix(in srgb, var(--danger) 15%, transparent);
+  color: var(--danger);
+  opacity: 1;
+}
+
+.explorer-empty {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.explorer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space);
+  margin-top: auto;
+  padding-top: var(--space);
+  border-top: 1px solid var(--border);
+}
+
+/*
+  The propositions page adds a rail ahead of the three panes. `.shell-body` is a flex row (the
+  panes each take `flex: 1` from `.pane`), so the rail is sized by a flex basis rather than a grid
+  column — a `grid-template-columns` here would be inert on a flex container. It stacks at the
+  same 900px `.shell-body`/`.pane` already collapse at, so the rail and the columns it leads never
+  disagree about when the shell is narrow, and its divider moves with theirs from right to bottom.
+*/
+.shell-body.with-rail > .explorer {
+  flex: 0 0 clamp(14rem, 24%, 20rem);
+}
+
+@media (max-width: 900px) {
+  .shell-body.with-rail > .explorer {
+    flex: none;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   New/Derive/Override dialog and the dependents strip.
+   --------------------------------------------------------------------------- */
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgb(0 0 0 / 45%);
+  z-index: 10;
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 1.5);
+  width: min(28rem, calc(100vw - 2rem));
+  padding: calc(var(--space) * 2);
+  border-radius: var(--radius);
+  background: var(--sh-panel);
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
+}
+
+.dialog-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.dialog-field,
+.dialog-field label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dialog-field small {
+  color: var(--muted);
+}
+
+/* A hint that is also the reason Create is unavailable, so it is not muted away like the others. */
+.dialog-field small.dialog-warning {
+  color: var(--danger);
+}
+
+.dialog-error {
+  margin: 0;
+  color: var(--danger);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space);
+}
+
+/* Kept in view while editing rather than sprung at save time. */
+.dependents-strip {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space);
+  padding: var(--space) 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+
+.dependents-strip ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
