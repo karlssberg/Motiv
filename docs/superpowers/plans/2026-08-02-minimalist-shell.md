@@ -1683,16 +1683,16 @@ git commit -m "feat(demo): one shell for both pages, and the json pane retires"
 
 ---
 
-### Task 9: `PropositionDialog` onto `Modal`, e2e rewrite, full verification
+### Task 9: `PropositionDialog` onto `Modal`
 
 **Files:**
 - Modify: `ui/apps/demo/src/explorer/PropositionDialog.tsx`
-- Modify: `ui/apps/demo/e2e/propositions.spec.ts`, `live-rules.spec.ts`, `dsl.spec.ts`
-- Create: `ui/apps/demo/e2e/shell.ts`
+- Modify: `ui/apps/demo/test/explorer/PropositionDialog.test.tsx`
+- Modify: `ui/apps/demo/src/styles/app.css`
 
 **Interfaces:**
 - Consumes: `Modal` (Task 2).
-- Produces: `openPalette(page, name)` and `chooseFromPalette(page, name)` in `e2e/shell.ts`.
+- Produces: nothing new.
 
 - [ ] **Step 1: Migrate the dialog**
 
@@ -1724,7 +1724,35 @@ cd ui && pnpm --filter @motiv/rules-demo test PropositionDialog
 ```
 Expected: PASS. Tests that queried `.dialog-backdrop` need updating to `getByRole('dialog')`; tests asserting the *disabled* Create button must assert `aria-disabled` now.
 
-- [ ] **Step 3: Write the e2e helper**
+- [ ] **Step 3: Run the whole suite and typecheck**
+
+```bash
+cd ui && pnpm -r test && pnpm -r typecheck
+```
+Expected: PASS.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add ui/apps/demo/src/explorer/PropositionDialog.tsx ui/apps/demo/test/explorer/PropositionDialog.test.tsx ui/apps/demo/src/styles/app.css
+git commit -m "fix(demo): give the authoring dialog a real modal, and a reachable reason"
+```
+
+---
+
+### Task 10: e2e rewrite, simplification, and full verification
+
+The shell has stopped moving; now the end-to-end suite catches up to it.
+
+**Files:**
+- Create: `ui/apps/demo/e2e/shell.ts`
+- Modify: `ui/apps/demo/e2e/propositions.spec.ts`, `live-rules.spec.ts`, `dsl.spec.ts`
+
+**Interfaces:**
+- Consumes: everything.
+- Produces: `openPalette(page, name)` and `chooseFromPalette(page, name, target)` in `e2e/shell.ts`.
+
+- [ ] **Step 1: Write the e2e helper**
 
 Create `ui/apps/demo/e2e/shell.ts`:
 
@@ -1748,13 +1776,13 @@ export async function chooseFromPalette(
 }
 ```
 
-- [ ] **Step 4: Rewrite the specs against the new shell**
+- [ ] **Step 2: Rewrite the specs against the new shell**
 
 Every `page.getByRole('button', { name: /rule/i }).click()` followed by an `option` click becomes `chooseFromPalette(page, 'Rules', '<name>')`. Every explorer `treeitem` click becomes `chooseFromPalette(page, 'Propositions', '<name>')`. Every `getByRole('button', { name: /^save$/i })` becomes `getByRole('button', { name: 'Save' })`.
 
 Preserve every existing assertion. The falsifiability of `propositions.spec.ts` test 1 rests on `customer.has-orders` and `customer.is-active` *disagreeing* about the fixture, and on `:175` asserting the rule version incremented exactly once — do not weaken either while porting.
 
-- [ ] **Step 5: Add e2e coverage for what jsdom cannot test**
+- [ ] **Step 3: Add e2e coverage for what jsdom cannot test**
 
 Append to `ui/apps/demo/e2e/propositions.spec.ts`. These three are the *only* home for these behaviours — the jsdom shim models none of them:
 
@@ -1799,7 +1827,7 @@ test('the document viewer opens from the toolbar on both pages', async ({ page }
 });
 ```
 
-- [ ] **Step 6: Run the e2e suite**
+- [ ] **Step 4: Run the e2e suite**
 
 Probe for a free port first — a busy one fails loudly rather than borrowing another checkout's server, but only if you pick one that is actually free:
 
@@ -1813,7 +1841,7 @@ cd ui && MOTIV_E2E_PORT=5123 pnpm --filter @motiv/rules-demo e2e
 ```
 Expected: PASS, 23 tests (20 pre-existing + 3 new).
 
-- [ ] **Step 7: Run everything**
+- [ ] **Step 5: Run everything**
 
 ```bash
 cd ui && pnpm -r test && pnpm -r typecheck
@@ -1823,7 +1851,7 @@ git diff --stat -- '*package.json' '*pnpm-lock.yaml'
 ```
 The last must be empty.
 
-- [ ] **Step 8: Simplify (mandatory per CLAUDE.md)**
+- [ ] **Step 6: Simplify (mandatory per CLAUDE.md)**
 
 Spawn a `code-simplifier` agent over `ui/apps/demo/src/shell/`, `src/panes/` and `src/explorer/`, with these constraints stated:
 
@@ -1840,7 +1868,7 @@ Constraints that must survive any refactor:
 
 Apply what it finds and re-run the affected tests.
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add -A ui/apps/demo
