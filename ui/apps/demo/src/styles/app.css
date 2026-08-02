@@ -749,6 +749,9 @@ button.node-dsl {
 }
 
 .tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   appearance: none;
   border: none;
   border-radius: 6px;

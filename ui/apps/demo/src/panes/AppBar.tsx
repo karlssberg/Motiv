@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react';
 import type { Page } from '../routing/useHashRoute.js';
+import { IconPropositions, IconRules, type IconProps } from '../shell/icons.js';
 
 /** The pages, in the order they are offered. */
-const PAGES: ReadonlyArray<{ id: Page; label: string }> = [
-  { id: 'rules', label: 'Rules' },
-  { id: 'propositions', label: 'Propositions' },
+const PAGES: ReadonlyArray<{ id: Page; label: string; icon: (props: IconProps) => JSX.Element }> = [
+  { id: 'rules', label: 'Rules', icon: IconRules },
+  { id: 'propositions', label: 'Propositions', icon: IconPropositions },
 ];
 
 /**
@@ -35,7 +36,7 @@ export function AppBar(props: {
         neither has any counterpart to point at from here.
       */}
       <div className="page-tabs" role="tablist" aria-label="Page">
-        {PAGES.map(({ id, label }) => {
+        {PAGES.map(({ id, label, icon: Icon }) => {
           const active = props.page === id;
           return (
             <button
@@ -46,6 +47,7 @@ export function AppBar(props: {
               className={active ? 'tab active' : 'tab'}
               onClick={() => props.onNavigate(id)}
             >
+              <Icon size={13} />
               {label}
             </button>
           );
