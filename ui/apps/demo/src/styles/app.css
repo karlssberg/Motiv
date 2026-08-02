@@ -1475,3 +1475,46 @@ button.node-dsl {
   white-space: nowrap;
   border: 0;
 }
+
+.palette { max-width: min(560px, 92vw); }
+
+.palette-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--faint);
+}
+
+.palette-input {
+  flex: 1;
+  border: none;
+  background: none;
+  color: var(--text);
+  font: 14px var(--sans);
+  outline: none;
+}
+
+.palette-count { font: 11px var(--sans); color: var(--faint); }
+
+.palette-list { list-style: none; margin: 0; padding: 4px 0; max-height: 46vh; overflow-y: auto; }
+.palette-browse { padding: 4px 0; max-height: 46vh; overflow-y: auto; }
+
+.palette-row { padding: 5px 12px; font: 13px var(--sans); color: var(--text); cursor: pointer; }
+.palette-row:hover { background: var(--sh-inset); }
+.palette-row.highlighted { background: var(--accent-weak); }
+
+.palette-footer {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 8px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+@media (max-width: 900px) {
+  .palette-list, .palette-browse { max-height: none; flex: 1; }
+  .palette { display: flex; flex-direction: column; }
+}
