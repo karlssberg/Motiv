@@ -1,3 +1,4 @@
+using Motiv.AndAlso;
 using Motiv.Diagnostics;
 using Motiv.Not;
 using Motiv.OrElse;
@@ -98,6 +99,23 @@ public abstract class AsyncPolicyBase<TModel, TMetadata> : AsyncSpecBase<TModel,
     /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
     /// <returns>A result that contains the Boolean result of the predicate in addition to the metadata.</returns>
     protected abstract ValueTask<PolicyResultBase<TMetadata>> EvaluatePolicyAsync(TModel model, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Creates a new asynchronous policy that is equivalent to a conditional "AND" of the current policy and
+    /// the other policy, preserving the single-value policy guarantee. The other policy's work is only
+    /// started if <c>this</c> policy is satisfied.
+    /// </summary>
+    /// <param name="other">The asynchronous policy to evaluate in the event that <c>this</c> policy is satisfied</param>
+    /// <returns>
+    /// A new <see cref="AsyncPolicyBase{TModel,TMetadata}" /> that will perform the conditional "And"
+    /// operation between <c>this</c> and <paramref name="other" /> when the policy is eventually evaluated.
+    /// </returns>
+    public AsyncPolicyBase<TModel, TMetadata> AndAlso(AsyncPolicyBase<TModel, TMetadata> other) =>
+        new AsyncAndAlsoPolicy<TModel, TMetadata>(this, other);
+
+    /// <inheritdoc cref="AndAlso(AsyncPolicyBase{TModel,TMetadata})" />
+    public AsyncPolicyBase<TModel, TMetadata> AndAlso(PolicyBase<TModel, TMetadata> other) =>
+        AndAlso(other.ToAsyncSpec());
 
     /// <summary>
     /// Combines this policy with another policy using the conditional OR operator, preserving the policy

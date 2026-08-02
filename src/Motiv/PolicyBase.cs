@@ -138,6 +138,19 @@ public abstract class PolicyBase<TModel, TMetadata> : SpecBase<TModel, TMetadata
         new OrElsePolicy<TModel, TMetadata>(this, alternative);
 
     /// <summary>
+    /// Creates a new asynchronous policy that is equivalent to a conditional "AND" of the current policy and
+    /// the asynchronous other policy, preserving the single-value policy guarantee. This policy is lifted
+    /// into the asynchronous hierarchy via <see cref="ToAsyncSpec" />.
+    /// </summary>
+    /// <param name="other">The asynchronous policy to evaluate in the event that <c>this</c> policy is satisfied</param>
+    /// <returns>
+    /// A new <see cref="AsyncPolicyBase{TModel,TMetadata}" /> that will perform the conditional "And"
+    /// operation between <c>this</c> and <paramref name="other" /> when the policy is eventually evaluated.
+    /// </returns>
+    public AsyncPolicyBase<TModel, TMetadata> AndAlso(AsyncPolicyBase<TModel, TMetadata> other) =>
+        ToAsyncSpec().AndAlso(other);
+
+    /// <summary>
     /// Creates a new asynchronous policy that is equivalent to a conditional "OR" of the current policy and
     /// the asynchronous alternative policy, preserving the single-value policy guarantee. This policy is
     /// lifted into the asynchronous hierarchy via <see cref="ToAsyncSpec" />. In the event that neither policy
