@@ -1,3 +1,4 @@
+using Motiv.AndAlso;
 using Motiv.ChangeModelType;
 using Motiv.Diagnostics;
 using Motiv.Not;
@@ -108,6 +109,20 @@ public abstract class PolicyBase<TModel, TMetadata> : SpecBase<TModel, TMetadata
     public new PolicyBase<TDerivedModel, TMetadata> ChangeModelTo<TDerivedModel>()
         where TDerivedModel : TModel =>
         new ChangeModelTypePolicy<TDerivedModel, TModel, TMetadata>(this, model => model);
+
+    /// <summary>
+    /// Creates a new policy that is equivalent to a conditional "AND" of the current policy and the other
+    /// policy. The other policy is only evaluated if <c>this</c> policy is satisfied. In the event that a
+    /// policy is unsatisfied, that policy's "WhenFalse" metadata is selected as the policy value; when every
+    /// policy is satisfied, the last one's "WhenTrue" metadata is selected.
+    /// </summary>
+    /// <param name="other">The policy to evaluate in the event that <c>this</c> policy is satisfied</param>
+    /// <returns>
+    /// A new <see cref="PolicyBase{TModel,TMetadata}" /> that will perform the conditional "And" operation
+    /// between <c>this</c> and <paramref name="other" /> when the policy is eventually evaluated.
+    /// </returns>
+    public PolicyBase<TModel, TMetadata> AndAlso(PolicyBase<TModel, TMetadata> other) =>
+        new AndAlsoPolicy<TModel, TMetadata>(this, other);
 
     /// <summary>
     /// Creates a new policy that is equivalent to a conditional "OR" of the current policy and the alternative
