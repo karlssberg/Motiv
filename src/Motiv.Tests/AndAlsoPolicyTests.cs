@@ -57,4 +57,63 @@ public class AndAlsoPolicyTests
             (false, true) => ["left-false"],
             (false, false) => ["left-false"]
         };
+
+    private static PolicyResultBase<string> Evaluated(bool satisfied, string name) =>
+        Gate(satisfied, name).Evaluate("model");
+
+    [Fact]
+    public void Should_select_the_first_failure_when_combining_two_policy_results()
+    {
+        // Arrange — the left gate passes, so the right is the decisive one.
+        var left = Evaluated(true, "left");
+        var right = Evaluated(false, "right");
+
+        // Act
+        var result = left.AndAlso(right);
+
+        // Assert
+        result.Satisfied.ShouldBeFalse();
+
+        // Value is the last-evaluated operand: for a conjunction that means the gate that failed.
+        result.Value.ShouldBe("right-false");
+
+        // Only the failing gate is causal — a passing gate did not cause an unsatisfied conjunction.
+        result.Values.ShouldBe(["right-false"]);
+    }
+
+    [Fact]
+    public void Should_short_circuit_on_an_unsatisfied_left_policy_result()
+    {
+        // Arrange
+        var left = Evaluated(false, "left");
+        var right = Evaluated(true, "right");
+
+        // Act — the left already decided the outcome, so the right is not part of the result.
+        var result = left.AndAlso(right);
+
+        // Assert
+        result.Satisfied.ShouldBeFalse();
+        result.Value.ShouldBe("left-false");
+        result.Values.ShouldBe(["left-false"]);
+        result.Underlying.Count().ShouldBe(1);
+    }
+
+    [Fact]
+    public void Should_select_the_last_evaluated_value_when_every_policy_result_is_satisfied()
+    {
+        // Arrange
+        var left = Evaluated(true, "left");
+        var right = Evaluated(true, "right");
+
+        // Act
+        var result = left.AndAlso(right);
+
+        // Assert
+        result.Satisfied.ShouldBeTrue();
+
+        // All gates passed, so no operand is decisive; Value takes the last evaluated, and
+        // Values still reports every contributing cause.
+        result.Value.ShouldBe("right-true");
+        result.Values.ShouldBe(["left-true", "right-true"]);
+    }
 }

@@ -1,3 +1,4 @@
+using Motiv.AndAlso;
 using Motiv.Not;
 using Motiv.OrElse;
 
@@ -8,7 +9,24 @@ namespace Motiv;
 public abstract class PolicyResultBase<TMetadata> : BooleanResultBase<TMetadata>
 {
     /// <summary>The single metadata instance that is returned by the policy.</summary>
+    /// <remarks>
+    /// For a short-circuiting composition (<see cref="OrElse" /> or <see cref="AndAlso" />) this value is a
+    /// <em>selection</em> — the last-evaluated operand's — and not a guarantee that only one cause exists.
+    /// When such a composition has more than one contributing cause, <see cref="BooleanResultBase{TMetadata}.Values" />
+    /// reports all of them, so <c>Value</c> is not necessarily <c>Values.Single()</c>.
+    /// </remarks>
     public abstract TMetadata Value { get; }
+
+    /// <summary>
+    /// Performs a conditional AND operation between the current PolicyResultBase instance and another
+    /// PolicyResultBase instance. The right operand does not contribute when the left operand is unsatisfied,
+    /// since an unsatisfied left operand already determines the outcome.
+    /// </summary>
+    /// <param name="right">The other policy result instance to perform the AND operation with.</param>
+    /// <returns>A new policy result instance representing the result of the AND operation.</returns>
+    public PolicyResultBase<TMetadata> AndAlso(PolicyResultBase<TMetadata> right) => Satisfied
+        ? new AndAlsoPolicyResult<TMetadata>(this, right)
+        : new AndAlsoPolicyResult<TMetadata>(this);
 
     /// <summary>
     /// Performs a conditional OR operation between the current PolicyResultBase instance and another PolicyResultBase
