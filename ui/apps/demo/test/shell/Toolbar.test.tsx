@@ -7,7 +7,9 @@ import { IconSave } from '../../src/shell/icons.js';
 describe('Toolbar', () => {
   it('names each icon button, since a glyph alone announces nothing', () => {
     render(<Toolbar actions={[{ id: 'save', label: 'Save', icon: IconSave, onActivate: () => {} }]} />);
-    expect(screen.getByRole('button', { name: 'Save' })).toBeTruthy();
+    const button = screen.getByRole('button', { name: 'Save' });
+    expect(button).toBeTruthy();
+    expect(button.getAttribute('aria-label')).toBe('Save');
   });
 
   it('activates on click', async () => {
