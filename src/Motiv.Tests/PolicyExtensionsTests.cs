@@ -303,6 +303,14 @@ public class PolicyExtensionsTests
         // The chain is a left-nested tree of OrElsePolicyResult, but Values recurses:
         // three policies yield three values, not the root node's two.
         result.Values.ShouldBe(["a-false", "b-false", "c-false"]);
+
+        // Assertions flatten alongside Values...
+        result.Assertions.ShouldBe(["a == false", "b == false", "c == false"]);
+
+        // ...but Causes and Underlying describe the binary composition shape: a three-policy
+        // chain is a left-nested tree, so its root reports two operands, not three.
+        result.Causes.Count().ShouldBe(2);
+        result.Underlying.Count().ShouldBe(2);
     }
 
     [Fact]
@@ -323,7 +331,7 @@ public class PolicyExtensionsTests
         result.Satisfied.ShouldBeTrue();
         result.Value.ShouldBe("y-true");
 
-        // Only causal values appear: x did not cause the true result, and z was never evaluated.
+        // Only causal values appear: neither x nor z is among the causal values.
         result.Values.ShouldBe(["y-true"]);
     }
 

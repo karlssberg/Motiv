@@ -11,7 +11,7 @@ You can perform a conditional OR (i.e., short-circuited) operation on two <xref:
 * `left.OrElse(right)`
 
 Only the `OrElse()` method is available for propositions because C# cannot overload `||` directly.
-The expression `x || y` compiles to `T.false(x) ? x : T.|(x, y)`, and the selected `operator |` must
+The expression `x || y` compiles to `T.true(x) ? x : T.|(x, y)`, and the selected `operator |` must
 take *and* return exactly `T` — so a short-circuiting operator on propositions would have to be built
 out of the eager `|`, which always evaluates both operands. `x || y` also short-circuits by returning
 `x` itself rather than a composed node, so it could not produce the `OrElse` node that appears in a
@@ -102,6 +102,11 @@ You can perform a conditional OR operation on two <xref:Motiv.BooleanResultBase`
 
 * `left || right`
 * `left.OrElse(right)`
+
+These are not equivalent. `left || right` returns the left result unwrapped when it is satisfied, so it
+produces either the bare left result or an eager `OrBooleanResult` (whose `Reason` uses `|`); `.OrElse()`
+always produces an `OrElseBooleanResult` (whose `Reason` uses `||`). Prefer `.OrElse()` when the shape of
+the justification tree or the policy-ness of the result matters.
 
 This allows you to combine into a single result the evaluations of different model types (by different propositions).
 

@@ -127,20 +127,25 @@ When a binary operation has:
 - `policy.OrElse(policy)` returns a policy
 - All other operations return a spec
 
-Policy status is **not** a property of the algebra. It is granted only where the combinator has a
-canonical single value a caller would ask for:
-- `OrElse` has one — it is `??`: the first operand that matched, or the final fallback. Its name advertises selection.
-- `Not` has one trivially — one operand in, one out.
-- `AndAlso` does **not**. "Also" advertises accumulation: when satisfied, both operands are causal and both are the point, so nominating one discards what the name emphasises. Its single-valued direction is the *unsatisfied* one ("which gate failed?"), which is a different operation wearing conjunction's name. If that is ever wanted, it gets its own name — do not add a policy-preserving `AndAlso`.
-- Eager `Or` / `And` / `XOr` do not — both operands always evaluate and neither is distinguished.
+Policy preservation follows **short-circuiting**. A short-circuiting combinator always has a
+well-defined last-evaluated operand, so a single `Value` is a total function of the evaluation path:
+- `OrElse` — the first operand that matched, else the final fallback. This is `??`.
+- `AndAlso` — the first operand that failed, else the final success. This is `Result`-chaining: "which gate stopped me?"
+- `Not` — one operand in, one out.
+- Eager `Or` / `And` / `XOr` have no last-evaluated operand, since both always evaluate. No operand is canonical, so they correctly return specs.
+
+`OrElse` and `Not` implement this today. **`AndAlso` does not yet** — `policy.AndAlso(policy)` still
+returns a spec. That is an outstanding gap to be closed on its own branch by mirroring the `OrElse`
+policy family (`OrElsePolicy`, `OrElsePolicyResult`, and the async and expression-tree variants),
+not a judgement that conjunction is ineligible.
 
 Preservation is a **static-type property**. `policy.OrElse(spec)` returns a spec, and declaring
 policies as `IEnumerable<SpecBase<TModel, TMetadata>>` before calling `OrElseTogether()` is the same
-act — it returns an `OrElseSpec`, not an `OrElsePolicy`. Introduce a non-policy and you abandon
+act — it returns an `OrElseSpec`, not an `OrElsePolicy`. Declare a non-policy and you abandon
 preservation. This is by design, not a covariance defect.
 
 **Operator overloads cannot carry policy preservation — do not re-propose this.** C# cannot overload
-`||` directly: `x || y` compiles to `T.false(x) ? x : T.|(x, y)`, and the selected `operator |` must
+`||` directly: `x || y` compiles to `T.true(x) ? x : T.|(x, y)`, and the selected `operator |` must
 take *and* return exactly `T`. A policy-preserving `||` therefore forces a policy-preserving `|` —
 but `|` is eager `Or` with no canonical operand, so `satisfiedPolicy | unsatisfiedPolicy` would
 report `Satisfied == true` while returning the *unsatisfied* operand's value. Two further blockers:

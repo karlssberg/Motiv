@@ -24,12 +24,12 @@ public sealed class CanCheckoutRule() : Rule<Customer, string>(
 
 The four flavours mirror Motiv's spec/policy × sync/async matrix:
 
-| Class                                | Evaluates via                        | Result                                        | Guarantees                          |
-|----------------------------------------|----------------------------------------|-------------------------------------------------|---------------------------------------|
-| `Rule<TModel, TMetadata>`               | `Evaluate(model)`                      | `BooleanResultBase<TMetadata>`                  | Spec-flavoured; may yield many values |
-| `PolicyRule<TModel, TMetadata>`         | `Evaluate(model)`                      | `PolicyResultBase<TMetadata>`                   | Exactly one value per evaluation      |
-| `AsyncRule<TModel, TMetadata>`          | `EvaluateAsync(model, ct)`             | `ValueTask<BooleanResultBase<TMetadata>>`       | Async; may yield many values          |
-| `AsyncPolicyRule<TModel, TMetadata>`    | `EvaluateAsync(model, ct)`             | `ValueTask<PolicyResultBase<TMetadata>>`        | Async; exactly one value              |
+| Class                                | Evaluates via              | Result                                    | Guarantees                                                    |
+|--------------------------------------|----------------------------|-------------------------------------------|---------------------------------------------------------------|
+| `Rule<TModel, TMetadata>`            | `Evaluate(model)`          | `BooleanResultBase<TMetadata>`            | Spec-flavoured; may yield many values                         |
+| `PolicyRule<TModel, TMetadata>`      | `Evaluate(model)`          | `PolicyResultBase<TMetadata>`             | Single `Value` (a selection); `Values` has every cause        |
+| `AsyncRule<TModel, TMetadata>`       | `EvaluateAsync(model, ct)` | `ValueTask<BooleanResultBase<TMetadata>>` | Async; may yield many values                                  |
+| `AsyncPolicyRule<TModel, TMetadata>` | `EvaluateAsync(model, ct)` | `ValueTask<PolicyResultBase<TMetadata>>`  | Async; single `Value` (a selection); `Values` has every cause |
 
 ## Defaults
 

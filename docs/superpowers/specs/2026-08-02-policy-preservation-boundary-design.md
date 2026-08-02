@@ -61,8 +61,10 @@ single value and it becomes an `ExpressionPolicyBase`, as it should.
 
 ### 1. No policy-preserving operator overloads
 
-C# cannot overload `||` directly. `x || y` compiles to `T.false(x) ? x : T.|(x, y)`, and the selected
-`operator |` must take *and* return exactly `T`. Making `||` policy-preserving therefore forces
+C# cannot overload `||` directly. `x || y` compiles to `T.true(x) ? x : T.|(x, y)` (corrected
+post-review: an earlier draft of this document had `T.false`, but `||` short-circuits on a *true*
+left operand, so the guard is `operator true`), and the selected `operator |` must take *and* return
+exactly `T`. Making `||` policy-preserving therefore forces
 making `|` policy-preserving — but `|` is eager `Or`, where both operands always evaluate and no
 operand is canonical. Under the `(Right ?? Left)` rule, `satisfiedPolicy | unsatisfiedPolicy` would
 report `Satisfied = true` while returning the *unsatisfied* operand's value.
@@ -79,6 +81,13 @@ Two further consequences, each independently disqualifying:
 operator". That is to be replaced with the actual mechanism.
 
 ### 2. `AndAlso` stays a Spec
+
+> **Superseded post-review.** This decision was reversed after the final review: the "both operands
+> are causal" argument below was found not to discriminate — it is equally true of an *unsatisfied*
+> `OrElse`, which this same document accepts precisely because `Value` is a selection and `Values`
+> reaches the rest. `AndAlso` is to become policy-preserving, on its own branch, mirroring the
+> `OrElse` policy family. This section is kept as a historical record of the original (superseded)
+> reasoning.
 
 The mechanical case for a mirror is real: `AndAlso` is single-valued when unsatisfied exactly as
 `OrElse` is when satisfied, and `AndAlsoPolicyResult.Value` would be the identical expression,

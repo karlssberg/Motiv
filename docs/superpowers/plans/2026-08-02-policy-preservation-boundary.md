@@ -275,8 +275,9 @@ act — it returns an `OrElseSpec`, not an `OrElsePolicy`. Introduce a non-polic
 preservation. This is by design, not a covariance defect.
 
 **Operator overloads cannot carry policy preservation — do not re-propose this.** C# cannot overload
-`||` directly: `x || y` compiles to `T.false(x) ? x : T.|(x, y)`, and the selected `operator |` must
-take *and* return exactly `T`. A policy-preserving `||` therefore forces a policy-preserving `|` —
+`||` directly: `x || y` compiles to `T.true(x) ? x : T.|(x, y)` (corrected post-review: this plan
+originally had `T.false`, but `||` short-circuits on a *true* left operand, so the guard is
+`operator true`), and the selected `operator |` must take *and* return exactly `T`. A policy-preserving `||` therefore forces a policy-preserving `|` —
 but `|` is eager `Or` with no canonical operand, so `satisfiedPolicy | unsatisfiedPolicy` would
 report `Satisfied == true` while returning the *unsatisfied* operand's value. Two further blockers:
 `x || y` short-circuits by returning `x` itself, unwrapped, so no `OrElse` node appears in the
@@ -379,11 +380,12 @@ with:
 
 ```markdown
 Only the `OrElse()` method is available for propositions because C# cannot overload `||` directly.
-The expression `x || y` compiles to `T.false(x) ? x : T.|(x, y)`, and the selected `operator |` must
-take *and* return exactly `T` — so a short-circuiting operator on propositions would have to be built
-out of the eager `|`, which always evaluates both operands. `x || y` also short-circuits by returning
-`x` itself rather than a composed node, so it could not produce the `OrElse` node that appears in a
-justification tree.
+The expression `x || y` compiles to `T.true(x) ? x : T.|(x, y)` (corrected post-review: this plan
+originally had `T.false`, but `||` short-circuits on a *true* left operand, so the guard is
+`operator true`), and the selected `operator |` must take *and* return exactly `T` — so a
+short-circuiting operator on propositions would have to be built out of the eager `|`, which always
+evaluates both operands. `x || y` also short-circuits by returning `x` itself rather than a composed
+node, so it could not produce the `OrElse` node that appears in a justification tree.
 ```
 
 - [ ] **Step 2: Add the Policies section**
