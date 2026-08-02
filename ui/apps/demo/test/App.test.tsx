@@ -29,11 +29,15 @@ describe('App', () => {
     window.location.hash = '';
   });
 
-  it('renders the three panes', () => {
+  it('renders the editor and evaluate panes, with the document behind the toolbar', async () => {
     renderApp();
     expect(screen.getByRole('region', { name: 'Editor' })).toBeDefined();
-    expect(screen.getByRole('region', { name: 'Document' })).toBeDefined();
     expect(screen.getByRole('region', { name: 'Evaluate' })).toBeDefined();
+    // The JSON pane retired in favour of a modal reached from the toolbar — see DocumentModal.
+    expect(screen.queryByRole('region', { name: 'Document' })).toBeNull();
+
+    await userEvent.click(screen.getByRole('button', { name: 'JSON' }));
+    expect(screen.getByRole('dialog', { name: /document/i })).toBeDefined();
   });
 
   it('validates with isAsync after an async rule is loaded', async () => {

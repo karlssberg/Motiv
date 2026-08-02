@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RuleEditorStore } from '@motiv/rules-core';
 import { RuleEditorProvider } from '@motiv/rules-react';
@@ -14,10 +14,22 @@ function renderWith(store: RuleEditorStore) {
 }
 
 describe('DocumentModal', () => {
-  it('shows the live document as formatted JSON', () => {
+  it('shows the live document as formatted JSON, following the store', () => {
     const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
     renderWith(store);
-    expect(screen.getByLabelText('rule document')).toBeTruthy();
+    expect(screen.getByLabelText('rule document').textContent).toContain('"spec": "is-active"');
+
+    // "live" is the claim the badge makes, so an edit made while it is open has to reach it.
+    act(() => store.replaceNode('$.rule', { spec: 'is-adult' }));
+    expect(screen.getByLabelText('rule document').textContent).toContain('"spec": "is-adult"');
+  });
+
+  it('lists validation errors set on the store', () => {
+    const store = new RuleEditorStore({ rule: { spec: 'nope' } });
+    renderWith(store);
+    act(() => store.setErrors([{ path: '$.rule', code: 'UnknownSpec', message: 'unknown spec' }]));
+    expect(screen.getByText(/UnknownSpec/)).toBeTruthy();
+    expect(screen.getByText(/unknown spec/)).toBeTruthy();
   });
 
   it('names itself for assistive technology', () => {
