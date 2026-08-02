@@ -256,6 +256,31 @@ public class RuleCascadeTests
         rule.Evaluate(inactiveAdult).Satisfied.ShouldBeFalse();
     }
 
+    /// <summary>
+    /// The UI's Override button POSTs against a name that exists only as a compiled spec, so this
+    /// is a create — and unlike every other create, it lands on a name live rules already reference
+    /// by that same name. Overriding therefore has to rebind them, exactly as updating does. Every
+    /// other cascade test here starts from a name the rule could only have learned after the
+    /// proposition existed, which is why this one is not a duplicate of them.
+    /// </summary>
+    [Fact]
+    public void Should_rebind_a_rule_when_a_create_overrides_the_compiled_spec_it_references()
+    {
+        // Arrange — the rule references the *compiled* spec, by the name about to be overridden
+        var (propositions, rules, rule) = NewHost();
+        rules.Update("can-checkout", """{ "rule": { "spec": "customer.is-active" } }""", 1)
+            .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
+        var activeMinor = new Customer(IsActive: true, Age: 10);
+        rule.Evaluate(activeMinor).Satisfied.ShouldBeTrue();
+
+        // Act — the rule is never touched again
+        propositions.Create("customer.is-active", "customer", """{ "rule": { "spec": "customer.is-adult" } }""", null)
+            .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
+
+        // Assert
+        rule.Evaluate(activeMinor).Satisfied.ShouldBeFalse();
+    }
+
     [Fact]
     public void Should_list_a_rule_as_a_dependent_of_the_proposition_it_references()
     {

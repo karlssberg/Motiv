@@ -140,13 +140,18 @@ public sealed class PropositionSet
 
     /// <summary>
     /// Authors a new proposition. A name already carrying an authored document is a conflict; a name
-    /// carrying only a compiled spec is accepted and creates an override.
+    /// carrying only a compiled spec is accepted and creates an override — which, because existing
+    /// documents already reference that name, rebinds everything that does, transactionally, as
+    /// <see cref="Update"/> would.
     /// </summary>
     /// <param name="name">The dot-separated name.</param>
     /// <param name="modelTypeId">A registered model-type id.</param>
     /// <param name="documentJson">The rule document defining the proposition.</param>
     /// <param name="description">An optional description.</param>
-    /// <returns>The outcome. Nothing is published or persisted unless it is <c>Created</c>.</returns>
+    /// <returns>
+    /// The outcome, carrying the dependents that broke when an override is why it was rejected.
+    /// Nothing is published or persisted unless it is <c>Created</c>.
+    /// </returns>
     public PropositionUpdateResult Create(
         string name, string modelTypeId, string documentJson, string? description) =>
         Scope.Locked(() =>
@@ -161,15 +166,20 @@ public sealed class PropositionSet
             if (prepared.Entry is not { } entry)
                 return PropositionUpdateResult.Invalid(prepared.Errors);
 
-            // A brand-new name has no referrers, so the closure is empty and there is nothing to
-            // cascade to — but the document may still reference the name being created.
-            Publish(new Authored(this, name, modelTypeId, documentJson, version: 1, description)
+            // A brand-new name has no referrers, so its closure is empty and the cascade below is a
+            // no-op. An *override* is the exception, and the reason a create cascades at all: it
+            // lands on a name existing documents already reference, so publishing it changes what
+            // they resolve exactly as an update would, on the same all-or-nothing terms.
+            var authored = new Authored(this, name, modelTypeId, documentJson, version: 1, description)
             {
                 Bound = entry,
                 References = prepared.References
-            });
+            };
 
-            return PropositionUpdateResult.Created(1);
+            var broken = PublishWithCascade(authored);
+            return broken.Count > 0
+                ? PropositionUpdateResult.BreaksDependents(broken)
+                : PropositionUpdateResult.Created(authored.Version);
         });
 
     /// <summary>
@@ -200,20 +210,10 @@ public sealed class PropositionSet
                 References = prepared.References
             };
 
-            // Bind the closure against a prospective overlay carrying the replacement, so a dependent
-            // is checked against what it *would* resolve rather than what it resolves today.
-            var prospective = new PropositionOverlay(Scope.Overlay);
-            prospective.Set(entry);
-
-            var commits = new List<IRebindCommit>();
-            var broken = Scope.PrepareClosure(name, prospective, commits);
-            if (broken.Count > 0)
-                return PropositionUpdateResult.BreaksDependents(broken);
-
-            Publish(replacement);
-            Scope.CommitClosure(commits);
-
-            return PropositionUpdateResult.Updated(replacement.Version);
+            var broken = PublishWithCascade(replacement);
+            return broken.Count > 0
+                ? PropositionUpdateResult.BreaksDependents(broken)
+                : PropositionUpdateResult.Updated(replacement.Version);
         });
 
     /// <summary>
@@ -540,6 +540,34 @@ public sealed class PropositionSet
         var isAsync = BindsAsync(Scope.Source, references);
         var entry = model.Bind(Scope.Source, name, description, document, isAsync, errors);
         return new Prepared(entry, references, errors);
+    }
+
+    /// <summary>
+    /// Publishes an authored proposition and rebinds everything that references its name — all of
+    /// it, or none. Shared by <see cref="Create"/> and <see cref="Update"/>, which differ only in
+    /// how they arrive here: whether a name may be published at all, and what the outcome is called.
+    /// Once a definition is going live under a name, what that does to the name's dependents is the
+    /// same question either way, and answering it twice is how the two would drift.
+    /// </summary>
+    /// <returns>
+    /// The dependents that would stop binding, in which case nothing was published. Empty when the
+    /// whole closure rebound and <paramref name="authored"/> is live.
+    /// </returns>
+    private IReadOnlyList<BrokenDependent> PublishWithCascade(Authored authored)
+    {
+        // Bind the closure against a prospective overlay carrying the new definition, so a dependent
+        // is checked against what it *would* resolve rather than what it resolves today.
+        var prospective = new PropositionOverlay(Scope.Overlay);
+        prospective.Set(authored.Bound!);
+
+        var commits = new List<IRebindCommit>();
+        var broken = Scope.PrepareClosure(authored.Name, prospective, commits);
+        if (broken.Count > 0)
+            return broken;
+
+        Publish(authored);
+        Scope.CommitClosure(commits);
+        return [];
     }
 
     /// <summary>

@@ -11,6 +11,9 @@ public class PropositionSetCreateTests
         Spec.BuildAsync(async (Customer c) => { await Task.Yield(); return c.IsActive; })
             .WhenTrue("passes").WhenFalse("fails").Create();
 
+    private static SpecBase<Customer, string> IsInactive { get; } =
+        Spec.Build((Customer c) => !c.IsActive).WhenTrue("inactive").WhenFalse("active").Create();
+
     private static (PropositionSet Set, BindingScope Scope, InMemoryPropositionStore Store) NewSet()
     {
         var registry = new SpecRegistry()
@@ -20,6 +23,42 @@ public class PropositionSetCreateTests
         var store = new InMemoryPropositionStore();
         var set = new PropositionSet(scope, store).AddModel<Customer>("customer");
         return (set, scope, store);
+    }
+
+    /// <summary>
+    /// A host for the override tests: two compiled specs that disagree, so overriding one with the
+    /// other is observable. Separate from <see cref="NewSet"/>, whose spec listing is asserted on
+    /// by name and by count.
+    /// </summary>
+    private static (PropositionSet Set, BindingScope Scope) NewOverridableSet(
+        InMemoryPropositionStore? store = null)
+    {
+        var registry = new SpecRegistry()
+            .Register("customer.is-active", IsActive)
+            .Register("customer.is-inactive", IsInactive);
+        var scope = new BindingScope(registry);
+        var set = new PropositionSet(scope, store ?? new InMemoryPropositionStore())
+            .AddModel<Customer>("customer");
+        return (set, scope);
+    }
+
+    /// <summary>Evaluates whatever the layered source currently resolves for a name.</summary>
+    private static bool Evaluate(BindingScope scope, string name, Customer customer)
+    {
+        var entry = scope.Source.Find(name).ShouldNotBeNull();
+        return ((SpecBase<Customer, string>)entry.Spec).Evaluate(customer).Satisfied;
+    }
+
+    /// <summary>A participant that refuses to rebind, standing in for a rule that would break.</summary>
+    private sealed class AlwaysBreaks(NodeId node) : IRebindable
+    {
+        public NodeId Node { get; } = node;
+
+        public IRebindCommit? PrepareRebind(ISpecSource prospective, List<RuleError> errors)
+        {
+            errors.Add(new RuleError("$", RuleErrorCode.AsyncSpecInSyncLoad, "would not bind"));
+            return null;
+        }
     }
 
     [Fact]
@@ -158,6 +197,79 @@ public class PropositionSetCreateTests
         set.Find("customer.is-active")!.Origin.ShouldBe(PropositionOrigin.Overridden);
         // The overlay now shadows the compiled spec, so the effective definition is the async one.
         scope.Source.Find("customer.is-active")!.IsAsync.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// An override is the one create that lands on a name something may already reference, so it is
+    /// the one create that has to cascade. Without this the overlay entry is published and the
+    /// catalog reports the override, while every dependent goes on resolving the compiled spec —
+    /// and only a later, redundant <see cref="PropositionSet.Update"/> makes the override take.
+    /// </summary>
+    [Fact]
+    public void Should_rebind_a_dependent_when_a_create_overrides_the_compiled_spec_it_references()
+    {
+        // Arrange — derived is bound against the *compiled* customer.is-active
+        var (set, scope) = NewOverridableSet();
+        set.Create("customer.derived", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        var active = new Customer(IsActive: true);
+        Evaluate(scope, "customer.derived", active).ShouldBeTrue();
+
+        // Act — the name derived references is overridden to mean the opposite; derived is not touched
+        var result = set.Create(
+            "customer.is-active", "customer", """{ "rule": { "spec": "customer.is-inactive" } }""", null);
+
+        // Assert
+        result.Outcome.ShouldBe(PropositionUpdateOutcome.Created);
+        Evaluate(scope, "customer.derived", active).ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// The transactional half of the same rule: if an override cascades, it must also be refused
+    /// whole when the cascade would break something, exactly as an update is.
+    /// </summary>
+    [Fact]
+    public void Should_reject_the_whole_create_when_an_override_would_break_a_dependent()
+    {
+        // Arrange — a stubbed dependent stands in for a rule that cannot bind the overriding definition
+        var (set, scope) = NewOverridableSet();
+        scope.Locked(() =>
+        {
+            scope.Enrol(new AlwaysBreaks(NodeId.Rule("can-checkout")));
+            scope.Graph.Set(NodeId.Rule("can-checkout"), ["customer.is-active"]);
+        });
+
+        // Act
+        var result = set.Create(
+            "customer.is-active", "customer", """{ "rule": { "spec": "customer.is-inactive" } }""", null);
+
+        // Assert
+        result.Outcome.ShouldBe(PropositionUpdateOutcome.Invalid);
+        result.BrokenDependents.Count.ShouldBe(1);
+        result.BrokenDependents[0].Name.ShouldBe("can-checkout");
+        result.BrokenDependents[0].Kind.ShouldBe("rule");
+    }
+
+    [Fact]
+    public void Should_leave_everything_untouched_when_an_override_would_break_a_dependent()
+    {
+        // Arrange
+        var store = new InMemoryPropositionStore();
+        var (set, scope) = NewOverridableSet(store);
+        scope.Locked(() =>
+        {
+            scope.Enrol(new AlwaysBreaks(NodeId.Rule("can-checkout")));
+            scope.Graph.Set(NodeId.Rule("can-checkout"), ["customer.is-active"]);
+        });
+        var active = new Customer(IsActive: true);
+
+        // Act
+        set.Create("customer.is-active", "customer", """{ "rule": { "spec": "customer.is-inactive" } }""", null);
+
+        // Assert — nothing authored, nothing persisted, the compiled spec still resolving
+        set.Find("customer.is-active")!.Origin.ShouldBe(PropositionOrigin.Compiled);
+        set.DocumentJsonOf("customer.is-active").ShouldBeNull();
+        store.Load().ShouldBeEmpty();
+        Evaluate(scope, "customer.is-active", active).ShouldBeTrue();
     }
 
     [Fact]
