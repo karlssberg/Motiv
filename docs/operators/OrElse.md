@@ -10,8 +10,12 @@ You can perform a conditional OR (i.e., short-circuited) operation on two <xref:
 
 * `left.OrElse(right)`
 
-This is due to quirks regarding the overloading of the `||` operator, only the `OrElse()` method is
-available for use with propositions.
+Only the `OrElse()` method is available for propositions because C# cannot overload `||` directly.
+The expression `x || y` compiles to `T.false(x) ? x : T.|(x, y)`, and the selected `operator |` must
+take *and* return exactly `T` — so a short-circuiting operator on propositions would have to be built
+out of the eager `|`, which always evaluates both operands. `x || y` also short-circuits by returning
+`x` itself rather than a composed node, so it could not produce the `OrElse` node that appears in a
+justification tree.
 
 The conditional OR will produce a new proposition that represents the logical OR of the two input propositions.
 When evaluating the resulting proposition, the right operand will only be evaluated if the left is unsatisfied.
@@ -54,6 +58,43 @@ var isProductAtRiskOfTheftSpec =
         .WhenFalse("the product is at low risk of theft")
         .Create();
 ```
+
+### [Policies](xref:Motiv.PolicyBase`2)
+
+`OrElse()` is the one composition that preserves a policy: `policy.OrElse(policy)` returns a
+<xref:Motiv.PolicyBase`2>, so an `OrElse` chain behaves like `??` — it yields a single `Value` even
+when nothing matched.
+
+When the chain is satisfied, `Value` is the first operand that matched. When nothing matched, every
+operand is a genuine cause and `Value` is the **last-evaluated** operand's — the fallback:
+
+```csharp
+var left = Spec
+    .Build((object _) => false)
+    .WhenTrue("left-true")
+    .WhenFalse("left-false")
+    .Create("left");
+
+var right = Spec
+    .Build((object _) => false)
+    .WhenTrue("right-true")
+    .WhenFalse("right-false")
+    .Create("right");
+
+var result = left.OrElse(right).Evaluate(new object());
+
+result.Satisfied; // false
+result.Value;     // "right-false"                    <- the selection: last evaluated
+result.Values;    // ["left-false", "right-false"]    <- every contributing cause
+```
+
+`Value` is therefore a *selection*, not a guarantee that only one cause exists. Use `Values` to reach
+everything it was selected from. `Values` flattens a nested chain — three policies combined with
+`OrElseTogether()` yield three values, not the root node's two — reports only causal values, and
+works for any metadata type.
+
+Note that `Causes` and `Underlying` describe the **binary composition shape** rather than the
+flattened causal set, so a three-policy chain reports two operands at its root.
 
 ### [Boolean Results](xref:Motiv.BooleanResultBase`1)
 
