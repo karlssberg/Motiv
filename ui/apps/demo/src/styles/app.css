@@ -1521,3 +1521,21 @@ button.node-dsl {
   .palette-list, .palette-browse { max-height: none; flex: 1; }
   .palette { display: flex; flex-direction: column; }
 }
+
+.modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  font: 600 13px var(--sans);
+  color: var(--text);
+}
+
+.modal-body { padding: 10px 12px; max-height: 60vh; overflow: auto; }
+
+@media (max-width: 900px) {
+  .modal-mobile-full .modal-body { max-height: none; flex: 1; }
+  .modal-mobile-full { display: flex; flex-direction: column; }
+}
