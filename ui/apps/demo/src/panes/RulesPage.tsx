@@ -2,7 +2,6 @@ import type { RuleListEntry, RulesApiClient } from '@motiv/rules-core';
 import type { Page } from '../routing/useHashRoute.js';
 import { RuleHeader } from './RuleHeader.js';
 import { EditorPane } from './EditorPane.js';
-import { JsonPane } from './JsonPane.js';
 import { EvaluatePane } from './EvaluatePane.js';
 import { CheckoutPane } from './CheckoutPane.js';
 
@@ -31,7 +30,6 @@ export function RulesPage(props: {
       */}
       <div className="shell-body">
         <EditorPane client={props.client} />
-        <JsonPane />
         <EvaluatePane client={props.client} />
       </div>
       <CheckoutPane client={props.client} />

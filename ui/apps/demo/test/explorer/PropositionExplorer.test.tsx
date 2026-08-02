@@ -22,11 +22,24 @@ const ENTRIES = [
 function renderExplorer(overrides: Partial<Parameters<typeof PropositionExplorer>[0]> = {}) {
   const actions = {
     onSelect: vi.fn(), onDerive: vi.fn(), onOverride: vi.fn(), onNew: vi.fn(), onDelete: vi.fn(),
+    onClose: vi.fn(),
   };
   render(
     <PropositionExplorer entries={ENTRIES} selected={null} actions={actions} {...overrides} />,
   );
   return actions;
+}
+
+/** Types into the palette's search box, which leaves the browse view for the flat match list. */
+async function search(needle: string): Promise<void> {
+  await userEvent.type(screen.getByRole('combobox'), needle);
+}
+
+/** What an unavailable action says for itself — the reason its `aria-describedby` points at. */
+function reasonFor(name: RegExp): string {
+  const button = screen.getByRole('button', { name });
+  expect(button.getAttribute('aria-disabled')).toBe('true');
+  return document.getElementById(button.getAttribute('aria-describedby')!)?.textContent ?? '';
 }
 
 describe('PropositionExplorer', () => {
@@ -52,21 +65,45 @@ describe('PropositionExplorer', () => {
     expect(within(order).getByRole('treeitem', { name: /is-large/ })).toBeTruthy();
   });
 
-  it('filters as you type, matching the full dotted path', async () => {
+  it('flattens to matching rows as you type, matching the full dotted path', async () => {
     renderExplorer();
 
-    await userEvent.type(screen.getByRole('searchbox', { name: /filter/i }), 'fraud');
+    await search('risk.is-fraud');
 
-    expect(screen.queryByRole('treeitem', { name: /is-fraudulent/ })).toBeTruthy();
-    expect(screen.queryByRole('treeitem', { name: /is-adult/ })).toBeNull();
+    // Hierarchy is noise in a result list, so the tree goes and one row per match takes its place
+    // — and the query is matched against the whole dotted path, not the leaf segment.
+    const rows = screen.getAllByRole('option');
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.textContent).toContain('is-fraudulent');
+    expect(screen.queryByRole('treeitem')).toBeNull();
+  });
+
+  it('shows the namespace a match came from, so two leaves of a name stay apart', async () => {
+    renderExplorer();
+
+    await search('is-fraudulent');
+
+    expect(screen.getByRole('option').textContent).toContain('customer.risk.');
   });
 
   it('reports how many propositions match', async () => {
     renderExplorer();
 
-    await userEvent.type(screen.getByRole('searchbox', { name: /filter/i }), 'eligibility');
+    await search('eligibility');
 
     expect(screen.getByText(/2 of 4/)).toBeTruthy();
+  });
+
+  it('chooses a matched row and closes on the way out', async () => {
+    const actions = renderExplorer();
+
+    await search('is-fraudulent');
+    await userEvent.keyboard('{Enter}');
+
+    expect(actions.onSelect).toHaveBeenCalledWith('customer.risk.is-fraudulent');
+    // Choosing is the palette's whole purpose: leaving it open would leave the user to dismiss a
+    // modal they are finished with.
+    expect(actions.onClose).toHaveBeenCalled();
   });
 
   it('narrows to one model when a chip is toggled', async () => {
@@ -76,14 +113,19 @@ describe('PropositionExplorer', () => {
 
     expect(screen.queryByRole('treeitem', { name: /is-large/ })).toBeTruthy();
     expect(screen.queryByRole('treeitem', { name: /is-adult/ })).toBeNull();
+    // The count is the only thing that says how much was narrowed away, and it is what the tree
+    // beside it cannot show — one of four survives here, so a count reporting the unfiltered total
+    // reads as "nothing was filtered" and is wrong by three.
+    expect(screen.getByText('1 of 4')).toBeTruthy();
   });
 
-  it('selects a proposition when its leaf is clicked', async () => {
+  it('selects a proposition when its leaf is clicked, and closes', async () => {
     const actions = renderExplorer();
 
     await userEvent.click(screen.getByRole('treeitem', { name: /is-fraudulent/ }));
 
     expect(actions.onSelect).toHaveBeenCalledWith('customer.risk.is-fraudulent');
+    expect(actions.onClose).toHaveBeenCalled();
   });
 
   it('does not select a namespace that holds no proposition', async () => {
@@ -158,12 +200,12 @@ describe('PropositionExplorer', () => {
     expect(actions.onNew).toHaveBeenCalled();
   });
 
-  it('says so when nothing matches', async () => {
+  it('says so when nothing matches, naming the query that found nothing', async () => {
     renderExplorer();
 
-    await userEvent.type(screen.getByRole('searchbox', { name: /filter/i }), 'zzz');
+    await search('zzz');
 
-    expect(screen.getByText(/no propositions match/i)).toBeTruthy();
+    expect(screen.getByText(/no propositions match/i).textContent).toContain('zzz');
   });
 
   it('does not blame an empty query for an empty catalog', () => {
@@ -276,28 +318,32 @@ describe('PropositionExplorer', () => {
   it('offers Override for a compiled entry whose model has a sibling spec', () => {
     renderExplorer({ selected: 'customer.eligibility.is-active' });
 
-    expect(screen.getByRole('button', { name: /^override/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^override/i }).getAttribute('aria-disabled'))
+      .toBeNull();
   });
 
-  it('does not offer Override for a compiled entry that is the only spec of its model', () => {
+  it('will not override a compiled entry that is the only spec of its model, and says why', () => {
+    // Override composes from another spec over the same model, and UI propositions are
+    // composition-only — so this one has nothing to build an override from. The button stays
+    // reachable and carries that reason rather than vanishing.
     renderExplorer({
       entries: [entry({ name: 'order.is-large', modelType: 'order', origin: 'Compiled', version: 0 })],
       selected: 'order.is-large',
     });
 
-    expect(screen.queryByRole('button', { name: /^override/i })).toBeNull();
+    expect(reasonFor(/^override/i)).toContain('order');
   });
 
-  it('does not offer Override for an already-authored entry', async () => {
-    // Override mints the overlay for a name served *only* by a compiled spec. Offered for an
-    // authored one it would POST against a name that already has an overlay, which can only come
-    // back `nameTaken`.
+  it('will not override an already-authored entry, and says why', async () => {
+    // Override mints the overlay for a name served *only* by a compiled spec. Run against an
+    // authored one it would POST at a name that already has an overlay, which can only come back
+    // `nameTaken`.
     renderExplorer({ selected: 'customer.eligibility.is-adult' });
 
-    expect(screen.queryByRole('button', { name: /^override/i })).toBeNull();
+    expect(reasonFor(/^override/i)).toMatch(/compiled/i);
   });
 
-  it('does not offer Override for an entry that is already overridden', async () => {
+  it('will not override an entry that is already overridden', async () => {
     renderExplorer({
       entries: [
         entry({ name: 'customer.eligibility.is-active', origin: 'Overridden', version: 2 }),
@@ -306,7 +352,17 @@ describe('PropositionExplorer', () => {
       selected: 'customer.eligibility.is-active',
     });
 
-    expect(screen.queryByRole('button', { name: /^override/i })).toBeNull();
+    expect(reasonFor(/^override/i)).toMatch(/compiled/i);
+  });
+
+  it('does nothing when an unavailable Override is clicked anyway', async () => {
+    // `aria-disabled` is a claim to assistive technology, not an enforcement — the click still
+    // arrives, so the handler has to refuse it.
+    const actions = renderExplorer({ selected: 'customer.eligibility.is-adult' });
+
+    await userEvent.click(screen.getByRole('button', { name: /^override/i }));
+
+    expect(actions.onOverride).not.toHaveBeenCalled();
   });
 
   it('calls onOverride with the selected name', async () => {
@@ -315,5 +371,52 @@ describe('PropositionExplorer', () => {
     await userEvent.click(screen.getByRole('button', { name: /^override/i }));
 
     expect(actions.onOverride).toHaveBeenCalledWith('customer.eligibility.is-active');
+  });
+
+  it('offers no Delete at all for a compiled entry', () => {
+    // Every other unavailable action explains itself instead of disappearing. This one genuinely
+    // has no target: there is no authored document under a compiled name to delete or revert.
+    renderExplorer({ selected: 'customer.eligibility.is-active' });
+
+    expect(screen.queryByRole('button', { name: /delete|revert/i })).toBeNull();
+  });
+
+  it('calls a delete on an overridden entry a revert', () => {
+    // The same DELETE either way, but what it does to the name differs: an override reverts to the
+    // compiled spec it shadowed, while an authored proposition goes for good.
+    renderExplorer({
+      entries: [entry({ name: 'customer.eligibility.is-active', origin: 'Overridden', version: 2 })],
+      selected: 'customer.eligibility.is-active',
+    });
+
+    expect(screen.getByRole('button', { name: 'Revert to compiled' })).toBeTruthy();
+  });
+
+  it('deletes the entry it is aimed at', async () => {
+    const actions = renderExplorer({ selected: 'customer.eligibility.is-adult' });
+
+    await userEvent.click(screen.getByRole('button', { name: /^delete$/i }));
+
+    expect(actions.onDelete).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'customer.eligibility.is-adult' }));
+  });
+
+  it('aims the actions at the highlighted row once a query is typed', async () => {
+    // The selection is what the user chose last; the highlight is what they are pointing at now.
+    // A footer that went on describing the selection would sit under a row it says nothing about.
+    const actions = renderExplorer({ selected: 'customer.eligibility.is-adult' });
+
+    await search('is-fraudulent');
+    await userEvent.click(screen.getByRole('button', { name: /derive/i }));
+
+    expect(actions.onDerive).toHaveBeenCalledWith('customer.risk.is-fraudulent');
+  });
+
+  it('says what the actions are missing when nothing is selected and nothing highlighted', () => {
+    renderExplorer();
+
+    expect(reasonFor(/derive/i)).toMatch(/pick a proposition/i);
+    expect(reasonFor(/^override/i)).toMatch(/pick a proposition/i);
+    expect(reasonFor(/^delete$/i)).toMatch(/pick a proposition/i);
   });
 });

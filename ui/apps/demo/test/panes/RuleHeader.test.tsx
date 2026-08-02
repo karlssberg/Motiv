@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RuleEditorStore, type RuleListEntry, type RulesApiClient } from '@motiv/rules-core';
 import { RuleEditorProvider } from '@motiv/rules-react';
@@ -19,6 +19,8 @@ const entries: RuleListEntry[] = [
     name: 'fraud-screening',
     modelType: 'customer',
     metadataType: 'String',
+    // Async on purpose: the onLoaded guard below asserts this reaches the shell, which is what
+    // lets App switch validation into async mode.
     isAsync: true,
     isPolicy: false,
     version: 1,
@@ -29,14 +31,17 @@ const entries: RuleListEntry[] = [
 function makeClient(overrides: Partial<Record<string, unknown>> = {}): RulesApiClient {
   return {
     listRules: vi.fn().mockResolvedValue(entries),
-    getRule: vi.fn().mockResolvedValue({ document: { rule: { spec: 'is-active' } }, version: 3 }),
+    // Deliberately *not* the document `renderHeader` seeds the store with. With the two the same,
+    // "loads the picked rule into the store" held whether or not the load ever ran — deleting
+    // `RuleHeader`'s `store.loadDocument` call left the whole file green.
+    getRule: vi.fn().mockResolvedValue({ document: { rule: { spec: 'is-adult' } }, version: 3 }),
     putRule: vi.fn().mockResolvedValue({ outcome: 'updated', version: 4 }),
     ...overrides,
   } as unknown as RulesApiClient;
 }
 
 function renderHeader(
-  client: RulesApiClient,
+  client: RulesApiClient = makeClient(),
   store = new RuleEditorStore({ rule: { spec: 'is-active' } }),
   onLoaded?: (entry: RuleListEntry | null) => void,
 ) {
@@ -53,61 +58,59 @@ function renderHeader(
   return store;
 }
 
-/** Matches the breadcrumb leaf whatever rule it currently names. */
-const LEAF = /^rule,/;
-const findLeaf = () => screen.findByRole('combobox', { name: LEAF });
-
-/** Opens the leaf's list and picks a rule by name, as a pointer would. */
-async function pick(name: string): Promise<void> {
-  fireEvent.click(await findLeaf());
-  fireEvent.click(await screen.findByRole('option', { name }));
+/**
+ * Opens the palette from the toolbar, types a query that uniquely matches one row, and presses
+ * Enter to choose it — the same path a keyboard-only user would take.
+ */
+async function pickViaPalette(query: string): Promise<void> {
+  await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+  await userEvent.type(screen.getByRole('combobox'), query);
+  await userEvent.keyboard('{Enter}');
 }
 
 describe('RuleHeader', () => {
   it('names the local draft in the breadcrumb until a rule is loaded', async () => {
-    renderHeader(makeClient());
+    renderHeader();
 
-    // The badge's text is its value, but a name given to a control replaces that text for
-    // assistive tech — so the loaded rule has to be in the name too, or it is lost.
-    expect((await screen.findByRole('combobox', { name: 'rule, local draft' })).textContent)
-      .toBe('local draft');
+    expect(await screen.findByText('local draft')).toBeTruthy();
   });
 
-  it('lists the local draft and every server rule, marking the one in force', async () => {
-    renderHeader(makeClient());
-    fireEvent.click(await findLeaf());
+  it('lists the local draft and every server rule in the palette', async () => {
+    renderHeader();
 
-    const options = screen.getAllByRole('option');
-    expect(options.map((o) => o.textContent)).toEqual(['local draft', 'can-checkout', 'fraud-screening']);
-    expect(options.filter((o) => o.getAttribute('aria-selected') === 'true').map((o) => o.textContent))
-      .toEqual(['local draft']);
+    await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+
+    const options = await screen.findAllByRole('option');
+    expect(options.map((option) => option.textContent)).toEqual([
+      'local draft', 'can-checkout', 'fraud-screening',
+    ]);
   });
 
   it('loads the picked rule into the store, and wears its name', async () => {
     const client = makeClient();
     const store = renderHeader(client);
 
-    await pick('can-checkout');
+    await pickViaPalette('can-checkout');
 
-    await waitFor(() => expect(store.getState().document).toEqual({ rule: { spec: 'is-active' } }));
+    await waitFor(() => expect(store.getState().document).toEqual({ rule: { spec: 'is-adult' } }));
     expect(screen.getByText(/v3/)).toBeDefined();
-    expect((await findLeaf()).textContent).toBe('can-checkout');
-    // Choosing closes it: the leaf is transient, and it has just been relabelled.
-    expect(screen.queryByRole('listbox')).toBeNull();
+    expect(await screen.findByText('can-checkout')).toBeTruthy();
+    // Choosing closes it: the palette is transient, and it has just been relabelled.
+    expect(screen.queryByRole('dialog', { name: 'Rules' })).toBeNull();
   });
 
   it('returns to the local draft when that is picked back, keeping the document', async () => {
-    const store = renderHeader(makeClient());
-    await pick('can-checkout');
+    const store = renderHeader();
+    await pickViaPalette('can-checkout');
     await screen.findByText(/v3/);
 
-    await pick('local draft');
+    await pickViaPalette('local draft');
 
     // Only the server identity is dropped — what is in the editor stays put, and is now a draft
     // again: there is nothing to save it back to.
-    expect((await findLeaf()).textContent).toBe('local draft');
+    expect(await screen.findByText('local draft')).toBeTruthy();
     expect(screen.queryByText(/v3/)).toBeNull();
-    expect(store.getState().document).toEqual({ rule: { spec: 'is-active' } });
+    expect(store.getState().document).toEqual({ rule: { spec: 'is-adult' } });
   });
 
   it('shows a code-default note when the server document is null', async () => {
@@ -116,7 +119,7 @@ describe('RuleHeader', () => {
     });
     renderHeader(client);
 
-    await pick('can-checkout');
+    await pickViaPalette('can-checkout');
 
     expect(await screen.findByText(/code-defined default/i)).toBeDefined();
   });
@@ -124,13 +127,13 @@ describe('RuleHeader', () => {
   it('saves with the loaded version and shows the new one', async () => {
     const client = makeClient();
     renderHeader(client);
-    await pick('can-checkout');
+    await pickViaPalette('can-checkout');
     await screen.findByText(/v3/);
 
     await userEvent.click(screen.getByRole('button', { name: /save/i }));
 
     await waitFor(() =>
-      expect(client.putRule).toHaveBeenCalledWith('can-checkout', { rule: { spec: 'is-active' } }, 3));
+      expect(client.putRule).toHaveBeenCalledWith('can-checkout', { rule: { spec: 'is-adult' } }, 3));
     expect(await screen.findByText(/v4/)).toBeDefined();
   });
 
@@ -139,11 +142,11 @@ describe('RuleHeader', () => {
     const client = makeClient();
     renderHeader(client, undefined, onLoaded);
 
-    await pick('fraud-screening');
+    await pickViaPalette('fraud-screening');
     await waitFor(() =>
       expect(onLoaded).toHaveBeenCalledWith(expect.objectContaining({ name: 'fraud-screening', isAsync: true })));
 
-    await pick('local draft');
+    await pickViaPalette('local draft');
     await waitFor(() => expect(onLoaded).toHaveBeenLastCalledWith(null));
   });
 
@@ -153,7 +156,7 @@ describe('RuleHeader', () => {
       putRule: vi.fn().mockResolvedValue({ outcome: 'invalid', errors }),
     });
     const store = renderHeader(client);
-    await pick('can-checkout');
+    await pickViaPalette('can-checkout');
     await screen.findByText(/v3/);
 
     await userEvent.click(screen.getByRole('button', { name: /save/i }));
@@ -166,7 +169,7 @@ describe('RuleHeader', () => {
       putRule: vi.fn().mockResolvedValue({ outcome: 'conflict', currentVersion: 9 }),
     });
     renderHeader(client);
-    await pick('can-checkout');
+    await pickViaPalette('can-checkout');
     await screen.findByText(/v3/);
 
     await userEvent.click(screen.getByRole('button', { name: /save/i }));
@@ -176,5 +179,54 @@ describe('RuleHeader', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /reload latest/i }));
     await waitFor(() => expect(client.getRule).toHaveBeenCalledTimes(2));
+  });
+
+  it('chooses the rule a partial query narrows to', async () => {
+    renderHeader();
+
+    await pickViaPalette('fraud');
+
+    expect(await screen.findByText('fraud-screening')).toBeTruthy();
+    expect(screen.queryByRole('dialog', { name: 'Rules' })).toBeNull();
+  });
+
+  it('offers no authoring actions, because rules are not authored here', async () => {
+    // The footer is caller-supplied precisely so this page can omit it. Rules are placeholders
+    // for compile-time logic; there is nothing to create, derive or delete.
+    renderHeader();
+    await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+    expect(screen.queryByRole('button', { name: /^new$/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /derive/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /delete/i })).toBeNull();
+  });
+
+  it('opens the palette with ⌘K', async () => {
+    // The same chord the propositions page uses, through the same hook — which is the whole point
+    // of the hook. Without this the binding was proven on one page only, and deleting
+    // `RuleHeader`'s `useCommandKey` call passed the entire suite.
+    renderHeader();
+
+    await userEvent.keyboard('{Meta>}k{/Meta}');
+
+    expect(screen.getByRole('dialog', { name: 'Rules' })).toBeTruthy();
+  });
+
+  it('opens the document viewer from the toolbar', async () => {
+    renderHeader();
+    await userEvent.click(screen.getByRole('button', { name: 'JSON' }));
+    expect(screen.getByRole('dialog', { name: /document/i })).toBeTruthy();
+  });
+
+  it('leaves ⌘K inert while the document viewer is open, rather than stacking a palette over it', async () => {
+    // Both pages bind the chord through the one hook, so the guard belongs in the hook and not in
+    // either page — which is what this asserts from the second page. The propositions page proves
+    // the same rule against its authoring dialog.
+    renderHeader();
+    await userEvent.click(screen.getByRole('button', { name: 'JSON' }));
+    await screen.findByRole('dialog', { name: /document/i });
+
+    await userEvent.keyboard('{Meta>}k{/Meta}');
+
+    expect(screen.queryByRole('dialog', { name: 'Rules' })).toBeNull();
   });
 });

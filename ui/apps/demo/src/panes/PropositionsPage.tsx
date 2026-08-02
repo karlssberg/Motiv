@@ -7,8 +7,11 @@ import type { Page } from '../routing/useHashRoute.js';
 import { MODEL_TYPE } from '../App.js';
 import { AppBar } from './AppBar.js';
 import { EditorPane } from './EditorPane.js';
-import { JsonPane } from './JsonPane.js';
 import { EvaluatePane } from './EvaluatePane.js';
+import { DocumentModal } from './DocumentModal.js';
+import { Toolbar } from '../shell/Toolbar.js';
+import { useCommandKey } from '../shell/useCommandKey.js';
+import { IconJson, IconOpen, IconSave } from '../shell/icons.js';
 import { PropositionExplorer } from '../explorer/PropositionExplorer.js';
 import { PropositionDialog, type DialogSeed, type DialogValues } from '../explorer/PropositionDialog.js';
 import { DependentsStrip } from '../explorer/DependentsStrip.js';
@@ -53,9 +56,33 @@ function describeThrown(error: unknown): string {
 }
 
 /**
- * The propositions page: the namespaced explorer alongside the same Editor / JSON / Evaluate panes
- * the rules page uses. The panes are reused unmodified — they read from the shared RuleEditorStore
- * and never ask what the document represents, so a proposition and a rule are the same thing to them.
+ * The namespace a derivation of `name` should land in: everything up to and including the final
+ * dot, or the empty string when the name has no namespace to keep.
+ */
+function namespacePrefixOf(name: string): string {
+  const cut = name.lastIndexOf('.');
+  return cut < 0 ? '' : name.slice(0, cut + 1);
+}
+
+/**
+ * Why Save cannot run, or `undefined` when it can.
+ *
+ * Version 0 is the contract's "purely compiled": no overlay document exists for a PUT to update,
+ * and `baseVersion` must be positive, so Save could only ever fail there. Authoring one is what
+ * Override is for.
+ */
+function whyNotSave(loaded: Loaded | null, saving: boolean): string | undefined {
+  if (loaded === null) return 'Nothing loaded yet.';
+  if (loaded.version === 0) return 'This name is served by a compiled spec. Use Override to author one.';
+  if (saving) return 'Saving…';
+  return undefined;
+}
+
+/**
+ * The propositions page: the same Editor / Evaluate panes the rules page uses, with the namespaced
+ * explorer behind the toolbar as a command palette and the document behind it as a modal. The panes
+ * are reused unmodified — they read from the shared RuleEditorStore and never ask what the document
+ * represents, so a proposition and a rule are the same thing to them.
  */
 export function PropositionsPage(props: {
   client: RulesApiClient;
@@ -73,6 +100,8 @@ export function PropositionsPage(props: {
   const [dialog, setDialog] = useState<DialogSeed | null>(null);
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [explorerOpen, setExplorerOpen] = useState(false);
+  const [documentOpen, setDocumentOpen] = useState(false);
   // Bumped when the selected name still names something, but something *different* — a revert
   // being the case. The route cannot express that, since the name did not change.
   const [reloads, setReloads] = useState(0);
@@ -83,6 +112,10 @@ export function PropositionsPage(props: {
   // while a request is in flight, so a click during one is ordinary use, not a race to be ignored.
   const selectedRef = useRef(props.selected);
   useEffect(() => { selectedRef.current = props.selected; }, [props.selected]);
+
+  // The same shortcut the rules page opens its palette with — one implementation, so the two
+  // cannot drift into meaning different things.
+  useCommandKey(() => setExplorerOpen(true));
 
   const loadEntries = useCallback(async (): Promise<void> => {
     setEntries(await props.client.listPropositions());
@@ -145,8 +178,9 @@ export function PropositionsPage(props: {
     return () => { cancelled = true; };
   }, [props.client, props.selected, store, reloads]);
 
-  const modelTypes = [...new Set(entries.map((entry) => entry.modelType))].sort();
-  const defaultModelType = modelTypes[0] ?? MODEL_TYPE;
+  // The alphabetically first model type in the listing: what a New starts on, and what stands in
+  // for an entry the listing has not got. Not de-duplicated first, since only the first is read.
+  const defaultModelType = entries.map((entry) => entry.modelType).sort()[0] ?? MODEL_TYPE;
 
   const save = async (): Promise<void> => {
     if (!loaded) return;
@@ -232,7 +266,13 @@ export function PropositionsPage(props: {
     props.onSelect(values.name);
   };
 
+  /**
+   * Opens New / Derive / Override, dismissing the palette they were reached from. Two stacked
+   * modals would leave the browser's focus trap holding the wrong one — and the palette has served
+   * its purpose the moment one of its actions has been taken.
+   */
   const openDialog = (seed: DialogSeed): void => {
+    setExplorerOpen(false);
     setDialogError(null);
     setDialog(seed);
   };
@@ -250,17 +290,19 @@ export function PropositionsPage(props: {
         controls={
           <>
             {loaded && <span className="rule-version">v{loaded.version}</span>}
-            {/* Version 0 is the contract's "purely compiled": no overlay document exists for a PUT
-                to update, and `baseVersion` must be positive, so Save could only ever fail there.
-                Authoring one is what Override is for. */}
-            <button
-              type="button"
-              className="btn"
-              disabled={!loaded || loaded.version === 0 || saving}
-              onClick={() => void save()}
-            >
-              Save{dependents.length > 0 ? ` (${dependents.length})` : ''}
-            </button>
+            <Toolbar actions={[
+              { id: 'open', label: 'Open', icon: IconOpen, onActivate: () => setExplorerOpen(true) },
+              {
+                // The blast radius rides on the label, so what a save would affect is legible from
+                // the control that would cause it without reading the strip.
+                id: 'save',
+                label: `Save${dependents.length > 0 ? ` (${dependents.length})` : ''}`,
+                icon: IconSave,
+                onActivate: () => void save(),
+                unavailable: whyNotSave(loaded, saving),
+              },
+              { id: 'json', label: 'JSON', icon: IconJson, onActivate: () => setDocumentOpen(true) },
+            ]} />
           </>
         }
       >
@@ -290,15 +332,21 @@ export function PropositionsPage(props: {
 
       <DependentsStrip dependents={dependents} />
 
-      <div className="shell-body with-rail">
+      <div className="shell-body">
+        <EditorPane client={props.client} />
+        <EvaluatePane client={props.client} />
+      </div>
+
+      {explorerOpen && (
         <PropositionExplorer
           entries={entries}
           selected={props.selected}
           actions={{
             onSelect: props.onSelect,
+            onClose: () => setExplorerOpen(false),
             onDerive: (name) => openDialog({
               // Prefilled to the source's namespace, so a derivation lands beside its origin.
-              name: name.includes('.') ? `${name.slice(0, name.lastIndexOf('.'))}.` : '',
+              name: namespacePrefixOf(name),
               modelType: modelTypeOf(name),
               startsFrom: name,
               title: `Derive from ${name}`,
@@ -323,18 +371,22 @@ export function PropositionsPage(props: {
             onDelete: (entry) => void remove(entry),
           }}
         />
-        <EditorPane client={props.client} />
-        <JsonPane />
-        <EvaluatePane client={props.client} />
-      </div>
+      )}
+
+      {documentOpen && <DocumentModal onClose={() => setDocumentOpen(false)} />}
 
       {dialog && (
         <PropositionDialog
           // Keyed so that replacing the seed remounts rather than reuses: the dialog seeds its
           // fields from the seed once and never resyncs, so a reused instance would show the new
           // flow's heading over the previous flow's answers — including its `startsFrom`, which
-          // the create would then send. Robust whether or not the buttons that can do that stay
-          // reachable behind the backdrop.
+          // the create would then send.
+          //
+          // Defence in depth, and deliberately kept as such. No route reaches it any more: every
+          // flow is opened from the palette, `openDialog` dismisses the palette on the way in, and
+          // `onCancel` unmounts this — while ⌘K, which used to reopen the palette stacked above an
+          // open dialog, is now inert whenever a modal is showing (`useCommandKey`). The keying
+          // costs one prop and survives whoever reopens that route.
           key={dialog.title}
           seed={dialog}
           sources={entries}

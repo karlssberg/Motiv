@@ -120,9 +120,6 @@ body {
   white-space: nowrap;
 }
 
-/* Wider than the operator list: the entries are rule names, not single words. */
-.breadcrumb-menu { min-width: 168px; }
-
 .model-pill {
   margin-left: 2px;
   display: inline-flex;
@@ -749,6 +746,9 @@ button.node-dsl {
 }
 
 .tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   appearance: none;
   border: none;
   border-radius: 6px;
@@ -1180,40 +1180,24 @@ button.node-dsl {
 .node-insert:hover { color: var(--accent); }
 
 /* ---------------------------------------------------------------------------
-   Proposition explorer — the namespaced tree rail on the propositions page.
-   Indentation is driven by a --depth custom property set per node, so nesting
-   needs no per-level selectors.
+   Proposition explorer — the namespaced tree the command palette browses while
+   its query is empty. Indentation is driven by a --depth custom property set
+   per node, so nesting needs no per-level selectors.
 
    Surfaces reuse the app's existing tokens rather than adding a parallel scale:
    --sh-inset is the resting/hover fill (as in .tab.active), --accent-weak the
    "this one" tint (as in .dsl-badge), and --danger the single problem colour
    (as in .error) — there is no separate warning tier.
+
+   Horizontal padding matches .palette-row's, so a browsed row and a matched
+   row start on the same edge as the query is typed.
    --------------------------------------------------------------------------- */
-.explorer {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space);
-  min-width: 0;
-  padding: calc(var(--space) * 1.5);
-  overflow-y: auto;
-  border-right: 1px solid var(--border);
-}
-
-.explorer-header {
-  display: flex;
-  gap: var(--space);
-}
-
-.explorer-search {
-  flex: 1;
-  min-width: 0;
-}
-
 .explorer-chips {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: calc(var(--space) / 2);
+  padding: calc(var(--space) / 2) 12px;
 }
 
 .explorer-count {
@@ -1245,8 +1229,8 @@ button.node-dsl {
   display: flex;
   align-items: center;
   gap: calc(var(--space) / 2);
-  padding: 2px calc(var(--space) / 2);
-  padding-left: calc(var(--space) / 2 + var(--depth) * var(--space) * 1.5);
+  padding: 2px 12px;
+  padding-left: calc(12px + var(--depth) * var(--space) * 1.5);
   border-radius: var(--radius);
 }
 
@@ -1296,64 +1280,19 @@ button.node-dsl {
 }
 
 .explorer-empty {
+  padding: calc(var(--space) / 2) 12px;
   font-size: 0.85rem;
   opacity: 0.7;
-}
-
-.explorer-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space);
-  margin-top: auto;
-  padding-top: var(--space);
-  border-top: 1px solid var(--border);
-}
-
-/*
-  The propositions page adds a rail ahead of the three panes. `.shell-body` is a flex row (the
-  panes each take `flex: 1` from `.pane`), so the rail is sized by a flex basis rather than a grid
-  column — a `grid-template-columns` here would be inert on a flex container. It stacks at the
-  same 900px `.shell-body`/`.pane` already collapse at, so the rail and the columns it leads never
-  disagree about when the shell is narrow, and its divider moves with theirs from right to bottom.
-*/
-.shell-body.with-rail > .explorer {
-  flex: 0 0 clamp(14rem, 24%, 20rem);
-}
-
-@media (max-width: 900px) {
-  .shell-body.with-rail > .explorer {
-    flex: none;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
 }
 
 /* ---------------------------------------------------------------------------
    New/Derive/Override dialog and the dependents strip.
    --------------------------------------------------------------------------- */
-.dialog-backdrop {
-  position: fixed;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background: rgb(0 0 0 / 45%);
-  z-index: 10;
-}
-
-.dialog {
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--space) * 1.5);
-  width: min(28rem, calc(100vw - 2rem));
-  padding: calc(var(--space) * 2);
-  border-radius: var(--radius);
-  background: var(--sh-panel);
-  border: 1px solid var(--border);
-  box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
-}
-
+/* Right padding keeps a long title ("Override some.long.name") clear of `Modal`'s close control,
+   which floats over the dialog's top-right corner. */
 .dialog-title {
   margin: 0;
+  padding-right: 24px;
   font-size: 1rem;
 }
 
@@ -1403,4 +1342,196 @@ button.node-dsl {
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+/* Native <dialog>. The element is display:none until opened, so `[open]` carries the layout. */
+.modal {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--sh-panel);
+  color: var(--text);
+  padding: 0;
+  box-shadow: 0 12px 40px rgb(0 0 0 / 22%);
+  max-width: min(680px, 92vw);
+  width: 100%;
+}
+
+.modal::backdrop {
+  background: rgb(15 18 22 / 42%);
+}
+
+.modal-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+/* The New/Derive/Override dialog is a `Modal` variant — the surface (border, radius, background,
+   shadow) comes from `.modal`, so only the form's own measure is stated here. It has to precede
+   the mobile rule below: both are single-class selectors setting `width` on the same element, so
+   source order is the whole of the cascade between them.
+
+   The padding and the row rhythm are deliberately *not* here — see `.dialog-form`. What is left is
+   a measure and nothing else: the only geometry the element can carry without also becoming
+   clickable area. The flex column the phone sheet needs comes from `.modal-mobile-full` below,
+   which `PropositionDialog` always asks for — restating it here would be a duplicate. */
+.dialog {
+  width: min(28rem, calc(100vw - 2rem));
+}
+
+/* The form's frame and the bands between its rows, on a wrapper inside the `<dialog>` rather than
+   on the dialog itself. `Modal` dismisses a click whose target *is* the dialog element, because a
+   dialog's backdrop is part of that element and there is no separate node to listen on — and an
+   element's padding box and flex gaps hit-test as the element too. On the dialog these 16px and
+   12px bands were live backdrop, so a click just outside a field threw away everything typed. On a
+   wrapper that covers the element edge to edge, every click inside the dialog's bounds lands on a
+   descendant. `PropositionDialog` states the same thing at the markup, and
+   `PropositionsPage.test.tsx` pins the structure this depends on. */
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 1.5);
+  padding: calc(var(--space) * 2);
+}
+
+/* The palette's measure, stated here rather than beside the rest of `.palette` further down, for
+   the same reason `.dialog` sits here: it is a single-class selector setting `max-width` on the
+   same element as `.modal-mobile-full` below, so left where it read most naturally it would win on
+   source order and cap the phone-fullscreen palette at 92vw — a 358.8px sheet on a 390px screen,
+   with the border and radius already stripped off it. No unit test can see that; only the e2e
+   `boundingBox` check can. */
+.palette { max-width: min(560px, 92vw); }
+
+@media (max-width: 900px) {
+  .modal-mobile-full {
+    max-width: none;
+    width: 100vw;
+    height: 100dvh;
+    max-height: none;
+    border: none;
+    border-radius: 0;
+  }
+
+  /* The sheet is a full 100dvh here, and the form is shorter than that. Without this the form
+     stacks at the top and the rest of the phone screen is bare dialog element — clickable, and
+     looking like nothing at all. Mirrors what `.modal-body` does for the document viewer. */
+  .modal-mobile-full .dialog-form { flex: 1; overflow-y: auto; }
+}
+
+/* Ghost: invisible at rest, a soft well on hover and focus. The whole toolbar treatment. */
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px;
+  border: none;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.ghost:hover { background: var(--sh-inset); color: var(--text); }
+.ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* Unavailable actions stay focusable — see Toolbar.tsx — so this is the only signal that they
+   are inert, and it must not rely on :disabled. */
+.ghost[aria-disabled='true'] { color: var(--faint); cursor: default; }
+.ghost[aria-disabled='true']:hover { background: none; color: var(--faint); }
+
+.toolbar { display: flex; align-items: center; gap: 4px; }
+.toolbar-slot { display: inline-flex; }
+
+/* Visible to assistive technology, not to the eye. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.palette-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--faint);
+}
+
+.palette-input {
+  flex: 1;
+  border: none;
+  background: none;
+  color: var(--text);
+  font: 14px var(--sans);
+  outline: none;
+}
+
+.palette-count { font: 11px var(--sans); color: var(--faint); }
+
+.palette-list { list-style: none; margin: 0; padding: 4px 0; max-height: 46vh; overflow-y: auto; }
+.palette-browse { padding: 4px 0; max-height: 46vh; overflow-y: auto; }
+
+.palette-row { padding: 5px 12px; font: 13px var(--sans); color: var(--text); cursor: pointer; }
+.palette-row:hover { background: var(--sh-inset); }
+.palette-row.highlighted { background: var(--accent-weak); }
+
+/* A matched row: the leaf in the text colour, the namespace it lives under faded behind it, and
+   the origin pushed to the far edge so the badges line up down the list. */
+.palette-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.palette-ns { color: var(--faint); }
+
+.palette-badge {
+  margin-left: auto;
+  font: 10px var(--sans);
+  color: var(--faint);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 4px;
+}
+
+.palette-footer {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 8px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+@media (max-width: 900px) {
+  .palette-list, .palette-browse { max-height: none; flex: 1; }
+  .palette { display: flex; flex-direction: column; }
+}
+
+.modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  font: 600 13px var(--sans);
+  color: var(--text);
+}
+
+.modal-body { padding: 10px 12px; max-height: 60vh; overflow: auto; }
+
+@media (max-width: 900px) {
+  .modal-mobile-full .modal-body { max-height: none; flex: 1; }
+  .modal-mobile-full { display: flex; flex-direction: column; }
 }

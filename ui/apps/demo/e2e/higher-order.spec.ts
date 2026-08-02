@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { expectDocument } from './shell.js';
 
 /** Replaces a row's expression by typing DSL into it, the way authoring now works. */
 async function typeExpression(page: Page, path: string, dsl: string): Promise<void> {
@@ -19,8 +20,7 @@ async function buildHigherOrderRule(page: Page): Promise<void> {
   await typeExpression(page, '$.rule', 'customer.is-adult & all in orders { order.is-large }');
 
   // the document reflects the higher-order node over the orders collection
-  await expect(page.getByLabel('rule document')).toContainText('asAllSatisfied');
-  await expect(page.getByLabel('rule document')).toContainText('"path": "orders"');
+  await expectDocument(page, 'asAllSatisfied', '"path": "orders"');
 }
 
 test('builds and evaluates a higher-order rule end to end', async ({ page }) => {

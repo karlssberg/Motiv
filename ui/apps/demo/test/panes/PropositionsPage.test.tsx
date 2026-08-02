@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
   RuleEditorStore, RulesApiError, type PropositionListEntry, type RuleDocument,
@@ -47,8 +47,17 @@ function optionsOf(label: string | RegExp): string[] {
   return [...(screen.getByLabelText(label) as HTMLSelectElement).options].map((option) => option.value);
 }
 
+/**
+ * Opens the explorer. It is a command palette behind the toolbar now rather than a standing rail,
+ * so every test that reaches into it — the tree, the model chips, New/Derive/Override/Delete —
+ * opens it first.
+ */
+async function openExplorer(): Promise<void> {
+  await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+}
+
 function renderPage(
-  client: ReturnType<typeof stubClient>,
+  client: ReturnType<typeof stubClient> = stubClient(),
   selected: string | null = null,
   document: RuleDocument = { rule: { spec: 'customer.is-active' } },
 ) {
@@ -73,6 +82,8 @@ describe('PropositionsPage', () => {
   it('lists propositions in the explorer on mount', async () => {
     const client = stubClient();
     renderPage(client);
+
+    await openExplorer();
 
     expect(await screen.findByRole('treeitem', { name: /is-active/ })).toBeTruthy();
     expect(client.listPropositions).toHaveBeenCalled();
@@ -134,20 +145,24 @@ describe('PropositionsPage', () => {
       .toHaveBeenCalledWith('customer.derived', expect.anything(), 1));
   });
 
-  it('does not offer Save for a name that is only served by a compiled spec', async () => {
+  it('explains why Save is unavailable for a name only served by a compiled spec', async () => {
     const client = stubClient({ getProposition: vi.fn().mockResolvedValue(COMPILED) });
     renderPage(client, 'customer.is-active');
 
     // Gated on the load becoming *observable* — the badge renders only once `loaded` is truthy —
-    // rather than on the button being disabled at some tick. `waitFor` resolves on the first tick
-    // where its condition holds, and `!loaded` already disables the button at tick zero, so
-    // waiting for "disabled" would pass without the version guard ever being consulted.
+    // rather than on the button being unavailable at some tick. `waitFor` resolves on the first
+    // tick where its condition holds, and `loaded === null` already makes it unavailable at tick
+    // zero, so waiting for that alone would pass without the version guard ever being consulted.
     await screen.findByText('v0');
 
     // Version 0 is the contract's "purely compiled": there is no overlay document for a PUT to
     // update, and `baseVersion` is required to be positive, so saving could only ever fail.
-    // Override is the affordance that authors one.
-    expect(screen.getByRole('button', { name: /^save$/i }).hasAttribute('disabled')).toBe(true);
+    // Override is the affordance that authors one — and saying so is the point: `aria-disabled`
+    // keeps the button reachable, so the reason it carries can actually be read.
+    const save = screen.getByRole('button', { name: 'Save' });
+    expect(save.getAttribute('aria-disabled')).toBe('true');
+    const reason = save.getAttribute('aria-describedby');
+    expect(document.getElementById(reason!)?.textContent).toMatch(/compiled/i);
   });
 
   it('surfaces a thrown listing failure rather than rendering an empty catalog', async () => {
@@ -193,7 +208,9 @@ describe('PropositionsPage', () => {
     await userEvent.click(screen.getByRole('button', { name: /^save$/i }));
 
     expect((await screen.findByRole('alert')).textContent).toContain('save exploded');
-    expect(screen.getByRole('button', { name: /^save$/i }).hasAttribute('disabled')).toBe(false);
+    // `aria-disabled`, not `disabled`: the attribute the toolbar actually uses. Asserting the one
+    // it never sets would pass no matter what state the failed save left the button in.
+    expect(screen.getByRole('button', { name: /^save$/i }).getAttribute('aria-disabled')).toBeNull();
   });
 
   it('surfaces a thrown delete failure', async () => {
@@ -203,6 +220,7 @@ describe('PropositionsPage', () => {
     const { onSelect } = renderPage(client, 'customer.derived');
     await screen.findByText('v1');
 
+    await openExplorer();
     await userEvent.click(await screen.findByRole('button', { name: /^delete$/i }));
 
     expect((await screen.findByRole('alert')).textContent).toContain('delete exploded');
@@ -215,6 +233,7 @@ describe('PropositionsPage', () => {
       createProposition: vi.fn().mockRejectedValue(new RulesApiError(500, 'create exploded')),
     });
     renderPage(client);
+    await openExplorer();
     await screen.findByRole('treeitem', { name: /is-active/ });
 
     await userEvent.click(screen.getByRole('button', { name: /^new$/i }));
@@ -281,6 +300,7 @@ describe('PropositionsPage', () => {
     const { onSelect, select } = renderPage(client, 'customer.derived');
     await screen.findByText('v1');
 
+    await openExplorer();
     await userEvent.click(await screen.findByRole('button', { name: /^delete$/i }));
     select('customer.overridden');
     settle();
@@ -347,6 +367,7 @@ describe('PropositionsPage', () => {
     // holds that page's draft. A create that copied it would depend on which page was visited
     // first, so the fixture is deliberately a document no source in the listing could produce.
     renderPage(client, null, { rule: { spec: 'customer.has-orders' } });
+    await openExplorer();
     await screen.findByRole('treeitem', { name: /is-active/ });
 
     await userEvent.click(screen.getByRole('button', { name: /^new$/i }));
@@ -364,6 +385,7 @@ describe('PropositionsPage', () => {
   it('starts a new proposition from whichever source is picked', async () => {
     const client = stubClient();
     renderPage(client, null, { rule: { spec: 'customer.has-orders' } });
+    await openExplorer();
     await screen.findByRole('treeitem', { name: /is-active/ });
 
     await userEvent.click(screen.getByRole('button', { name: /^new$/i }));
@@ -385,6 +407,7 @@ describe('PropositionsPage', () => {
       ]),
     });
     renderPage(client);
+    await openExplorer();
     await screen.findByRole('treeitem', { name: /derived/ });
 
     await userEvent.click(screen.getByRole('button', { name: /^new$/i }));
@@ -410,13 +433,35 @@ describe('PropositionsPage', () => {
     renderPage(client);
     await waitFor(() => expect(client.listPropositions).toHaveBeenCalled());
 
+    await openExplorer();
     await userEvent.click(screen.getByRole('button', { name: /^new$/i }));
     await userEvent.type(screen.getByLabelText('Name'), 'customer.fresh');
 
     // A UI-authored proposition is composition-only, so with nothing registered to compose over
     // there is nothing to create. The button being dead is not an explanation, so it is said.
-    expect(screen.getByRole('button', { name: /create/i }).hasAttribute('disabled')).toBe(true);
+    // `aria-disabled`, not `disabled`: the latter drops the button from the tab order in every
+    // major browser, leaving a keyboard screen-reader user unable to reach it and so unable to
+    // hear the `aria-describedby` explanation this test also checks for.
+    const create = screen.getByRole('button', { name: /create/i });
+    expect(create.getAttribute('aria-disabled')).toBe('true');
+    expect(create.hasAttribute('disabled')).toBe(false);
     expect(screen.getByText(/nothing to start from/i)).toBeTruthy();
+  });
+
+  it('does not create when the Create button is aria-disabled', async () => {
+    const client = stubClient({ listPropositions: vi.fn().mockResolvedValue([]) });
+    renderPage(client);
+    await waitFor(() => expect(client.listPropositions).toHaveBeenCalled());
+
+    await openExplorer();
+    await userEvent.click(screen.getByRole('button', { name: /^new$/i }));
+    await userEvent.type(screen.getByLabelText('Name'), 'customer.fresh');
+
+    // `aria-disabled` alone does not stop a click from reaching the handler — the guard has to be
+    // in the handler itself, exactly like `Toolbar`'s early return.
+    await userEvent.click(screen.getByRole('button', { name: /create/i }));
+
+    expect(client.createProposition).not.toHaveBeenCalled();
   });
 
   it('seeds the dialog from the derived-from node', async () => {
@@ -426,6 +471,7 @@ describe('PropositionsPage', () => {
     renderPage(client, 'customer.overridden');
     await waitFor(() => expect(client.getProposition).toHaveBeenCalled());
 
+    await openExplorer();
     await userEvent.click(await screen.findByRole('button', { name: /derive/i }));
 
     // Prefilled to the source's namespace, so derivation lands beside what it came from
@@ -440,6 +486,7 @@ describe('PropositionsPage', () => {
     renderPage(client, 'customer.overridden');
     await waitFor(() => expect(client.getProposition).toHaveBeenCalled());
 
+    await openExplorer();
     await userEvent.click(await screen.findByRole('button', { name: /derive/i }));
     await userEvent.type(screen.getByLabelText('Name'), 'onward');
     await userEvent.click(screen.getByRole('button', { name: /create/i }));
@@ -455,6 +502,7 @@ describe('PropositionsPage', () => {
     renderPage(client, 'customer.is-active');
     await waitFor(() => expect(client.getProposition).toHaveBeenCalled());
 
+    await openExplorer();
     await userEvent.click(await screen.findByRole('button', { name: /^override$/i }));
 
     // An override *takes* the compiled spec's name — it does not derive a new one from it.
@@ -467,6 +515,7 @@ describe('PropositionsPage', () => {
     renderPage(client, 'customer.is-active');
     await waitFor(() => expect(client.getProposition).toHaveBeenCalled());
 
+    await openExplorer();
     await userEvent.click(await screen.findByRole('button', { name: /^override$/i }));
 
     // An override is authored under the very name it overrides, so a reference back to that name
@@ -481,6 +530,7 @@ describe('PropositionsPage', () => {
     renderPage(client, 'customer.is-active', { rule: { spec: 'customer.has-orders' } });
     await waitFor(() => expect(client.getProposition).toHaveBeenCalled());
 
+    await openExplorer();
     await userEvent.click(await screen.findByRole('button', { name: /^override$/i }));
     await userEvent.selectOptions(screen.getByLabelText(/starts from/i), 'customer.overridden');
     await userEvent.click(screen.getByRole('button', { name: /create/i }));
@@ -491,23 +541,32 @@ describe('PropositionsPage', () => {
     })));
   });
 
-  it('starts a fresh form when one flow replaces another without closing the dialog', async () => {
-    // The dialog seeds four `useState` calls and never resyncs them, so replacing `dialog` while
-    // it is mounted would leave the heading describing one flow and the fields holding the last
-    // one's answers — and the create would go out with the wrong `startsFrom`. The explorer's
-    // New/Derive/Override buttons are reachable this way: the backdrop blocks pointer events but
-    // not focus, and there is no focus trap, so Tab out of the dialog wraps straight into them.
+  it('keeps the whole form off the dialog element itself, where a click would dismiss it', async () => {
+    // `Modal` reports a click whose target *is* the dialog as a backdrop click — the backdrop
+    // belongs to the element, so there is no other node to compare against. That is only sound
+    // while the element has no self-area to click on, and this form's 16px frame and 12px row gaps
+    // used to be exactly that: padding box and flex gaps hit-test as the element, so a click on the
+    // frame or in any band between rows dismissed the dialog and destroyed everything typed.
+    //
+    // The rhythm lives on an inner wrapper now, which covers the element edge to edge — true only
+    // while that wrapper is the dialog's one in-flow child. jsdom computes no layout, so the
+    // *consequence* is unprovable here and `propositions.spec.ts › a click inside the authoring
+    // dialog keeps what was typed` measures it in a browser. The *cause* is this one structure.
     const client = stubClient();
-    renderPage(client, 'customer.overridden');
-    await screen.findByText('v1');
-
-    await userEvent.click(await screen.findByRole('button', { name: /derive/i }));
-    expect((screen.getByLabelText('Name') as HTMLInputElement).value).toBe('customer.');
-
+    renderPage(client);
+    await openExplorer();
+    await screen.findByRole('treeitem', { name: /is-active/ });
     await userEvent.click(screen.getByRole('button', { name: /^new$/i }));
 
-    expect(screen.getByRole('dialog').getAttribute('aria-label')).toBe('New proposition');
-    expect((screen.getByLabelText('Name') as HTMLInputElement).value).toBe('');
+    const dialog = screen.getByRole('dialog');
+    // Close floats over the corner rather than sitting in the flow, so it is not part of the count.
+    const close = screen.getByRole('button', { name: /close/i });
+    const inFlow = [...dialog.children].filter((child) => child !== close);
+
+    expect(inFlow.map((child) => child.className)).toEqual(['dialog-form']);
+    // …and the wrapper is the form, not an empty box the fields sit outside of.
+    expect(inFlow[0]!.contains(screen.getByLabelText('Name'))).toBe(true);
+    expect(inFlow[0]!.contains(screen.getByRole('button', { name: /create/i }))).toBe(true);
   });
 
   it('does not offer a quarantined authored proposition as a source', async () => {
@@ -529,6 +588,7 @@ describe('PropositionsPage', () => {
       ]),
     });
     renderPage(client);
+    await openExplorer();
     await screen.findByRole('treeitem', { name: /sound/ });
 
     await userEvent.click(screen.getByRole('button', { name: /^new$/i }));
@@ -541,6 +601,7 @@ describe('PropositionsPage', () => {
       createProposition: vi.fn().mockResolvedValue({ outcome: 'nameTaken' }),
     });
     renderPage(client);
+    await openExplorer();
     await screen.findByRole('treeitem', { name: /is-active/ });
 
     await userEvent.click(screen.getByRole('button', { name: /^new$/i }));
@@ -557,6 +618,7 @@ describe('PropositionsPage', () => {
     renderPage(client, 'customer.derived');
     await waitFor(() => expect(client.getProposition).toHaveBeenCalled());
 
+    await openExplorer();
     await userEvent.click(await screen.findByRole('button', { name: /^delete$/i }));
 
     expect((await screen.findByRole('alert')).textContent).toContain('customer.other');
@@ -567,6 +629,7 @@ describe('PropositionsPage', () => {
     const { onSelect } = renderPage(client, 'customer.derived');
     await waitFor(() => expect(client.getProposition).toHaveBeenCalled());
 
+    await openExplorer();
     await userEvent.click(await screen.findByRole('button', { name: /^delete$/i }));
 
     // DELETE answers the same `{ version: 0 }` either way, so the authored-vs-overridden
@@ -579,6 +642,7 @@ describe('PropositionsPage', () => {
     const { onSelect } = renderPage(client, 'customer.overridden');
     await waitFor(() => expect(client.getProposition).toHaveBeenCalledTimes(1));
 
+    await openExplorer();
     await userEvent.click(await screen.findByRole('button', { name: /revert/i }));
 
     // The name survives a revert — it is served by the compiled spec now — so it stays selected,
@@ -588,9 +652,87 @@ describe('PropositionsPage', () => {
     expect(onSelect).not.toHaveBeenCalledWith(null);
   });
 
+  it('opens the explorer from the toolbar', async () => {
+    renderPage();
+
+    expect(screen.queryByRole('dialog', { name: 'Propositions' })).toBeNull();
+    await openExplorer();
+
+    expect(screen.getByRole('dialog', { name: 'Propositions' })).toBeTruthy();
+  });
+
+  it('opens the explorer with ⌘K', async () => {
+    renderPage();
+
+    await userEvent.keyboard('{Meta>}k{/Meta}');
+
+    expect(screen.getByRole('dialog', { name: 'Propositions' })).toBeTruthy();
+  });
+
+  it('leaves ⌘K inert while the authoring dialog is open, rather than stacking a palette over it', async () => {
+    // The shortcut is bound on `window` so it works wherever focus is, and a keydown inside a
+    // modal <dialog> still bubbles there — so without a guard ⌘K mounts a second dialog on top of
+    // the first. `openDialog` already refuses to do that in the other direction, and this is the
+    // same rule from the other side: choosing a row in the stacked palette navigates the page
+    // underneath, discarding a form the user is part-way through filling in.
+    renderPage();
+    await openExplorer();
+    await userEvent.click(screen.getByRole('button', { name: 'New' }));
+    await screen.findByRole('dialog', { name: 'New proposition' });
+
+    await userEvent.keyboard('{Meta>}k{/Meta}');
+
+    expect(screen.queryByRole('dialog', { name: 'Propositions' })).toBeNull();
+    expect(screen.getByRole('dialog', { name: 'New proposition' })).toBeTruthy();
+  });
+
+  it('claims ⌘K from the browser rather than letting both fire', () => {
+    // jsdom binds nothing to ⌘K, so the browser default this exists to suppress cannot be
+    // observed here. What can is the thing a real browser actually reads — that the handler marked
+    // the event default-prevented — and `fireEvent` returns false exactly when it did.
+    renderPage();
+
+    const notPrevented = fireEvent.keyDown(window, { key: 'k', metaKey: true });
+
+    expect(notPrevented).toBe(false);
+  });
+
+  it('opens the explorer fresh, discarding the previous query', async () => {
+    // The palette unmounts on close, so this only holds while the query lives inside it. Move
+    // that state up to the page and this breaks.
+    renderPage();
+    await openExplorer();
+    await userEvent.type(screen.getByRole('combobox'), 'derived');
+    await userEvent.click(screen.getByRole('button', { name: /close/i }));
+
+    await openExplorer();
+
+    expect(screen.getByRole('combobox')).toHaveProperty('value', '');
+  });
+
+  it('closes the explorer once a proposition is chosen', async () => {
+    const { onSelect } = renderPage();
+    await openExplorer();
+
+    await userEvent.type(screen.getByRole('combobox'), 'derived');
+    await userEvent.keyboard('{Enter}');
+
+    expect(onSelect).toHaveBeenCalledWith('customer.derived');
+    expect(screen.queryByRole('dialog', { name: 'Propositions' })).toBeNull();
+  });
+
+  it('opens the document viewer from the toolbar', async () => {
+    renderPage();
+
+    await userEvent.click(screen.getByRole('button', { name: 'JSON' }));
+
+    expect(screen.getByRole('dialog', { name: /document/i })).toBeTruthy();
+  });
+
   it('refreshes the listing after a successful create', async () => {
     const client = stubClient();
     renderPage(client);
+    await openExplorer();
     await screen.findByRole('treeitem', { name: /is-active/ });
     const before = client.listPropositions.mock.calls.length;
 

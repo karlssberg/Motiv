@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { PropositionListEntry } from '@motiv/rules-core';
+import { Modal } from '../shell/Modal.js';
 
 /** What the New / Derive / Override flows start from. */
 export interface DialogSeed {
@@ -51,12 +52,10 @@ export interface DialogValues {
  * already records exactly what a "derived from" edge would, and layering records the override.
  * What separates them is only how much of the form is already answered.
  *
- * `aria-modal` here is a claim the markup does not keep: the backdrop blocks pointer events but not
- * focus, so Tab leaves the dialog and lands in the page behind it, and Escape does nothing. The
- * intended fix is the native `<dialog>` element with `showModal()`, which brings the focus trap,
- * Escape-to-close and inertness of the rest of the document at no dependency cost — a larger change
- * than this pass, and independent of the `key` the page mounts this with, which addresses only the
- * stale-state consequence rather than the reachability that exposes it.
+ * Rendered on `Modal`, which brings the focus trap, Escape-to-close and inertness of the rest of
+ * the document via the native `<dialog>` element's `showModal()` — this used to be a hand-rolled
+ * backdrop div with `aria-modal="true"` and none of those behaviours, which left a screen-reader
+ * user with focus on a button `aria-modal` had just told assistive technology to hide.
  */
 export function PropositionDialog(props: {
   seed: DialogSeed;
@@ -93,6 +92,8 @@ export function PropositionDialog(props: {
     .map((entry) => entry.name)
     .sort();
 
+  const nothingToStartFrom = sourceNames.length === 0;
+
   // Derived rather than corrected in an effect: changing the model type (or typing the name of the
   // very proposition picked) can invalidate the choice, and a selection that no longer appears in
   // the list must not be what a create is built from.
@@ -102,6 +103,8 @@ export function PropositionDialog(props: {
   // One statement of what makes the form submittable, shared by the Enter key and the button.
   const canCreate = trimmedName !== '' && selectedSource !== null;
 
+  // Guards itself rather than relying on the caller, so it is safe as the Create button's handler:
+  // `aria-disabled` — see below — does not stop a click reaching it.
   const submit = (): void => {
     // `canCreate` already covers both, and is restated only because the type-checker cannot narrow
     // `selectedSource` through it.
@@ -115,8 +118,16 @@ export function PropositionDialog(props: {
   };
 
   return (
-    <div className="dialog-backdrop" role="presentation">
-      <div className="dialog" role="dialog" aria-modal="true" aria-label={props.seed.title}>
+    <Modal label={props.seed.title} onClose={props.onCancel} className="dialog" fullscreenOnMobile>
+      {/* Everything is wrapped rather than placed straight in the `<dialog>`, and the form's
+          padding and row gaps ride on this wrapper. `Modal` reads a click whose target is the
+          dialog element as a backdrop click — the backdrop is part of that element, so there is
+          nothing else to compare against — and an element's padding box and flex gaps hit-test as
+          the element too. With the rhythm on the dialog, a click on the frame around the form or
+          in any band between its rows was a backdrop click, and dismissing threw away every field
+          the user had filled in. The wrapper covers the element edge to edge, so nothing inside
+          the dialog's bounds targets the dialog. */}
+      <div className="dialog-form">
         <h2 className="dialog-title">{props.seed.title}</h2>
 
         {/* The hint sits outside the <label>: a label's whole text content becomes its control's
@@ -153,7 +164,7 @@ export function PropositionDialog(props: {
             <span>Starts from</span>
             <select
               value={selectedSource ?? ''}
-              disabled={sourceNames.length === 0}
+              disabled={nothingToStartFrom}
               onChange={(event) => setStartsFrom(event.target.value)}
             >
               {sourceNames.map((sourceName) => (
@@ -161,7 +172,7 @@ export function PropositionDialog(props: {
               ))}
             </select>
           </label>
-          {sourceNames.length === 0
+          {nothingToStartFrom
             ? (
               // Referenced from Create below: the select is disabled and so out of the tab order,
               // which would leave the reason the button is dead unreachable from the button itself.
@@ -184,17 +195,21 @@ export function PropositionDialog(props: {
 
         <div className="dialog-actions">
           <button type="button" className="btn" onClick={props.onCancel}>Cancel</button>
+          {/* `aria-disabled`, not `disabled`: `disabled` removes the button from the tab order in
+              every major browser, which would leave a keyboard screen-reader user unable to reach it
+              and so unable to hear the `aria-describedby` explanation. Matches `Toolbar`'s pattern —
+              an unavailable control that stays focusable, and a handler that returns early. */}
           <button
             type="button"
             className="btn"
-            disabled={!canCreate}
-            aria-describedby={sourceNames.length === 0 ? NO_SOURCE_ID : undefined}
+            aria-disabled={canCreate ? undefined : true}
+            aria-describedby={nothingToStartFrom ? NO_SOURCE_ID : undefined}
             onClick={submit}
           >
             Create
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

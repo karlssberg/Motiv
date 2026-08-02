@@ -1,4 +1,5 @@
 import { test, expect, type APIRequestContext, type Page } from '@playwright/test';
+import { chooseFromPalette, expectDocument } from './shell.js';
 
 const RULE_URL = '/api/rules/rules/can-checkout';
 
@@ -35,9 +36,8 @@ test('editing and saving a rule changes the next checkout, and stale saves confl
 
   await page.goto('/');
 
-  // Load the live rule from the breadcrumb's leaf: version + code-default note appear.
-  await page.getByRole('combobox', { name: /^rule,/ }).click();
-  await page.getByRole('option', { name: 'can-checkout' }).click();
+  // Load the live rule from the toolbar's palette: version + code-default note appear.
+  await chooseFromPalette(page, 'Rules', 'can-checkout');
   await expect(versionBadge(page, loadedVersion)).toBeVisible();
   await expect(page.getByText(/code-defined default/)).toBeVisible();
 
@@ -50,7 +50,7 @@ test('editing and saving a rule changes the next checkout, and stale saves confl
   await page.keyboard.press('ControlOrMeta+a');
   await page.keyboard.type('!customer.is-active');
   await page.keyboard.press('Enter');
-  await expect(page.getByLabel('rule document')).toContainText('"not"');
+  await expectDocument(page, '"not"');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   const savedVersion = loadedVersion + 1;
   await expect(versionBadge(page, savedVersion)).toBeVisible();
