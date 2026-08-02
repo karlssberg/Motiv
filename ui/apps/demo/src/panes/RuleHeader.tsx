@@ -7,6 +7,7 @@ import { AppBar } from './AppBar.js';
 import { DocumentModal } from './DocumentModal.js';
 import { CommandPalette } from '../shell/CommandPalette.js';
 import { Toolbar } from '../shell/Toolbar.js';
+import { useCommandKey } from '../shell/useCommandKey.js';
 import { IconJson, IconOpen, IconSave } from '../shell/icons.js';
 
 /**
@@ -76,19 +77,9 @@ export function RuleHeader(props: {
     };
   }, [props.client]);
 
-  // Same shortcut as the propositions page: hunting for a toolbar button is what a shortcut
-  // exists to avoid. `preventDefault` because ⌘K/Ctrl-K is bound in browsers (the address bar's
-  // search) and that must not fire as well.
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent): void => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
-        event.preventDefault();
-        setPicking(true);
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  // The same shortcut the propositions page opens its palette with — one implementation, so the
+  // two cannot drift into meaning different things.
+  useCommandKey(() => setPicking(true));
 
   const load = async (name: string): Promise<void> => {
     if (!name) {

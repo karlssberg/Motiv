@@ -244,9 +244,10 @@ function ExplorerFooter(props: {
       id: 'override',
       label: 'Override',
       icon: IconOverride,
-      onActivate: () => {
-        if (entry !== null && overrideUnavailable === undefined) actions.onOverride(entry.name);
-      },
+      // Only the null check is made here, as with Derive and Delete: `unavailable` is what stops
+      // an activation, and Toolbar returns early on it. Restating the reason here as well would
+      // read as though this one action did not trust that, and could fall out of step with it.
+      onActivate: () => { if (entry !== null) actions.onOverride(entry.name); },
       unavailable: overrideUnavailable,
     },
     ...(deletable ? [deleteAction] : []),

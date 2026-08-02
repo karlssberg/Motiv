@@ -57,10 +57,21 @@ export function Modal(props: {
 
   return (
     <dialog ref={ref} className={classes} aria-label={props.label} onClick={onClick}>
+      {props.children}
+      {/*
+        Last in the document, not first, though it is painted top-right either way — it is
+        absolutely positioned, so its place here is about focus rather than layout. `showModal()`
+        runs the dialog focusing steps, which hand focus to the first focusable descendant unless
+        one carries the `autofocus` *attribute* — and React's `autoFocus` prop is not that
+        attribute, it is an imperative `focus()` during commit that `showModal()` then overrides.
+        With this button first, every modal in the app opened with focus on Close: the palette's
+        caret was not in its search box and the authoring dialog's was not in its Name field,
+        whatever their own markup asked for. jsdom's `showModal` shim sets `open` and nothing else,
+        so no unit test could see it.
+      */}
       <button type="button" className="ghost modal-close" aria-label="Close" onClick={onClose}>
         <IconClose size={15} />
       </button>
-      {props.children}
     </dialog>
   );
 }

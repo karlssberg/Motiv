@@ -10,6 +10,7 @@ import { EditorPane } from './EditorPane.js';
 import { EvaluatePane } from './EvaluatePane.js';
 import { DocumentModal } from './DocumentModal.js';
 import { Toolbar } from '../shell/Toolbar.js';
+import { useCommandKey } from '../shell/useCommandKey.js';
 import { IconJson, IconOpen, IconSave } from '../shell/icons.js';
 import { PropositionExplorer } from '../explorer/PropositionExplorer.js';
 import { PropositionDialog, type DialogSeed, type DialogValues } from '../explorer/PropositionDialog.js';
@@ -52,6 +53,15 @@ function describeFailure(result: PropositionSaveResult): string | null {
  */
 function describeThrown(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+/**
+ * The namespace a derivation of `name` should land in: everything up to and including the final
+ * dot, or the empty string when the name has no namespace to keep.
+ */
+function namespacePrefixOf(name: string): string {
+  const cut = name.lastIndexOf('.');
+  return cut < 0 ? '' : name.slice(0, cut + 1);
 }
 
 /**
@@ -103,19 +113,9 @@ export function PropositionsPage(props: {
   const selectedRef = useRef(props.selected);
   useEffect(() => { selectedRef.current = props.selected; }, [props.selected]);
 
-  // The palette is the only way to the listing now, so it needs a key of its own — hunting for a
-  // toolbar button is what a shortcut exists to avoid. `preventDefault` because ⌘K/Ctrl-K is bound
-  // in browsers (the address bar's search) and that must not fire as well.
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent): void => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
-        event.preventDefault();
-        setExplorerOpen(true);
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  // The same shortcut the rules page opens its palette with — one implementation, so the two
+  // cannot drift into meaning different things.
+  useCommandKey(() => setExplorerOpen(true));
 
   const loadEntries = useCallback(async (): Promise<void> => {
     setEntries(await props.client.listPropositions());
@@ -178,8 +178,9 @@ export function PropositionsPage(props: {
     return () => { cancelled = true; };
   }, [props.client, props.selected, store, reloads]);
 
-  const modelTypes = [...new Set(entries.map((entry) => entry.modelType))].sort();
-  const defaultModelType = modelTypes[0] ?? MODEL_TYPE;
+  // The alphabetically first model type in the listing: what a New starts on, and what stands in
+  // for an entry the listing has not got. Not de-duplicated first, since only the first is read.
+  const defaultModelType = entries.map((entry) => entry.modelType).sort()[0] ?? MODEL_TYPE;
 
   const save = async (): Promise<void> => {
     if (!loaded) return;
@@ -345,7 +346,7 @@ export function PropositionsPage(props: {
             onClose: () => setExplorerOpen(false),
             onDerive: (name) => openDialog({
               // Prefilled to the source's namespace, so a derivation lands beside its origin.
-              name: name.includes('.') ? `${name.slice(0, name.lastIndexOf('.'))}.` : '',
+              name: namespacePrefixOf(name),
               modelType: modelTypeOf(name),
               startsFrom: name,
               title: `Derive from ${name}`,

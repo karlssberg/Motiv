@@ -1,5 +1,9 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 import { openDsl, replaceBuffer } from './dsl-surface.js';
+import {
+  chooseFromPalette, closePalette, expectDocument, expectInTree, openPalette, palette,
+  paletteAction,
+} from './shell.js';
 
 const API = '/api/rules';
 
@@ -98,20 +102,19 @@ test('an authored proposition is a building block the live rule follows', async 
   // Author one over a compiled spec. Deliberately not `customer.is-active`, which is the shared
   // editor's seeded draft — a create that ignored the picker and cloned the draft would otherwise
   // produce the very document this asserts.
-  await page.getByRole('button', { name: 'New', exact: true }).click();
+  await paletteAction(page, 'New');
   await createFromDialog(page, 'New proposition', ELIGIBLE, 'customer.has-orders');
 
   // It lands in the tree under its namespace, badged as authored rather than compiled…
-  await expect(page.getByRole('treeitem', { name: 'e2e-eligible authored' })).toBeVisible();
+  await expectInTree(page, 'e2e-eligible authored');
   // …and its body is the reference the picker chose.
-  await expect(page.getByLabel('rule document')).toContainText('"customer.has-orders"');
+  await expectDocument(page, '"customer.has-orders"');
 
   // Reference it from the live rule. The rule is saved exactly once, here.
   await page.getByRole('tab', { name: 'Rules' }).click();
-  await page.getByRole('combobox', { name: /^rule,/ }).click();
-  await page.getByRole('option', { name: RULE }).click();
+  await chooseFromPalette(page, 'Rules', RULE);
   await replaceBuffer(await openDsl(page), ELIGIBLE);
-  await expect(page.getByLabel('rule document')).toContainText(`"${ELIGIBLE}"`);
+  await expectDocument(page, `"${ELIGIBLE}"`);
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.getByText(new RegExp(`^v${ruleBaseline + 1}\\b`))).toBeVisible();
 
@@ -124,15 +127,15 @@ test('an authored proposition is a building block the live rule follows', async 
 
   // Redefine the proposition. The rule is never opened again.
   await page.getByRole('tab', { name: 'Propositions' }).click();
-  await page.getByRole('treeitem', { name: 'e2e-eligible authored' }).click();
-  await expect(page.getByLabel('rule document')).toContainText('"customer.has-orders"');
+  await chooseFromPalette(page, 'Propositions', ELIGIBLE);
+  await expectDocument(page, '"customer.has-orders"');
 
   // The blast radius is on the page before the edit is saved, not sprung afterwards.
   await expect(page.getByText('Changing this affects 1 rule:')).toBeVisible();
   await expect(page.getByRole('listitem').filter({ hasText: RULE })).toBeVisible();
 
   await replaceBuffer(await openDsl(page), 'customer.is-active');
-  await expect(page.getByLabel('rule document')).toContainText('"customer.is-active"');
+  await expectDocument(page, '"customer.is-active"');
   // The count on the button is the same blast radius, restated where the commit happens.
   await page.getByRole('button', { name: 'Save (1)' }).click();
   await expect(page.getByText(/^v2\b/)).toBeVisible();
@@ -151,17 +154,21 @@ test('an authored proposition is a building block the live rule follows', async 
 test('deriving from a proposition shows the blast radius on the one it was derived from', async ({ page }) => {
   await page.goto('/#/propositions');
 
-  await page.getByRole('button', { name: 'New', exact: true }).click();
+  await paletteAction(page, 'New');
   await createFromDialog(page, 'New proposition', BASE, 'customer.is-active');
-  await expect(page.getByRole('treeitem', { name: 'e2e-base authored' })).toBeVisible();
 
-  // Derive seeds the source, so the dialog already knows what the new one starts from.
-  await page.getByRole('button', { name: 'Derive from this' }).click();
+  // One trip through the palette proves both: the new proposition is browsable in the tree under
+  // its namespace, and Derive — aimed at the selection while the palette is browsing — seeds the
+  // source, so the dialog already knows what the new one starts from.
+  await openPalette(page, 'Propositions');
+  await expect(palette(page, 'Propositions').getByRole('treeitem', { name: 'e2e-base authored' }))
+    .toBeVisible();
+  await palette(page, 'Propositions').getByRole('button', { name: 'Derive', exact: true }).click();
   await createFromDialog(page, `Derive from ${BASE}`, DERIVED, BASE);
-  await expect(page.getByRole('treeitem', { name: 'e2e-derived authored' })).toBeVisible();
+  await expectInTree(page, 'e2e-derived authored');
 
   // Selecting the source shows what an edit to it would reach.
-  await page.getByRole('treeitem', { name: 'e2e-base authored' }).click();
+  await chooseFromPalette(page, 'Propositions', BASE);
   await expect(page.getByText('Changing this affects 1 proposition:')).toBeVisible();
   await expect(page.getByRole('listitem').filter({ hasText: DERIVED })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Save (1)' })).toBeVisible();
@@ -175,9 +182,71 @@ test('a proposition something else references cannot be deleted', async ({ page,
   await page.goto(`/#/propositions/${BASE}`);
   await expect(page.getByRole('button', { name: 'Save (1)' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Delete', exact: true }).click();
+  // Delete is a palette action, and the only one that leaves the palette standing — there is
+  // nothing to go on to. Dismissed here so the banner underneath is reachable again.
+  await paletteAction(page, 'Delete');
+  await closePalette(page, 'Propositions');
 
   await expect(page.getByRole('alert')).toContainText(DERIVED);
   // Refused whole: the proposition is still there to select.
-  await expect(page.getByRole('treeitem', { name: 'e2e-base authored' })).toBeVisible();
+  await expectInTree(page, 'e2e-base authored');
+});
+
+/*
+ * The three below are the only home for what `test/setup.ts`'s jsdom shim cannot model. That shim
+ * sets `open` on `showModal()` and does nothing else — jsdom has no top layer — so focus trapping,
+ * backdrop inertness, Escape, and geometry of any kind are unobservable to all 389 unit tests. A
+ * browser is the only place they can be proven, and this is the only browser.
+ */
+
+test('the palette traps focus, closes on Escape, and makes the page behind it inert', async ({ page }) => {
+  await page.goto('/#/propositions');
+  await openPalette(page, 'Propositions');
+
+  // Focus starts inside and stays inside: tabbing from the last control wraps to the first
+  // rather than escaping to the page behind.
+  await expect(palette(page, 'Propositions').getByRole('combobox')).toBeFocused();
+  await page.keyboard.press('Tab');
+  const inside = await page.evaluate(() =>
+    document.querySelector('dialog[open]')?.contains(document.activeElement) ?? false);
+  expect(inside).toBe(true);
+
+  // The page behind is inert: the toolbar button that opened this cannot take focus back, which is
+  // the guarantee `showModal()` makes and an `aria-modal` div never did.
+  // Asserted through focus rather than visibility: Playwright's visibility is geometric, and a
+  // measurement against this very button behind an open modal returned `true` — inert content is
+  // still laid out, so `not.toBeVisible()` would have passed for no reason and failed to notice
+  // if the modal stopped being modal. Not taking focus is the guarantee itself.
+  const openButton = page.getByRole('button', { name: 'Open' });
+  await openButton.evaluate((button) => (button as HTMLButtonElement).focus());
+  const stillInside = await page.evaluate(() =>
+    document.querySelector('dialog[open]')?.contains(document.activeElement) ?? false);
+  expect(stillInside).toBe(true);
+
+  await page.keyboard.press('Escape');
+  await expect(palette(page, 'Propositions')).toBeHidden();
+});
+
+test('the palette fills the screen on a phone', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 780 });
+  await page.goto('/#/propositions');
+  await openPalette(page, 'Propositions');
+
+  // jsdom computes no styles at all, so this is the only automated check on modal geometry that
+  // exists: below 900px `modal-mobile-full` must beat every other rule that sets a max-width on
+  // the same element, and all of them are single-class selectors — source order is the whole of
+  // the cascade between them.
+  const box = await palette(page, 'Propositions').boundingBox();
+  expect(box?.width).toBe(390);
+});
+
+test('the document viewer opens from the toolbar on both pages', async ({ page }) => {
+  await page.goto('/#/propositions');
+  await page.getByRole('button', { name: 'JSON' }).click();
+  await expect(page.getByRole('dialog', { name: /document/i })).toBeVisible();
+  await page.keyboard.press('Escape');
+
+  await page.goto('/#/rules');
+  await page.getByRole('button', { name: 'JSON' }).click();
+  await expect(page.getByRole('dialog', { name: /document/i })).toBeVisible();
 });

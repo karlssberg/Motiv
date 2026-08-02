@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { expectDocument } from './shell.js';
 
 test('build a rule, then evaluate it end to end', async ({ page }) => {
   await page.goto('/');
@@ -12,8 +13,8 @@ test('build a rule, then evaluate it end to end', async ({ page }) => {
   await page.keyboard.type('customer.is-active & customer.is-adult');
   await page.keyboard.press('Enter');
 
-  // The JSON pane reflects the composite document.
-  await expect(page.getByLabel('rule document')).toContainText('"and"');
+  // The document modal reflects the composite document.
+  await expectDocument(page, '"and"');
 
   // Evaluate against the prefilled sample model.
   await page.getByRole('button', { name: 'Evaluate' }).click();

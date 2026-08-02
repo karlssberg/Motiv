@@ -110,7 +110,12 @@ test('committing by clicking the caret leaves the new subtree revealed', async (
   // the row has actually re-kinded is what makes the release land on the control the gesture was
   // never aimed at, every time.
   await page.mouse.down();
-  await expect(page.getByLabel('rule document')).toContainText('"and"');
+  // Waited on the caret itself rather than on the document, which now lives behind a modal: the
+  // gesture is still mid-press here, and opening one would tear the press and the release apart.
+  // The control changing identity under the pointer *is* what this test needs to have happened —
+  // `details for $.rule` becoming `collapse $.rule` says the commit landed and the row re-kinded,
+  // which is exactly what the JSON read used to stand in for.
+  await expect(page.getByRole('button', { name: 'collapse $.rule', exact: true })).toBeVisible();
   await page.mouse.up();
   // The root, its two operands, and the nested or's two — the whole subtree, still on screen.
   await expect(page.locator('.node-row')).toHaveCount(5);

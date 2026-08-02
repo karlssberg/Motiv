@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { openDsl, replaceBuffer } from './dsl-surface.js';
+import { expectDocument } from './shell.js';
 
 test('the DSL surface shows the rule as text, and editing the text drives the document', async ({ page }) => {
   await page.goto('/');
@@ -9,11 +10,9 @@ test('the DSL surface shows the rule as text, and editing the text drives the do
 
   await replaceBuffer(content, 'customer.is-active && customer.is-adult');
 
-  // The buffer debounce-commits into the store, so the JSON pane follows the text.
+  // The buffer debounce-commits into the store, so the document follows the text.
   // `&&` is the short-circuiting operator, so it prints as `andAlso`.
-  const document = page.getByLabel('rule document');
-  await expect(document).toContainText('"andAlso"');
-  await expect(document).toContainText('"customer.is-adult"');
+  await expectDocument(page, '"andAlso"', '"customer.is-adult"');
 });
 
 test('an unknown spec is reported as a lint diagnostic', async ({ page }) => {

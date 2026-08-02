@@ -1382,6 +1382,14 @@ button.node-dsl {
   padding: calc(var(--space) * 2);
 }
 
+/* The palette's measure, stated here rather than beside the rest of `.palette` further down, for
+   the same reason `.dialog` sits here: it is a single-class selector setting `max-width` on the
+   same element as `.modal-mobile-full` below, so left where it read most naturally it would win on
+   source order and cap the phone-fullscreen palette at 92vw — a 358.8px sheet on a 390px screen,
+   with the border and radius already stripped off it. No unit test can see that; only the e2e
+   `boundingBox` check can. */
+.palette { max-width: min(560px, 92vw); }
+
 @media (max-width: 900px) {
   .modal-mobile-full {
     max-width: none;
@@ -1430,8 +1438,6 @@ button.node-dsl {
   white-space: nowrap;
   border: 0;
 }
-
-.palette { max-width: min(560px, 92vw); }
 
 .palette-search {
   display: flex;

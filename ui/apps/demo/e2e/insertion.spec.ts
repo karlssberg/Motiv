@@ -1,4 +1,5 @@
 import { test, expect, type Locator, type Page } from '@playwright/test';
+import { closeDocument, expectDocument, openDocument } from './shell.js';
 
 /** Replaces the root row's expression by typing DSL into it, the way authoring works elsewhere. */
 async function buildRootExpression(page: Page, dsl: string): Promise<void> {
@@ -43,7 +44,7 @@ test('the strip scrolls the hovered mark into view', async ({ page }) => {
     { length: 20 }, (_, i) => (i % 2 === 0 ? 'customer.is-active' : 'customer.is-adult'),
   ).join(' & ');
   await buildRootExpression(page, longExpression);
-  await expect(page.getByLabel('rule document')).toContainText('"and"');
+  await expectDocument(page, '"and"');
 
   const strip = page.locator('.dsl-strip');
   // Building the expression can itself leave a row hovered (the cursor rests over whatever
@@ -81,7 +82,7 @@ test('the strip scrolls the hovered mark into view', async ({ page }) => {
 test('inserting an operand round-trips into the DSL pane', async ({ page }) => {
   await page.goto('/');
   await buildRootExpression(page, 'customer.is-active & customer.is-adult');
-  await expect(page.getByLabel('rule document')).toContainText('"and"');
+  await expectDocument(page, '"and"');
 
   await page.getByRole('button', { name: 'insert after $.rule.and[0]', exact: true }).click();
   await expect(pendingContent(page)).toBeFocused();
@@ -90,7 +91,7 @@ test('inserting an operand round-trips into the DSL pane', async ({ page }) => {
 
   // The phantom row is gone once the commit lands — the insertion applied to the document.
   await expect(page.locator('.node-row-pending')).toHaveCount(0);
-  await expect(page.getByLabel('rule document')).toContainText('customer.has-orders');
+  await expectDocument(page, 'customer.has-orders');
 
   await page.getByRole('tab', { name: 'DSL' }).click();
   const content = page.locator('.cm-content');
@@ -124,7 +125,7 @@ test('inserting an operand round-trips into the DSL pane', async ({ page }) => {
 test('blurring a parseable slot by clicking elsewhere commits it exactly once', async ({ page }) => {
   await page.goto('/');
   await buildRootExpression(page, 'customer.is-active & customer.is-adult');
-  await expect(page.getByLabel('rule document')).toContainText('"and"');
+  await expectDocument(page, '"and"');
 
   await page.getByRole('button', { name: 'insert after $.rule.and[0]', exact: true }).click();
   await expect(pendingContent(page)).toBeFocused();
@@ -135,7 +136,7 @@ test('blurring a parseable slot by clicking elsewhere commits it exactly once', 
   await page.locator('.dsl-strip-label').click();
 
   await expect(page.locator('.node-row-pending')).toHaveCount(0);
-  const document = page.getByLabel('rule document');
+  const document = await openDocument(page);
   await expect(document).toContainText('customer.has-orders');
   // Exactly one insertion: not the pre-fix double-commit, and not a silently dropped one. A
   // `text=` locator would only prove the substring appears *somewhere* in the one `<pre>`
@@ -144,12 +145,13 @@ test('blurring a parseable slot by clicking elsewhere commits it exactly once', 
     const text = await document.textContent();
     return (text?.match(/"customer\.has-orders"/g) ?? []).length;
   }).toBe(1);
+  await closeDocument(page);
 });
 
 test('cancelling with Escape does not insert the cancelled buffer', async ({ page }) => {
   await page.goto('/');
   await buildRootExpression(page, 'customer.is-active & customer.is-adult');
-  await expect(page.getByLabel('rule document')).toContainText('"and"');
+  await expectDocument(page, '"and"');
 
   await page.getByRole('button', { name: 'insert after $.rule.and[0]', exact: true }).click();
   await expect(pendingContent(page)).toBeFocused();
@@ -158,8 +160,9 @@ test('cancelling with Escape does not insert the cancelled buffer', async ({ pag
   await page.keyboard.press('Escape');
 
   await expect(page.locator('.node-row-pending')).toHaveCount(0);
-  const document = page.getByLabel('rule document');
+  const document = await openDocument(page);
   await expect(document).not.toContainText('customer.has-orders');
   await expect(document).toContainText('"customer.is-active"');
   await expect(document).toContainText('"customer.is-adult"');
+  await closeDocument(page);
 });

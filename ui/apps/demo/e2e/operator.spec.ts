@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { expectDocument } from './shell.js';
 
 /**
  * The operator badge is a custom control, so the behaviour a native `<select>` would have supplied
@@ -30,5 +31,5 @@ test('an operator can be changed from the keyboard alone', async ({ page }) => {
   await expect(page.getByRole('listbox')).toHaveCount(0);
   await expect(badge).toHaveText('XOR');
   await expect(badge).toBeFocused();
-  await expect(page.getByLabel('rule document')).toContainText('"xor"');
+  await expectDocument(page, '"xor"');
 });

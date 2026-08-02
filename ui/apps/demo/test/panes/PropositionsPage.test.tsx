@@ -545,9 +545,11 @@ describe('PropositionsPage', () => {
     // The dialog seeds four `useState` calls and never resyncs them, so replacing `dialog` while
     // it is mounted would leave the heading describing one flow and the fields holding the last
     // one's answers — and the create would go out with the wrong `startsFrom`. Opening a flow now
-    // dismisses the palette it was reached from, but that does not close this off: the dialog is a
-    // plain div with no focus trap of its own, so ⌘K reopens the palette over it and its New is
-    // one click away, replacing the seed of a dialog that never went away.
+    // dismisses the palette it was reached from, but that does not close this off: the dialog's
+    // focus trap does not stop the shortcut, because ⌘K is bound on `window` and a keydown inside
+    // a modal `<dialog>` still bubbles all the way there. The palette reopens stacked *above* this
+    // dialog in the top layer, and its New is one click away — replacing the seed of a dialog that
+    // never went away.
     const client = stubClient();
     renderPage(client, 'customer.overridden');
     await screen.findByText('v1');

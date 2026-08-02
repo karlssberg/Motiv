@@ -7,6 +7,7 @@ import {
   type SchemaViolation,
 } from '@motiv/rules-core';
 import { MODEL_TYPE } from '../App.js';
+import { SchemaViolations } from './SchemaViolations.js';
 
 interface CheckoutResponse {
   approved: boolean;
@@ -97,15 +98,7 @@ export function CheckoutPane(props: { client?: RulesApiClient }) {
           Try checkout
         </button>
         {error && <p role="alert">{error}</p>}
-        {violations.length > 0 && (
-          <ul aria-label="schema violations" className="errors">
-            {violations.map((violation, i) => (
-              <li key={`${violation.path}-${i}`} role="alert" className="error">
-                {violation.path}: {violation.message}
-              </li>
-            ))}
-          </ul>
-        )}
+        <SchemaViolations violations={violations} />
         {outcome && (
           <div className="checkout-outcome">
             <strong className="outcome">{outcome.approved ? 'Approved' : 'Rejected'}</strong>
