@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Modal } from '../../src/shell/Modal.js';
 
@@ -73,5 +73,23 @@ describe('Modal', () => {
 
     await userEvent.click(screen.getByRole('dialog'));
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the dialog when a drag that began inside releases on the backdrop', () => {
+    // A `click` fires on the nearest common ancestor of where the press and the release landed —
+    // so a drag that starts on content and ends past the dialog's edge targets the dialog itself,
+    // exactly as a backdrop click does. Comparing only the click cannot tell them apart, and the
+    // one it gets wrong is the one that destroys work: drag-selecting the text in a field and
+    // releasing outside dismissed the authoring dialog and discarded every value typed into it.
+    //
+    // fireEvent rather than userEvent, because userEvent drives a *complete* press-and-release on
+    // one target and this is precisely the case where the two targets differ.
+    const onClose = vi.fn();
+    render(<Modal label="Propositions" onClose={onClose}><button>inside</button></Modal>);
+
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'inside' }));
+    fireEvent.click(screen.getByRole('dialog'));
+
+    expect(onClose).not.toHaveBeenCalled();
   });
 });

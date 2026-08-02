@@ -44,11 +44,24 @@ export function Modal(props: {
     return () => dialog.removeEventListener('cancel', cancel);
   }, [onClose]);
 
-  // The backdrop belongs to the dialog element itself, so a click on it targets the dialog while
-  // a click on any content targets a descendant. Comparing target to currentTarget is what tells
+  // The backdrop belongs to the dialog element itself, so a press on it targets the dialog while
+  // a press on any content targets a descendant. Comparing target to currentTarget is what tells
   // them apart — there is no separate backdrop node to listen on.
+  //
+  // Both ends of the gesture are checked, because `click` fires on the nearest common ancestor of
+  // the press and the release — so a drag that starts on content and ends past the dialog's edge
+  // arrives here targeting the dialog, indistinguishable from a backdrop click on the click alone.
+  // Drag-selecting the text in a field and releasing outside is the ordinary way to hit that, and
+  // it used to dismiss the authoring dialog and discard everything typed into it. The press is
+  // what carries the intent, so the press is what has to agree.
+  const pressedBackdrop = useRef(false);
+
+  const onMouseDown = (event: MouseEvent<HTMLDialogElement>): void => {
+    pressedBackdrop.current = event.target === event.currentTarget;
+  };
+
   const onClick = (event: MouseEvent<HTMLDialogElement>): void => {
-    if (event.target === event.currentTarget) onClose();
+    if (event.target === event.currentTarget && pressedBackdrop.current) onClose();
   };
 
   const classes = ['modal', props.fullscreenOnMobile === true ? 'modal-mobile-full' : null, props.className]
@@ -56,7 +69,7 @@ export function Modal(props: {
     .join(' ');
 
   return (
-    <dialog ref={ref} className={classes} aria-label={props.label} onClick={onClick}>
+    <dialog ref={ref} className={classes} aria-label={props.label} onMouseDown={onMouseDown} onClick={onClick}>
       {props.children}
       {/*
         Last in the document, not first, though it is painted top-right either way — it is
