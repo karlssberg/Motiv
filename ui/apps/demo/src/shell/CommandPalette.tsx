@@ -48,7 +48,6 @@ export function CommandPalette<T extends PaletteItem>(props: {
     () => (trimmed === '' ? props.items : props.items.filter((item) => props.match(item, trimmed))),
     // `props.match` is intentionally not a dependency: callers pass an inline arrow, so including
     // it would recompute on every render and defeat the memo entirely.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [props.items, trimmed],
   );
 

@@ -4,7 +4,17 @@ import userEvent from '@testing-library/user-event';
 import { CommandPalette } from '../../src/shell/CommandPalette.js';
 
 interface Row { id: string; }
-const ROWS: Row[] = [{ id: 'customer.is-active' }, { id: 'customer.is-adult' }, { id: 'orders.is-large' }];
+// A fourth "customer" row keeps the post-"customer"-filter match set at 3 rows instead of 2, so a
+// stale cursor of 2 (left over from two ArrowDowns) is *in bounds* and resolves to matches[2] —
+// the wrong row — rather than falling out of bounds to the same matches[0] a correct reset would
+// produce. Without this row, "resets the highlight when the query changes" cannot tell a real
+// reset from a cursor that merely overflowed to the same fallback answer.
+const ROWS: Row[] = [
+  { id: 'customer.is-active' },
+  { id: 'customer.is-adult' },
+  { id: 'orders.is-large' },
+  { id: 'customer.is-verified' },
+];
 
 const setup = (overrides: Partial<Parameters<typeof CommandPalette<Row>>[0]> = {}) => {
   const onChoose = vi.fn();
