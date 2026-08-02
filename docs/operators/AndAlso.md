@@ -10,8 +10,12 @@ You can perform a conditional AND (i.e., short-circuited) operation on two <xref
 
 * `left.AndAlso(right)`
 
-This is due to quirks regarding the overloading of the `&&` operator, only the `AndAlso()` method is
-available for use with propositions.
+Only the `AndAlso()` method is available for propositions because C# cannot overload `&&` directly.
+The expression `x && y` compiles to `T.false(x) ? x : T.&(x, y)`, and the selected `operator &` must
+take *and* return exactly `T` — so a short-circuiting operator on propositions would have to be built
+out of the eager `&`, which always evaluates both operands. `x && y` also short-circuits by returning
+`x` itself rather than a composed node, so it could not produce the `AndAlso` node that appears in a
+justification tree.
 
 The conditional AND will produce a new proposition that represents the logical AND of the two input propositions.
 When evaluating the resulting proposition, the right operand will only be evaluated if the left is satisfied.

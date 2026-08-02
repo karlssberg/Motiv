@@ -584,5 +584,36 @@ public class OrElsePolicyTests
 
         result.Justification.ShouldBe(expected);
     }
+
+    [Fact]
+    public void Should_select_the_last_evaluated_value_while_retaining_every_cause()
+    {
+        // Arrange
+        var left =
+            Spec.Build((object _) => false)
+                .WhenTrue("left-true")
+                .WhenFalse("left-false")
+                .Create("left");
+
+        var right =
+            Spec.Build((object _) => false)
+                .WhenTrue("right-true")
+                .WhenFalse("right-false")
+                .Create("right");
+
+        var policy = left.OrElse(right);
+
+        // Act
+        var result = policy.Evaluate(new object());
+
+        // Assert
+        result.Satisfied.ShouldBeFalse();
+
+        // Value is a *selection* — the last-evaluated operand, i.e. the `??` fallback.
+        result.Value.ShouldBe("right-false");
+
+        // Values is the full causal set. Value is deliberately NOT Values.Single().
+        result.Values.ShouldBe(["left-false", "right-false"]);
+    }
 }
 

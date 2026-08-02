@@ -127,6 +127,33 @@ When a binary operation has:
 - `policy.OrElse(policy)` returns a policy
 - All other operations return a spec
 
+Policy preservation follows **short-circuiting**. A short-circuiting combinator always has a
+well-defined last-evaluated operand, so a single `Value` is a total function of the evaluation path:
+- `OrElse` — the first operand that matched, else the final fallback. This is `??`.
+- `AndAlso` — the first operand that failed, else the final success. This is `Result`-chaining: "which gate stopped me?"
+- `Not` — one operand in, one out.
+- Eager `Or` / `And` / `XOr` have no last-evaluated operand, since both always evaluate. No operand is canonical, so they correctly return specs.
+
+`OrElse` and `Not` implement this today. **`AndAlso` does not yet** — `policy.AndAlso(policy)` still
+returns a spec. That is an outstanding gap to be closed on its own branch by mirroring the `OrElse`
+policy family (`OrElsePolicy`, `OrElsePolicyResult`, and the async and expression-tree variants),
+not a judgement that conjunction is ineligible.
+
+Preservation is a **static-type property**. `policy.OrElse(spec)` returns a spec, and declaring
+policies as `IEnumerable<SpecBase<TModel, TMetadata>>` before calling `OrElseTogether()` is the same
+act — it returns an `OrElseSpec`, not an `OrElsePolicy`. Declare a non-policy and you abandon
+preservation. This is by design, not a covariance defect.
+
+**Operator overloads cannot carry policy preservation — do not re-propose this.** C# cannot overload
+`||` directly: `x || y` compiles to `T.true(x) ? x : T.|(x, y)`, and the selected `operator |` must
+take *and* return exactly `T`. A policy-preserving `||` therefore forces a policy-preserving `|` —
+but `|` is eager `Or` with no canonical operand, so `satisfiedPolicy | unsatisfiedPolicy` would
+report `Satisfied == true` while returning the *unsatisfied* operand's value. Two further blockers:
+`x || y` short-circuits by returning `x` itself, unwrapped, so no `OrElse` node appears in the
+justification tree; and an `operator |` on `PolicyBase` that meant `OrElse` would make `|` eager on
+specs and lazy on policies, so widening a variable's declared type would silently change evaluation
+semantics.
+
 ## Builder Pattern
 
 ```
@@ -160,10 +187,30 @@ Spec.Build(input)
 A **Policy** resolves to a single value — one assertion or one metadata object per evaluation. It models a decision with exactly one outcome explanation. A **Spec** is an accumulation of values — it can yield multiple assertions or metadata objects from a single evaluation, aggregating results from underlying operands or yield functions.
 
 This distinction is a meaningful type-level guarantee:
-- **Policy** (`PolicyBase<TModel, TMetadata>`) — created by minimal propositions, or when both `WhenTrue()` and `WhenFalse()` (singular) are used. Guarantees exactly one value.
+- **Policy** (`PolicyBase<TModel, TMetadata>`) — created by minimal propositions, or when both `WhenTrue()` and `WhenFalse()` (singular) are used. Guarantees a single `Value` — but see below: that value is a *selection*, not a claim that only one cause exists.
 - **Spec** (`SpecBase<TModel, TMetadata>`) — created when `WhenTrueYield()` or `WhenFalseYield()` are used, or when composing propositions with operators. Can accumulate multiple values from underlying evaluations.
 
 Policy is a subtype of Spec, so policies can be used anywhere a spec is expected. The reverse is not true — a spec that yields multiple values cannot be treated as a policy.
+
+### `Value` is a selection; `Values` is the full causal set
+
+A Policy guarantees a single `Value`, but for an `OrElse` composition that value is the
+**last-evaluated operand's** — the `??` fallback. When a chain is unsatisfied, every operand is a
+genuine cause, so `Value` is *not* necessarily `Values.Single()`:
+
+```csharp
+left.OrElse(right).Evaluate(model);          // both unsatisfied
+// Value  == "right-false"                   <- the selection
+// Values == ["left-false", "right-false"]   <- everything it was selected from
+```
+
+`Values` is how a consumer reaches the unselected causes. It:
+- **flattens** — an `OrElseTogether` chain is a left-nested tree of `OrElsePolicyResult`, but a three-policy chain yields three values, not the root's two;
+- **de-noises** — only causal values appear, so when a middle policy is satisfied `Values` holds just that one;
+- is **metadata-agnostic** — it works for arbitrary `TMetadata`, not only the string path.
+
+Contrast `Causes` and `Underlying`, which expose the **binary composition shape** (two operands at
+the root of a three-policy chain) rather than the flattened causal set.
 
 ## Architecture Notes
 

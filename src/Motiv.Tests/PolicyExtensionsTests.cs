@@ -281,4 +281,79 @@ public class PolicyExtensionsTests
         // Act & Assert
         Should.Throw<ArgumentNullException>(() => nullPolicies.OrElseTogether());
     }
+
+    [Fact]
+    public void Should_flatten_every_cause_of_an_unsatisfied_chain()
+    {
+        // Arrange
+        var policies = new[]
+        {
+            Spec.Build<string>(_ => false).WhenTrue("a-true").WhenFalse("a-false").Create("a"),
+            Spec.Build<string>(_ => false).WhenTrue("b-true").WhenFalse("b-false").Create("b"),
+            Spec.Build<string>(_ => false).WhenTrue("c-true").WhenFalse("c-false").Create("c")
+        };
+
+        // Act
+        var result = policies.OrElseTogether().Evaluate("model");
+
+        // Assert
+        result.Satisfied.ShouldBeFalse();
+        result.Value.ShouldBe("c-false");
+
+        // The chain is a left-nested tree of OrElsePolicyResult, but Values recurses:
+        // three policies yield three values, not the root node's two.
+        result.Values.ShouldBe(["a-false", "b-false", "c-false"]);
+
+        // Assertions flatten alongside Values...
+        result.Assertions.ShouldBe(["a == false", "b == false", "c == false"]);
+
+        // ...but Causes and Underlying describe the binary composition shape: a three-policy
+        // chain is a left-nested tree, so its root reports two operands, not three.
+        result.Causes.Count().ShouldBe(2);
+        result.Underlying.Count().ShouldBe(2);
+    }
+
+    [Fact]
+    public void Should_report_only_the_causal_value_when_a_chain_is_satisfied()
+    {
+        // Arrange
+        var policies = new[]
+        {
+            Spec.Build<string>(_ => false).WhenTrue("x-true").WhenFalse("x-false").Create("x"),
+            Spec.Build<string>(_ => true).WhenTrue("y-true").WhenFalse("y-false").Create("y"),
+            Spec.Build<string>(_ => false).WhenTrue("z-true").WhenFalse("z-false").Create("z")
+        };
+
+        // Act
+        var result = policies.OrElseTogether().Evaluate("model");
+
+        // Assert
+        result.Satisfied.ShouldBeTrue();
+        result.Value.ShouldBe("y-true");
+
+        // Only causal values appear: neither x nor z is among the causal values.
+        result.Values.ShouldBe(["y-true"]);
+    }
+
+    [Fact]
+    public void Should_retain_every_cause_for_non_string_metadata()
+    {
+        // Arrange
+        var policies = new[]
+        {
+            Spec.Build<string>(_ => false).WhenTrue(1).WhenFalse(10).Create("m1"),
+            Spec.Build<string>(_ => false).WhenTrue(2).WhenFalse(20).Create("m2"),
+            Spec.Build<string>(_ => false).WhenTrue(3).WhenFalse(30).Create("m3")
+        };
+
+        // Act
+        var result = policies.OrElseTogether().Evaluate("model");
+
+        // Assert
+        result.Satisfied.ShouldBeFalse();
+        result.Value.ShouldBe(30);
+
+        // The guarantee is metadata-agnostic, not string-path-only.
+        result.Values.ShouldBe([10, 20, 30]);
+    }
 }
