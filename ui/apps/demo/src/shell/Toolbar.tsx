@@ -12,8 +12,12 @@ export interface ToolbarAction {
   label: string;
   icon: (props: IconProps) => JSX.Element;
   onActivate: () => void;
-  /** Why this action cannot be used right now. Absent means it can. */
-  unavailable?: string;
+  /**
+   * Why this action cannot be used right now. Absent — or explicitly `undefined`, which under
+   * `exactOptionalPropertyTypes` is a separate thing to say and the natural end of a chain of
+   * conditions — means it can.
+   */
+  unavailable?: string | undefined;
 }
 
 /**

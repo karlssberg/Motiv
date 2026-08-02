@@ -1183,40 +1183,24 @@ button.node-dsl {
 .node-insert:hover { color: var(--accent); }
 
 /* ---------------------------------------------------------------------------
-   Proposition explorer — the namespaced tree rail on the propositions page.
-   Indentation is driven by a --depth custom property set per node, so nesting
-   needs no per-level selectors.
+   Proposition explorer — the namespaced tree the command palette browses while
+   its query is empty. Indentation is driven by a --depth custom property set
+   per node, so nesting needs no per-level selectors.
 
    Surfaces reuse the app's existing tokens rather than adding a parallel scale:
    --sh-inset is the resting/hover fill (as in .tab.active), --accent-weak the
    "this one" tint (as in .dsl-badge), and --danger the single problem colour
    (as in .error) — there is no separate warning tier.
+
+   Horizontal padding matches .palette-row's, so a browsed row and a matched
+   row start on the same edge as the query is typed.
    --------------------------------------------------------------------------- */
-.explorer {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space);
-  min-width: 0;
-  padding: calc(var(--space) * 1.5);
-  overflow-y: auto;
-  border-right: 1px solid var(--border);
-}
-
-.explorer-header {
-  display: flex;
-  gap: var(--space);
-}
-
-.explorer-search {
-  flex: 1;
-  min-width: 0;
-}
-
 .explorer-chips {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: calc(var(--space) / 2);
+  padding: calc(var(--space) / 2) 12px;
 }
 
 .explorer-count {
@@ -1248,8 +1232,8 @@ button.node-dsl {
   display: flex;
   align-items: center;
   gap: calc(var(--space) / 2);
-  padding: 2px calc(var(--space) / 2);
-  padding-left: calc(var(--space) / 2 + var(--depth) * var(--space) * 1.5);
+  padding: 2px 12px;
+  padding-left: calc(12px + var(--depth) * var(--space) * 1.5);
   border-radius: var(--radius);
 }
 
@@ -1299,36 +1283,9 @@ button.node-dsl {
 }
 
 .explorer-empty {
+  padding: calc(var(--space) / 2) 12px;
   font-size: 0.85rem;
   opacity: 0.7;
-}
-
-.explorer-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space);
-  margin-top: auto;
-  padding-top: var(--space);
-  border-top: 1px solid var(--border);
-}
-
-/*
-  The propositions page adds a rail ahead of the three panes. `.shell-body` is a flex row (the
-  panes each take `flex: 1` from `.pane`), so the rail is sized by a flex basis rather than a grid
-  column — a `grid-template-columns` here would be inert on a flex container. It stacks at the
-  same 900px `.shell-body`/`.pane` already collapse at, so the rail and the columns it leads never
-  disagree about when the shell is narrow, and its divider moves with theirs from right to bottom.
-*/
-.shell-body.with-rail > .explorer {
-  flex: 0 0 clamp(14rem, 24%, 20rem);
-}
-
-@media (max-width: 900px) {
-  .shell-body.with-rail > .explorer {
-    flex: none;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -1507,6 +1464,27 @@ button.node-dsl {
 .palette-row { padding: 5px 12px; font: 13px var(--sans); color: var(--text); cursor: pointer; }
 .palette-row:hover { background: var(--sh-inset); }
 .palette-row.highlighted { background: var(--accent-weak); }
+
+/* A matched row: the leaf in the text colour, the namespace it lives under faded behind it, and
+   the origin pushed to the far edge so the badges line up down the list. */
+.palette-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.palette-ns { color: var(--faint); }
+
+.palette-badge {
+  margin-left: auto;
+  font: 10px var(--sans);
+  color: var(--faint);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 4px;
+}
 
 .palette-footer {
   display: flex;

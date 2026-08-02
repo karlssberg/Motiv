@@ -33,6 +33,8 @@ export function CommandPalette<T extends PaletteItem>(props: {
   match: (item: T, query: string) => boolean;
   renderItem: (item: T, highlighted: boolean) => ReactNode;
   renderBrowse?: () => ReactNode;
+  /** Rendered instead of an empty list, handed the query that matched nothing. */
+  renderEmpty?: (query: string) => ReactNode;
   onChoose: (item: T) => void;
   onClose: () => void;
   footer?: (highlighted: T | null) => ReactNode;
@@ -51,7 +53,11 @@ export function CommandPalette<T extends PaletteItem>(props: {
     [props.items, trimmed],
   );
 
-  const highlightIndex = highlightIndexOf(cursor, matches.length);
+  // Browsing renders the browse view *instead of* the list, so there is no row on screen under the
+  // highlight. Reporting one anyway would let Enter choose something nobody was shown, hand a
+  // footer a target the user never picked, and point aria-activedescendant at an id that is not in
+  // the document at all.
+  const highlightIndex = browsing ? -1 : highlightIndexOf(cursor, matches.length);
   const highlighted = matches[highlightIndex] ?? null;
 
   const optionId = (index: number): string => `${listId}-option-${index}`;
@@ -97,23 +103,30 @@ export function CommandPalette<T extends PaletteItem>(props: {
       {browsing
         ? <div className="palette-browse">{props.renderBrowse?.()}</div>
         : (
-          <ul id={listId} role="listbox" aria-label={props.label} className="palette-list">
-            {matches.map((item, index) => {
-              const isHighlighted = index === highlightIndex;
-              return (
-                <li
-                  key={item.id}
-                  id={optionId(index)}
-                  role="option"
-                  aria-selected={isHighlighted}
-                  className={isHighlighted ? 'palette-row highlighted' : 'palette-row'}
-                  onClick={() => props.onChoose(item)}
-                >
-                  {props.renderItem(item, isHighlighted)}
-                </li>
-              );
-            })}
-          </ul>
+          <>
+            {/* The listbox stays in the document even while empty: the input's `aria-controls`
+                names it, and a control pointing at nothing is worse than a control pointing at an
+                empty list. The explanation sits beside it rather than inside, because a listbox's
+                children are its options. */}
+            <ul id={listId} role="listbox" aria-label={props.label} className="palette-list">
+              {matches.map((item, index) => {
+                const isHighlighted = index === highlightIndex;
+                return (
+                  <li
+                    key={item.id}
+                    id={optionId(index)}
+                    role="option"
+                    aria-selected={isHighlighted}
+                    className={isHighlighted ? 'palette-row highlighted' : 'palette-row'}
+                    onClick={() => props.onChoose(item)}
+                  >
+                    {props.renderItem(item, isHighlighted)}
+                  </li>
+                );
+              })}
+            </ul>
+            {matches.length === 0 && props.renderEmpty?.(trimmed)}
+          </>
         )}
 
       {props.footer !== undefined && (

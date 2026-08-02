@@ -98,6 +98,31 @@ describe('CommandPalette', () => {
     expect(screen.getByText(/target: orders.is-large/)).toBeTruthy();
   });
 
+  it('holds no highlight while browsing, where no row is on screen to be highlighted', async () => {
+    // The browse view renders instead of the list, so there is no row under the highlight to see,
+    // to choose, or to hand a footer. Reporting matches[0] anyway would make Enter choose a row
+    // nobody was shown, and point aria-activedescendant at an id that is not in the document.
+    const { onChoose } = setup({
+      renderBrowse: () => <p>browse view</p>,
+      footer: (highlighted) => <span>target: {highlighted?.id ?? 'none'}</span>,
+    });
+
+    expect(screen.getByText('target: none')).toBeTruthy();
+    expect(screen.getByRole('combobox').getAttribute('aria-activedescendant')).toBeNull();
+    await userEvent.keyboard('{Enter}');
+    expect(onChoose).not.toHaveBeenCalled();
+  });
+
+  it('renders the empty state with the query that found nothing', async () => {
+    // "Nothing matched" is a statement about the query, so the query is what the caller is handed
+    // to say it with.
+    setup({ renderEmpty: (query) => <p>nothing like “{query}”</p> });
+
+    await userEvent.type(screen.getByRole('combobox'), 'zzz');
+
+    expect(screen.getByText('nothing like “zzz”')).toBeTruthy();
+  });
+
   it('does nothing on Enter when nothing matched', async () => {
     const { onChoose } = setup();
     await userEvent.type(screen.getByRole('combobox'), 'nothing-matches-this');

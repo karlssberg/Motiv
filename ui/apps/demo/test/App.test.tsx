@@ -91,6 +91,8 @@ describe('App', () => {
     window.location.hash = '#/propositions/customer.is-active';
     renderApp();
 
-    expect(await screen.findByRole('complementary', { name: 'Propositions' })).toBeTruthy();
+    // The explorer is behind the toolbar now rather than standing in the page, so what says the
+    // propositions page is up is the toolbar action that opens it — no other page has one.
+    expect(await screen.findByRole('button', { name: 'Open' })).toBeTruthy();
   });
 });
