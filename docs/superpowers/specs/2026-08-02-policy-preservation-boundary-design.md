@@ -105,14 +105,44 @@ If "first failure wins" is wanted later it gets its own name; it does not get co
 is not a covariance defect to be worked around — introduce a non-policy and you abandon policy
 preservation. The rule is uniform and should be stated as such.
 
-### 4. Correct the documented Policy contract
+### 4. The unselected causes must stay reachable
+
+If `Value` is a *selection*, a consumer must have a clean way to obtain everything it selected from.
+`Values` already provides this, verified across the cases that matter:
+
+```
+3-deep chain, all false : Value = [c-false]   Values = [a-false | b-false | c-false]   (3)
+mixed, middle satisfied : Value = [y-true]    Values = [y-true]                        (1)
+non-string metadata     : Value = [30]        Values = [10 | 20 | 30]                  (3)
+```
+
+Three properties hold and are to be guaranteed:
+
+- **It flattens.** An `OrElseTogether` chain is a left-nested tree of `OrElsePolicyResult`, but
+  `Values` recurses rather than reporting only the root's two operands.
+- **It de-noises.** Only causal values appear. When the middle policy is satisfied, `Values` is just
+  that policy's value — the non-contributing operands are correctly absent.
+- **It is metadata-agnostic.** It works for arbitrary `TMetadata`, not only the string path.
+
+No new member is added. `Values` is the uniform property across every result type; a policy-only
+synonym would fragment the API and cut against Policy being a subtype of Spec. The problem is
+discoverability — `Value` and `Values` differ by one character while carrying different contracts —
+and it is addressed by documentation and tests.
+
+Note for the docs: `Underlying` and `Causes` report the *binary composition shape* (2 operands for a
+3-policy chain), whereas `Values` and `Assertions` flatten to the causal set (3). Both are
+legitimate readings of "all the values"; the flattening one is what a consumer reaching for
+"give me everything" expects, so the distinction must be stated rather than discovered.
+
+### 5. Correct the documented Policy contract
 
 CLAUDE.md states that a Policy "resolves to a single value" and "guarantees exactly one value". That
 overstates what ships, per finding 1. The contract to document:
 
 > A Policy guarantees a single `Value`. For an `OrElse` composition that value is the last-evaluated
 > operand's — the `??` fallback — and when a chain is unsatisfied, `Values` and `Assertions` still
-> report every contributing cause. `Value` is therefore not necessarily `Values.Single()`.
+> report every contributing cause. `Value` is therefore not necessarily `Values.Single()`: it is a
+> selection, and `Values` is how a consumer reaches everything it was selected from.
 
 ## Scope of Change
 
@@ -121,12 +151,15 @@ No production code changes. This is a documentation correction plus a regression
 | File | Change |
 |---|---|
 | `CLAUDE.md` | Correct the Policy vs Spec contract wording (lines ~160, ~163). Add the canonical-single-value rule and the static-type rule to Policy Preservation (~line 125). Record the `\|\|` mechanism so operator overloads are not re-proposed. |
-| `docs/operators/OrElse.md` | Replace "quirks regarding the overloading of the `\|\|` operator" with the mechanism. Add a Policies section covering `Value` on an unsatisfied chain. |
-| `src/Motiv.Tests/OrElsePolicyTests.cs` | Add a regression test pinning `Value` = last-evaluated while `Values` reports both causes. |
+| `docs/operators/OrElse.md` | Replace "quirks regarding the overloading of the `\|\|` operator" with the mechanism. Add a Policies section covering `Value` on an unsatisfied chain, `Values` as the way to reach every cause, and the flattening-vs-shape distinction against `Causes`/`Underlying`. |
+| `src/Motiv.Tests/OrElsePolicyTests.cs` | Pin `Value` = last-evaluated while `Values` reports both causes. |
+| `src/Motiv.Tests/PolicyExtensionsTests.cs` | Pin the three `Values` guarantees on a chain: flattening (3-deep, all false, 3 values), de-noising (middle satisfied, 1 value), and non-string metadata. |
 
 ## Non-Goals
 
 - Adding `|`, `&`, `^`, `||`, `&&` overloads to `PolicyBase` or `PolicyResultBase`.
+- Adding a policy-only member for "all values". `Values` already serves this and is uniform across
+  every result type.
 - Adding `AndAlso`/`AndAlsoTogether` policy overloads.
 - Changing `OrElse`'s runtime behaviour, which is correct and already pinned by
   `PolicyExtensionsTests`.
