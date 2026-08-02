@@ -119,86 +119,96 @@ export function PropositionDialog(props: {
 
   return (
     <Modal label={props.seed.title} onClose={props.onCancel} className="dialog" fullscreenOnMobile>
-      <h2 className="dialog-title">{props.seed.title}</h2>
+      {/* Everything is wrapped rather than placed straight in the `<dialog>`, and the form's
+          padding and row gaps ride on this wrapper. `Modal` reads a click whose target is the
+          dialog element as a backdrop click — the backdrop is part of that element, so there is
+          nothing else to compare against — and an element's padding box and flex gaps hit-test as
+          the element too. With the rhythm on the dialog, a click on the frame around the form or
+          in any band between its rows was a backdrop click, and dismissing threw away every field
+          the user had filled in. The wrapper covers the element edge to edge, so nothing inside
+          the dialog's bounds targets the dialog. */}
+      <div className="dialog-form">
+        <h2 className="dialog-title">{props.seed.title}</h2>
 
-      {/* The hint sits outside the <label>: a label's whole text content becomes its control's
-          accessible name, so a sentence of guidance inside it is read out as part of the field's
-          name every time the field is reached. */}
-      <div className="dialog-field">
-        <label>
-          <span>Name</span>
-          <input
-            type="text"
-            value={name}
-            placeholder="customer.eligibility.is-eligible"
-            onChange={(event) => setName(event.target.value)}
-            onKeyDown={(event) => { if (event.key === 'Enter' && canCreate) submit(); }}
-          />
-        </label>
-        <small>Dots namespace the proposition; each segment starts with a letter.</small>
-      </div>
+        {/* The hint sits outside the <label>: a label's whole text content becomes its control's
+            accessible name, so a sentence of guidance inside it is read out as part of the field's
+            name every time the field is reached. */}
+        <div className="dialog-field">
+          <label>
+            <span>Name</span>
+            <input
+              type="text"
+              value={name}
+              placeholder="customer.eligibility.is-eligible"
+              onChange={(event) => setName(event.target.value)}
+              onKeyDown={(event) => { if (event.key === 'Enter' && canCreate) submit(); }}
+            />
+          </label>
+          <small>Dots namespace the proposition; each segment starts with a letter.</small>
+        </div>
 
-      <div className="dialog-field">
-        <label>
-          <span>Model type</span>
-          <select value={modelType} onChange={(event) => setModelType(event.target.value)}>
-            {modelTypes.map((model) => <option key={model} value={model}>{model}</option>)}
-          </select>
-        </label>
-      </div>
+        <div className="dialog-field">
+          <label>
+            <span>Model type</span>
+            <select value={modelType} onChange={(event) => setModelType(event.target.value)}>
+              {modelTypes.map((model) => <option key={model} value={model}>{model}</option>)}
+            </select>
+          </label>
+        </div>
 
-      {/* Left changeable even when the flow seeded it. Derive is a shortcut into ordinary
-          authoring, not a separate concept, so the same form answers it — picking the wrong node
-          to derive from should be a change of mind, not a cancel and start again. */}
-      <div className="dialog-field">
-        <label>
-          <span>Starts from</span>
-          <select
-            value={selectedSource ?? ''}
-            disabled={nothingToStartFrom}
-            onChange={(event) => setStartsFrom(event.target.value)}
+        {/* Left changeable even when the flow seeded it. Derive is a shortcut into ordinary
+            authoring, not a separate concept, so the same form answers it — picking the wrong node
+            to derive from should be a change of mind, not a cancel and start again. */}
+        <div className="dialog-field">
+          <label>
+            <span>Starts from</span>
+            <select
+              value={selectedSource ?? ''}
+              disabled={nothingToStartFrom}
+              onChange={(event) => setStartsFrom(event.target.value)}
+            >
+              {sourceNames.map((sourceName) => (
+                <option key={sourceName} value={sourceName}>{sourceName}</option>
+              ))}
+            </select>
+          </label>
+          {nothingToStartFrom
+            ? (
+              // Referenced from Create below: the select is disabled and so out of the tab order,
+              // which would leave the reason the button is dead unreachable from the button itself.
+              <small className="dialog-warning" id={NO_SOURCE_ID}>
+                Nothing to start from: an authored proposition is composed from ones that already
+                exist, and no other {modelType} proposition is registered.
+              </small>
+            )
+            : <small>The new proposition begins as a reference to this one; compose it from there.</small>}
+        </div>
+
+        <div className="dialog-field">
+          <label>
+            <span>Description</span>
+            <input type="text" value={description} onChange={(event) => setDescription(event.target.value)} />
+          </label>
+        </div>
+
+        {props.error !== null && <p className="dialog-error" role="alert">{props.error}</p>}
+
+        <div className="dialog-actions">
+          <button type="button" className="btn" onClick={props.onCancel}>Cancel</button>
+          {/* `aria-disabled`, not `disabled`: `disabled` removes the button from the tab order in
+              every major browser, which would leave a keyboard screen-reader user unable to reach it
+              and so unable to hear the `aria-describedby` explanation. Matches `Toolbar`'s pattern —
+              an unavailable control that stays focusable, and a handler that returns early. */}
+          <button
+            type="button"
+            className="btn"
+            aria-disabled={canCreate ? undefined : true}
+            aria-describedby={nothingToStartFrom ? NO_SOURCE_ID : undefined}
+            onClick={submit}
           >
-            {sourceNames.map((sourceName) => (
-              <option key={sourceName} value={sourceName}>{sourceName}</option>
-            ))}
-          </select>
-        </label>
-        {nothingToStartFrom
-          ? (
-            // Referenced from Create below: the select is disabled and so out of the tab order,
-            // which would leave the reason the button is dead unreachable from the button itself.
-            <small className="dialog-warning" id={NO_SOURCE_ID}>
-              Nothing to start from: an authored proposition is composed from ones that already
-              exist, and no other {modelType} proposition is registered.
-            </small>
-          )
-          : <small>The new proposition begins as a reference to this one; compose it from there.</small>}
-      </div>
-
-      <div className="dialog-field">
-        <label>
-          <span>Description</span>
-          <input type="text" value={description} onChange={(event) => setDescription(event.target.value)} />
-        </label>
-      </div>
-
-      {props.error !== null && <p className="dialog-error" role="alert">{props.error}</p>}
-
-      <div className="dialog-actions">
-        <button type="button" className="btn" onClick={props.onCancel}>Cancel</button>
-        {/* `aria-disabled`, not `disabled`: `disabled` removes the button from the tab order in
-            every major browser, which would leave a keyboard screen-reader user unable to reach it
-            and so unable to hear the `aria-describedby` explanation. Matches `Toolbar`'s pattern —
-            an unavailable control that stays focusable, and a handler that returns early. */}
-        <button
-          type="button"
-          className="btn"
-          aria-disabled={canCreate ? undefined : true}
-          aria-describedby={nothingToStartFrom ? NO_SOURCE_ID : undefined}
-          onClick={submit}
-        >
-          Create
-        </button>
+            Create
+          </button>
+        </div>
       </div>
     </Modal>
   );

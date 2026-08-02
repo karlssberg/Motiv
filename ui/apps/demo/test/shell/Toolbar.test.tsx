@@ -10,6 +10,9 @@ describe('Toolbar', () => {
     const button = screen.getByRole('button', { name: 'Save' });
     expect(button).toBeTruthy();
     expect(button.getAttribute('aria-label')).toBe('Save');
+    // Both, and for different people: `aria-label` is what assistive technology reads, `title` is
+    // the tooltip a sighted pointer user gets. Neither substitutes for the other.
+    expect(button.getAttribute('title')).toBe('Save');
   });
 
   it('activates on click', async () => {

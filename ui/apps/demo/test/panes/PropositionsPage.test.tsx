@@ -565,6 +565,34 @@ describe('PropositionsPage', () => {
     expect((screen.getByLabelText('Name') as HTMLInputElement).value).toBe('');
   });
 
+  it('keeps the whole form off the dialog element itself, where a click would dismiss it', async () => {
+    // `Modal` reports a click whose target *is* the dialog as a backdrop click — the backdrop
+    // belongs to the element, so there is no other node to compare against. That is only sound
+    // while the element has no self-area to click on, and this form's 16px frame and 12px row gaps
+    // used to be exactly that: padding box and flex gaps hit-test as the element, so a click on the
+    // frame or in any band between rows dismissed the dialog and destroyed everything typed.
+    //
+    // The rhythm lives on an inner wrapper now, which covers the element edge to edge — true only
+    // while that wrapper is the dialog's one in-flow child. jsdom computes no layout, so the
+    // *consequence* is unprovable here and `propositions.spec.ts › a click inside the authoring
+    // dialog keeps what was typed` measures it in a browser. The *cause* is this one structure.
+    const client = stubClient();
+    renderPage(client);
+    await openExplorer();
+    await screen.findByRole('treeitem', { name: /is-active/ });
+    await userEvent.click(screen.getByRole('button', { name: /^new$/i }));
+
+    const dialog = screen.getByRole('dialog');
+    // Close floats over the corner rather than sitting in the flow, so it is not part of the count.
+    const close = screen.getByRole('button', { name: /close/i });
+    const inFlow = [...dialog.children].filter((child) => child !== close);
+
+    expect(inFlow.map((child) => child.className)).toEqual(['dialog-form']);
+    // …and the wrapper is the form, not an empty box the fields sit outside of.
+    expect(inFlow[0]!.contains(screen.getByLabelText('Name'))).toBe(true);
+    expect(inFlow[0]!.contains(screen.getByRole('button', { name: /create/i }))).toBe(true);
+  });
+
   it('does not offer a quarantined authored proposition as a source', async () => {
     // A quarantined *authored* proposition is not in the effective set at all, so a reference to
     // it would not resolve. A quarantined *override* is different: the compiled default still

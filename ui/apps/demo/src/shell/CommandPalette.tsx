@@ -90,7 +90,11 @@ export function CommandPalette<T extends PaletteItem>(props: {
           className="palette-input"
           aria-label={props.placeholder}
           aria-expanded={!browsing}
-          aria-controls={listId}
+          // Dropped while browsing, because the browse view renders *instead of* the list — see
+          // below — so the id names nothing in the document. An IDREF to an absent element is an
+          // invalid relationship, and this is the palette's default state: every open of the
+          // Propositions palette started there.
+          aria-controls={browsing ? undefined : listId}
           aria-activedescendant={highlightIndex >= 0 ? optionId(highlightIndex) : undefined}
           placeholder={props.placeholder}
           value={query}

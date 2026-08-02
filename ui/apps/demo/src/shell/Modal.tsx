@@ -69,7 +69,7 @@ export function Modal(props: {
         whatever their own markup asked for. jsdom's `showModal` shim sets `open` and nothing else,
         so no unit test could see it.
       */}
-      <button type="button" className="ghost modal-close" aria-label="Close" onClick={onClose}>
+      <button type="button" className="ghost modal-close" aria-label="Close" title="Close" onClick={onClose}>
         <IconClose size={15} />
       </button>
     </dialog>

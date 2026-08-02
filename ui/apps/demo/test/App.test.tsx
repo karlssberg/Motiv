@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RuleEditorStore, RulesApiClient } from '@motiv/rules-core';
 import { App } from '../src/App.js';
@@ -19,9 +19,9 @@ function testClient(): RulesApiClient {
 }
 
 function renderApp() {
-  return render(
-    <App client={testClient()} store={new RuleEditorStore({ rule: { spec: 'is-active' } })} />,
-  );
+  const client = testClient();
+  render(<App client={client} store={new RuleEditorStore({ rule: { spec: 'is-active' } })} />);
+  return client;
 }
 
 describe('App', () => {
@@ -60,9 +60,12 @@ describe('App', () => {
     } as unknown as RulesApiClient;
     render(<App client={client} store={store} />);
 
-    // Pick the async rule from the breadcrumb's leaf listbox (click leaf, then the option).
-    fireEvent.click(await screen.findByRole('combobox', { name: /^rule,/ }));
-    fireEvent.click(await screen.findByRole('option', { name: 'fraud-screening' }));
+    // Pick the async rule from the palette: open it from the toolbar, narrow to the one rule,
+    // and choose it with Enter — the path the shell now offers in place of the breadcrumb listbox.
+    await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+    const palette = await screen.findByRole('dialog', { name: 'Rules' });
+    await userEvent.type(within(palette).getByRole('combobox'), 'fraud-screening');
+    await userEvent.keyboard('{Enter}');
     await waitFor(() =>
       expect(store.getState().document).toEqual({ rule: { spec: 'passes-credit-check' } }));
 
@@ -93,10 +96,14 @@ describe('App', () => {
 
   it('opens straight onto the propositions page from a deep link', async () => {
     window.location.hash = '#/propositions/customer.is-active';
-    renderApp();
+    const client = renderApp();
 
-    // The explorer is behind the toolbar now rather than standing in the page, so what says the
-    // propositions page is up is the toolbar action that opens it — no other page has one.
-    expect(await screen.findByRole('button', { name: 'Open' })).toBeTruthy();
+    // Both halves of the hash in one assertion, and deliberately: only the propositions page
+    // fetches a proposition, and it fetches the one the name names. What stood here before was the
+    // toolbar's Open button — which `RuleHeader` mints identically, so the assertion held on either
+    // page. Narrowing the route parser to send every hash to the rules page, or dropping the name
+    // from the parse, both left it green.
+    await waitFor(() => expect(client.getProposition).toHaveBeenCalledWith('customer.is-active'));
+    expect(await screen.findByRole('tab', { name: 'Propositions', selected: true })).toBeTruthy();
   });
 });

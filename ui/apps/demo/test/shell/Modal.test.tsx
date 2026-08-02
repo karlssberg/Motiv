@@ -14,21 +14,35 @@ describe('Modal', () => {
     expect(screen.getByRole('dialog', { name: 'Propositions' })).toBeTruthy();
   });
 
-  it('reports the close control', async () => {
+  it('reports the close control, and titles it like every other icon button', async () => {
     const onClose = vi.fn();
     render(<Modal label="Propositions" onClose={onClose}>body</Modal>);
-    await userEvent.click(screen.getByRole('button', { name: /close/i }));
+    const close = screen.getByRole('button', { name: /close/i });
+
+    // A bare glyph teaches nothing on first sight, so an icon-only button carries both — the
+    // `aria-label` for assistive technology and the `title` for the pointer. `Toolbar` states the
+    // same rule for the three shell actions; this was the one button departing from it.
+    expect(close.getAttribute('title')).toBe('Close');
+
+    await userEvent.click(close);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('reports a native cancel, which is what Escape raises', () => {
+  it('reports a native cancel, which is what Escape raises, and prevents its default', () => {
     // Escape on a <dialog> fires `cancel`, not a keydown the component sees. Dispatching the
     // event directly is the only honest way to reach that path under jsdom, which has no
     // top layer and so never raises it on its own.
     const onClose = vi.fn();
     render(<Modal label="Propositions" onClose={onClose}>body</Modal>);
-    screen.getByRole('dialog').dispatchEvent(new Event('cancel', { cancelable: true }));
+
+    const notPrevented = screen.getByRole('dialog').dispatchEvent(new Event('cancel', { cancelable: true }));
+
     expect(onClose).toHaveBeenCalledTimes(1);
+    // Without `preventDefault` the browser closes the dialog itself, behind React's back, while
+    // the caller's state still says it is open — and the modal cannot be reopened. jsdom raises no
+    // native cancel, but `dispatchEvent` returns false exactly when the default was prevented,
+    // which is the same signal a browser reads.
+    expect(notPrevented).toBe(false);
   });
 
   it('puts the close control last, so it is not what showModal focuses', () => {

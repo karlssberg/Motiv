@@ -120,9 +120,6 @@ body {
   white-space: nowrap;
 }
 
-/* Wider than the operator list: the entries are rule names, not single words. */
-.breadcrumb-menu { min-width: 168px; }
-
 .model-pill {
   margin-left: 2px;
   display: inline-flex;
@@ -1370,15 +1367,30 @@ button.node-dsl {
 }
 
 /* The New/Derive/Override dialog is a `Modal` variant — the surface (border, radius, background,
-   shadow) comes from `.modal`, so only the form's own measure and rhythm are stated here. It has
-   to follow `.modal` and precede the mobile rule below: all three are single-class selectors, so
-   source order is the whole of the cascade between them, and `.modal` would otherwise strip the
-   padding to 0. */
+   shadow) comes from `.modal`, so only the form's own measure is stated here. It has to precede
+   the mobile rule below: both are single-class selectors setting `width` on the same element, so
+   source order is the whole of the cascade between them.
+
+   The padding and the row rhythm are deliberately *not* here — see `.dialog-form`. What is left is
+   a measure and nothing else: the only geometry the element can carry without also becoming
+   clickable area. The flex column the phone sheet needs comes from `.modal-mobile-full` below,
+   which `PropositionDialog` always asks for — restating it here would be a duplicate. */
 .dialog {
+  width: min(28rem, calc(100vw - 2rem));
+}
+
+/* The form's frame and the bands between its rows, on a wrapper inside the `<dialog>` rather than
+   on the dialog itself. `Modal` dismisses a click whose target *is* the dialog element, because a
+   dialog's backdrop is part of that element and there is no separate node to listen on — and an
+   element's padding box and flex gaps hit-test as the element too. On the dialog these 16px and
+   12px bands were live backdrop, so a click just outside a field threw away everything typed. On a
+   wrapper that covers the element edge to edge, every click inside the dialog's bounds lands on a
+   descendant. `PropositionDialog` states the same thing at the markup, and
+   `PropositionsPage.test.tsx` pins the structure this depends on. */
+.dialog-form {
   display: flex;
   flex-direction: column;
   gap: calc(var(--space) * 1.5);
-  width: min(28rem, calc(100vw - 2rem));
   padding: calc(var(--space) * 2);
 }
 
@@ -1399,6 +1411,11 @@ button.node-dsl {
     border: none;
     border-radius: 0;
   }
+
+  /* The sheet is a full 100dvh here, and the form is shorter than that. Without this the form
+     stacks at the top and the rest of the phone screen is bare dialog element — clickable, and
+     looking like nothing at all. Mirrors what `.modal-body` does for the document viewer. */
+  .modal-mobile-full .dialog-form { flex: 1; overflow-y: auto; }
 }
 
 /* Ghost: invisible at rest, a soft well on hover and focus. The whole toolbar treatment. */

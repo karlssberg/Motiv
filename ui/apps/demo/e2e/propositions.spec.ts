@@ -193,11 +193,55 @@ test('a proposition something else references cannot be deleted', async ({ page,
 });
 
 /*
- * The three below are the only home for what `test/setup.ts`'s jsdom shim cannot model. That shim
+ * The four below are the only home for what `test/setup.ts`'s jsdom shim cannot model. That shim
  * sets `open` on `showModal()` and does nothing else — jsdom has no top layer — so focus trapping,
- * backdrop inertness, Escape, and geometry of any kind are unobservable to all 389 unit tests. A
+ * backdrop inertness, Escape, and geometry of any kind are unobservable to every unit test. A
  * browser is the only place they can be proven, and this is the only browser.
  */
+
+test('a click inside the authoring dialog keeps what was typed', async ({ page }) => {
+  // `Modal` dismisses a click whose target *is* the dialog element — a dialog's backdrop belongs to
+  // that element, so there is nothing else to compare against. The authoring form's 16px frame and
+  // 12px row gaps used to sit on the dialog too, and padding boxes and flex gaps hit-test as the
+  // element: a click a few pixels outside a field was read as a backdrop click, unmounted the
+  // dialog, and destroyed four fields of typed input.
+  //
+  // Only measurable here. jsdom computes no layout, so `userEvent.click(dialog)` cannot tell a
+  // backdrop click from a padding click; the unit suite pins the structure the fix rests on
+  // (`PropositionsPage.test.tsx › keeps the whole form off the dialog element itself`) and this
+  // pins the consequence, including the CSS, which no unit test can see at all.
+  const TYPED = 'customer.e2e-typed-and-kept';
+
+  await page.goto('/#/propositions');
+  await paletteAction(page, 'New');
+
+  const dialog = page.getByRole('dialog', { name: 'New proposition' });
+  const nameField = dialog.getByLabel('Name', { exact: true });
+  await nameField.fill(TYPED);
+
+  // 4px inside the top-left corner: within the dialog's bounds, on the frame around the form, and
+  // clear of every control.
+  const box = (await dialog.boundingBox())!;
+  await page.mouse.click(box.x + 4, box.y + 4);
+  await expect(dialog).toBeVisible();
+  await expect(nameField).toHaveValue(TYPED);
+
+  // And in the band *between* two rows — the same hit-testing, in the middle of the form rather
+  // than at its edge, where a stray click is likelier still.
+  const fields = dialog.locator('.dialog-field');
+  const first = (await fields.nth(0).boundingBox())!;
+  const second = (await fields.nth(1).boundingBox())!;
+
+  // Both bands are still *there*: the frame and the rhythm moved onto the inner wrapper, they were
+  // not deleted. Without this the two clicks above would pass by landing on a field rather than by
+  // landing on a descendant of the wrapper, and the fix would read as "delete the padding".
+  expect(first.x - box.x).toBeGreaterThan(8);
+  expect(second.y - (first.y + first.height)).toBeGreaterThan(4);
+
+  await page.mouse.click(first.x + first.width / 2, (first.y + first.height + second.y) / 2);
+  await expect(dialog).toBeVisible();
+  await expect(nameField).toHaveValue(TYPED);
+});
 
 test('the palette traps focus, closes on Escape, and makes the page behind it inert', async ({ page }) => {
   await page.goto('/#/propositions');
@@ -247,6 +291,24 @@ test('the palette fills the screen on a phone', async ({ page }) => {
   // the cascade between them.
   const box = await palette(page, 'Propositions').boundingBox();
   expect(box?.width).toBe(390);
+});
+
+test('the authoring dialog fills the screen on a phone, form and all', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 780 });
+  await page.goto('/#/propositions');
+  await paletteAction(page, 'New');
+
+  const dialog = page.getByRole('dialog', { name: 'New proposition' });
+  const box = (await dialog.boundingBox())!;
+  expect(box.width).toBe(390);
+
+  // The sheet is a full 100dvh, and the form is far shorter. Without the form stretching to fill
+  // it, it stacks at the top and the rest of the phone screen is bare dialog element — looking like
+  // nothing, and (before the wrapper) dismissing the dialog when touched. This is also what makes
+  // `.dialog`'s own flex column redundant: the column comes from `.modal-mobile-full`, and if it
+  // did not, this would say so.
+  const form = (await dialog.locator('.dialog-form').boundingBox())!;
+  expect(form.height).toBeGreaterThan(box.height - 4);
 });
 
 test('the document viewer opens from the toolbar on both pages', async ({ page }) => {

@@ -31,7 +31,10 @@ const entries: RuleListEntry[] = [
 function makeClient(overrides: Partial<Record<string, unknown>> = {}): RulesApiClient {
   return {
     listRules: vi.fn().mockResolvedValue(entries),
-    getRule: vi.fn().mockResolvedValue({ document: { rule: { spec: 'is-active' } }, version: 3 }),
+    // Deliberately *not* the document `renderHeader` seeds the store with. With the two the same,
+    // "loads the picked rule into the store" held whether or not the load ever ran — deleting
+    // `RuleHeader`'s `store.loadDocument` call left the whole file green.
+    getRule: vi.fn().mockResolvedValue({ document: { rule: { spec: 'is-adult' } }, version: 3 }),
     putRule: vi.fn().mockResolvedValue({ outcome: 'updated', version: 4 }),
     ...overrides,
   } as unknown as RulesApiClient;
@@ -89,7 +92,7 @@ describe('RuleHeader', () => {
 
     await pickViaPalette('can-checkout');
 
-    await waitFor(() => expect(store.getState().document).toEqual({ rule: { spec: 'is-active' } }));
+    await waitFor(() => expect(store.getState().document).toEqual({ rule: { spec: 'is-adult' } }));
     expect(screen.getByText(/v3/)).toBeDefined();
     expect(await screen.findByText('can-checkout')).toBeTruthy();
     // Choosing closes it: the palette is transient, and it has just been relabelled.
@@ -107,7 +110,7 @@ describe('RuleHeader', () => {
     // again: there is nothing to save it back to.
     expect(await screen.findByText('local draft')).toBeTruthy();
     expect(screen.queryByText(/v3/)).toBeNull();
-    expect(store.getState().document).toEqual({ rule: { spec: 'is-active' } });
+    expect(store.getState().document).toEqual({ rule: { spec: 'is-adult' } });
   });
 
   it('shows a code-default note when the server document is null', async () => {
@@ -130,7 +133,7 @@ describe('RuleHeader', () => {
     await userEvent.click(screen.getByRole('button', { name: /save/i }));
 
     await waitFor(() =>
-      expect(client.putRule).toHaveBeenCalledWith('can-checkout', { rule: { spec: 'is-active' } }, 3));
+      expect(client.putRule).toHaveBeenCalledWith('can-checkout', { rule: { spec: 'is-adult' } }, 3));
     expect(await screen.findByText(/v4/)).toBeDefined();
   });
 
@@ -195,6 +198,17 @@ describe('RuleHeader', () => {
     expect(screen.queryByRole('button', { name: /^new$/i })).toBeNull();
     expect(screen.queryByRole('button', { name: /derive/i })).toBeNull();
     expect(screen.queryByRole('button', { name: /delete/i })).toBeNull();
+  });
+
+  it('opens the palette with ⌘K', async () => {
+    // The same chord the propositions page uses, through the same hook — which is the whole point
+    // of the hook. Without this the binding was proven on one page only, and deleting
+    // `RuleHeader`'s `useCommandKey` call passed the entire suite.
+    renderHeader();
+
+    await userEvent.keyboard('{Meta>}k{/Meta}');
+
+    expect(screen.getByRole('dialog', { name: 'Rules' })).toBeTruthy();
   });
 
   it('opens the document viewer from the toolbar', async () => {

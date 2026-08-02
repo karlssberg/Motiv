@@ -35,7 +35,16 @@ const setup = (overrides: Partial<Parameters<typeof CommandPalette<Row>>[0]> = {
 };
 
 describe('CommandPalette', () => {
-  it('opens with the search input focused, so typing needs no click', () => {
+  it('commits autoFocus onto the search input, which is not the same as opening focused', () => {
+    // Named for what it proves and no more. React's `autoFocus` is not the HTML attribute — it is
+    // an imperative `focus()` during commit, and it renders no attribute to assert on, so this is
+    // the only trace of it. In a browser `showModal()` then runs the dialog focusing steps *after*
+    // that commit and decides the caret for itself, which is how the real focus-order bug — every
+    // modal opening on Close — survived a green run of this very test.
+    //
+    // Not a hole: what actually lands the caret here is the close button being rendered last.
+    // `Modal.test.tsx › puts the close control last` pins that structure, and
+    // `propositions.spec.ts › the palette traps focus…` measures the outcome in a browser.
     setup();
     expect(document.activeElement).toBe(screen.getByRole('combobox'));
   });
@@ -111,6 +120,23 @@ describe('CommandPalette', () => {
     expect(screen.getByRole('combobox').getAttribute('aria-activedescendant')).toBeNull();
     await userEvent.keyboard('{Enter}');
     expect(onChoose).not.toHaveBeenCalled();
+  });
+
+  it('names no list while browsing, where there is no list in the document to name', async () => {
+    // The browse view renders *instead of* the listbox, so `aria-controls` pointed the combobox at
+    // an id nothing in the document carried — an invalid IDREF, and in the palette's default state:
+    // every open of the Propositions palette started there. The comment justifying the empty <ul>
+    // that stays mounted turns on exactly this, so the browse branch was contradicting it.
+    setup({ renderBrowse: () => <p>browse view</p> });
+    const input = screen.getByRole('combobox');
+
+    expect(input.getAttribute('aria-controls')).toBeNull();
+
+    await userEvent.type(input, 'orders');
+
+    const controls = input.getAttribute('aria-controls');
+    expect(controls).not.toBeNull();
+    expect(document.getElementById(controls!)).toBe(screen.getByRole('listbox'));
   });
 
   it('renders the empty state with the query that found nothing', async () => {
