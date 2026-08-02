@@ -116,4 +116,41 @@ public class AndAlsoPolicyTests
         result.Value.ShouldBe("right-true");
         result.Values.ShouldBe(["left-true", "right-true"]);
     }
+
+    [Fact]
+    public void Should_preserve_the_policy_when_combining_two_propositions()
+    {
+        // Arrange
+        var composed = Gate(true, "left").AndAlso(Gate(false, "right"));
+
+        // Act
+        var result = composed.Evaluate("model");
+
+        // Assert — the static type is the point: AndAlso on two policies yields a policy,
+        // so `.Value` is available without a cast.
+        result.Value.ShouldBe("right-false");
+        result.Values.ShouldBe(["right-false"]);
+        result.Satisfied.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Should_not_evaluate_the_right_proposition_when_the_left_is_unsatisfied()
+    {
+        // Arrange
+        var rightEvaluations = 0;
+        var left = Gate(false, "left");
+        var right = Spec
+            .Build<string>(_ => { rightEvaluations++; return true; })
+            .WhenTrue("right-true")
+            .WhenFalse("right-false")
+            .Create("right");
+
+        // Act
+        var result = left.AndAlso(right).Evaluate("model");
+
+        // Assert
+        result.Satisfied.ShouldBeFalse();
+        result.Value.ShouldBe("left-false");
+        rightEvaluations.ShouldBe(0);
+    }
 }
