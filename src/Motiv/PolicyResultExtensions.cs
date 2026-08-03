@@ -6,6 +6,16 @@ namespace Motiv;
 public static class PolicyResultExtensions
 {
     /// <summary>
+    /// Combines a collection of policy results using the conditional AND operator (i.e. `&amp;&amp;`).
+    /// </summary>
+    /// <param name="policyResult">The policy results to apply the AND operator to.</param>
+    /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
+    /// <returns>A single policy result that is the conditional AND of all the input propositions.</returns>
+    public static PolicyResultBase<TMetadata> AndAlsoTogether<TMetadata>(
+        this IEnumerable<PolicyResultBase<TMetadata>> policyResult) =>
+        policyResult.Aggregate((left, right) => left.AndAlso(right));
+
+    /// <summary>
     /// Combines a collection of policy results using the conditional OR operator (i.e. `||`).
     /// </summary>
     /// <param name="policyResult">The policy results to apply the OR operator to.</param>

@@ -245,4 +245,51 @@ public class AndAlsoPolicyTests
         result.Satisfied.ShouldBeFalse();
         result.Value.ShouldBe("plain-false");
     }
+
+    [Fact]
+    public void Should_select_the_first_failing_gate_in_a_chain()
+    {
+        // Arrange
+        var policies = new[] { Gate(true, "a"), Gate(false, "b"), Gate(false, "c") };
+
+        // Act
+        var result = policies.AndAlsoTogether().Evaluate("model");
+
+        // Assert — "b" fails first, so "c" is never evaluated and "b" is the value.
+        result.Satisfied.ShouldBeFalse();
+        result.Value.ShouldBe("b-false");
+        result.Values.ShouldBe(["b-false"]);
+    }
+
+    [Fact]
+    public void Should_flatten_every_cause_of_a_fully_satisfied_chain()
+    {
+        // Arrange
+        var policies = new[] { Gate(true, "a"), Gate(true, "b"), Gate(true, "c") };
+
+        // Act
+        var result = policies.AndAlsoTogether().Evaluate("model");
+
+        // Assert
+        result.Satisfied.ShouldBeTrue();
+
+        // No gate is decisive when all pass, so Value takes the last evaluated — but Values
+        // flattens the left-nested tree and reports all three.
+        result.Value.ShouldBe("c-true");
+        result.Values.ShouldBe(["a-true", "b-true", "c-true"]);
+    }
+
+    [Fact]
+    public void Should_combine_policy_results_with_AndAlsoTogether()
+    {
+        // Arrange
+        var results = new[] { Evaluated(true, "a"), Evaluated(false, "b"), Evaluated(true, "c") };
+
+        // Act
+        var combined = results.AndAlsoTogether();
+
+        // Assert
+        combined.Satisfied.ShouldBeFalse();
+        combined.Value.ShouldBe("b-false");
+    }
 }
