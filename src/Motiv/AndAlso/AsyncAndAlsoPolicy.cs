@@ -29,7 +29,8 @@ internal sealed class AsyncAndAlsoPolicy<TModel, TMetadata>(
             operand => operand is AsyncAndSpec<TModel, TMetadata> or AsyncAndAlsoSpec<TModel, TMetadata>
                 or AsyncAndAlsoPolicy<TModel, TMetadata>
                 or AndSpec<TModel, TMetadata> or AndAlsoSpec<TModel, TMetadata> or AndAlsoPolicy<TModel, TMetadata>
-                or ExpressionAndSpec<TModel, TMetadata> or ExpressionAndAlsoSpec<TModel, TMetadata>);
+                or ExpressionAndSpec<TModel, TMetadata> or ExpressionAndAlsoSpec<TModel, TMetadata>
+                or ExpressionAndAlsoPolicy<TModel, TMetadata>);
 
     /// <inheritdoc />
     public string Operation => Operator.AndAlso;
