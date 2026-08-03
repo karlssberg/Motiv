@@ -28,8 +28,10 @@ internal sealed class AsyncAndSpec<TModel, TMetadata>(
     public override ISpecDescription Description => field ??=
         new AsyncBinarySpecDescription<TModel, TMetadata>(left, right, "&", Operator.And,
             operand => operand is AsyncAndSpec<TModel, TMetadata> or AsyncAndAlsoSpec<TModel, TMetadata>
-                or AndSpec<TModel, TMetadata> or AndAlsoSpec<TModel, TMetadata>
-                or ExpressionAndSpec<TModel, TMetadata> or ExpressionAndAlsoSpec<TModel, TMetadata>);
+                or AsyncAndAlsoPolicy<TModel, TMetadata>
+                or AndSpec<TModel, TMetadata> or AndAlsoSpec<TModel, TMetadata> or AndAlsoPolicy<TModel, TMetadata>
+                or ExpressionAndSpec<TModel, TMetadata> or ExpressionAndAlsoSpec<TModel, TMetadata>
+                or ExpressionAndAlsoPolicy<TModel, TMetadata>);
 
     /// <inheritdoc />
     public string Operation => Operator.And;

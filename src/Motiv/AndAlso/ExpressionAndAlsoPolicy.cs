@@ -7,12 +7,10 @@ using Expr = System.Linq.Expressions.Expression;
 
 namespace Motiv.AndAlso;
 
-internal sealed class ExpressionAndAlsoSpec<TModel, TMetadata>(
-    SpecBase<TModel, TMetadata> left,
-    SpecBase<TModel, TMetadata> right,
-    IExpressionSpec<TModel> leftExpression,
-    IExpressionSpec<TModel> rightExpression)
-    : ExpressionSpecBase<TModel, TMetadata>,
+internal sealed class ExpressionAndAlsoPolicy<TModel, TMetadata>(
+    ExpressionPolicyBase<TModel, TMetadata> left,
+    ExpressionPolicyBase<TModel, TMetadata> right)
+    : ExpressionPolicyBase<TModel, TMetadata>,
         IBinaryOperationSpec<TModel, TMetadata>,
         IBinaryOperationSpec<TModel>,
         IBinaryOperationSpec
@@ -20,7 +18,7 @@ internal sealed class ExpressionAndAlsoSpec<TModel, TMetadata>(
     private readonly SpecBase[] _underlying = [left, right];
 
     private readonly Lazy<Expression<Func<TModel, bool>>> _expression = new(() =>
-        ExpressionComposer.Combine(leftExpression, rightExpression, Expr.AndAlso));
+        ExpressionComposer.Combine(left, right, Expr.AndAlso));
 
     public override IEnumerable<SpecBase> Underlying => _underlying;
 
@@ -34,9 +32,27 @@ internal sealed class ExpressionAndAlsoSpec<TModel, TMetadata>(
 
     public bool IsCollapsable => true;
 
-    public SpecBase<TModel, TMetadata> Left => left;
+    public override Expression<Func<TModel, bool>> ToExpression() => _expression.Value;
 
-    public SpecBase<TModel, TMetadata> Right => right;
+    public override bool Matches(TModel model) => left.Matches(model) && right.Matches(model);
+
+    protected override PolicyResultBase<TMetadata> EvaluatePolicy(TModel model)
+    {
+        var leftResult = left.EvaluatePolicyInternal(model);
+        return leftResult.Satisfied switch
+        {
+            true => new AndAlsoPolicyResult<TMetadata>(leftResult, right.EvaluatePolicyInternal(model)),
+            false => new AndAlsoPolicyResult<TMetadata>(leftResult)
+        };
+    }
+
+    public PolicyBase<TModel, TMetadata> Left => left;
+
+    public PolicyBase<TModel, TMetadata> Right => right;
+
+    SpecBase<TModel, TMetadata> IBinaryOperationSpec<TModel, TMetadata>.Left => left;
+
+    SpecBase<TModel, TMetadata> IBinaryOperationSpec<TModel, TMetadata>.Right => right;
 
     SpecBase<TModel> IBinaryOperationSpec<TModel>.Right => Right;
 
@@ -45,20 +61,4 @@ internal sealed class ExpressionAndAlsoSpec<TModel, TMetadata>(
     SpecBase IBinaryOperationSpec.Right => Right;
 
     SpecBase IBinaryOperationSpec.Left => Left;
-
-    public override Expression<Func<TModel, bool>> ToExpression() => _expression.Value;
-
-    public override bool Matches(TModel model) => left.Matches(model) && right.Matches(model);
-
-    protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
-    {
-        var leftResult = left.EvaluateInternal(model);
-        return leftResult.Satisfied switch
-        {
-            true => new AndAlsoBooleanResult<TMetadata>(
-                leftResult,
-                right.EvaluateInternal(model)),
-            false => new AndAlsoBooleanResult<TMetadata>(leftResult)
-        };
-    }
 }

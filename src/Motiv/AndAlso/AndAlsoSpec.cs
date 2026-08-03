@@ -20,7 +20,7 @@ internal sealed class AndAlsoSpec<TModel, TMetadata>(
         new BinarySpecDescription<TModel, TMetadata>(left, right, "&&", Operator.AndAlso,
             operand => operand is AndSpec<TModel, TMetadata> or AndAlsoPolicy<TModel, TMetadata>
                 or AndAlsoSpec<TModel, TMetadata> or ExpressionAndSpec<TModel, TMetadata>
-                or ExpressionAndAlsoSpec<TModel, TMetadata>);
+                or ExpressionAndAlsoSpec<TModel, TMetadata> or ExpressionAndAlsoPolicy<TModel, TMetadata>);
 
     public string Operation => Operator.AndAlso;
 

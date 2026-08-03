@@ -209,4 +209,40 @@ public class AndAlsoPolicyTests
         result.Satisfied.ShouldBeFalse();
         result.Value.ShouldBe("right-false");
     }
+
+    private static ExpressionPolicyBase<int, string> ExprGate(int threshold, string name) =>
+        Spec.From((int n) => n > threshold)
+            .WhenTrue($"{name}-true")
+            .WhenFalse($"{name}-false")
+            .Create(name);
+
+    [Fact]
+    public void Should_preserve_the_policy_when_combining_two_expression_propositions()
+    {
+        // Arrange — 5 > 0 is satisfied, 5 > 10 is not, so the right gate is decisive.
+        var composed = ExprGate(0, "above-zero").AndAlso(ExprGate(10, "above-ten"));
+
+        // Act
+        var result = composed.Evaluate(5);
+
+        // Assert
+        result.Satisfied.ShouldBeFalse();
+        result.Value.ShouldBe("above-ten-false");
+    }
+
+    [Fact]
+    public void Should_preserve_the_policy_when_mixing_expression_and_plain_propositions()
+    {
+        // Arrange
+        var composed = ExprGate(0, "above-zero").AndAlso(
+            Spec.Build<int>(_ => false).WhenTrue("plain-true").WhenFalse("plain-false").Create("plain"));
+
+        // Act
+        var result = composed.Evaluate(5);
+
+        // Assert — degrading from ExpressionPolicyBase to PolicyBase is fine; degrading to a
+        // spec is not, so `.Value` must still be reachable.
+        result.Satisfied.ShouldBeFalse();
+        result.Value.ShouldBe("plain-false");
+    }
 }
