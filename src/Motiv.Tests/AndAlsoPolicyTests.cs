@@ -250,7 +250,15 @@ public class AndAlsoPolicyTests
     public void Should_select_the_first_failing_gate_in_a_chain()
     {
         // Arrange
-        var policies = new[] { Gate(true, "a"), Gate(false, "b"), Gate(false, "c") };
+        var cEvaluations = 0;
+        var a = Gate(true, "a");
+        var b = Gate(false, "b");
+        var c = Spec
+            .Build<string>(_ => { cEvaluations++; return false; })
+            .WhenTrue("c-true")
+            .WhenFalse("c-false")
+            .Create("c");
+        var policies = new[] { a, b, c };
 
         // Act
         var result = policies.AndAlsoTogether().Evaluate("model");
@@ -259,6 +267,7 @@ public class AndAlsoPolicyTests
         result.Satisfied.ShouldBeFalse();
         result.Value.ShouldBe("b-false");
         result.Values.ShouldBe(["b-false"]);
+        cEvaluations.ShouldBe(0);
     }
 
     [Fact]
@@ -280,7 +289,7 @@ public class AndAlsoPolicyTests
     }
 
     [Fact]
-    public void Should_combine_policy_results_with_AndAlsoTogether()
+    public void Should_select_the_first_failing_result_when_combining_policy_results()
     {
         // Arrange
         var results = new[] { Evaluated(true, "a"), Evaluated(false, "b"), Evaluated(true, "c") };
@@ -291,5 +300,6 @@ public class AndAlsoPolicyTests
         // Assert
         combined.Satisfied.ShouldBeFalse();
         combined.Value.ShouldBe("b-false");
+        combined.Values.ShouldBe(["b-false"]);
     }
 }
