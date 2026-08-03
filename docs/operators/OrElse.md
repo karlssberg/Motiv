@@ -61,7 +61,7 @@ var isProductAtRiskOfTheftSpec =
 
 ### [Policies](xref:Motiv.PolicyBase`2)
 
-`OrElse()` is the one composition that preserves a policy: `policy.OrElse(policy)` returns a
+`OrElse()` preserves a policy, as does `AndAlso()`: `policy.OrElse(policy)` returns a
 <xref:Motiv.PolicyBase`2>, so an `OrElse` chain behaves like `??` — it yields a single `Value` even
 when nothing matched.
 
