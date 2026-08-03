@@ -27,7 +27,7 @@ public static class PolicyExtensions
     /// <param name="propositions">The propositions to apply the ELSE operator to.</param>
     /// <typeparam name="TModel">The type of the model.</typeparam>
     /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
-    /// <returns>A single specification that represents the conditional OR of all the input propositions.</returns>
+    /// <returns>A single policy that represents the conditional OR of all the input propositions.</returns>
     public static PolicyBase<TModel, TMetadata> OrElseTogether<TModel, TMetadata>(
         this IEnumerable<PolicyBase<TModel, TMetadata>> propositions) =>
         propositions.Aggregate((leftSpec, rightSpec) => leftSpec.OrElse(rightSpec));

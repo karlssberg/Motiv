@@ -8,6 +8,11 @@ public class AndAlsoPolicyTests
             .WhenFalse($"{name}-false")
             .Create(name);
 
+    // Regression pin: these expectations were captured from a real run *before* any production code
+    // in this branch existed, to prove that making AndAlso policy-preserving is a non-breaking change
+    // for existing callers who combined two policies. Do not amend the theory or its Expected* helpers
+    // to make a future change pass — a mismatch here means the change altered public output, which is
+    // exactly what this test exists to catch.
     [Theory]
     [InlineData(true, true)]
     [InlineData(true, false)]
@@ -301,5 +306,21 @@ public class AndAlsoPolicyTests
         combined.Satisfied.ShouldBeFalse();
         combined.Value.ShouldBe("b-false");
         combined.Values.ShouldBe(["b-false"]);
+    }
+
+    [Fact]
+    public void Should_not_parenthesize_a_nested_andalso_policy_result_inside_an_eager_and()
+    {
+        // Arrange — an AndAlso of two policies nested inside an eager And should render as a flat
+        // chain, the same way an eager And of two policies would. The AndAlso family and the eager
+        // And family recognise each other as the same family for parenthesization purposes.
+        var composed = Gate(true, "a").AndAlso(Gate(true, "b")).And(Gate(true, "c"));
+
+        // Act
+        var result = composed.Evaluate("model");
+
+        // Assert
+        result.Satisfied.ShouldBeTrue();
+        result.Reason.ShouldBe("(a == true) && (b == true) & (c == true)");
     }
 }

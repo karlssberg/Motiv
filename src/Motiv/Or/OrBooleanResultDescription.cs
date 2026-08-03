@@ -12,5 +12,6 @@ internal sealed class OrBooleanResultDescription<TMetadata>(
     protected override string Separator => " | ";
 
     protected override bool IsSameFamily(BooleanResultBase<TMetadata> result) =>
-        result is OrBooleanResult<TMetadata> or OrElseBooleanResult<TMetadata>;
+        result is OrBooleanResult<TMetadata> or OrElsePolicyResult<TMetadata>
+            or OrElseBooleanResult<TMetadata>;
 }

@@ -125,7 +125,10 @@ When a binary operation has:
 ### Policy Preservation
 - `!policy` returns a policy
 - `policy.OrElse(policy)` and `policy.AndAlso(policy)` return a policy
-- All other operations return a spec
+- All other logical *combinators* return a spec
+
+`ChangeModelTo` and `ToAsyncSpec` also preserve policy-ness — they re-target or lift a policy rather
+than combining two, so they are not combinators and the rule above does not apply to them.
 
 Policy preservation follows **short-circuiting**. A short-circuiting combinator always has a
 well-defined last-evaluated operand, so a single `Value` is a total function of the evaluation path:
