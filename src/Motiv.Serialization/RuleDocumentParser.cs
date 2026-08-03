@@ -62,6 +62,10 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
                 case "rule":
                     hasRule = true;
                     rule = ParseNode(property.Value, "$.rule", depth: 1, errors);
+                    if (rule is not null && CompositionDepthOf(rule) > options.MaxCompositionDepth)
+                        ReportTooLarge("$.rule",
+                            "document composes deeper than the maximum composition depth of "
+                            + options.MaxCompositionDepth, errors);
                     break;
                 default:
                     errors.Add(new RuleError($"$.{property.Name}", RuleErrorCode.InvalidNode,
@@ -474,6 +478,32 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
 
         static bool IsIdentifierStart(char ch) => ch is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or '_';
         static bool IsIdentifierPart(char ch) => IsIdentifierStart(ch) || ch is >= '0' and <= '9';
+    }
+
+    /// <summary>
+    /// The depth of the spec tree a node binds to, which is what result-tree walks recurse over —
+    /// not the document's JSON nesting.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="RuleBinder" /> folds an n-ary operator left-deep (<c>((c₁ op c₂) op c₃) …</c>), so
+    /// every operand after the first adds a level, and a nested operand's own depth compounds rather
+    /// than adds — three operands nested three levels compose six deep, not three. That is why a
+    /// per-node operand cap cannot bound this and <see cref="RuleSerializerOptions.MaxDocumentDepth" />
+    /// does not either. Recursion here is bounded by <c>MaxDocumentDepth</c>, which is already
+    /// enforced during parsing.
+    /// </remarks>
+    private static int CompositionDepthOf(RuleNode node)
+    {
+        if (node.Children.Count == 0)
+            return 0;
+
+        var depth = CompositionDepthOf(node.Children[0]);
+        for (var index = 1; index < node.Children.Count; index++)
+            depth = 1 + Math.Max(depth, CompositionDepthOf(node.Children[index]));
+
+        // A single-operand node — 'not', and the higher-order quantifiers — still wraps its operand
+        // in one composition level, which the fold above has no second operand to accumulate.
+        return node.Children.Count == 1 ? depth + 1 : depth;
     }
 
     private bool ExceedsLimits(string path, int depth, List<RuleError> errors)

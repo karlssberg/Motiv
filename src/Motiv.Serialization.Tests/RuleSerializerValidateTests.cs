@@ -315,6 +315,84 @@ public class RuleSerializerValidateTests
     }
 
     [Fact]
+    public void Should_reject_a_document_whose_composition_exceeds_the_maximum_depth()
+    {
+        // Arrange: five operands fold left-deep into a four-deep composition.
+        var options = new RuleSerializerOptions { MaxCompositionDepth = 3 };
+        const string json =
+            """
+            { "rule": { "and": [ { "spec": "a" }, { "spec": "b" }, { "spec": "c" }, { "spec": "d" },
+                                 { "spec": "e" } ] } }
+            """;
+
+        // Act
+        var errors = Validate(json, options);
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.DocumentTooLarge);
+    }
+
+    [Fact]
+    public void Should_count_a_unary_operator_towards_the_composition_depth()
+    {
+        // Arrange: three negations wrap the leaf in three composition levels, even though no node
+        // has more than one operand for the left-deep fold to accumulate.
+        var options = new RuleSerializerOptions { MaxCompositionDepth = 2 };
+        const string json =
+            """{ "rule": { "not": { "not": { "not": { "spec": "a" } } } } }""";
+
+        // Act
+        var errors = Validate(json, options);
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.DocumentTooLarge);
+    }
+
+    [Fact]
+    public void Should_compound_composition_depth_through_nesting_rather_than_adding_it()
+    {
+        // Arrange: no node has more than three operands, so a per-operand width cap would admit
+        // this — but three levels of three compose six deep. This is the shape that makes a
+        // width-based limit unsound.
+        var options = new RuleSerializerOptions { MaxCompositionDepth = 5 };
+        const string json =
+            """
+            { "rule": { "and": [ { "and": [ { "and": [ { "spec": "a" }, { "spec": "b" },
+                                                       { "spec": "c" } ] },
+                                           { "spec": "d" }, { "spec": "e" } ] },
+                                 { "spec": "f" }, { "spec": "g" } ] } }
+            """;
+
+        // Act
+        var errors = Validate(json, options);
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.DocumentTooLarge);
+    }
+
+    [Fact]
+    public void Should_accept_a_document_that_composes_exactly_to_the_maximum_depth()
+    {
+        // Arrange: four operands fold three deep, which the limit admits — the guard must not
+        // reject documents merely because they are wide.
+        var options = new RuleSerializerOptions { MaxCompositionDepth = 3 };
+        const string json =
+            """
+            { "rule": { "and": [ { "spec": "a" }, { "spec": "b" }, { "spec": "c" },
+                                 { "spec": "d" } ] } }
+            """;
+
+        // Act
+        var errors = Validate(json, options);
+
+        // Assert
+        errors.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Should_report_payload_errors_even_when_the_operator_subtree_fails()
     {
         // Act
