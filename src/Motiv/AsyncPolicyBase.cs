@@ -113,7 +113,14 @@ public abstract class AsyncPolicyBase<TModel, TMetadata> : AsyncSpecBase<TModel,
     public AsyncPolicyBase<TModel, TMetadata> AndAlso(AsyncPolicyBase<TModel, TMetadata> other) =>
         new AsyncAndAlsoPolicy<TModel, TMetadata>(this, other);
 
-    /// <inheritdoc cref="AndAlso(AsyncPolicyBase{TModel,TMetadata})" />
+    /// <summary>
+    /// Combines this policy with a synchronous policy using the conditional AND operator, preserving the
+    /// policy guarantee. The synchronous other operand is lifted into the asynchronous hierarchy via
+    /// <see cref="PolicyBase{TModel,TMetadata}.ToAsyncSpec" />. The other operand's work is only started
+    /// if <c>this</c> policy is satisfied.
+    /// </summary>
+    /// <param name="other">The synchronous policy to evaluate in the event that <c>this</c> policy is satisfied.</param>
+    /// <returns>A new policy that represents the conditional AND of this policy and <paramref name="other" />.</returns>
     public AsyncPolicyBase<TModel, TMetadata> AndAlso(PolicyBase<TModel, TMetadata> other) =>
         AndAlso(other.ToAsyncSpec());
 

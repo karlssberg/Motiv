@@ -256,6 +256,13 @@ Replace lines 125-128 in `CLAUDE.md`, which currently read:
 
 with:
 
+> **Superseded.** The `AndAlso` analysis below — and its instruction "do not add a
+> policy-preserving `AndAlso`" — was the boundary this plan drew at the time. A later branch,
+> `2026-08-03-andalso-policy-preservation`, revisited and reversed that call: `AndAlso` is now
+> policy-preserving too, mirroring `OrElse`. See
+> `docs/superpowers/specs/2026-08-02-andalso-policy-preservation-design.md` for the design that
+> shipped. The block below is left unmodified as the historical record of the plan as executed.
+
 ```markdown
 ### Policy Preservation
 - `!policy` returns a policy
