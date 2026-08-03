@@ -615,5 +615,25 @@ public class OrElsePolicyTests
         // Values is the full causal set. Value is deliberately NOT Values.Single().
         result.Values.ShouldBe(["left-false", "right-false"]);
     }
+
+    [Fact]
+    public void Should_not_parenthesize_a_nested_orelse_policy_result_inside_an_eager_or()
+    {
+        // Arrange — an OrElse of two policies nested inside an eager Or should render as a flat
+        // chain, the same way an eager Or of two policies would. The OrElse family and the eager
+        // Or family recognise each other as the same family for parenthesization purposes.
+        var a = Spec.Build((object _) => false).Create("a");
+        var b = Spec.Build((object _) => false).Create("b");
+        var c = Spec.Build((object _) => false).Create("c");
+
+        var composed = a.OrElse(b).Or(c);
+
+        // Act
+        var result = composed.Evaluate(new object());
+
+        // Assert
+        result.Satisfied.ShouldBeFalse();
+        result.Reason.ShouldBe("(a == false) || (b == false) | (c == false)");
+    }
 }
 

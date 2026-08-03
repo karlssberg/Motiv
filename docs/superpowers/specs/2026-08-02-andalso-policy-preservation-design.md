@@ -135,10 +135,15 @@ changed before moving on. Enumerate carriers by grepping rather than working fro
 `AndAlsoSpec` / `AndAlsoBooleanResult`. After this change it binds to the new overload and produces
 an `AndAlsoPolicy` / `AndAlsoPolicyResult`.
 
-Source and binary compatibility hold — `PolicyBase : SpecBase`, so existing assignments still compile,
-and the old method still exists for already-compiled callers. The risk is **behavioural**: if the two
-result types render `Reason`, `Assertions`, `Justification` or `Values` differently, every existing
-consumer who combined two policies sees changed output.
+Source and binary compatibility hold on the sync, async and result surfaces — `PolicyBase : SpecBase`,
+so existing assignments still compile, and the old method still exists for already-compiled callers.
+The expression-tree surface is the exception: `ExpressionPolicyBase` derives from `PolicyBase`, not
+from `ExpressionSpecBase`, so narrowing `ExpressionPolicyBase.AndAlso(ExpressionPolicyBase)`'s return
+type from `ExpressionSpecBase<TModel,TMetadata>` to `ExpressionPolicyBase<TModel,TMetadata>` carries a
+narrow source break for callers who declared the result as `ExpressionSpecBase<TModel,TMetadata>` —
+matching the break `OrElse` already shipped in PR #90. The risk on the surfaces where compatibility
+holds is **behavioural**: if the two result types render `Reason`, `Assertions`, `Justification` or
+`Values` differently, every existing consumer who combined two policies sees changed output.
 
 They are expected to match, since `OrElsePolicyResult` and `OrElseBooleanResult` share
 `OrElseBooleanResultDescription`. Expected is not verified. The first task therefore pins the current
