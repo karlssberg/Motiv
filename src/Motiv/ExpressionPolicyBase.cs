@@ -101,9 +101,26 @@ public abstract class ExpressionPolicyBase<TModel, TMetadata> : PolicyBase<TMode
     public ExpressionSpecBase<TModel, TMetadata> AndAlso(ExpressionSpecBase<TModel, TMetadata> spec) =>
         new ExpressionAndAlsoSpec<TModel, TMetadata>(this, spec, this, spec);
 
-    /// <inheritdoc cref="AndAlso(ExpressionSpecBase{TModel, TMetadata})"/>
-    public ExpressionSpecBase<TModel, TMetadata> AndAlso(ExpressionPolicyBase<TModel, TMetadata> spec) =>
-        new ExpressionAndAlsoSpec<TModel, TMetadata>(this, spec, this, spec);
+    /// <summary>
+    /// Creates a policy equivalent to a conditional "AND" of this policy and the other policy.
+    /// The result remains both a policy and expression-backed.
+    /// </summary>
+    /// <param name="other">The policy to evaluate when this policy is satisfied.</param>
+    /// <returns>An expression-backed policy representing the conditional AND of the two policies.</returns>
+    public ExpressionPolicyBase<TModel, TMetadata> AndAlso(ExpressionPolicyBase<TModel, TMetadata> other) =>
+        new ExpressionAndAlsoPolicy<TModel, TMetadata>(this, other);
+
+    /// <summary>
+    /// Combines this policy with an ordinary <see cref="PolicyBase{TModel,TMetadata}"/> operand using the
+    /// Policy-Also combinator (see <see cref="PolicyBase{TModel,TMetadata}.AndAlso"/>). Redeclared here (rather
+    /// than relying on the inherited base implementation) so this overload remains a candidate of equal
+    /// declaring-type precedence to <see cref="AndAlso{TSpec}"/> and the same-metadata <see cref="SpecBase{TModel,TMetadata}"/>
+    /// overload below, preserving overload resolution parity and the distinct Policy-Also return type.
+    /// </summary>
+    /// <param name="other">The policy to evaluate when this policy is satisfied.</param>
+    /// <returns>A <see cref="PolicyBase{TModel,TMetadata}"/> representing the conditional AND of the two policies.</returns>
+    public new PolicyBase<TModel, TMetadata> AndAlso(PolicyBase<TModel, TMetadata> other) =>
+        base.AndAlso(other);
 
     /// <summary>
     /// Combines this proposition with a same-metadata proposition that is not itself expression-backed,

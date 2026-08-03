@@ -21,8 +21,8 @@ where the lifted type is needed explicitly, e.g. assigning to an `AsyncSpecBase<
   evaluation in an already-completed `ValueTask` &mdash; it does not introduce any actual asynchrony, thread
   hops, I/O, or per-evaluation `Task` allocation. Results are identical to calling `Evaluate()` directly.
 - **Policies stay policies.** `PolicyBase<TModel, TMetadata>.ToAsyncSpec()` returns an
-  `AsyncPolicyBase<TModel, TMetadata>`, preserving the single-value guarantee &mdash; the same way `!policy`
-  and `policy.OrElse(policy)` preserve policy-ness elsewhere in Motiv.
+  `AsyncPolicyBase<TModel, TMetadata>`, preserving the single-value guarantee &mdash; the same way `!policy`,
+  `policy.OrElse(policy)` and `policy.AndAlso(policy)` preserve policy-ness elsewhere in Motiv.
 - **Mixed composition works in both directions.** `syncSpec.AndAlso(asyncSpec)` and
   `asyncSpec.AndAlso(syncSpec)` (and the `&`/`|`/`^` operator forms) both compile and produce an
   `AsyncSpecBase<TModel, TMetadata>` &mdash; the synchronous operand is lifted regardless of which side it's on.

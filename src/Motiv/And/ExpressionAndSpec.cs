@@ -27,7 +27,8 @@ internal sealed class ExpressionAndSpec<TModel, TMetadata>(
     public override ISpecDescription Description => field ??=
         new BinarySpecDescription<TModel, TMetadata>(left, right, "&", Operator.And,
             operand => operand is AndSpec<TModel, TMetadata> or AndAlsoSpec<TModel, TMetadata>
-                or ExpressionAndSpec<TModel, TMetadata> or ExpressionAndAlsoSpec<TModel, TMetadata>);
+                or AndAlsoPolicy<TModel, TMetadata> or ExpressionAndSpec<TModel, TMetadata>
+                or ExpressionAndAlsoSpec<TModel, TMetadata> or ExpressionAndAlsoPolicy<TModel, TMetadata>);
 
     public string Operation => Operator.And;
 
