@@ -124,7 +124,7 @@ When a binary operation has:
 
 ### Policy Preservation
 - `!policy` returns a policy
-- `policy.OrElse(policy)` returns a policy
+- `policy.OrElse(policy)` and `policy.AndAlso(policy)` return a policy
 - All other operations return a spec
 
 Policy preservation follows **short-circuiting**. A short-circuiting combinator always has a
@@ -134,10 +134,8 @@ well-defined last-evaluated operand, so a single `Value` is a total function of 
 - `Not` — one operand in, one out.
 - Eager `Or` / `And` / `XOr` have no last-evaluated operand, since both always evaluate. No operand is canonical, so they correctly return specs.
 
-`OrElse` and `Not` implement this today. **`AndAlso` does not yet** — `policy.AndAlso(policy)` still
-returns a spec. That is an outstanding gap to be closed on its own branch by mirroring the `OrElse`
-policy family (`OrElsePolicy`, `OrElsePolicyResult`, and the async and expression-tree variants),
-not a judgement that conjunction is ineligible.
+`OrElse`, `AndAlso` and `Not` all implement this. `policy.AndAlso(policy)` returns a policy across the
+sync, async, expression-tree and result surfaces, as `OrElse` does.
 
 Preservation is a **static-type property**. `policy.OrElse(spec)` returns a spec, and declaring
 policies as `IEnumerable<SpecBase<TModel, TMetadata>>` before calling `OrElseTogether()` is the same
