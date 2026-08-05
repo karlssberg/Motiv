@@ -62,10 +62,7 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
                 case "rule":
                     hasRule = true;
                     rule = ParseNode(property.Value, "$.rule", depth: 1, errors);
-                    if (rule is not null && CompositionDepthOf(rule) > options.MaxCompositionDepth)
-                        ReportTooLarge("$.rule",
-                            "document composes deeper than the maximum composition depth of "
-                            + options.MaxCompositionDepth, errors);
+                    ReportIfComposesTooDeeply(rule, errors);
                     break;
                 default:
                     errors.Add(new RuleError($"$.{property.Name}", RuleErrorCode.InvalidNode,
@@ -481,6 +478,20 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
     }
 
     /// <summary>
+    /// Refuses a rule whose <em>composed</em> spec tree would be deeper than
+    /// <see cref="RuleSerializerOptions.MaxCompositionDepth" />.
+    /// </summary>
+    private void ReportIfComposesTooDeeply(RuleNode? rule, List<RuleError> errors)
+    {
+        if (rule is null || CompositionDepthOf(rule) <= options.MaxCompositionDepth)
+            return;
+
+        ReportTooLarge("$.rule",
+            $"document composes deeper than the maximum composition depth of {options.MaxCompositionDepth}",
+            errors);
+    }
+
+    /// <summary>
     /// The depth of the spec tree a node binds to, which is what result-tree walks recurse over —
     /// not the document's JSON nesting.
     /// </summary>
@@ -494,16 +505,22 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
     /// </remarks>
     private static int CompositionDepthOf(RuleNode node)
     {
+        // A leaf binds to a single spec, composing nothing.
         if (node.Children.Count == 0)
             return 0;
 
         var depth = CompositionDepthOf(node.Children[0]);
+
+        // A single-operand node — 'not', and the higher-order quantifiers — still wraps its operand
+        // in one composition level, which the fold below has no second operand to accumulate.
+        if (node.Children.Count == 1)
+            return depth + 1;
+
+        // The left-deep fold: every operand after the first adds a level over the deepest so far.
         for (var index = 1; index < node.Children.Count; index++)
             depth = 1 + Math.Max(depth, CompositionDepthOf(node.Children[index]));
 
-        // A single-operand node — 'not', and the higher-order quantifiers — still wraps its operand
-        // in one composition level, which the fold above has no second operand to accumulate.
-        return node.Children.Count == 1 ? depth + 1 : depth;
+        return depth;
     }
 
     private bool ExceedsLimits(string path, int depth, List<RuleError> errors)

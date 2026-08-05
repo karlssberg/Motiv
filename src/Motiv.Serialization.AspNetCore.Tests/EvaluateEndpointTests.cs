@@ -51,6 +51,8 @@ public class EvaluateEndpointTests
         //
         // Note this can only ever assert the *fixed* behaviour: a test that reproduced the crash
         // would take the test host down with it.
+
+        // Arrange
         await using var app = await StartAsync();
         var client = app.GetTestClient();
         var operands = string.Join(", ", Enumerable.Repeat("""{ "spec": "is-positive" }""", 2_000));
