@@ -32,6 +32,21 @@ public class RuleSerializerOptionsTests
         act.ShouldThrow<ArgumentOutOfRangeException>();
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void Should_reject_a_MaxCompositionDepth_below_one(int value)
+    {
+        // Arrange
+        var options = new RuleSerializerOptions();
+
+        // Act
+        var act = () => { options.MaxCompositionDepth = value; };
+
+        // Assert
+        act.ShouldThrow<ArgumentOutOfRangeException>();
+    }
+
     [Fact]
     public void Should_validate_without_overflowing_when_MaxDocumentDepth_is_int_MaxValue()
     {

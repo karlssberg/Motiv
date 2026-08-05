@@ -42,6 +42,37 @@ public class EvaluateEndpointTests
     }
 
     [Fact]
+    public async Task Should_refuse_a_document_that_would_compose_past_the_stack()
+    {
+        // A flat operand array folds left-deep, so 2,000 siblings compose 1,999 levels — which the
+        // recursive result-tree walk used to blow the stack on. StackOverflowException cannot be
+        // caught, so this arrived as process death rather than a failed request. The composition
+        // limit has to refuse it during parsing, before anything binds or evaluates.
+        //
+        // Note this can only ever assert the *fixed* behaviour: a test that reproduced the crash
+        // would take the test host down with it.
+
+        // Arrange
+        await using var app = await StartAsync();
+        var client = app.GetTestClient();
+        var operands = string.Join(", ", Enumerable.Repeat("""{ "spec": "is-positive" }""", 2_000));
+        var request = new
+        {
+            modelType = "number",
+            document = JsonDocument.Parse($$"""{ "rule": { "and": [ {{operands}} ] } }""").RootElement,
+            model = JsonDocument.Parse("5").RootElement
+        };
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/rules/evaluate", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("errors")[0].GetProperty("code").GetString()!.ShouldBe("DocumentTooLarge");
+    }
+
+    [Fact]
     public async Task Should_reflect_a_false_outcome()
     {
         // Arrange
