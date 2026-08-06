@@ -37,11 +37,18 @@ public static class MotivRulesEndpoints
         MotivRulesOptions options,
         RuleSet? rules = null)
     {
-        var serializer = new RuleSerializer(registry, options.SerializerOptions);
+        var propositions = endpoints.ServiceProvider.GetService<PropositionSet>();
+
+        // Bind through the authored overlay whenever propositions are enabled. The catalog lists
+        // authored propositions and the rule endpoints bind documents referencing them — RuleSet
+        // resolves through the same BindingScope — so a serializer over the bare registry would
+        // leave validate/evaluate rejecting, as UnknownSpec, the very names the rest of the surface
+        // advertises and accepts.
+        var serializer = new RuleSerializer(
+            propositions?.Scope.Source ?? registry, options.SerializerOptions);
         var resultSerializer = new ResultSerializer();
         var json = options.JsonSerializerOptions;
         var group = endpoints.MapGroup(basePath);
-        var propositions = endpoints.ServiceProvider.GetService<PropositionSet>();
 
         MapCatalogEndpoint(group, registry, options, rules, propositions, json);
 

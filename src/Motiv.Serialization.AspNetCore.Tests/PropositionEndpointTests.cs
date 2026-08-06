@@ -51,6 +51,58 @@ public class PropositionEndpointTests
         });
 
     [Fact]
+    public async Task Should_evaluate_a_document_that_references_an_authored_proposition()
+    {
+        // Arrange: the catalog lists an authored proposition, so a document may reference it — and
+        // the rule endpoints will bind one that does, because RuleSet resolves through the
+        // BindingScope. /evaluate has to agree, or the catalog advertises what it cannot evaluate.
+        await using var app = await StartAsync();
+        var client = app.GetTestClient();
+        await Create(client, "customer.is-eligible",
+            """
+            { "rule": { "and": [ { "spec": "customer.is-active" }, { "spec": "customer.is-adult" } ] } }
+            """);
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/rules/evaluate", new
+        {
+            modelType = "customer",
+            document = JsonDocument.Parse("""{ "rule": { "spec": "customer.is-eligible" } }""").RootElement,
+            model = JsonDocument.Parse("""{ "isActive": true, "age": 30 }""").RootElement
+        });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>(ResponseJson);
+        body.GetProperty("satisfied").GetBoolean().ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Should_validate_a_document_that_references_an_authored_proposition()
+    {
+        // Arrange: /validate answers 200 with an errors array rather than a status code, so a
+        // regression here would surface as live validation marking a legal document unknown.
+        await using var app = await StartAsync();
+        var client = app.GetTestClient();
+        await Create(client, "customer.is-eligible",
+            """
+            { "rule": { "and": [ { "spec": "customer.is-active" }, { "spec": "customer.is-adult" } ] } }
+            """);
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/rules/validate", new
+        {
+            modelType = "customer",
+            document = JsonDocument.Parse("""{ "rule": { "spec": "customer.is-eligible" } }""").RootElement
+        });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>(ResponseJson);
+        body.GetProperty("errors").GetArrayLength().ShouldBe(0);
+    }
+
+    [Fact]
     public async Task Should_create_a_proposition_with_201()
     {
         // Arrange
