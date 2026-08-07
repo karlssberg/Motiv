@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
-import { RuleEditorStore } from '@motiv/rules-core';
+import { RuleEditorStore } from '@motiv-rules/core';
 import { useRuleEditor } from '../src/useRuleEditor.js';
 
 describe('useRuleEditor', () => {

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { RuleEditorStore, RulesApiClient } from '@motiv/rules-core';
+import { RuleEditorStore, RulesApiClient } from '@motiv-rules/core';
 import { App } from '../src/App.js';
 
 function testClient(): RulesApiClient {

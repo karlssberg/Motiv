@@ -6,5 +6,5 @@ export default defineConfig({
   dts: true,
   clean: true,
   sourcemap: true,
-  external: ['react', '@motiv/rules-core'],
+  external: ['react', '@motiv-rules/core'],
 });

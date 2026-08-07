@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { RuleEditorStore } from '@motiv/rules-core';
+import { RuleEditorStore } from '@motiv-rules/core';
 import { useDslSync } from '../../src/dsl/useDslSync.js';
 
 describe('useDslSync', () => {

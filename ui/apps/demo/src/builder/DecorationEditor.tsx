@@ -1,5 +1,5 @@
-import type { RuleNode } from '@motiv/rules-core';
-import { useRuleEditorStore } from '@motiv/rules-react';
+import type { RuleNode } from '@motiv-rules/core';
+import { useRuleEditorStore } from '@motiv-rules/react';
 import type { DecorationPatch } from '../decorationPatch.js';
 
 /** Editable name/whenTrue/whenFalse decoration fields for the node at a path. */

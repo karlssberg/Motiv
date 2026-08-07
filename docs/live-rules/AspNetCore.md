@@ -105,7 +105,7 @@ rule untouched.
   `{"type": ["string", "integer"], "pattern": "^-?(?:0|[1-9]\\d*)$"}`). `"30"` is genuinely
   accepted by the binder; a frontend validator should honor the union rather than flag it.
 
-Frontends can enforce these client-side before submitting &mdash; `@motiv/rules-core` ships a
+Frontends can enforce these client-side before submitting &mdash; `@motiv-rules/core` ships a
 matching structural validator (`validateAgainstSchema`). Both maps are additive; clients written
 against older hosts should treat them as optional and skip enforcement when absent.
 

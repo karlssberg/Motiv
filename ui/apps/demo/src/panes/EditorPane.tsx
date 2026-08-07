@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { RulesApiClient } from '@motiv/rules-core';
-import { useCatalog, useRuleEditorStore } from '@motiv/rules-react';
+import type { RulesApiClient } from '@motiv-rules/core';
+import { useCatalog, useRuleEditorStore } from '@motiv-rules/react';
 import { DslEditor } from '../dsl/DslEditor.js';
 import { useDslSync } from '../dsl/useDslSync.js';
 import { BuilderBody, EMPTY_CATALOG } from './BuilderPane.js';

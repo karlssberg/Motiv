@@ -1,7 +1,7 @@
 import {
   binaryOperator, higherOrderKey, isBinaryNode, isHigherOrderNode, isNotNode,
   operandsOf, type RuleNode,
-} from '@motiv/rules-core';
+} from '@motiv-rules/core';
 
 /** The child node paths of a rule node, in the same order the document walks them. */
 export function childPaths(node: RuleNode, path: string): string[] {

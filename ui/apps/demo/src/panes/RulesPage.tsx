@@ -1,4 +1,4 @@
-import type { RuleListEntry, RulesApiClient } from '@motiv/rules-core';
+import type { RuleListEntry, RulesApiClient } from '@motiv-rules/core';
 import type { Page } from '../routing/useHashRoute.js';
 import { RuleHeader } from './RuleHeader.js';
 import { EditorPane } from './EditorPane.js';

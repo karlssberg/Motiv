@@ -1,4 +1,4 @@
-import type { DependentEntry } from '@motiv/rules-core';
+import type { DependentEntry } from '@motiv-rules/core';
 
 /** "1 rule and 2 propositions", pluralised, omitting a kind with no members. */
 function summarise(dependents: DependentEntry[]): string {

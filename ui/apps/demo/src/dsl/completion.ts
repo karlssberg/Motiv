@@ -1,11 +1,11 @@
 import type { Completion, CompletionContext, CompletionResult } from '@codemirror/autocomplete';
-import { PARAM_REST_CHARS, WORD_REST_CHARS, WORD_START_CHARS, type Catalog } from '@motiv/rules-core';
+import { PARAM_REST_CHARS, WORD_REST_CHARS, WORD_START_CHARS, type Catalog } from '@motiv-rules/core';
 import { DSL_KEYWORDS, DSL_QUANTIFIERS, DSL_TYPES } from './motivLanguage.js';
 
 /**
  * The word shape a completion can replace: a parameter reference (`@` then the core lexer's
  * non-dotted `PARAM_REST_CHARS` — params aren't namespaced) or a plain identifier (`WORD_START_CHARS`
- * then the dotted `WORD_REST_CHARS` — a spec name may be). Built from `@motiv/rules-core`'s exported
+ * then the dotted `WORD_REST_CHARS` — a spec name may be). Built from `@motiv-rules/core`'s exported
  * character classes rather than a hand-copied class, which is exactly how this drifted out of sync
  * with `tokenize` before: once dots were admitted to spec words in the core lexer, this file's own
  * copy silently kept stopping at the dot, so completion past a namespace dot returned nothing.

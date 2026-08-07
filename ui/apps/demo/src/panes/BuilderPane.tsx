@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { Catalog, RulesApiClient } from '@motiv/rules-core';
-import { useCatalog, useRuleEditor, useRuleEditorStore } from '@motiv/rules-react';
+import type { Catalog, RulesApiClient } from '@motiv-rules/core';
+import { useCatalog, useRuleEditor, useRuleEditorStore } from '@motiv-rules/react';
 import { BuilderTreeContext, RuleNodeEditor } from '../builder/RuleNodeEditor.js';
 import {
   EMPTY_ACCORDION, closeAll, toggleCollapsed, toggleOpen, togglePin,

@@ -1,4 +1,4 @@
-import type { Decoration } from '@motiv/rules-core';
+import type { Decoration } from '@motiv-rules/core';
 
 /**
  * The patch shape accepted by `setDecoration`, widened so a field can be cleared.

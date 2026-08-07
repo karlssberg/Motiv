@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { RuleEditorStore, type Catalog, type RulesApiClient } from '@motiv/rules-core';
-import { RuleEditorProvider } from '@motiv/rules-react';
+import { RuleEditorStore, type Catalog, type RulesApiClient } from '@motiv-rules/core';
+import { RuleEditorProvider } from '@motiv-rules/react';
 import { EditorPane } from '../../src/panes/EditorPane.js';
 import { editorText, replaceBuffer } from '../support/codemirror.js';
 

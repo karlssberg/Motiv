@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { PropositionListEntry } from '@motiv/rules-core';
+import type { PropositionListEntry } from '@motiv-rules/core';
 import { PropositionExplorer } from '../../src/explorer/PropositionExplorer.js';
 
 function entry(overrides: Partial<PropositionListEntry> & { name: string }): PropositionListEntry {

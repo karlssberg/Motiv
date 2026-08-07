@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { PropositionListEntry } from '@motiv/rules-core';
+import type { PropositionListEntry } from '@motiv-rules/core';
 import { Modal } from '../shell/Modal.js';
 
 /** What the New / Derive / Override flows start from. */

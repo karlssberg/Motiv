@@ -1,4 +1,4 @@
-import type { SchemaViolation } from '@motiv/rules-core';
+import type { SchemaViolation } from '@motiv-rules/core';
 
 /**
  * What the catalog's model schema rejected, before anything was sent.
