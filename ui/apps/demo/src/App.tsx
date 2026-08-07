@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { RuleEditorStore, RulesApiClient, createValidationController } from '@motiv/rules-core';
-import { RuleEditorProvider } from '@motiv/rules-react';
+import { RuleEditorStore, RulesApiClient, createValidationController } from '@motiv-rules/core';
+import { RuleEditorProvider } from '@motiv-rules/react';
 import { useHashRoute, type Page } from './routing/useHashRoute.js';
 import { RulesPage } from './panes/RulesPage.js';
 import { PropositionsPage } from './panes/PropositionsPage.js';

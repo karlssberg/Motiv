@@ -1,7 +1,7 @@
 import {
   binaryOperator, operandsOf,
   type BinaryNode, type BinaryOperator, type RuleEditorStore, type RuleNode,
-} from '@motiv/rules-core';
+} from '@motiv-rules/core';
 
 /** The five binary operators, in the order the picker offers them. */
 export const BINARY_OPERATORS: readonly BinaryOperator[] = ['and', 'or', 'xor', 'andAlso', 'orElse'];

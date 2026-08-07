@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import type { EvaluateRequest, EvaluationResult, RulesApiClient } from '@motiv/rules-core';
+import type { EvaluateRequest, EvaluationResult, RulesApiClient } from '@motiv-rules/core';
 
 type EvaluationStatus =
   | { status: 'idle' }

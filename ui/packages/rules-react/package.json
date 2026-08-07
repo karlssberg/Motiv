@@ -1,7 +1,7 @@
 {
-  "name": "@motiv/rules-react",
+  "name": "@motiv-rules/react",
   "version": "0.1.0",
-  "description": "Headless React adapter for @motiv/rules-core.",
+  "description": "Headless React adapter for @motiv-rules/core.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -25,7 +25,7 @@
     "react": ">=18"
   },
   "dependencies": {
-    "@motiv/rules-core": "workspace:*"
+    "@motiv-rules/core": "workspace:*"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.0",

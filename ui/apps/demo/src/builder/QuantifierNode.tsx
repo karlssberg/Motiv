@@ -1,5 +1,5 @@
-import type { Catalog, HigherOrderNode } from '@motiv/rules-core';
-import { useRuleEditorStore } from '@motiv/rules-react';
+import type { Catalog, HigherOrderNode } from '@motiv-rules/core';
+import { useRuleEditorStore } from '@motiv-rules/react';
 import {
   KINDS, N_KINDS, quantifierKindOf, setQuantifierCollection, setQuantifierKind, setQuantifierN,
   type QuantifierKind, type QuantifierLike,

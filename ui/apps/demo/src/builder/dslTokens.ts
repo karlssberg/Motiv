@@ -1,4 +1,4 @@
-import { tokenize, type TokenKind } from '@motiv/rules-core';
+import { tokenize, type TokenKind } from '@motiv-rules/core';
 
 /** One rendered run of DSL text: a lexed token, or the gap of whitespace before it. */
 export interface TokenSpan {

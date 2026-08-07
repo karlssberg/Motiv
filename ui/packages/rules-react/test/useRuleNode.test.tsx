@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { createElement, type ReactNode } from 'react';
-import { RuleEditorStore } from '@motiv/rules-core';
+import { RuleEditorStore } from '@motiv-rules/core';
 import { RuleEditorProvider } from '../src/context.js';
 import { useRuleNode } from '../src/useRuleNode.js';
 

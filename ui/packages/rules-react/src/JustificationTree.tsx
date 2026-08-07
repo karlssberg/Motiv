@@ -1,7 +1,7 @@
 import {
   flattenExplanation, toExplanationView,
   type ExplanationNode, type ExplanationRow,
-} from '@motiv/rules-core';
+} from '@motiv-rules/core';
 import { useMemo, useState, type ReactNode } from 'react';
 
 /** A row surfaced to a {@link JustificationTree} render prop, plus a collapse toggle. */

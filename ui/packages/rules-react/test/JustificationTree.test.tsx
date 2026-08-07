@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { createElement } from 'react';
-import type { ExplanationNode } from '@motiv/rules-core';
+import type { ExplanationNode } from '@motiv-rules/core';
 import { JustificationTree } from '../src/JustificationTree.js';
 
 const explanation: ExplanationNode = {

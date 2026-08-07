@@ -6,7 +6,7 @@ import {
   type ParseResult,
   type RuleError,
   type SourceRange,
-} from '@motiv/rules-core';
+} from '@motiv-rules/core';
 
 /** Separates a diagnostic's machine-readable code from its human message. */
 const SEPARATOR = ': ';

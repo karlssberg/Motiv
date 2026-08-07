@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { parse } from '@motiv/rules-core';
-import type { RuleError } from '@motiv/rules-core';
+import { parse } from '@motiv-rules/core';
+import type { RuleError } from '@motiv-rules/core';
 import { diagnosticsFor } from '../../src/dsl/lint.js';
 
 describe('diagnosticsFor', () => {

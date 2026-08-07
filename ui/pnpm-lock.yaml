@@ -35,10 +35,10 @@ importers:
       '@lezer/highlight':
         specifier: ^1.2.3
         version: 1.2.3
-      '@motiv/rules-core':
+      '@motiv-rules/core':
         specifier: workspace:*
         version: link:../../packages/rules-core
-      '@motiv/rules-react':
+      '@motiv-rules/react':
         specifier: workspace:*
         version: link:../../packages/rules-react
       react:
@@ -105,7 +105,7 @@ importers:
 
   packages/rules-react:
     dependencies:
-      '@motiv/rules-core':
+      '@motiv-rules/core':
         specifier: workspace:*
         version: link:../rules-core
     devDependencies:

@@ -1,5 +1,5 @@
 {
-  "name": "@motiv/rules-core",
+  "name": "@motiv-rules/core",
   "version": "0.1.0",
   "description": "Headless, framework-free core for building Motiv rules-engine UIs.",
   "license": "MIT",

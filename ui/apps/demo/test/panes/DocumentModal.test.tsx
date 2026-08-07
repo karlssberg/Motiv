@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { RuleEditorStore } from '@motiv/rules-core';
-import { RuleEditorProvider } from '@motiv/rules-react';
+import { RuleEditorStore } from '@motiv-rules/core';
+import { RuleEditorProvider } from '@motiv-rules/react';
 import { DocumentModal } from '../../src/panes/DocumentModal.js';
 
 function renderWith(store: RuleEditorStore) {

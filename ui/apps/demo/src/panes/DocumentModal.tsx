@@ -1,4 +1,4 @@
-import { useRuleEditor, useRuleEditorStore } from '@motiv/rules-react';
+import { useRuleEditor, useRuleEditorStore } from '@motiv-rules/react';
 import { Modal } from '../shell/Modal.js';
 
 /**

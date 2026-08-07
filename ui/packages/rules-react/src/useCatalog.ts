@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { Catalog, RulesApiClient } from '@motiv/rules-core';
+import type { Catalog, RulesApiClient } from '@motiv-rules/core';
 
 /** The state of an async catalog load. */
 export type CatalogState =
