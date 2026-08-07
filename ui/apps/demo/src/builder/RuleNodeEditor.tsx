@@ -1,8 +1,8 @@
 import { createContext, useContext, useRef, type MouseEvent } from 'react';
 import {
   isBinaryNode, isHigherOrderNode, firstOperandTarget, insertTargetForRow, planInsert, type Catalog,
-} from '@motiv/rules-core';
-import { useRuleEditorStore, useRuleNode } from '@motiv/rules-react';
+} from '@motiv-rules/core';
+import { useRuleEditorStore, useRuleNode } from '@motiv-rules/react';
 import { NodeToolbar } from './NodeToolbar.js';
 import { OperatorPicker } from './OperatorPicker.js';
 import { QuantifierNode } from './QuantifierNode.js';

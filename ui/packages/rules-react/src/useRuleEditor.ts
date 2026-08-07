@@ -1,5 +1,5 @@
 import { useCallback, useRef, useSyncExternalStore } from 'react';
-import type { EditorState, RuleEditorStore } from '@motiv/rules-core';
+import type { EditorState, RuleEditorStore } from '@motiv-rules/core';
 
 /**
  * Subscribes a component to a {@link RuleEditorStore} and returns its current state.

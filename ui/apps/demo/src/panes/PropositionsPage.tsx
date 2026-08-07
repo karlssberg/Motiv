@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
   DependentEntry, PropositionListEntry, PropositionSaveResult, RulesApiClient,
-} from '@motiv/rules-core';
-import { useRuleEditor, useRuleEditorStore } from '@motiv/rules-react';
+} from '@motiv-rules/core';
+import { useRuleEditor, useRuleEditorStore } from '@motiv-rules/react';
 import type { Page } from '../routing/useHashRoute.js';
 import { MODEL_TYPE } from '../App.js';
 import { AppBar } from './AppBar.js';

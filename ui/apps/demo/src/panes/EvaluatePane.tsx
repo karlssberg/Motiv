@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from 'react';
-import { validateAgainstSchema, type RulesApiClient, type SchemaViolation } from '@motiv/rules-core';
-import { JustificationTree, useCatalog, useEvaluation, useRuleEditor, useRuleEditorStore } from '@motiv/rules-react';
+import { validateAgainstSchema, type RulesApiClient, type SchemaViolation } from '@motiv-rules/core';
+import { JustificationTree, useCatalog, useEvaluation, useRuleEditor, useRuleEditorStore } from '@motiv-rules/react';
 import { MODEL_TYPE } from '../App.js';
 import { SchemaViolations } from './SchemaViolations.js';
 

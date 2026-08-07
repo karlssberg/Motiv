@@ -1,4 +1,4 @@
-import { isSpecNode, type RuleNode } from '@motiv/rules-core';
+import { isSpecNode, type RuleNode } from '@motiv-rules/core';
 
 /**
  * The extension points offered beside a node's decoration fields. Currently only the disabled

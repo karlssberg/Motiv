@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   mergeDecorations, parse, print,
   type ParseResult, type RuleDocument, type RuleEditorStore,
-} from '@motiv/rules-core';
+} from '@motiv-rules/core';
 
 /** How the text buffer currently relates to the store's document. */
 export type SyncStatus =

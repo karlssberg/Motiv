@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { EditorState } from '@codemirror/state';
 import { CompletionContext } from '@codemirror/autocomplete';
 import { createMotivCompletion } from '../../src/dsl/completion.js';
-import type { Catalog } from '@motiv/rules-core';
+import type { Catalog } from '@motiv-rules/core';
 
 const CATALOG: Catalog = {
   specs: [

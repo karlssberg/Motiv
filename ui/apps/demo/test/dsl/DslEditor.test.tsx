@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { RuleEditorStore } from '@motiv/rules-core';
-import type { Catalog, RuleNode } from '@motiv/rules-core';
+import { RuleEditorStore } from '@motiv-rules/core';
+import type { Catalog, RuleNode } from '@motiv-rules/core';
 import { DslEditor } from '../../src/dsl/DslEditor.js';
 import { useDslSync } from '../../src/dsl/useDslSync.js';
 import { editorText, editorView, replaceBuffer } from '../support/codemirror.js';

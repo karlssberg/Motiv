@@ -1,4 +1,4 @@
-import { errorsForNode, listPaths, type RuleError, type RuleNode } from '@motiv/rules-core';
+import { errorsForNode, listPaths, type RuleError, type RuleNode } from '@motiv-rules/core';
 import type { ReactNode } from 'react';
 import { useRuleEditorStore } from './context.js';
 import { useRuleEditor } from './useRuleEditor.js';

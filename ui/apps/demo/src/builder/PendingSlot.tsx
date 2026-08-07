@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { parse, type Catalog, type RuleNode } from '@motiv/rules-core';
+import { parse, type Catalog, type RuleNode } from '@motiv-rules/core';
 import { useInlineDslEditor } from './useInlineDslEditor.js';
 
 /**

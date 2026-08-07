@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { Catalog, EvaluationResult, RulesApiClient } from '@motiv/rules-core';
+import type { Catalog, EvaluationResult, RulesApiClient } from '@motiv-rules/core';
 import { CheckoutPane } from '../../src/panes/CheckoutPane.js';
 
 const eligibility: EvaluationResult = {
