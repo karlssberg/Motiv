@@ -19,8 +19,10 @@ public static class MotivRulesEndpoints
     /// <c>DELETE {basePath}/rules/{{name}}</c> for live rule management with optimistic concurrency.
     /// When a <see cref="PropositionSet"/> is resolvable from the endpoint route builder's service
     /// provider (i.e. <see cref="MotivRulesBuilder.AddPropositions"/> was called), the
-    /// <c>{basePath}/propositions</c> endpoints are mapped against it as well. This overload cannot
-    /// substitute a different one, so pass the same registry and options it was built with.
+    /// <c>{basePath}/propositions</c> endpoints are mapped against it as well, and documents bind
+    /// through its authored layer over the registry, so validate/evaluate resolve the same names the
+    /// catalog lists. This overload cannot substitute a different one, so pass the same registry and
+    /// options it was built with.
     /// </summary>
     /// <param name="endpoints">The endpoint route builder to map onto.</param>
     /// <param name="basePath">The base path to mount under, e.g. <c>/api/rules</c>.</param>
@@ -37,11 +39,17 @@ public static class MotivRulesEndpoints
         MotivRulesOptions options,
         RuleSet? rules = null)
     {
-        var serializer = new RuleSerializer(registry, options.SerializerOptions);
+        var propositions = endpoints.ServiceProvider.GetService<PropositionSet>();
+
+        // The catalog lists authored propositions and RuleSet binds documents referencing them,
+        // both through the scope's layered source. Binding over the bare registry here would leave
+        // validate/evaluate rejecting, as UnknownSpec, the very names the rest of the surface
+        // advertises and accepts.
+        var specSource = propositions?.Scope.Source ?? registry;
+        var serializer = new RuleSerializer(specSource, options.SerializerOptions);
         var resultSerializer = new ResultSerializer();
         var json = options.JsonSerializerOptions;
         var group = endpoints.MapGroup(basePath);
-        var propositions = endpoints.ServiceProvider.GetService<PropositionSet>();
 
         MapCatalogEndpoint(group, registry, options, rules, propositions, json);
 
