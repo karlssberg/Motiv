@@ -3,7 +3,7 @@ import { autocompletion, completionKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { EditorState } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
-import type { Catalog } from '@motiv/rules-core';
+import type { Catalog } from '@motiv-rules/core';
 import { createMotivCompletion } from '../dsl/completion.js';
 import { motiv } from '../dsl/motivLanguage.js';
 import { motivEditorTheme } from '../dsl/theme.js';

@@ -5,7 +5,7 @@ import {
   type JsonSchema,
   type RulesApiClient,
   type SchemaViolation,
-} from '@motiv/rules-core';
+} from '@motiv-rules/core';
 import { MODEL_TYPE } from '../App.js';
 import { SchemaViolations } from './SchemaViolations.js';
 

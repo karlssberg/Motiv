@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { RuleEditorStore, type RulesApiClient } from '@motiv/rules-core';
-import { RuleEditorProvider } from '@motiv/rules-react';
+import { RuleEditorStore, type RulesApiClient } from '@motiv-rules/core';
+import { RuleEditorProvider } from '@motiv-rules/react';
 import { EditorPane } from '../../src/panes/EditorPane.js';
 
 const catalog = {

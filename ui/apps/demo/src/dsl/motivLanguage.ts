@@ -6,7 +6,7 @@ import {
 } from '@codemirror/language';
 import type { StreamParser, StringStream } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
-import { PARAM_REST_CHARS, WORD_REST_CHARS, WORD_START_CHARS } from '@motiv/rules-core';
+import { PARAM_REST_CHARS, WORD_REST_CHARS, WORD_START_CHARS } from '@motiv-rules/core';
 
 /** The DSL's reserved words, in the order they are offered for completion. */
 export const DSL_KEYWORDS = ['param', 'in', 'as'] as const;
@@ -22,7 +22,7 @@ const TYPES: ReadonlySet<string> = new Set(DSL_TYPES);
 /**
  * Word shapes, built from the core lexer's exported character classes rather than hand-copied —
  * a hand-copy is exactly how this stream parser drifted out of sync with `tokenize` before: dots
- * were admitted to spec words in `@motiv/rules-core`'s lexer, and this file's own copies of
+ * were admitted to spec words in `@motiv-rules/core`'s lexer, and this file's own copies of
  * `WORD_START`/`WORD_REST` silently kept the old, non-dotted shape.
  */
 const WORD_START = new RegExp(`[${WORD_START_CHARS}]`);

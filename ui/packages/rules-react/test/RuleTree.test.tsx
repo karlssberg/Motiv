@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { createElement } from 'react';
-import { RuleEditorStore } from '@motiv/rules-core';
+import { RuleEditorStore } from '@motiv-rules/core';
 import { RuleEditorProvider } from '../src/context.js';
 import { RuleTree } from '../src/RuleTree.js';
 

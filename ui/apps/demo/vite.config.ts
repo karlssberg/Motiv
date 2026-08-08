@@ -26,8 +26,8 @@ export default defineConfig({
     // so tests would otherwise run against a stale artefact — or fail outright on a fresh
     // clone. Only tests are aliased; `vite build` still consumes the published entry points.
     alias: {
-      '@motiv/rules-core': packageSource('rules-core'),
-      '@motiv/rules-react': packageSource('rules-react'),
+      '@motiv-rules/core': packageSource('rules-core'),
+      '@motiv-rules/react': packageSource('rules-react'),
     },
   },
 });

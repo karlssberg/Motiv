@@ -1,5 +1,5 @@
-import { binaryOperator, type BinaryNode } from '@motiv/rules-core';
-import { useRuleEditorStore } from '@motiv/rules-react';
+import { binaryOperator, type BinaryNode } from '@motiv-rules/core';
+import { useRuleEditorStore } from '@motiv-rules/react';
 import { BINARY_OPERATORS, setBinaryOperator } from './mutations.js';
 import { OPERATOR_LABELS } from './nodeSummary.js';
 import { ListboxPicker } from './ListboxPicker.js';

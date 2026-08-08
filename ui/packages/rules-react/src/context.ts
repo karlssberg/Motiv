@@ -1,5 +1,5 @@
 import { createContext, createElement, useContext, type ReactNode } from 'react';
-import type { RuleEditorStore } from '@motiv/rules-core';
+import type { RuleEditorStore } from '@motiv-rules/core';
 
 const RuleEditorContext = createContext<RuleEditorStore | null>(null);
 

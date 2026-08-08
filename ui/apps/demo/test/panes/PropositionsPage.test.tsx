@@ -3,8 +3,8 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
   RuleEditorStore, RulesApiError, type PropositionListEntry, type RuleDocument,
-} from '@motiv/rules-core';
-import { RuleEditorProvider } from '@motiv/rules-react';
+} from '@motiv-rules/core';
+import { RuleEditorProvider } from '@motiv-rules/react';
 import { PropositionsPage } from '../../src/panes/PropositionsPage.js';
 
 function entry(overrides: Partial<PropositionListEntry> & { name: string }): PropositionListEntry {

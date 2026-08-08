@@ -8,8 +8,8 @@ import type { Diagnostic } from '@codemirror/lint';
 import {
   getNode, isSpecNode,
   type Catalog, type NodeSpan, type RuleDocument, type RuleEditorStore,
-} from '@motiv/rules-core';
-import { useRuleEditor } from '@motiv/rules-react';
+} from '@motiv-rules/core';
+import { useRuleEditor } from '@motiv-rules/react';
 import { createMotivCompletion } from './completion.js';
 import { diagnosticsFor } from './lint.js';
 import { motivHover } from './hover.js';

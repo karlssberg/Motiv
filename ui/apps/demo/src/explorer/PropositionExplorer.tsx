@@ -2,7 +2,7 @@ import { useMemo, useState, type CSSProperties, type KeyboardEvent, type MouseEv
 import {
   buildNamespaceTree, countLeaves, filterTree,
   type NamespaceNode, type PropositionListEntry,
-} from '@motiv/rules-core';
+} from '@motiv-rules/core';
 import { CommandPalette } from '../shell/CommandPalette.js';
 import { Toolbar, type ToolbarAction } from '../shell/Toolbar.js';
 import { IconDelete, IconDerive, IconNew, IconOverride } from '../shell/icons.js';

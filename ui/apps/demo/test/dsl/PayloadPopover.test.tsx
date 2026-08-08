@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { RuleEditorStore } from '@motiv/rules-core';
-import type { Catalog } from '@motiv/rules-core';
+import { RuleEditorStore } from '@motiv-rules/core';
+import type { Catalog } from '@motiv-rules/core';
 import { PayloadPopover } from '../../src/dsl/PayloadPopover.js';
 
 const CATALOG: Catalog = {

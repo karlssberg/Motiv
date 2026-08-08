@@ -1,4 +1,4 @@
-import { useRuleEditorStore } from '@motiv/rules-react';
+import { useRuleEditorStore } from '@motiv-rules/react';
 import { usePopoverCard } from './usePopoverCard.js';
 
 /** One entry in a node's actions menu. */

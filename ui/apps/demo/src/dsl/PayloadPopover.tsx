@@ -2,7 +2,7 @@ import { useState, type CSSProperties, type Ref } from 'react';
 import {
   getNode,
   type Catalog, type Payload, type RuleEditorStore,
-} from '@motiv/rules-core';
+} from '@motiv-rules/core';
 import type { DecorationPatch } from '../decorationPatch.js';
 
 /** Metadata types whose payloads are plain text rather than JSON objects. */
