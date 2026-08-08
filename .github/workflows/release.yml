@@ -1,6 +1,18 @@
-# Release: triggered by pushing a v* tag (e.g. v8.1.0).
+# Release: triggered by pushing a v* tag (e.g. v9.0.0).
 # The tag is the single source of truth for the version (derived via MinVer).
 # Steps: test the tagged commit, pack, push to NuGet, create a GitHub Release.
+#
+# Scope: this tag prefix releases Motiv only. Motiv.Serialization,
+# Motiv.Serialization.AspNetCore, Motiv.Analyzer and Motiv.CodeFix are deliberately
+# unpublished — they are on their own maturity curve and are due a series of
+# intentional breaking changes (a rule store, an async publish path, a refresh
+# contract). Publishing them on this prefix would both number a first release after
+# Motiv's majors and force Motiv's major every time the rules stack breaks. They get
+# their own MinVerTagPrefix and their own 0.x line before they ship.
+#
+# Every project sets GeneratePackageOnBuild, so a Release build leaves .nupkg files in
+# each project's bin/. That is harmless here only because the push below is scoped to
+# ./nupkgs — keep it that way, or unpublished packages will ship by accident.
 
 name: Release
 
@@ -38,7 +50,6 @@ jobs:
     - name: Pack (version stamped from the tag by MinVer)
       run: |
         dotnet pack src/Motiv/Motiv.csproj --configuration Release --output ./nupkgs
-        dotnet pack src/Motiv.Serialization/Motiv.Serialization.csproj --configuration Release --output ./nupkgs
 
     - name: List NuGet Packages
       run: Get-ChildItem -Path .\nupkgs\ -Recurse -Name
