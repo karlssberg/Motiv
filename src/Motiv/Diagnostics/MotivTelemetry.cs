@@ -28,6 +28,15 @@ public static class MotivTelemetry
     /// </summary>
     public const string MeterName = "Motiv";
 
+    /// <summary>
+    /// Controls how much explanation text is attached to evaluation spans — the <c>motiv.reason</c> and
+    /// <c>motiv.assertions</c> tags. Defaults to <see cref="Diagnostics.ExplanationDetail.Full" /> for
+    /// backward compatibility; set it to <see cref="Diagnostics.ExplanationDetail.None" /> in deployments
+    /// where assertion text may embed data from the evaluated model. Applies process-wide, so set it once
+    /// at startup. See <see cref="Diagnostics.ExplanationDetail" /> for the privacy and cost implications.
+    /// </summary>
+    public static ExplanationDetail ExplanationDetail { get; set; } = ExplanationDetail.Full;
+
     /// <summary>The name given to every evaluation activity.</summary>
     internal const string ActivityName = "motiv.evaluate";
 

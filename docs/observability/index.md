@@ -28,7 +28,9 @@ builder.Services.AddOpenTelemetry()
         .AddOtlpExporter());
 ```
 
-(Both constants resolve to `"Motiv"`; they are the only public API this feature adds.)
+(Both constants resolve to `"Motiv"`. The only other public API this feature adds is
+`MotivTelemetry.ExplanationDetail`, which controls how much explanation text a span carries &mdash; see
+[Sensitive Data](#sensitive-data).)
 
 (Requires the `OpenTelemetry.Extensions.Hosting` and `OpenTelemetry.Exporter.OpenTelemetryProtocol` packages, or
 swap `AddOtlpExporter()` for `AddConsoleExporter()` during local development.) Until something subscribes, Motiv
@@ -63,6 +65,10 @@ The span is tagged with the result's own explanation:
 On failure, the span status is set to `Error` and an `exception` event is added (`exception.type`,
 `exception.message`, `exception.stacktrace`), then the original exception is rethrown unchanged; `motiv.satisfied`,
 `motiv.reason`, and `motiv.assertions` are not set for a failed evaluation.
+
+`motiv.reason` and `motiv.assertions` are additionally governed by `MotivTelemetry.ExplanationDetail`: the table
+above describes the default (`Full`), and either or both can be suppressed for privacy or cost &mdash; see
+[Sensitive Data](#sensitive-data).
 
 ### Cancellation Is Not an Error
 
@@ -135,9 +141,35 @@ Both instruments are gated the same way as the span: recording is skipped entire
 
 `motiv.reason` and `motiv.assertions` are derived from your model and your proposition's assertion text &mdash;
 they can carry data you don't want leaving the process (customer names, account numbers, anything a predicate's
-explanation happens to mention). Motiv exposes no redaction knob by design: there's already a standard place to
-do this, and duplicating it would just be a second, less flexible version of the same mechanism. Strip or hash
-the tags you don't want exported with an ordinary OpenTelemetry processor:
+explanation happens to mention).
+
+### Prevention: `MotivTelemetry.ExplanationDetail`
+
+The most reliable control is to never put the text on the span in the first place. Set this once at startup:
+
+```csharp
+using Motiv.Diagnostics;
+
+// Trace the outcome, but attach no reason/assertions text.
+MotivTelemetry.ExplanationDetail = ExplanationDetail.None;
+```
+
+| Value | `motiv.reason` | `motiv.assertions` |
+|-------|:--------------:|:------------------:|
+| `Full` (default) | ✓ | ✓ |
+| `ReasonOnly` | ✓ | &mdash; |
+| `None` | &mdash; | &mdash; |
+
+`None` returns *before* the explanation is resolved, so beyond keeping the text off the span it also skips the cost
+of computing `Reason`/`Assertions` and never runs your `WhenTrue`/`WhenFalse` delegates on telemetry's behalf (see
+*Dependencies and Cost*). `ReasonOnly` keeps the one-line summary and drops the potentially large assertion array.
+The outcome (`motiv.satisfied`), timing, and metrics are unaffected at every level.
+
+### Cure: an export-time processor
+
+For finer control than the three levels &mdash; redacting some tags but not others, hashing rather than dropping,
+or stripping conditionally &mdash; an ordinary OpenTelemetry processor can rewrite tags on the way out. This runs
+*after* the text has been resolved and set, so it removes the text from the export but not the cost of producing it:
 
 ```csharp
 public sealed class RedactMotivAssertionsProcessor : BaseProcessor<Activity>
@@ -156,6 +188,9 @@ public sealed class RedactMotivAssertionsProcessor : BaseProcessor<Activity>
 tracing.AddProcessor(new RedactMotivAssertionsProcessor());
 ```
 
+Prefer prevention where you can: a processor you forget to register, mis-target, or drop during a pipeline change
+silently starts leaking again, whereas text that was never produced cannot leak.
+
 ## Dependencies and Cost
 
 On `netstandard2.0`, Motiv brings in `System.Diagnostics.DiagnosticSource` to supply the `Activity`/`ActivitySource`
@@ -170,7 +205,8 @@ Enabling tracing (an `ActivityListener` subscribed to `"Motiv"`) forces `motiv.r
 resolved on every evaluation, which for an unnamed explanation proposition means its `WhenTrue`/`WhenFalse`
 delegates run. Keep those delegates pure: one that counts calls, writes a log line, or populates a cache runs zero
 times with only metrics attached (or nothing attached at all), and once per evaluation the moment a tracing
-listener is added.
+listener is added &mdash; unless you set `MotivTelemetry.ExplanationDetail` to `None` (which resolves neither) or
+`ReasonOnly` (which skips the assertion array), in which case those delegates are not run on telemetry's behalf.
 
 ## Next Steps
 
