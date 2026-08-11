@@ -264,3 +264,13 @@ This step is mandatory — do not skip it. If the agent identifies improvements,
 - Known CodeFix edge cases to watch for: (1) `nameof()` is syntactically an `InvocationExpressionSyntax` — `InstanceMethodDetector` excludes it via `SyntaxFacts.GetContextualKeywordKind`; other keywords (`typeof`, `sizeof`, `default`) have their own syntax node types and don't reach `VisitInvocationExpression`; (2) pattern-introduced variables (`obj is string s`) must not be treated as method parameters in model generation; (3) when the diagnosed expression is nested inside `!()`, the negation context must be preserved in the replacement
 - Use `SyntaxFacts.GetContextualKeywordKind(identifier) != SyntaxKind.None` to detect contextual keywords (e.g., `nameof`) rather than hard-coding string comparisons
 - For CodeFix edge case tests with uncertain output, write the test source input first, run it with a placeholder expected output, then capture the actual output from the diff — don't spend time predicting exact indentation or comment wrapping
+
+## Agent skills
+
+### Issue tracker
+
+Issues and PRDs live as **GitHub issues** on `karlssberg/Motiv`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+**Single-context** — `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
