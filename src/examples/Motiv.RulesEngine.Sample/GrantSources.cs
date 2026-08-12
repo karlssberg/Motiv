@@ -197,12 +197,11 @@ internal sealed class ClaimsGrantSource(IReadOnlyList<ClaimsGrantMapping> mappin
     /// <inheritdoc />
     public IReadOnlyList<NamespaceGrant> GrantsFor(ClaimsPrincipal principal)
     {
-        var roles = principal.FindAll(ClaimTypes.Role).Select(c => c.Value).ToHashSet();
         var grants = new List<NamespaceGrant>();
 
         foreach (var mapping in _validatedMappings)
         {
-            if (roles.Contains(mapping.ClaimValue) && !IsAdministerRow(mapping))
+            if (principal.HasClaim(mapping.ClaimType, mapping.ClaimValue) && !IsAdministerRow(mapping))
             {
                 grants.Add(new NamespaceGrant(mapping.Prefix, LadderVerb(mapping.Verb)));
             }
@@ -214,8 +213,8 @@ internal sealed class ClaimsGrantSource(IReadOnlyList<ClaimsGrantMapping> mappin
     /// <inheritdoc />
     public bool IsAdministrator(ClaimsPrincipal principal)
     {
-        var roles = principal.FindAll(ClaimTypes.Role).Select(c => c.Value).ToHashSet();
-        return _validatedMappings.Exists(m => roles.Contains(m.ClaimValue) && IsAdministerRow(m));
+        return _validatedMappings.Exists(m =>
+            principal.HasClaim(m.ClaimType, m.ClaimValue) && IsAdministerRow(m));
     }
 
     private static List<ClaimsGrantMapping> ValidateAndBuild(IReadOnlyList<ClaimsGrantMapping> mappings)

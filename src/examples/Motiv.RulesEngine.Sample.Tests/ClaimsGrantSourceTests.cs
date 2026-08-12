@@ -164,6 +164,29 @@ public class ClaimsGrantSourceTests
         Should.Throw<ArgumentException>(() => new ClaimsGrantSource(mappings));
     }
 
+    [Fact]
+    public void Should_match_custom_claim_types_like_groups()
+    {
+        // Arrange — a mapping with claimType "groups" should match "groups" claims, not role claims
+        var mappings = new List<ClaimsGrantMapping>
+        {
+            new("groups", "pricing-team", "pricing", "author")
+        };
+        var source = new ClaimsGrantSource(mappings);
+
+        // Act & Assert — principal with matching "groups" claim should get the grant
+        var principalWithGroupsClaim = new ClaimsPrincipal(new ClaimsIdentity(
+            new[] { new Claim("groups", "pricing-team") },
+            "test"));
+        var grantsWithGroup = source.GrantsFor(principalWithGroupsClaim);
+        GrantEvaluator.IsGranted(grantsWithGroup, GrantVerb.Author, "pricing").ShouldBeTrue();
+
+        // Act & Assert — principal with only role claim should NOT get the grant
+        var principalWithOnlyRoleClaim = PrincipalWithRoleClaim("pricing-team");
+        var grantsWithoutGroup = source.GrantsFor(principalWithOnlyRoleClaim);
+        GrantEvaluator.IsGranted(grantsWithoutGroup, GrantVerb.Author, "pricing").ShouldBeFalse();
+    }
+
     private static ClaimsPrincipal PrincipalWithRoleClaim(string roleValue) =>
         new(new ClaimsIdentity(
             new[] { new Claim(ClaimTypes.Role, roleValue) },
