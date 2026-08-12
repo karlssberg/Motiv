@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -17,10 +18,7 @@ internal sealed class TestAuthHandler(
     UrlEncoder encoder)
     : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
 {
-    // `new` is required: AuthenticationHandler<TOptions> declares its own `Scheme` property
-    // (the resolved AuthenticationScheme), so this constant deliberately hides it — the repo
-    // builds with TreatWarningsAsErrors, and CS0108 would otherwise fail the build.
-    public new const string Scheme = "Test";
+    public const string SchemeName = "Test";
     public const string AnonymousHeader = "X-Test-Anonymous";
     public const string SubjectHeader = "X-Test-User";
     public const string RolesHeader = "X-Test-Roles";
@@ -39,7 +37,30 @@ internal sealed class TestAuthHandler(
                 .Split(',', StringSplitOptions.RemoveEmptyEntries)
                 .Select(role => new Claim(ClaimTypes.Role, role.Trim())));
 
-        var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, Scheme));
-        return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(principal, Scheme)));
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, SchemeName));
+        return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(principal, SchemeName)));
+    }
+}
+
+/// <summary>
+/// Enrols the <see cref="TestAuthHandler"/> scheme on a test host. The rules endpoints are secure
+/// by default, so every host that mounts them needs authentication and authorization wired up —
+/// this keeps that wiring identical across the test hosts rather than repeated at each one.
+/// </summary>
+internal static class TestAuth
+{
+    public static IServiceCollection AddTestAuth(this IServiceCollection services)
+    {
+        services
+            .AddAuthentication(TestAuthHandler.SchemeName)
+            .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, null);
+        return services.AddAuthorization();
+    }
+
+    public static WebApplication UseTestAuth(this WebApplication app)
+    {
+        app.UseAuthentication();
+        app.UseAuthorization();
+        return app;
     }
 }

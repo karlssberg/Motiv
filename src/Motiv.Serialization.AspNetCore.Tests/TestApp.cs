@@ -1,7 +1,4 @@
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Motiv.Serialization.AspNetCore.Tests;
@@ -18,14 +15,10 @@ internal static class TestApp
     {
         var builder = WebApplication.CreateSlimBuilder();
         builder.WebHost.UseTestServer();
-        builder.Services
-            .AddAuthentication(TestAuthHandler.Scheme)
-            .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.Scheme, null);
-        builder.Services.AddAuthorization();
+        builder.Services.AddTestAuth();
         services?.Invoke(builder.Services);
         var app = builder.Build();
-        app.UseAuthentication();
-        app.UseAuthorization();
+        app.UseTestAuth();
         app.MapMotivRules("/api/rules", registry, options, rules, endpointOptions);
         await app.StartAsync();
         return app;

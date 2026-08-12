@@ -1,5 +1,4 @@
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Motiv.Serialization.AspNetCore.Tests;
@@ -40,14 +39,10 @@ public class PropositionCatalogTests
         var (registry, options) = Fixture();
         var builder = WebApplication.CreateSlimBuilder();
         builder.WebHost.UseTestServer();
-        builder.Services
-            .AddAuthentication(TestAuthHandler.Scheme)
-            .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.Scheme, null);
-        builder.Services.AddAuthorization();
+        builder.Services.AddTestAuth();
         enroll(builder.Services.AddMotivRules(registry, options));
         var app = builder.Build();
-        app.UseAuthentication();
-        app.UseAuthorization();
+        app.UseTestAuth();
         app.MapMotivRules("/api/rules");
         await app.StartAsync();
         return app;
