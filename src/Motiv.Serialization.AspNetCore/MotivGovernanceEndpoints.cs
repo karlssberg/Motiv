@@ -32,6 +32,15 @@ internal static class MotivGovernanceEndpoints
         {
             var proposed = request.Changes ?? [];
 
+            // A blank name can be neither granted against nor resolved to a target, so it is
+            // refused before either — ahead of the grant check below, and well before Create()
+            // would otherwise hand it to a lookup that assumes a real name.
+            for (var i = 0; i < proposed.Count; i++)
+                if (string.IsNullOrWhiteSpace(proposed[i].Name))
+                    return Results.Json(
+                        new ErrorResponse($"Change {i} must name a target; a blank name is not valid."),
+                        json, statusCode: 400);
+
             // Authoring an envelope is authoring every target in it, so the weakest link decides.
             // Checked before the kinds are parsed: a caller with no grant learns nothing about
             // whether the rest of their request was well-formed.

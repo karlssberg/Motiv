@@ -260,7 +260,16 @@ admin.MapPost("", (HttpContext http, IGrantSource grants, [FromBody] GrantRecord
         return Results.NotFound();
     if (!grants.IsAdministrator(http.User))
         return Results.StatusCode(403);
-    store.Add(record);
+    try
+    {
+        store.Add(record);
+    }
+    catch (ArgumentException ex)
+    {
+        // An unknown verb is a malformed request, not a server failure — refused with the
+        // store's own message rather than surfacing the exception as a 500.
+        return Results.Json(new { error = ex.Message }, statusCode: 400);
+    }
     return Results.NoContent();
 });
 admin.MapDelete("", (HttpContext http, IGrantSource grants, [FromBody] GrantRecord record) =>

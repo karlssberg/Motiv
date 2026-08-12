@@ -421,6 +421,28 @@ public class GovernanceEndpointTests
             .GetProperty("isDeletion").GetBoolean().ShouldBeTrue();
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task Should_refuse_a_proposed_change_with_a_blank_name_rather_than_500(string? name)
+    {
+        // Arrange
+        await using var app = await StartAsync(governed: true);
+        var client = app.GetTestClient();
+
+        // Act
+        var response = await Send(client, HttpMethod.Post, "/api/rules/change-requests", "author", new
+        {
+            changeNote = "oops",
+            changes = new[] { new { kind = "rule", name, document = AdultDocument, baseVersion = 1 } }
+        });
+
+        // Assert — a 400 naming the offending entry, not a 500 from a null flowing into a lookup
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await response.Content.ReadAsStringAsync()).ShouldContain("Change 0");
+    }
+
     [Fact]
     public async Task Should_still_refuse_a_direct_write_the_caller_has_no_grant_for_before_the_gate_sees_it()
     {

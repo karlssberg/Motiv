@@ -73,6 +73,30 @@ public class AdminEndpointTests(WebApplicationFactory<Program> factory)
     }
 
     [Fact]
+    public async Task Should_refuse_an_unknown_grant_verb_with_a_bad_request_rather_than_500()
+    {
+        // Arrange — same app-store swap as the round-trip test, so "dev" is an administrator
+        var path = TempPath();
+        var store = new JsonFileGrantSource(path);
+        store.Add(new GrantRecord("dev", "", "administer"));
+
+        await using var appStoreFactory = factory.WithWebHostBuilder(builder =>
+            builder.ConfigureServices(services => services.AddSingleton<IGrantSource>(store)));
+        var client = appStoreFactory.CreateClient();
+
+        // Act — "banana" is not a recognized grant verb
+        var response = await client.PostAsJsonAsync("/api/admin/grants",
+            new { subject = "alice", prefix = "pricing", verb = "banana" });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var error = body.GetProperty("error").GetString();
+        error.ShouldNotBeNullOrWhiteSpace();
+        error.ShouldContain("banana");
+    }
+
+    [Fact]
     public async Task Should_refuse_deleting_the_last_administer_with_a_conflict()
     {
         // Arrange
