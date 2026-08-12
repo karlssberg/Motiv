@@ -60,6 +60,14 @@ public abstract class RuleBase
     /// </summary>
     internal abstract IRebindCommit? PrepareRebind(RuleSerializer serializer, List<RuleError> errors);
 
+    /// <summary>
+    /// Binds a *proposed* document against the serializer's source, publishing nothing and leaving
+    /// the version untouched — the dry run behind a governed publish's validate-everything-first
+    /// phase. Distinct from <see cref="PrepareRebind"/>, which re-binds the document the rule
+    /// already carries; here the document is one the rule has never seen.
+    /// </summary>
+    internal abstract void ValidateDocument(RuleSerializer serializer, string documentJson, List<RuleError> errors);
+
     /// <summary>Reads the version and document from one snapshot, so the pair is always coherent.</summary>
     internal abstract (int Version, string? DocumentJson) VersionedDocument();
 }

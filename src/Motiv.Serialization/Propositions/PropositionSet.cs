@@ -154,33 +154,41 @@ public sealed class PropositionSet
     /// </returns>
     public PropositionUpdateResult Create(
         string name, string modelTypeId, string documentJson, string? description) =>
-        Scope.Locked(() =>
+        Scope.Locked(() => CreateCore(name, modelTypeId, documentJson, description));
+
+    /// <summary>
+    /// <see cref="Create"/> without taking the scope lock, for a caller already holding it. See
+    /// <see cref="RuleSet.UpdateCore"/> for why the split exists — a governed publish takes the
+    /// lock once so that a whole envelope of edits is one atomic step.
+    /// </summary>
+    internal PropositionUpdateResult CreateCore(
+        string name, string modelTypeId, string documentJson, string? description)
+    {
+        if (_authored.ContainsKey(name))
+            return PropositionUpdateResult.NameTaken();
+
+        if (ValidateName(name) is { } nameError)
+            return PropositionUpdateResult.Invalid([nameError]);
+
+        var prepared = Prepare(name, modelTypeId, documentJson, description);
+        if (prepared.Entry is not { } entry)
+            return PropositionUpdateResult.Invalid(prepared.Errors);
+
+        // A brand-new name has no referrers, so its closure is empty and the cascade below is a
+        // no-op. An *override* is the exception, and the reason a create cascades at all: it
+        // lands on a name existing documents already reference, so publishing it changes what
+        // they resolve exactly as an update would, on the same all-or-nothing terms.
+        var authored = new Authored(this, name, modelTypeId, documentJson, version: 1, description)
         {
-            if (_authored.ContainsKey(name))
-                return PropositionUpdateResult.NameTaken();
+            Bound = entry,
+            References = prepared.References
+        };
 
-            if (ValidateName(name) is { } nameError)
-                return PropositionUpdateResult.Invalid([nameError]);
-
-            var prepared = Prepare(name, modelTypeId, documentJson, description);
-            if (prepared.Entry is not { } entry)
-                return PropositionUpdateResult.Invalid(prepared.Errors);
-
-            // A brand-new name has no referrers, so its closure is empty and the cascade below is a
-            // no-op. An *override* is the exception, and the reason a create cascades at all: it
-            // lands on a name existing documents already reference, so publishing it changes what
-            // they resolve exactly as an update would, on the same all-or-nothing terms.
-            var authored = new Authored(this, name, modelTypeId, documentJson, version: 1, description)
-            {
-                Bound = entry,
-                References = prepared.References
-            };
-
-            var broken = PublishWithCascade(authored);
-            return broken.Count > 0
-                ? PropositionUpdateResult.BreaksDependents(broken)
-                : PropositionUpdateResult.Created(authored.Version);
-        });
+        var broken = PublishWithCascade(authored);
+        return broken.Count > 0
+            ? PropositionUpdateResult.BreaksDependents(broken)
+            : PropositionUpdateResult.Created(authored.Version);
+    }
 
     /// <summary>
     /// Replaces an authored proposition's document, rebinding everything that references it. Either
@@ -191,30 +199,33 @@ public sealed class PropositionSet
     /// <param name="expectedVersion">The version the caller last observed.</param>
     /// <returns>The outcome, carrying the dependents that broke when that is why it was rejected.</returns>
     public PropositionUpdateResult Update(string name, string documentJson, int expectedVersion) =>
-        Scope.Locked(() =>
+        Scope.Locked(() => UpdateCore(name, documentJson, expectedVersion));
+
+    /// <summary><see cref="Update"/> without taking the scope lock. See <see cref="CreateCore"/>.</summary>
+    internal PropositionUpdateResult UpdateCore(string name, string documentJson, int expectedVersion)
+    {
+        if (!_authored.TryGetValue(name, out var current))
+            return PropositionUpdateResult.NotFound();
+
+        if (current.Version != expectedVersion)
+            return PropositionUpdateResult.VersionConflict(current.Version);
+
+        var prepared = Prepare(name, current.ModelTypeId, documentJson, current.Description);
+        if (prepared.Entry is not { } entry)
+            return PropositionUpdateResult.Invalid(prepared.Errors);
+
+        var replacement = new Authored(
+            this, name, current.ModelTypeId, documentJson, current.Version + 1, current.Description)
         {
-            if (!_authored.TryGetValue(name, out var current))
-                return PropositionUpdateResult.NotFound();
+            Bound = entry,
+            References = prepared.References
+        };
 
-            if (current.Version != expectedVersion)
-                return PropositionUpdateResult.VersionConflict(current.Version);
-
-            var prepared = Prepare(name, current.ModelTypeId, documentJson, current.Description);
-            if (prepared.Entry is not { } entry)
-                return PropositionUpdateResult.Invalid(prepared.Errors);
-
-            var replacement = new Authored(
-                this, name, current.ModelTypeId, documentJson, current.Version + 1, current.Description)
-            {
-                Bound = entry,
-                References = prepared.References
-            };
-
-            var broken = PublishWithCascade(replacement);
-            return broken.Count > 0
-                ? PropositionUpdateResult.BreaksDependents(broken)
-                : PropositionUpdateResult.Updated(replacement.Version);
-        });
+        var broken = PublishWithCascade(replacement);
+        return broken.Count > 0
+            ? PropositionUpdateResult.BreaksDependents(broken)
+            : PropositionUpdateResult.Updated(replacement.Version);
+    }
 
     /// <summary>
     /// Withdraws an authored document. When a compiled spec lies beneath the name this reverts to it
@@ -225,51 +236,81 @@ public sealed class PropositionSet
     /// <param name="expectedVersion">The version the caller last observed.</param>
     /// <returns>The outcome.</returns>
     public PropositionUpdateResult Withdraw(string name, int expectedVersion) =>
-        Scope.Locked(() =>
+        Scope.Locked(() => WithdrawCore(name, expectedVersion));
+
+    /// <summary><see cref="Withdraw"/> without taking the scope lock. See <see cref="CreateCore"/>.</summary>
+    internal PropositionUpdateResult WithdrawCore(string name, int expectedVersion)
+    {
+        if (!_authored.TryGetValue(name, out var current))
+            return PropositionUpdateResult.NotFound();
+
+        if (current.Version != expectedVersion)
+            return PropositionUpdateResult.VersionConflict(current.Version);
+
+        var compiled = Scope.Registry.Find(name);
+        var commits = new List<IRebindCommit>();
+
+        if (compiled is null)
         {
-            if (!_authored.TryGetValue(name, out var current))
-                return PropositionUpdateResult.NotFound();
+            // Removal would leave referrers pointing at nothing, so direct referrers block it.
+            var referrers = Scope.Graph.Referrers(name);
+            if (referrers.Count > 0)
+                return PropositionUpdateResult.Referenced([.. referrers.Select(node => node.Name)]);
+        }
+        else
+        {
+            // Reverting changes what referrers resolve, so it takes the same transactional check
+            // as any other edit — the compiled spec may not satisfy every dependent.
+            var prospective = new PropositionOverlay(Scope.Overlay);
+            prospective.Remove(name);
 
-            if (current.Version != expectedVersion)
-                return PropositionUpdateResult.VersionConflict(current.Version);
+            var broken = Scope.PrepareClosure(name, prospective, commits);
+            if (broken.Count > 0)
+                return PropositionUpdateResult.BreaksDependents(broken);
+        }
 
-            var compiled = Scope.Registry.Find(name);
-            var commits = new List<IRebindCommit>();
+        // The store is the only step in this method that can fail, so it runs first — as Publish
+        // does — keeping "all of it, or none" true even though there is no explicit rollback for
+        // the in-memory mutations, including dependent commits, that follow.
+        _store.Delete(name);
+        Scope.CommitClosure(commits);
 
-            if (compiled is null)
-            {
-                // Removal would leave referrers pointing at nothing, so direct referrers block it.
-                var referrers = Scope.Graph.Referrers(name);
-                if (referrers.Count > 0)
-                    return PropositionUpdateResult.Referenced([.. referrers.Select(node => node.Name)]);
-            }
-            else
-            {
-                // Reverting changes what referrers resolve, so it takes the same transactional check
-                // as any other edit — the compiled spec may not satisfy every dependent.
-                var prospective = new PropositionOverlay(Scope.Overlay);
-                prospective.Remove(name);
+        _authored.Remove(name);
+        Scope.Overlay.Remove(name);
+        Scope.Graph.Remove(current.Node);
+        // Defensive rather than load-bearing: a proposition is only ever enrolled by Publish,
+        // which is also what put the graph edges above, so the two always come and go together.
+        Scope.Withdraw(current.Node);
 
-                var broken = Scope.PrepareClosure(name, prospective, commits);
-                if (broken.Count > 0)
-                    return PropositionUpdateResult.BreaksDependents(broken);
-            }
+        return PropositionUpdateResult.Removed();
+    }
 
-            // The store is the only step in this method that can fail, so it runs first — as Publish
-            // does — keeping "all of it, or none" true even though there is no explicit rollback for
-            // the in-memory mutations, including dependent commits, that follow.
-            _store.Delete(name);
-            Scope.CommitClosure(commits);
+    /// <summary>
+    /// One name's authored state, read without taking the scope lock, for a caller already holding
+    /// it. A name with no authored document reports <c>Exists: false</c> and version 0 even when a
+    /// compiled spec resolves beneath it — authoring over a compiled spec is a creation.
+    /// </summary>
+    internal (bool Exists, int Version, string? ModelTypeId, string? Description) AuthoredStateCore(string name) =>
+        _authored.TryGetValue(name, out var authored)
+            ? (true, authored.Version, authored.ModelTypeId, authored.Description)
+            : (false, 0, null, null);
 
-            _authored.Remove(name);
-            Scope.Overlay.Remove(name);
-            Scope.Graph.Remove(current.Node);
-            // Defensive rather than load-bearing: a proposition is only ever enrolled by Publish,
-            // which is also what put the graph edges above, so the two always come and go together.
-            Scope.Withdraw(current.Node);
+    /// <summary>
+    /// Parses, cycle-checks and binds a proposed document against <paramref name="source"/> without
+    /// publishing anything — the proposition half of a governed publish's validate-everything-first
+    /// phase. Passing a prospective source lets one envelope member resolve against another that is
+    /// not live yet. Assumes the scope lock is held.
+    /// </summary>
+    /// <returns>The bound entry to fold into the prospective overlay, or the errors that stopped it.</returns>
+    internal (SpecRegistryEntry? Entry, IReadOnlyList<RuleError> Errors) PrepareCore(
+        string name, string modelTypeId, string documentJson, string? description, ISpecSource source)
+    {
+        if (ValidateName(name) is { } nameError)
+            return (null, [nameError]);
 
-            return PropositionUpdateResult.Removed();
-        });
+        var prepared = Prepare(name, modelTypeId, documentJson, description, source);
+        return (prepared.Entry, prepared.Errors);
+    }
 
     /// <summary>
     /// Reads every persisted proposition and binds it, in dependency order. A document that fails to
@@ -516,8 +557,14 @@ public sealed class PropositionSet
         references.Any(reference => source.Find(reference) is { IsAsync: true });
 
     /// <summary>Parses, cycle-checks, and binds a document without publishing anything.</summary>
-    private Prepared Prepare(string name, string modelTypeId, string documentJson, string? description)
+    /// <param name="source">
+    /// Where references resolve, or null for the live source. A governed publish passes a
+    /// prospective source so an envelope member can bind against another member that is not live yet.
+    /// </param>
+    private Prepared Prepare(
+        string name, string modelTypeId, string documentJson, string? description, ISpecSource? source = null)
     {
+        var against = source ?? Scope.Source;
         var errors = new List<RuleError>();
 
         var model = ResolveModel(modelTypeId, errors);
@@ -537,8 +584,8 @@ public sealed class PropositionSet
             return new Prepared(null, references, errors);
         }
 
-        var isAsync = BindsAsync(Scope.Source, references);
-        var entry = model.Bind(Scope.Source, name, description, document, isAsync, errors);
+        var isAsync = BindsAsync(against, references);
+        var entry = model.Bind(against, name, description, document, isAsync, errors);
         return new Prepared(entry, references, errors);
     }
 

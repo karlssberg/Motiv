@@ -72,8 +72,14 @@ public sealed record ChangeClassification(
 /// <param name="ProposedDocumentJson">The new document, or null to delete / revert to the compiled default.</param>
 /// <param name="BaseVersion">The version this change was authored against.</param>
 /// <param name="Classification">What kind of change this is, derived from the diff.</param>
+/// <param name="ModelTypeId">
+/// The registered model-type id a proposition *creation* is authored against. Null for rules, and
+/// for edits to a proposition that already exists — an existing proposition's model type is fixed,
+/// so restating it would only create a way for the two to disagree.
+/// </param>
 public sealed record ProposedChange(
-    ChangeTarget Target, string? ProposedDocumentJson, int BaseVersion, ChangeClassification Classification);
+    ChangeTarget Target, string? ProposedDocumentJson, int BaseVersion, ChangeClassification Classification,
+    string? ModelTypeId = null);
 
 /// <summary>The governance envelope: 1..N proposed changes that publish atomically.</summary>
 public sealed class ChangeRequest
