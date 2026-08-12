@@ -35,14 +35,25 @@ public class ApprovalGateTests
         return request;
     }
 
-    /// <summary>In-memory fake store, sufficient to prove a second <see cref="ApprovalGate"/> instance reloads it.</summary>
+    /// <summary>
+    /// In-memory fake store, sufficient to prove a second <see cref="ApprovalGate"/> instance
+    /// reloads it. <see cref="ThrowOnSave"/> lets a test simulate a persistence failure on demand.
+    /// </summary>
     private sealed class FakeGateStore : IGateStore
     {
         private string? _documentJson;
 
+        public bool ThrowOnSave { get; set; }
+
         public string? Load() => _documentJson;
 
-        public void Save(string? documentJson) => _documentJson = documentJson;
+        public void Save(string? documentJson)
+        {
+            if (ThrowOnSave)
+                throw new IOException("simulated store failure");
+
+            _documentJson = documentJson;
+        }
     }
 
     [Fact]
@@ -144,5 +155,41 @@ public class ApprovalGateTests
         secondGate.DocumentJson!.ShouldBe(MakerCheckerDocument);
         decision.MayPublish.ShouldBeFalse();
         decision.Assertions.ShouldContain("change has fewer than 1 approvals");
+    }
+
+    [Fact]
+    public void Should_propagate_a_store_save_failure_and_leave_the_gate_unchanged()
+    {
+        // Arrange — a gate already holding a maker-checker document, backed by a store that now fails to persist
+        var store = new FakeGateStore();
+        var gate = new ApprovalGate(store);
+        gate.SetGate(MakerCheckerDocument, []);
+        store.ThrowOnSave = true;
+
+        // Act — attempt to reset to permissive; the store rejects the write
+        Should.Throw<IOException>(() => gate.SetGate(null, []));
+
+        // Assert — the exception propagated, and the in-memory gate never swapped: it still
+        // behaves exactly as the maker-checker document it had before the failed attempt
+        gate.DocumentJson!.ShouldBe(MakerCheckerDocument);
+        gate.Evaluate(Request(author: "alice")).MayPublish.ShouldBeFalse();
+        gate.Evaluate(Request(author: "alice", approvals: [new Approval("bob", Now, [])])).MayPublish.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Should_throw_when_the_stored_document_is_invalid()
+    {
+        // Arrange — the store is a dumb sink: it can hold a document that never passed SetGate's
+        // own validation, e.g. because it was tampered with or corrupted at rest.
+        var store = new FakeGateStore();
+        store.Save("{not valid json");
+
+        // Act
+        var exception = Should.Throw<InvalidOperationException>(() => new ApprovalGate(store));
+
+        // Assert — fails closed and loud: names the store as the source, and surfaces the
+        // underlying error detail rather than silently starting up permissive.
+        exception.Message.ShouldContain("IGateStore");
+        exception.Message.ShouldContain("invalid JSON");
     }
 }

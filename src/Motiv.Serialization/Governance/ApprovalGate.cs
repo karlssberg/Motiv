@@ -60,6 +60,12 @@ public sealed class ApprovalGate
     /// </summary>
     public const string NoGateConfiguredReason = "no approval gate is configured";
 
+    /// <summary>
+    /// Shared across every <see cref="ApprovalGate"/> instance rather than held per-instance: the
+    /// gate registry (<see cref="GateSpecs.CreateRegistry"/>) is immutable and stateless, so one
+    /// serializer safely serves all of them. This deviates from an instance field purely to avoid
+    /// rebuilding the (immutable) registry on every construction.
+    /// </summary>
     private static readonly RuleSerializer Serializer = new(GateSpecs.CreateRegistry());
 
     private readonly IGateStore? _store;
@@ -73,6 +79,14 @@ public sealed class ApprovalGate
     /// The store to load the active gate document from and persist future updates to, or
     /// <c>null</c> to run without persistence (always permissive).
     /// </param>
+    /// <exception cref="InvalidOperationException">
+    /// <paramref name="store"/> holds a document that fails to validate or bind. A store is a dumb
+    /// sink — it cannot have rejected a bad write — so a stored-but-invalid document means the
+    /// governance store was tampered with or corrupted. The gate fails closed and loud rather than
+    /// silently falling back to permissive; recovery (fixing or clearing the stored document, or
+    /// break-glass at the infrastructure layer) is an operational act, not something this
+    /// constructor can safely paper over.
+    /// </exception>
     public ApprovalGate(IGateStore? store = null)
     {
         _store = store;
@@ -83,11 +97,17 @@ public sealed class ApprovalGate
 
         var errors = new List<RuleError>();
         var spec = TryBind(loaded, errors);
-        if (spec is not null)
+        if (spec is null)
         {
-            _documentJson = loaded;
-            _boundSpec = spec;
+            var details = string.Join("; ", errors);
+            throw new InvalidOperationException(
+                $"The gate document loaded from the configured IGateStore is invalid and cannot " +
+                $"be bound; the gate cannot start. Fix or clear the stored document to recover. " +
+                $"Errors: {details}");
         }
+
+        _documentJson = loaded;
+        _boundSpec = spec;
     }
 
     /// <summary>The currently active gate document, or <c>null</c> when the gate is at its permissive default.</summary>
@@ -138,9 +158,11 @@ public sealed class ApprovalGate
         {
             if (documentJson is null)
             {
+                // Persist before swapping: if Save throws, the in-memory gate must stay exactly
+                // as it was rather than diverge from what's now (or still) on disk.
+                _store?.Save(null);
                 _documentJson = null;
                 _boundSpec = null;
-                _store?.Save(null);
                 return new GateUpdateResult(GateUpdateOutcome.Updated, [], null);
             }
 
@@ -149,9 +171,10 @@ public sealed class ApprovalGate
             if (spec is null)
                 return new GateUpdateResult(GateUpdateOutcome.Invalid, errors, null);
 
+            // Persist before swapping — same rationale as the null-reset path above.
+            _store?.Save(documentJson);
             _documentJson = documentJson;
             _boundSpec = spec;
-            _store?.Save(documentJson);
             return new GateUpdateResult(GateUpdateOutcome.Updated, [], null);
         }
     }
