@@ -21,13 +21,52 @@ namespace Motiv.Serialization;
 /// <param name="ModelTypeId">
 /// The registered model-type id, required when creating a proposition and ignored otherwise.
 /// </param>
+/// <param name="Description">
+/// The human-readable description, applied when creating a proposition and ignored otherwise — an
+/// existing proposition keeps the description it was created with.
+/// </param>
 public sealed record NewProposedChange(
     ChangeTargetKind Kind,
     string Name,
     string? DocumentJson,
     int BaseVersion,
     int? RollbackOfVersion,
-    string? ModelTypeId = null);
+    string? ModelTypeId = null,
+    string? Description = null);
+
+/// <summary>
+/// Which of the five ungoverned writes a <see cref="ChangeRequestSet.DirectWrite"/> is standing in
+/// for. Supplied rather than derived, because the caller's *intent* is what decides the refusal a
+/// caller sees: authoring over a name that already carries a document is a name-taken conflict, not
+/// a silent update, and the live state alone cannot tell the two apart.
+/// </summary>
+internal enum DirectWriteOperation
+{
+    /// <summary>Replace a rule's document.</summary>
+    RuleUpdate,
+
+    /// <summary>Return a rule to its default.</summary>
+    RuleRevert,
+
+    /// <summary>Author a proposition that has no document yet.</summary>
+    PropositionCreate,
+
+    /// <summary>Replace an authored proposition's document.</summary>
+    PropositionUpdate,
+
+    /// <summary>Withdraw an authored proposition.</summary>
+    PropositionWithdraw
+}
+
+/// <summary>
+/// The outcome of a <see cref="ChangeRequestSet.DirectWrite"/>: either the gate refused, or the
+/// underlying write ran and reported in its own terms. Exactly one of the three is non-null.
+/// </summary>
+/// <param name="Blocked">The gate's refusal, when it refused; otherwise null.</param>
+/// <param name="Rule">The rule write's outcome, for the two rule operations.</param>
+/// <param name="Proposition">The proposition write's outcome, for the three proposition operations.</param>
+internal sealed record DirectWriteResult(
+    GateDecision? Blocked, RuleUpdateResult? Rule, PropositionUpdateResult? Proposition);
 
 /// <summary>What happened to a <see cref="ChangeRequestSet"/> operation.</summary>
 public enum ChangeRequestOutcome
@@ -193,14 +232,7 @@ public sealed class ChangeRequestSet
                 var target = new ChangeTarget(change.Kind, change.Name);
                 var current = CurrentStateOf(target);
 
-                classified.Add(new ProposedChange(
-                    target,
-                    change.DocumentJson,
-                    change.BaseVersion,
-                    ChangeClassifier.Classify(
-                        change.DocumentJson, current.DocumentJson, current.Exists, SpecIsAsync,
-                        change.RollbackOfVersion),
-                    change.ModelTypeId));
+                classified.Add(Classify(change, target, current));
             }
 
             return classified;
@@ -316,6 +348,108 @@ public sealed class ChangeRequestSet
             return applied with { Change = change };
         }
     }
+
+    /// <summary>
+    /// Runs one ungoverned write through the approval gate without minting a change request: the
+    /// edit is classified, offered to the gate as a transient <see cref="ChangeRequest"/>, and — if
+    /// the gate allows it — executed by the very core the ungoverned endpoint would have called, so
+    /// its caller reports the outcome in exactly the terms it always has.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This is what makes "no bypass" true without the ordinary rule and proposition surfaces
+    /// growing a second vocabulary of refusals. A publish through <see cref="Publish"/> answers in
+    /// <see cref="ChangeRequestResult"/> terms, which cannot restate a referenced proposition's
+    /// referrer list or a cascade's broken dependents; running the core itself returns those
+    /// verbatim. There is exactly one execution — the gate decides, then the write happens.
+    /// </para>
+    /// <para>
+    /// The whole span is under one <see cref="BindingScope"/> lock, so the world the gate was shown
+    /// is the world the write lands in. Beyond that, the version compare-and-swap inside each core
+    /// is what makes classification and application agree structurally: an edit authored against a
+    /// version that has since moved fails the CAS and is refused as a conflict, in the same words as
+    /// before.
+    /// </para>
+    /// <para>
+    /// Nothing is recorded. A direct write is not a proposal, so it leaves no row in
+    /// <see cref="All"/>; a caller whose write the gate refuses is pointed at <see cref="Create"/>,
+    /// which is where proposals live.
+    /// </para>
+    /// </remarks>
+    /// <param name="author">Who is performing the write.</param>
+    /// <param name="operation">Which ungoverned write this stands in for.</param>
+    /// <param name="change">The edit, whose <see cref="NewProposedChange.Kind"/> must match <paramref name="operation"/>.</param>
+    /// <returns>The gate's refusal, or the underlying write's own outcome.</returns>
+    /// <exception cref="ArgumentException"><paramref name="change"/>'s kind contradicts <paramref name="operation"/>.</exception>
+    /// <exception cref="InvalidOperationException">A proposition write was asked of a host with no <see cref="PropositionSet"/>.</exception>
+    internal DirectWriteResult DirectWrite(string author, DirectWriteOperation operation, NewProposedChange change)
+    {
+        if (change is null) throw new ArgumentNullException(nameof(change));
+
+        var kind = KindOf(operation);
+        if (change.Kind != kind)
+            throw new ArgumentException(
+                $"A {operation} write targets a {kind.ToString().ToLowerInvariant()}, but the change " +
+                $"names a {change.Kind.ToString().ToLowerInvariant()}.", nameof(change));
+
+        if (kind == ChangeTargetKind.Proposition && _propositions is null)
+            throw new InvalidOperationException(
+                "This host has no PropositionSet, so a proposition cannot be written. The " +
+                "proposition endpoints are not mounted without one, so reaching here is a wiring bug.");
+
+        return _rules.Scope.Locked(() =>
+        {
+            var target = new ChangeTarget(kind, change.Name);
+            var proposed = Classify(change, target, CurrentStateOf(target));
+            var transient = new ChangeRequest(
+                Guid.NewGuid(), author,
+                $"direct {operation} of {kind.ToString().ToLowerInvariant()} '{change.Name}'",
+                [proposed]);
+
+            var decision = _gate.Evaluate(transient);
+            if (!decision.MayPublish)
+                return new DirectWriteResult(decision, null, null);
+
+            return operation switch
+            {
+                DirectWriteOperation.RuleUpdate => OfRule(
+                    _rules.UpdateCore(change.Name, change.DocumentJson!, change.BaseVersion)),
+                DirectWriteOperation.RuleRevert => OfRule(
+                    _rules.RevertCore(change.Name, change.BaseVersion)),
+                DirectWriteOperation.PropositionCreate => OfProposition(
+                    _propositions!.CreateCore(
+                        change.Name, change.ModelTypeId!, change.DocumentJson!, change.Description)),
+                DirectWriteOperation.PropositionUpdate => OfProposition(
+                    _propositions!.UpdateCore(change.Name, change.DocumentJson!, change.BaseVersion)),
+                _ => OfProposition(_propositions!.WithdrawCore(change.Name, change.BaseVersion))
+            };
+        });
+
+        static DirectWriteResult OfRule(RuleUpdateResult result) => new(null, result, null);
+
+        static DirectWriteResult OfProposition(PropositionUpdateResult result) => new(null, null, result);
+    }
+
+    private static ChangeTargetKind KindOf(DirectWriteOperation operation) =>
+        operation is DirectWriteOperation.RuleUpdate or DirectWriteOperation.RuleRevert
+            ? ChangeTargetKind.Rule
+            : ChangeTargetKind.Proposition;
+
+    /// <summary>
+    /// One edit classified against the target's current state. Shared by <see cref="Create"/> and
+    /// <see cref="DirectWrite"/> so a direct write is shown to the gate as exactly the change request
+    /// an author would have raised for it. Assumes the scope lock is held.
+    /// </summary>
+    private ProposedChange Classify(
+        NewProposedChange change, ChangeTarget target, (bool Exists, string? DocumentJson) current) =>
+        new(target,
+            change.DocumentJson,
+            change.BaseVersion,
+            ChangeClassifier.Classify(
+                change.DocumentJson, current.DocumentJson, current.Exists, SpecIsAsync,
+                change.RollbackOfVersion),
+            change.ModelTypeId,
+            change.Description);
 
     /// <summary>
     /// Whether a spec name is evaluated asynchronously, read from the binding scope's live layered
@@ -435,8 +569,12 @@ public sealed class ChangeRequestSet
                     return Invalid(proposed.Target,
                         "creating a proposition requires a model-type id", RuleErrorCode.ModelTypeMismatch);
 
+                // An existing proposition keeps its own description; a creation carries the one it
+                // was authored with. Same precedence as the model-type id above, and the same
+                // reason: what already exists cannot be restated into disagreement.
                 var prepared = propositions.PrepareCore(
-                    name, modelTypeId, proposed.ProposedDocumentJson!, state.Description, prospectiveSource);
+                    name, modelTypeId, proposed.ProposedDocumentJson!,
+                    state.Description ?? proposed.Description, prospectiveSource);
 
                 if (prepared.Entry is not { } entry)
                     return Failed(ChangeRequestOutcome.Invalid, proposed.Target, prepared.Errors);
@@ -625,7 +763,7 @@ public sealed class ChangeRequestSet
                 var result = state.Exists
                     ? propositions.UpdateCore(name, proposed.ProposedDocumentJson!, proposed.BaseVersion)
                     : propositions.CreateCore(
-                        name, proposed.ModelTypeId!, proposed.ProposedDocumentJson!, description: null);
+                        name, proposed.ModelTypeId!, proposed.ProposedDocumentJson!, proposed.Description);
 
                 if (result.Outcome is not (PropositionUpdateOutcome.Created or PropositionUpdateOutcome.Updated))
                     throw Unexpected(proposed.Target, result.Outcome.ToString(), Detail(result));

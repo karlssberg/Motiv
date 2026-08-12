@@ -45,9 +45,20 @@ internal static class MotivGovernanceEndpoints
                             $"Unknown change target kind '{change.Kind}'. Expected 'rule' or 'proposition'."),
                         json, statusCode: 400);
 
+                // Removal is spelled `"document": null`, never by leaving the property out. A
+                // forgotten field and a deliberate deletion are the same bytes on the wire otherwise,
+                // and the deletion is the destructive one — so the ambiguity is refused rather than
+                // resolved in its favour.
+                if (change.Document.ValueKind == JsonValueKind.Undefined)
+                    return Results.Json(
+                        new ErrorResponse(
+                            $"The change to {Label(kind)} '{change.Name}' must include a document. "
+                            + "Pass \"document\": null to remove the target."),
+                        json, statusCode: 400);
+
                 authored.Add(new NewProposedChange(
                     kind, change.Name, DocumentJson(change.Document), change.BaseVersion,
-                    change.RollbackOfVersion, change.ModelTypeId));
+                    change.RollbackOfVersion, change.ModelTypeId, change.Description));
             }
 
             var result = changes.Create(
@@ -55,7 +66,7 @@ internal static class MotivGovernanceEndpoints
 
             return result is { Outcome: ChangeRequestOutcome.Ok, Change: { } created }
                 ? Results.Json(ToResponse(created), json, statusCode: 201)
-                : ToFailure(result, json, "created");
+                : ToFailure(result, json, "The change request could not be created as authored.");
         });
 
         group.MapPost("/change-requests/{id:guid}/approvals", (Guid id, HttpContext http) =>
@@ -73,7 +84,7 @@ internal static class MotivGovernanceEndpoints
 
             return result is { Outcome: ChangeRequestOutcome.Ok, Change: { } approved }
                 ? Results.Json(ToResponse(approved), json)
-                : ToFailure(result, json, "approved");
+                : ToFailure(result, json, "The change request cannot be approved once it is closed.");
         });
 
         group.MapPost("/change-requests/{id:guid}/rejection",
@@ -88,7 +99,7 @@ internal static class MotivGovernanceEndpoints
             var result = changes.Reject(id, request.Reason ?? string.Empty);
             return result is { Outcome: ChangeRequestOutcome.Ok, Change: { } rejected }
                 ? Results.Json(ToResponse(rejected), json)
-                : ToFailure(result, json, "rejected");
+                : ToFailure(result, json, "The change request cannot be rejected once it is closed.");
         });
 
         group.MapPost("/change-requests/{id:guid}/withdrawal", (Guid id, HttpContext http) =>
@@ -102,7 +113,8 @@ internal static class MotivGovernanceEndpoints
             var result = changes.Withdraw(id, PrincipalIdentity.Subject(http.User));
             return result is { Outcome: ChangeRequestOutcome.Ok, Change: { } withdrawn }
                 ? Results.Json(ToResponse(withdrawn), json)
-                : ToFailure(result, json, "withdrawn by this caller — only its author may withdraw it, and only while it is open");
+                : ToFailure(result, json,
+                    "Only the change request's author may withdraw it, and only while it is open.");
         });
 
         group.MapPost("/change-requests/{id:guid}/publish", (Guid id, HttpContext http) =>
@@ -120,88 +132,105 @@ internal static class MotivGovernanceEndpoints
                     new ChangeRequestPublishResponse(
                         ToResponse(published), result.PublishedVersions ?? new Dictionary<string, int>()),
                     json)
-                : ToFailure(result, json, "published");
+                : ToFailure(result, json, "The change request cannot be published once it is closed.");
         });
     }
 
     /// <summary>
-    /// Publishes one direct write — a rule PUT/DELETE, or a proposition create/update/delete — as a
-    /// single-change request through the approval gate, so the ungoverned surface cannot be used to
-    /// walk around the ceremony.
+    /// Runs one direct rule write — a PUT or a DELETE — through the approval gate, and, when the
+    /// gate allows it, through the very same core the ungoverned endpoint calls.
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// Returns null in the two cases where the caller should perform its own, ungoverned write:
-    /// governance is not registered at all, or the governed publish refused for a reason that is not
-    /// the gate. The second is deliberate. Nothing has been applied at that point, and a change
-    /// request refuses in <see cref="ChangeRequestResult"/> terms — a flattened error list, a
-    /// <c>ChangeTarget</c> — which are not the terms the rule and proposition surfaces have always
-    /// answered in. Re-running the write reproduces the refusal callers already parse (a referenced
-    /// proposition's referrer list, a name-taken 409, a cascade's broken dependents) byte for byte,
-    /// and cannot bypass anything: the gate is what governs, and it already said yes.
-    /// </para>
-    /// <para>
-    /// A gate refusal leaves the change request in Draft rather than discarding it, so the write the
-    /// author attempted is already sitting there for a peer to approve.
-    /// </para>
+    /// The write executes exactly once and reports in <see cref="RuleUpdateResult"/> terms, so
+    /// <paramref name="written"/> can map it with the mapping this surface has always used. Nothing
+    /// is recorded: a direct write is not a proposal, and a caller the gate refuses is pointed at
+    /// the change-request surface, where proposals live.
     /// </remarks>
-    /// <param name="changes">The governance workflow, or null when governance is not registered.</param>
+    /// <param name="governance">The governance workflow.</param>
     /// <param name="http">The request, for the caller's identity.</param>
     /// <param name="json">The serializer options every response on this surface is written with.</param>
-    /// <param name="kind">Whether the target is a rule or a proposition.</param>
-    /// <param name="name">The target's dot-separated name.</param>
-    /// <param name="documentJson">The proposed document, or null to withdraw / revert.</param>
-    /// <param name="baseVersion">The version the caller authored against; 0 for a creation.</param>
-    /// <param name="modelTypeId">The model-type id, when the write creates a proposition.</param>
-    /// <param name="published">Builds the surface's own success response from the new version.</param>
-    /// <returns>The response, or null when the caller should write directly.</returns>
-    internal static IResult? PublishDirectWrite(
-        ChangeRequestSet? changes,
+    /// <param name="operation">Which ungoverned write this stands in for.</param>
+    /// <param name="name">The rule's name.</param>
+    /// <param name="documentJson">The proposed document, or null to revert to the default.</param>
+    /// <param name="baseVersion">The version the caller authored against.</param>
+    /// <param name="written">Maps the write's own outcome onto this surface's response.</param>
+    /// <returns>The gate's 403 refusal, or whatever <paramref name="written"/> produced.</returns>
+    internal static IResult GovernedRuleWrite(
+        ChangeRequestSet governance,
         HttpContext http,
         JsonSerializerOptions json,
-        ChangeTargetKind kind,
+        DirectWriteOperation operation,
+        string name,
+        string? documentJson,
+        int baseVersion,
+        Func<RuleUpdateResult, IResult> written)
+    {
+        var result = governance.DirectWrite(
+            PrincipalIdentity.Subject(http.User), operation,
+            new NewProposedChange(ChangeTargetKind.Rule, name, documentJson, baseVersion, null));
+
+        return result.Blocked is { } decision
+            ? RefusedDirectWrite(decision, json)
+            : written(result.Rule!);
+    }
+
+    /// <summary>
+    /// Runs one direct proposition write — a create, an update, or a withdrawal — through the
+    /// approval gate, and, when the gate allows it, through the very same core the ungoverned
+    /// endpoint calls. See <see cref="GovernedRuleWrite"/>.
+    /// </summary>
+    /// <param name="governance">The governance workflow.</param>
+    /// <param name="http">The request, for the caller's identity.</param>
+    /// <param name="json">The serializer options every response on this surface is written with.</param>
+    /// <param name="operation">Which ungoverned write this stands in for.</param>
+    /// <param name="name">The proposition's dot-separated name.</param>
+    /// <param name="documentJson">The proposed document, or null to withdraw.</param>
+    /// <param name="baseVersion">The version the caller authored against; 0 for a creation.</param>
+    /// <param name="modelTypeId">The model-type id, when the write creates a proposition.</param>
+    /// <param name="description">The description, when the write creates a proposition.</param>
+    /// <param name="written">Maps the write's own outcome onto this surface's response.</param>
+    /// <returns>The gate's 403 refusal, or whatever <paramref name="written"/> produced.</returns>
+    internal static IResult GovernedPropositionWrite(
+        ChangeRequestSet governance,
+        HttpContext http,
+        JsonSerializerOptions json,
+        DirectWriteOperation operation,
         string name,
         string? documentJson,
         int baseVersion,
         string? modelTypeId,
-        Func<int, IResult> published)
+        string? description,
+        Func<PropositionUpdateResult, IResult> written)
     {
-        if (changes is null)
-            return null;
+        var result = governance.DirectWrite(
+            PrincipalIdentity.Subject(http.User), operation,
+            new NewProposedChange(
+                ChangeTargetKind.Proposition, name, documentJson, baseVersion, null,
+                modelTypeId, description));
 
-        var author = PrincipalIdentity.Subject(http.User);
-        var created = changes.Create(
-            author,
-            $"direct {(documentJson is null ? "removal" : "write")} of {Label(kind)} '{name}' by {author}",
-            [new NewProposedChange(kind, name, documentJson, baseVersion, null, modelTypeId)]);
-
-        if (created is not { Outcome: ChangeRequestOutcome.Ok, Change: { } change })
-            return null;
-
-        var result = changes.Publish(change.Id, breakGlassActive: false);
-        switch (result.Outcome)
-        {
-            case ChangeRequestOutcome.Ok:
-                return published(
-                    result.PublishedVersions is { } versions && versions.TryGetValue(name, out var version)
-                        ? version
-                        : 0);
-
-            case ChangeRequestOutcome.GateBlocked:
-                return Refused(result.Gate!, json);
-
-            default:
-                // Nothing was applied, and the record would otherwise sit in Draft forever pretending
-                // to be a live proposal.
-                changes.Reject(change.Id, $"the direct write was refused: {result.Outcome}");
-                return null;
-        }
+        return result.Blocked is { } decision
+            ? RefusedDirectWrite(decision, json)
+            : written(result.Proposition!);
     }
 
-    /// <summary>The gate's refusal as a 403 — the one response governance adds to a direct write.</summary>
+    /// <summary>The gate's refusal as a 403, in the gate's own words.</summary>
     private static IResult Refused(GateDecision decision, JsonSerializerOptions json) =>
         Results.Json(
             new GateRefusalResponse(decision.Reason, decision.Assertions, decision.Justification),
+            json, statusCode: 403);
+
+    /// <summary>
+    /// A refused direct write, whose reason also names the way forward. A refused *publish* has a
+    /// change request the caller can go and get approved; a refused direct write mints nothing, so
+    /// without this the caller is told only that they may not, never what to do instead.
+    /// </summary>
+    private static IResult RefusedDirectWrite(GateDecision decision, JsonSerializerOptions json) =>
+        Results.Json(
+            new GateRefusalResponse(
+                $"{decision.Reason}. Raise the edit as a change request (POST change-requests) "
+                + "and have it approved.",
+                decision.Assertions,
+                decision.Justification),
             json, statusCode: 403);
 
     /// <summary>Refuses unless the caller holds <paramref name="verb"/> on every one of the names.</summary>
@@ -230,11 +259,11 @@ internal static class MotivGovernanceEndpoints
     };
 
     /// <summary>
-    /// A supplied document as raw JSON. Both an absent property and an explicit <c>null</c> mean
-    /// "no document", which is how a removal is expressed.
+    /// A supplied document as raw JSON. An explicit <c>null</c> is "no document", which is how a
+    /// removal is expressed; an absent property never reaches here, having been refused above.
     /// </summary>
     private static string? DocumentJson(JsonElement document) =>
-        document.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null ? null : document.GetRawText();
+        document.ValueKind == JsonValueKind.Null ? null : document.GetRawText();
 
     private static string Label(ChangeTargetKind kind) => kind.ToString().ToLowerInvariant();
 
@@ -251,15 +280,18 @@ internal static class MotivGovernanceEndpoints
                 EndpointResponses.DocumentElement(proposed.ProposedDocumentJson),
                 proposed.BaseVersion,
                 proposed.Classification,
-                proposed.ModelTypeId))],
-            change.Approvals);
+                proposed.ModelTypeId,
+                proposed.Description))],
+            [.. change.Approvals.Select(approval => new ApprovalResponse(
+                approval.Approver, approval.TimestampUtc, approval.Roles))]);
 
     /// <summary>
-    /// Every non-Ok outcome as an HTTP answer. <paramref name="attempted"/> completes the sentence
-    /// "the change request cannot be …", so an invalid-state refusal says which transition it refused.
+    /// Every non-Ok outcome as an HTTP answer. <paramref name="invalidState"/> is the whole sentence
+    /// an invalid-state refusal answers with, so each transition can explain its own precondition
+    /// rather than have one phrasing bent to fit all five.
     /// </summary>
     private static IResult ToFailure(
-        ChangeRequestResult result, JsonSerializerOptions json, string attempted) =>
+        ChangeRequestResult result, JsonSerializerOptions json, string invalidState) =>
         result.Outcome switch
         {
             ChangeRequestOutcome.GateBlocked => Refused(result.Gate!, json),
@@ -282,8 +314,7 @@ internal static class MotivGovernanceEndpoints
 
             ChangeRequestOutcome.InvalidState => Results.Json(
                 new ChangeRequestErrorResponse(
-                    $"The change request cannot be {attempted}"
-                    + (result.Change is { } change ? $" while it is '{change.Status}'." : "."),
+                    result.Change is { } change ? $"{invalidState} It is '{change.Status}'." : invalidState,
                     result.Errors, result.FailedTarget?.Name, null),
                 json, statusCode: 409),
 

@@ -17,13 +17,18 @@ namespace Motiv.Serialization.AspNetCore;
 /// <param name="ModelTypeId">
 /// A registered model-type id. Required when the edit creates a proposition; ignored otherwise.
 /// </param>
+/// <param name="Description">
+/// A human-readable description. Applied when the edit creates a proposition; ignored otherwise,
+/// since an existing proposition keeps the description it was created with.
+/// </param>
 public sealed record ProposedChangeRequest(
     string Kind,
     string Name,
     JsonElement Document,
     int BaseVersion,
     int? RollbackOfVersion,
-    string? ModelTypeId);
+    string? ModelTypeId,
+    string? Description);
 
 /// <summary>A request to open a change request over one or more artefacts.</summary>
 /// <param name="ChangeNote">A human-readable note describing the change.</param>
@@ -42,13 +47,22 @@ public sealed record ChangeRequestRejectionRequest(string Reason);
 /// <param name="BaseVersion">The version the edit was authored against.</param>
 /// <param name="Classification">What kind of change this is, as derived when it was authored.</param>
 /// <param name="ModelTypeId">The model-type id a proposition creation was authored against, if any.</param>
+/// <param name="Description">The description a proposition creation was authored with, if any.</param>
 public sealed record ProposedChangeResponse(
     string Kind,
     string Name,
     JsonElement? Document,
     int BaseVersion,
     ChangeClassification Classification,
-    string? ModelTypeId);
+    string? ModelTypeId,
+    string? Description);
+
+/// <summary>One approval recorded against a change request.</summary>
+/// <param name="Approver">Who gave the approval.</param>
+/// <param name="TimestampUtc">When it was recorded.</param>
+/// <param name="Roles">The roles the approver held at the time.</param>
+public sealed record ApprovalResponse(
+    string Approver, DateTimeOffset TimestampUtc, IReadOnlyList<string> Roles);
 
 /// <summary>A change request's full state.</summary>
 /// <param name="Id">The change request's identity.</param>
@@ -58,7 +72,7 @@ public sealed record ProposedChangeResponse(
 /// <param name="RejectionReason">Why it was rejected, when it was.</param>
 /// <param name="PublishedUnderBreakGlass">Whether publication bypassed the approval gate.</param>
 /// <param name="Changes">The edits that publish together.</param>
-/// <param name="Approvals">The approvals recorded against it, with the roles held at the time.</param>
+/// <param name="Approvals">The approvals recorded against it, at most one per approver.</param>
 public sealed record ChangeRequestResponse(
     Guid Id,
     string Author,
@@ -67,7 +81,7 @@ public sealed record ChangeRequestResponse(
     string? RejectionReason,
     bool PublishedUnderBreakGlass,
     IReadOnlyList<ProposedChangeResponse> Changes,
-    IReadOnlyList<Approval> Approvals);
+    IReadOnlyList<ApprovalResponse> Approvals);
 
 /// <summary>A successful publish.</summary>
 /// <param name="Request">The change request, now in the Published state.</param>

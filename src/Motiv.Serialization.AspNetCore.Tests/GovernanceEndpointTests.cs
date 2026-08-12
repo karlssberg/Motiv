@@ -239,9 +239,9 @@ public class GovernanceEndpointTests
     [Fact]
     public async Task Should_leave_a_refused_direct_write_answering_exactly_as_it_did_before()
     {
-        // A governed publish refuses in ChangeRequest terms, which are not the terms the rule
-        // surface has always answered in — so a refusal falls through to the ungoverned write,
-        // whose refusal is the one callers (and the demo UI) already parse.
+        // Once the gate allows the write, the core that runs is the very one the ungoverned
+        // endpoint calls — so every refusal below the gate comes back in the words callers (and the
+        // demo UI) already parse, with no second execution and no mapping to invent.
 
         // Arrange
         await using var governed = await StartAsync(governed: true);
@@ -275,20 +275,150 @@ public class GovernanceEndpointTests
             name = "customer.is-eligible",
             modelType = "customer",
             document = JsonDocument.Parse("""{ "rule": { "spec": "customer.is-adult" } }""").RootElement,
-            description = (string?)null
+            // Non-null on purpose: a governed create routes through a different call path, and a
+            // dropped description would be invisible to a null-description test.
+            description = "eligible for the loyalty tier"
         };
 
         // Act
         var underGovernance = await governed.GetTestClient().PostAsJsonAsync("/api/rules/propositions", create);
         var withoutGovernance = await legacy.GetTestClient().PostAsJsonAsync("/api/rules/propositions", create);
 
-        // Assert — same status, same body, and the proposition is really live
+        // Assert — same status, same body, and the two stores hold the same proposition, description included
         underGovernance.StatusCode.ShouldBe(HttpStatusCode.Created);
         underGovernance.StatusCode.ShouldBe(withoutGovernance.StatusCode);
         (await underGovernance.Content.ReadAsStringAsync())
             .ShouldBe(await withoutGovernance.Content.ReadAsStringAsync());
+
+        (await governed.GetTestClient().GetStringAsync("/api/rules/propositions"))
+            .ShouldBe(await legacy.GetTestClient().GetStringAsync("/api/rules/propositions"));
         governed.Services.GetRequiredService<PropositionSet>()
-            .DocumentJsonOf("customer.is-eligible").ShouldNotBeNull();
+            .Find("customer.is-eligible")!.Description!.ShouldBe("eligible for the loyalty tier");
+    }
+
+    [Fact]
+    public async Task Should_answer_a_referenced_proposition_deletion_exactly_as_the_ungoverned_surface_does()
+    {
+        // The refusal a change request cannot restate: PropositionReferencedResponse carries the
+        // referrer list the demo UI renders. Running the core itself is what keeps it.
+
+        // Arrange — a proposition another proposition is derived from, on both hosts
+        await using var governed = await StartAsync(governed: true);
+        await using var legacy = await StartAsync(governed: false);
+
+        async Task Seed(WebApplication app)
+        {
+            var client = app.GetTestClient();
+            await client.PostAsJsonAsync("/api/rules/propositions", new
+            {
+                name = "customer.base", modelType = "customer",
+                document = JsonDocument.Parse("""{ "rule": { "spec": "customer.is-active" } }""").RootElement,
+                description = (string?)null
+            });
+            await client.PostAsJsonAsync("/api/rules/propositions", new
+            {
+                name = "customer.derived", modelType = "customer",
+                document = JsonDocument.Parse("""{ "rule": { "spec": "customer.base" } }""").RootElement,
+                description = (string?)null
+            });
+        }
+
+        await Seed(governed);
+        await Seed(legacy);
+
+        // Act
+        var underGovernance = await governed.GetTestClient()
+            .DeleteAsync("/api/rules/propositions/customer.base?baseVersion=1");
+        var withoutGovernance = await legacy.GetTestClient()
+            .DeleteAsync("/api/rules/propositions/customer.base?baseVersion=1");
+
+        // Assert — the same 409, naming the same referrer
+        underGovernance.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        underGovernance.StatusCode.ShouldBe(withoutGovernance.StatusCode);
+        var body = await underGovernance.Content.ReadAsStringAsync();
+        body.ShouldBe(await withoutGovernance.Content.ReadAsStringAsync());
+        body.ShouldContain("customer.derived");
+    }
+
+    [Fact]
+    public async Task Should_mint_no_change_request_for_a_direct_write_whether_it_lands_or_is_refused()
+    {
+        // A direct write is not a proposal. Recording one would leave GET /change-requests full of
+        // rows nobody raised, and a refused write wedged in Draft looking like a live proposal.
+
+        // Arrange
+        await using var app = await StartAsync(governed: true);
+        var client = app.GetTestClient();
+        var changes = app.Services.GetRequiredService<ChangeRequestSet>();
+
+        // Act — one that lands, then a gate that refuses, then one that is refused
+        var landed = await client.PutAsJsonAsync($"/api/rules/rules/{RuleName}",
+            new { document = AdultDocument, baseVersion = 1 });
+        app.Services.GetRequiredService<ApprovalGate>().SetGate(MakerCheckerGate, []);
+        var refused = await client.PutAsJsonAsync($"/api/rules/rules/{RuleName}",
+            new { document = AdultDocument, baseVersion = 2 });
+
+        // Assert
+        landed.StatusCode.ShouldBe(HttpStatusCode.OK);
+        refused.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        changes.All.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Should_count_one_approver_once_however_often_they_approve()
+    {
+        // Arrange — two pairs of eyes required
+        await using var app = await StartAsync(governed: true);
+        var client = app.GetTestClient();
+        app.Services.GetRequiredService<ApprovalGate>().SetGate(
+            """{"rule": {"spec": "change.approver-count-at-least", "args": {"n": 2}}}""", []);
+        var id = await IdOf(await Send(client, HttpMethod.Post, "/api/rules/change-requests",
+            "author", OneRuleChange(RuleName, AdultDocument, 1)));
+
+        // Act — the same checker twice, then a second, distinct one
+        await Send(client, HttpMethod.Post, $"/api/rules/change-requests/{id}/approvals", "checker");
+        await Send(client, HttpMethod.Post, $"/api/rules/change-requests/{id}/approvals", "checker");
+        var afterRepeat = await Send(client, HttpMethod.Post, $"/api/rules/change-requests/{id}/publish", "author");
+
+        await Send(client, HttpMethod.Post, $"/api/rules/change-requests/{id}/approvals", "second-checker");
+        var afterSecond = await Send(client, HttpMethod.Post, $"/api/rules/change-requests/{id}/publish", "author");
+
+        // Assert — pressing the button twice is one approver, not two
+        afterRepeat.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        afterSecond.StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await client.GetFromJsonAsync<JsonElement>($"/api/rules/change-requests/{id}"))
+            .GetProperty("approvals").GetArrayLength().ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task Should_refuse_a_proposed_change_whose_document_is_absent_rather_than_read_it_as_a_deletion()
+    {
+        // Arrange
+        await using var app = await StartAsync(governed: true);
+        var client = app.GetTestClient();
+
+        // Act — no document property at all, then an explicit null
+        var absent = await Send(client, HttpMethod.Post, "/api/rules/change-requests", "author", new
+        {
+            changeNote = "oops",
+            changes = new[] { new { kind = "rule", name = RuleName, baseVersion = 1 } }
+        });
+        var explicitNull = await Send(client, HttpMethod.Post, "/api/rules/change-requests", "author", new
+        {
+            changeNote = "revert to the default",
+            changes = new[]
+            {
+                new { kind = "rule", name = RuleName, document = (JsonElement?)null, baseVersion = 1 }
+            }
+        });
+
+        // Assert — omission is a mistake; null is a deletion
+        absent.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await absent.Content.ReadAsStringAsync()).ShouldContain(RuleName);
+        explicitNull.StatusCode.ShouldBe(HttpStatusCode.Created);
+        (await explicitNull.Content.ReadFromJsonAsync<JsonElement>())
+            .GetProperty("changes")[0].GetProperty("classification")
+            .GetProperty("isDeletion").GetBoolean().ShouldBeTrue();
     }
 
     [Fact]

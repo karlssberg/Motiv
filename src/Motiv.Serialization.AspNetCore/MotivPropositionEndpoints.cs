@@ -55,16 +55,18 @@ internal static class MotivPropositionEndpoints
 
             var documentJson = request.Document.GetRawText();
 
-            // Grants first, exactly as before; then the governed publish, which answers only when it
-            // published or the gate refused. Anything else falls through to the ungoverned write,
-            // which refuses in the terms this endpoint has always refused in — a name-taken 409, a
-            // cascade's broken dependents — that a change request cannot restate.
-            return Governed(
-                       governance, http, json, request.Name, documentJson,
-                       baseVersion: 0, request.ModelType, created: true)
-                   ?? ToResult(
-                       propositions.Create(request.Name, request.ModelType, documentJson, request.Description),
-                       request.Name, json);
+            // Grants first, exactly as before; then the write itself, which with governance
+            // registered runs inside the gate check rather than beside it. The core it reaches is
+            // the very one called below, so a name-taken 409 or a cascade's broken dependents come
+            // back verbatim — refusals a change request could not restate.
+            return governance is null
+                ? ToResult(
+                    propositions.Create(request.Name, request.ModelType, documentJson, request.Description),
+                    request.Name, json)
+                : MotivGovernanceEndpoints.GovernedPropositionWrite(
+                    governance, http, json, DirectWriteOperation.PropositionCreate, request.Name,
+                    documentJson, baseVersion: 0, request.ModelType, request.Description,
+                    written => ToResult(written, request.Name, json));
         });
 
         group.MapPut("/propositions/{name}", (string name, PropositionPutRequest request, HttpContext http) =>
@@ -79,10 +81,12 @@ internal static class MotivPropositionEndpoints
 
             var documentJson = request.Document.GetRawText();
 
-            return Governed(
-                       governance, http, json, name, documentJson,
-                       request.BaseVersion, modelTypeId: null, created: false)
-                   ?? ToResult(propositions.Update(name, documentJson, request.BaseVersion), name, json);
+            return governance is null
+                ? ToResult(propositions.Update(name, documentJson, request.BaseVersion), name, json)
+                : MotivGovernanceEndpoints.GovernedPropositionWrite(
+                    governance, http, json, DirectWriteOperation.PropositionUpdate, name,
+                    documentJson, request.BaseVersion, modelTypeId: null, description: null,
+                    written => ToResult(written, name, json));
         });
 
         group.MapDelete("/propositions/{name}", (string name, int baseVersion, HttpContext http) =>
@@ -93,10 +97,12 @@ internal static class MotivPropositionEndpoints
             if (baseVersion <= 0)
                 return EndpointResponses.NonPositiveBaseVersion(json);
 
-            return Governed(
-                       governance, http, json, name, documentJson: null,
-                       baseVersion, modelTypeId: null, created: false)
-                   ?? ToResult(propositions.Withdraw(name, baseVersion), name, json);
+            return governance is null
+                ? ToResult(propositions.Withdraw(name, baseVersion), name, json)
+                : MotivGovernanceEndpoints.GovernedPropositionWrite(
+                    governance, http, json, DirectWriteOperation.PropositionWithdraw, name,
+                    documentJson: null, baseVersion, modelTypeId: null, description: null,
+                    written => ToResult(written, name, json));
         });
 
         group.MapGet("/propositions/{name}/dependents", (string name) =>
@@ -106,29 +112,6 @@ internal static class MotivPropositionEndpoints
                     [.. propositions.Dependents(name)
                         .Select(dependent => new DependentEntry(dependent.Name, dependent.Kind))]), json));
     }
-
-    /// <summary>
-    /// The proposition surface's half of the no-bypass wiring: publishes the write as a one-change
-    /// request through the approval gate, or returns null to let the caller write directly.
-    /// </summary>
-    /// <param name="created">
-    /// Whether a successful publish is a creation, which alone answers 201 — the change request
-    /// reports a version, not which of the three writes produced it.
-    /// </param>
-    private static IResult? Governed(
-        ChangeRequestSet? governance,
-        HttpContext http,
-        JsonSerializerOptions json,
-        string name,
-        string? documentJson,
-        int baseVersion,
-        string? modelTypeId,
-        bool created) =>
-        MotivGovernanceEndpoints.PublishDirectWrite(
-            governance, http, json, ChangeTargetKind.Proposition, name, documentJson, baseVersion,
-            modelTypeId,
-            version => Results.Json(
-                new PropositionSaveResponse(version), json, statusCode: created ? 201 : 200));
 
     /// <summary>
     /// The HTTP response for one attempted write. A single mapping serves create, update and

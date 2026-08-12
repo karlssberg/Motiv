@@ -77,9 +77,14 @@ public sealed record ChangeClassification(
 /// for edits to a proposition that already exists — an existing proposition's model type is fixed,
 /// so restating it would only create a way for the two to disagree.
 /// </param>
+/// <param name="Description">
+/// The human-readable description a proposition *creation* is authored with. Null for rules, and for
+/// edits to a proposition that already exists — an existing proposition keeps the description it was
+/// created with, exactly as <see cref="PropositionSet.Update"/> does.
+/// </param>
 public sealed record ProposedChange(
     ChangeTarget Target, string? ProposedDocumentJson, int BaseVersion, ChangeClassification Classification,
-    string? ModelTypeId = null);
+    string? ModelTypeId = null, string? Description = null);
 
 /// <summary>The governance envelope: 1..N proposed changes that publish atomically.</summary>
 public sealed class ChangeRequest
@@ -135,6 +140,13 @@ public sealed class ChangeRequest
     public bool PublishedUnderBreakGlass { get; private set; }
 
     /// <summary>Records an approval, moving a draft request into review.</summary>
+    /// <remarks>
+    /// One approver, one row. A second approval from the same subject replaces their first rather
+    /// than appending: the approvals are what gates like <c>change.approver-count-at-least</c> count,
+    /// and counting one person twice would let a single approver satisfy a two-pair-of-eyes rule by
+    /// pressing the button again. Replacing rather than ignoring keeps the row current — the roles
+    /// captured are the ones the approver held when they last assented.
+    /// </remarks>
     /// <param name="approval">The approval to record.</param>
     /// <exception cref="InvalidOperationException">
     /// <see cref="Status"/> is neither <see cref="ChangeRequestStatus.Draft"/> nor
@@ -146,7 +158,14 @@ public sealed class ChangeRequest
             throw new InvalidOperationException(
                 $"Cannot add an approval to a change request in the '{Status}' state.");
 
-        _approvals.Add(approval);
+        var existing = _approvals.FindIndex(
+            recorded => string.Equals(recorded.Approver, approval.Approver, StringComparison.Ordinal));
+
+        if (existing >= 0)
+            _approvals[existing] = approval;
+        else
+            _approvals.Add(approval);
+
         Status = ChangeRequestStatus.InReview;
     }
 

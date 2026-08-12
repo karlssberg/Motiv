@@ -152,7 +152,10 @@ public static class MotivRulesEndpoints
                 "AddGovernance() registered a ChangeRequestSet over the RuleSet in the service " +
                 "provider, but MapMotivRules was handed a different RuleSet instance. Governed " +
                 "writes would publish into the registered set while these endpoints read the one " +
-                "passed here. Use the MapMotivRules(basePath) overload, or pass the registered RuleSet.");
+                "passed here. To fix: mount with the MapMotivRules(basePath) overload, which uses " +
+                "the registered RuleSet; or pass that same RuleSet " +
+                "(services.GetRequiredService<RuleSet>()) to this overload; or drop the " +
+                "AddGovernance() call if this mount is not meant to be governed.");
         }
 
         return governance;
@@ -310,11 +313,14 @@ public static class MotivRulesEndpoints
             var documentJson = request.Document.GetRawText();
 
             // Grants first, exactly as before — the gate governs *what* may be published, not *who*
-            // may ask. Then the governed publish, which answers only when it published or the gate
-            // refused; anything else falls through to the ungoverned write below, which refuses in
-            // the terms this endpoint has always refused in.
-            return Governed(governance, http, json, ChangeTargetKind.Rule, name, documentJson, request.BaseVersion)
-                   ?? ToResult(rules.Update(name, documentJson, request.BaseVersion), name, json);
+            // may ask. Then the write itself, which with governance registered runs inside the gate
+            // check rather than beside it: same core, same outcome, one execution.
+            return governance is null
+                ? ToResult(rules.Update(name, documentJson, request.BaseVersion), name, json)
+                : MotivGovernanceEndpoints.GovernedRuleWrite(
+                    governance, http, json, DirectWriteOperation.RuleUpdate,
+                    name, documentJson, request.BaseVersion,
+                    written => ToResult(written, name, json));
         });
 
         group.MapDelete("/rules/{name}", (string name, int baseVersion, HttpContext http) =>
@@ -325,29 +331,16 @@ public static class MotivRulesEndpoints
             if (baseVersion <= 0)
                 return EndpointResponses.NonPositiveBaseVersion(json);
 
-            // A rule is never removed, only reverted to its default — which a change request
-            // expresses as a null document, the same shape a proposition withdrawal takes.
-            return Governed(governance, http, json, ChangeTargetKind.Rule, name, null, baseVersion)
-                   ?? ToResult(rules.Revert(name, baseVersion), name, json);
+            // A rule is never removed, only reverted to its default — which the gate is shown as a
+            // null document, the same shape a proposition withdrawal takes.
+            return governance is null
+                ? ToResult(rules.Revert(name, baseVersion), name, json)
+                : MotivGovernanceEndpoints.GovernedRuleWrite(
+                    governance, http, json, DirectWriteOperation.RuleRevert,
+                    name, documentJson: null, baseVersion,
+                    written => ToResult(written, name, json));
         });
     }
-
-    /// <summary>
-    /// The rule surface's half of the no-bypass wiring: publishes the write as a one-change request
-    /// through the approval gate, or returns null to let the caller write directly (governance is not
-    /// registered, or the governed publish refused for a reason this endpoint answers in its own terms).
-    /// </summary>
-    private static IResult? Governed(
-        ChangeRequestSet? governance,
-        HttpContext http,
-        JsonSerializerOptions json,
-        ChangeTargetKind kind,
-        string name,
-        string? documentJson,
-        int baseVersion) =>
-        MotivGovernanceEndpoints.PublishDirectWrite(
-            governance, http, json, kind, name, documentJson, baseVersion, modelTypeId: null,
-            version => Results.Json(new RulePutResponse(version), json));
 
     private static IResult ToResult(RuleUpdateResult outcome, string name, JsonSerializerOptions json) =>
         outcome.Outcome switch
