@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
-/** The two pages the demo shell switches between. */
-export type Page = 'rules' | 'propositions';
+/** The pages the demo shell switches between. */
+export type Page = 'rules' | 'propositions' | 'admin';
 
 /** Where the user is: which page, and what is selected on it. */
 export interface Route {
@@ -35,7 +35,7 @@ export function parseHash(hash: string): Route {
   const [page, ...rest] = hash.replace(/^#\/?/, '').split('/');
   // Compared literally rather than looked up in a list, which narrows the type on the way through
   // and so needs no cast — an unknown page (the empty string included) falls back.
-  if (page !== 'rules' && page !== 'propositions') return DEFAULT_ROUTE;
+  if (page !== 'rules' && page !== 'propositions' && page !== 'admin') return DEFAULT_ROUTE;
   const name = rest.join('/');
   return { page, name: name === '' ? null : decodeName(name) };
 }

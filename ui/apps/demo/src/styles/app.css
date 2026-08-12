@@ -1535,3 +1535,35 @@ button.node-dsl {
   .modal-mobile-full .modal-body { max-height: none; flex: 1; }
   .modal-mobile-full { display: flex; flex-direction: column; }
 }
+
+/* Admin: the grants table and the add-grant form beneath it */
+.grants-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.grants-table th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--muted);
+  padding: calc(var(--space) / 2) var(--space);
+  border-bottom: 1px solid var(--border);
+}
+
+.grants-table td {
+  padding: calc(var(--space) / 2) var(--space);
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
+.admin-add-form {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space);
+  flex-wrap: wrap;
+}
+
+.admin-add-form .field {
+  min-width: 140px;
+}

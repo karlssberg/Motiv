@@ -4,6 +4,7 @@ import { RuleEditorProvider } from '@motiv-rules/react';
 import { useHashRoute, type Page } from './routing/useHashRoute.js';
 import { RulesPage } from './panes/RulesPage.js';
 import { PropositionsPage } from './panes/PropositionsPage.js';
+import { AdminPage } from './panes/AdminPage.js';
 
 const MODEL_TYPE = 'customer';
 
@@ -49,14 +50,16 @@ export function App(props: { client?: RulesApiClient; store?: RuleEditorStore })
               onSelect={(name) => navigate({ page: 'propositions', name })}
             />
           )
-          : (
-            <RulesPage
-              client={client}
-              page={route.page}
-              onNavigate={goToPage}
-              onLoaded={(entry) => setIsAsync(entry?.isAsync ?? false)}
-            />
-          )}
+          : route.page === 'admin'
+            ? <AdminPage page={route.page} onNavigate={goToPage} />
+            : (
+              <RulesPage
+                client={client}
+                page={route.page}
+                onNavigate={goToPage}
+                onLoaded={(entry) => setIsAsync(entry?.isAsync ?? false)}
+              />
+            )}
       </main>
     </RuleEditorProvider>
   );

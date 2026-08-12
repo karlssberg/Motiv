@@ -93,3 +93,10 @@ export const IconDelete = (props: IconProps) => (
 export const IconClose = (props: IconProps) => (
   <Glyph {...props}><path d="M6 6l12 12M18 6L6 18" /></Glyph>
 );
+
+export const IconAdmin = (props: IconProps) => (
+  <Glyph {...props}>
+    <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" />
+    <path d="M9.5 12l1.8 1.8 3.2-3.6" />
+  </Glyph>
+);
