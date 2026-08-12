@@ -37,11 +37,13 @@ MotivRulesBuilder AddPropositions(IPropositionStore? store = null);
 Call it once. A second call throws `InvalidOperationException` rather than letting DI's last-wins
 registration quietly discard the first store.
 
-Neither these endpoints nor the rules ones call `RequireAuthorization`, so they are open unless the
-host says otherwise. `POST /propositions` can override a compiled spec, which changes what *every*
-rule referencing that name evaluates &mdash; put the group behind
-[`RequireAuthorization()`](https://learn.microsoft.com/aspnet/core/security/authorization/endpoint)
-(or a policy on the containing group) before exposing it beyond a trusted network.
+These endpoints are mounted under the same group as the rule endpoints, which is **secure by
+default**: `MapMotivRules()` calls `RequireAuthorization()` on the whole group unless the host opts
+out with `AllowAnonymous()`. `POST /propositions` can override a compiled spec, which changes what
+*every* rule referencing that name evaluates &mdash; layer [namespace grants](../governance/grants.md)
+on top so only callers holding a `Publish` grant on the target namespace can write, and
+[`AddGovernance()`](../governance/change-requests.md) for a review gate before the write lands. See
+[Governance](../governance/index.md) for the full pipeline.
 
 ## Endpoints
 

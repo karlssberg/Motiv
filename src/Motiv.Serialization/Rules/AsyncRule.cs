@@ -119,6 +119,24 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
         return Publish(current, new State(@default.DocumentJson, current.Version + 1, @default.Spec));
     }
 
+    internal sealed override void ValidateDocument(
+        RuleSerializer serializer, string documentJson, List<RuleError> errors)
+    {
+        AsyncSpecBase<TModel, TMetadata> spec;
+        try
+        {
+            spec = Bind(serializer, documentJson);
+        }
+        catch (RuleSerializationException exception)
+        {
+            errors.AddRange(exception.Errors);
+            return;
+        }
+
+        if (RequirePolicy(spec) is { } policyError)
+            errors.Add(policyError);
+    }
+
     internal sealed override (int Version, string? DocumentJson) VersionedDocument()
     {
         var snapshot = Snapshot();

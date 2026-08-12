@@ -22,4 +22,6 @@ items:
     href: live-rules/toc.yml
   - name: Runtime Propositions
     href: propositions/toc.yml
+  - name: Governance
+    href: governance/toc.yml
 

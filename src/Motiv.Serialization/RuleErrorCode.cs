@@ -39,6 +39,12 @@ public enum RuleErrorCode
     /// <summary>A payload string or 'n' slot references a parameter that is not declared.</summary>
     UnknownParameterReference,
 
+    /// <summary>A spec node supplied 'args' to a spec that was not registered as parameterised.</summary>
+    UnexpectedArguments,
+
+    /// <summary>A parameterised spec's factory threw while building the spec from its arguments.</summary>
+    SpecFactoryFailed,
+
     /// <summary>A higher-order node references a collection path that is not registered.</summary>
     UnknownCollection,
 
@@ -52,5 +58,11 @@ public enum RuleErrorCode
     InvalidSpecName,
 
     /// <summary>Publishing the document would create a reference cycle.</summary>
-    CycleDetected
+    CycleDetected,
+
+    /// <summary>
+    /// A gate document referenced a spec registered as asynchronous. The approval gate evaluates
+    /// change requests synchronously, so it can never bind to an async registry entry.
+    /// </summary>
+    GateMustBeSynchronous
 }

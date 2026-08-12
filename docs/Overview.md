@@ -117,3 +117,22 @@ Runtime propositions (in the `Motiv.Serialization` and `Motiv.Serialization.AspN
 | [PropositionSet](./propositions/PropositionSet.md)                        | `AddModel()`, `Create()`, `Update()`, `Withdraw()`, `Load()`, `Dependents()` &mdash; the write path and its outcome contract. |
 | [IPropositionStore](./propositions/IPropositionStore.md)                  | The persistence seam, `StoredProposition`, and `InMemoryPropositionStore`.                        |
 | [ASP.NET Core Integration](./propositions/AspNetCore.md)                  | `AddPropositions()` and the six `/propositions` endpoints.                                        |
+
+## Governance
+
+Governance (in the `Motiv.Serialization` and `Motiv.Serialization.AspNetCore` packages) layers
+authentication, namespace-scoped authorization, and a maker-checker approval gate around the live
+rules and runtime propositions HTTP surface: `MapMotivRules()` is secure by default, `IGrantSource`
+controls what an authenticated caller may read and write, and `AddGovernance()` routes every publish
+&mdash; proposed through a change request or attempted directly &mdash; through one `ApprovalGate`, a
+may-publish `Policy` over a `ChangeRequest` that explains a refusal through the same `Reason`,
+`Assertions`, and `Justification` every Motiv evaluation produces. See [Governance](./governance/index.md)
+for the full authenticate &rarr; authorize &rarr; govern &rarr; publish pipeline, the permissive
+default, and the lockout pre-check and break-glass recovery layers.
+
+| Type / Method                                                            | Description                                                                                       |
+|---------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| [Namespace Grants](./governance/grants.md)                                | `IGrantSource`, `NamespaceGrant`, the `Read`/`Author`/`Publish` verb ladder, and namespace-prefix covering. |
+| [Change Requests](./governance/change-requests.md)                        | `ChangeRequest`, `ProposedChange`, and the `ChangeRequestSet` create/approve/reject/withdraw/publish workflow. |
+| [The Approval Gate](./governance/approval-gate.md)                        | `ApprovalGate`, the built-in `change.*` gate specs, maker-checker, and the lockout pre-check.     |
+| [Break-Glass](./governance/break-glass.md)                                | The deploy-time flag that disables the gate, and its audit trail.                                  |

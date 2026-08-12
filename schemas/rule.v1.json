@@ -29,6 +29,10 @@
     "payload": {
       "anyOf": [{ "$ref": "#/$defs/nonEmptyString" }, { "type": "object" }]
     },
+    "args": {
+      "type": "object",
+      "additionalProperties": { "type": ["string", "number", "boolean", "null"] }
+    },
     "countable": {
       "anyOf": [
         { "type": "integer", "minimum": 0 },
@@ -84,6 +88,7 @@
     "specNode": {
       "properties": {
         "spec": { "$ref": "#/$defs/nonEmptyString" },
+        "args": { "$ref": "#/$defs/args" },
         "whenTrue": { "$ref": "#/$defs/payload" },
         "whenFalse": { "$ref": "#/$defs/payload" },
         "name": { "$ref": "#/$defs/nonEmptyString" }

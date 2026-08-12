@@ -30,8 +30,10 @@ public class PropositionEndpointTests
         var options = new MotivRulesOptions().AddModel<Customer>("customer");
         var builder = WebApplication.CreateSlimBuilder();
         builder.WebHost.UseTestServer();
+        builder.Services.AddTestAuth();
         builder.Services.AddMotivRules(registry, options).AddPropositions();
         var app = builder.Build();
+        app.UseTestAuth();
         app.MapMotivRules("/api/rules");
         await app.StartAsync();
         return app;

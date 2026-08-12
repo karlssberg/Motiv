@@ -152,7 +152,7 @@ public sealed class RuleSet
     {
         if (documentJson is null) throw new ArgumentNullException(nameof(documentJson));
 
-        return Mutate(name, rule => rule.TryUpdate(_serializer, documentJson, expectedVersion));
+        return Scope.Locked(() => UpdateCore(name, documentJson, expectedVersion));
     }
 
     /// <summary>Reverts a rule to its default. The version moves forward, never back.</summary>
@@ -160,24 +160,103 @@ public sealed class RuleSet
     /// <param name="expectedVersion">The version the caller last observed.</param>
     /// <returns>The outcome: updated, version conflict, invalid default document, or not found.</returns>
     public RuleUpdateResult Revert(string name, int expectedVersion) =>
-        Mutate(name, rule => rule.TryRevert(_serializer, expectedVersion));
+        Scope.Locked(() => RevertCore(name, expectedVersion));
 
     /// <summary>
-    /// Looks up a rule and, under the scope lock, applies a publish operation to it — the shared
-    /// shape behind <see cref="Update"/> and <see cref="Revert"/>: find-or-not-found, publish, then
-    /// re-track the rule's graph edges whenever the publish actually took.
+    /// <see cref="Update"/> without taking the scope lock, for a caller already holding it — a
+    /// governed publish takes the lock once and drives several of these, so that the whole envelope
+    /// is one atomic step rather than a sequence of individually-atomic ones.
     /// </summary>
-    private RuleUpdateResult Mutate(string name, Func<RuleBase, RuleUpdateResult> publish) =>
-        Scope.Locked(() =>
-        {
-            if (Find(name) is not { } rule)
-                return RuleUpdateResult.NotFound();
+    /// <remarks>
+    /// The lock is a plain monitor and therefore reentrant, so calling the public method from inside
+    /// it would not in fact deadlock. The split is about the *unit of atomicity*, not about
+    /// deadlock avoidance: a caller that means "these edits publish together" must not be able to
+    /// express it as a series of calls each of which releases the lock in between.
+    /// </remarks>
+    internal RuleUpdateResult UpdateCore(string name, string documentJson, int expectedVersion) =>
+        MutateCore(name, rule => rule.TryUpdate(_serializer, documentJson, expectedVersion));
 
-            var result = publish(rule);
-            if (result.Outcome == RuleUpdateOutcome.Updated)
-                Track(rule);
-            return result;
-        });
+    /// <summary><see cref="Revert"/> without taking the scope lock. See <see cref="UpdateCore"/>.</summary>
+    internal RuleUpdateResult RevertCore(string name, int expectedVersion) =>
+        MutateCore(name, rule => rule.TryRevert(_serializer, expectedVersion));
+
+    /// <summary>
+    /// Binds a proposed document against <paramref name="source"/> without publishing anything, so a
+    /// governed publish can discover that a rule half of an envelope would not bind while nothing
+    /// has moved yet. Passing a prospective source is the point: an envelope's rule edit may
+    /// reference a proposition the same envelope creates, which the live source cannot resolve.
+    /// Assumes the scope lock is held.
+    /// </summary>
+    /// <param name="name">The rule name.</param>
+    /// <param name="documentJson">The proposed document.</param>
+    /// <param name="source">The source names resolve against — live, or prospective.</param>
+    /// <returns>Why the document would not bind, or empty when it would.</returns>
+    internal IReadOnlyList<RuleError> ValidateCore(string name, string documentJson, ISpecSource source)
+    {
+        if (Find(name) is not { } rule)
+            return [];
+
+        var errors = new List<RuleError>();
+        rule.ValidateDocument(new RuleSerializer(source, _options), documentJson, errors);
+        return errors;
+    }
+
+    /// <summary>
+    /// The names a proposed document would resolve, so a governed publish can tell which of its own
+    /// members would reference a proposition it is also withdrawing. The document must already have
+    /// passed <see cref="ValidateCore"/>, which rules a parse failure out.
+    /// </summary>
+    internal IReadOnlyList<string> ReferencesOfCore(string? documentJson) => ReferencesOf(documentJson);
+
+    /// <summary>
+    /// The names a rule would resolve once reverted. A compiled default resolves none, but a rule
+    /// declared with a <see cref="RuleDocumentSource"/> default re-acquires that document's
+    /// references — <see cref="Track"/> recomputes them from whatever document the revert published,
+    /// so a revert is not automatically a departure from the graph.
+    /// </summary>
+    internal IReadOnlyList<string> DefaultReferencesOfCore(string name) =>
+        Find(name) is { } rule ? ReferencesOf(rule.Default.DocumentJson) : [];
+
+    /// <summary>
+    /// Binds the document a revert would republish against <paramref name="source"/> without
+    /// publishing — the counterpart of <see cref="ValidateCore"/> for the deletion arm of a governed
+    /// publish. A revert is not a return to something known-good: <see cref="RuleBase.TryRevert"/>
+    /// re-binds the default against whatever the world looks like now, and a proposition edit landing
+    /// earlier in the same envelope can be exactly what stops it binding.
+    /// </summary>
+    /// <remarks>
+    /// A compiled default is skipped rather than checked. It resolves no names and was type-checked
+    /// at construction, so <see cref="RuleBase.TryRevert"/> cannot fail on it.
+    /// </remarks>
+    /// <param name="name">The rule name.</param>
+    /// <param name="source">The source names resolve against — live, or prospective.</param>
+    /// <returns>Why the default would not bind, or empty when it would.</returns>
+    internal IReadOnlyList<RuleError> ValidateDefaultCore(string name, ISpecSource source)
+    {
+        if (Find(name) is not { Default.DocumentJson: { } documentJson } rule)
+            return [];
+
+        var errors = new List<RuleError>();
+        rule.ValidateDocument(new RuleSerializer(source, _options), documentJson, errors);
+        return errors;
+    }
+
+    /// <summary>
+    /// Looks up a rule and applies a publish operation to it — the shared shape behind
+    /// <see cref="UpdateCore"/> and <see cref="RevertCore"/>: find-or-not-found, publish, then
+    /// re-track the rule's graph edges whenever the publish actually took. Assumes the scope lock
+    /// is held.
+    /// </summary>
+    private RuleUpdateResult MutateCore(string name, Func<RuleBase, RuleUpdateResult> publish)
+    {
+        if (Find(name) is not { } rule)
+            return RuleUpdateResult.NotFound();
+
+        var result = publish(rule);
+        if (result.Outcome == RuleUpdateOutcome.Updated)
+            Track(rule);
+        return result;
+    }
 
     /// <summary>
     /// Records the rule's current outgoing references and its participation in rebinds. A rule on a

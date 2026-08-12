@@ -57,6 +57,47 @@ public sealed class SpecRegistry : ISpecSource
     public SpecRegistry Register<TModel, TMetadata>(string name, AsyncSpecBase<TModel, TMetadata> spec, string? description = null) =>
         Add(name, spec, typeof(TModel), typeof(TMetadata), isAsync: true, description);
 
+    /// <summary>
+    /// Registers a spec that is built per reference from arguments a document supplies, rather than
+    /// registered as a finished instance.
+    /// </summary>
+    /// <remarks>
+    /// A referencing node passes its arguments as an <c>args</c> sibling of <c>spec</c> —
+    /// <c>{"spec": "list.count-at-least", "args": {"n": 2}}</c> — which is validated and coerced
+    /// against <paramref name="parameters" /> by the same rules a document's own <c>parameters</c>
+    /// block obeys, so missing, surplus and mistyped arguments (and declared defaults) are reported
+    /// before the factory ever runs. The factory's product is a plain spec, so a parameterised entry
+    /// composes exactly like any other.
+    /// </remarks>
+    /// <typeparam name="TModel">The model type the built spec evaluates against.</typeparam>
+    /// <param name="name">
+    /// The stable name that rule documents use to reference the spec. Must start with an ASCII letter
+    /// and contain only ASCII letters, digits, <c>-</c> or <c>_</c>, so it can be referenced safely
+    /// from documents and DSL text.
+    /// </param>
+    /// <param name="parameters">The arguments a referencing node must supply.</param>
+    /// <param name="factory">Builds the spec from the resolved arguments, keyed by declared name.</param>
+    /// <param name="description">An optional human-readable description surfaced in a catalog UI.</param>
+    /// <returns>This registry, to allow chained registration.</returns>
+    public SpecRegistry RegisterParameterised<TModel>(
+        string name,
+        IReadOnlyList<RuleParameterDeclaration> parameters,
+        Func<IReadOnlyDictionary<string, object?>, SpecBase<TModel, string>> factory,
+        string? description = null)
+    {
+        if (parameters is null)
+            throw new ArgumentNullException(nameof(parameters));
+        if (factory is null)
+            throw new ArgumentNullException(nameof(factory));
+
+        // Erased to Func<…, object> so an entry stores one slot whether or not it is parameterised.
+        var erased = new Func<IReadOnlyDictionary<string, object?>, object>(values =>
+            factory(values) ?? throw new InvalidOperationException(
+                $"The factory registered for the parameterised spec '{name}' returned null."));
+
+        return Add(name, erased, typeof(TModel), typeof(string), isAsync: false, description, parameters);
+    }
+
     /// <summary>Looks up a registered spec by name.</summary>
     /// <param name="name">The name the spec was registered under.</param>
     /// <returns>The matching entry, or <c>null</c> when no spec is registered under the name.</returns>
@@ -131,7 +172,14 @@ public sealed class SpecRegistry : ISpecSource
     private static string NameOf(ScopeClaim claim) =>
         claim == ScopeClaim.Rules ? nameof(RuleSet) : nameof(PropositionSet);
 
-    private SpecRegistry Add(string name, object? spec, Type modelType, Type metadataType, bool isAsync, string? description)
+    private SpecRegistry Add(
+        string name,
+        object? spec,
+        Type modelType,
+        Type metadataType,
+        bool isAsync,
+        string? description,
+        IReadOnlyList<RuleParameterDeclaration>? parameters = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("A registered spec name must not be empty or whitespace.", nameof(name));
@@ -145,7 +193,7 @@ public sealed class SpecRegistry : ISpecSource
         if (_entries.ContainsKey(name))
             throw new ArgumentException($"A spec is already registered under the name '{name}'.", nameof(name));
 
-        _entries[name] = new SpecRegistryEntry(name, modelType, metadataType, isAsync, spec, description);
+        _entries[name] = new SpecRegistryEntry(name, modelType, metadataType, isAsync, spec, description, parameters);
         return this;
     }
 

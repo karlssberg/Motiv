@@ -39,8 +39,10 @@ public class PropositionCatalogTests
         var (registry, options) = Fixture();
         var builder = WebApplication.CreateSlimBuilder();
         builder.WebHost.UseTestServer();
+        builder.Services.AddTestAuth();
         enroll(builder.Services.AddMotivRules(registry, options));
         var app = builder.Build();
+        app.UseTestAuth();
         app.MapMotivRules("/api/rules");
         await app.StartAsync();
         return app;

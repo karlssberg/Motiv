@@ -22,7 +22,9 @@ public static class MotivRulesEndpoints
     /// <c>{basePath}/propositions</c> endpoints are mapped against it as well, and documents bind
     /// through its authored layer over the registry, so validate/evaluate resolve the same names the
     /// catalog lists. This overload cannot substitute a different one, so pass the same registry and
-    /// options it was built with.
+    /// options it was built with. The mapped group is secure by default — callers must be
+    /// authenticated — unless <paramref name="configureEndpoints"/> calls
+    /// <see cref="MotivRulesEndpointOptions.AllowAnonymous"/>, the explicit, greppable escape.
     /// </summary>
     /// <param name="endpoints">The endpoint route builder to map onto.</param>
     /// <param name="basePath">The base path to mount under, e.g. <c>/api/rules</c>.</param>
@@ -31,13 +33,18 @@ public static class MotivRulesEndpoints
     /// <param name="rules">The live rule set to manage, or null to omit the rule endpoints.
     /// Construct it with the same registry and <see cref="MotivRulesOptions.SerializerOptions"/>
     /// passed here, so validate/evaluate and rule updates agree on how documents bind.</param>
+    /// <param name="configureEndpoints">Configures per-mount endpoint behavior. The mapped group
+    /// is secure by default (<c>RequireAuthorization</c>); call
+    /// <see cref="MotivRulesEndpointOptions.AllowAnonymous"/> here to open it to unauthenticated
+    /// callers — an explicit, greppable escape rather than a silent default.</param>
     /// <returns>The endpoint route builder, for chaining.</returns>
     public static IEndpointRouteBuilder MapMotivRules(
         this IEndpointRouteBuilder endpoints,
         string basePath,
         SpecRegistry registry,
         MotivRulesOptions options,
-        RuleSet? rules = null)
+        RuleSet? rules = null,
+        Action<MotivRulesEndpointOptions>? configureEndpoints = null)
     {
         var propositions = endpoints.ServiceProvider.GetService<PropositionSet>();
 
@@ -51,10 +58,20 @@ public static class MotivRulesEndpoints
         var json = options.JsonSerializerOptions;
         var group = endpoints.MapGroup(basePath);
 
+        var endpointOptions = new MotivRulesEndpointOptions();
+        configureEndpoints?.Invoke(endpointOptions);
+        if (endpointOptions.Anonymous)
+            group.AllowAnonymous();
+        else
+            group.RequireAuthorization();
+
         MapCatalogEndpoint(group, registry, options, rules, propositions, json);
 
-        group.MapPost("/validate", (ValidateRequest request) =>
+        group.MapPost("/validate", (ValidateRequest request, HttpContext http) =>
         {
+            if (GrantGate.RefuseUnlessAuthorAnywhere(http, json) is { } refusal)
+                return refusal;
+
             if (request.Document.ValueKind == JsonValueKind.Undefined)
                 return EndpointResponses.MissingDocument(json);
 
@@ -68,8 +85,11 @@ public static class MotivRulesEndpoints
             return Results.Json(new ValidationResponse(errors), json);
         });
 
-        group.MapPost("/evaluate", (EvaluateRequest request) =>
+        group.MapPost("/evaluate", (EvaluateRequest request, HttpContext http) =>
         {
+            if (GrantGate.RefuseUnlessAuthorAnywhere(http, json) is { } refusal)
+                return refusal;
+
             if (request.Document.ValueKind == JsonValueKind.Undefined)
                 return EndpointResponses.MissingDocument(json);
 
@@ -96,13 +116,56 @@ public static class MotivRulesEndpoints
             }
         });
 
+        var governance = ResolveGovernance(endpoints, rules);
+        if (governance is not null)
+        {
+            MotivGovernanceEndpoints.MapChangeRequestEndpoints(group, governance, json);
+
+            // AddGovernance() registers the ApprovalGate and the ChangeRequestSet together, so one
+            // resolving means the other always does too.
+            var gate = endpoints.ServiceProvider.GetRequiredService<ApprovalGate>();
+            MotivGovernanceEndpoints.MapGateEndpoints(group, gate, json);
+        }
+
         if (rules is not null)
-            MapRuleEndpoints(group, rules, options, json);
+            MapRuleEndpoints(group, rules, governance, options, json);
 
         if (propositions is not null)
-            MotivPropositionEndpoints.MapPropositionEndpoints(group, propositions, json);
+            MotivPropositionEndpoints.MapPropositionEndpoints(group, propositions, governance, json);
 
         return endpoints;
+    }
+
+    /// <summary>
+    /// The registered governance workflow, or null when <see cref="MotivRulesBuilder.AddGovernance"/>
+    /// was never called.
+    /// </summary>
+    /// <remarks>
+    /// A governance set publishes into the <see cref="RuleSet"/> it was constructed with, which is
+    /// the one in DI. Mounting a *different* RuleSet alongside it would leave the endpoints reading
+    /// one set while governed writes published to another — a silent, security-relevant divergence,
+    /// so it is refused at startup rather than discovered in production.
+    /// </remarks>
+    private static ChangeRequestSet? ResolveGovernance(IEndpointRouteBuilder endpoints, RuleSet? rules)
+    {
+        if (endpoints.ServiceProvider.GetService<ChangeRequestSet>() is not { } governance)
+            return null;
+
+        if (rules is not null
+            && endpoints.ServiceProvider.GetService<RuleSet>() is { } registered
+            && !ReferenceEquals(registered, rules))
+        {
+            throw new InvalidOperationException(
+                "AddGovernance() registered a ChangeRequestSet over the RuleSet in the service " +
+                "provider, but MapMotivRules was handed a different RuleSet instance. Governed " +
+                "writes would publish into the registered set while these endpoints read the one " +
+                "passed here. To fix: mount with the MapMotivRules(basePath) overload, which uses " +
+                "the registered RuleSet; or pass that same RuleSet " +
+                "(services.GetRequiredService<RuleSet>()) to this overload; or drop the " +
+                "AddGovernance() call if this mount is not meant to be governed.");
+        }
+
+        return governance;
     }
 
     /// <summary>
@@ -110,12 +173,21 @@ public static class MotivRulesEndpoints
     /// via <see cref="MotivRulesServiceCollectionExtensions.AddMotivRules"/> — the RuleSet is
     /// guaranteed to share that registry and serializer options, so validate/evaluate and rule
     /// updates cannot diverge. Resolves the RuleSet eagerly so an invalid rule default fails
-    /// here, at startup, rather than at first request.
+    /// here, at startup, rather than at first request. The mapped group is secure by default —
+    /// callers must be authenticated — unless <paramref name="configureEndpoints"/> calls
+    /// <see cref="MotivRulesEndpointOptions.AllowAnonymous"/>, the explicit, greppable escape.
     /// </summary>
     /// <param name="endpoints">The endpoint route builder to map onto.</param>
     /// <param name="basePath">The base path to mount under, e.g. <c>/api/rules</c>.</param>
+    /// <param name="configureEndpoints">Configures per-mount endpoint behavior. The mapped group
+    /// is secure by default (<c>RequireAuthorization</c>); call
+    /// <see cref="MotivRulesEndpointOptions.AllowAnonymous"/> here to open it to unauthenticated
+    /// callers — an explicit, greppable escape rather than a silent default.</param>
     /// <returns>The endpoint route builder, for chaining.</returns>
-    public static IEndpointRouteBuilder MapMotivRules(this IEndpointRouteBuilder endpoints, string basePath)
+    public static IEndpointRouteBuilder MapMotivRules(
+        this IEndpointRouteBuilder endpoints,
+        string basePath,
+        Action<MotivRulesEndpointOptions>? configureEndpoints = null)
     {
         var services = endpoints.ServiceProvider;
         if (services.GetService<SpecRegistry>() is not { } registry
@@ -128,7 +200,8 @@ public static class MotivRulesEndpoints
 
         // Resolving the RuleSet binds every enrolled rule's default — an invalid default
         // fails here, at startup, rather than at first request.
-        return endpoints.MapMotivRules(basePath, registry, options, services.GetRequiredService<RuleSet>());
+        return endpoints.MapMotivRules(
+            basePath, registry, options, services.GetRequiredService<RuleSet>(), configureEndpoints);
     }
 
     /// <summary>
@@ -204,7 +277,12 @@ public static class MotivRulesEndpoints
     private static bool Resolves(PropositionEntry entry) =>
         entry.Quarantine.Count == 0 || entry.Origin != PropositionOrigin.Authored;
 
-    private static void MapRuleEndpoints(RouteGroupBuilder group, RuleSet rules, MotivRulesOptions options, JsonSerializerOptions json)
+    private static void MapRuleEndpoints(
+        RouteGroupBuilder group,
+        RuleSet rules,
+        ChangeRequestSet? governance,
+        MotivRulesOptions options,
+        JsonSerializerOptions json)
     {
         group.MapGet("/rules", () =>
             Results.Json(rules.Rules
@@ -228,21 +306,47 @@ public static class MotivRulesEndpoints
                 new RuleGetResponse(EndpointResponses.DocumentElement(entry.DocumentJson), entry.Version), json);
         });
 
-        group.MapPut("/rules/{name}", (string name, RulePutRequest request) =>
+        group.MapPut("/rules/{name}", (string name, RulePutRequest request, HttpContext http) =>
         {
+            if (GrantGate.Refuse(http, GrantVerb.Publish, name, json) is { } refusal)
+                return refusal;
+
             if (request.Document.ValueKind == JsonValueKind.Undefined)
                 return EndpointResponses.MissingDocument(json);
 
             if (request.BaseVersion <= 0)
                 return EndpointResponses.NonPositiveBaseVersion(json);
 
-            return ToResult(rules.Update(name, request.Document.GetRawText(), request.BaseVersion), name, json);
+            var documentJson = request.Document.GetRawText();
+
+            // Grants first, exactly as before — the gate governs *what* may be published, not *who*
+            // may ask. Then the write itself, which with governance registered runs inside the gate
+            // check rather than beside it: same core, same outcome, one execution.
+            return governance is null
+                ? ToResult(rules.Update(name, documentJson, request.BaseVersion), name, json)
+                : MotivGovernanceEndpoints.GovernedRuleWrite(
+                    governance, http, json, DirectWriteOperation.RuleUpdate,
+                    name, documentJson, request.BaseVersion,
+                    written => ToResult(written, name, json));
         });
 
-        group.MapDelete("/rules/{name}", (string name, int baseVersion) =>
-            baseVersion <= 0
-                ? EndpointResponses.NonPositiveBaseVersion(json)
-                : ToResult(rules.Revert(name, baseVersion), name, json));
+        group.MapDelete("/rules/{name}", (string name, int baseVersion, HttpContext http) =>
+        {
+            if (GrantGate.Refuse(http, GrantVerb.Publish, name, json) is { } refusal)
+                return refusal;
+
+            if (baseVersion <= 0)
+                return EndpointResponses.NonPositiveBaseVersion(json);
+
+            // A rule is never removed, only reverted to its default — which the gate is shown as a
+            // null document, the same shape a proposition withdrawal takes.
+            return governance is null
+                ? ToResult(rules.Revert(name, baseVersion), name, json)
+                : MotivGovernanceEndpoints.GovernedRuleWrite(
+                    governance, http, json, DirectWriteOperation.RuleRevert,
+                    name, documentJson: null, baseVersion,
+                    written => ToResult(written, name, json));
+        });
     }
 
     private static IResult ToResult(RuleUpdateResult outcome, string name, JsonSerializerOptions json) =>

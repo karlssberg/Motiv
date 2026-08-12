@@ -1,3 +1,3 @@
 .PHONY: demo
 demo:
-	./run-demo.sh
+	ASPNETCORE_ENVIRONMENT=Development ./run-demo.sh

@@ -14,7 +14,10 @@ namespace Motiv.Serialization.AspNetCore;
 internal static class MotivPropositionEndpoints
 {
     internal static void MapPropositionEndpoints(
-        RouteGroupBuilder group, PropositionSet propositions, JsonSerializerOptions json)
+        RouteGroupBuilder group,
+        PropositionSet propositions,
+        ChangeRequestSet? governance,
+        JsonSerializerOptions json)
     {
         group.MapGet("/propositions", () =>
             Results.Json(propositions.Propositions
@@ -36,36 +39,71 @@ internal static class MotivPropositionEndpoints
                 entry.Origin != PropositionOrigin.Authored), json);
         });
 
-        group.MapPost("/propositions", (PropositionCreateRequest request) =>
+        group.MapPost("/propositions", (PropositionCreateRequest request, HttpContext http) =>
         {
-            if (request.Document.ValueKind == JsonValueKind.Undefined)
-                return EndpointResponses.MissingDocument(json);
             if (string.IsNullOrWhiteSpace(request.Name))
                 return Results.Json(new ErrorResponse("The request must include a name."), json, statusCode: 400);
+
+            if (GrantGate.Refuse(http, GrantVerb.Publish, request.Name, json) is { } refusal)
+                return refusal;
+
+            if (request.Document.ValueKind == JsonValueKind.Undefined)
+                return EndpointResponses.MissingDocument(json);
             if (string.IsNullOrWhiteSpace(request.ModelType))
                 return Results.Json(
                     new ErrorResponse("The request must include a modelType."), json, statusCode: 400);
 
-            var result = propositions.Create(
-                request.Name, request.ModelType, request.Document.GetRawText(), request.Description);
+            var documentJson = request.Document.GetRawText();
 
-            return ToResult(result, request.Name, json);
+            // Grants first, exactly as before; then the write itself, which with governance
+            // registered runs inside the gate check rather than beside it. The core it reaches is
+            // the very one called below, so a name-taken 409 or a cascade's broken dependents come
+            // back verbatim — refusals a change request could not restate.
+            return governance is null
+                ? ToResult(
+                    propositions.Create(request.Name, request.ModelType, documentJson, request.Description),
+                    request.Name, json)
+                : MotivGovernanceEndpoints.GovernedPropositionWrite(
+                    governance, http, json, DirectWriteOperation.PropositionCreate, request.Name,
+                    documentJson, baseVersion: 0, request.ModelType, request.Description,
+                    written => ToResult(written, request.Name, json));
         });
 
-        group.MapPut("/propositions/{name}", (string name, PropositionPutRequest request) =>
+        group.MapPut("/propositions/{name}", (string name, PropositionPutRequest request, HttpContext http) =>
         {
+            if (GrantGate.Refuse(http, GrantVerb.Publish, name, json) is { } refusal)
+                return refusal;
+
             if (request.Document.ValueKind == JsonValueKind.Undefined)
                 return EndpointResponses.MissingDocument(json);
             if (request.BaseVersion <= 0)
                 return EndpointResponses.NonPositiveBaseVersion(json);
 
-            return ToResult(propositions.Update(name, request.Document.GetRawText(), request.BaseVersion), name, json);
+            var documentJson = request.Document.GetRawText();
+
+            return governance is null
+                ? ToResult(propositions.Update(name, documentJson, request.BaseVersion), name, json)
+                : MotivGovernanceEndpoints.GovernedPropositionWrite(
+                    governance, http, json, DirectWriteOperation.PropositionUpdate, name,
+                    documentJson, request.BaseVersion, modelTypeId: null, description: null,
+                    written => ToResult(written, name, json));
         });
 
-        group.MapDelete("/propositions/{name}", (string name, int baseVersion) =>
-            baseVersion <= 0
-                ? EndpointResponses.NonPositiveBaseVersion(json)
-                : ToResult(propositions.Withdraw(name, baseVersion), name, json));
+        group.MapDelete("/propositions/{name}", (string name, int baseVersion, HttpContext http) =>
+        {
+            if (GrantGate.Refuse(http, GrantVerb.Publish, name, json) is { } refusal)
+                return refusal;
+
+            if (baseVersion <= 0)
+                return EndpointResponses.NonPositiveBaseVersion(json);
+
+            return governance is null
+                ? ToResult(propositions.Withdraw(name, baseVersion), name, json)
+                : MotivGovernanceEndpoints.GovernedPropositionWrite(
+                    governance, http, json, DirectWriteOperation.PropositionWithdraw, name,
+                    documentJson: null, baseVersion, modelTypeId: null, description: null,
+                    written => ToResult(written, name, json));
+        });
 
         group.MapGet("/propositions/{name}/dependents", (string name) =>
             propositions.Find(name) is null

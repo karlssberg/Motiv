@@ -1,0 +1,128 @@
+using System.Text.Json;
+
+namespace Motiv.Serialization.AspNetCore;
+
+/// <summary>One artefact edit inside a change-request creation request.</summary>
+/// <param name="Kind">Either <c>rule</c> or <c>proposition</c>, matched case-insensitively.</param>
+/// <param name="Name">The dot-separated target name.</param>
+/// <param name="Document">
+/// The proposed document. Omitted (or JSON <c>null</c>) means "remove": withdraw the proposition, or
+/// revert the rule to its default.
+/// </param>
+/// <param name="BaseVersion">
+/// The version the edit was authored against — 0 when creating a proposition that does not exist
+/// yet. A stale value is a 409 at publish time, not at creation.
+/// </param>
+/// <param name="RollbackOfVersion">The version this edit restores, when it is authored as a rollback.</param>
+/// <param name="ModelTypeId">
+/// A registered model-type id. Required when the edit creates a proposition; ignored otherwise.
+/// </param>
+/// <param name="Description">
+/// A human-readable description. Applied when the edit creates a proposition; ignored otherwise,
+/// since an existing proposition keeps the description it was created with.
+/// </param>
+public sealed record ProposedChangeRequest(
+    string Kind,
+    string Name,
+    JsonElement Document,
+    int BaseVersion,
+    int? RollbackOfVersion,
+    string? ModelTypeId,
+    string? Description);
+
+/// <summary>A request to open a change request over one or more artefacts.</summary>
+/// <param name="ChangeNote">A human-readable note describing the change.</param>
+/// <param name="Changes">The edits that publish together. Must not be empty.</param>
+public sealed record ChangeRequestCreateRequest(
+    string ChangeNote, IReadOnlyList<ProposedChangeRequest> Changes);
+
+/// <summary>A request to reject a change request.</summary>
+/// <param name="Reason">Why the request is being rejected.</param>
+public sealed record ChangeRequestRejectionRequest(string Reason);
+
+/// <summary>One proposed change as the change-request surface reports it.</summary>
+/// <param name="Kind">Either <c>rule</c> or <c>proposition</c>.</param>
+/// <param name="Name">The dot-separated target name.</param>
+/// <param name="Document">The proposed document, or null when the change removes the target.</param>
+/// <param name="BaseVersion">The version the edit was authored against.</param>
+/// <param name="Classification">What kind of change this is, as derived when it was authored.</param>
+/// <param name="ModelTypeId">The model-type id a proposition creation was authored against, if any.</param>
+/// <param name="Description">The description a proposition creation was authored with, if any.</param>
+public sealed record ProposedChangeResponse(
+    string Kind,
+    string Name,
+    JsonElement? Document,
+    int BaseVersion,
+    ChangeClassification Classification,
+    string? ModelTypeId,
+    string? Description);
+
+/// <summary>One approval recorded against a change request.</summary>
+/// <param name="Approver">Who gave the approval.</param>
+/// <param name="TimestampUtc">When it was recorded.</param>
+/// <param name="Roles">The roles the approver held at the time.</param>
+public sealed record ApprovalResponse(
+    string Approver, DateTimeOffset TimestampUtc, IReadOnlyList<string> Roles);
+
+/// <summary>A change request's full state.</summary>
+/// <param name="Id">The change request's identity.</param>
+/// <param name="Author">Who authored it.</param>
+/// <param name="ChangeNote">The note describing the change.</param>
+/// <param name="Status">The workflow state (Draft, InReview, Published, Rejected, Withdrawn).</param>
+/// <param name="RejectionReason">Why it was rejected, when it was.</param>
+/// <param name="PublishedUnderBreakGlass">Whether publication bypassed the approval gate.</param>
+/// <param name="Changes">The edits that publish together.</param>
+/// <param name="Approvals">The approvals recorded against it, at most one per approver.</param>
+public sealed record ChangeRequestResponse(
+    Guid Id,
+    string Author,
+    string ChangeNote,
+    string Status,
+    string? RejectionReason,
+    bool PublishedUnderBreakGlass,
+    IReadOnlyList<ProposedChangeResponse> Changes,
+    IReadOnlyList<ApprovalResponse> Approvals);
+
+/// <summary>A successful publish.</summary>
+/// <param name="Request">The change request, now in the Published state.</param>
+/// <param name="PublishedVersions">
+/// Each published target's new version, keyed by target name. A withdrawn proposition reports 0.
+/// </param>
+public sealed record ChangeRequestPublishResponse(
+    ChangeRequestResponse Request, IReadOnlyDictionary<string, int> PublishedVersions);
+
+/// <summary>
+/// The approval gate's refusal, in the gate's own words. Returned with 403 from a publish the gate
+/// blocked — and from a direct write, which publishes through the same gate.
+/// </summary>
+/// <param name="Reason">A one-line summary of why the gate refused.</param>
+/// <param name="Assertions">Every contributing assertion string.</param>
+/// <param name="Justification">The full hierarchical breakdown of the unmet conditions.</param>
+public sealed record GateRefusalResponse(
+    string Reason, IReadOnlyList<string> Assertions, string Justification);
+
+/// <summary>The active gate document, as reported by <c>GET /gate</c> and echoed back by <c>PUT /gate</c>.</summary>
+/// <param name="Document">The active gate document, or <c>null</c> at the permissive default.</param>
+/// <param name="PermissiveDefault">
+/// Whether the gate has no document configured — equivalent to <c>Document is null</c>, reported
+/// explicitly so a caller need not infer the gate's mode from the presence or absence of JSON.
+/// </param>
+public sealed record GateGetResponse(JsonElement? Document, bool PermissiveDefault);
+
+/// <summary>A request to replace the active gate document.</summary>
+/// <param name="Document">
+/// The gate document to activate. Must be present — <c>PUT /gate</c> has no reset-to-permissive
+/// spelling of its own; <c>DELETE /gate</c> is that route.
+/// </param>
+public sealed record GatePutRequest(JsonElement Document);
+
+/// <summary>A refused change-request operation.</summary>
+/// <param name="Error">A human-readable description of the refusal.</param>
+/// <param name="Errors">Why a proposed document was rejected; empty for other refusals.</param>
+/// <param name="FailedTarget">The name of the target that failed, when one did.</param>
+/// <param name="ConflictVersion">The target's current version, on a version conflict.</param>
+public sealed record ChangeRequestErrorResponse(
+    string Error,
+    IReadOnlyList<RuleError> Errors,
+    string? FailedTarget,
+    int? ConflictVersion);

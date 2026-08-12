@@ -22,6 +22,10 @@ describe('parseHash', () => {
     expect(parseHash('#/propositions')).toEqual({ page: 'propositions', name: null });
   });
 
+  it('reads the admin route', () => {
+    expect(parseHash('#/admin')).toEqual({ page: 'admin', name: null });
+  });
+
   it('decodes a percent-encoded name', () => {
     expect(parseHash('#/rules/a%20b')).toEqual({ page: 'rules', name: 'a b' });
   });
@@ -62,6 +66,7 @@ describe('formatHash', () => {
       { page: 'rules', name: null },
       { page: 'propositions', name: 'customer.a.b' },
       { page: 'rules', name: 'can-checkout' },
+      { page: 'admin', name: null },
     ] as const) {
       expect(parseHash(formatHash(route))).toEqual(route);
     }

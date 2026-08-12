@@ -273,6 +273,51 @@ combine specs that already exist, because new primitive facts still come from C#
 Available via the `Motiv.Serialization` and `Motiv.Serialization.AspNetCore`
 packages.
 
+### Governance and Access Control
+
+Live rules are secure by default: `MapMotivRules()` requires authentication on
+the whole endpoint group, and opening it up is an explicit opt-out
+(`AllowAnonymous()`), never a silent default. Layer `AddGovernance()` on top for
+a maker-checker gate that a publish must satisfy:
+
+```csharp
+builder.Services.AddMotivRules(registry, options)
+    .AddGovernance() // permissive until a gate document is installed
+    .AddRule<CanCheckoutRule>();
+
+app.MapMotivRules("/api/rules");
+// or: app.MapMotivRules("/api/rules", o => o.AllowAnonymous());
+```
+
+```jsonc
+// PUT /api/rules/gate — publish requires an approval, and never from the author
+{
+  "document": {
+    "rule": { "and": [
+      { "spec": "change.approver-count-at-least", "args": { "n": 1 } },
+      { "not": { "spec": "change.author-is-approver" } }
+    ]}
+  }
+}
+```
+
+An unapproved publish refuses with the same explainability the library exists
+to provide:
+
+```jsonc
+// 403 from POST /api/rules/change-requests/{id}/publish
+{
+  "reason": "change has fewer than 1 approvals",
+  "assertions": ["change has fewer than 1 approvals"],
+  "justification": "AND\n    change has fewer than 1 approvals"
+}
+```
+
+The gate's default is permissive and namespace grants (`IGrantSource`) are
+opt-in, so enabling either changes no response until it is configured.
+Available via the `Motiv.Serialization` and `Motiv.Serialization.AspNetCore`
+packages.
+
 ## Quick Start
 
 Install the Motiv NuGet package:

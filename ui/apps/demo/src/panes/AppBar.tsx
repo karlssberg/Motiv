@@ -1,12 +1,17 @@
 import type { ReactNode } from 'react';
 import type { Page } from '../routing/useHashRoute.js';
-import { IconPropositions, IconRules, type IconProps } from '../shell/icons.js';
+import { useAdminCapabilities } from '../shell/useAdminCapabilities.js';
+import { IconAdmin, IconPropositions, IconRules, type IconProps } from '../shell/icons.js';
 
 /** The pages, in the order they are offered. */
 const PAGES: ReadonlyArray<{ id: Page; label: string; icon: (props: IconProps) => JSX.Element }> = [
   { id: 'rules', label: 'Rules', icon: IconRules },
   { id: 'propositions', label: 'Propositions', icon: IconPropositions },
 ];
+
+/** Admin is not one of the base pages: it is offered only once capabilities confirm it. */
+const ADMIN_PAGE: { id: Page; label: string; icon: (props: IconProps) => JSX.Element } =
+  { id: 'admin', label: 'Admin', icon: IconAdmin };
 
 /**
  * The shell's top bar: brand, page tabs, then whatever breadcrumb trail the current page supplies,
@@ -19,6 +24,14 @@ export function AppBar(props: {
   controls?: ReactNode;
   children?: ReactNode;
 }) {
+  // Self-fetched rather than threaded down from App: AppBar is mounted fresh from three different
+  // parents (RuleHeader, PropositionsPage, AdminPage), and each already re-fetches its own static
+  // data on mount (catalog, listings) rather than sharing a cache — see useAdminCapabilities.
+  const capabilities = useAdminCapabilities();
+  const pages = capabilities.grantAdministration && capabilities.administrator
+    ? [...PAGES, ADMIN_PAGE]
+    : PAGES;
+
   return (
     <header className="appbar">
       <div className="appbar-brand">
@@ -36,7 +49,7 @@ export function AppBar(props: {
         neither has any counterpart to point at from here.
       */}
       <div className="page-tabs" role="tablist" aria-label="Page">
-        {PAGES.map(({ id, label, icon: Icon }) => {
+        {pages.map(({ id, label, icon: Icon }) => {
           const active = props.page === id;
           return (
             <button

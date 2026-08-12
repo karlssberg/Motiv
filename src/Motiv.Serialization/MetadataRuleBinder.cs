@@ -80,7 +80,11 @@ internal sealed class MetadataRuleBinder<TMetadata>(ISpecSource source, RuleSeri
             return null;
         }
 
-        if (entry.Spec is not SpecBase<TModel> spec)
+        var resolved = entry.ResolveSpec(node, errors);
+        if (resolved is null)
+            return null;
+
+        if (resolved is not SpecBase<TModel> spec)
         {
             errors.Add(new RuleError(node.Path, RuleErrorCode.ModelTypeMismatch,
                 $"'{node.SpecName}' has model type '{entry.ModelType.Name}' but the document is being " +

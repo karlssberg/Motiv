@@ -1,4 +1,8 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Motiv;
+using Motiv.RulesEngine.Sample;
 using Motiv.Serialization;
 using Motiv.Serialization.AspNetCore;
 
@@ -65,6 +69,95 @@ if (!string.IsNullOrWhiteSpace(assignedPort) && string.IsNullOrWhiteSpace(builde
     builder.WebHost.UseUrls($"http://localhost:{assignedPort}");
 }
 
+// Fail-closed identity wiring: the endpoints are secure by default, so the host must be told
+// who supplies the principal — OIDC for real deployments, the dev identity for local evaluation.
+// Anything enable-able by omission is a default-credentials vulnerability, so no identity means
+// no startup.
+var devIdentityEnabled = builder.Configuration.GetValue<bool>("Motiv:DevIdentity:Enabled");
+var oidcAuthority = builder.Configuration["Motiv:Oidc:Authority"];
+
+if (devIdentityEnabled
+    && builder.Environment.IsProduction()
+    && !builder.Configuration.GetValue<bool>("Motiv:DevIdentity:AllowInProduction"))
+{
+    throw new InvalidOperationException(
+        "The Motiv dev identity is enabled in a Production environment. Set " +
+        "Motiv:DevIdentity:AllowInProduction=true only if you accept every request being " +
+        "authenticated as the dev superuser.");
+}
+
+if (!devIdentityEnabled && string.IsNullOrWhiteSpace(oidcAuthority))
+{
+    throw new InvalidOperationException(
+        "No identity is configured and the Motiv endpoints are secure by default. Configure " +
+        "OIDC (Motiv:Oidc:Authority, Motiv:Oidc:Audience) or explicitly enable the dev " +
+        "identity (Motiv:DevIdentity:Enabled=true).");
+}
+
+if (devIdentityEnabled)
+{
+    builder.Services
+        .AddAuthentication(DevIdentityHandler.SchemeName)
+        .AddScheme<AuthenticationSchemeOptions, DevIdentityHandler>(DevIdentityHandler.SchemeName, null);
+    builder.Services.AddHostedService<DevIdentityWarningService>();
+    builder.Services.AddSingleton<IGrantSource, DevGrantSource>();
+}
+else
+{
+    builder.Services
+        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(o =>
+        {
+            o.Authority = oidcAuthority;
+            o.Audience = builder.Configuration["Motiv:Oidc:Audience"];
+            o.Events = new JwtBearerEvents
+            {
+                OnTokenValidated = context =>
+                {
+                    // Keycloak nests realm roles under realm_access.roles; flatten them into role
+                    // claims so the claims→prefix mapping (and ClaimTypes.Role consumers) see them.
+                    if (context.Principal is { } principal)
+                        KeycloakClaims.FlattenRealmRoles(principal);
+                    return Task.CompletedTask;
+                }
+            };
+            // Containers talk to Keycloak over http — dev/demo only.
+            o.RequireHttpsMetadata = false;
+        });
+
+    // Seam: grant source. "app" (or unset) is the default — a mutable, file-backed store the
+    // running app administers itself. "claims" (Task 9) reads grants straight out of the OIDC
+    // token instead; this switch is where that branch slots in.
+    var grantSource = builder.Configuration["Motiv:Grants:Source"];
+    switch (grantSource)
+    {
+        case "claims":
+            var claimsMapping = builder.Configuration.GetSection("Motiv:Grants:ClaimsMapping")
+                .Get<List<ClaimsGrantMapping>>() ?? [];
+            builder.Services.AddSingleton<IGrantSource>(new ClaimsGrantSource(claimsMapping));
+            break;
+        case "app":
+        case null:
+        case "":
+            var grantsPath = builder.Configuration["Motiv:Grants:Path"]
+                ?? Path.Combine(builder.Environment.ContentRootPath, "grants.json");
+            var appStore = new JsonFileGrantSource(grantsPath);
+
+            // Seam: cold-start elevation. Only the app-owned store can be bootstrapped this way — a
+            // decorator, not a standing superuser, so it's wired only when the config key is present.
+            var bootstrapSubject = builder.Configuration["Motiv:Bootstrap:Subject"];
+            IGrantSource grantsSource = string.IsNullOrWhiteSpace(bootstrapSubject)
+                ? appStore
+                : new BootstrapGrantSource(appStore, bootstrapSubject);
+            builder.Services.AddSingleton<IGrantSource>(grantsSource);
+            break;
+        default:
+            throw new InvalidOperationException(
+                $"Unknown Motiv:Grants:Source '{grantSource}'. Expected 'app' or 'claims'.");
+    }
+}
+builder.Services.AddAuthorization();
+
 // Seam: authored propositions. AddPropositions enables the propositions endpoints and points them
 // at a store. Propositions load before rule defaults bind, so a rule's default document may
 // reference one. The path is configurable so a container can mount it on a volume.
@@ -74,11 +167,31 @@ var propositionsPath = builder.Configuration["Propositions:Path"]
 // Seam: live rules. Each AddRule enrolls a sealed rule class as a DI singleton and in the
 // RuleSet behind GET/PUT/DELETE /api/rules/rules — the app executes the same instances the
 // UI hot-swaps, with optimistic-concurrency protection on writes.
+// Seam: governance. AddGovernance mounts the change-request surface and routes every direct write
+// through the approval gate, so there is no way around the ceremony once one is configured. The
+// gate's default is permissive — access is still locked by grants; only the ceremony is opt-in — so
+// with no gate.json on disk the app behaves exactly as it did before governance existed.
+var gatePath = builder.Configuration["Motiv:Gate:Path"]
+    ?? Path.Combine(builder.Environment.ContentRootPath, "gate.json");
+
 builder.Services.AddMotivRules(registry, options)
     .AddPropositions(new JsonFilePropositionStore(propositionsPath))
+    .AddGovernance(new JsonFileGateStore(gatePath))
     .AddRule<CanCheckoutRule>()
     .AddRule<FraudScreeningRule>()
     .AddRule<LoyaltyDiscountRule>();
+
+// Seam: break-glass. AddGovernance already registered BreakGlass.Off; a host that wants the 3am
+// escape overrides it here with AddSingleton, which — DI being last-registration-wins — beats the
+// TryAddSingleton above. Deploy-time only: this reads appsettings/environment, never an in-app
+// toggle, so turning it on requires ops access to the host's configuration, not a grant.
+var breakGlassEnabled = builder.Configuration.GetValue<bool>("Motiv:BreakGlass:Enabled");
+if (breakGlassEnabled)
+{
+    var breakGlassExpiresUtc = builder.Configuration.GetValue<DateTimeOffset?>("Motiv:BreakGlass:ExpiresUtc");
+    builder.Services.AddSingleton(new BreakGlass(true, breakGlassExpiresUtc));
+    builder.Services.AddHostedService<BreakGlassWarningService>();
+}
 
 var app = builder.Build();
 
@@ -93,6 +206,9 @@ var staticFiles = new StaticFileOptions
             context.Context.Response.Headers.CacheControl = "no-cache";
     }
 };
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseDefaultFiles();
 app.UseStaticFiles(staticFiles);
@@ -117,7 +233,68 @@ app.MapPost("/api/checkout", async (
         resultSerializer.ToEvaluationResult(eligibility),
         resultSerializer.ToEvaluationResult(screening)),
         options.JsonSerializerOptions);
+})
+.RequireAuthorization();
+
+// Seam: administration surface. Capabilities tells the client what it's allowed to render (an
+// immutable source like the dev grant source has no administration UI); the grants group is the
+// UI's CRUD surface over a mutable store, gated on IsAdministrator and hidden (404) entirely when
+// the active source doesn't support administration.
+app.MapGet("/api/admin/capabilities", (HttpContext http, IGrantSource grants) => Results.Json(new
+{
+    grantAdministration = grants.SupportsAdministration,
+    administrator = grants.IsAdministrator(http.User),
+    devIdentity = devIdentityEnabled
+})).RequireAuthorization();
+
+var admin = app.MapGroup("/api/admin/grants").RequireAuthorization();
+admin.MapGet("", (HttpContext http, IGrantSource grants) =>
+{
+    if (TryGetMutableStore(grants) is not { } store) return Results.NotFound();
+    if (!grants.IsAdministrator(http.User)) return Results.StatusCode(403);
+    return Results.Json(store.All);
 });
+admin.MapPost("", (HttpContext http, IGrantSource grants, [FromBody] GrantRecord record) =>
+{
+    if (TryGetMutableStore(grants) is not { } store)
+        return Results.NotFound();
+    if (!grants.IsAdministrator(http.User))
+        return Results.StatusCode(403);
+    try
+    {
+        store.Add(record);
+    }
+    catch (ArgumentException ex)
+    {
+        // An unknown verb is a malformed request, not a server failure — refused with the
+        // store's own message rather than surfacing the exception as a 500.
+        return Results.Json(new { error = ex.Message }, statusCode: 400);
+    }
+    return Results.NoContent();
+});
+admin.MapDelete("", (HttpContext http, IGrantSource grants, [FromBody] GrantRecord record) =>
+{
+    if (TryGetMutableStore(grants) is not { } store) return Results.NotFound();
+    if (!grants.IsAdministrator(http.User)) return Results.StatusCode(403);
+    return store.Remove(record) switch
+    {
+        GrantRemovalOutcome.Removed => Results.NoContent(),
+        GrantRemovalOutcome.LastAdminister => Results.Json(
+            new { error = "cannot remove the last administer grant" }, statusCode: 409),
+        _ => Results.NotFound()
+    };
+});
+
+// Seam: the admin endpoints only ever need the mutable store, never the grant-source wrapper
+// itself — this unwraps BootstrapGrantSource's decorator (and passes a bare JsonFileGrantSource
+// through unchanged), so callers above check IsAdministrator on `grants` (the elevation-aware
+// wrapper) while mutating through the store this returns.
+static JsonFileGrantSource? TryGetMutableStore(IGrantSource grants) => grants switch
+{
+    JsonFileGrantSource store => store,
+    BootstrapGrantSource bootstrap => bootstrap.Store,
+    _ => null
+};
 
 app.MapFallbackToFile("index.html", staticFiles);
 

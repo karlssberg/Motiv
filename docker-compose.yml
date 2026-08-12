@@ -5,3 +5,55 @@ services:
       dockerfile: src/examples/Motiv.RulesEngine.Sample/Dockerfile
     ports:
       - "5100:5100"
+    environment:
+      Motiv__DevIdentity__Enabled: "true"
+      Motiv__DevIdentity__AllowInProduction: "true"  # demo container only — never copy to a real deployment
+
+  # Opt-in OIDC evidence stack — `docker compose --profile auth up`. Leaves the default `demo`
+  # service (dev identity, zero config) untouched; this is a second, independent app instance
+  # wired to a real Keycloak IdP instead.
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    profiles: ["auth"]
+    command: start-dev --import-realm --http-port 8081
+    ports: ["8081:8081"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      # Pin the issuer Keycloak stamps into tokens to the container-network address, as a full
+      # URL (scheme + non-standard port 8081 both need to be explicit — a bare hostname would
+      # let Keycloak 26's v2 hostname resolution guess scheme/port from the request instead).
+      # Without this, a token fetched from the host via http://localhost:8081 would carry
+      # iss=http://localhost:8081/realms/motiv, while demo-auth's OIDC discovery (Authority
+      # http://keycloak:8081/realms/motiv) expects iss=http://keycloak:8081/realms/motiv — the
+      # mismatch would 401 every authenticated call, host-issued token or not.
+      KC_HOSTNAME: http://keycloak:8081
+      KC_HEALTH_ENABLED: "true"
+    volumes:
+      - ./keycloak/motiv-realm.json:/opt/keycloak/data/import/motiv-realm.json:ro
+    healthcheck:
+      # The keycloak image ships neither curl nor wget, so this is Keycloak's own documented
+      # compose health-check recipe: a bare /dev/tcp probe against the management port's
+      # /health/ready. Requires /bin/sh to support /dev/tcp (true for the image's shell as of
+      # 26.0) — unverified here since Docker isn't available in this environment.
+      # `Connection: close` is required on the request line — without it HTTP/1.1 keep-alive
+      # lets the server hold fd 3 open after the response, so `cat <&3` blocks reading until the
+      # probe's own timeout on every single attempt (see keycloak/keycloak#36537).
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\\r\\nhost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -m 1 status | grep -m 1 UP"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  demo-auth:
+    profiles: ["auth"]
+    build:
+      context: .
+      dockerfile: src/examples/Motiv.RulesEngine.Sample/Dockerfile
+    ports: ["5101:5100"]
+    environment:
+      Motiv__Oidc__Authority: "http://keycloak:8081/realms/motiv"
+      Motiv__Oidc__Audience: "motiv-demo"
+      Motiv__Grants__Source: "claims"
+    depends_on:
+      keycloak:
+        condition: service_healthy
