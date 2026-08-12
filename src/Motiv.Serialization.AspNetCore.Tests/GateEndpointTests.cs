@@ -32,7 +32,17 @@ public class GateEndpointTests
     private static JsonElement AdultDocument =>
         JsonDocument.Parse("""{ "rule": { "spec": "customer.is-active" } }""").RootElement;
 
-    private static async Task<WebApplication> StartAsync(params NamespaceGrant[] grantsForAdmin)
+    private static async Task<WebApplication> StartAsync(
+        params NamespaceGrant[] grantsForAdmin) =>
+        await StartAsync(grantsForAdmin, knownRoles: []);
+
+    /// <summary>
+    /// Same as the parameterless overload, but with a caller-supplied known-role universe — needed
+    /// to exercise the gate's lockout pre-check, which only refuses a document when the roles it
+    /// names are missing from what governance knows about.
+    /// </summary>
+    private static async Task<WebApplication> StartAsync(
+        NamespaceGrant[] grantsForAdmin, IReadOnlyCollection<string> knownRoles)
     {
         var registry = new SpecRegistry().Register("customer.is-active", IsActive);
         var options = new MotivRulesOptions().AddModel<Customer>("customer");
@@ -41,7 +51,7 @@ public class GateEndpointTests
         builder.WebHost.UseTestServer();
         builder.Services.AddTestAuth();
         builder.Services.AddSingleton<IGrantSource>(
-            new GrantEnforcementTests.FakeGrantSource(grantsForAdmin, isAdministrator: true));
+            new GrantEnforcementTests.FakeGrantSource(grantsForAdmin, isAdministrator: true, knownRoles: knownRoles));
 
         builder.Services.AddMotivRules(registry, options)
             .AddRule<CanCheckoutRule>()
@@ -177,6 +187,28 @@ public class GateEndpointTests
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        app.Services.GetRequiredService<ApprovalGate>().DocumentJson.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Should_refuse_a_would_lock_out_document_with_422_naming_the_missing_role()
+    {
+        // Arrange — a gate document that requires a role no one known to governance holds
+        await using var app = await StartAsync(
+            grantsForAdmin: [], knownRoles: ["motiv-dev"]);
+        var client = app.GetTestClient();
+        const string ghostRoleGate =
+            """{"rule": {"spec": "change.approver-has-role", "args": {"role": "ghost"}}}""";
+
+        // Act
+        var response = await PutGate(client, JsonDocument.Parse(ghostRoleGate).RootElement);
+
+        // Assert — refused as a would-be lockout, not the ordinary validation-error shape, and the
+        // gate itself is left unconfigured
+        response.StatusCode.ShouldBe((HttpStatusCode)422);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("assertions").EnumerateArray().Select(a => a.GetString())
+            .ShouldContain("no approver holds role 'ghost'");
         app.Services.GetRequiredService<ApprovalGate>().DocumentJson.ShouldBeNull();
     }
 

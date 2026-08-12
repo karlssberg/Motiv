@@ -168,12 +168,14 @@ public sealed class ApprovalGate
     /// </summary>
     /// <param name="documentJson">The rule document to activate, or <c>null</c> to reset to the permissive default.</param>
     /// <param name="knownRoles">
-    /// The roles known to the governance system. Reserved for the lockout pre-check landing in a
-    /// later task; not yet consulted.
+    /// The roles known to the governance system, consulted by the lockout pre-check below. Ignored
+    /// when <paramref name="documentJson"/> is <c>null</c> — resetting to permissive is always safe.
     /// </param>
     /// <returns>
-    /// <see cref="GateUpdateOutcome.Updated"/> with the gate now active, or
-    /// <see cref="GateUpdateOutcome.Invalid"/> with the errors found and the gate left unchanged.
+    /// <see cref="GateUpdateOutcome.Updated"/> with the gate now active;
+    /// <see cref="GateUpdateOutcome.Invalid"/> with the errors found and the gate left unchanged; or
+    /// <see cref="GateUpdateOutcome.WouldLockOut"/> with the refusing <see cref="GateDecision"/> in
+    /// <see cref="GateUpdateResult.PreCheck"/> and the gate left unchanged.
     /// </returns>
     public GateUpdateResult SetGate(string? documentJson, IReadOnlyCollection<string> knownRoles)
     {
@@ -184,7 +186,8 @@ public sealed class ApprovalGate
             if (documentJson is null)
             {
                 // Persist before swapping: if Save throws, the in-memory gate must stay exactly
-                // as it was rather than diverge from what's now (or still) on disk.
+                // as it was rather than diverge from what's now (or still) on disk. No pre-check
+                // here — resetting to permissive is the recovery path, and is always lockout-safe.
                 _store?.Save(null);
                 _documentJson = null;
                 _boundSpec = null;
@@ -196,12 +199,37 @@ public sealed class ApprovalGate
             if (spec is null)
                 return new GateUpdateResult(GateUpdateOutcome.Invalid, errors, null);
 
+            // Lockout pre-check: before persisting a candidate document, ask it to judge the
+            // friendliest change imaginable. If it would refuse even that, no real change could ever
+            // pass, so the update itself is refused and nothing is saved.
+            if (PreCheckLockout(spec, knownRoles) is { } refusal)
+                return new GateUpdateResult(GateUpdateOutcome.WouldLockOut, [], refusal);
+
             // Persist before swapping — same rationale as the null-reset path above.
             _store?.Save(documentJson);
             _documentJson = documentJson;
             _boundSpec = spec;
             return new GateUpdateResult(GateUpdateOutcome.Updated, [], null);
         }
+    }
+
+    /// <summary>
+    /// Evaluates <paramref name="spec"/> against <see cref="SyntheticChangeRequests.MaximallyApprovable"/>.
+    /// </summary>
+    /// <param name="spec">The candidate gate document's bound spec, not yet active.</param>
+    /// <param name="knownRoles">The roles known to the governance system.</param>
+    /// <returns>
+    /// The refusing <see cref="GateDecision"/> when the synthetic request is unsatisfied, or
+    /// <c>null</c> when it passes and the candidate document may be persisted.
+    /// </returns>
+    private static GateDecision? PreCheckLockout(
+        SpecBase<ChangeRequest, string> spec, IReadOnlyCollection<string> knownRoles)
+    {
+        var synthetic = SyntheticChangeRequests.MaximallyApprovable(knownRoles);
+        var result = spec.Evaluate(synthetic);
+        return result.Satisfied
+            ? null
+            : new GateDecision(result.Satisfied, result.Reason, [.. result.Assertions], result.Justification);
     }
 
     /// <summary>

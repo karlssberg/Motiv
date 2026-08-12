@@ -92,14 +92,20 @@ public class GrantEnforcementTests
     /// Whether every principal is reported as an administrator, for tests of the administer-gated
     /// surfaces (e.g. gate configuration).
     /// </param>
-    internal sealed class FakeGrantSource(IReadOnlyList<NamespaceGrant> grants, bool isAdministrator = false)
+    /// <param name="knownRoles">
+    /// The role universe reported for the gate's lockout pre-check; empty unless a test needs to
+    /// exercise it.
+    /// </param>
+    internal sealed class FakeGrantSource(
+        IReadOnlyList<NamespaceGrant> grants, bool isAdministrator = false,
+        IReadOnlyCollection<string>? knownRoles = null)
         : IGrantSource
     {
         /// <inheritdoc />
         public bool SupportsAdministration => false;
 
         /// <inheritdoc />
-        public IReadOnlyCollection<string> KnownRoles => [];
+        public IReadOnlyCollection<string> KnownRoles => knownRoles ?? [];
 
         /// <inheritdoc />
         public IReadOnlyList<NamespaceGrant> GrantsFor(ClaimsPrincipal principal) => grants;
