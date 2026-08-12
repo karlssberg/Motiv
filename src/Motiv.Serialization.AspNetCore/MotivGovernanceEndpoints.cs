@@ -67,9 +67,12 @@ internal static class MotivGovernanceEndpoints
             var result = changes.Create(
                 PrincipalIdentity.Subject(http.User), request.ChangeNote ?? string.Empty, authored);
 
+            // Create only ever answers Ok or Invalid — never GateBlocked, NotFound, VersionConflict
+            // or InvalidState — so ToFailure's invalidState message (which only the InvalidState arm
+            // reads) never surfaces here; the switch's own default text answers an Invalid outcome.
             return result is { Outcome: ChangeRequestOutcome.Ok, Change: { } created }
                 ? Results.Json(ToResponse(created), json, statusCode: 201)
-                : ToFailure(result, json, "The change request could not be created as authored.");
+                : ToFailure(result, json);
         });
 
         group.MapPost("/change-requests/{id:guid}/approvals", (Guid id, HttpContext http) =>
@@ -183,9 +186,6 @@ internal static class MotivGovernanceEndpoints
                 GateUpdateOutcome.Invalid =>
                     Results.Json(new ValidationResponse(result.Errors), json, statusCode: 400),
 
-                // Not yet reachable — SetGate's lockout pre-check lands in a later task — but
-                // mapped now, from the shape SetGate already exposes for it, so that task needs no
-                // endpoint change: the 422 and its GateRefusalResponse body are settled here.
                 GateUpdateOutcome.WouldLockOut => Results.Json(
                     new GateRefusalResponse(
                         result.PreCheck!.Reason, result.PreCheck.Assertions, result.PreCheck.Justification),
@@ -405,10 +405,13 @@ internal static class MotivGovernanceEndpoints
     /// <summary>
     /// Every non-Ok outcome as an HTTP answer. <paramref name="invalidState"/> is the whole sentence
     /// an invalid-state refusal answers with, so each transition can explain its own precondition
-    /// rather than have one phrasing bent to fit all five.
+    /// rather than have one phrasing bent to fit all five. Defaulted, since not every caller's
+    /// operation (e.g. <c>Create</c>) can ever produce an <see cref="ChangeRequestOutcome.InvalidState"/>
+    /// outcome to word.
     /// </summary>
     private static IResult ToFailure(
-        ChangeRequestResult result, JsonSerializerOptions json, string invalidState) =>
+        ChangeRequestResult result, JsonSerializerOptions json,
+        string invalidState = "The change request is not publishable as authored.") =>
         result.Outcome switch
         {
             ChangeRequestOutcome.GateBlocked => Refused(result.Gate!, json),
