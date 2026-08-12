@@ -19,7 +19,19 @@ public class ChangeRequestSetTests
     private static SpecBase<Customer, string> IsAdult { get; } =
         Spec.Build((Customer c) => c.Age >= 18).WhenTrue("adult").WhenFalse("minor").Create();
 
+    private static PolicyBase<Customer, string> IsActivePolicy { get; } =
+        Spec.Build((Customer c) => c.IsActive).WhenTrue("active").WhenFalse("inactive").Create();
+
+    // Composition returns a Spec, not a Policy, so this is what a PolicyRule must refuse to rebind to.
+    private static SpecBase<Customer, string> ComposedNonPolicy { get; } = IsActive & IsAdult;
+
     private sealed class CanCheckoutRule() : Rule<Customer, string>("can-checkout", IsActive);
+
+    private sealed class CanCheckoutPolicyRule() : PolicyRule<Customer, string>("can-checkout-policy", IsActivePolicy);
+
+    /// <summary>A rule whose default is a *document*, so reverting re-acquires its references.</summary>
+    private sealed class AuthoredDefaultRule()
+        : Rule<Customer, string>("can-checkout-authored", RuleDocuments.FromJson(CheckoutUsesEligible));
 
     private sealed record Host(
         ChangeRequestSet Changes,
@@ -415,6 +427,127 @@ public class ChangeRequestSetTests
         published.PublishedVersions!["customer.eligible"].ShouldBe(0);
         host.Propositions.DocumentJsonOf("customer.eligible").ShouldBeNull();
         host.Rule.Evaluate(new Customer(IsActive: false, Age: 30)).Satisfied.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// A rule declared with a *document* default does not leave the dependency graph when it
+    /// reverts — it re-acquires its default document's references. Treating a revert as "references
+    /// nothing" would clear the only referrer standing between the withdrawal and a dangling name.
+    /// </summary>
+    [Fact]
+    public void Should_refuse_a_withdrawal_whose_referrer_is_a_rule_reverting_to_a_document_default()
+    {
+        // Arrange — the default document itself references the proposition
+        var registry = new SpecRegistry()
+            .Register("customer.is-active", IsActive)
+            .Register("customer.is-adult", IsAdult);
+        var scope = new BindingScope(registry);
+        var propositions = new PropositionSet(scope, new InMemoryPropositionStore()).AddModel<Customer>("customer");
+        propositions.Create("customer.eligible", "customer", EligibleIsAdult, null)
+            .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
+
+        var rule = new AuthoredDefaultRule();
+        var rules = new RuleSet(scope).Add(rule);
+        rules.Update("can-checkout-authored", """{ "rule": { "spec": "customer.is-active" } }""", 1)
+            .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
+        var changes = new ChangeRequestSet(new ApprovalGate(), rules, propositions);
+
+        var created = changes.Create("alice", "a note",
+        [
+            new(ChangeTargetKind.Rule, "can-checkout-authored", null, BaseVersion: 2, RollbackOfVersion: null),
+            new(ChangeTargetKind.Proposition, "customer.eligible", null, BaseVersion: 1, RollbackOfVersion: null)
+        ]);
+
+        // Act — reverting re-acquires the default's reference to customer.eligible
+        var published = changes.Publish(created.Change!.Id, breakGlassActive: false);
+
+        // Assert
+        published.Outcome.ShouldBe(ChangeRequestOutcome.Invalid);
+        published.FailedTarget.ShouldBe(new ChangeTarget(ChangeTargetKind.Proposition, "customer.eligible"));
+        published.Errors.ShouldContain(error => error.Message.Contains("can-checkout-authored"));
+
+        // Nothing applied
+        propositions.DocumentJsonOf("customer.eligible")!.ShouldBe(EligibleIsAdult);
+        rules.FindEntry("can-checkout-authored")!.Version.ShouldBe(2);
+    }
+
+    /// <summary>
+    /// A rule and a proposition may share a name. Keying the envelope's republished nodes by bare
+    /// name lets the rule's entry mask the same-named proposition, so a live referrer disappears
+    /// from the check.
+    /// </summary>
+    [Fact]
+    public void Should_not_let_a_rule_edit_mask_a_same_named_proposition_referrer()
+    {
+        // Arrange — a proposition named exactly like the rule, and it is what references eligible
+        var host = NewHost();
+        host.Propositions.Create("customer.eligible", "customer", EligibleIsAdult, null);
+        host.Propositions.Create("can-checkout", "customer", CheckoutUsesEligible, null)
+            .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
+
+        var created = host.Changes.Create("alice", "a note",
+        [
+            new(ChangeTargetKind.Rule, "can-checkout", """{ "rule": { "spec": "customer.is-adult" } }""",
+                BaseVersion: 1, RollbackOfVersion: null),
+            new(ChangeTargetKind.Proposition, "customer.eligible", null, BaseVersion: 1, RollbackOfVersion: null)
+        ]);
+
+        // Act — the RULE is edited; the same-named PROPOSITION still references customer.eligible
+        var published = host.Changes.Publish(created.Change!.Id, breakGlassActive: false);
+
+        // Assert
+        published.Outcome.ShouldBe(ChangeRequestOutcome.Invalid);
+        published.Errors.ShouldContain(error => error.Message.Contains("proposition 'can-checkout'"));
+
+        // Nothing applied
+        host.Propositions.DocumentJsonOf("customer.eligible")!.ShouldBe(EligibleIsAdult);
+        host.Rules.FindEntry("can-checkout")!.Version.ShouldBe(1);
+    }
+
+    /// <summary>
+    /// A cascade refusal is an ordinary expected outcome — the edit is valid on its own and only a
+    /// dependent objects — so it must come back as a value. Binding the document singly would miss
+    /// it entirely and let it reach the apply phase, where it can only throw.
+    /// </summary>
+    [Fact]
+    public void Should_return_a_broken_dependent_cascade_as_a_value_rather_than_throwing()
+    {
+        // Arrange — a policy rule bound through a proposition, which the change turns into a spec
+        var registry = new SpecRegistry()
+            .Register("customer.is-active-policy", IsActivePolicy)
+            .Register("customer.composed", ComposedNonPolicy);
+        var scope = new BindingScope(registry);
+        var propositions = new PropositionSet(scope, new InMemoryPropositionStore()).AddModel<Customer>("customer");
+        propositions.Create("customer.eligible-policy", "customer",
+            """{ "rule": { "spec": "customer.is-active-policy" } }""", null);
+
+        var rule = new CanCheckoutPolicyRule();
+        var rules = new RuleSet(scope).Add(rule);
+        rules.Update("can-checkout-policy", """{ "rule": { "spec": "customer.eligible-policy" } }""", 1)
+            .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
+        var changes = new ChangeRequestSet(new ApprovalGate(), rules, propositions);
+
+        var created = changes.Create("alice", "a note",
+        [
+            new(ChangeTargetKind.Proposition, "customer.eligible-policy",
+                """{ "rule": { "spec": "customer.composed" } }""",
+                BaseVersion: 1, RollbackOfVersion: null)
+        ]);
+
+        // Act
+        var published = changes.Publish(created.Change!.Id, breakGlassActive: false);
+
+        // Assert — a value, not an exception
+        published.Outcome.ShouldBe(ChangeRequestOutcome.Invalid);
+        published.FailedTarget.ShouldBe(
+            new ChangeTarget(ChangeTargetKind.Proposition, "customer.eligible-policy"));
+        published.Errors.ShouldContain(error => error.Code == RuleErrorCode.PolicyRequired);
+        published.Errors.ShouldContain(error => error.Message.Contains("can-checkout-policy"));
+
+        // Nothing applied — the rule is still bound to a policy and still evaluates
+        propositions.DocumentJsonOf("customer.eligible-policy")!
+            .ShouldBe("""{ "rule": { "spec": "customer.is-active-policy" } }""");
+        rule.Evaluate(new Customer(IsActive: true, Age: 30)).Satisfied.ShouldBeTrue();
     }
 
     private sealed record Customer(bool IsActive, int Age);

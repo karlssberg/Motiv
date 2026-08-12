@@ -377,11 +377,21 @@ public sealed class ChangeRequestSet
         /// proposition the same envelope creates, which the live source could not resolve.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// Mirroring the apply order is load-bearing, not tidiness. Validating in envelope order
         /// while applying in canonical order lets the two disagree about the intermediate states:
         /// an envelope that creates a proposition referencing one it also withdraws validates
         /// against a world where the withdrawal already happened, then applies against one where it
         /// has not. Both passes must see the same sequence of worlds.
+        /// </para>
+        /// <para>
+        /// Phase C runs withdrawals in envelope order, so an envelope that lists a proposition's
+        /// withdrawal *before* the withdrawal of its only referrer is refused — at that point the
+        /// referrer is still live. That is order sensitivity, not a bug: the apply does exactly the
+        /// same thing, so validation agrees with it and nothing is applied. Reordering the two
+        /// entries publishes cleanly. Phase C is deliberately not dependency-sorted; the sort would
+        /// be new machinery to paper over an authoring order that the caller can simply reverse.
+        /// </para>
         /// </remarks>
         /// <returns>The first failure found, or null when every edit would apply.</returns>
         private static ChangeRequestResult? Validate(
@@ -392,8 +402,10 @@ public sealed class ChangeRequestSet
 
             // What each republished node would reference once the envelope lands. The live graph
             // still holds these nodes' *old* edges, which phases A and B replace before any
-            // withdrawal runs, so the referrer check in phase C has to prefer this.
-            var rebound = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+            // withdrawal runs, so the referrer check in phase C has to prefer this. Keyed by NodeId
+            // rather than by name: kind is part of a node's identity precisely because a host may
+            // name a rule after a proposition, and merging the two would hide a real referrer.
+            var rebound = new Dictionary<NodeId, IReadOnlyList<string>>();
 
             // Phase A — propositions coming into existence or changing.
             foreach (var proposed in Ordered(change, ChangeTargetKind.Proposition, deletions: false))
@@ -401,7 +413,8 @@ public sealed class ChangeRequestSet
                 if (propositions is null)
                     return NoPropositionSet(proposed.Target);
 
-                var state = propositions.AuthoredStateCore(proposed.Target.Name);
+                var name = proposed.Target.Name;
+                var state = propositions.AuthoredStateCore(name);
                 if (Mismatch(proposed, state.Exists, state.Version) is { } mismatch)
                     return mismatch;
 
@@ -411,14 +424,21 @@ public sealed class ChangeRequestSet
                         "creating a proposition requires a model-type id", RuleErrorCode.ModelTypeMismatch);
 
                 var prepared = propositions.PrepareCore(
-                    proposed.Target.Name, modelTypeId, proposed.ProposedDocumentJson!,
-                    state.Description, prospectiveSource);
+                    name, modelTypeId, proposed.ProposedDocumentJson!, state.Description, prospectiveSource);
 
                 if (prepared.Entry is not { } entry)
                     return Failed(ChangeRequestOutcome.Invalid, proposed.Target, prepared.Errors);
 
                 prospective.Set(entry);
-                rebound[proposed.Target.Name] = prepared.References;
+
+                // The document binding on its own says nothing about what already resolves *through*
+                // this name. PublishWithCascade rebinds the whole dependent closure and refuses the
+                // publish if any member stops binding, so the same closure is prepared here, over the
+                // prospective overlay, and a break is returned as a value rather than met at apply.
+                if (rules.Scope.PrepareClosure(name, prospective, []) is { Count: > 0 } broken)
+                    return BrokenDependents(proposed.Target, broken);
+
+                rebound[NodeId.Proposition(name)] = prepared.References;
             }
 
             // Phase B — rules, which may reference anything phase A just folded in.
@@ -427,8 +447,10 @@ public sealed class ChangeRequestSet
                 if (proposed.Target.Kind != ChangeTargetKind.Rule)
                     continue;
 
+                var name = proposed.Target.Name;
+
                 // Rules are compiled-registered, so an unknown one cannot be created into existence.
-                if (rules.FindEntry(proposed.Target.Name) is not { } entry)
+                if (rules.FindEntry(name) is not { } entry)
                     return Failed(ChangeRequestOutcome.NotFound, proposed.Target, []);
 
                 if (Mismatch(proposed, targetExists: true, entry.Version) is { } mismatch)
@@ -436,22 +458,22 @@ public sealed class ChangeRequestSet
 
                 if (proposed.ProposedDocumentJson is null)
                 {
-                    // A revert to a compiled default resolves no names, so the rule leaves the graph.
-                    rebound[proposed.Target.Name] = [];
+                    // Not necessarily empty: a rule declared with a document default re-acquires
+                    // that document's references when it reverts. Only a compiled default is a
+                    // genuine departure from the graph.
+                    rebound[NodeId.Rule(name)] = rules.DefaultReferencesOfCore(name);
                     continue;
                 }
 
-                var errors = rules.ValidateCore(
-                    proposed.Target.Name, proposed.ProposedDocumentJson, prospectiveSource);
-
+                var errors = rules.ValidateCore(name, proposed.ProposedDocumentJson, prospectiveSource);
                 if (errors.Count > 0)
                     return Failed(ChangeRequestOutcome.Invalid, proposed.Target, errors);
 
-                rebound[proposed.Target.Name] = rules.ReferencesOfCore(proposed.ProposedDocumentJson);
+                rebound[NodeId.Rule(name)] = rules.ReferencesOfCore(proposed.ProposedDocumentJson);
             }
 
-            // Phase C — propositions going away, which nothing may still reference by then.
-            var withdrawn = new HashSet<string>(StringComparer.Ordinal);
+            // Phase C — propositions going away, which nothing may still resolve through by then.
+            var withdrawn = new HashSet<NodeId>();
             foreach (var proposed in Ordered(change, ChangeTargetKind.Proposition, deletions: true))
             {
                 if (propositions is null)
@@ -462,18 +484,27 @@ public sealed class ChangeRequestSet
                 if (Mismatch(proposed, state.Exists, state.Version) is { } mismatch)
                     return mismatch;
 
-                // Mirrors WithdrawCore: only a name with nothing compiled beneath it can be left
-                // dangling, so only that case is blocked by referrers.
+                // The two arms WithdrawCore takes. With nothing compiled beneath the name, removal
+                // would leave referrers dangling, so direct referrers block it outright; with a
+                // compiled spec beneath, the name keeps resolving and the question is instead
+                // whether every dependent still binds against what it reverts to.
                 if (rules.Scope.Registry.Find(name) is null)
                 {
                     var referrers = Referrers(rules, name, rebound, withdrawn);
                     if (referrers.Count > 0)
                         return Invalid(proposed.Target,
                             $"'{name}' is still referenced by {string.Join(", ", referrers)}");
+
+                    prospective.Remove(name);
+                }
+                else
+                {
+                    prospective.Remove(name);
+                    if (rules.Scope.PrepareClosure(name, prospective, []) is { Count: > 0 } broken)
+                        return BrokenDependents(proposed.Target, broken);
                 }
 
-                prospective.Remove(name);
-                withdrawn.Add(name);
+                withdrawn.Add(NodeId.Proposition(name));
             }
 
             return null;
@@ -493,26 +524,39 @@ public sealed class ChangeRequestSet
         private static IReadOnlyList<string> Referrers(
             RuleSet rules,
             string name,
-            IReadOnlyDictionary<string, IReadOnlyList<string>> rebound,
+            IReadOnlyDictionary<NodeId, IReadOnlyList<string>> rebound,
             // Not IReadOnlySet: netstandard2.0, which this assembly still targets, has no such type.
-            HashSet<string> withdrawn)
+            HashSet<NodeId> withdrawn)
         {
             var referrers = new List<string>();
 
             foreach (var node in rules.Scope.Graph.Referrers(name))
             {
-                if (!rebound.ContainsKey(node.Name) && !withdrawn.Contains(node.Name))
-                    referrers.Add(node.Name);
+                if (!rebound.ContainsKey(node) && !withdrawn.Contains(node))
+                    referrers.Add($"{node.KindLabel} '{node.Name}'");
             }
 
             foreach (var (node, references) in rebound)
             {
                 if (!withdrawn.Contains(node) && references.Contains(name, StringComparer.Ordinal))
-                    referrers.Add(node);
+                    referrers.Add($"{node.KindLabel} '{node.Name}'");
             }
 
             return referrers;
         }
+
+        /// <summary>
+        /// A cascade refusal as a value. A broken dependent carries its own errors; flattening them
+        /// keeps one error channel, and each is already prefixed with the dependent's name.
+        /// </summary>
+        private static ChangeRequestResult BrokenDependents(
+            ChangeTarget target, IReadOnlyList<BrokenDependent> broken) =>
+            Failed(ChangeRequestOutcome.Invalid, target,
+            [
+                .. broken.SelectMany(dependent => dependent.Errors.Select(error =>
+                    new RuleError(error.Path, error.Code,
+                        $"{dependent.Kind} '{dependent.Name}' would stop binding: {error.Message}")))
+            ]);
 
         /// <summary>
         /// Applies the validated envelope in the one order that lets its members reference each
@@ -529,12 +573,13 @@ public sealed class ChangeRequestSet
         /// lock leaves the same partially-applied state, but says so.
         /// </para>
         /// <para>
-        /// One case is genuinely beyond the validation pass and so the likeliest way to see this
-        /// throw: withdrawing a proposition that has a compiled spec beneath it runs a full
-        /// dependent-closure rebind, and whether an *external* dependent still binds against the
-        /// compiled spec cannot be answered without preparing the whole closure over the envelope's
-        /// prospective state. The referrer check that guards the dangling case, by contrast, is a
-        /// live-graph query and is validated up front.
+        /// Every refusal each core can produce has a counterpart in <see cref="Validate"/>:
+        /// existence and version checks cover <c>NotFound</c>, <c>NameTaken</c> and
+        /// <c>VersionConflict</c>; a prospective bind covers <c>Invalid</c>; the referrer check
+        /// covers <c>Referenced</c>; and preparing the dependent closure over the prospective
+        /// overlay — in phase A for a publish, in phase C for a withdrawal over a compiled spec —
+        /// covers <c>BreaksDependents</c>, which is a cascade failure and therefore an ordinary
+        /// expected outcome that must be returned as a value, never thrown.
         /// </para>
         /// </remarks>
         private static ChangeRequestResult ApplyValidated(

@@ -209,6 +209,15 @@ public sealed class RuleSet
     internal IReadOnlyList<string> ReferencesOfCore(string? documentJson) => ReferencesOf(documentJson);
 
     /// <summary>
+    /// The names a rule would resolve once reverted. A compiled default resolves none, but a rule
+    /// declared with a <see cref="RuleDocumentSource"/> default re-acquires that document's
+    /// references — <see cref="Track"/> recomputes them from whatever document the revert published,
+    /// so a revert is not automatically a departure from the graph.
+    /// </summary>
+    internal IReadOnlyList<string> DefaultReferencesOfCore(string name) =>
+        Find(name) is { } rule ? ReferencesOf(rule.Default.DocumentJson) : [];
+
+    /// <summary>
     /// Looks up a rule and applies a publish operation to it — the shared shape behind
     /// <see cref="UpdateCore"/> and <see cref="RevertCore"/>: find-or-not-found, publish, then
     /// re-track the rule's graph edges whenever the publish actually took. Assumes the scope lock
