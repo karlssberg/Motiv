@@ -16,9 +16,11 @@ MotivRulesBuilder AddRule<TRule>(TRule rule) where TRule : RuleBase;
 MotivRulesOptions AddModel<TModel>(string modelTypeId);
 
 // Endpoints
-IEndpointRouteBuilder MapMotivRules(this IEndpointRouteBuilder endpoints, string basePath);
 IEndpointRouteBuilder MapMotivRules(this IEndpointRouteBuilder endpoints, string basePath,
-    SpecRegistry registry, MotivRulesOptions options, RuleSet? rules = null);
+    Action<MotivRulesEndpointOptions>? configureEndpoints = null);
+IEndpointRouteBuilder MapMotivRules(this IEndpointRouteBuilder endpoints, string basePath,
+    SpecRegistry registry, MotivRulesOptions options, RuleSet? rules = null,
+    Action<MotivRulesEndpointOptions>? configureEndpoints = null);
 ```
 
 ## Wiring
@@ -33,6 +35,21 @@ var app = builder.Build();
 
 app.MapMotivRules("/api/rules");
 ```
+
+## Security
+
+The mapped group is **secure by default** &mdash; every route under `{basePath}` requires an
+authenticated caller (`RequireAuthorization()`). Opening it up is an explicit, greppable opt-out at
+the mount site, never a silent default:
+
+```csharp
+app.MapMotivRules("/api/rules", options => options.AllowAnonymous());
+```
+
+Layer [namespace grants](../governance/grants.md) on top to control *what* an authenticated caller may
+read and write, and [`AddGovernance()`](../governance/change-requests.md) for a review gate in front
+of publishing &mdash; both opt-in, and both mount additional routes (`/change-requests`, `/gate`) under
+this same secured group when enabled. See [Governance](../governance/index.md) for the full pipeline.
 
 Each `AddRule<TRule>()` registers the rule as a singleton under its concrete type and enrolls it in
 the `RuleSet`. Inject the concrete type wherever the rule is executed:
@@ -128,3 +145,5 @@ against older hosts should treat them as optional and skip enforcement when abse
 - Declare the rules being enrolled with the [Rule Classes](Rules.md).
 - See [`RuleSet`](RuleSet.md) for the `Update()`/`Revert()` semantics behind `PUT`/`DELETE`.
 - See the [Live Rules overview](index.md) for the concurrency model these endpoints rely on.
+- See [Governance](../governance/index.md) for authentication, namespace grants, and the approval gate
+  layered on top of this surface.

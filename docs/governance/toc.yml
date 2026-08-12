@@ -1,0 +1,10 @@
+### YamlMime:ManagedReference
+items:
+  - name: Namespace Grants
+    href: grants.md
+  - name: Change Requests
+    href: change-requests.md
+  - name: The Approval Gate
+    href: approval-gate.md
+  - name: Break-Glass
+    href: break-glass.md
