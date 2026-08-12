@@ -15,6 +15,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <InternalsVisibleTo Include="$(AssemblyName).Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
         <EmbeddedResource Include="Rules\loyalty-discount.json" />
     </ItemGroup>
 

@@ -110,6 +110,27 @@ else
             o.Authority = oidcAuthority;
             o.Audience = builder.Configuration["Motiv:Oidc:Audience"];
         });
+
+    // Seam: grant source. "app" (or unset) is the default — a mutable, file-backed store the
+    // running app administers itself. "claims" (Task 9) reads grants straight out of the OIDC
+    // token instead; this switch is where that branch slots in.
+    var grantSource = builder.Configuration["Motiv:Grants:Source"];
+    switch (grantSource)
+    {
+        case "claims":
+            throw new InvalidOperationException(
+                "Motiv:Grants:Source=claims is not yet implemented.");
+        case "app":
+        case null:
+        case "":
+            var grantsPath = builder.Configuration["Motiv:Grants:Path"]
+                ?? Path.Combine(builder.Environment.ContentRootPath, "grants.json");
+            builder.Services.AddSingleton<IGrantSource>(new JsonFileGrantSource(grantsPath));
+            break;
+        default:
+            throw new InvalidOperationException(
+                $"Unknown Motiv:Grants:Source '{grantSource}'. Expected 'app' or 'claims'.");
+    }
 }
 builder.Services.AddAuthorization();
 
