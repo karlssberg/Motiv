@@ -22,7 +22,9 @@ public static class MotivRulesEndpoints
     /// <c>{basePath}/propositions</c> endpoints are mapped against it as well, and documents bind
     /// through its authored layer over the registry, so validate/evaluate resolve the same names the
     /// catalog lists. This overload cannot substitute a different one, so pass the same registry and
-    /// options it was built with.
+    /// options it was built with. The mapped group is secure by default — callers must be
+    /// authenticated — unless <paramref name="configureEndpoints"/> calls
+    /// <see cref="MotivRulesEndpointOptions.AllowAnonymous"/>, the explicit, greppable escape.
     /// </summary>
     /// <param name="endpoints">The endpoint route builder to map onto.</param>
     /// <param name="basePath">The base path to mount under, e.g. <c>/api/rules</c>.</param>
@@ -31,13 +33,18 @@ public static class MotivRulesEndpoints
     /// <param name="rules">The live rule set to manage, or null to omit the rule endpoints.
     /// Construct it with the same registry and <see cref="MotivRulesOptions.SerializerOptions"/>
     /// passed here, so validate/evaluate and rule updates agree on how documents bind.</param>
+    /// <param name="configureEndpoints">Configures per-mount endpoint behavior. The mapped group
+    /// is secure by default (<c>RequireAuthorization</c>); call
+    /// <see cref="MotivRulesEndpointOptions.AllowAnonymous"/> here to open it to unauthenticated
+    /// callers — an explicit, greppable escape rather than a silent default.</param>
     /// <returns>The endpoint route builder, for chaining.</returns>
     public static IEndpointRouteBuilder MapMotivRules(
         this IEndpointRouteBuilder endpoints,
         string basePath,
         SpecRegistry registry,
         MotivRulesOptions options,
-        RuleSet? rules = null)
+        RuleSet? rules = null,
+        Action<MotivRulesEndpointOptions>? configureEndpoints = null)
     {
         var propositions = endpoints.ServiceProvider.GetService<PropositionSet>();
 
@@ -50,6 +57,13 @@ public static class MotivRulesEndpoints
         var resultSerializer = new ResultSerializer();
         var json = options.JsonSerializerOptions;
         var group = endpoints.MapGroup(basePath);
+
+        var endpointOptions = new MotivRulesEndpointOptions();
+        configureEndpoints?.Invoke(endpointOptions);
+        if (endpointOptions.Anonymous)
+            group.AllowAnonymous();
+        else
+            group.RequireAuthorization();
 
         MapCatalogEndpoint(group, registry, options, rules, propositions, json);
 
@@ -110,12 +124,21 @@ public static class MotivRulesEndpoints
     /// via <see cref="MotivRulesServiceCollectionExtensions.AddMotivRules"/> — the RuleSet is
     /// guaranteed to share that registry and serializer options, so validate/evaluate and rule
     /// updates cannot diverge. Resolves the RuleSet eagerly so an invalid rule default fails
-    /// here, at startup, rather than at first request.
+    /// here, at startup, rather than at first request. The mapped group is secure by default —
+    /// callers must be authenticated — unless <paramref name="configureEndpoints"/> calls
+    /// <see cref="MotivRulesEndpointOptions.AllowAnonymous"/>, the explicit, greppable escape.
     /// </summary>
     /// <param name="endpoints">The endpoint route builder to map onto.</param>
     /// <param name="basePath">The base path to mount under, e.g. <c>/api/rules</c>.</param>
+    /// <param name="configureEndpoints">Configures per-mount endpoint behavior. The mapped group
+    /// is secure by default (<c>RequireAuthorization</c>); call
+    /// <see cref="MotivRulesEndpointOptions.AllowAnonymous"/> here to open it to unauthenticated
+    /// callers — an explicit, greppable escape rather than a silent default.</param>
     /// <returns>The endpoint route builder, for chaining.</returns>
-    public static IEndpointRouteBuilder MapMotivRules(this IEndpointRouteBuilder endpoints, string basePath)
+    public static IEndpointRouteBuilder MapMotivRules(
+        this IEndpointRouteBuilder endpoints,
+        string basePath,
+        Action<MotivRulesEndpointOptions>? configureEndpoints = null)
     {
         var services = endpoints.ServiceProvider;
         if (services.GetService<SpecRegistry>() is not { } registry
@@ -128,7 +151,8 @@ public static class MotivRulesEndpoints
 
         // Resolving the RuleSet binds every enrolled rule's default — an invalid default
         // fails here, at startup, rather than at first request.
-        return endpoints.MapMotivRules(basePath, registry, options, services.GetRequiredService<RuleSet>());
+        return endpoints.MapMotivRules(
+            basePath, registry, options, services.GetRequiredService<RuleSet>(), configureEndpoints);
     }
 
     /// <summary>
