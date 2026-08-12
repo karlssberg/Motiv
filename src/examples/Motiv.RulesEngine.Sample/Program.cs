@@ -119,8 +119,10 @@ else
     switch (grantSource)
     {
         case "claims":
-            throw new InvalidOperationException(
-                "Motiv:Grants:Source=claims is not yet implemented.");
+            var claimsMapping = builder.Configuration.GetSection("Motiv:Grants:ClaimsMapping")
+                .Get<List<ClaimsGrantMapping>>() ?? [];
+            builder.Services.AddSingleton<IGrantSource>(new ClaimsGrantSource(claimsMapping));
+            break;
         case "app":
         case null:
         case "":

@@ -175,3 +175,85 @@ internal sealed class JsonFileGrantSource(string path) : IGrantSource
         ?? principal.Identity?.Name
         ?? "unknown";
 }
+
+/// <summary>A claims-to-grant mapping: the claim type and value to watch for, and the namespace grant
+/// to issue when a principal holds that claim. Verb is one of "read"/"author"/"publish" (the
+/// namespace-grant ladder) or "administer" (a subject-wide capability, not namespace-scoped).</summary>
+internal sealed record ClaimsGrantMapping(string ClaimType, string ClaimValue, string Prefix, string Verb);
+
+/// <summary>
+/// Maps IdP group/role claims to namespace grants via app config — the IdP does not know Motiv's
+/// namespaces, so the mapping lives here. Administered in the IdP, so no in-app administration surface.
+/// </summary>
+internal sealed class ClaimsGrantSource(IReadOnlyList<ClaimsGrantMapping> mappings) : IGrantSource
+{
+    private readonly List<ClaimsGrantMapping> _validatedMappings = ValidateAndBuild(mappings);
+
+    public bool SupportsAdministration => false;
+
+    public IReadOnlyCollection<string> KnownRoles =>
+        _validatedMappings.Select(m => m.ClaimValue).Distinct().ToList();
+
+    /// <inheritdoc />
+    public IReadOnlyList<NamespaceGrant> GrantsFor(ClaimsPrincipal principal)
+    {
+        var roles = principal.FindAll(ClaimTypes.Role).Select(c => c.Value).ToHashSet();
+        var grants = new List<NamespaceGrant>();
+
+        foreach (var mapping in _validatedMappings)
+        {
+            if (roles.Contains(mapping.ClaimValue) && !IsAdministerRow(mapping))
+            {
+                grants.Add(new NamespaceGrant(mapping.Prefix, LadderVerb(mapping.Verb)));
+            }
+        }
+
+        return grants;
+    }
+
+    /// <inheritdoc />
+    public bool IsAdministrator(ClaimsPrincipal principal)
+    {
+        var roles = principal.FindAll(ClaimTypes.Role).Select(c => c.Value).ToHashSet();
+        return _validatedMappings.Exists(m => roles.Contains(m.ClaimValue) && IsAdministerRow(m));
+    }
+
+    private static List<ClaimsGrantMapping> ValidateAndBuild(IReadOnlyList<ClaimsGrantMapping> mappings)
+    {
+        var result = new List<ClaimsGrantMapping>();
+        foreach (var mapping in mappings)
+        {
+            ValidateVerb(mapping.Verb);
+            // Normalize "role" (case-insensitive) to ClaimTypes.Role
+            var claimType = string.Equals(mapping.ClaimType, "role", StringComparison.OrdinalIgnoreCase)
+                ? ClaimTypes.Role
+                : mapping.ClaimType;
+            result.Add(new ClaimsGrantMapping(claimType, mapping.ClaimValue, mapping.Prefix, mapping.Verb));
+        }
+        return result;
+    }
+
+    private static bool IsAdministerRow(ClaimsGrantMapping mapping) =>
+        string.Equals(mapping.Verb, "administer", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Maps a validated ladder verb string to <see cref="GrantVerb"/>.</summary>
+    private static GrantVerb LadderVerb(string verb) => verb.ToLowerInvariant() switch
+    {
+        "read" => GrantVerb.Read,
+        "author" => GrantVerb.Author,
+        "publish" => GrantVerb.Publish,
+        _ => throw new InvalidOperationException(
+            $"Corrupt grant verb '{verb}' — Validation should have rejected this.")
+    };
+
+    private static void ValidateVerb(string verb)
+    {
+        switch (verb.ToLowerInvariant())
+        {
+            case "read" or "author" or "publish" or "administer":
+                return;
+            default:
+                throw new ArgumentException($"Unknown grant verb '{verb}'.", nameof(verb));
+        }
+    }
+}
