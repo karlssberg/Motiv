@@ -19,6 +19,7 @@ export default defineConfig({
   },
   webServer: {
     command: `dotnet run --project ../../../src/examples/Motiv.RulesEngine.Sample --urls ${baseURL}`,
+    env: { ...process.env, ASPNETCORE_ENVIRONMENT: 'Development' },
     url: `${baseURL}/api/rules/catalog`,
     /**
      * Never adopt a server this suite did not start, even locally.

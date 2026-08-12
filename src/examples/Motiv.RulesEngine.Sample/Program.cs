@@ -1,4 +1,7 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Motiv;
+using Motiv.RulesEngine.Sample;
 using Motiv.Serialization;
 using Motiv.Serialization.AspNetCore;
 
@@ -65,6 +68,50 @@ if (!string.IsNullOrWhiteSpace(assignedPort) && string.IsNullOrWhiteSpace(builde
     builder.WebHost.UseUrls($"http://localhost:{assignedPort}");
 }
 
+// Fail-closed identity wiring: the endpoints are secure by default, so the host must be told
+// who supplies the principal — OIDC for real deployments, the dev identity for local evaluation.
+// Anything enable-able by omission is a default-credentials vulnerability, so no identity means
+// no startup.
+var devIdentityEnabled = builder.Configuration.GetValue<bool>("Motiv:DevIdentity:Enabled");
+var oidcAuthority = builder.Configuration["Motiv:Oidc:Authority"];
+
+if (devIdentityEnabled
+    && builder.Environment.IsProduction()
+    && !builder.Configuration.GetValue<bool>("Motiv:DevIdentity:AllowInProduction"))
+{
+    throw new InvalidOperationException(
+        "The Motiv dev identity is enabled in a Production environment. Set " +
+        "Motiv:DevIdentity:AllowInProduction=true only if you accept every request being " +
+        "authenticated as the dev superuser.");
+}
+
+if (!devIdentityEnabled && string.IsNullOrWhiteSpace(oidcAuthority))
+{
+    throw new InvalidOperationException(
+        "No identity is configured and the Motiv endpoints are secure by default. Configure " +
+        "OIDC (Motiv:Oidc:Authority, Motiv:Oidc:Audience) or explicitly enable the dev " +
+        "identity (Motiv:DevIdentity:Enabled=true).");
+}
+
+if (devIdentityEnabled)
+{
+    builder.Services
+        .AddAuthentication(DevIdentityHandler.SchemeName)
+        .AddScheme<AuthenticationSchemeOptions, DevIdentityHandler>(DevIdentityHandler.SchemeName, null);
+    builder.Services.AddHostedService<DevIdentityWarningService>();
+}
+else
+{
+    builder.Services
+        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(o =>
+        {
+            o.Authority = oidcAuthority;
+            o.Audience = builder.Configuration["Motiv:Oidc:Audience"];
+        });
+}
+builder.Services.AddAuthorization();
+
 // Seam: authored propositions. AddPropositions enables the propositions endpoints and points them
 // at a store. Propositions load before rule defaults bind, so a rule's default document may
 // reference one. The path is configurable so a container can mount it on a volume.
@@ -94,6 +141,9 @@ var staticFiles = new StaticFileOptions
     }
 };
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.UseDefaultFiles();
 app.UseStaticFiles(staticFiles);
 
@@ -117,7 +167,8 @@ app.MapPost("/api/checkout", async (
         resultSerializer.ToEvaluationResult(eligibility),
         resultSerializer.ToEvaluationResult(screening)),
         options.JsonSerializerOptions);
-});
+})
+.RequireAuthorization();
 
 app.MapFallbackToFile("index.html", staticFiles);
 

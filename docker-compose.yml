@@ -5,3 +5,6 @@ services:
       dockerfile: src/examples/Motiv.RulesEngine.Sample/Dockerfile
     ports:
       - "5100:5100"
+    environment:
+      Motiv__DevIdentity__Enabled: "true"
+      Motiv__DevIdentity__AllowInProduction: "true"  # demo container only — never copy to a real deployment
