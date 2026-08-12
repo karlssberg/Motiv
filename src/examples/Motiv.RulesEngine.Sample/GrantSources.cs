@@ -225,20 +225,11 @@ internal sealed class ClaimsGrantSource(IReadOnlyList<ClaimsGrantMapping> mappin
         _validatedMappings.Select(m => m.ClaimValue).Distinct().ToList();
 
     /// <inheritdoc />
-    public IReadOnlyList<NamespaceGrant> GrantsFor(ClaimsPrincipal principal)
-    {
-        var grants = new List<NamespaceGrant>();
-
-        foreach (var mapping in _validatedMappings)
-        {
-            if (principal.HasClaim(mapping.ClaimType, mapping.ClaimValue) && !IsAdministerRow(mapping))
-            {
-                grants.Add(new NamespaceGrant(mapping.Prefix, LadderVerb(mapping.Verb)));
-            }
-        }
-
-        return grants;
-    }
+    public IReadOnlyList<NamespaceGrant> GrantsFor(ClaimsPrincipal principal) =>
+        [.. _validatedMappings
+            .Where(mapping => principal.HasClaim(mapping.ClaimType, mapping.ClaimValue)
+                && !IsAdministerRow(mapping))
+            .Select(mapping => new NamespaceGrant(mapping.Prefix, LadderVerb(mapping.Verb)))];
 
     /// <inheritdoc />
     public bool IsAdministrator(ClaimsPrincipal principal)

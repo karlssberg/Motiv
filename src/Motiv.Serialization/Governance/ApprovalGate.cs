@@ -289,10 +289,7 @@ public sealed class ApprovalGate
         if (document?.Root is null)
             return null;
 
-        foreach (var name in DocumentReferences.From(document))
-            if (_registry.Find(name) is { IsAsync: true })
-                return name;
-
-        return null;
+        return DocumentReferences.From(document)
+            .FirstOrDefault(name => _registry.Find(name) is { IsAsync: true });
     }
 }

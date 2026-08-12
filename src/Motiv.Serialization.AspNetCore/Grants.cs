@@ -31,20 +31,10 @@ public static class GrantEvaluator
     /// Whether <paramref name="grants"/> satisfy <paramref name="verb"/> for <paramref name="name"/>.
     /// Applies the verb ladder: higher verbs cover lower ones.
     /// </summary>
-    public static bool IsGranted(IReadOnlyList<NamespaceGrant> grants, GrantVerb verb, string name)
-    {
-        foreach (var grant in grants)
-            if (grant.Verb >= verb && NamespacePrefix.Covers(grant.Prefix, name))
-                return true;
-        return false;
-    }
+    public static bool IsGranted(IReadOnlyList<NamespaceGrant> grants, GrantVerb verb, string name) =>
+        grants.Any(grant => grant.Verb >= verb && NamespacePrefix.Covers(grant.Prefix, name));
 
     /// <summary>Whether <paramref name="grants"/> include Author or Publish on any namespace.</summary>
-    public static bool CanAuthorAnywhere(IReadOnlyList<NamespaceGrant> grants)
-    {
-        foreach (var grant in grants)
-            if (grant.Verb >= GrantVerb.Author)
-                return true;
-        return false;
-    }
+    public static bool CanAuthorAnywhere(IReadOnlyList<NamespaceGrant> grants) =>
+        grants.Any(grant => grant.Verb >= GrantVerb.Author);
 }

@@ -42,14 +42,8 @@ internal static class RuleDocumentComparer
             return left is null && right is null;
         if (left.Count != right.Count)
             return false;
-        foreach (var argument in left)
-        {
-            if (!right.TryGetValue(argument.Key, out var match))
-                return false;
-            if (!Equals(argument.Value, match))
-                return false;
-        }
-        return true;
+        return left.All(argument =>
+            right.TryGetValue(argument.Key, out var match) && Equals(argument.Value, match));
     }
 
     // Parameters have no semantic order — the resolver keys them by name, and the parser rejects
@@ -62,14 +56,9 @@ internal static class RuleDocumentComparer
         if (left.Count != right.Count)
             return false;
         var rightByName = right.ToDictionary(p => p.Name, StringComparer.Ordinal);
-        foreach (var declaration in left)
-        {
-            if (!rightByName.TryGetValue(declaration.Name, out var match))
-                return false;
-            if (!ParameterEqual(declaration, match))
-                return false;
-        }
-        return true;
+        return left.All(declaration =>
+            rightByName.TryGetValue(declaration.Name, out var match)
+            && ParameterEqual(declaration, match));
     }
 
     private static bool ParameterEqual(RuleParameterDeclaration left, RuleParameterDeclaration right) =>
