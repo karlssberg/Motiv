@@ -30,21 +30,28 @@ internal static class RuleDocumentComparer
         return true;
     }
 
+    // Parameters have no semantic order — the resolver keys them by name, and the parser rejects
+    // duplicate names — so declaration order must not affect equality. Compare by name instead of
+    // by index.
     private static bool ParametersEqual(
         IReadOnlyList<RuleParameterDeclaration> left,
         IReadOnlyList<RuleParameterDeclaration> right)
     {
         if (left.Count != right.Count)
             return false;
-        for (var i = 0; i < left.Count; i++)
-            if (!ParameterEqual(left[i], right[i]))
+        var rightByName = right.ToDictionary(p => p.Name, StringComparer.Ordinal);
+        foreach (var declaration in left)
+        {
+            if (!rightByName.TryGetValue(declaration.Name, out var match))
                 return false;
+            if (!ParameterEqual(declaration, match))
+                return false;
+        }
         return true;
     }
 
     private static bool ParameterEqual(RuleParameterDeclaration left, RuleParameterDeclaration right) =>
-        left.Name == right.Name
-        && left.Type == right.Type
+        left.Type == right.Type
         && left.HasDefault == right.HasDefault
         && Equals(left.DefaultValue, right.DefaultValue);
 }

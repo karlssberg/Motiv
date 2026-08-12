@@ -178,4 +178,36 @@ public class RuleDocumentComparerTests
         // Assert
         equal.ShouldBeTrue();
     }
+
+    [Fact]
+    public void Should_treat_reordered_parameter_declarations_as_structurally_equal()
+    {
+        // Arrange — parameters have no semantic order; only the set of declarations matters
+        var left = AParsedDocument(
+            """
+            {
+              "parameters": {
+                "label": { "type": "string", "default": "x" },
+                "minOrders": { "type": "integer" }
+              },
+              "rule": { "spec": "is-active" }
+            }
+            """);
+        var right = AParsedDocument(
+            """
+            {
+              "parameters": {
+                "minOrders": { "type": "integer" },
+                "label": { "type": "string", "default": "x" }
+              },
+              "rule": { "spec": "is-active" }
+            }
+            """);
+
+        // Act
+        var equal = RuleDocumentComparer.StructurallyEqual(left, right);
+
+        // Assert
+        equal.ShouldBeTrue();
+    }
 }
