@@ -301,15 +301,18 @@ public sealed class PropositionSet
     /// phase. Passing a prospective source lets one envelope member resolve against another that is
     /// not live yet. Assumes the scope lock is held.
     /// </summary>
-    /// <returns>The bound entry to fold into the prospective overlay, or the errors that stopped it.</returns>
-    internal (SpecRegistryEntry? Entry, IReadOnlyList<RuleError> Errors) PrepareCore(
+    /// <returns>
+    /// The bound entry to fold into the prospective overlay and the names it resolves, or the errors
+    /// that stopped it.
+    /// </returns>
+    internal (SpecRegistryEntry? Entry, IReadOnlyList<string> References, IReadOnlyList<RuleError> Errors) PrepareCore(
         string name, string modelTypeId, string documentJson, string? description, ISpecSource source)
     {
         if (ValidateName(name) is { } nameError)
-            return (null, [nameError]);
+            return (null, [], [nameError]);
 
         var prepared = Prepare(name, modelTypeId, documentJson, description, source);
-        return (prepared.Entry, prepared.Errors);
+        return (prepared.Entry, prepared.References, prepared.Errors);
     }
 
     /// <summary>

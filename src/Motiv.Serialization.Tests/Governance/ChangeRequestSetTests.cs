@@ -292,5 +292,130 @@ public class ChangeRequestSetTests
         host.Rules.FindEntry("can-checkout")!.Version.ShouldBe(1);
     }
 
+    /// <summary>
+    /// Two edits to one target validate against the same live version and then fight over it at
+    /// apply — one lands, the other conflicts, leaving a live edit with no governance record. There
+    /// is no defensible reading of the pair, so it is refused at authoring time.
+    /// </summary>
+    [Fact]
+    public void Should_refuse_a_change_request_that_targets_one_artefact_twice()
+    {
+        // Arrange
+        var host = NewHost();
+
+        // Act
+        var created = host.Changes.Create("alice", "a note",
+        [
+            new(ChangeTargetKind.Rule, "can-checkout", """{ "rule": { "spec": "customer.is-adult" } }""",
+                BaseVersion: 1, RollbackOfVersion: null),
+            new(ChangeTargetKind.Rule, "can-checkout", """{ "rule": { "spec": "customer.is-active" } }""",
+                BaseVersion: 1, RollbackOfVersion: null)
+        ]);
+
+        // Assert
+        created.Outcome.ShouldBe(ChangeRequestOutcome.Invalid);
+        created.Change.ShouldBeNull();
+        created.FailedTarget.ShouldBe(new ChangeTarget(ChangeTargetKind.Rule, "can-checkout"));
+        host.Changes.All.ShouldBeEmpty();
+        host.Rules.FindEntry("can-checkout")!.Version.ShouldBe(1);
+    }
+
+    /// <summary>
+    /// The intermediate-state trap: validation walks the envelope in the same canonical order the
+    /// apply does, so the creation of a proposition referencing one the same envelope withdraws is
+    /// seen against a world where the withdrawal has *not* happened yet — exactly as the apply
+    /// would see it — and the withdrawal is then refused while nothing has moved.
+    /// </summary>
+    [Fact]
+    public void Should_refuse_an_envelope_that_creates_a_proposition_referencing_one_it_withdraws()
+    {
+        // Arrange
+        var host = NewHost();
+        host.Propositions.Create("customer.eligible", "customer", EligibleIsAdult, null)
+            .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
+
+        var created = host.Changes.Create("alice", "a note",
+        [
+            new(ChangeTargetKind.Proposition, "customer.derived", CheckoutUsesEligible,
+                BaseVersion: 0, RollbackOfVersion: null, ModelTypeId: "customer"),
+            new(ChangeTargetKind.Proposition, "customer.eligible", null,
+                BaseVersion: 1, RollbackOfVersion: null)
+        ]);
+
+        // Act
+        var published = host.Changes.Publish(created.Change!.Id, breakGlassActive: false);
+
+        // Assert
+        published.Outcome.ShouldBe(ChangeRequestOutcome.Invalid);
+        published.FailedTarget.ShouldBe(new ChangeTarget(ChangeTargetKind.Proposition, "customer.eligible"));
+        published.Errors.ShouldContain(error => error.Message.Contains("customer.derived"));
+
+        // Nothing applied
+        host.Propositions.DocumentJsonOf("customer.derived").ShouldBeNull();
+        host.Propositions.DocumentJsonOf("customer.eligible")!.ShouldBe(EligibleIsAdult);
+        host.Changes.Find(created.Change!.Id)!.Status.ShouldBe(ChangeRequestStatus.Draft);
+    }
+
+    /// <summary>
+    /// The referrer that blocks a withdrawal may be entirely outside the envelope. That is a pure
+    /// live-graph query, so it belongs in the validation pass rather than being discovered by a
+    /// core mid-apply.
+    /// </summary>
+    [Fact]
+    public void Should_refuse_to_withdraw_a_proposition_a_live_rule_still_references()
+    {
+        // Arrange
+        var host = NewHost();
+        host.Propositions.Create("customer.eligible", "customer", EligibleIsAdult, null);
+        host.Rules.Update("can-checkout", CheckoutUsesEligible, 1)
+            .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
+
+        var created = host.Changes.Create("alice", "a note",
+        [
+            new(ChangeTargetKind.Proposition, "customer.eligible", null,
+                BaseVersion: 1, RollbackOfVersion: null)
+        ]);
+
+        // Act
+        var published = host.Changes.Publish(created.Change!.Id, breakGlassActive: false);
+
+        // Assert
+        published.Outcome.ShouldBe(ChangeRequestOutcome.Invalid);
+        published.Errors.ShouldContain(error => error.Message.Contains("can-checkout"));
+        host.Propositions.DocumentJsonOf("customer.eligible")!.ShouldBe(EligibleIsAdult);
+    }
+
+    /// <summary>
+    /// The mirror of the test above: the same withdrawal is fine when the envelope's own rule edit
+    /// is what stops referencing the proposition. The live graph still holds the rule's old edge at
+    /// validation time, so reading it alone would refuse a perfectly good envelope.
+    /// </summary>
+    [Fact]
+    public void Should_allow_a_withdrawal_whose_only_referrer_is_redirected_by_the_same_envelope()
+    {
+        // Arrange
+        var host = NewHost();
+        host.Propositions.Create("customer.eligible", "customer", EligibleIsAdult, null);
+        host.Rules.Update("can-checkout", CheckoutUsesEligible, 1);
+
+        var created = host.Changes.Create("alice", "inline the proposition and retire it",
+        [
+            new(ChangeTargetKind.Rule, "can-checkout", """{ "rule": { "spec": "customer.is-adult" } }""",
+                BaseVersion: 2, RollbackOfVersion: null),
+            new(ChangeTargetKind.Proposition, "customer.eligible", null,
+                BaseVersion: 1, RollbackOfVersion: null)
+        ]);
+
+        // Act
+        var published = host.Changes.Publish(created.Change!.Id, breakGlassActive: false);
+
+        // Assert
+        published.Outcome.ShouldBe(ChangeRequestOutcome.Ok);
+        published.PublishedVersions!["can-checkout"].ShouldBe(3);
+        published.PublishedVersions!["customer.eligible"].ShouldBe(0);
+        host.Propositions.DocumentJsonOf("customer.eligible").ShouldBeNull();
+        host.Rule.Evaluate(new Customer(IsActive: false, Age: 30)).Satisfied.ShouldBeTrue();
+    }
+
     private sealed record Customer(bool IsActive, int Age);
 }

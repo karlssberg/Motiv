@@ -156,8 +156,12 @@ public sealed class ChangeRequestSet
     /// </remarks>
     /// <param name="author">Who is authoring the request.</param>
     /// <param name="changeNote">A human-readable note describing the change.</param>
-    /// <param name="changes">The edits that publish together. Must not be empty.</param>
-    /// <returns>The new request, or <see cref="ChangeRequestOutcome.Invalid"/> when no edits were given.</returns>
+    /// <param name="changes">
+    /// The edits that publish together. Must not be empty, and must target each artefact at most
+    /// once — two edits to one target is authoring nonsense with no defensible reading (which wins?
+    /// against which base version?), so it is refused here rather than discovered at publish.
+    /// </param>
+    /// <returns>The new request, or <see cref="ChangeRequestOutcome.Invalid"/> when the edits are unusable.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="changes"/> is null.</exception>
     public ChangeRequestResult Create(string author, string changeNote, IReadOnlyList<NewProposedChange> changes)
     {
@@ -167,20 +171,40 @@ public sealed class ChangeRequestSet
             return Failure(ChangeRequestOutcome.Invalid, null, errors:
                 [new RuleError("$", RuleErrorCode.InvalidNode, "a change request must propose at least one change")]);
 
-        var proposed = new List<ProposedChange>(changes.Count);
+        var targets = new HashSet<ChangeTarget>();
         foreach (var change in changes)
         {
-            var target = new ChangeTarget(change.Kind, change.Name);
-            var current = CurrentStateOf(target);
-
-            proposed.Add(new ProposedChange(
-                target,
-                change.DocumentJson,
-                change.BaseVersion,
-                ChangeClassifier.Classify(
-                    change.DocumentJson, current.DocumentJson, current.Exists, SpecIsAsync, change.RollbackOfVersion),
-                change.ModelTypeId));
+            var duplicate = new ChangeTarget(change.Kind, change.Name);
+            if (!targets.Add(duplicate))
+                return Failure(ChangeRequestOutcome.Invalid, null, duplicate,
+                    [new RuleError("$", RuleErrorCode.InvalidNode,
+                        $"the change request targets {duplicate.Kind.ToString().ToLowerInvariant()} " +
+                        $"'{duplicate.Name}' more than once")]);
         }
+
+        // Classification reads live binding state — the layered source and the rules' documents —
+        // so it runs under the scope lock, or a concurrent publish could be half-visible to it and
+        // the request would be classified against a base that never existed.
+        var proposed = _rules.Scope.Locked(() =>
+        {
+            var classified = new List<ProposedChange>(changes.Count);
+            foreach (var change in changes)
+            {
+                var target = new ChangeTarget(change.Kind, change.Name);
+                var current = CurrentStateOf(target);
+
+                classified.Add(new ProposedChange(
+                    target,
+                    change.DocumentJson,
+                    change.BaseVersion,
+                    ChangeClassifier.Classify(
+                        change.DocumentJson, current.DocumentJson, current.Exists, SpecIsAsync,
+                        change.RollbackOfVersion),
+                    change.ModelTypeId));
+            }
+
+            return classified;
+        });
 
         var request = new ChangeRequest(Guid.NewGuid(), author, changeNote, proposed);
         lock (_lock)
@@ -348,10 +372,17 @@ public sealed class ChangeRequestSet
             rules.Scope.Locked(() => Validate(rules, propositions, change) ?? ApplyValidated(rules, propositions, change));
 
         /// <summary>
-        /// Checks every edit against the live state and against a prospective source carrying the
-        /// envelope's own proposition edits — a rule edit may reference a proposition the same
-        /// envelope creates, which the live source could not resolve.
+        /// Walks the envelope in exactly the order <see cref="ApplyValidated"/> will, against a
+        /// prospective overlay carrying the envelope's own edits — a rule edit may reference a
+        /// proposition the same envelope creates, which the live source could not resolve.
         /// </summary>
+        /// <remarks>
+        /// Mirroring the apply order is load-bearing, not tidiness. Validating in envelope order
+        /// while applying in canonical order lets the two disagree about the intermediate states:
+        /// an envelope that creates a proposition referencing one it also withdraws validates
+        /// against a world where the withdrawal already happened, then applies against one where it
+        /// has not. Both passes must see the same sequence of worlds.
+        /// </remarks>
         /// <returns>The first failure found, or null when every edit would apply.</returns>
         private static ChangeRequestResult? Validate(
             RuleSet rules, PropositionSet? propositions, ChangeRequest change)
@@ -359,26 +390,20 @@ public sealed class ChangeRequestSet
             var prospective = new PropositionOverlay(rules.Scope.Overlay);
             var prospectiveSource = new LayeredSpecSource(prospective, rules.Scope.Registry);
 
-            // Propositions first, folding each one into the prospective overlay, so that by the time
-            // the rules are checked the overlay describes the state the envelope would leave behind.
-            foreach (var proposed in change.ProposedChanges)
-            {
-                if (proposed.Target.Kind != ChangeTargetKind.Proposition)
-                    continue;
+            // What each republished node would reference once the envelope lands. The live graph
+            // still holds these nodes' *old* edges, which phases A and B replace before any
+            // withdrawal runs, so the referrer check in phase C has to prefer this.
+            var rebound = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
 
+            // Phase A — propositions coming into existence or changing.
+            foreach (var proposed in Ordered(change, ChangeTargetKind.Proposition, deletions: false))
+            {
                 if (propositions is null)
-                    return Invalid(proposed.Target,
-                        "this host has no PropositionSet, so a proposition cannot be changed");
+                    return NoPropositionSet(proposed.Target);
 
                 var state = propositions.AuthoredStateCore(proposed.Target.Name);
                 if (Mismatch(proposed, state.Exists, state.Version) is { } mismatch)
                     return mismatch;
-
-                if (proposed.ProposedDocumentJson is null)
-                {
-                    prospective.Remove(proposed.Target.Name);
-                    continue;
-                }
 
                 var modelTypeId = state.ModelTypeId ?? proposed.ModelTypeId;
                 if (modelTypeId is null)
@@ -386,15 +411,17 @@ public sealed class ChangeRequestSet
                         "creating a proposition requires a model-type id", RuleErrorCode.ModelTypeMismatch);
 
                 var prepared = propositions.PrepareCore(
-                    proposed.Target.Name, modelTypeId, proposed.ProposedDocumentJson,
+                    proposed.Target.Name, modelTypeId, proposed.ProposedDocumentJson!,
                     state.Description, prospectiveSource);
 
                 if (prepared.Entry is not { } entry)
                     return Failed(ChangeRequestOutcome.Invalid, proposed.Target, prepared.Errors);
 
                 prospective.Set(entry);
+                rebound[proposed.Target.Name] = prepared.References;
             }
 
+            // Phase B — rules, which may reference anything phase A just folded in.
             foreach (var proposed in change.ProposedChanges)
             {
                 if (proposed.Target.Kind != ChangeTargetKind.Rule)
@@ -408,16 +435,83 @@ public sealed class ChangeRequestSet
                     return mismatch;
 
                 if (proposed.ProposedDocumentJson is null)
+                {
+                    // A revert to a compiled default resolves no names, so the rule leaves the graph.
+                    rebound[proposed.Target.Name] = [];
                     continue;
+                }
 
                 var errors = rules.ValidateCore(
                     proposed.Target.Name, proposed.ProposedDocumentJson, prospectiveSource);
 
                 if (errors.Count > 0)
                     return Failed(ChangeRequestOutcome.Invalid, proposed.Target, errors);
+
+                rebound[proposed.Target.Name] = rules.ReferencesOfCore(proposed.ProposedDocumentJson);
+            }
+
+            // Phase C — propositions going away, which nothing may still reference by then.
+            var withdrawn = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var proposed in Ordered(change, ChangeTargetKind.Proposition, deletions: true))
+            {
+                if (propositions is null)
+                    return NoPropositionSet(proposed.Target);
+
+                var name = proposed.Target.Name;
+                var state = propositions.AuthoredStateCore(name);
+                if (Mismatch(proposed, state.Exists, state.Version) is { } mismatch)
+                    return mismatch;
+
+                // Mirrors WithdrawCore: only a name with nothing compiled beneath it can be left
+                // dangling, so only that case is blocked by referrers.
+                if (rules.Scope.Registry.Find(name) is null)
+                {
+                    var referrers = Referrers(rules, name, rebound, withdrawn);
+                    if (referrers.Count > 0)
+                        return Invalid(proposed.Target,
+                            $"'{name}' is still referenced by {string.Join(", ", referrers)}");
+                }
+
+                prospective.Remove(name);
+                withdrawn.Add(name);
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Who would still reference <paramref name="name"/> at the moment the envelope withdraws
+        /// it: the live graph's referrers, except those the envelope has already republished (whose
+        /// old edges are gone) or already withdrawn, plus those whose *new* document references it.
+        /// </summary>
+        /// <remarks>
+        /// The live graph alone is not enough in either direction. A proposition created earlier in
+        /// this same envelope is not in it yet, and a rule whose edit drops its reference is still
+        /// in it. Both are constructible envelopes, and both would otherwise pass validation and
+        /// then be refused mid-apply.
+        /// </remarks>
+        private static IReadOnlyList<string> Referrers(
+            RuleSet rules,
+            string name,
+            IReadOnlyDictionary<string, IReadOnlyList<string>> rebound,
+            // Not IReadOnlySet: netstandard2.0, which this assembly still targets, has no such type.
+            HashSet<string> withdrawn)
+        {
+            var referrers = new List<string>();
+
+            foreach (var node in rules.Scope.Graph.Referrers(name))
+            {
+                if (!rebound.ContainsKey(node.Name) && !withdrawn.Contains(node.Name))
+                    referrers.Add(node.Name);
+            }
+
+            foreach (var (node, references) in rebound)
+            {
+                if (!withdrawn.Contains(node) && references.Contains(name, StringComparer.Ordinal))
+                    referrers.Add(node);
+            }
+
+            return referrers;
         }
 
         /// <summary>
@@ -426,11 +520,22 @@ public sealed class ChangeRequestSet
         /// then the propositions going away — which nothing may still reference by then.
         /// </summary>
         /// <remarks>
-        /// A cascade check inside a core can still refuse an edit here, after earlier members have
-        /// applied — a withdrawal blocked by a referrer outside the envelope is the realistic case.
-        /// The validation pass cannot see that, because the referrer's post-envelope state is not
-        /// live yet. Such a failure is reported like any other, but unlike a validation failure it
-        /// leaves the earlier members of the envelope published.
+        /// <para>
+        /// Every refusal a core can produce has been validated away by the time this runs, so a
+        /// refusal here is an invariant violation rather than an expected outcome, and it throws.
+        /// Returning it as a value is the one thing that must never happen: the caller would report
+        /// a clean refusal while some members of the envelope were already live and the change
+        /// request sat wedged in Draft — applied edits with no governance record. Throwing under the
+        /// lock leaves the same partially-applied state, but says so.
+        /// </para>
+        /// <para>
+        /// One case is genuinely beyond the validation pass and so the likeliest way to see this
+        /// throw: withdrawing a proposition that has a compiled spec beneath it runs a full
+        /// dependent-closure rebind, and whether an *external* dependent still binds against the
+        /// compiled spec cannot be answered without preparing the whole closure over the envelope's
+        /// prospective state. The referrer check that guards the dangling case, by contrast, is a
+        /// live-graph query and is validated up front.
+        /// </para>
         /// </remarks>
         private static ChangeRequestResult ApplyValidated(
             RuleSet rules, PropositionSet? propositions, ChangeRequest change)
@@ -447,7 +552,7 @@ public sealed class ChangeRequestSet
                         name, proposed.ModelTypeId!, proposed.ProposedDocumentJson!, description: null);
 
                 if (result.Outcome is not (PropositionUpdateOutcome.Created or PropositionUpdateOutcome.Updated))
-                    return MapProposition(result, proposed.Target);
+                    throw Unexpected(proposed.Target, result.Outcome.ToString(), Detail(result));
 
                 versions[name] = result.Version;
             }
@@ -463,7 +568,8 @@ public sealed class ChangeRequestSet
                     : rules.UpdateCore(name, proposed.ProposedDocumentJson, proposed.BaseVersion);
 
                 if (result.Outcome != RuleUpdateOutcome.Updated)
-                    return MapRule(result, proposed.Target);
+                    throw Unexpected(proposed.Target, result.Outcome.ToString(),
+                        string.Join("; ", result.Errors));
 
                 versions[name] = result.Version;
             }
@@ -472,7 +578,7 @@ public sealed class ChangeRequestSet
             {
                 var result = propositions!.WithdrawCore(proposed.Target.Name, proposed.BaseVersion);
                 if (result.Outcome != PropositionUpdateOutcome.Removed)
-                    return MapProposition(result, proposed.Target);
+                    throw Unexpected(proposed.Target, result.Outcome.ToString(), Detail(result));
 
                 // No authored document remains, so there is no version left to report.
                 versions[proposed.Target.Name] = 0;
@@ -480,6 +586,20 @@ public sealed class ChangeRequestSet
 
             return new ChangeRequestResult(ChangeRequestOutcome.Ok, change, null, [], null, null, versions);
         }
+
+        private static InvalidOperationException Unexpected(ChangeTarget target, string outcome, string detail) =>
+            new($"Publishing {target.Kind.ToString().ToLowerInvariant()} '{target.Name}' was refused " +
+                $"with '{outcome}' during the apply phase, after validation had accepted the whole " +
+                $"change request. This is a bug in the publisher's validation, not a caller error. " +
+                $"Earlier members of the envelope may already be live. Detail: {detail}");
+
+        private static string Detail(PropositionUpdateResult result) =>
+            string.Join("; ", [
+                .. result.Errors.Select(error => error.ToString()),
+                .. result.Referrers,
+                .. result.BrokenDependents.Select(dependent =>
+                    $"{dependent.Kind} '{dependent.Name}': {string.Join(", ", dependent.Errors)}")
+            ]);
 
         private static IEnumerable<ProposedChange> Ordered(
             ChangeRequest change, ChangeTargetKind kind, bool deletions) =>
@@ -504,29 +624,8 @@ public sealed class ChangeRequestSet
                     ChangeRequestOutcome.VersionConflict, null, null, [], proposed.Target, currentVersion, null);
         }
 
-        private static ChangeRequestResult MapRule(RuleUpdateResult result, ChangeTarget target) =>
-            result.Outcome switch
-            {
-                RuleUpdateOutcome.VersionConflict => new ChangeRequestResult(
-                    ChangeRequestOutcome.VersionConflict, null, null, [], target, result.Version, null),
-                RuleUpdateOutcome.NotFound => Failed(ChangeRequestOutcome.NotFound, target, []),
-                _ => Failed(ChangeRequestOutcome.Invalid, target, result.Errors)
-            };
-
-        private static ChangeRequestResult MapProposition(PropositionUpdateResult result, ChangeTarget target) =>
-            result.Outcome switch
-            {
-                PropositionUpdateOutcome.VersionConflict => new ChangeRequestResult(
-                    ChangeRequestOutcome.VersionConflict, null, null, [], target, result.Version, null),
-                PropositionUpdateOutcome.NotFound => Failed(ChangeRequestOutcome.NotFound, target, []),
-                PropositionUpdateOutcome.Referenced => Invalid(target,
-                    $"'{target.Name}' is still referenced by {string.Join(", ", result.Referrers)}"),
-                PropositionUpdateOutcome.NameTaken => Invalid(target,
-                    $"'{target.Name}' is already authored"),
-                // A broken dependent carries its own errors; flattening them keeps one error channel.
-                _ => Failed(ChangeRequestOutcome.Invalid, target,
-                    [.. result.Errors, .. result.BrokenDependents.SelectMany(dependent => dependent.Errors)])
-            };
+        private static ChangeRequestResult NoPropositionSet(ChangeTarget target) =>
+            Invalid(target, "this host has no PropositionSet, so a proposition cannot be changed");
 
         private static ChangeRequestResult Invalid(
             ChangeTarget target, string message, RuleErrorCode code = RuleErrorCode.InvalidNode) =>

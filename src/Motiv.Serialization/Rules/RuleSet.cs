@@ -202,6 +202,13 @@ public sealed class RuleSet
     }
 
     /// <summary>
+    /// The names a proposed document would resolve, so a governed publish can tell which of its own
+    /// members would reference a proposition it is also withdrawing. The document must already have
+    /// passed <see cref="ValidateCore"/>, which rules a parse failure out.
+    /// </summary>
+    internal IReadOnlyList<string> ReferencesOfCore(string? documentJson) => ReferencesOf(documentJson);
+
+    /// <summary>
     /// Looks up a rule and applies a publish operation to it — the shared shape behind
     /// <see cref="UpdateCore"/> and <see cref="RevertCore"/>: find-or-not-found, publish, then
     /// re-track the rule's graph edges whenever the publish actually took. Assumes the scope lock
