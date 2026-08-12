@@ -80,6 +80,29 @@ public sealed class SpecRegistryEntry
         if (errors.Count > errorCountBefore)
             return null;
 
-        return ((Func<IReadOnlyDictionary<string, object?>, object>)Spec)(values);
+        return Build(values, node, errors);
+    }
+
+    /// <summary>
+    /// Runs the host's factory behind a catch-all, because this is where third-party code executes
+    /// inside a document load. Every other failure a document can cause is a
+    /// <see cref="RuleError" />, and <c>Validate</c> promises to accumulate errors rather than
+    /// throw — a factory that rejects an argument combination the declarations could not express
+    /// (a spec name that is whitespace, say) must not turn an author's document into an unhandled
+    /// exception at the validation endpoint.
+    /// </summary>
+    private object? Build(Dictionary<string, object?> values, RuleNode node, List<RuleError> errors)
+    {
+        try
+        {
+            return ((Func<IReadOnlyDictionary<string, object?>, object>)Spec)(values);
+        }
+        catch (Exception exception)
+        {
+            errors.Add(new RuleError(node.Path, RuleErrorCode.SpecFactoryFailed,
+                $"the factory registered for '{Name}' failed to build the spec from the supplied " +
+                $"arguments: {exception.Message}"));
+            return null;
+        }
     }
 }

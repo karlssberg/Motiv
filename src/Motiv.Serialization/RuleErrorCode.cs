@@ -42,6 +42,9 @@ public enum RuleErrorCode
     /// <summary>A spec node supplied 'args' to a spec that was not registered as parameterised.</summary>
     UnexpectedArguments,
 
+    /// <summary>A parameterised spec's factory threw while building the spec from its arguments.</summary>
+    SpecFactoryFailed,
+
     /// <summary>A higher-order node references a collection path that is not registered.</summary>
     UnknownCollection,
 
