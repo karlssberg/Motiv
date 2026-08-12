@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Motiv;
 using Motiv.RulesEngine.Sample;
 using Motiv.Serialization;
@@ -191,6 +192,42 @@ app.MapPost("/api/checkout", async (
         options.JsonSerializerOptions);
 })
 .RequireAuthorization();
+
+// Seam: administration surface. Capabilities tells the client what it's allowed to render (an
+// immutable source like the dev grant source has no administration UI); the grants group is the
+// UI's CRUD surface over a mutable store, gated on IsAdministrator and hidden (404) entirely when
+// the active source doesn't support administration.
+app.MapGet("/api/admin/capabilities", (HttpContext http, IGrantSource grants) => Results.Json(new
+{
+    grantAdministration = grants.SupportsAdministration,
+    administrator = grants.IsAdministrator(http.User),
+    devIdentity = devIdentityEnabled
+})).RequireAuthorization();
+
+var admin = app.MapGroup("/api/admin/grants").RequireAuthorization();
+admin.MapGet("", (HttpContext http, IGrantSource grants) =>
+    grants is not JsonFileGrantSource store ? Results.NotFound()
+    : !grants.IsAdministrator(http.User) ? Results.StatusCode(403)
+    : Results.Json(store.All));
+admin.MapPost("", (HttpContext http, IGrantSource grants, [FromBody] GrantRecord record) =>
+{
+    if (grants is not JsonFileGrantSource store)
+        return Results.NotFound();
+    if (!grants.IsAdministrator(http.User))
+        return Results.StatusCode(403);
+    store.Add(record);
+    return Results.NoContent();
+});
+admin.MapDelete("", (HttpContext http, IGrantSource grants, [FromBody] GrantRecord record) =>
+    grants is not JsonFileGrantSource store ? Results.NotFound()
+    : !grants.IsAdministrator(http.User) ? Results.StatusCode(403)
+    : store.Remove(record) switch
+    {
+        GrantRemovalOutcome.Removed => Results.NoContent(),
+        GrantRemovalOutcome.LastAdminister => Results.Json(
+            new { error = "cannot remove the last administer grant" }, statusCode: 409),
+        _ => Results.NotFound()
+    });
 
 app.MapFallbackToFile("index.html", staticFiles);
 
