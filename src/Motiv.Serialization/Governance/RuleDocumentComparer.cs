@@ -8,8 +8,10 @@ namespace Motiv.Serialization;
 internal static class RuleDocumentComparer
 {
     public static bool StructurallyEqual(RuleDocument left, RuleDocument right) =>
-        NodesEqual(left.Root, right.Root);
+        NodesEqual(left.Root, right.Root) && ParametersEqual(left.Parameters, right.Parameters);
 
+    // Recursion depth mirrors the parser's own guarded nesting depth, so parser-accepted
+    // documents cannot overflow here.
     private static bool NodesEqual(RuleNode? left, RuleNode? right)
     {
         if (left is null || right is null)
@@ -27,4 +29,22 @@ internal static class RuleDocumentComparer
                 return false;
         return true;
     }
+
+    private static bool ParametersEqual(
+        IReadOnlyList<RuleParameterDeclaration> left,
+        IReadOnlyList<RuleParameterDeclaration> right)
+    {
+        if (left.Count != right.Count)
+            return false;
+        for (var i = 0; i < left.Count; i++)
+            if (!ParameterEqual(left[i], right[i]))
+                return false;
+        return true;
+    }
+
+    private static bool ParameterEqual(RuleParameterDeclaration left, RuleParameterDeclaration right) =>
+        left.Name == right.Name
+        && left.Type == right.Type
+        && left.HasDefault == right.HasDefault
+        && Equals(left.DefaultValue, right.DefaultValue);
 }

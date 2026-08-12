@@ -131,4 +131,51 @@ public class RuleDocumentComparerTests
         // Assert
         equal.ShouldBeFalse();
     }
+
+    [Fact]
+    public void Should_treat_a_changed_parameter_default_as_structurally_unequal()
+    {
+        // Arrange — same tree, but the declared parameter's default value differs: a logic change
+        var left = AParsedDocument(
+            """
+            {
+              "parameters": { "label": { "type": "string", "default": "x" } },
+              "rule": { "spec": "is-active" }
+            }
+            """);
+        var right = AParsedDocument(
+            """
+            {
+              "parameters": { "label": { "type": "string", "default": "y" } },
+              "rule": { "spec": "is-active" }
+            }
+            """);
+
+        // Act
+        var equal = RuleDocumentComparer.StructurallyEqual(left, right);
+
+        // Assert
+        equal.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Should_treat_identical_parameter_declarations_as_structurally_equal()
+    {
+        // Arrange
+        const string json =
+            """
+            {
+              "parameters": { "label": { "type": "string", "default": "x" } },
+              "rule": { "spec": "is-active" }
+            }
+            """;
+        var left = AParsedDocument(json);
+        var right = AParsedDocument(json);
+
+        // Act
+        var equal = RuleDocumentComparer.StructurallyEqual(left, right);
+
+        // Assert
+        equal.ShouldBeTrue();
+    }
 }
