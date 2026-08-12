@@ -16,7 +16,7 @@ public enum ChangeTargetKind
 public sealed record ChangeTarget(ChangeTargetKind Kind, string Name)
 {
     /// <summary>The parent namespace of the dotted name ("" when the name has no dot).</summary>
-    public string Namespace { get; } = ComputeNamespace(Name);
+    public string Namespace => ComputeNamespace(Name);
 
     private static string ComputeNamespace(string name)
     {
@@ -96,7 +96,7 @@ public sealed class ChangeRequest
         Id = id;
         Author = author;
         ChangeNote = changeNote;
-        ProposedChanges = proposedChanges;
+        ProposedChanges = new List<ProposedChange>(proposedChanges).AsReadOnly();
         Status = ChangeRequestStatus.Draft;
     }
 
@@ -113,7 +113,7 @@ public sealed class ChangeRequest
     public IReadOnlyList<ProposedChange> ProposedChanges { get; }
 
     /// <summary>The accumulating positive assents recorded against this request.</summary>
-    public IReadOnlyList<Approval> Approvals => _approvals;
+    public IReadOnlyList<Approval> Approvals => _approvals.AsReadOnly();
 
     /// <summary>The current workflow state.</summary>
     public ChangeRequestStatus Status { get; private set; }
