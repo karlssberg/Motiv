@@ -40,7 +40,10 @@ internal static class KeycloakClaims
 
             foreach (var role in roles.EnumerateArray())
             {
-                if (role.GetString() is { } roleName)
+                // Skip non-string entries outright — role.GetString() throws
+                // InvalidOperationException (not JsonException) for e.g. a number, which would
+                // otherwise escape the catch below and violate the no-throw contract.
+                if (role.ValueKind == JsonValueKind.String && role.GetString() is { } roleName)
                     identity.AddClaim(new Claim(ClaimTypes.Role, roleName));
             }
         }

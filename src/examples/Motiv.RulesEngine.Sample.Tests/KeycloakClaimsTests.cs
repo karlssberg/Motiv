@@ -83,6 +83,20 @@ public class KeycloakClaimsTests
             ignoreOrder: true);
     }
 
+    [Fact]
+    public void Should_skip_non_string_role_entries_without_throwing()
+    {
+        // Arrange
+        var principal = PrincipalWithRealmAccess("""{"roles":[1,"motiv-admin"]}""");
+
+        // Act
+        var act = () => KeycloakClaims.FlattenRealmRoles(principal);
+
+        // Assert
+        act.ShouldNotThrow();
+        principal.FindAll(ClaimTypes.Role).Select(c => c.Value).ShouldBe(["motiv-admin"]);
+    }
+
     private static ClaimsPrincipal PrincipalWithRealmAccess(string realmAccessJson)
     {
         var identity = new ClaimsIdentity([new Claim("realm_access", realmAccessJson)], "test");
