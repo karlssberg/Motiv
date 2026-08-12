@@ -160,6 +160,18 @@ builder.Services.AddMotivRules(registry, options)
     .AddRule<FraudScreeningRule>()
     .AddRule<LoyaltyDiscountRule>();
 
+// Seam: break-glass. AddGovernance already registered BreakGlass.Off; a host that wants the 3am
+// escape overrides it here with AddSingleton, which — DI being last-registration-wins — beats the
+// TryAddSingleton above. Deploy-time only: this reads appsettings/environment, never an in-app
+// toggle, so turning it on requires ops access to the host's configuration, not a grant.
+var breakGlassEnabled = builder.Configuration.GetValue<bool>("Motiv:BreakGlass:Enabled");
+if (breakGlassEnabled)
+{
+    var breakGlassExpiresUtc = builder.Configuration.GetValue<DateTimeOffset?>("Motiv:BreakGlass:ExpiresUtc");
+    builder.Services.AddSingleton(new BreakGlass(true, breakGlassExpiresUtc));
+    builder.Services.AddHostedService<BreakGlassWarningService>();
+}
+
 var app = builder.Build();
 
 // index.html references content-hashed bundles, so a stale cached shell points at assets that no

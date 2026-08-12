@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Motiv.Serialization.AspNetCore;
 
@@ -127,14 +128,24 @@ internal static class MotivGovernanceEndpoints
             if (RefuseUnlessGrantedEverywhere(http, json, GrantVerb.Publish, TargetNames(change)) is { } refusal)
                 return refusal;
 
-            // Break-glass is Task 21's; until it lands nothing bypasses the gate.
-            var result = changes.Publish(id, breakGlassActive: false);
-            return result is { Outcome: ChangeRequestOutcome.Ok, Change: { } published }
-                ? Results.Json(
-                    new ChangeRequestPublishResponse(
-                        ToResponse(published), result.PublishedVersions ?? new Dictionary<string, int>()),
-                    json)
-                : ToFailure(result, json, "The change request cannot be published once it is closed.");
+            var breakGlassActive = ResolveBreakGlass(http).Active(DateTimeOffset.UtcNow);
+            var result = changes.Publish(id, breakGlassActive);
+
+            if (result is not { Outcome: ChangeRequestOutcome.Ok, Change: { } published })
+                return ToFailure(result, json, "The change request cannot be published once it is closed.");
+
+            // The durable stamp lives on the change request itself (PublishedUnderBreakGlass, already
+            // in the response below); this is the loud, out-of-band echo of it.
+            if (published.PublishedUnderBreakGlass)
+                AuditLog(http).LogWarning(
+                    "MOTIV-AUDIT break-glass publish: change request {ChangeRequestId} by {Author} " +
+                    "published with the approval gate DISABLED.",
+                    published.Id, PrincipalIdentity.Subject(http.User));
+
+            return Results.Json(
+                new ChangeRequestPublishResponse(
+                    ToResponse(published), result.PublishedVersions ?? new Dictionary<string, int>()),
+                json);
         });
     }
 
@@ -234,13 +245,20 @@ internal static class MotivGovernanceEndpoints
         int baseVersion,
         Func<RuleUpdateResult, IResult> written)
     {
+        var author = PrincipalIdentity.Subject(http.User);
+        var breakGlassActive = ResolveBreakGlass(http).Active(DateTimeOffset.UtcNow);
         var result = governance.DirectWrite(
-            PrincipalIdentity.Subject(http.User), operation,
-            new NewProposedChange(ChangeTargetKind.Rule, name, documentJson, baseVersion, null));
+            author, operation,
+            new NewProposedChange(ChangeTargetKind.Rule, name, documentJson, baseVersion, null),
+            breakGlassActive);
 
-        return result.Blocked is { } decision
-            ? RefusedDirectWrite(decision, json)
-            : written(result.Rule!);
+        if (result.Blocked is { } decision)
+            return RefusedDirectWrite(decision, json);
+
+        if (result.PublishedUnderBreakGlass)
+            LogDirectWriteAudit(http, "rule", name, author);
+
+        return written(result.Rule!);
     }
 
     /// <summary>
@@ -271,16 +289,46 @@ internal static class MotivGovernanceEndpoints
         string? description,
         Func<PropositionUpdateResult, IResult> written)
     {
+        var author = PrincipalIdentity.Subject(http.User);
+        var breakGlassActive = ResolveBreakGlass(http).Active(DateTimeOffset.UtcNow);
         var result = governance.DirectWrite(
-            PrincipalIdentity.Subject(http.User), operation,
+            author, operation,
             new NewProposedChange(
                 ChangeTargetKind.Proposition, name, documentJson, baseVersion, null,
-                modelTypeId, description));
+                modelTypeId, description),
+            breakGlassActive);
 
-        return result.Blocked is { } decision
-            ? RefusedDirectWrite(decision, json)
-            : written(result.Proposition!);
+        if (result.Blocked is { } decision)
+            return RefusedDirectWrite(decision, json);
+
+        if (result.PublishedUnderBreakGlass)
+            LogDirectWriteAudit(http, "proposition", name, author);
+
+        return written(result.Proposition!);
     }
+
+    /// <summary>
+    /// The break-glass window in effect for this request. Resolved from DI rather than threaded
+    /// through as a parameter, since every caller already carries the <see cref="HttpContext"/> this
+    /// needs. Falls back to <see cref="BreakGlass.Off"/> when governance was enabled without a
+    /// registration reaching this far — defensive only; <c>AddGovernance</c> always registers one.
+    /// </summary>
+    private static BreakGlass ResolveBreakGlass(HttpContext http) =>
+        http.RequestServices.GetService<BreakGlass>() ?? BreakGlass.Off;
+
+    /// <summary>
+    /// The fixed category every break-glass bypass is logged through, so an operator can filter for
+    /// it independently of which route emitted the line.
+    /// </summary>
+    private static ILogger AuditLog(HttpContext http) =>
+        http.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("Motiv.Governance.Audit");
+
+    /// <summary>The audit marker for a direct write that landed with the gate bypassed.</summary>
+    private static void LogDirectWriteAudit(HttpContext http, string kind, string name, string author) =>
+        AuditLog(http).LogWarning(
+            "MOTIV-AUDIT break-glass publish: direct write of {Kind} '{Name}' by {Author} " +
+            "published with the approval gate DISABLED.",
+            kind, name, author);
 
     /// <summary>The gate's refusal as a 403, in the gate's own words.</summary>
     private static IResult Refused(GateDecision decision, JsonSerializerOptions json) =>

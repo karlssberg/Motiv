@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Motiv.Serialization.AspNetCore;
 
@@ -108,6 +109,12 @@ public sealed class MotivRulesBuilder
             provider.GetRequiredService<ApprovalGate>(),
             provider.GetRequiredService<RuleSet>(),
             provider.GetService<PropositionSet>()));
+
+        // TryAdd, not Add: a host that wants break-glass registers its own BreakGlass *after*
+        // AddGovernance (AddSingleton overrides TryAdd), so this only fills the slot when nobody
+        // else has. The default is off, so enabling governance changes no publish behaviour until
+        // a host deliberately opts in.
+        Services.TryAddSingleton(BreakGlass.Off);
         return this;
     }
 }

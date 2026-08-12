@@ -65,8 +65,15 @@ internal enum DirectWriteOperation
 /// <param name="Blocked">The gate's refusal, when it refused; otherwise null.</param>
 /// <param name="Rule">The rule write's outcome, for the two rule operations.</param>
 /// <param name="Proposition">The proposition write's outcome, for the three proposition operations.</param>
+/// <param name="PublishedUnderBreakGlass">
+/// Whether this write landed with the gate bypassed by an active break-glass window. A direct write
+/// mints no <see cref="ChangeRequest"/>, so there is nothing to stamp — this flag is the only record
+/// the caller has that the gate was skipped, and is what tells the endpoint to emit the audit log.
+/// Always false when <see cref="Blocked"/> is non-null.
+/// </param>
 internal sealed record DirectWriteResult(
-    GateDecision? Blocked, RuleUpdateResult? Rule, PropositionUpdateResult? Proposition);
+    GateDecision? Blocked, RuleUpdateResult? Rule, PropositionUpdateResult? Proposition,
+    bool PublishedUnderBreakGlass);
 
 /// <summary>What happened to a <see cref="ChangeRequestSet"/> operation.</summary>
 public enum ChangeRequestOutcome
@@ -379,10 +386,16 @@ public sealed class ChangeRequestSet
     /// <param name="author">Who is performing the write.</param>
     /// <param name="operation">Which ungoverned write this stands in for.</param>
     /// <param name="change">The edit, whose <see cref="NewProposedChange.Kind"/> must match <paramref name="operation"/>.</param>
+    /// <param name="breakGlassActive">
+    /// Whether an active break-glass window is bypassing the gate. When true the gate is not
+    /// evaluated at all — the write always proceeds — and the result's
+    /// <see cref="DirectWriteResult.PublishedUnderBreakGlass"/> is set so the caller can audit-log it.
+    /// </param>
     /// <returns>The gate's refusal, or the underlying write's own outcome.</returns>
     /// <exception cref="ArgumentException"><paramref name="change"/>'s kind contradicts <paramref name="operation"/>.</exception>
     /// <exception cref="InvalidOperationException">A proposition write was asked of a host with no <see cref="PropositionSet"/>.</exception>
-    internal DirectWriteResult DirectWrite(string author, DirectWriteOperation operation, NewProposedChange change)
+    internal DirectWriteResult DirectWrite(
+        string author, DirectWriteOperation operation, NewProposedChange change, bool breakGlassActive = false)
     {
         if (change is null) throw new ArgumentNullException(nameof(change));
 
@@ -406,9 +419,12 @@ public sealed class ChangeRequestSet
                 $"direct {operation} of {kind.ToString().ToLowerInvariant()} '{change.Name}'",
                 [proposed]);
 
-            var decision = _gate.Evaluate(transient);
-            if (!decision.MayPublish)
-                return new DirectWriteResult(decision, null, null);
+            if (!breakGlassActive)
+            {
+                var decision = _gate.Evaluate(transient);
+                if (!decision.MayPublish)
+                    return new DirectWriteResult(decision, null, null, false);
+            }
 
             return operation switch
             {
@@ -425,9 +441,9 @@ public sealed class ChangeRequestSet
             };
         });
 
-        static DirectWriteResult OfRule(RuleUpdateResult result) => new(null, result, null);
+        DirectWriteResult OfRule(RuleUpdateResult result) => new(null, result, null, breakGlassActive);
 
-        static DirectWriteResult OfProposition(PropositionUpdateResult result) => new(null, null, result);
+        DirectWriteResult OfProposition(PropositionUpdateResult result) => new(null, null, result, breakGlassActive);
     }
 
     private static ChangeTargetKind KindOf(DirectWriteOperation operation) =>
