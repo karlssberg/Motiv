@@ -8,3 +8,29 @@ services:
     environment:
       Motiv__DevIdentity__Enabled: "true"
       Motiv__DevIdentity__AllowInProduction: "true"  # demo container only — never copy to a real deployment
+
+  # Opt-in OIDC evidence stack — `docker compose --profile auth up`. Leaves the default `demo`
+  # service (dev identity, zero config) untouched; this is a second, independent app instance
+  # wired to a real Keycloak IdP instead.
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    profiles: ["auth"]
+    command: start-dev --import-realm --http-port 8081
+    ports: ["8081:8081"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    volumes:
+      - ./keycloak/motiv-realm.json:/opt/keycloak/data/import/motiv-realm.json:ro
+
+  demo-auth:
+    profiles: ["auth"]
+    build:
+      context: .
+      dockerfile: src/examples/Motiv.RulesEngine.Sample/Dockerfile
+    ports: ["5101:5100"]
+    environment:
+      Motiv__Oidc__Authority: "http://keycloak:8081/realms/motiv"
+      Motiv__Oidc__Audience: "motiv-demo"
+      Motiv__Grants__Source: "claims"
+    depends_on: [keycloak]

@@ -110,6 +110,19 @@ else
         {
             o.Authority = oidcAuthority;
             o.Audience = builder.Configuration["Motiv:Oidc:Audience"];
+            o.Events = new JwtBearerEvents
+            {
+                OnTokenValidated = context =>
+                {
+                    // Keycloak nests realm roles under realm_access.roles; flatten them into role
+                    // claims so the claims→prefix mapping (and ClaimTypes.Role consumers) see them.
+                    if (context.Principal is { } principal)
+                        KeycloakClaims.FlattenRealmRoles(principal);
+                    return Task.CompletedTask;
+                }
+            };
+            // Containers talk to Keycloak over http — dev/demo only.
+            o.RequireHttpsMetadata = false;
         });
 
     // Seam: grant source. "app" (or unset) is the default — a mutable, file-backed store the

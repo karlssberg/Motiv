@@ -1,0 +1,78 @@
+{
+  "realm": "motiv",
+  "enabled": true,
+  "sslRequired": "none",
+  "roles": {
+    "realm": [
+      { "name": "motiv-pricing-author", "description": "May author pricing propositions" },
+      { "name": "motiv-pricing-publisher", "description": "May publish pricing propositions" },
+      { "name": "motiv-admin", "description": "Administers grants and the governance gate" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "motiv-demo",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "implicitFlowEnabled": false,
+      "redirectUris": ["http://localhost:5101/*"],
+      "webOrigins": ["http://localhost:5101"],
+      "defaultClientScopes": ["web-origins", "profile", "roles", "email"],
+      "protocolMappers": [
+        {
+          "name": "motiv-demo-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "motiv-demo",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "alice-author",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "password", "temporary": false }
+      ],
+      "realmRoles": ["motiv-pricing-author"]
+    },
+    {
+      "username": "paula-publisher",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "password", "temporary": false }
+      ],
+      "realmRoles": ["motiv-pricing-publisher"]
+    },
+    {
+      "username": "petra-publisher",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "password", "temporary": false }
+      ],
+      "realmRoles": ["motiv-pricing-publisher"]
+    },
+    {
+      "username": "root-admin",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "password", "temporary": false }
+      ],
+      "realmRoles": ["motiv-admin"]
+    }
+  ]
+}
