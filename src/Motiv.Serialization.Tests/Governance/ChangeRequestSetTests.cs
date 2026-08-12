@@ -33,6 +33,12 @@ public class ChangeRequestSetTests
     private sealed class AuthoredDefaultRule()
         : Rule<Customer, string>("can-checkout-authored", RuleDocuments.FromJson(CheckoutUsesEligible));
 
+    /// <summary>A policy rule whose default is a document, so reverting must re-bind — and can fail.</summary>
+    private sealed class AuthoredDefaultPolicyRule()
+        : PolicyRule<Customer, string>(
+            "can-checkout-authored-policy",
+            RuleDocuments.FromJson("""{ "rule": { "spec": "customer.eligible-policy" } }"""));
+
     private sealed record Host(
         ChangeRequestSet Changes,
         ApprovalGate Gate,
@@ -547,6 +553,60 @@ public class ChangeRequestSetTests
         // Nothing applied — the rule is still bound to a policy and still evaluates
         propositions.DocumentJsonOf("customer.eligible-policy")!
             .ShouldBe("""{ "rule": { "spec": "customer.is-active-policy" } }""");
+        rule.Evaluate(new Customer(IsActive: true, Age: 30)).Satisfied.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// A revert re-binds the rule's default document against the world the envelope has *already*
+    /// half-built, so it can fail for a reason that did not exist when the request was authored.
+    /// Recording the default's references without also binding it leaves that failure to the apply
+    /// phase, where earlier members are live and the only recourse is to throw.
+    /// </summary>
+    [Fact]
+    public void Should_refuse_a_revert_whose_default_stops_binding_against_the_envelopes_own_edit()
+    {
+        // Arrange — a policy rule whose default document resolves through an authored proposition
+        var registry = new SpecRegistry()
+            .Register("customer.is-active-policy", IsActivePolicy)
+            .Register("customer.composed", ComposedNonPolicy);
+        var scope = new BindingScope(registry);
+        var propositions = new PropositionSet(scope, new InMemoryPropositionStore()).AddModel<Customer>("customer");
+        propositions.Create("customer.eligible-policy", "customer",
+            """{ "rule": { "spec": "customer.is-active-policy" } }""", null)
+            .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
+
+        var rule = new AuthoredDefaultPolicyRule();
+        var rules = new RuleSet(scope).Add(rule);
+
+        // Move the rule off its default, so it is not a live dependent of the proposition and the
+        // phase-A closure check cannot be what catches this.
+        rules.Update("can-checkout-authored-policy",
+            """{ "rule": { "spec": "customer.is-active-policy" } }""", 1)
+            .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
+        var changes = new ChangeRequestSet(new ApprovalGate(), rules, propositions);
+
+        var created = changes.Create("alice", "a note",
+        [
+            new(ChangeTargetKind.Proposition, "customer.eligible-policy",
+                """{ "rule": { "spec": "customer.composed" } }""",
+                BaseVersion: 1, RollbackOfVersion: null),
+            new(ChangeTargetKind.Rule, "can-checkout-authored-policy", null,
+                BaseVersion: 2, RollbackOfVersion: null)
+        ]);
+
+        // Act — the revert's default would now resolve to a non-policy spec
+        var published = changes.Publish(created.Change!.Id, breakGlassActive: false);
+
+        // Assert — a value, not an exception
+        published.Outcome.ShouldBe(ChangeRequestOutcome.Invalid);
+        published.FailedTarget.ShouldBe(
+            new ChangeTarget(ChangeTargetKind.Rule, "can-checkout-authored-policy"));
+        published.Errors.ShouldContain(error => error.Code == RuleErrorCode.PolicyRequired);
+
+        // Nothing applied
+        propositions.DocumentJsonOf("customer.eligible-policy")!
+            .ShouldBe("""{ "rule": { "spec": "customer.is-active-policy" } }""");
+        rules.FindEntry("can-checkout-authored-policy")!.Version.ShouldBe(2);
         rule.Evaluate(new Customer(IsActive: true, Age: 30)).Satisfied.ShouldBeTrue();
     }
 

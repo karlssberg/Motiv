@@ -218,6 +218,30 @@ public sealed class RuleSet
         Find(name) is { } rule ? ReferencesOf(rule.Default.DocumentJson) : [];
 
     /// <summary>
+    /// Binds the document a revert would republish against <paramref name="source"/> without
+    /// publishing — the counterpart of <see cref="ValidateCore"/> for the deletion arm of a governed
+    /// publish. A revert is not a return to something known-good: <see cref="RuleBase.TryRevert"/>
+    /// re-binds the default against whatever the world looks like now, and a proposition edit landing
+    /// earlier in the same envelope can be exactly what stops it binding.
+    /// </summary>
+    /// <remarks>
+    /// A compiled default is skipped rather than checked. It resolves no names and was type-checked
+    /// at construction, so <see cref="RuleBase.TryRevert"/> cannot fail on it.
+    /// </remarks>
+    /// <param name="name">The rule name.</param>
+    /// <param name="source">The source names resolve against — live, or prospective.</param>
+    /// <returns>Why the default would not bind, or empty when it would.</returns>
+    internal IReadOnlyList<RuleError> ValidateDefaultCore(string name, ISpecSource source)
+    {
+        if (Find(name) is not { Default.DocumentJson: { } documentJson } rule)
+            return [];
+
+        var errors = new List<RuleError>();
+        rule.ValidateDocument(new RuleSerializer(source, _options), documentJson, errors);
+        return errors;
+    }
+
+    /// <summary>
     /// Looks up a rule and applies a publish operation to it — the shared shape behind
     /// <see cref="UpdateCore"/> and <see cref="RevertCore"/>: find-or-not-found, publish, then
     /// re-track the rule's graph edges whenever the publish actually took. Assumes the scope lock

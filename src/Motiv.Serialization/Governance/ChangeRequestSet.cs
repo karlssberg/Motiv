@@ -392,6 +392,18 @@ public sealed class ChangeRequestSet
         /// entries publishes cleanly. Phase C is deliberately not dependency-sorted; the sort would
         /// be new machinery to paper over an authoring order that the caller can simply reverse.
         /// </para>
+        /// <para>
+        /// A second, sharper limitation with the same shape: phase A prepares each dependent closure
+        /// against the dependents' <em>live</em> documents, because that is what
+        /// <c>PublishWithCascade</c> does at apply time. So an envelope that changes a proposition
+        /// <em>and</em> edits the dependent rule to accommodate the change is refused, naming the
+        /// very rule the envelope repairs — the rule is checked as it stands today, not as the
+        /// envelope would leave it. Validation and apply agree, so nothing is applied and the
+        /// refusal is safe; but the coordinated repair has to be split into two change requests, the
+        /// rule's first. Closing this would mean teaching <c>PrepareClosure</c> to substitute the
+        /// envelope's pending documents for the live ones, which is a change to the cascade engine
+        /// itself rather than to this validator.
+        /// </para>
         /// </remarks>
         /// <returns>The first failure found, or null when every edit would apply.</returns>
         private static ChangeRequestResult? Validate(
@@ -458,6 +470,13 @@ public sealed class ChangeRequestSet
 
                 if (proposed.ProposedDocumentJson is null)
                 {
+                    // A revert re-binds the default against the world phase A just left, so it is
+                    // not a return to something known-good: the proposition edit above may be
+                    // exactly what stops the default binding.
+                    var defaultErrors = rules.ValidateDefaultCore(name, prospectiveSource);
+                    if (defaultErrors.Count > 0)
+                        return Failed(ChangeRequestOutcome.Invalid, proposed.Target, defaultErrors);
+
                     // Not necessarily empty: a rule declared with a document default re-acquires
                     // that document's references when it reverts. Only a compiled default is a
                     // genuine departure from the graph.
@@ -550,13 +569,25 @@ public sealed class ChangeRequestSet
         /// keeps one error channel, and each is already prefixed with the dependent's name.
         /// </summary>
         private static ChangeRequestResult BrokenDependents(
-            ChangeTarget target, IReadOnlyList<BrokenDependent> broken) =>
-            Failed(ChangeRequestOutcome.Invalid, target,
+            ChangeTarget target, IReadOnlyList<BrokenDependent> broken)
+        {
+            List<RuleError> errors =
             [
                 .. broken.SelectMany(dependent => dependent.Errors.Select(error =>
                     new RuleError(error.Path, error.Code,
                         $"{dependent.Kind} '{dependent.Name}' would stop binding: {error.Message}")))
-            ]);
+            ];
+
+            // A dependent that failed to prepare without recording an error of its own would
+            // otherwise flatten to nothing, turning a real refusal into an empty one. Cheap
+            // insurance: name the dependents even when they will not say why.
+            if (errors.Count == 0)
+                errors.Add(new RuleError("$", RuleErrorCode.InvalidNode,
+                    $"publishing '{target.Name}' would stop these binding: " +
+                    string.Join(", ", broken.Select(dependent => $"{dependent.Kind} '{dependent.Name}'"))));
+
+            return Failed(ChangeRequestOutcome.Invalid, target, errors);
+        }
 
         /// <summary>
         /// Applies the validated envelope in the one order that lets its members reference each
