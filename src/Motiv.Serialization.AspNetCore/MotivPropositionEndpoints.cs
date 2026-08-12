@@ -14,7 +14,10 @@ namespace Motiv.Serialization.AspNetCore;
 internal static class MotivPropositionEndpoints
 {
     internal static void MapPropositionEndpoints(
-        RouteGroupBuilder group, PropositionSet propositions, JsonSerializerOptions json)
+        RouteGroupBuilder group,
+        PropositionSet propositions,
+        ChangeRequestSet? governance,
+        JsonSerializerOptions json)
     {
         group.MapGet("/propositions", () =>
             Results.Json(propositions.Propositions
@@ -50,10 +53,18 @@ internal static class MotivPropositionEndpoints
                 return Results.Json(
                     new ErrorResponse("The request must include a modelType."), json, statusCode: 400);
 
-            var result = propositions.Create(
-                request.Name, request.ModelType, request.Document.GetRawText(), request.Description);
+            var documentJson = request.Document.GetRawText();
 
-            return ToResult(result, request.Name, json);
+            // Grants first, exactly as before; then the governed publish, which answers only when it
+            // published or the gate refused. Anything else falls through to the ungoverned write,
+            // which refuses in the terms this endpoint has always refused in — a name-taken 409, a
+            // cascade's broken dependents — that a change request cannot restate.
+            return Governed(
+                       governance, http, json, request.Name, documentJson,
+                       baseVersion: 0, request.ModelType, created: true)
+                   ?? ToResult(
+                       propositions.Create(request.Name, request.ModelType, documentJson, request.Description),
+                       request.Name, json);
         });
 
         group.MapPut("/propositions/{name}", (string name, PropositionPutRequest request, HttpContext http) =>
@@ -66,7 +77,12 @@ internal static class MotivPropositionEndpoints
             if (request.BaseVersion <= 0)
                 return EndpointResponses.NonPositiveBaseVersion(json);
 
-            return ToResult(propositions.Update(name, request.Document.GetRawText(), request.BaseVersion), name, json);
+            var documentJson = request.Document.GetRawText();
+
+            return Governed(
+                       governance, http, json, name, documentJson,
+                       request.BaseVersion, modelTypeId: null, created: false)
+                   ?? ToResult(propositions.Update(name, documentJson, request.BaseVersion), name, json);
         });
 
         group.MapDelete("/propositions/{name}", (string name, int baseVersion, HttpContext http) =>
@@ -74,9 +90,13 @@ internal static class MotivPropositionEndpoints
             if (GrantGate.Refuse(http, GrantVerb.Publish, name, json) is { } refusal)
                 return refusal;
 
-            return baseVersion <= 0
-                ? EndpointResponses.NonPositiveBaseVersion(json)
-                : ToResult(propositions.Withdraw(name, baseVersion), name, json);
+            if (baseVersion <= 0)
+                return EndpointResponses.NonPositiveBaseVersion(json);
+
+            return Governed(
+                       governance, http, json, name, documentJson: null,
+                       baseVersion, modelTypeId: null, created: false)
+                   ?? ToResult(propositions.Withdraw(name, baseVersion), name, json);
         });
 
         group.MapGet("/propositions/{name}/dependents", (string name) =>
@@ -86,6 +106,29 @@ internal static class MotivPropositionEndpoints
                     [.. propositions.Dependents(name)
                         .Select(dependent => new DependentEntry(dependent.Name, dependent.Kind))]), json));
     }
+
+    /// <summary>
+    /// The proposition surface's half of the no-bypass wiring: publishes the write as a one-change
+    /// request through the approval gate, or returns null to let the caller write directly.
+    /// </summary>
+    /// <param name="created">
+    /// Whether a successful publish is a creation, which alone answers 201 — the change request
+    /// reports a version, not which of the three writes produced it.
+    /// </param>
+    private static IResult? Governed(
+        ChangeRequestSet? governance,
+        HttpContext http,
+        JsonSerializerOptions json,
+        string name,
+        string? documentJson,
+        int baseVersion,
+        string? modelTypeId,
+        bool created) =>
+        MotivGovernanceEndpoints.PublishDirectWrite(
+            governance, http, json, ChangeTargetKind.Proposition, name, documentJson, baseVersion,
+            modelTypeId,
+            version => Results.Json(
+                new PropositionSaveResponse(version), json, statusCode: created ? 201 : 200));
 
     /// <summary>
     /// The HTTP response for one attempted write. A single mapping serves create, update and

@@ -146,8 +146,16 @@ var propositionsPath = builder.Configuration["Propositions:Path"]
 // Seam: live rules. Each AddRule enrolls a sealed rule class as a DI singleton and in the
 // RuleSet behind GET/PUT/DELETE /api/rules/rules — the app executes the same instances the
 // UI hot-swaps, with optimistic-concurrency protection on writes.
+// Seam: governance. AddGovernance mounts the change-request surface and routes every direct write
+// through the approval gate, so there is no way around the ceremony once one is configured. The
+// gate's default is permissive — access is still locked by grants; only the ceremony is opt-in — so
+// with no gate.json on disk the app behaves exactly as it did before governance existed.
+var gatePath = builder.Configuration["Motiv:Gate:Path"]
+    ?? Path.Combine(builder.Environment.ContentRootPath, "gate.json");
+
 builder.Services.AddMotivRules(registry, options)
     .AddPropositions(new JsonFilePropositionStore(propositionsPath))
+    .AddGovernance(new JsonFileGateStore(gatePath))
     .AddRule<CanCheckoutRule>()
     .AddRule<FraudScreeningRule>()
     .AddRule<LoyaltyDiscountRule>();

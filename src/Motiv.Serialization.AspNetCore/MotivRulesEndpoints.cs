@@ -116,13 +116,46 @@ public static class MotivRulesEndpoints
             }
         });
 
+        var governance = ResolveGovernance(endpoints, rules);
+        if (governance is not null)
+            MotivGovernanceEndpoints.MapChangeRequestEndpoints(group, governance, json);
+
         if (rules is not null)
-            MapRuleEndpoints(group, rules, options, json);
+            MapRuleEndpoints(group, rules, governance, options, json);
 
         if (propositions is not null)
-            MotivPropositionEndpoints.MapPropositionEndpoints(group, propositions, json);
+            MotivPropositionEndpoints.MapPropositionEndpoints(group, propositions, governance, json);
 
         return endpoints;
+    }
+
+    /// <summary>
+    /// The registered governance workflow, or null when <see cref="MotivRulesBuilder.AddGovernance"/>
+    /// was never called.
+    /// </summary>
+    /// <remarks>
+    /// A governance set publishes into the <see cref="RuleSet"/> it was constructed with, which is
+    /// the one in DI. Mounting a *different* RuleSet alongside it would leave the endpoints reading
+    /// one set while governed writes published to another — a silent, security-relevant divergence,
+    /// so it is refused at startup rather than discovered in production.
+    /// </remarks>
+    private static ChangeRequestSet? ResolveGovernance(IEndpointRouteBuilder endpoints, RuleSet? rules)
+    {
+        if (endpoints.ServiceProvider.GetService<ChangeRequestSet>() is not { } governance)
+            return null;
+
+        if (rules is not null
+            && endpoints.ServiceProvider.GetService<RuleSet>() is { } registered
+            && !ReferenceEquals(registered, rules))
+        {
+            throw new InvalidOperationException(
+                "AddGovernance() registered a ChangeRequestSet over the RuleSet in the service " +
+                "provider, but MapMotivRules was handed a different RuleSet instance. Governed " +
+                "writes would publish into the registered set while these endpoints read the one " +
+                "passed here. Use the MapMotivRules(basePath) overload, or pass the registered RuleSet.");
+        }
+
+        return governance;
     }
 
     /// <summary>
@@ -234,7 +267,12 @@ public static class MotivRulesEndpoints
     private static bool Resolves(PropositionEntry entry) =>
         entry.Quarantine.Count == 0 || entry.Origin != PropositionOrigin.Authored;
 
-    private static void MapRuleEndpoints(RouteGroupBuilder group, RuleSet rules, MotivRulesOptions options, JsonSerializerOptions json)
+    private static void MapRuleEndpoints(
+        RouteGroupBuilder group,
+        RuleSet rules,
+        ChangeRequestSet? governance,
+        MotivRulesOptions options,
+        JsonSerializerOptions json)
     {
         group.MapGet("/rules", () =>
             Results.Json(rules.Rules
@@ -269,7 +307,14 @@ public static class MotivRulesEndpoints
             if (request.BaseVersion <= 0)
                 return EndpointResponses.NonPositiveBaseVersion(json);
 
-            return ToResult(rules.Update(name, request.Document.GetRawText(), request.BaseVersion), name, json);
+            var documentJson = request.Document.GetRawText();
+
+            // Grants first, exactly as before — the gate governs *what* may be published, not *who*
+            // may ask. Then the governed publish, which answers only when it published or the gate
+            // refused; anything else falls through to the ungoverned write below, which refuses in
+            // the terms this endpoint has always refused in.
+            return Governed(governance, http, json, ChangeTargetKind.Rule, name, documentJson, request.BaseVersion)
+                   ?? ToResult(rules.Update(name, documentJson, request.BaseVersion), name, json);
         });
 
         group.MapDelete("/rules/{name}", (string name, int baseVersion, HttpContext http) =>
@@ -277,11 +322,32 @@ public static class MotivRulesEndpoints
             if (GrantGate.Refuse(http, GrantVerb.Publish, name, json) is { } refusal)
                 return refusal;
 
-            return baseVersion <= 0
-                ? EndpointResponses.NonPositiveBaseVersion(json)
-                : ToResult(rules.Revert(name, baseVersion), name, json);
+            if (baseVersion <= 0)
+                return EndpointResponses.NonPositiveBaseVersion(json);
+
+            // A rule is never removed, only reverted to its default — which a change request
+            // expresses as a null document, the same shape a proposition withdrawal takes.
+            return Governed(governance, http, json, ChangeTargetKind.Rule, name, null, baseVersion)
+                   ?? ToResult(rules.Revert(name, baseVersion), name, json);
         });
     }
+
+    /// <summary>
+    /// The rule surface's half of the no-bypass wiring: publishes the write as a one-change request
+    /// through the approval gate, or returns null to let the caller write directly (governance is not
+    /// registered, or the governed publish refused for a reason this endpoint answers in its own terms).
+    /// </summary>
+    private static IResult? Governed(
+        ChangeRequestSet? governance,
+        HttpContext http,
+        JsonSerializerOptions json,
+        ChangeTargetKind kind,
+        string name,
+        string? documentJson,
+        int baseVersion) =>
+        MotivGovernanceEndpoints.PublishDirectWrite(
+            governance, http, json, kind, name, documentJson, baseVersion, modelTypeId: null,
+            version => Results.Json(new RulePutResponse(version), json));
 
     private static IResult ToResult(RuleUpdateResult outcome, string name, JsonSerializerOptions json) =>
         outcome.Outcome switch

@@ -34,3 +34,6 @@ node_modules/
 
 # Sample host state: the file-backed proposition store's data, not source.
 src/examples/Motiv.RulesEngine.Sample/propositions.json
+
+# Sample host state: the active approval-gate document, written by the gate store at runtime.
+src/examples/Motiv.RulesEngine.Sample/gate.json

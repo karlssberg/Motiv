@@ -77,6 +77,39 @@ public sealed class MotivRulesBuilder
         });
         return this;
     }
+
+    /// <summary>
+    /// Enables the governance workflow: an <see cref="ApprovalGate"/> and a
+    /// <see cref="ChangeRequestSet"/> over the <see cref="RuleSet"/> and, when
+    /// <see cref="AddPropositions"/> was also called, the <see cref="PropositionSet"/>. Mounting the
+    /// endpoints then adds the <c>change-requests</c> routes and — the point of the whole exercise —
+    /// routes every direct write through the same gate, so the ungoverned surface cannot be used to
+    /// walk around the ceremony.
+    /// </summary>
+    /// <remarks>
+    /// The gate's default is permissive, so enabling governance changes no response until a gate
+    /// document is installed. Both singletons are built from factories, so this may be called before
+    /// or after <see cref="AddPropositions"/> — the set that exists when the workflow is first
+    /// resolved is the one it governs.
+    /// </remarks>
+    /// <param name="gateStore">Where the active gate document persists, or null to run without persistence.</param>
+    /// <returns>This builder, to allow chained registration.</returns>
+    /// <exception cref="InvalidOperationException">Governance is already enabled. DI is last-wins,
+    /// so a second call would silently discard the first store rather than layering onto it.</exception>
+    public MotivRulesBuilder AddGovernance(IGateStore? gateStore = null)
+    {
+        if (Services.Any(descriptor => descriptor.ServiceType == typeof(ChangeRequestSet)))
+            throw new InvalidOperationException(
+                $"{nameof(AddGovernance)} has already been called. Call it once — a second call " +
+                "would silently replace the first gate store, as DI registration is last-wins.");
+
+        Services.AddSingleton(_ => new ApprovalGate(gateStore));
+        Services.AddSingleton(provider => new ChangeRequestSet(
+            provider.GetRequiredService<ApprovalGate>(),
+            provider.GetRequiredService<RuleSet>(),
+            provider.GetService<PropositionSet>()));
+        return this;
+    }
 }
 
 /// <summary>DI registration for the Motiv rules endpoints and live rules.</summary>
