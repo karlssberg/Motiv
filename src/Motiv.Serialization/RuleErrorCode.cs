@@ -58,5 +58,11 @@ public enum RuleErrorCode
     InvalidSpecName,
 
     /// <summary>Publishing the document would create a reference cycle.</summary>
-    CycleDetected
+    CycleDetected,
+
+    /// <summary>
+    /// A gate document referenced a spec registered as asynchronous. The approval gate evaluates
+    /// change requests synchronously, so it can never bind to an async registry entry.
+    /// </summary>
+    GateMustBeSynchronous
 }

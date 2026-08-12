@@ -1,7 +1,9 @@
+using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Motiv.Serialization.AspNetCore;
 
@@ -135,6 +137,73 @@ internal static class MotivGovernanceEndpoints
                 : ToFailure(result, json, "The change request cannot be published once it is closed.");
         });
     }
+
+    /// <summary>
+    /// Maps <c>GET /gate</c>, <c>PUT /gate</c>, and <c>DELETE /gate</c>: inspecting, replacing, and
+    /// resetting the active approval-gate document.
+    /// </summary>
+    /// <remarks>
+    /// The gate never governs itself. Reconfiguring it is an <c>administer</c> act, checked by
+    /// <see cref="GrantGate.RefuseUnlessAdministrator"/> at the endpoint boundary — never a
+    /// <see cref="ChangeRequest"/> routed through the very gate being reconfigured. A gate that had
+    /// to approve its own replacement could not be locked down further than its current document
+    /// already allows, which defeats the purpose of tightening it.
+    /// </remarks>
+    /// <param name="group">The already-secured route group to map onto.</param>
+    /// <param name="gate">The approval gate these routes inspect and reconfigure.</param>
+    /// <param name="json">The serializer options every response on this surface is written with.</param>
+    internal static void MapGateEndpoints(RouteGroupBuilder group, ApprovalGate gate, JsonSerializerOptions json)
+    {
+        group.MapGet("/gate", () => Results.Json(ToGetResponse(gate.DocumentJson), json));
+
+        group.MapPut("/gate", (GatePutRequest request, HttpContext http) =>
+        {
+            if (GrantGate.RefuseUnlessAdministrator(http, json) is { } refusal)
+                return refusal;
+
+            if (request.Document.ValueKind == JsonValueKind.Undefined)
+                return EndpointResponses.MissingDocument(json);
+
+            var result = gate.SetGate(request.Document.GetRawText(), KnownRoles(http));
+
+            return result.Outcome switch
+            {
+                GateUpdateOutcome.Updated => Results.Json(ToGetResponse(gate.DocumentJson), json),
+                GateUpdateOutcome.Invalid =>
+                    Results.Json(new ValidationResponse(result.Errors), json, statusCode: 400),
+
+                // Not yet reachable — SetGate's lockout pre-check lands in a later task — but
+                // mapped now, from the shape SetGate already exposes for it, so that task needs no
+                // endpoint change: the 422 and its GateRefusalResponse body are settled here.
+                GateUpdateOutcome.WouldLockOut => Results.Json(
+                    new GateRefusalResponse(
+                        result.PreCheck!.Reason, result.PreCheck.Assertions, result.PreCheck.Justification),
+                    json, statusCode: 422),
+
+                _ => throw new UnreachableException($"Unhandled {nameof(GateUpdateOutcome)}: {result.Outcome}.")
+            };
+        });
+
+        group.MapDelete("/gate", (HttpContext http) =>
+        {
+            if (GrantGate.RefuseUnlessAdministrator(http, json) is { } refusal)
+                return refusal;
+
+            gate.SetGate(null, KnownRoles(http));
+            return Results.NoContent();
+        });
+    }
+
+    private static GateGetResponse ToGetResponse(string? documentJson) =>
+        new(EndpointResponses.DocumentElement(documentJson), documentJson is null);
+
+    /// <summary>
+    /// The role universe <see cref="ApprovalGate.SetGate"/> reserves for its lockout pre-check, or
+    /// empty when no <see cref="IGrantSource"/> is registered — grants (and the roles they know
+    /// about) are opt-in, same as everywhere else on this surface.
+    /// </summary>
+    private static IReadOnlyCollection<string> KnownRoles(HttpContext http) =>
+        http.RequestServices.GetService<IGrantSource>()?.KnownRoles ?? [];
 
     /// <summary>
     /// Runs one direct rule write — a PUT or a DELETE — through the approval gate, and, when the

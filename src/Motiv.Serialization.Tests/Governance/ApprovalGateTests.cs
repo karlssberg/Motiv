@@ -192,4 +192,47 @@ public class ApprovalGateTests
         exception.Message.ShouldContain("IGateStore");
         exception.Message.ShouldContain("invalid JSON");
     }
+
+    /// <summary>
+    /// The built-in <see cref="GateSpecs"/> catalogue is all synchronous, so the only way to exercise
+    /// the gate's synchronous-only guard is a registry that carries an async entry the built-in
+    /// catalogue never has — hence the internal test-only constructor overload.
+    /// </summary>
+    private static SpecRegistry RegistryWithAnAsyncEntry() =>
+        GateSpecs.CreateRegistry().Register(
+            "change.async-noop",
+            Spec.BuildAsync((ChangeRequest c) => new ValueTask<bool>(true))
+                .WhenTrue("async noop true")
+                .WhenFalse("async noop false")
+                .Create());
+
+    [Fact]
+    public void Should_reject_a_gate_document_that_references_an_async_registry_entry()
+    {
+        // Arrange — a registry extended with a throwaway async spec, and a document referencing it
+        var gate = new ApprovalGate(store: null, RegistryWithAnAsyncEntry());
+
+        // Act
+        var updateResult = gate.SetGate("""{"rule": {"spec": "change.async-noop"}}""", []);
+
+        // Assert — refused with the gate-specific code, not the binder's generic one, and the gate
+        // stays at its permissive default
+        updateResult.Outcome.ShouldBe(GateUpdateOutcome.Invalid);
+        updateResult.Errors.ShouldContain(error => error.Code == RuleErrorCode.GateMustBeSynchronous);
+        gate.DocumentJson.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Should_accept_a_synchronous_document_through_a_registry_that_also_carries_an_async_entry()
+    {
+        // Arrange — the same extended registry, but a document that never references the async entry
+        var gate = new ApprovalGate(store: null, RegistryWithAnAsyncEntry());
+
+        // Act
+        var updateResult = gate.SetGate(MakerCheckerDocument, []);
+
+        // Assert — the guard only refuses documents that actually reference an async entry
+        updateResult.Outcome.ShouldBe(GateUpdateOutcome.Updated);
+        gate.DocumentJson!.ShouldBe(MakerCheckerDocument);
+    }
 }

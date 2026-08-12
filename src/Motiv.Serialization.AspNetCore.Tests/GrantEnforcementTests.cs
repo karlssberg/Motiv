@@ -88,7 +88,12 @@ public class GrantEnforcementTests
         Spec.Build((Customer c) => c.IsActive).WhenTrue("ok").WhenFalse("no").Create());
 
     /// <summary>A fixed set of grants for one principal, reused across later tasks' tests.</summary>
-    internal sealed class FakeGrantSource(IReadOnlyList<NamespaceGrant> grants) : IGrantSource
+    /// <param name="isAdministrator">
+    /// Whether every principal is reported as an administrator, for tests of the administer-gated
+    /// surfaces (e.g. gate configuration).
+    /// </param>
+    internal sealed class FakeGrantSource(IReadOnlyList<NamespaceGrant> grants, bool isAdministrator = false)
+        : IGrantSource
     {
         /// <inheritdoc />
         public bool SupportsAdministration => false;
@@ -100,6 +105,6 @@ public class GrantEnforcementTests
         public IReadOnlyList<NamespaceGrant> GrantsFor(ClaimsPrincipal principal) => grants;
 
         /// <inheritdoc />
-        public bool IsAdministrator(ClaimsPrincipal principal) => false;
+        public bool IsAdministrator(ClaimsPrincipal principal) => isAdministrator;
     }
 }

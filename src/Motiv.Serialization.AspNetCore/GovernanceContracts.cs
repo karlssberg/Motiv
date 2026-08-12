@@ -101,6 +101,21 @@ public sealed record ChangeRequestPublishResponse(
 public sealed record GateRefusalResponse(
     string Reason, IReadOnlyList<string> Assertions, string Justification);
 
+/// <summary>The active gate document, as reported by <c>GET /gate</c> and echoed back by <c>PUT /gate</c>.</summary>
+/// <param name="Document">The active gate document, or <c>null</c> at the permissive default.</param>
+/// <param name="PermissiveDefault">
+/// Whether the gate has no document configured — equivalent to <c>Document is null</c>, reported
+/// explicitly so a caller need not infer the gate's mode from the presence or absence of JSON.
+/// </param>
+public sealed record GateGetResponse(JsonElement? Document, bool PermissiveDefault);
+
+/// <summary>A request to replace the active gate document.</summary>
+/// <param name="Document">
+/// The gate document to activate. Must be present — <c>PUT /gate</c> has no reset-to-permissive
+/// spelling of its own; <c>DELETE /gate</c> is that route.
+/// </param>
+public sealed record GatePutRequest(JsonElement Document);
+
 /// <summary>A refused change-request operation.</summary>
 /// <param name="Error">A human-readable description of the refusal.</param>
 /// <param name="Errors">Why a proposed document was rejected; empty for other refusals.</param>

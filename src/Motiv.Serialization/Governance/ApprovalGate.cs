@@ -61,14 +61,18 @@ public sealed class ApprovalGate
     public const string NoGateConfiguredReason = "no approval gate is configured";
 
     /// <summary>
-    /// Shared across every <see cref="ApprovalGate"/> instance rather than held per-instance: the
-    /// gate registry (<see cref="GateSpecs.CreateRegistry"/>) is immutable and stateless, so one
-    /// serializer safely serves all of them. This deviates from an instance field purely to avoid
-    /// rebuilding the (immutable) registry on every construction.
+    /// Built once and shared by every <see cref="ApprovalGate"/> constructed with the public
+    /// constructor: the built-in gate registry (<see cref="GateSpecs.CreateRegistry"/>) is
+    /// immutable and stateless, so there is no benefit to rebuilding it per instance. Tests that
+    /// need a different registry (e.g. one carrying a throwaway async entry) use the internal
+    /// constructor overload instead, which takes its own registry rather than sharing this one.
     /// </summary>
-    private static readonly RuleSerializer Serializer = new(GateSpecs.CreateRegistry());
+    private static readonly SpecRegistry DefaultRegistry = GateSpecs.CreateRegistry();
 
     private readonly IGateStore? _store;
+    private readonly SpecRegistry _registry;
+    private readonly RuleSerializerOptions _parserOptions = new();
+    private readonly RuleSerializer _serializer;
     private readonly object _gate = new();
 
     private string? _documentJson;
@@ -87,9 +91,30 @@ public sealed class ApprovalGate
     /// break-glass at the infrastructure layer) is an operational act, not something this
     /// constructor can safely paper over.
     /// </exception>
-    public ApprovalGate(IGateStore? store = null)
+    public ApprovalGate(IGateStore? store = null) : this(store, DefaultRegistry)
+    {
+    }
+
+    /// <summary>
+    /// Creates the approval gate against a caller-supplied registry, rather than the shared
+    /// built-in <see cref="GateSpecs"/> catalogue. Exists so tests can prove the synchronous-only
+    /// guard against a registry carrying an async entry the built-in catalogue never has — the
+    /// public constructor has no way to express that, since it always binds the built-in registry.
+    /// </summary>
+    /// <param name="store">
+    /// The store to load the active gate document from and persist future updates to, or
+    /// <c>null</c> to run without persistence (always permissive).
+    /// </param>
+    /// <param name="registry">The registry gate documents resolve spec references against.</param>
+    /// <exception cref="InvalidOperationException">
+    /// <paramref name="store"/> holds a document that fails to validate or bind. See the public
+    /// constructor's remarks.
+    /// </exception>
+    internal ApprovalGate(IGateStore? store, SpecRegistry registry)
     {
         _store = store;
+        _registry = registry ?? throw new ArgumentNullException(nameof(registry));
+        _serializer = new RuleSerializer(_registry, _parserOptions);
 
         var loaded = store?.Load();
         if (loaded is null)
@@ -179,9 +204,36 @@ public sealed class ApprovalGate
         }
     }
 
-    private static SpecBase<ChangeRequest, string>? TryBind(string documentJson, List<RuleError> errors)
+    /// <summary>
+    /// Binds a candidate gate document, folding in the gate's own synchronous-only guard: the guard
+    /// runs on a structural parse taken before <see cref="RuleSerializer.Validate{TModel}"/> ever
+    /// reaches the binder, so a document referencing an async registry entry reports
+    /// <see cref="RuleErrorCode.GateMustBeSynchronous"/> — not the binder's generic
+    /// <see cref="RuleErrorCode.AsyncSpecInSyncLoad"/>, which would otherwise fire first and name a
+    /// mistake this isn't: the gate document is a perfectly legal synchronous load target in
+    /// general, just not of an async entry the gate itself must evaluate.
+    /// </summary>
+    private SpecBase<ChangeRequest, string>? TryBind(string documentJson, List<RuleError> errors)
     {
-        var validationErrors = Serializer.Validate<ChangeRequest>(documentJson);
+        var structuralErrors = new List<RuleError>();
+        var document = new RuleDocumentParser(_parserOptions).Parse(documentJson, structuralErrors);
+        if (structuralErrors.Count > 0)
+        {
+            errors.AddRange(structuralErrors);
+            return null;
+        }
+
+        if (FindAsyncReference(document) is { } asyncSpecName)
+        {
+            errors.Add(new RuleError(
+                "$.rule", RuleErrorCode.GateMustBeSynchronous,
+                $"the gate document references '{asyncSpecName}', which is registered as an " +
+                "asynchronous spec; the approval gate evaluates change requests synchronously and " +
+                "cannot bind to an async entry"));
+            return null;
+        }
+
+        var validationErrors = _serializer.Validate<ChangeRequest>(documentJson);
         if (validationErrors.Count > 0)
         {
             errors.AddRange(validationErrors);
@@ -190,12 +242,29 @@ public sealed class ApprovalGate
 
         try
         {
-            return Serializer.Deserialize<ChangeRequest>(documentJson);
+            return _serializer.Deserialize<ChangeRequest>(documentJson);
         }
         catch (RuleSerializationException exception)
         {
             errors.AddRange(exception.Errors);
             return null;
         }
+    }
+
+    /// <summary>
+    /// The first referenced spec name that resolves in this gate's registry to an async entry, or
+    /// <c>null</c> when every reference is synchronous (or unresolved — an unknown-spec reference is
+    /// reported separately by the ordinary validate/bind pipeline this guard runs ahead of).
+    /// </summary>
+    private string? FindAsyncReference(RuleDocument? document)
+    {
+        if (document?.Root is null)
+            return null;
+
+        foreach (var name in DocumentReferences.From(document))
+            if (_registry.Find(name) is { IsAsync: true })
+                return name;
+
+        return null;
     }
 }

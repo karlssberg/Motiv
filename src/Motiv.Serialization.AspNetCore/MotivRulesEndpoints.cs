@@ -118,7 +118,14 @@ public static class MotivRulesEndpoints
 
         var governance = ResolveGovernance(endpoints, rules);
         if (governance is not null)
+        {
             MotivGovernanceEndpoints.MapChangeRequestEndpoints(group, governance, json);
+
+            // AddGovernance() registers the ApprovalGate and the ChangeRequestSet together, so one
+            // resolving means the other always does too.
+            var gate = endpoints.ServiceProvider.GetRequiredService<ApprovalGate>();
+            MotivGovernanceEndpoints.MapGateEndpoints(group, gate, json);
+        }
 
         if (rules is not null)
             MapRuleEndpoints(group, rules, governance, options, json);
