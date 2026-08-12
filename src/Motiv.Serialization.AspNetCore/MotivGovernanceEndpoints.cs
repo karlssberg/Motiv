@@ -152,7 +152,7 @@ internal static class MotivGovernanceEndpoints
                 AuditLog(http).LogWarning(
                     "MOTIV-AUDIT break-glass publish: change request {ChangeRequestId} by {Author} " +
                     "published with the approval gate DISABLED.",
-                    published.Id, PrincipalIdentity.Subject(http.User));
+                    published.Id, ForLog(PrincipalIdentity.Subject(http.User)));
 
             return Results.Json(
                 new ChangeRequestPublishResponse(
@@ -337,7 +337,15 @@ internal static class MotivGovernanceEndpoints
         AuditLog(http).LogWarning(
             "MOTIV-AUDIT break-glass publish: direct write of {Kind} '{Name}' by {Author} " +
             "published with the approval gate DISABLED.",
-            kind, name, author);
+            kind, ForLog(name), ForLog(author));
+
+    /// <summary>
+    /// A caller-supplied value made safe for the audit trail: line breaks are stripped so a crafted
+    /// artefact name or token subject cannot forge additional log lines (CWE-117). The audit log is
+    /// the only record a break-glass direct write leaves, so its lines must be unforgeable.
+    /// </summary>
+    internal static string ForLog(string value) =>
+        value.Replace("\r", string.Empty).Replace("\n", string.Empty);
 
     /// <summary>The gate's refusal as a 403, in the gate's own words.</summary>
     private static IResult Refused(GateDecision decision, JsonSerializerOptions json) =>
