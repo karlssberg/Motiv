@@ -66,10 +66,15 @@ internal enum DirectWriteOperation
 /// <param name="Rule">The rule write's outcome, for the two rule operations.</param>
 /// <param name="Proposition">The proposition write's outcome, for the three proposition operations.</param>
 /// <param name="PublishedUnderBreakGlass">
-/// Whether this write landed with the gate bypassed by an active break-glass window. A direct write
-/// mints no <see cref="ChangeRequest"/>, so there is nothing to stamp — this flag is the only record
-/// the caller has that the gate was skipped, and is what tells the endpoint to emit the audit log.
-/// Always false when <see cref="Blocked"/> is non-null.
+/// Whether this write both bypassed an active break-glass window <em>and</em> genuinely succeeded —
+/// the wrapped core reported a real success (a rule <see cref="RuleUpdateOutcome.Updated"/>; a
+/// proposition <see cref="PropositionUpdateOutcome.Created"/>, <see cref="PropositionUpdateOutcome.Updated"/>,
+/// or <see cref="PropositionUpdateOutcome.Removed"/>), not a stale version, an invalid document, or
+/// an unknown target refused by the core itself. A direct write mints no <see cref="ChangeRequest"/>,
+/// so there is nothing to stamp — this flag is the only record the caller has that the gate was
+/// skipped, and is what tells the endpoint to emit the audit log; a write that failed after the gate
+/// was skipped must not read as an audited publish that never happened. Always false when
+/// <see cref="Blocked"/> is non-null.
 /// </param>
 internal sealed record DirectWriteResult(
     GateDecision? Blocked, RuleUpdateResult? Rule, PropositionUpdateResult? Proposition,
@@ -441,9 +446,17 @@ public sealed class ChangeRequestSet
             };
         });
 
-        DirectWriteResult OfRule(RuleUpdateResult result) => new(null, result, null, breakGlassActive);
+        // breakGlassActive alone is not enough: it says the gate was skipped, not that the write
+        // that followed actually landed. A stale base version, an invalid document, or an unknown
+        // target still fails its own core the same way it would without break-glass — and for a
+        // direct write the audit log is the *only* record, so a false positive here would be a log
+        // entry for a publish that never happened. Only a genuine success sets it.
+        DirectWriteResult OfRule(RuleUpdateResult result) =>
+            new(null, result, null, breakGlassActive && result.Outcome == RuleUpdateOutcome.Updated);
 
-        DirectWriteResult OfProposition(PropositionUpdateResult result) => new(null, null, result, breakGlassActive);
+        DirectWriteResult OfProposition(PropositionUpdateResult result) =>
+            new(null, null, result, breakGlassActive && result.Outcome is
+                PropositionUpdateOutcome.Created or PropositionUpdateOutcome.Updated or PropositionUpdateOutcome.Removed);
     }
 
     private static ChangeTargetKind KindOf(DirectWriteOperation operation) =>

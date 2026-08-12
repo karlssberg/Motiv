@@ -9,7 +9,8 @@ namespace Motiv.Serialization.AspNetCore.Tests;
 /// <summary>
 /// The 3am escape end to end: a deploy-time <see cref="BreakGlass"/> bypasses a blocking gate for
 /// both a direct write and a workflow publish, stamps the durable record, and is loud about it via
-/// the <c>MOTIV-AUDIT</c> log line — and stops working the moment it expires.
+/// the <c>MOTIV-AUDIT</c> log line under the <c>Motiv.Governance.Audit</c> category — but only for a
+/// write that actually landed, and stops working the moment the window expires.
 /// </summary>
 public class BreakGlassTests
 {
@@ -23,6 +24,7 @@ public class BreakGlassTests
 
     private const string RuleName = "checkout.can-checkout";
     private const string AuditMarker = "MOTIV-AUDIT break-glass publish";
+    private const string AuditCategory = "Motiv.Governance.Audit";
 
     private sealed record Customer(bool IsActive, int Age);
 
@@ -43,7 +45,8 @@ public class BreakGlassTests
     /// <see cref="BreakGlass"/> singleton registered over <c>AddGovernance</c>'s
     /// <see cref="BreakGlass.Off"/> default (AddSingleton after AddGovernance beats its TryAdd, the
     /// same override order the sample host uses). A <see cref="CapturingLoggerProvider"/> is wired in
-    /// regardless, so every test can inspect what — if anything — was audit-logged.
+    /// regardless, so every test can inspect what — if anything — was audit-logged, and under which
+    /// category.
     /// </summary>
     private static async Task<(WebApplication App, CapturingLoggerProvider Logs)> StartAsync(BreakGlass? breakGlass = null)
     {
@@ -95,6 +98,13 @@ public class BreakGlassTests
     private static async Task<Guid> IdOf(HttpResponseMessage response) =>
         (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetGuid();
 
+    /// <summary>Whether any captured entry is an audit line, in the audit category, matching <paramref name="predicate"/>.</summary>
+    private static bool HasAuditEntry(CapturingLoggerProvider logs, Func<string, bool> predicate) =>
+        logs.Entries.Any(entry =>
+            entry.Category == AuditCategory
+            && entry.Message.Contains(AuditMarker, StringComparison.Ordinal)
+            && predicate(entry.Message));
+
     [Fact]
     public async Task Should_bypass_a_blocking_gate_for_a_direct_write_and_audit_log_it()
     {
@@ -109,11 +119,9 @@ public class BreakGlassTests
         var direct = await client.PutAsJsonAsync($"/api/rules/rules/{RuleName}",
             new { document = AdultDocument, baseVersion = 1 });
 
-        // Assert — it lands anyway, and the bypass is loudly audit-logged
+        // Assert — it lands anyway, and the bypass is loudly audit-logged under the audit category
         direct.StatusCode.ShouldBe(HttpStatusCode.OK);
-        logs.Messages.ShouldContain(message =>
-            message.Contains(AuditMarker, StringComparison.Ordinal)
-            && message.Contains(RuleName, StringComparison.Ordinal));
+        HasAuditEntry(logs, message => message.Contains(RuleName, StringComparison.Ordinal)).ShouldBeTrue();
     }
 
     [Fact]
@@ -130,13 +138,11 @@ public class BreakGlassTests
         var published = await Send(client, HttpMethod.Post, $"/api/rules/change-requests/{id}/publish", "author");
 
         // Assert — publishes, the durable stamp shows on the response, and the same event is
-        // audit-logged with the change request's own id
+        // audit-logged, under the audit category, naming the change request's own id
         published.StatusCode.ShouldBe(HttpStatusCode.OK);
         var body = await published.Content.ReadFromJsonAsync<JsonElement>();
         body.GetProperty("request").GetProperty("publishedUnderBreakGlass").GetBoolean().ShouldBeTrue();
-        logs.Messages.ShouldContain(message =>
-            message.Contains(AuditMarker, StringComparison.Ordinal)
-            && message.Contains(id.ToString(), StringComparison.Ordinal));
+        HasAuditEntry(logs, message => message.Contains(id.ToString(), StringComparison.Ordinal)).ShouldBeTrue();
     }
 
     [Fact]
@@ -153,7 +159,29 @@ public class BreakGlassTests
 
         // Assert — refused exactly as it would be with no break-glass at all, and nothing audit-logged
         direct.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
-        logs.Messages.ShouldNotContain(message => message.Contains(AuditMarker, StringComparison.Ordinal));
+        HasAuditEntry(logs, _ => true).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Should_refuse_a_stale_direct_write_as_a_conflict_under_break_glass_without_auditing_it()
+    {
+        // Arrange — break-glass on, so the gate is skipped entirely, but the write itself is doomed
+        // regardless: a stale base version. The core still refuses it on its own terms, and since
+        // nothing actually published, there must be no audit entry for it — an audit line here would
+        // be a record of a publish that never happened, and for a direct write the audit log is the
+        // only record there is.
+        var (app, logs) = await StartAsync(new BreakGlass(true, null));
+        await using var _ = app;
+        var client = app.GetTestClient();
+
+        // Act — the rule is at version 1; ask to replace version 2
+        var direct = await client.PutAsJsonAsync($"/api/rules/rules/{RuleName}",
+            new { document = AdultDocument, baseVersion = 2 });
+
+        // Assert — a genuine version conflict, not a gate refusal, and no audit entry despite
+        // break-glass being active throughout
+        direct.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        HasAuditEntry(logs, _ => true).ShouldBeFalse();
     }
 
     [Fact]
@@ -181,32 +209,35 @@ public class BreakGlassTests
         new BreakGlass(false, DateTimeOffset.UtcNow.AddMinutes(5)).Active(DateTimeOffset.UtcNow).ShouldBeFalse();
     }
 
+    /// <summary>One captured log line, with the category it was logged under.</summary>
+    private sealed record LoggedEntry(string Category, string Message);
+
     /// <summary>Captures every formatted log line across every category, for asserting audit output.</summary>
     private sealed class CapturingLoggerProvider : ILoggerProvider
     {
-        private readonly List<string> _messages = [];
+        private readonly List<LoggedEntry> _entries = [];
         private readonly object _lock = new();
 
-        public IReadOnlyList<string> Messages
+        public IReadOnlyList<LoggedEntry> Entries
         {
             get
             {
                 lock (_lock)
-                    return [.. _messages];
+                    return [.. _entries];
             }
         }
 
-        public ILogger CreateLogger(string categoryName) => new CapturingLogger(this);
+        public ILogger CreateLogger(string categoryName) => new CapturingLogger(this, categoryName);
 
         public void Dispose() { }
 
-        private void Add(string message)
+        private void Add(string category, string message)
         {
             lock (_lock)
-                _messages.Add(message);
+                _entries.Add(new LoggedEntry(category, message));
         }
 
-        private sealed class CapturingLogger(CapturingLoggerProvider owner) : ILogger
+        private sealed class CapturingLogger(CapturingLoggerProvider owner, string category) : ILogger
         {
             public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
 
@@ -215,7 +246,7 @@ public class BreakGlassTests
             public void Log<TState>(
                 LogLevel logLevel, EventId eventId, TState state, Exception? exception,
                 Func<TState, Exception?, string> formatter) =>
-                owner.Add(formatter(state, exception));
+                owner.Add(category, formatter(state, exception));
         }
     }
 }
