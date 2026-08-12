@@ -69,9 +69,13 @@ internal sealed class AsyncMetadataRuleBinder<TMetadata>(ISpecSource source, Rul
             return null;
         }
 
+        var resolved = entry.ResolveSpec(node, errors);
+        if (resolved is null)
+            return null;
+
         if (entry.IsAsync)
         {
-            if (entry.Spec is not AsyncSpecBase<TModel> asyncSpec)
+            if (resolved is not AsyncSpecBase<TModel> asyncSpec)
             {
                 errors.Add(new RuleError(node.Path, RuleErrorCode.ModelTypeMismatch,
                     $"'{node.SpecName}' has model type '{entry.ModelType.Name}' but the document is being " +
@@ -91,7 +95,7 @@ internal sealed class AsyncMetadataRuleBinder<TMetadata>(ISpecSource source, Rul
             return asyncTyped;
         }
 
-        if (entry.Spec is not SpecBase<TModel> spec)
+        if (resolved is not SpecBase<TModel> spec)
         {
             errors.Add(new RuleError(node.Path, RuleErrorCode.ModelTypeMismatch,
                 $"'{node.SpecName}' has model type '{entry.ModelType.Name}' but the document is being " +

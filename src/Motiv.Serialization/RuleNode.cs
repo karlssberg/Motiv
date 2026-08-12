@@ -12,6 +12,11 @@ internal sealed class RuleNode(RuleOperator @operator, string path)
 
     public string? ExpressionText { get; set; }
 
+    // Scalar arguments supplied to a parameterised registry entry, keyed by declared parameter
+    // name. Null when the node supplied no 'args' at all, which is what distinguishes "took no
+    // arguments" from "took an empty argument object".
+    public Dictionary<string, object?>? Args { get; set; }
+
     public List<RuleNode> Children { get; } = [];
 
     public string? WhenTrueText { get; set; }

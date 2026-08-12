@@ -27,22 +27,29 @@ internal static class RuleParameterResolver
         }
     }
 
+    /// <param name="errorPath">
+    /// The JSON path errors are reported under. Defaults to the document's own <c>parameters</c>
+    /// block; a parameterised spec node passes its own <c>args</c> path instead, so an argument
+    /// error points at the node that supplied it rather than at a declaration block the document
+    /// may not even have.
+    /// </param>
     public static Dictionary<string, object?> Resolve(
         IReadOnlyList<RuleParameterDeclaration> declarations,
         IReadOnlyDictionary<string, object?>? supplied,
-        List<RuleError> errors)
+        List<RuleError> errors,
+        string errorPath = "$.parameters")
     {
         var values = new Dictionary<string, object?>(StringComparer.Ordinal);
         foreach (var declaration in declarations)
-            values[declaration.Name] = ResolveValue(declaration, supplied, errors);
+            values[declaration.Name] = ResolveValue(declaration, supplied, errors, errorPath);
 
         if (supplied is null)
             return values;
 
         var surplus = supplied.Keys.Where(name => declarations.All(declaration => declaration.Name != name));
         foreach (var name in surplus)
-            errors.Add(new RuleError($"$.parameters.{name}", RuleErrorCode.SurplusParameter,
-                $"no parameter named '{name}' is declared by the document"));
+            errors.Add(new RuleError($"{errorPath}.{name}", RuleErrorCode.SurplusParameter,
+                $"no parameter named '{name}' is declared"));
 
         return values;
     }
@@ -60,16 +67,17 @@ internal static class RuleParameterResolver
     private static object? ResolveValue(
         RuleParameterDeclaration declaration,
         IReadOnlyDictionary<string, object?>? supplied,
-        List<RuleError> errors)
+        List<RuleError> errors,
+        string errorPath)
     {
         if (supplied is not null && supplied.TryGetValue(declaration.Name, out var value))
             // A placeholder stands in on mismatch so interpolation does not cascade errors.
-            return Coerce(declaration, value, errors) ?? Placeholder(declaration);
+            return Coerce(declaration, value, errors, errorPath) ?? Placeholder(declaration);
 
         if (declaration.HasDefault)
             return declaration.DefaultValue;
 
-        errors.Add(new RuleError($"$.parameters.{declaration.Name}", RuleErrorCode.MissingParameter,
+        errors.Add(new RuleError($"{errorPath}.{declaration.Name}", RuleErrorCode.MissingParameter,
             $"the required parameter '{declaration.Name}' was not supplied"));
         return Placeholder(declaration);
     }
@@ -77,7 +85,8 @@ internal static class RuleParameterResolver
     private static object? Coerce(
         RuleParameterDeclaration declaration,
         object? value,
-        List<RuleError> errors)
+        List<RuleError> errors,
+        string errorPath)
     {
         object? coerced = (declaration.Type, value) switch
         {
@@ -94,7 +103,7 @@ internal static class RuleParameterResolver
         };
 
         if (coerced is null)
-            errors.Add(new RuleError($"$.parameters.{declaration.Name}", RuleErrorCode.ParameterTypeMismatch,
+            errors.Add(new RuleError($"{errorPath}.{declaration.Name}", RuleErrorCode.ParameterTypeMismatch,
                 $"the supplied value for '{declaration.Name}' does not match the declared type " +
                 $"'{declaration.Type.ToString().ToLowerInvariant()}'"));
 

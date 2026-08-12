@@ -93,6 +93,7 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         JsonElement? whenFalse = null;
         JsonElement? nElement = null;
         JsonElement? pathElement = null;
+        JsonElement? argsElement = null;
         string? name = null;
 
         foreach (var property in element.EnumerateObject())
@@ -109,6 +110,9 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
                     break;
                 case "path":
                     pathElement = property.Value;
+                    break;
+                case "args":
+                    argsElement = property.Value;
                     break;
                 case "whenTrue":
                     whenTrue = property.Value;
@@ -142,6 +146,7 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
             return null;
 
         ApplyHigherOrderProperties(node, nElement, pathElement, path, errors);
+        ApplyArguments(node, argsElement, path, errors);
         node.Name = name;
 
         if (node.HasObjectPayloads && node.Name is null)
@@ -446,6 +451,80 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         {
             errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
                 "higher-order nodes require a 'path' to the collection"));
+        }
+    }
+
+    /// <summary>
+    /// Reads a spec node's optional <c>args</c>: the scalar values a parameterised registry entry is
+    /// built from. Only the values' JSON kinds are checked here — whether they satisfy the entry's
+    /// declarations is a binding-time question, because only the registry knows what was declared.
+    /// </summary>
+    private static void ApplyArguments(
+        RuleNode node,
+        JsonElement? argsElement,
+        string path,
+        List<RuleError> errors)
+    {
+        if (argsElement is not { } args)
+            return;
+
+        if (node.Operator != RuleOperator.Spec)
+        {
+            errors.Add(new RuleError($"{path}.args", RuleErrorCode.InvalidNode,
+                "'args' is only valid on 'spec' nodes"));
+            return;
+        }
+
+        if (args.ValueKind != JsonValueKind.Object)
+        {
+            errors.Add(new RuleError($"{path}.args", RuleErrorCode.InvalidNode,
+                "'args' must be a JSON object of scalar values"));
+            return;
+        }
+
+        var values = new Dictionary<string, object?>(StringComparer.Ordinal);
+        foreach (var argument in args.EnumerateObject())
+        {
+            if (!TryReadScalar(argument.Value, out var value))
+            {
+                errors.Add(new RuleError($"{path}.args.{argument.Name}", RuleErrorCode.ParameterTypeMismatch,
+                    $"the argument '{argument.Name}' must be a string, number, boolean or null"));
+                continue;
+            }
+
+            values[argument.Name] = value;
+        }
+
+        node.Args = values;
+    }
+
+    private static bool TryReadScalar(JsonElement element, out object? value)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.String:
+                value = element.GetString();
+                return true;
+            case JsonValueKind.Number when element.TryGetInt32(out var integer):
+                value = integer;
+                return true;
+            case JsonValueKind.Number when element.TryGetInt64(out var wide):
+                // Out of int range: kept as a long so the resolver reports the mismatch against an
+                // 'integer' declaration, rather than the parser silently widening it to a double.
+                value = wide;
+                return true;
+            case JsonValueKind.Number:
+                value = element.GetDouble();
+                return true;
+            case JsonValueKind.True or JsonValueKind.False:
+                value = element.GetBoolean();
+                return true;
+            case JsonValueKind.Null:
+                value = null;
+                return true;
+            default:
+                value = null;
+                return false;
         }
     }
 

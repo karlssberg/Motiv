@@ -26,6 +26,8 @@ public class RuleSchemaTests
         """{ "rule": { "spec": "a", "whenTrue": "yes", "whenFalse": "no", "name": "n" } }""",
         """{ "rule": { "spec": "a", "whenTrue": { "code": 1 }, "whenFalse": { "code": 2 }, "name": "coded" } }""",
         """{ "rule": { "expression": "Age >= @minAge" } }""",
+        """{ "rule": { "spec": "count-at-least", "args": { "n": 2 } } }""",
+        """{ "rule": { "spec": "a", "args": { "s": "x", "d": 1.5, "b": true, "nothing": null } } }""",
         """{ "parameters": { "minAge": { "type": "integer", "default": 18 } }, "rule": { "spec": "a" } }""",
         """{ "rule": { "asAllSatisfied": { "spec": "a" }, "path": "Orders", "name": "all" } }""",
         """{ "rule": { "asAnySatisfied": { "spec": "a" }, "path": "orders", "whenTrue": "some", "whenFalse": "none" } }""",
@@ -62,7 +64,9 @@ public class RuleSchemaTests
         """{ "rule": { "asAllSatisfied": { "spec": "a" }, "path": "" } }""",
         """{ "rule": { "asNSatisfied": { "spec": "a" }, "n": "minOrders", "path": "orders" } }""",
         """{ "rule": { "spec": "a", "whenTrue": { "code": 1 }, "whenFalse": { "code": 2 } } }""",
-        """{ "rule": { "asAllSatisfied": { "spec": "a" }, "name": "x" } }"""
+        """{ "rule": { "asAllSatisfied": { "spec": "a" }, "name": "x" } }""",
+        """{ "rule": { "spec": "a", "args": { "n": { "value": 2 } } } }""",
+        """{ "rule": { "not": { "spec": "a" }, "args": { "n": 2 } } }"""
     };
 
     [Theory]

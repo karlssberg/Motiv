@@ -39,6 +39,9 @@ public enum RuleErrorCode
     /// <summary>A payload string or 'n' slot references a parameter that is not declared.</summary>
     UnknownParameterReference,
 
+    /// <summary>A spec node supplied 'args' to a spec that was not registered as parameterised.</summary>
+    UnexpectedArguments,
+
     /// <summary>A higher-order node references a collection path that is not registered.</summary>
     UnknownCollection,
 

@@ -210,4 +210,46 @@ public class RuleDocumentComparerTests
         // Assert
         equal.ShouldBeTrue();
     }
+
+    [Fact]
+    public void Should_treat_differing_spec_arguments_as_structurally_unequal()
+    {
+        // Arrange — an argument is logic, not display text: a different threshold is a different rule
+        var left = AParsedDocument("""{ "rule": { "spec": "count-at-least", "args": { "n": 2 } } }""");
+        var right = AParsedDocument("""{ "rule": { "spec": "count-at-least", "args": { "n": 3 } } }""");
+
+        // Act
+        var equal = RuleDocumentComparer.StructurallyEqual(left, right);
+
+        // Assert
+        equal.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Should_treat_an_added_spec_argument_as_structurally_unequal()
+    {
+        // Arrange
+        var left = AParsedDocument("""{ "rule": { "spec": "count-at-least" } }""");
+        var right = AParsedDocument("""{ "rule": { "spec": "count-at-least", "args": { "n": 2 } } }""");
+
+        // Act & Assert
+        RuleDocumentComparer.StructurallyEqual(left, right).ShouldBeFalse();
+        RuleDocumentComparer.StructurallyEqual(right, left).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Should_treat_reordered_spec_arguments_as_structurally_equal()
+    {
+        // Arrange — arguments are name-keyed, so JSON property order must not affect equality
+        var left = AParsedDocument(
+            """{ "rule": { "spec": "count-at-least", "args": { "n": 2, "label": "x" } } }""");
+        var right = AParsedDocument(
+            """{ "rule": { "spec": "count-at-least", "args": { "label": "x", "n": 2 } } }""");
+
+        // Act
+        var equal = RuleDocumentComparer.StructurallyEqual(left, right);
+
+        // Assert
+        equal.ShouldBeTrue();
+    }
 }
