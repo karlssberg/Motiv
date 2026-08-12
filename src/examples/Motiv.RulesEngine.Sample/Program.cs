@@ -99,6 +99,7 @@ if (devIdentityEnabled)
         .AddAuthentication(DevIdentityHandler.SchemeName)
         .AddScheme<AuthenticationSchemeOptions, DevIdentityHandler>(DevIdentityHandler.SchemeName, null);
     builder.Services.AddHostedService<DevIdentityWarningService>();
+    builder.Services.AddSingleton<IGrantSource, DevGrantSource>();
 }
 else
 {
