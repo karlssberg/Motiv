@@ -35,31 +35,36 @@ export function App(props: { client?: RulesApiClient; store?: RuleEditorStore })
   // Switching page always drops the selection: a rule name means nothing on the propositions page.
   const goToPage = (page: Page): void => navigate({ page, name: null });
 
+  let page: JSX.Element;
+  if (route.page === 'propositions') {
+    page = (
+      <PropositionsPage
+        client={client}
+        page={route.page}
+        selected={route.name}
+        onNavigate={goToPage}
+        onSelect={(name) => navigate({ page: 'propositions', name })}
+      />
+    );
+  } else if (route.page === 'admin') {
+    page = <AdminPage page={route.page} onNavigate={goToPage} />;
+  } else {
+    page = (
+      <RulesPage
+        client={client}
+        page={route.page}
+        onNavigate={goToPage}
+        onLoaded={(entry) => setIsAsync(entry?.isAsync ?? false)}
+      />
+    );
+  }
+
   return (
     // Seam: the store hookup. RuleEditorProvider exposes the single RuleEditorStore
     // to every builder component (useRuleEditorStore / useRuleNode) below it.
     <RuleEditorProvider store={store}>
       <main className="app">
-        {route.page === 'propositions'
-          ? (
-            <PropositionsPage
-              client={client}
-              page={route.page}
-              selected={route.name}
-              onNavigate={goToPage}
-              onSelect={(name) => navigate({ page: 'propositions', name })}
-            />
-          )
-          : route.page === 'admin'
-            ? <AdminPage page={route.page} onNavigate={goToPage} />
-            : (
-              <RulesPage
-                client={client}
-                page={route.page}
-                onNavigate={goToPage}
-                onLoaded={(entry) => setIsAsync(entry?.isAsync ?? false)}
-              />
-            )}
+        {page}
       </main>
     </RuleEditorProvider>
   );

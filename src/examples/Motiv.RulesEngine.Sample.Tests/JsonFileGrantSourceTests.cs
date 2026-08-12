@@ -47,6 +47,36 @@ public class JsonFileGrantSourceTests
         reloaded.All.ShouldContain(new GrantRecord("alice", "pricing", "publish"));
     }
 
+    [Fact]
+    public void Should_normalize_verb_casing_on_add_so_remove_matches_by_equality()
+    {
+        // Arrange — LadderVerb/IsAdministerRow read the Verb case-insensitively, but Remove
+        // matches by record equality, so a mixed-case Verb must be normalized before it is stored.
+        var source = new JsonFileGrantSource(TempPath());
+        source.Add(new GrantRecord("alice", "pricing", "Author"));
+
+        // Assert — stored lowercase, regardless of how it was added
+        source.All.ShouldContain(new GrantRecord("alice", "pricing", "author"));
+
+        // Act & Assert — a lowercase-verb record (what a caller reads back from All) matches
+        source.Remove(new GrantRecord("alice", "pricing", "author")).ShouldBe(GrantRemovalOutcome.Removed);
+    }
+
+    [Fact]
+    public void Should_normalize_verb_casing_loaded_from_a_hand_edited_file()
+    {
+        // Arrange — a file written outside JsonFileGrantSource is the other way mixed casing arrives
+        var path = TempPath();
+        File.WriteAllText(path, """[{"subject":"alice","prefix":"pricing","verb":"Author"}]""");
+
+        // Act
+        var source = new JsonFileGrantSource(path);
+
+        // Assert
+        source.All.ShouldContain(new GrantRecord("alice", "pricing", "author"));
+        source.Remove(new GrantRecord("alice", "pricing", "author")).ShouldBe(GrantRemovalOutcome.Removed);
+    }
+
     private static string TempPath() =>
         Path.Combine(Path.GetTempPath(), $"grants-{Guid.NewGuid():N}.json");
 

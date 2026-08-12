@@ -31,35 +31,38 @@ internal static class PrincipalIdentity
 internal static class GrantGate
 {
     /// <summary>Refuses the request unless its grants include <paramref name="verb"/> on <paramref name="name"/>.</summary>
-    public static IResult? Refuse(HttpContext http, GrantVerb verb, string name, JsonSerializerOptions json)
-    {
-        if (http.RequestServices.GetService<IGrantSource>() is not { } source)
-            return null;
-        return GrantEvaluator.IsGranted(source.GrantsFor(http.User), verb, name)
-            ? null
-            : Results.Json(new ErrorResponse(
-                $"Requires the '{verb.ToString().ToLowerInvariant()}' grant on '{name}'."),
-                json, statusCode: 403);
-    }
+    public static IResult? Refuse(HttpContext http, GrantVerb verb, string name, JsonSerializerOptions json) =>
+        RefuseUnless(
+            http, json,
+            source => GrantEvaluator.IsGranted(source.GrantsFor(http.User), verb, name),
+            $"Requires the '{verb.ToString().ToLowerInvariant()}' grant on '{name}'.");
 
     /// <summary>Refuses the request unless its grants include Author or Publish on at least one namespace.</summary>
-    public static IResult? RefuseUnlessAuthorAnywhere(HttpContext http, JsonSerializerOptions json)
-    {
-        if (http.RequestServices.GetService<IGrantSource>() is not { } source)
-            return null;
-        return GrantEvaluator.CanAuthorAnywhere(source.GrantsFor(http.User))
-            ? null
-            : Results.Json(new ErrorResponse("Requires an 'author' grant on at least one namespace."),
-                json, statusCode: 403);
-    }
+    public static IResult? RefuseUnlessAuthorAnywhere(HttpContext http, JsonSerializerOptions json) =>
+        RefuseUnless(
+            http, json,
+            source => GrantEvaluator.CanAuthorAnywhere(source.GrantsFor(http.User)),
+            "Requires an 'author' grant on at least one namespace.");
 
     /// <summary>Refuses the request unless the principal is an administrator.</summary>
-    public static IResult? RefuseUnlessAdministrator(HttpContext http, JsonSerializerOptions json)
+    public static IResult? RefuseUnlessAdministrator(HttpContext http, JsonSerializerOptions json) =>
+        RefuseUnless(
+            http, json,
+            source => source.IsAdministrator(http.User),
+            "Requires 'administer'.");
+
+    /// <summary>
+    /// Shared shape behind every check above: no registered <see cref="IGrantSource"/> means the
+    /// request proceeds unconditionally (grants are opt-in); otherwise <paramref name="isGranted"/>
+    /// decides between proceeding and a 403 naming <paramref name="requirement"/>.
+    /// </summary>
+    private static IResult? RefuseUnless(
+        HttpContext http, JsonSerializerOptions json, Func<IGrantSource, bool> isGranted, string requirement)
     {
         if (http.RequestServices.GetService<IGrantSource>() is not { } source)
             return null;
-        return source.IsAdministrator(http.User)
+        return isGranted(source)
             ? null
-            : Results.Json(new ErrorResponse("Requires 'administer'."), json, statusCode: 403);
+            : Results.Json(new ErrorResponse(requirement), json, statusCode: 403);
     }
 }

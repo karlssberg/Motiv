@@ -66,13 +66,16 @@ internal sealed class JsonFileGrantSource(string path) : IGrantSource
     }
 
     /// <summary>Adds a grant and persists it. Throws for a <paramref name="grant"/> whose Verb is
-    /// not one of "read"/"author"/"publish"/"administer" — an unknown verb fails loud, not silent.</summary>
+    /// not one of "read"/"author"/"publish"/"administer" — an unknown verb fails loud, not silent.
+    /// The Verb is normalized to lowercase before storage, so <see cref="Remove"/>'s case-sensitive
+    /// equality check agrees with the case-insensitive verb-semantics checks below
+    /// (<see cref="IsAdministerRow"/>, <see cref="LadderVerb"/>).</summary>
     public void Add(GrantRecord grant)
     {
         ValidateVerb(grant.Verb);
         lock (_gate)
         {
-            _grants.Add(grant);
+            _grants.Add(grant with { Verb = grant.Verb.ToLowerInvariant() });
             Write();
         }
     }
@@ -126,7 +129,10 @@ internal sealed class JsonFileGrantSource(string path) : IGrantSource
 
         try
         {
-            return JsonSerializer.Deserialize<List<GrantRecord>>(File.ReadAllText(path), Json) ?? [];
+            var loaded = JsonSerializer.Deserialize<List<GrantRecord>>(File.ReadAllText(path), Json) ?? [];
+            // Normalize here too: a hand-edited file is the other way mixed-case Verb values can
+            // reach the store, and Remove's equality check needs them consistently lowercase.
+            return [.. loaded.Select(grant => grant with { Verb = grant.Verb.ToLowerInvariant() })];
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
