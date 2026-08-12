@@ -67,8 +67,11 @@ public static class MotivRulesEndpoints
 
         MapCatalogEndpoint(group, registry, options, rules, propositions, json);
 
-        group.MapPost("/validate", (ValidateRequest request) =>
+        group.MapPost("/validate", (ValidateRequest request, HttpContext http) =>
         {
+            if (GrantGate.RefuseUnlessAuthorAnywhere(http, json) is { } refusal)
+                return refusal;
+
             if (request.Document.ValueKind == JsonValueKind.Undefined)
                 return EndpointResponses.MissingDocument(json);
 
@@ -82,8 +85,11 @@ public static class MotivRulesEndpoints
             return Results.Json(new ValidationResponse(errors), json);
         });
 
-        group.MapPost("/evaluate", (EvaluateRequest request) =>
+        group.MapPost("/evaluate", (EvaluateRequest request, HttpContext http) =>
         {
+            if (GrantGate.RefuseUnlessAuthorAnywhere(http, json) is { } refusal)
+                return refusal;
+
             if (request.Document.ValueKind == JsonValueKind.Undefined)
                 return EndpointResponses.MissingDocument(json);
 
@@ -252,8 +258,11 @@ public static class MotivRulesEndpoints
                 new RuleGetResponse(EndpointResponses.DocumentElement(entry.DocumentJson), entry.Version), json);
         });
 
-        group.MapPut("/rules/{name}", (string name, RulePutRequest request) =>
+        group.MapPut("/rules/{name}", (string name, RulePutRequest request, HttpContext http) =>
         {
+            if (GrantGate.Refuse(http, GrantVerb.Publish, name, json) is { } refusal)
+                return refusal;
+
             if (request.Document.ValueKind == JsonValueKind.Undefined)
                 return EndpointResponses.MissingDocument(json);
 
@@ -263,10 +272,15 @@ public static class MotivRulesEndpoints
             return ToResult(rules.Update(name, request.Document.GetRawText(), request.BaseVersion), name, json);
         });
 
-        group.MapDelete("/rules/{name}", (string name, int baseVersion) =>
-            baseVersion <= 0
+        group.MapDelete("/rules/{name}", (string name, int baseVersion, HttpContext http) =>
+        {
+            if (GrantGate.Refuse(http, GrantVerb.Publish, name, json) is { } refusal)
+                return refusal;
+
+            return baseVersion <= 0
                 ? EndpointResponses.NonPositiveBaseVersion(json)
-                : ToResult(rules.Revert(name, baseVersion), name, json));
+                : ToResult(rules.Revert(name, baseVersion), name, json);
+        });
     }
 
     private static IResult ToResult(RuleUpdateResult outcome, string name, JsonSerializerOptions json) =>

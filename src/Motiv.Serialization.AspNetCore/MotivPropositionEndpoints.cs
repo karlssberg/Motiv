@@ -36,12 +36,16 @@ internal static class MotivPropositionEndpoints
                 entry.Origin != PropositionOrigin.Authored), json);
         });
 
-        group.MapPost("/propositions", (PropositionCreateRequest request) =>
+        group.MapPost("/propositions", (PropositionCreateRequest request, HttpContext http) =>
         {
-            if (request.Document.ValueKind == JsonValueKind.Undefined)
-                return EndpointResponses.MissingDocument(json);
             if (string.IsNullOrWhiteSpace(request.Name))
                 return Results.Json(new ErrorResponse("The request must include a name."), json, statusCode: 400);
+
+            if (GrantGate.Refuse(http, GrantVerb.Publish, request.Name, json) is { } refusal)
+                return refusal;
+
+            if (request.Document.ValueKind == JsonValueKind.Undefined)
+                return EndpointResponses.MissingDocument(json);
             if (string.IsNullOrWhiteSpace(request.ModelType))
                 return Results.Json(
                     new ErrorResponse("The request must include a modelType."), json, statusCode: 400);
@@ -52,8 +56,11 @@ internal static class MotivPropositionEndpoints
             return ToResult(result, request.Name, json);
         });
 
-        group.MapPut("/propositions/{name}", (string name, PropositionPutRequest request) =>
+        group.MapPut("/propositions/{name}", (string name, PropositionPutRequest request, HttpContext http) =>
         {
+            if (GrantGate.Refuse(http, GrantVerb.Publish, name, json) is { } refusal)
+                return refusal;
+
             if (request.Document.ValueKind == JsonValueKind.Undefined)
                 return EndpointResponses.MissingDocument(json);
             if (request.BaseVersion <= 0)
@@ -62,10 +69,15 @@ internal static class MotivPropositionEndpoints
             return ToResult(propositions.Update(name, request.Document.GetRawText(), request.BaseVersion), name, json);
         });
 
-        group.MapDelete("/propositions/{name}", (string name, int baseVersion) =>
-            baseVersion <= 0
+        group.MapDelete("/propositions/{name}", (string name, int baseVersion, HttpContext http) =>
+        {
+            if (GrantGate.Refuse(http, GrantVerb.Publish, name, json) is { } refusal)
+                return refusal;
+
+            return baseVersion <= 0
                 ? EndpointResponses.NonPositiveBaseVersion(json)
-                : ToResult(propositions.Withdraw(name, baseVersion), name, json));
+                : ToResult(propositions.Withdraw(name, baseVersion), name, json);
+        });
 
         group.MapGet("/propositions/{name}/dependents", (string name) =>
             propositions.Find(name) is null
