@@ -1,4 +1,4 @@
-import { test, expect, type APIRequestContext } from '@playwright/test';
+import { test, expect, request as newRequestContext, type APIRequestContext } from '@playwright/test';
 
 /**
  * End-to-end coverage of the real OIDC path: grants enforced over actual Keycloak tokens, not the
@@ -64,6 +64,47 @@ test.describe.serial('authenticated path against real Keycloak grants (--profile
   // previous step left behind.
   let e2eFlagVersion: number;
   let changeRequestId: string;
+
+  test.afterAll(async () => {
+    // Safety-net teardown. Serial mode aborts the remaining tests — including case 8's own
+    // cleanup — the moment any test in this file fails, which would otherwise leave the
+    // maker-checker gate installed and/or pricing.e2e-flag behind in the container's file-backed
+    // stores. A subsequent run's case 4 (create) or case 5 (gate PUT) would then fail confusingly
+    // against state left by a *previous* failure rather than starting clean. This hook mirrors
+    // case 8, but every step is independently best-effort (never throws) and re-derives what to
+    // delete rather than trusting this run's local variables, so it is idempotent whether case 8
+    // already ran or not. `request` (the fixture) cannot be used from afterAll, hence the
+    // standalone context via the `request` *module export* imported as `newRequestContext`.
+    //
+    // Residual limitation: a hard process kill (not a test failure/throw) before this hook gets
+    // to run still leaks state. `docker compose --profile auth down` (or a fresh `up`) resets it.
+    if (!process.env.MOTIV_E2E_AUTH_URL) return;
+
+    const context = await newRequestContext.newContext();
+    try {
+      const rootToken = await token(context, 'root-admin').catch(() => undefined);
+      if (rootToken) {
+        await context.delete(`${APP_URL}/api/rules/gate`, { headers: bearer(rootToken) }).catch(() => {});
+      }
+
+      const paulaToken = await token(context, 'paula-publisher').catch(() => undefined);
+      if (paulaToken) {
+        const current = await context
+          .get(`${APP_URL}/api/rules/propositions/pricing.e2e-flag`, { headers: bearer(paulaToken) })
+          .catch(() => undefined);
+        if (current?.ok()) {
+          const version = ((await current.json()) as { version: number }).version;
+          await context
+            .delete(`${APP_URL}/api/rules/propositions/pricing.e2e-flag?baseVersion=${version}`, {
+              headers: bearer(paulaToken),
+            })
+            .catch(() => {});
+        }
+      }
+    } finally {
+      await context.dispose();
+    }
+  });
 
   test('1: an unauthenticated catalog read is refused', async ({ request }) => {
     const response = await request.get(`${APP_URL}/api/rules/catalog`);
