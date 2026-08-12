@@ -174,12 +174,36 @@ internal sealed class JsonFileGrantSource(string path) : IGrantSource
 
     /// <summary>The principal's stable subject: NameIdentifier, then "sub", then Name, then
     /// "unknown" — mirrors <c>Motiv.Serialization.AspNetCore.PrincipalIdentity.Subject</c>, which is
-    /// internal to that assembly and not visible here.</summary>
-    private static string Subject(ClaimsPrincipal principal) =>
+    /// internal to that assembly and not visible here. Internal (not private) so
+    /// <see cref="BootstrapGrantSource"/> can reuse the exact same resolution for its subject match.</summary>
+    internal static string Subject(ClaimsPrincipal principal) =>
         principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
         ?? principal.FindFirst("sub")?.Value
         ?? principal.Identity?.Name
         ?? "unknown";
+}
+
+/// <summary>
+/// Cold start for an empty app-owned store: a config-designated subject (Motiv:Bootstrap:Subject)
+/// holds administer ONLY while the store contains no administer grant. A conditional seed, not a
+/// standing superuser — once a real admin exists the elevation goes inert, so a leaked bootstrap
+/// config does nothing thereafter. Never an unauthenticated first-run flow.
+/// </summary>
+internal sealed class BootstrapGrantSource(JsonFileGrantSource inner, string subject) : IGrantSource
+{
+    /// <summary>The wrapped mutable store — admin endpoints reach it through this to unwrap the
+    /// decorator, since <see cref="IGrantSource"/> itself exposes no administration surface.</summary>
+    public JsonFileGrantSource Store => inner;
+
+    public bool SupportsAdministration => inner.SupportsAdministration;
+    public IReadOnlyCollection<string> KnownRoles => inner.KnownRoles;
+    public IReadOnlyList<NamespaceGrant> GrantsFor(ClaimsPrincipal principal) => inner.GrantsFor(principal);
+
+    /// <summary>The real check, or — only while the store holds no administer grant at all — the
+    /// configured bootstrap subject. Once any real admin exists this second branch can never fire
+    /// again, even for the bootstrap subject itself: elevation is conditional on emptiness, not identity.</summary>
+    public bool IsAdministrator(ClaimsPrincipal principal) =>
+        inner.IsAdministrator(principal) || (!inner.AnyAdministrators && JsonFileGrantSource.Subject(principal) == subject);
 }
 
 /// <summary>A claims-to-grant mapping: the claim type and value to watch for, and the namespace grant

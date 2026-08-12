@@ -128,7 +128,15 @@ else
         case "":
             var grantsPath = builder.Configuration["Motiv:Grants:Path"]
                 ?? Path.Combine(builder.Environment.ContentRootPath, "grants.json");
-            builder.Services.AddSingleton<IGrantSource>(new JsonFileGrantSource(grantsPath));
+            var appStore = new JsonFileGrantSource(grantsPath);
+
+            // Seam: cold-start elevation. Only the app-owned store can be bootstrapped this way — a
+            // decorator, not a standing superuser, so it's wired only when the config key is present.
+            var bootstrapSubject = builder.Configuration["Motiv:Bootstrap:Subject"];
+            IGrantSource grantsSource = string.IsNullOrWhiteSpace(bootstrapSubject)
+                ? appStore
+                : new BootstrapGrantSource(appStore, bootstrapSubject);
+            builder.Services.AddSingleton<IGrantSource>(grantsSource);
             break;
         default:
             throw new InvalidOperationException(
@@ -229,13 +237,13 @@ app.MapGet("/api/admin/capabilities", (HttpContext http, IGrantSource grants) =>
 var admin = app.MapGroup("/api/admin/grants").RequireAuthorization();
 admin.MapGet("", (HttpContext http, IGrantSource grants) =>
 {
-    if (grants is not JsonFileGrantSource store) return Results.NotFound();
+    if (TryGetMutableStore(grants) is not { } store) return Results.NotFound();
     if (!grants.IsAdministrator(http.User)) return Results.StatusCode(403);
     return Results.Json(store.All);
 });
 admin.MapPost("", (HttpContext http, IGrantSource grants, [FromBody] GrantRecord record) =>
 {
-    if (grants is not JsonFileGrantSource store)
+    if (TryGetMutableStore(grants) is not { } store)
         return Results.NotFound();
     if (!grants.IsAdministrator(http.User))
         return Results.StatusCode(403);
@@ -244,7 +252,7 @@ admin.MapPost("", (HttpContext http, IGrantSource grants, [FromBody] GrantRecord
 });
 admin.MapDelete("", (HttpContext http, IGrantSource grants, [FromBody] GrantRecord record) =>
 {
-    if (grants is not JsonFileGrantSource store) return Results.NotFound();
+    if (TryGetMutableStore(grants) is not { } store) return Results.NotFound();
     if (!grants.IsAdministrator(http.User)) return Results.StatusCode(403);
     return store.Remove(record) switch
     {
@@ -254,6 +262,17 @@ admin.MapDelete("", (HttpContext http, IGrantSource grants, [FromBody] GrantReco
         _ => Results.NotFound()
     };
 });
+
+// Seam: the admin endpoints only ever need the mutable store, never the grant-source wrapper
+// itself — this unwraps BootstrapGrantSource's decorator (and passes a bare JsonFileGrantSource
+// through unchanged), so callers above check IsAdministrator on `grants` (the elevation-aware
+// wrapper) while mutating through the store this returns.
+static JsonFileGrantSource? TryGetMutableStore(IGrantSource grants) => grants switch
+{
+    JsonFileGrantSource store => store,
+    BootstrapGrantSource bootstrap => bootstrap.Store,
+    _ => null
+};
 
 app.MapFallbackToFile("index.html", staticFiles);
 
