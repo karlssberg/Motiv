@@ -36,7 +36,10 @@ services:
       # compose health-check recipe: a bare /dev/tcp probe against the management port's
       # /health/ready. Requires /bin/sh to support /dev/tcp (true for the image's shell as of
       # 26.0) — unverified here since Docker isn't available in this environment.
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\\r\\nhost: localhost\\r\\n\\r\\n' >&3 && cat <&3 | grep -m 1 status | grep -m 1 UP"]
+      # `Connection: close` is required on the request line — without it HTTP/1.1 keep-alive
+      # lets the server hold fd 3 open after the response, so `cat <&3` blocks reading until the
+      # probe's own timeout on every single attempt (see keycloak/keycloak#36537).
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\\r\\nhost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -m 1 status | grep -m 1 UP"]
       interval: 5s
       timeout: 5s
       retries: 20
