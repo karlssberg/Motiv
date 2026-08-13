@@ -86,6 +86,32 @@ describe('parse — leaves and grouping', () => {
     expect(Object.getPrototypeOf(args)).toBe(Object.prototype);
     expect(Object.keys(args)).toEqual(['__proto__']);
   });
+
+  it('accepts keyword-shaped argument names', () => {
+    const result = parse('s(all = 1, string = "x", param = true, in = 2)');
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({
+      spec: 's', args: { all: 1, string: 'x', param: true, in: 2 },
+    });
+  });
+
+  it('accepts a keyword-shaped parameter name', () => {
+    const result = parse('param all: integer = 2\n\ns');
+    expect(result.errors).toEqual([]);
+    expect(result.document?.parameters).toEqual({ all: { type: 'integer', default: 2 } });
+  });
+
+  it('accepts a keyword-shaped collection path', () => {
+    const result = parse('any in string { is-positive }');
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({ asAnySatisfied: { spec: 'is-positive' }, path: 'string' });
+  });
+
+  it('still reads a bare quantifier keyword at expression position as a quantifier', () => {
+    const result = parse('all in orders { is-positive }');
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({ asAllSatisfied: { spec: 'is-positive' }, path: 'orders' });
+  });
 });
 
 describe('parse — binary operators', () => {

@@ -1,6 +1,6 @@
 import type { ArgValue, ParameterDeclaration, RuleDocument, RuleNode } from '../document.js';
 import { tokenize } from './lexer.js';
-import type { DslError, NodeSpan, ParseResult, Token } from './types.js';
+import type { DslError, NodeSpan, ParseResult, Token, TokenKind } from './types.js';
 
 const ROOT = '$.rule';
 
@@ -51,6 +51,29 @@ class ParserState {
       if (this.spans[i]!.path === path) this.spans.splice(i, 1);
     }
   }
+}
+
+/**
+ * The token kinds a word can lex as. The lexer classifies words context-free, so `all` is a
+ * `quantifier` and `string` a `type` wherever they appear.
+ */
+const WORD_KINDS: ReadonlySet<TokenKind> = new Set<TokenKind>(['spec', 'keyword', 'type', 'quantifier']);
+
+/**
+ * Consumes an identifier in a position where the grammar admits nothing but an identifier, so any
+ * word is simply a name. Used for argument names, `param` declaration names, and collection paths.
+ *
+ * Deliberately NOT used for a spec reference at expression position: a bare `all` there could open
+ * `all in orders { … }`, so the lexer's classification is load-bearing and must be respected.
+ */
+function parseIdentifier(state: ParserState, code: string, message: string): Token | undefined {
+  const token = state.peek();
+  if (!token || !WORD_KINDS.has(token.kind)) {
+    state.error(code, message, token);
+    return undefined;
+  }
+  state.next();
+  return token;
 }
 
 /** Consumes a trailing `as "name"` clause, returning the name when present. */
@@ -121,12 +144,10 @@ function parseQuantifier(state: ParserState, path: string, word: QuantifierWord)
   }
   state.next();
 
-  const pathToken = state.peek();
-  if (!pathToken || pathToken.kind !== 'spec') {
-    state.error('ExpectedCollection', 'expected a collection path after `in`', pathToken);
-    return undefined;
-  }
-  state.next();
+  const pathToken = parseIdentifier(
+    state, 'ExpectedCollection', 'expected a collection path after `in`',
+  );
+  if (!pathToken) return undefined;
 
   const open = state.peek();
   if (!open || open.value !== '{') {
@@ -177,12 +198,8 @@ function parseArgs(state: ParserState): Record<string, ArgValue> | undefined {
   const args: Record<string, ArgValue> = {};
 
   for (;;) {
-    const name = state.peek();
-    if (!name || name.kind !== 'spec') {
-      state.error('ExpectedArgName', 'expected an argument name', name);
-      return undefined;
-    }
-    state.next();
+    const name = parseIdentifier(state, 'ExpectedArgName', 'expected an argument name');
+    if (!name) return undefined;
 
     if (state.peek()?.kind !== 'equals') {
       state.error('ExpectedArgValue', 'expected `=` and an argument value', state.peek());
@@ -367,12 +384,8 @@ function parseParameters(state: ParserState): RuleDocument['parameters'] {
 
   while (state.peek()?.value === 'param') {
     state.next();
-    const nameToken = state.peek();
-    if (!nameToken || nameToken.kind !== 'spec') {
-      state.error('ExpectedParameterName', 'expected a parameter name', nameToken);
-      break;
-    }
-    state.next();
+    const nameToken = parseIdentifier(state, 'ExpectedParameterName', 'expected a parameter name');
+    if (!nameToken) break;
 
     if (state.peek()?.kind !== 'colon') {
       state.error('ExpectedParameterType', 'expected `:` and a type', state.peek());
