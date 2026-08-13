@@ -72,6 +72,25 @@ describe('Catalog schema maps typing', () => {
     expect(catalog.metadataTypes?.['Verdict']).toBe(verdictMetadataSchema);
     expect(catalog.modelTypes?.['customer']).toBe(customerModelSchema);
   });
+
+  it('a catalog entry carries ordered parameter declarations', () => {
+    const catalog: Catalog = {
+      specs: [{
+        name: 'at-least',
+        modelType: 'customer',
+        metadataType: 'String',
+        isAsync: false,
+        origin: 'Compiled',
+        parameters: [
+          { name: 'floor', type: 'integer', default: 2 },
+          { name: 'label', type: 'string' },
+        ],
+      }],
+      collections: [],
+    };
+
+    expect(catalog.specs[0]!.parameters?.map((parameter) => parameter.name)).toEqual(['floor', 'label']);
+  });
 });
 
 describe('validateAgainstSchema', () => {

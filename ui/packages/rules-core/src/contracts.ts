@@ -1,4 +1,13 @@
-import type { RuleDocument } from './document.js';
+import type { ArgValue, ParameterDeclaration, RuleDocument } from './document.js';
+
+/** One declared parameter of a parameterised spec, in declaration order. */
+export interface CatalogParameter {
+  name: string;
+  /** The scalar type, matching the `parameterDeclaration.type` enum in rule.v1.json. */
+  type: ParameterDeclaration['type'];
+  /** The default value, absent when the parameter is required. */
+  default?: ArgValue;
+}
 
 /** One catalog listing for a registered specification. */
 export interface CatalogEntry {
@@ -9,6 +18,11 @@ export interface CatalogEntry {
   description?: string | null;
   /** Whether the spec is compiled, overridden by an authored document, or authored. */
   origin: PropositionOrigin;
+  /**
+   * The spec's declared parameters, in order — present only for a parameterised compiled
+   * registration. Order is a hint for authoring positionally; the stored document is always named.
+   */
+  parameters?: CatalogParameter[];
 }
 
 /** One catalog listing for a registered collection projection. */
