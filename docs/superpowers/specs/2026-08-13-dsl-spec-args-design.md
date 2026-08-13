@@ -35,6 +35,9 @@ gate with an append-only version log, a silent semantic change is the worst avai
    consumed at author time, and never enters a rule document.
 4. **The printer always emits the named form.** Positional is input-only.
 5. **Two steps, one design.** Step 1 stands alone and closes the hole; step 2 is ergonomics on top.
+6. **Identifier positions that are grammatically unambiguous accept any word-shaped token** — arg
+   names, `param` declaration names, and collection paths. The spec-name position keeps the lexer's
+   classification, because it is genuinely ambiguous.
 
 ### Why `=` and not `:`
 
@@ -60,6 +63,8 @@ stale hint can only affect the line being typed, which is the same exposure any 
 
 - `ArgValue` and `SpecNode.args` in `rules-core`.
 - DSL lexer/parser/printer support for named args, including the round-trip guarantee.
+- **The contextual-name rule at all three unambiguous identifier positions** (arg names, `param`
+  declaration names, collection paths) — see "Identifier positions" below.
 - The two known hand-copy duplication sites in the demo (highlighting).
 - Step 2: ordered `parameters` on the catalog (C# + TS), positional *input*, declared-order printing.
 
@@ -73,9 +78,6 @@ stale hint can only affect the line being typed, which is the same exposure any 
 - **Any change to `rule.v1.json`, the C# binder, or stored documents.**
 - Escaping inside DSL strings. The DSL has no escapes, so a `"` cannot appear in a quoted string — a
   pre-existing limitation of `as "name"` and of string-valued args, inherited unchanged.
-- Widening `param` declaration names to the same contextual rule arg names get. `parseParameters`
-  still requires a `spec`-kind token, so `param all: integer` remains unrepresentable. Aligning the
-  two is a small, separate consistency change and is deliberately not bundled here.
 
 ---
 
@@ -133,29 +135,49 @@ if (token.kind === 'spec') {
 }
 ```
 
-- **Arg names are a contextual position.** The lexer classifies words context-free, so `all` is a
-  `quantifier` token and `string` a `type` token wherever they appear. But immediately after `(` or
-  `,` an arg name is the *only* thing that can occur — args are strictly `name = literal`, so no
-  quantifier, keyword or type word can mean anything else there. `parseArgs` therefore accepts any
-  **word-shaped** token as a name and reads its text verbatim, rather than requiring `kind === 'spec'`.
-  This makes every word-shaped key representable with no quoting.
-
-  Quoted arg names (`s("all" = 1)`) were considered and **rejected**: quoting a name makes it read as
-  a value, which inverts what it is. The contextual-position rule achieves the same completeness
-  without the misleading syntax.
+- Arg names use the contextual-name rule below, so `s(all = 1)` and `s(string = "x")` are ordinary
+  named args. Quoted arg names (`s("all" = 1)`) were considered and **rejected**: quoting a name makes
+  it read as a value, which inverts what it is.
 - **Duplicate arg names** are a parse error, not last-wins. Last-wins is silent loss.
 - Keys are inserted with `Object.defineProperty`, following the `__proto__` precedent established in
   `parseParameters`.
 - New error codes follow the existing idiom: `ExpectedArgName`, `ExpectedArgValue`, `UnclosedArgs`,
   `DuplicateArg`.
 
+### Identifier positions (`src/dsl/parser.ts`)
+
+The lexer classifies words **context-free**: `all` is a `quantifier` token and `string` a `type`
+token wherever either appears. That classification is right in one place and overreaching in three.
+
+An identifier position is **unambiguous** when the grammar admits nothing but an identifier there.
+In those positions the parser knows what it is reading from position alone, so demanding
+`kind === 'spec'` is the lexer making a decision that belongs to the parser — and the visible cost is
+a legal name the DSL cannot express. All three take a shared helper that accepts any **word-shaped**
+token and reads its text verbatim:
+
+| Position | Grammar | Today | Effect of the change |
+|---|---|---|---|
+| Arg name | after `(` or `,`, must be followed by `=` | new | `s(all = 1)` parses |
+| `param` name | after the `param` keyword | `parser.ts:304` requires `spec` | `param all: integer` parses |
+| Collection path | after `in` | `parser.ts:125` requires `spec` | `all in string { … }` parses |
+
+**The spec-name position is deliberately excluded.** At expression position a bare `all` genuinely
+could open `all in orders { … }`, so the parser cannot tell a spec reference from a quantifier
+keyword by position — the lexer's classification is load-bearing there and stays exactly as it is.
+That exclusion is what makes this a rule about grammatical position rather than a blanket "keywords
+are just identifiers".
+
+**The arg-value position is also excluded, for a different reason.** In `s(n = all)`, `all` is not an
+over-classified name; it is simply not a literal. Values remain `NUMBER | STRING | true | false |
+null`, and a bare word outside that set stays an error.
+
 ### Printer (`src/dsl/printer.ts`)
 
 `printBody`'s spec branch becomes `${node.spec}${printArgs(node.args)}`. `printArgs` returns `''`
 for absent or empty args, so `args: {}` prints as bare `s` and round-trips to `{spec:'s'}` —
 semantically identical, documented and tested. `s()` is a parse error. Names print bare — never
-quoted — which the contextual-position rule above makes safe for every word-shaped key. Values reuse
-the existing literal rendering, extended for `null`.
+quoted — which the contextual-name rule above makes safe for every word-shaped key. Values reuse the
+existing literal rendering, extended for `null`.
 
 A key that is **not** word-shaped (containing whitespace or punctuation outside `A-Za-z0-9_.-`)
 remains unrepresentable. The printer emits it bare regardless, so the resulting text fails to parse
@@ -235,8 +257,10 @@ Test-first throughout, per the repo's TDD requirement. The headline is the round
 - Round-trip: a document with args survives document → DSL → document unchanged.
 - Parser: each literal type (number, negative number, string, `true`, `false`, `null`); multiple args;
   args combined with an `as` clause; args inside quantifier bodies and under negation.
-- Parser: keyword-, type- and quantifier-shaped arg names (`s(all = 1)`, `s(string = "x")`,
-  `s(param = true)`) parse as ordinary names — the contextual-position rule.
+- Contextual names, one test per unambiguous position: `s(all = 1)` / `s(string = "x")` /
+  `s(param = true)`; `param all: integer = 2`; `any in string { … }`.
+- Contextual names stop where they should: `all` at expression position still parses as a quantifier,
+  not a spec reference; `s(n = all)` is still an `ExpectedArgValue` error.
 - Parser errors: missing `=`, missing value, unclosed paren, duplicate name, `s()`.
 - Printer: bare (never quoted) names, omission for absent and empty args.
 - Printer last resort: a non-word-shaped key prints bare and the result fails to parse, rather than
@@ -253,7 +277,16 @@ Test-first throughout, per the repo's TDD requirement. The headline is the round
 - Print orders args by declaration when a catalog is supplied, and does not reorder without one.
 
 **Regression surface:** the full `rules-core` suite plus the demo's UI tests, since the lexer's
-`TokenKind` union widens. `pnpm e2e` per the repo's e2e note (never bare `playwright test`).
+`TokenKind` union widens *and* three identifier positions loosen. The loosening only ever turns a
+former parse error into a successful parse, so no previously-valid document changes meaning.
+
+No existing test asserts the rejections being lifted. The one case that comes close —
+`dsl-parser-errors.test.ts:32`, `parse('all in { is-positive }')` expecting `ExpectedCollection` —
+survives unchanged, because the token after `in` there is a `brace`, not a word, and the rule only
+admits **word-shaped** tokens. That is a useful check on the rule's blast radius: it loosens which
+*words* are accepted, not whether a non-word is.
+
+`pnpm e2e` per the repo's e2e note (never bare `playwright test`).
 
 ## Verification obligations
 
@@ -268,4 +301,3 @@ Test-first throughout, per the repo's TDD requirement. The headline is the round
 - Catalog-driven completion and lint of arg names and values (editor affordances).
 - The DSL's lack of string escapes, which bounds representable text in `as` clauses and string-valued
   args alike.
-- Aligning `param` declaration names with the contextual arg-name rule.
