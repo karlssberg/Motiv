@@ -143,6 +143,18 @@ describe('parse — leaves and grouping', () => {
     expect(result.errors).toEqual([]);
     expect(result.document?.rule).toEqual({ spec: 'at-least', args: { floor: 2, label: 'high' } });
   });
+
+  it('resolves a positional boolean argument to its declared name', () => {
+    const result = parse('at-least(true)', { catalog: CATALOG });
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({ spec: 'at-least', args: { floor: true } });
+  });
+
+  it('resolves positional null and string arguments to their declared names', () => {
+    const result = parse('at-least(null, "x")', { catalog: CATALOG });
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({ spec: 'at-least', args: { floor: null, label: 'x' } });
+  });
 });
 
 describe('parse — binary operators', () => {

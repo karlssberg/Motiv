@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parse } from '../src/dsl/parser.js';
+import type { ParseOptions } from '../src/dsl/parser.js';
 import type { Catalog } from '../src/contracts.js';
 
 const CATALOG: Catalog = {
@@ -21,16 +22,25 @@ const CATALOG: Catalog = {
 };
 
 /**
- * The backend sends an explicit JSON `null` for a plain spec's `parameters` rather than omitting
- * the property, so `CatalogEntry.parameters` is `CatalogParameter[] | null | undefined`. A guard
- * written as `=== undefined` would silently fail to fire against this literal `null` — pinned
- * separately from `plain` above (which has `parameters` merely absent) to catch that exact bug.
+ * Two specs whose catalog entries declare "no parameters" two different ways, neither of which is
+ * `plain` above's merely-absent `parameters`:
+ *  - `plain-null` — the backend sends an explicit JSON `null` for a plain spec's `parameters`
+ *    rather than omitting the property, so `CatalogEntry.parameters` is
+ *    `CatalogParameter[] | null | undefined`. A guard written as `=== undefined` would silently
+ *    fail to fire against this literal `null`.
+ *  - `plain-empty` — an empty declared-parameter array. `entry.parameters == null` is `false` for
+ *    `[]`, so a named argument like `s(n = 1)` would otherwise slip past the pre-guard client-side
+ *    and only be rejected later by the server.
  */
-const CATALOG_WITH_NULL_PARAMETERS: Catalog = {
+const CATALOG_WITH_NULL_OR_EMPTY_PARAMETERS: Catalog = {
   specs: [
     {
       name: 'plain-null', modelType: 'customer', metadataType: 'String', isAsync: false,
       origin: 'Compiled', parameters: null,
+    },
+    {
+      name: 'plain-empty', modelType: 'customer', metadataType: 'String', isAsync: false,
+      origin: 'Compiled', parameters: [],
     },
   ],
   collections: [],
@@ -106,7 +116,9 @@ describe('parse — errors', () => {
   });
 
   it('reports a missing `=` after an argument name', () => {
-    expect(parse('s(n 1)').errors[0]).toMatchObject({ code: 'ExpectedArgValue' });
+    expect(parse('s(n 1)').errors[0]).toMatchObject({
+      code: 'ExpectedArgValue', message: 'expected `=` and an argument value',
+    });
   });
 
   /**
@@ -136,8 +148,39 @@ describe('parse — errors', () => {
     expect(parse('s(n = all)').errors[0]).toMatchObject({ code: 'ExpectedArgValue' });
   });
 
+  /**
+   * `looksLikeArgValue` admits a string token, so without the one-token `=` lookahead this would
+   * take the positional branch instead of reaching `parseIdentifier` — the actual source of the
+   * rejection, since `WORD_KINDS` excludes `'string'`. Pinned directly because it is the one input
+   * whose dispatch the lookahead changes.
+   */
+  it('still rejects a quoted argument name even when followed by `=`', () => {
+    expect(parse('s("x" = 1)').errors[0]).toMatchObject({ code: 'ExpectedArgName' });
+  });
+
+  /**
+   * `@parameter` references inside `args` are a deliberate non-goal — the backend's
+   * `RuleParameterSubstituter` never rewrites `args`, so accepting one would author a document
+   * the backend silently ignores. Guards `parseArgValue` against a future `paramRef` case added
+   * for symmetry with `parseCount`.
+   */
+  it('rejects a @parameter reference as an argument value', () => {
+    expect(parse('s(n = @x)').errors[0]).toMatchObject({ code: 'ExpectedArgValue' });
+  });
+
   it('refuses a positional argument with no catalog', () => {
     expect(parse('at-least(2)').errors[0]).toMatchObject({ code: 'ExpectedArgName' });
+  });
+
+  /**
+   * TypeScript forbids `catalog: null` (the option is typed `Catalog | undefined`), but this
+   * package is consumed as JavaScript too, where a caller could pass `catalog: null` in place of
+   * omitting it. A guard written as `=== undefined` would let that fall through to
+   * `UnknownParameterisedSpec` instead — non-crashing but the wrong diagnostic for "no catalog".
+   */
+  it('refuses a positional argument when the catalog is explicitly null', () => {
+    const options = { catalog: null } as unknown as ParseOptions;
+    expect(parse('at-least(2)', options).errors[0]).toMatchObject({ code: 'ExpectedArgName' });
   });
 
   it('refuses a positional argument for a spec the catalog does not name', () => {
@@ -161,7 +204,12 @@ describe('parse — errors', () => {
   });
 
   it('refuses arguments for a spec whose catalog parameters are literal null', () => {
-    expect(parse('plain-null(1)', { catalog: CATALOG_WITH_NULL_PARAMETERS }).errors[0])
+    expect(parse('plain-null(1)', { catalog: CATALOG_WITH_NULL_OR_EMPTY_PARAMETERS }).errors[0])
+      .toMatchObject({ code: 'UnexpectedArguments' });
+  });
+
+  it('refuses a named argument for a spec whose catalog parameters are an empty array', () => {
+    expect(parse('plain-empty(n = 1)', { catalog: CATALOG_WITH_NULL_OR_EMPTY_PARAMETERS }).errors[0])
       .toMatchObject({ code: 'UnexpectedArguments' });
   });
 });

@@ -21,6 +21,10 @@ const DOCUMENTS: Array<{ label: string; document: RuleDocument }> = [
     label: 'spec with exponential arg values',
     document: { rule: { spec: 'gate', args: { big: 1e21, tiny: 1e-7 } } },
   },
+  {
+    label: 'spec with literal-keyword arg names',
+    document: { rule: { spec: 'gate', args: { true: 1, false: 2, null: 3 } } },
+  },
   { label: 'expression', document: { rule: { expression: 'n > 0' } } },
   { label: 'not', document: { rule: { not: { spec: 'is-flagged' } } } },
   { label: 'and', document: { rule: { and: [{ spec: 'a' }, { spec: 'b' }] } } },

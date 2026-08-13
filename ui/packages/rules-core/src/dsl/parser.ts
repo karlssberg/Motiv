@@ -238,7 +238,7 @@ function looksLikeArgValue(token: Token | undefined): boolean {
 function positionalName(
   state: ParserState, spec: string, index: number, token: Token | undefined,
 ): string | undefined {
-  if (state.catalog === undefined) {
+  if (state.catalog == null) {
     state.error('ExpectedArgName', 'expected an argument name', token);
     return undefined;
   }
@@ -271,11 +271,15 @@ function parseArgs(state: ParserState, spec: string): Record<string, ArgValue> |
   for (;;) {
     // Anything that opens a value literal is positional; everything else (including a bare
     // identifier with no following `=`) is an attempted name, so `s(n 1)` still reports the
-    // missing `=` rather than being mistaken for a positional argument.
+    // missing `=` rather than being mistaken for a positional argument. A one-token lookahead
+    // for `=` keeps `true`/`false`/`null` usable as argument NAMES (`gate(true = 1)`) even
+    // though they lex the same as their literal-value forms. A quoted name (`s("x" = 1)`) takes
+    // this same named branch — the lookahead sees its `=` too — but is still rejected, because
+    // `parseIdentifier` below only accepts `WORD_KINDS`, which excludes `'string'`.
     const argToken = state.peek();
     let name: string | undefined;
 
-    if (looksLikeArgValue(argToken)) {
+    if (looksLikeArgValue(argToken) && state.peek(1)?.kind !== 'equals') {
       if (sawNamed) {
         state.error('PositionalAfterNamed',
           'a positional argument cannot follow a named one', argToken);
@@ -335,10 +339,14 @@ function parsePrimary(state: ParserState, path: string): RuleNode | undefined {
     state.next();
     // A spec the catalog names but gives no parameters takes no argument list at all, so say so
     // outright rather than leaving `parseArgs` to complain about the first argument. `parameters`
-    // is an explicit `null` for a plain spec, so this must not test `undefined` alone.
+    // is an explicit `null` for a plain spec, so this must not test `undefined` alone — and an
+    // empty declaration list (`[]`) is the same "no parameters" case, since `!= null` alone would
+    // let it slip through to `parseArgs` and only be rejected later by the server.
     const entry = catalogEntry(state, token.value);
     const openArgs = state.peek();
-    if (openArgs?.value === '(' && entry !== undefined && entry.parameters == null) {
+    const declaresNoParameters = entry !== undefined
+      && (entry.parameters == null || entry.parameters.length === 0);
+    if (openArgs?.value === '(' && declaresNoParameters) {
       state.error('UnexpectedArguments', `\`${token.value}\` takes no arguments`, openArgs);
       state.next();
       return undefined;
