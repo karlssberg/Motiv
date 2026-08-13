@@ -78,6 +78,7 @@ export function tokenize(text: string): Token[] {
     if (char === '{' || char === '}') { push('brace', i, i + 1); i++; continue; }
     if (char === ':') { push('colon', i, i + 1); i++; continue; }
     if (char === '=') { push('equals', i, i + 1); i++; continue; }
+    if (char === ',') { push('comma', i, i + 1); i++; continue; }
 
     if (char === '"') { const end = readDelimited(text, i, '"'); push('string', i, end); i = end; continue; }
     if (char === '`') { const end = readDelimited(text, i, '`'); push('expression', i, end); i = end; continue; }

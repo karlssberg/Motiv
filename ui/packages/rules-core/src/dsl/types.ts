@@ -11,6 +11,7 @@ export type TokenKind =
   | 'brace'       // { }
   | 'colon'       // :
   | 'equals'      // =
+  | 'comma'       // ,
   | 'string'      // "quota"
   | 'expression'  // `n > 0`
   | 'number'      // 3

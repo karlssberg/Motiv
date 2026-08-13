@@ -154,4 +154,12 @@ describe('tokenize', () => {
       ['spec', 'foo'],
     ]);
   });
+
+  it('lexes a comma as its own token', () => {
+    expect(tokenize(',')).toEqual([{ kind: 'comma', value: ',', from: 0, to: 1 }]);
+  });
+
+  it('lexes a comma between words without swallowing them', () => {
+    expect(tokenize('a, b').map((token) => token.kind)).toEqual(['spec', 'comma', 'spec']);
+  });
 });
