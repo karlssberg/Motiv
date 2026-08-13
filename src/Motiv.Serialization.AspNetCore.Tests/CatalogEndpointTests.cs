@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Motiv.Serialization.AspNetCore.Tests;
 
@@ -8,6 +9,23 @@ public class CatalogEndpointTests
 {
     private static SpecBase<int, string> IsPositive { get; } =
         Spec.Build((int n) => n > 0).WhenTrue("is positive").WhenFalse("is not positive").Create();
+
+    /// <summary>Spins up a host with propositions enabled, mirroring <see cref="TestApp.StartAsync"/>
+    /// for the cases that need the layered catalog (<c>EffectiveSpecs</c>) rather than the compiled
+    /// one (<c>CompiledSpecs</c>).</summary>
+    private static async Task<WebApplication> StartWithPropositionsAsync(
+        SpecRegistry registry, MotivRulesOptions options)
+    {
+        var builder = WebApplication.CreateSlimBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddTestAuth();
+        builder.Services.AddMotivRules(registry, options).AddPropositions();
+        var app = builder.Build();
+        app.UseTestAuth();
+        app.MapMotivRules("/api/rules");
+        await app.StartAsync();
+        return app;
+    }
 
     [Fact]
     public async Task Should_list_specs_and_collections()
@@ -151,6 +169,75 @@ public class CatalogEndpointTests
         // Assert
         var body = await response.Content.ReadFromJsonAsync<JsonElement>();
         body.GetProperty("specs")[0].GetProperty("parameters").ValueKind.ShouldBe(JsonValueKind.Null);
+    }
+
+    [Fact]
+    public async Task Should_surface_parameters_for_a_still_compiled_spec_in_the_layered_catalog()
+    {
+        // Arrange — propositions are enabled, but nothing is authored, so "at-least" resolves as
+        // PropositionOrigin.Compiled through EffectiveSpecs. This proves the registry lookup inside
+        // EffectiveSpecs actually finds the entry: a lookup that silently returned nothing would
+        // look identical to "no parameters" and this test would fail where the plain-catalog tests
+        // above (which never touch EffectiveSpecs) could not catch it.
+        var registry = new SpecRegistry()
+            .RegisterParameterised(
+                "at-least",
+                [
+                    new RuleParameterDeclaration("floor", RuleParameterType.Integer, hasDefault: true, 2),
+                    new RuleParameterDeclaration("label", RuleParameterType.String, hasDefault: false, null),
+                ],
+                values => Spec.Build((int n) => n >= (int)values["floor"]!).Create("at-least"));
+        var options = new MotivRulesOptions().AddModel<int>("number");
+        await using var app = await StartWithPropositionsAsync(registry, options);
+
+        // Act
+        var body = await app.GetTestClient().GetFromJsonAsync<JsonElement>("/api/rules/catalog");
+
+        // Assert
+        var atLeast = body.GetProperty("specs").EnumerateArray()
+            .Single(spec => spec.GetProperty("name").GetString() == "at-least");
+        atLeast.GetProperty("origin").GetString()!.ShouldBe("Compiled");
+
+        var parameters = atLeast.GetProperty("parameters");
+        parameters.GetArrayLength().ShouldBe(2);
+        parameters[0].GetProperty("name").GetString()!.ShouldBe("floor");
+        parameters[0].GetProperty("type").GetString()!.ShouldBe("integer");
+        parameters[0].GetProperty("default").GetInt32().ShouldBe(2);
+        parameters[1].GetProperty("name").GetString()!.ShouldBe("label");
+        parameters[1].GetProperty("type").GetString()!.ShouldBe("string");
+        parameters[1].GetProperty("default").ValueKind.ShouldBe(JsonValueKind.Null);
+    }
+
+    [Fact]
+    public async Task Should_suppress_parameters_when_an_override_replaces_a_parameterised_compiled_spec()
+    {
+        // Arrange — "at-least" is compiled as a parameterised spec, then overridden by an authored
+        // document that delegates to the plain "is-positive" spec. The registry entry for
+        // "at-least" still declares a parameter; the *effective* definition no longer does, because
+        // its behaviour now comes from the authored document, not the argument contract. A naive
+        // implementation that looks the name up in the registry and reports whatever it finds would
+        // pass the sibling test above but fail this one, since the registry entry survives untouched.
+        var registry = new SpecRegistry()
+            .Register("is-positive", IsPositive)
+            .RegisterParameterised(
+                "at-least",
+                [new RuleParameterDeclaration("floor", RuleParameterType.Integer, hasDefault: true, 2)],
+                values => Spec.Build((int n) => n >= (int)values["floor"]!).Create("at-least"));
+        var options = new MotivRulesOptions().AddModel<int>("number");
+        await using var app = await StartWithPropositionsAsync(registry, options);
+
+        var propositions = app.Services.GetRequiredService<PropositionSet>();
+        var created = propositions.Create("at-least", "number", """{ "rule": { "spec": "is-positive" } }""", null);
+        created.Outcome.ShouldBe(PropositionUpdateOutcome.Created);
+
+        // Act
+        var body = await app.GetTestClient().GetFromJsonAsync<JsonElement>("/api/rules/catalog");
+
+        // Assert
+        var atLeast = body.GetProperty("specs").EnumerateArray()
+            .Single(spec => spec.GetProperty("name").GetString() == "at-least");
+        atLeast.GetProperty("origin").GetString()!.ShouldBe("Overridden");
+        atLeast.GetProperty("parameters").ValueKind.ShouldBe(JsonValueKind.Null);
     }
 
     private static SpecBase<int, Verdict> HasVerdict { get; } =
