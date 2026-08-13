@@ -1,6 +1,25 @@
 import { describe, it, expect } from 'vitest';
 import { parse } from '../src/dsl/parser.js';
 import { listPaths } from '../src/paths.js';
+import type { Catalog } from '../src/contracts.js';
+
+const CATALOG: Catalog = {
+  specs: [
+    {
+      name: 'at-least', modelType: 'customer', metadataType: 'String', isAsync: false,
+      origin: 'Compiled',
+      parameters: [
+        { name: 'floor', type: 'integer' },
+        { name: 'label', type: 'string' },
+      ],
+    },
+    {
+      name: 'plain', modelType: 'customer', metadataType: 'String', isAsync: false,
+      origin: 'Compiled',
+    },
+  ],
+  collections: [],
+};
 
 describe('parse — leaves and grouping', () => {
   it('parses a bare spec into a spec node at the root path', () => {
@@ -111,6 +130,18 @@ describe('parse — leaves and grouping', () => {
     const result = parse('all in orders { is-positive }');
     expect(result.errors).toEqual([]);
     expect(result.document?.rule).toEqual({ asAllSatisfied: { spec: 'is-positive' }, path: 'orders' });
+  });
+
+  it('resolves a positional argument to its declared name', () => {
+    const result = parse('at-least(2)', { catalog: CATALOG });
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({ spec: 'at-least', args: { floor: 2 } });
+  });
+
+  it('resolves positional arguments before named ones', () => {
+    const result = parse('at-least(2, label = "high")', { catalog: CATALOG });
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({ spec: 'at-least', args: { floor: 2, label: 'high' } });
   });
 });
 

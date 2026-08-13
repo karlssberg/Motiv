@@ -1,5 +1,40 @@
 import { describe, it, expect } from 'vitest';
 import { parse } from '../src/dsl/parser.js';
+import type { Catalog } from '../src/contracts.js';
+
+const CATALOG: Catalog = {
+  specs: [
+    {
+      name: 'at-least', modelType: 'customer', metadataType: 'String', isAsync: false,
+      origin: 'Compiled',
+      parameters: [
+        { name: 'floor', type: 'integer' },
+        { name: 'label', type: 'string' },
+      ],
+    },
+    {
+      name: 'plain', modelType: 'customer', metadataType: 'String', isAsync: false,
+      origin: 'Compiled',
+    },
+  ],
+  collections: [],
+};
+
+/**
+ * The backend sends an explicit JSON `null` for a plain spec's `parameters` rather than omitting
+ * the property, so `CatalogEntry.parameters` is `CatalogParameter[] | null | undefined`. A guard
+ * written as `=== undefined` would silently fail to fire against this literal `null` — pinned
+ * separately from `plain` above (which has `parameters` merely absent) to catch that exact bug.
+ */
+const CATALOG_WITH_NULL_PARAMETERS: Catalog = {
+  specs: [
+    {
+      name: 'plain-null', modelType: 'customer', metadataType: 'String', isAsync: false,
+      origin: 'Compiled', parameters: null,
+    },
+  ],
+  collections: [],
+};
 
 describe('parse — errors', () => {
   it('reports an unclosed group on the opening paren', () => {
@@ -88,6 +123,35 @@ describe('parse — errors', () => {
 
   it('rejects a bare word as an argument value', () => {
     expect(parse('s(n = all)').errors[0]).toMatchObject({ code: 'ExpectedArgValue' });
+  });
+
+  it('refuses a positional argument with no catalog', () => {
+    expect(parse('at-least(2)').errors[0]).toMatchObject({ code: 'ExpectedArgName' });
+  });
+
+  it('refuses a positional argument for a spec the catalog does not name', () => {
+    expect(parse('unknown(2)', { catalog: CATALOG }).errors[0])
+      .toMatchObject({ code: 'UnknownParameterisedSpec' });
+  });
+
+  it('refuses arguments for a spec with no declared parameters', () => {
+    expect(parse('plain(2)', { catalog: CATALOG }).errors[0])
+      .toMatchObject({ code: 'UnexpectedArguments' });
+  });
+
+  it('refuses more positional arguments than declared parameters', () => {
+    expect(parse('at-least(1, 2, 3)', { catalog: CATALOG }).errors[0])
+      .toMatchObject({ code: 'TooManyArguments' });
+  });
+
+  it('refuses a positional argument after a named one', () => {
+    expect(parse('at-least(floor = 1, 2)', { catalog: CATALOG }).errors[0])
+      .toMatchObject({ code: 'PositionalAfterNamed' });
+  });
+
+  it('refuses arguments for a spec whose catalog parameters are literal null', () => {
+    expect(parse('plain-null(1)', { catalog: CATALOG_WITH_NULL_PARAMETERS }).errors[0])
+      .toMatchObject({ code: 'UnexpectedArguments' });
   });
 });
 

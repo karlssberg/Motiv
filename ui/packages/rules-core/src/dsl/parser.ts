@@ -1,8 +1,19 @@
 import type { ArgValue, ParameterDeclaration, RuleDocument, RuleNode } from '../document.js';
+import type { Catalog, CatalogParameter } from '../contracts.js';
 import { tokenize } from './lexer.js';
 import type { DslError, NodeSpan, ParseResult, Token, TokenKind } from './types.js';
 
 const ROOT = '$.rule';
+
+/** Options for {@link parse}. */
+export interface ParseOptions {
+  /**
+   * The spec catalog, used only to resolve *positional* arguments to their declared names.
+   * Absent, positional arguments are an error rather than a guess — so parsing stays a pure
+   * function of the text for every document the printer can produce.
+   */
+  catalog?: Catalog;
+}
 
 /**
  * Strips the delimiters off a consumed string or expression token, reporting a literal that ran
@@ -24,7 +35,7 @@ class ParserState {
   readonly errors: DslError[] = [];
   index = 0;
 
-  constructor(readonly text: string) {
+  constructor(readonly text: string, readonly catalog?: Catalog) {
     this.tokens = tokenize(text);
   }
 
@@ -74,6 +85,18 @@ function parseIdentifier(state: ParserState, code: string, message: string): Tok
   }
   state.next();
   return token;
+}
+
+/**
+ * The declared parameters of `spec`, or `null`/`undefined` when the catalog cannot say — either
+ * because there is no catalog, the spec is unknown to it, or its entry declares no parameters
+ * (the server sends an explicit `null` for a plain spec's `parameters`, rather than omitting the
+ * property, so this must not be narrowed to `undefined` alone).
+ */
+function declaredParameters(
+  state: ParserState, spec: string,
+): readonly CatalogParameter[] | null | undefined {
+  return state.catalog?.specs.find((entry) => entry.name === spec)?.parameters;
 }
 
 /** Consumes a trailing `as "name"` clause, returning the name when present. */
@@ -191,32 +214,106 @@ function parseArgValue(state: ParserState): ArgValue | undefined {
   return undefined;
 }
 
-/** args := '(' NAME '=' literal (',' NAME '=' literal)* ')' — absent when no `(` follows. */
-function parseArgs(state: ParserState): Record<string, ArgValue> | undefined {
+/**
+ * Whether `token` opens a literal an argument value could be — the same set `parseArgValue`
+ * accepts. A bare identifier (e.g. `n`) is never one of these, even though it lexes with a
+ * `spec`-like kind, so it is read as an attempted argument *name* rather than a positional value.
+ */
+function looksLikeArgValue(token: Token | undefined): boolean {
+  if (!token) return false;
+  if (token.kind === 'number' || token.kind === 'string') return true;
+  return token.value === 'true' || token.value === 'false' || token.value === 'null';
+}
+
+/**
+ * The name `spec` declares for its parameter at `index`, which a positional argument there takes.
+ * Reports why the catalog cannot supply one — no catalog, a spec it does not name, or more
+ * arguments than parameters — and returns undefined.
+ */
+function positionalName(
+  state: ParserState, spec: string, index: number, token: Token | undefined,
+): string | undefined {
+  if (state.catalog === undefined) {
+    state.error('ExpectedArgName', 'expected an argument name', token);
+    return undefined;
+  }
+  const declared = declaredParameters(state, spec);
+  if (!declared) {
+    state.error('UnknownParameterisedSpec',
+      `\`${spec}\` declares no parameters to supply positionally`, token);
+    return undefined;
+  }
+  if (index >= declared.length) {
+    state.error('TooManyArguments', `\`${spec}\` declares ${declared.length} parameter(s)`, token);
+    return undefined;
+  }
+  return declared[index]!.name;
+}
+
+/**
+ * args := '(' arg (',' arg)* ')' where arg := literal | NAME '=' literal — absent when no `(`
+ * follows. Positional args resolve to the declared name of `spec`'s catalog entry at that
+ * position, so what lands in the document is always named. Positional args must precede named
+ * ones, mirroring C#.
+ */
+function parseArgs(state: ParserState, spec: string): Record<string, ArgValue> | undefined {
   if (state.peek()?.value !== '(') return undefined;
   const open = state.next()!;
   const args: Record<string, ArgValue> = {};
+  let positional = 0;
+  let sawNamed = false;
 
   for (;;) {
-    const name = parseIdentifier(state, 'ExpectedArgName', 'expected an argument name');
-    if (!name) return undefined;
+    // Anything that opens a value literal is positional; everything else (including a bare
+    // identifier with no following `=`) is an attempted name, so `s(n 1)` still reports a
+    // missing `=` rather than being mistaken for a positional argument with no catalog to
+    // resolve it against.
+    const isNamed = !looksLikeArgValue(state.peek());
+    let name: string;
+    let value: ArgValue | undefined;
 
-    if (state.peek()?.kind !== 'equals') {
-      state.error('ExpectedArgValue', 'expected `=` and an argument value', state.peek());
-      return undefined;
+    if (isNamed) {
+      const nameToken = parseIdentifier(state, 'ExpectedArgName', 'expected an argument name');
+      if (!nameToken) return undefined;
+      state.next(); // the '='
+      sawNamed = true;
+      name = nameToken.value;
+      value = parseArgValue(state);
+    } else {
+      if (sawNamed) {
+        state.error('PositionalAfterNamed',
+          'a positional argument cannot follow a named one', state.peek());
+        return undefined;
+      }
+      const declared = declaredParameters(state, spec);
+      if (!declared) {
+        state.error(
+          state.catalog === undefined ? 'ExpectedArgName' : 'UnknownParameterisedSpec',
+          state.catalog === undefined
+            ? 'expected an argument name'
+            : `\`${spec}\` declares no parameters to supply positionally`,
+          state.peek());
+        return undefined;
+      }
+      if (positional >= declared.length) {
+        state.error('TooManyArguments',
+          `\`${spec}\` declares ${declared.length} parameter(s)`, state.peek());
+        return undefined;
+      }
+      name = declared[positional]!.name;
+      positional++;
+      value = parseArgValue(state);
     }
-    state.next();
 
-    const value = parseArgValue(state);
     if (value === undefined) return undefined;
 
-    if (Object.prototype.hasOwnProperty.call(args, name.value)) {
-      state.error('DuplicateArg', `duplicate argument \`${name.value}\``, name);
+    if (Object.prototype.hasOwnProperty.call(args, name)) {
+      state.error('DuplicateArg', `duplicate argument \`${name}\``, state.peek());
       return undefined;
     }
     // `defineProperty`, not assignment: an argument named `__proto__` would otherwise hit the
     // prototype setter, silently dropping the value and mutating the object.
-    Object.defineProperty(args, name.value, {
+    Object.defineProperty(args, name, {
       value, enumerable: true, writable: true, configurable: true,
     });
 
@@ -244,7 +341,15 @@ function parsePrimary(state: ParserState, path: string): RuleNode | undefined {
 
   if (token.kind === 'spec') {
     state.next();
-    const args = parseArgs(state);
+    const hasArgs = state.peek()?.value === '(';
+    if (hasArgs && state.catalog !== undefined && declaredParameters(state, token.value) == null
+        && state.catalog.specs.some((entry) => entry.name === token.value)) {
+      state.error('UnexpectedArguments',
+        `\`${token.value}\` takes no arguments`, state.peek());
+      state.next();
+      return undefined;
+    }
+    const args = parseArgs(state, token.value);
     return args ? { spec: token.value, args } : { spec: token.value };
   }
 
@@ -425,8 +530,8 @@ function parseParameters(state: ParserState): RuleDocument['parameters'] {
  * Parses DSL text into a rule document, along with the source range of every node and
  * any errors found. Never throws; a fatal error leaves `document` undefined.
  */
-export function parse(text: string): ParseResult {
-  const state = new ParserState(text);
+export function parse(text: string, options?: ParseOptions): ParseResult {
+  const state = new ParserState(text, options?.catalog);
   const parameters = parseParameters(state);
   const rule = parseExpression(state, ROOT);
 
