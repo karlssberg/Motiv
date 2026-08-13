@@ -71,8 +71,11 @@ stale hint can only affect the line being typed, which is the same exposure any 
 - **Catalog-driven completion or lint of arg names/values.** Deferred editor-affordance scope; step
   2's catalog work is its prerequisite.
 - **Any change to `rule.v1.json`, the C# binder, or stored documents.**
-- Escaping inside DSL strings. The DSL has no escapes, so a `"` cannot appear in a quoted name — a
-  pre-existing limitation of `as "name"`, inherited unchanged and not addressed here.
+- Escaping inside DSL strings. The DSL has no escapes, so a `"` cannot appear in a quoted string — a
+  pre-existing limitation of `as "name"` and of string-valued args, inherited unchanged.
+- Widening `param` declaration names to the same contextual rule arg names get. `parseParameters`
+  still requires a `spec`-kind token, so `param all: integer` remains unrepresentable. Aligning the
+  two is a small, separate consistency change and is deliberately not bundled here.
 
 ---
 
@@ -97,8 +100,11 @@ requires curating this barrel before first publish, which is separate work.
 ```
 primary := SPEC args? | `expr` | '(' expr ')' | quantifier
 args    := '(' arg (',' arg)* ')'
-arg     := (SPEC | STRING) '=' literal
+arg     := ARGNAME '=' literal
 literal := NUMBER | STRING | 'true' | 'false' | 'null'
+
+ARGNAME := any word-shaped token — see "Arg names are a contextual position" below
+
 ```
 
 Two collision checks make this additive rather than breaking:
@@ -127,9 +133,16 @@ if (token.kind === 'spec') {
 }
 ```
 
-- **Quoted arg names** are accepted (`s("all" = 1)`). Without this, keyword-shaped keys are
-  unrepresentable — the same gap `param all: integer` already has. Since this design exists to stop
-  silent loss, the gap is closed rather than documented.
+- **Arg names are a contextual position.** The lexer classifies words context-free, so `all` is a
+  `quantifier` token and `string` a `type` token wherever they appear. But immediately after `(` or
+  `,` an arg name is the *only* thing that can occur — args are strictly `name = literal`, so no
+  quantifier, keyword or type word can mean anything else there. `parseArgs` therefore accepts any
+  **word-shaped** token as a name and reads its text verbatim, rather than requiring `kind === 'spec'`.
+  This makes every word-shaped key representable with no quoting.
+
+  Quoted arg names (`s("all" = 1)`) were considered and **rejected**: quoting a name makes it read as
+  a value, which inverts what it is. The contextual-position rule achieves the same completeness
+  without the misleading syntax.
 - **Duplicate arg names** are a parse error, not last-wins. Last-wins is silent loss.
 - Keys are inserted with `Object.defineProperty`, following the `__proto__` precedent established in
   `parseParameters`.
@@ -140,9 +153,15 @@ if (token.kind === 'spec') {
 
 `printBody`'s spec branch becomes `${node.spec}${printArgs(node.args)}`. `printArgs` returns `''`
 for absent or empty args, so `args: {}` prints as bare `s` and round-trips to `{spec:'s'}` —
-semantically identical, documented and tested. `s()` is a parse error. Names are quoted only when a
-bare word would not survive relexing; values reuse the existing literal rendering, extended for
-`null`.
+semantically identical, documented and tested. `s()` is a parse error. Names print bare — never
+quoted — which the contextual-position rule above makes safe for every word-shaped key. Values reuse
+the existing literal rendering, extended for `null`.
+
+A key that is **not** word-shaped (containing whitespace or punctuation outside `A-Za-z0-9_.-`)
+remains unrepresentable. The printer emits it bare regardless, so the resulting text fails to parse
+and surfaces as a visible lint error rather than a silently different document — and rather than a
+throw, which would crash every builder row that renders through `printInline`. This is a deliberate
+last-resort behaviour for a case no real parameter name reaches, and it is tested as such.
 
 ### Deliberately unchanged
 
@@ -216,9 +235,12 @@ Test-first throughout, per the repo's TDD requirement. The headline is the round
 - Round-trip: a document with args survives document → DSL → document unchanged.
 - Parser: each literal type (number, negative number, string, `true`, `false`, `null`); multiple args;
   args combined with an `as` clause; args inside quantifier bodies and under negation.
-- Parser errors: missing `=`, missing value, unclosed paren, duplicate name, `s()`, arg name that is a
-  bare keyword.
-- Printer: named output, quoting only when required, omission for absent and empty args.
+- Parser: keyword-, type- and quantifier-shaped arg names (`s(all = 1)`, `s(string = "x")`,
+  `s(param = true)`) parse as ordinary names — the contextual-position rule.
+- Parser errors: missing `=`, missing value, unclosed paren, duplicate name, `s()`.
+- Printer: bare (never quoted) names, omission for absent and empty args.
+- Printer last resort: a non-word-shaped key prints bare and the result fails to parse, rather than
+  throwing or round-tripping to a different document.
 - `printInline` parity with `print` for an arg-bearing node.
 - `__proto__` as an arg name does not reach the prototype setter.
 
@@ -244,5 +266,6 @@ Test-first throughout, per the repo's TDD requirement. The headline is the round
 
 - Curating the `rules-core` barrel before first publish (ticket 06).
 - Catalog-driven completion and lint of arg names and values (editor affordances).
-- The DSL's lack of string escapes, which bounds representable names in `as` clauses and arg keys
-  alike.
+- The DSL's lack of string escapes, which bounds representable text in `as` clauses and string-valued
+  args alike.
+- Aligning `param` declaration names with the contextual arg-name rule.
