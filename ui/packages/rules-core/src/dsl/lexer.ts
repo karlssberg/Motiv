@@ -78,6 +78,7 @@ export function tokenize(text: string): Token[] {
     if (char === '{' || char === '}') { push('brace', i, i + 1); i++; continue; }
     if (char === ':') { push('colon', i, i + 1); i++; continue; }
     if (char === '=') { push('equals', i, i + 1); i++; continue; }
+    if (char === ',') { push('comma', i, i + 1); i++; continue; }
 
     if (char === '"') { const end = readDelimited(text, i, '"'); push('string', i, end); i = end; continue; }
     if (char === '`') { const end = readDelimited(text, i, '`'); push('expression', i, end); i = end; continue; }
@@ -96,6 +97,18 @@ export function tokenize(text: string): Token[] {
       // A single `.` continues the number only when a digit follows, so `2.` lexes as `2`
       // then an error character rather than a number the parser cannot re-read.
       if (text[j] === '.' && DIGIT.test(text[j + 1] ?? '')) j = readDigits(text, j + 1);
+      // An exponent continues the number only when it is followed by a digit, or by
+      // +/- followed by a digit, so `1e` lexes as `1` then `e`, not as an incomplete exponent.
+      const exponentChar = text[j];
+      if (exponentChar === 'e' || exponentChar === 'E') {
+        const nextChar = text[j + 1];
+        const hasDigit = DIGIT.test(nextChar ?? '');
+        const hasSignAndDigit = (nextChar === '+' || nextChar === '-') && DIGIT.test(text[j + 2] ?? '');
+        if (hasDigit || hasSignAndDigit) {
+          j = (nextChar === '+' || nextChar === '-') ? j + 2 : j + 1;
+          j = readDigits(text, j);
+        }
+      }
       push('number', i, j); i = j; continue;
     }
 

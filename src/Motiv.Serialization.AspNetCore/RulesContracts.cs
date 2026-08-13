@@ -9,8 +9,18 @@ namespace Motiv.Serialization.AspNetCore;
 /// <param name="IsAsync">Whether the spec evaluates asynchronously.</param>
 /// <param name="Description">An optional human-readable description.</param>
 /// <param name="Origin">Whether the spec is compiled, overridden by an authored document, or authored.</param>
+/// <param name="Parameters">
+/// The spec's declared parameters in order, or <c>null</c> when it is not a parameterised registration.
+/// </param>
 public sealed record CatalogEntry(
-    string Name, string ModelType, string MetadataType, bool IsAsync, string? Description, PropositionOrigin Origin);
+    string Name, string ModelType, string MetadataType, bool IsAsync, string? Description,
+    PropositionOrigin Origin, IReadOnlyList<CatalogParameter>? Parameters = null);
+
+/// <summary>One declared parameter of a parameterised spec, in declaration order.</summary>
+/// <param name="Name">The name a <c>spec</c> node's <c>args</c> supplies the value under.</param>
+/// <param name="Type">The scalar type, lowercased to match the names in <c>rule.v1.json</c>.</param>
+/// <param name="Default">The default value, or <c>null</c> when the parameter is required.</param>
+public sealed record CatalogParameter(string Name, string Type, object? Default);
 
 /// <summary>A catalog listing for one registered collection projection.</summary>
 /// <param name="Path">The path higher-order nodes reference the collection by.</param>

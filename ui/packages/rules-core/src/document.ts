@@ -11,7 +11,14 @@ export interface Decoration {
 /** An N value: a literal count or a "@param" reference. */
 export type Countable = number | string;
 
-export interface SpecNode extends Decoration { spec: string }
+/**
+ * A value supplied to a parameterised spec. Literals only: `RuleParameterSubstituter`
+ * interpolates `whenTrue`/`whenFalse` text and resolves `n`, but never rewrites `args`, so a
+ * `@parameter` reference here would be authored and then silently ignored by the binder.
+ */
+export type ArgValue = string | number | boolean | null;
+
+export interface SpecNode extends Decoration { spec: string; args?: Record<string, ArgValue> }
 export interface ExpressionNode extends Decoration { expression: string }
 export interface NotNode extends Decoration { not: RuleNode }
 export interface AndNode extends Decoration { and: RuleNode[] }

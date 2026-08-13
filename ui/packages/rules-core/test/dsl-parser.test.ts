@@ -1,6 +1,25 @@
 import { describe, it, expect } from 'vitest';
 import { parse } from '../src/dsl/parser.js';
 import { listPaths } from '../src/paths.js';
+import type { Catalog } from '../src/contracts.js';
+
+const CATALOG: Catalog = {
+  specs: [
+    {
+      name: 'at-least', modelType: 'customer', metadataType: 'String', isAsync: false,
+      origin: 'Compiled',
+      parameters: [
+        { name: 'floor', type: 'integer' },
+        { name: 'label', type: 'string' },
+      ],
+    },
+    {
+      name: 'plain', modelType: 'customer', metadataType: 'String', isAsync: false,
+      origin: 'Compiled',
+    },
+  ],
+  collections: [],
+};
 
 describe('parse — leaves and grouping', () => {
   it('parses a bare spec into a spec node at the root path', () => {
@@ -48,6 +67,93 @@ describe('parse — leaves and grouping', () => {
     expect(parse('(is-active) as "activity"').document).toEqual({
       rule: { spec: 'is-active', name: 'activity' },
     });
+  });
+
+  it('parses a single named argument', () => {
+    const result = parse('approver-count-at-least(n = 1)');
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({ spec: 'approver-count-at-least', args: { n: 1 } });
+  });
+
+  it('parses every literal kind an argument may take', () => {
+    const result = parse('s(count = -2, ratio = 2.5, label = "high", strict = true, note = null)');
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({
+      spec: 's',
+      args: { count: -2, ratio: 2.5, label: 'high', strict: true, note: null },
+    });
+  });
+
+  it('parses a spec with args and a name', () => {
+    const result = parse('s(n = 1) as "gate"');
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({ spec: 's', args: { n: 1 }, name: 'gate' });
+  });
+
+  it('parses args on a spec inside a composition', () => {
+    const result = parse('s(n = 1) & !t(flag = false)');
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({
+      and: [{ spec: 's', args: { n: 1 } }, { not: { spec: 't', args: { flag: false } } }],
+    });
+  });
+
+  it('does not let an argument name reach the prototype', () => {
+    const result = parse('s(__proto__ = 1)');
+    expect(result.errors).toEqual([]);
+    const args = (result.document?.rule as { args: Record<string, unknown> }).args;
+    expect(Object.getPrototypeOf(args)).toBe(Object.prototype);
+    expect(Object.keys(args)).toEqual(['__proto__']);
+  });
+
+  it('accepts keyword-shaped argument names', () => {
+    const result = parse('s(all = 1, string = "x", param = true, in = 2)');
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({
+      spec: 's', args: { all: 1, string: 'x', param: true, in: 2 },
+    });
+  });
+
+  it('accepts a keyword-shaped parameter name', () => {
+    const result = parse('param all: integer = 2\n\ns');
+    expect(result.errors).toEqual([]);
+    expect(result.document?.parameters).toEqual({ all: { type: 'integer', default: 2 } });
+  });
+
+  it('accepts a keyword-shaped collection path', () => {
+    const result = parse('any in string { is-positive }');
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({ asAnySatisfied: { spec: 'is-positive' }, path: 'string' });
+  });
+
+  it('still reads a bare quantifier keyword at expression position as a quantifier', () => {
+    const result = parse('all in orders { is-positive }');
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({ asAllSatisfied: { spec: 'is-positive' }, path: 'orders' });
+  });
+
+  it('resolves a positional argument to its declared name', () => {
+    const result = parse('at-least(2)', { catalog: CATALOG });
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({ spec: 'at-least', args: { floor: 2 } });
+  });
+
+  it('resolves positional arguments before named ones', () => {
+    const result = parse('at-least(2, label = "high")', { catalog: CATALOG });
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({ spec: 'at-least', args: { floor: 2, label: 'high' } });
+  });
+
+  it('resolves a positional boolean argument to its declared name', () => {
+    const result = parse('at-least(true)', { catalog: CATALOG });
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({ spec: 'at-least', args: { floor: true } });
+  });
+
+  it('resolves positional null and string arguments to their declared names', () => {
+    const result = parse('at-least(null, "x")', { catalog: CATALOG });
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({ spec: 'at-least', args: { floor: null, label: 'x' } });
   });
 });
 

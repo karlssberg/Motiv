@@ -107,6 +107,25 @@ describe('motivStreamParser', () => {
     expect(tagOf('=')).toBe('punctuation');
   });
 
+  it('tags a comma as punctuation, like the other separators', () => {
+    expect(tagOf(',')).toBe('punctuation');
+    expect(tagOf(':')).toBe('punctuation');
+    expect(tagOf('=')).toBe('punctuation');
+  });
+
+  it('tags numbers with exponents as a single number token', () => {
+    expect(tagOf('1e21')).toBe('number');
+    expect(tagOf('1e+21')).toBe('number');
+    expect(tagOf('1.5e-3')).toBe('number');
+  });
+
+  it('does not consume a trailing e that cannot complete an exponent', () => {
+    expect(classify('2e')).toEqual([
+      { text: '2', tag: 'number' },
+      { text: 'e', tag: 'variableName' },
+    ]);
+  });
+
   it('tags an unrecognised character as invalid', () => {
     expect(tagOf('#')).toBe('invalid');
   });

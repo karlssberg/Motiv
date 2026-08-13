@@ -1,0 +1,303 @@
+# Spec Args in the TS DSL — Design
+
+**Date:** 2026-08-13
+**Status:** Approved (design)
+**Source:** Disclosure 2 on [#123](https://github.com/karlssberg/Motiv/pull/123) (Spec 1 — Trust &
+Control), which shipped parameterised specs via spec-node `args` on the C# side and recorded that
+`@motiv-rules/core` does not know them. Ticket [06](https://github.com/karlssberg/Motiv/issues/106)
+governs the schema/versioning constraints.
+
+## Summary
+
+`Motiv.Serialization` accepts `args` on a spec node — the mechanism Spec 1's ten built-in `change.*`
+gate specs use to be parameterised (`approver-count-at-least` with `n = 1`). `schemas/rule.v1.json`
+declares it. The TypeScript stack does not: `args` appears **nowhere** in `ui/packages/rules-core/src`,
+so `SpecNode` has no such field and the DSL printer drops it on round-trip.
+
+This design closes that hole in two steps. **Step 1** teaches the TS types and the DSL grammar about
+named args, with no catalog dependency. **Step 2** adds ordered parameter metadata to the catalog so
+args may be *typed* positionally, while names remain the stored source of truth.
+
+## Why now
+
+Today the gap is unreachable: no UI authors args, and gate configuration is API-only. It stops being
+unreachable the moment `args` reaches the editor, and the failure mode is silent — a document
+round-tripped through the DSL loses its args and publishes as a different rule. Under an approval
+gate with an append-only version log, a silent semantic change is the worst available failure.
+
+## Decisions (locked)
+
+1. **Named args are the contract.** The rule document stores `args` as a name→value map. This is
+   unchanged from `rule.v1.json` and the C# `Dictionary<string, object?>` binder; **no schema change,
+   no C# binder change.**
+2. **Parenthesised call syntax with `=`** — `change.approver-count-at-least(n = 1)`.
+3. **Positional order is a catalog *hint*, never document data.** Order lives in `CatalogEntry`, is
+   consumed at author time, and never enters a rule document.
+4. **The printer always emits the named form.** Positional is input-only.
+5. **Two steps, one design.** Step 1 stands alone and closes the hole; step 2 is ergonomics on top.
+6. **Identifier positions that are grammatically unambiguous accept any word-shaped token** — arg
+   names, `param` declaration names, and collection paths. The spec-name position keeps the lexer's
+   classification, because it is genuinely ambiguous.
+
+### Why `=` and not `:`
+
+The grammar has already assigned both tokens a meaning, in its one existing use of each: in
+`param n: integer = 5`, `:` introduces a **type** and `=` introduces a **value**. Spec args are
+values, drawn from very nearly the same literal union as a parameter default. Choosing `:` would
+teach a reader "`:` is followed by a type" and then break it. `=` keeps one token, one meaning — and
+`parseDefault` already reads exactly that literal union.
+
+### Why named args, and not positional binding
+
+Positional binding would mean that reordering a spec's parameters silently changes the meaning of
+every stored document using the positional form. Named args are immune. For a product whose decision
+log exists to answer "why was *this* customer declined?", a stored document that quietly re-binds
+after an unrelated code change is a correctness hazard, not a style preference.
+
+Resolving positional input to names **at author time** keeps the ergonomics without the hazard: a
+stale hint can only affect the line being typed, which is the same exposure any autocomplete has.
+
+## Scope
+
+### In scope
+
+- `ArgValue` and `SpecNode.args` in `rules-core`.
+- DSL lexer/parser/printer support for named args, including the round-trip guarantee.
+- **The contextual-name rule at all three unambiguous identifier positions** (arg names, `param`
+  declaration names, collection paths) — see "Identifier positions" below.
+- The two known hand-copy duplication sites in the demo (highlighting).
+- Step 2: ordered `parameters` on the catalog (C# + TS), positional *input*, declared-order printing.
+
+### Non-goals
+
+- **`@param` references inside args.** `RuleParameterSubstituter` interpolates `whenTrue`/`whenFalse`
+  text and resolves `n`, but never touches `args`. Accepting `@param` in TS would author documents
+  the backend silently ignores.
+- **Catalog-driven completion or lint of arg names/values.** Deferred editor-affordance scope; step
+  2's catalog work is its prerequisite.
+- **Any change to `rule.v1.json`, the C# binder, or stored documents.**
+- Escaping inside DSL strings. The DSL has no escapes, so a `"` cannot appear in a quoted string — a
+  pre-existing limitation of `as "name"` and of string-valued args, inherited unchanged.
+
+---
+
+## Step 1 — named args, catalog-free
+
+### Types (`ui/packages/rules-core/src/document.ts`)
+
+```ts
+/** A value supplied to a parameterised spec. Literals only — the binder does not
+ *  substitute `@parameter` references into args. */
+export type ArgValue = string | number | boolean | null;
+
+export interface SpecNode extends Decoration { spec: string; args?: Record<string, ArgValue> }
+```
+
+`args` lands on `SpecNode` only, mirroring `rule.v1.json` where `args` appears solely in `specNode`.
+`src/index.ts` is `export *`, so `ArgValue` publishes without a barrel edit — noting that ticket 06
+requires curating this barrel before first publish, which is separate work.
+
+### Grammar
+
+```
+primary := SPEC args? | `expr` | '(' expr ')' | quantifier
+args    := '(' arg (',' arg)* ')'
+arg     := ARGNAME '=' literal
+literal := NUMBER | STRING | 'true' | 'false' | 'null'
+
+ARGNAME := any word-shaped token — see "Arg names are a contextual position" below
+
+```
+
+Two collision checks make this additive rather than breaking:
+
+- A `(` following a **spec** token is currently a hard `UnexpectedToken` error, so no existing
+  document can mean anything by it.
+- The counted quantifier's `(` follows a **quantifier** token — a different `TokenKind`. The two
+  uses of `(` never meet, so `exactly(2) in orders { … }` is unaffected.
+
+### Lexer (`src/dsl/lexer.ts`, `src/dsl/types.ts`)
+
+One new token kind: `,` → `comma`. There is no comma in the language today; it currently lexes as an
+`error` character. Nothing else needs lexer work — `(`/`)` are `paren`, `=` is `equals`, and
+`true`/`false`/`null` arrive as plain word tokens, exactly as `parseDefault` already handles for
+parameter defaults.
+
+### Parser (`src/dsl/parser.ts`)
+
+`parsePrimary`'s spec branch consumes an optional arg list:
+
+```ts
+if (token.kind === 'spec') {
+  state.next();
+  const args = parseArgs(state);           // undefined when no '(' follows
+  return args ? { spec: token.value, args } : { spec: token.value };
+}
+```
+
+- Arg names use the contextual-name rule below, so `s(all = 1)` and `s(string = "x")` are ordinary
+  named args. Quoted arg names (`s("all" = 1)`) were considered and **rejected**: quoting a name makes
+  it read as a value, which inverts what it is.
+- **Duplicate arg names** are a parse error, not last-wins. Last-wins is silent loss.
+- Keys are inserted with `Object.defineProperty`, following the `__proto__` precedent established in
+  `parseParameters`.
+- New error codes follow the existing idiom: `ExpectedArgName`, `ExpectedArgValue`, `UnclosedArgs`,
+  `DuplicateArg`.
+
+### Identifier positions (`src/dsl/parser.ts`)
+
+The lexer classifies words **context-free**: `all` is a `quantifier` token and `string` a `type`
+token wherever either appears. That classification is right in one place and overreaching in three.
+
+An identifier position is **unambiguous** when the grammar admits nothing but an identifier there.
+In those positions the parser knows what it is reading from position alone, so demanding
+`kind === 'spec'` is the lexer making a decision that belongs to the parser — and the visible cost is
+a legal name the DSL cannot express. All three take a shared helper that accepts any **word-shaped**
+token and reads its text verbatim:
+
+| Position | Grammar | Today | Effect of the change |
+|---|---|---|---|
+| Arg name | after `(` or `,`, must be followed by `=` | new | `s(all = 1)` parses |
+| `param` name | after the `param` keyword | `parser.ts:304` requires `spec` | `param all: integer` parses |
+| Collection path | after `in` | `parser.ts:125` requires `spec` | `all in string { … }` parses |
+
+**The spec-name position is deliberately excluded.** At expression position a bare `all` genuinely
+could open `all in orders { … }`, so the parser cannot tell a spec reference from a quantifier
+keyword by position — the lexer's classification is load-bearing there and stays exactly as it is.
+That exclusion is what makes this a rule about grammatical position rather than a blanket "keywords
+are just identifiers".
+
+**The arg-value position is also excluded, for a different reason.** In `s(n = all)`, `all` is not an
+over-classified name; it is simply not a literal. Values remain `NUMBER | STRING | true | false |
+null`, and a bare word outside that set stays an error.
+
+### Printer (`src/dsl/printer.ts`)
+
+`printBody`'s spec branch becomes `${node.spec}${printArgs(node.args)}`. `printArgs` returns `''`
+for absent or empty args, so `args: {}` prints as bare `s` and round-trips to `{spec:'s'}` —
+semantically identical, documented and tested. `s()` is a parse error. Names print bare — never
+quoted — which the contextual-name rule above makes safe for every word-shaped key. Values reuse the
+existing literal rendering, extended for `null`.
+
+A key that is **not** word-shaped (containing whitespace or punctuation outside `A-Za-z0-9_.-`)
+remains unrepresentable. The printer emits it bare regardless, so the resulting text fails to parse
+and surfaces as a visible lint error rather than a silently different document — and rather than a
+throw, which would crash every builder row that renders through `printInline`. This is a deliberate
+last-resort behaviour for a case no real parameter name reaches, and it is tested as such.
+
+### Deliberately unchanged
+
+- **`decorations.ts`** — `isCompatible` compares `a.spec === b.spec`, and args must *not* join that
+  check: retyping `s(n = 1)` as `s(n = 2)` is the same spec and should keep its `whenTrue`/`whenFalse`
+  payloads.
+- **Spans** — `parsePostfix` records `start..lastEnd` *after* `parsePrimary` returns, so args fall
+  inside the node's span for free.
+- **`validation.ts`** — client-side validation delegates to the server, so nothing in TS rejects args
+  today and nothing needs to start.
+
+### Duplication sites that must move in lockstep
+
+Both are the hand-copy drift `lexer.ts` warns about in its own comments:
+
+| Site | Change | Symptom if missed |
+|---|---|---|
+| `ui/apps/demo/src/dsl/motivLanguage.ts:66` | add `,` to the `':' \|\| '='` punctuation check | commas lose highlighting in CodeMirror |
+| `ui/apps/demo/src/styles/app.css:614` | add `.tok-comma` beside `.tok-colon`/`.tok-equals` | commas render in body colour in builder rows |
+
+---
+
+## Step 2 — positional hints from the catalog
+
+### C# surface
+
+`SpecRegistryEntry.Parameters` is currently `internal IReadOnlyList<RuleParameterDeclaration>?`.
+`Motiv.Serialization.csproj` already grants `InternalsVisibleTo` to `Motiv.Serialization.AspNetCore`,
+so **the catalog endpoint can read it as-is**: the property stays internal and the endpoint projects
+an ordered `parameters` array onto the catalog response. Widening `Parameters` to public is therefore
+unnecessary and is not done — the HTTP contract is the right place for this to become public, not the
+registry type. The catalog addition is additive on a package that has never shipped, so it costs
+nothing under ticket 06.
+
+### TS surface
+
+```ts
+export interface CatalogParameter {
+  name: string;
+  type: ParameterDeclaration['type'];   // 'integer' | 'number' | 'string' | 'boolean'
+  default?: ArgValue;
+}
+export interface CatalogEntry { /* … existing … */ parameters?: CatalogParameter[] }
+```
+
+`parse(text, options?)`, `print(document, options?)` and `printInline(node, options?)` take an
+optional catalog. All three keep working without one.
+
+- **Parse** accepts positional `s(1)` only when the catalog is present *and* names the spec.
+  Otherwise positional is a parse error — never a guess. Positional args must precede named ones,
+  mirroring C#. A spec whose catalog entry has no `parameters` rejects args outright, pre-empting the
+  server's `UnexpectedArguments`.
+- **Print** always emits the **named** form, ordered by declaration when a catalog is available and
+  by insertion order otherwise. Arg order is cosmetic; JSON object key order was never semantic.
+
+### The invariant this preserves
+
+`printer.ts` documents that `parse(printInline(node)).document.rule` deep-equals `node` — the
+property that makes a rendered builder row safe to hand back to the parser. Because printer output is
+always named, that round-trip **never needs a catalog**. The catalog may be absent, stale, or wrong
+and the guarantee is unaffected. Positional is strictly an input affordance.
+
+---
+
+## Testing
+
+Test-first throughout, per the repo's TDD requirement. The headline is the round-trip property in
+`dsl-roundtrip.test.ts` — the test that fails today and encodes the actual bug.
+
+**Step 1**
+- Round-trip: a document with args survives document → DSL → document unchanged.
+- Parser: each literal type (number, negative number, string, `true`, `false`, `null`); multiple args;
+  args combined with an `as` clause; args inside quantifier bodies and under negation.
+- Contextual names, one test per unambiguous position: `s(all = 1)` / `s(string = "x")` /
+  `s(param = true)`; `param all: integer = 2`; `any in string { … }`.
+- Contextual names stop where they should: `all` at expression position still parses as a quantifier,
+  not a spec reference; `s(n = all)` is still an `ExpectedArgValue` error.
+- Parser errors: missing `=`, missing value, unclosed paren, duplicate name, `s()`.
+- Printer: bare (never quoted) names, omission for absent and empty args.
+- Printer last resort: a non-word-shaped key prints bare and the result fails to parse, rather than
+  throwing or round-tripping to a different document.
+- `printInline` parity with `print` for an arg-bearing node.
+- `__proto__` as an arg name does not reach the prototype setter.
+
+**Step 2**
+- Positional input resolves to named storage against a catalog.
+- Positional input without a catalog is an error, not a guess.
+- Positional input for a spec absent from the catalog is an error.
+- Args on a spec with no declared `parameters` are rejected.
+- Positional-after-named is an error.
+- Print orders args by declaration when a catalog is supplied, and does not reorder without one.
+
+**Regression surface:** the full `rules-core` suite plus the demo's UI tests, since the lexer's
+`TokenKind` union widens *and* three identifier positions loosen. The loosening only ever turns a
+former parse error into a successful parse, so no previously-valid document changes meaning.
+
+No existing test asserts the rejections being lifted. The one case that comes close —
+`dsl-parser-errors.test.ts:32`, `parse('all in { is-positive }')` expecting `ExpectedCollection` —
+survives unchanged, because the token after `in` there is a `brace`, not a word, and the rule only
+admits **word-shaped** tokens. That is a useful check on the rule's blast radius: it loosens which
+*words* are accepted, not whether a non-word is.
+
+`pnpm e2e` per the repo's e2e note (never bare `playwright test`).
+
+## Verification obligations
+
+- A gate document using `change.approver-count-at-least(n = 1)` round-trips through the DSL with its
+  args intact — the concrete case from Spec 1.
+- No change to any file under `schemas/`, and no change to C# binder behaviour, provable by diff.
+- Commas highlight identically in both the CodeMirror editor and the builder's inline rows.
+
+## Follow-ups this does not close
+
+- Curating the `rules-core` barrel before first publish (ticket 06).
+- Catalog-driven completion and lint of arg names and values (editor affordances).
+- The DSL's lack of string escapes, which bounds representable text in `as` clauses and string-valued
+  args alike.

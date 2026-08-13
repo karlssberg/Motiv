@@ -63,7 +63,7 @@ export const motivStreamParser: StreamParser<unknown> = {
 
     if ('&|^!'.includes(char)) return 'operator';
     if ('(){}'.includes(char)) return 'bracket';
-    if (char === ':' || char === '=') return 'punctuation';
+    if (char === ':' || char === '=' || char === ',') return 'punctuation';
     if (char === '"') { skipDelimited(stream, '"'); return 'string'; }
     if (char === '`') { skipDelimited(stream, '`'); return 'string.special'; }
     if (char === '@') { stream.eatWhile(PARAM_REST); return 'variableName.special'; }
@@ -74,6 +74,9 @@ export const motivStreamParser: StreamParser<unknown> = {
       stream.eatWhile(DIGIT);
       // A `.` continues the number only when a digit follows, so `2.` is a number then an error.
       stream.match(/^\.[0-9]+/);
+      // An exponent continues the number only when it is followed by a digit, or by +/- followed
+      // by a digit, so `2e` is a number then an identifier, not an incomplete exponent.
+      stream.match(/^[eE][+-]?[0-9]+/);
       return 'number';
     }
 

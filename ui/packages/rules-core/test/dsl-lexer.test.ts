@@ -154,4 +154,48 @@ describe('tokenize', () => {
       ['spec', 'foo'],
     ]);
   });
+
+  it('lexes a comma as its own token', () => {
+    expect(tokenize(',')).toEqual([{ kind: 'comma', value: ',', from: 0, to: 1 }]);
+  });
+
+  it('lexes a comma between words without swallowing them', () => {
+    expect(tokenize('a, b').map((token) => token.kind)).toEqual(['spec', 'comma', 'spec']);
+  });
+
+  it('lexes a number with an exponent as one token', () => {
+    expect(tokenize('1e21')).toEqual([{ kind: 'number', value: '1e21', from: 0, to: 4 }]);
+  });
+
+  it('lexes an uppercase exponent', () => {
+    expect(tokenize('1E21')).toEqual([{ kind: 'number', value: '1E21', from: 0, to: 4 }]);
+  });
+
+  it('lexes an exponent with an explicit plus sign', () => {
+    expect(tokenize('1e+21')).toEqual([{ kind: 'number', value: '1e+21', from: 0, to: 5 }]);
+  });
+
+  it('lexes an exponent with a negative sign', () => {
+    expect(tokenize('1e-7')).toEqual([{ kind: 'number', value: '1e-7', from: 0, to: 4 }]);
+  });
+
+  it('lexes a decimal number with an exponent', () => {
+    expect(tokenize('1.5e-3')).toEqual([{ kind: 'number', value: '1.5e-3', from: 0, to: 6 }]);
+  });
+
+  it('lexes a negative decimal number with an exponent', () => {
+    expect(tokenize('-2.5e10')).toEqual([{ kind: 'number', value: '-2.5e10', from: 0, to: 7 }]);
+  });
+
+  it('stops an exponent at the e when no digit or sign follows', () => {
+    expect(tokenize('2e').map((t) => [t.kind, t.value])).toEqual([
+      ['number', '2'], ['spec', 'e'],
+    ]);
+  });
+
+  it('stops an exponent at the e when no digit follows the sign', () => {
+    expect(tokenize('1e+').map((t) => [t.kind, t.value])).toEqual([
+      ['number', '1'], ['spec', 'e'], ['error', '+'],
+    ]);
+  });
 });

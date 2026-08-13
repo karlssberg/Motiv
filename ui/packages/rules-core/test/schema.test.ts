@@ -25,6 +25,12 @@ const documents: RuleDocument[] = [
   { rule: { and: [{ spec: 'a' }, { spec: 'b' }] } },
   { rule: { orElse: [{ spec: 'a' }, { spec: 'b' }, { spec: 'c' }] } },
   { name: 'doc', rule: { xor: [{ spec: 'a' }, { not: { spec: 'b' } }] } },
+  { rule: { spec: 'approver-count-at-least', args: { n: 1 } } },
+  {
+    rule: {
+      spec: 'threshold', args: { limit: 2.5, label: 'high', strict: true, note: null },
+    },
+  },
 ];
 
 describe('rule.v1.json drift', () => {
@@ -65,6 +71,37 @@ describe('Catalog schema maps typing', () => {
     };
     expect(catalog.metadataTypes?.['Verdict']).toBe(verdictMetadataSchema);
     expect(catalog.modelTypes?.['customer']).toBe(customerModelSchema);
+  });
+
+  it('a catalog entry carries ordered parameter declarations', () => {
+    const catalog: Catalog = {
+      specs: [
+        {
+          name: 'at-least',
+          modelType: 'customer',
+          metadataType: 'String',
+          isAsync: false,
+          origin: 'Compiled',
+          parameters: [
+            { name: 'floor', type: 'integer', default: 2 },
+            { name: 'label', type: 'string' },
+          ],
+        },
+        {
+          name: 'is-active',
+          modelType: 'customer',
+          metadataType: 'String',
+          isAsync: false,
+          origin: 'Compiled',
+          parameters: null,
+        },
+      ],
+      collections: [],
+    };
+
+    expect(catalog.specs[0]!.parameters).toHaveLength(2);
+    expect(catalog.specs[0]!.parameters?.map((parameter) => parameter.name)).toEqual(['floor', 'label']);
+    expect(catalog.specs[1]!.parameters).toBeNull();
   });
 });
 

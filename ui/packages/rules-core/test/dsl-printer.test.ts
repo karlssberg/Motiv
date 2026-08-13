@@ -1,6 +1,17 @@
 import { describe, it, expect } from 'vitest';
+import { parse } from '../src/dsl/parser.js';
 import { print } from '../src/dsl/printer.js';
 import type { RuleDocument } from '../src/document.js';
+import type { Catalog } from '../src/contracts.js';
+
+const CATALOG: Catalog = {
+  specs: [{
+    name: 'at-least', modelType: 'customer', metadataType: 'String', isAsync: false,
+    origin: 'Compiled',
+    parameters: [{ name: 'floor', type: 'integer' }, { name: 'label', type: 'string' }],
+  }],
+  collections: [],
+};
 
 describe('print', () => {
   it('prints a bare spec', () => {
@@ -101,5 +112,69 @@ describe('print', () => {
       '    is-positive && is-recent\n' +
       '} as "quota"',
     );
+  });
+
+  it('prints a single named argument', () => {
+    expect(print({ rule: { spec: 'gate', args: { n: 1 } } })).toBe('gate(n = 1)');
+  });
+
+  it('prints every argument literal kind', () => {
+    expect(print({
+      rule: { spec: 'gate', args: { count: -2, ratio: 2.5, label: 'high', strict: true, note: null } },
+    })).toBe('gate(count = -2, ratio = 2.5, label = "high", strict = true, note = null)');
+  });
+
+  it('prints nothing for an empty argument map', () => {
+    expect(print({ rule: { spec: 'gate', args: {} } })).toBe('gate');
+  });
+
+  it('prints args before an `as` clause', () => {
+    expect(print({ rule: { spec: 'gate', args: { n: 1 }, name: 'check' } })).toBe('gate(n = 1) as "check"');
+  });
+
+  // The last resort. A key that is not word-shaped cannot be represented, and the DSL has no
+  // escapes to fall back on. Printing it bare yields text that fails to parse — a visible lint
+  // error — rather than text that parses to a *different* document. Throwing was rejected:
+  // printInline renders every builder row, so a throw would take the row down with it.
+  it('prints a non-word-shaped arg name bare, yielding text that fails to parse', () => {
+    const text = print({ rule: { spec: 'gate', args: { 'not a name': 1 } } });
+    expect(text).toBe('gate(not a name = 1)');
+    expect(parse(text).errors.length).toBeGreaterThan(0);
+  });
+
+  it('prints args in declared order when a catalog is supplied', () => {
+    const document: RuleDocument = {
+      rule: { spec: 'at-least', args: { label: 'high', floor: 2 } },
+    };
+    expect(print(document, { catalog: CATALOG })).toBe('at-least(floor = 2, label = "high")');
+  });
+
+  it('prints args in insertion order without a catalog', () => {
+    const document: RuleDocument = {
+      rule: { spec: 'at-least', args: { label: 'high', floor: 2 } },
+    };
+    expect(print(document)).toBe('at-least(label = "high", floor = 2)');
+  });
+
+  it('prints an undeclared arg after the declared ones', () => {
+    const document: RuleDocument = {
+      rule: { spec: 'at-least', args: { extra: 1, floor: 2 } },
+    };
+    expect(print(document, { catalog: CATALOG })).toBe('at-least(floor = 2, extra = 1)');
+  });
+
+  it('falls back to insertion order when the catalog entry has parameters: null, without throwing', () => {
+    const catalogWithPlainSpec: Catalog = {
+      specs: [{
+        name: 'is-active', modelType: 'customer', metadataType: 'String', isAsync: false,
+        origin: 'Compiled', parameters: null,
+      }],
+      collections: [],
+    };
+    const document: RuleDocument = {
+      rule: { spec: 'is-active', args: { b: 1, a: 2 } },
+    };
+    expect(() => print(document, { catalog: catalogWithPlainSpec })).not.toThrow();
+    expect(print(document, { catalog: catalogWithPlainSpec })).toBe('is-active(b = 1, a = 2)');
   });
 });
