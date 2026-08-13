@@ -1,4 +1,4 @@
-import type { ParameterDeclaration, RuleDocument, RuleNode } from '../document.js';
+import type { ArgValue, ParameterDeclaration, RuleDocument, RuleNode } from '../document.js';
 import { tokenize } from './lexer.js';
 import type { DslError, NodeSpan, ParseResult, Token } from './types.js';
 
@@ -151,6 +151,72 @@ function parseQuantifier(state: ParserState, path: string, word: QuantifierWord)
   return node as unknown as RuleNode;
 }
 
+/**
+ * Reads an argument value literal. Returns `undefined` for an error — distinct from a legitimate
+ * `null` value, which is why the caller tests `=== undefined` rather than falsiness.
+ */
+function parseArgValue(state: ParserState): ArgValue | undefined {
+  const token = state.peek();
+  if (!token) { state.error('ExpectedArgValue', 'expected an argument value'); return undefined; }
+  if (token.kind === 'number') { state.next(); return Number(token.value); }
+  if (token.kind === 'string') {
+    state.next();
+    return literalValue(state, token, '"', 'UnterminatedString');
+  }
+  if (token.value === 'true') { state.next(); return true; }
+  if (token.value === 'false') { state.next(); return false; }
+  if (token.value === 'null') { state.next(); return null; }
+  state.error('ExpectedArgValue', `\`${token.value}\` is not a valid argument value`, token);
+  return undefined;
+}
+
+/** args := '(' NAME '=' literal (',' NAME '=' literal)* ')' — absent when no `(` follows. */
+function parseArgs(state: ParserState): Record<string, ArgValue> | undefined {
+  if (state.peek()?.value !== '(') return undefined;
+  const open = state.next()!;
+  const args: Record<string, ArgValue> = {};
+
+  for (;;) {
+    const name = state.peek();
+    if (!name || name.kind !== 'spec') {
+      state.error('ExpectedArgName', 'expected an argument name', name);
+      return undefined;
+    }
+    state.next();
+
+    if (state.peek()?.kind !== 'equals') {
+      state.error('ExpectedArgValue', 'expected `=` and an argument value', state.peek());
+      return undefined;
+    }
+    state.next();
+
+    const value = parseArgValue(state);
+    if (value === undefined) return undefined;
+
+    if (Object.prototype.hasOwnProperty.call(args, name.value)) {
+      state.error('DuplicateArg', `duplicate argument \`${name.value}\``, name);
+      return undefined;
+    }
+    // `defineProperty`, not assignment: an argument named `__proto__` would otherwise hit the
+    // prototype setter, silently dropping the value and mutating the object.
+    Object.defineProperty(args, name.value, {
+      value, enumerable: true, writable: true, configurable: true,
+    });
+
+    if (state.peek()?.kind === 'comma') { state.next(); continue; }
+    break;
+  }
+
+  const close = state.peek();
+  if (!close || close.value !== ')') {
+    state.error('UnclosedArgs', 'expected `)` to close the argument list', open);
+  } else {
+    state.next();
+  }
+
+  return args;
+}
+
 /** primary := SPEC | `expr` | '(' expr ')' | quantifier */
 function parsePrimary(state: ParserState, path: string): RuleNode | undefined {
   const token = state.peek();
@@ -161,7 +227,8 @@ function parsePrimary(state: ParserState, path: string): RuleNode | undefined {
 
   if (token.kind === 'spec') {
     state.next();
-    return { spec: token.value };
+    const args = parseArgs(state);
+    return args ? { spec: token.value, args } : { spec: token.value };
   }
 
   if (token.kind === 'expression') {

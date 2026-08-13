@@ -49,6 +49,43 @@ describe('parse — leaves and grouping', () => {
       rule: { spec: 'is-active', name: 'activity' },
     });
   });
+
+  it('parses a single named argument', () => {
+    const result = parse('approver-count-at-least(n = 1)');
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({ spec: 'approver-count-at-least', args: { n: 1 } });
+  });
+
+  it('parses every literal kind an argument may take', () => {
+    const result = parse('s(count = -2, ratio = 2.5, label = "high", strict = true, note = null)');
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({
+      spec: 's',
+      args: { count: -2, ratio: 2.5, label: 'high', strict: true, note: null },
+    });
+  });
+
+  it('parses a spec with args and a name', () => {
+    const result = parse('s(n = 1) as "gate"');
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({ spec: 's', args: { n: 1 }, name: 'gate' });
+  });
+
+  it('parses args on a spec inside a composition', () => {
+    const result = parse('s(n = 1) & !t(flag = false)');
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({
+      and: [{ spec: 's', args: { n: 1 } }, { not: { spec: 't', args: { flag: false } } }],
+    });
+  });
+
+  it('does not let an argument name reach the prototype', () => {
+    const result = parse('s(__proto__ = 1)');
+    expect(result.errors).toEqual([]);
+    const args = (result.document?.rule as { args: Record<string, unknown> }).args;
+    expect(Object.getPrototypeOf(args)).toBe(Object.prototype);
+    expect(Object.keys(args)).toEqual(['__proto__']);
+  });
 });
 
 describe('parse — binary operators', () => {

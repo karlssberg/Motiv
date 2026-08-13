@@ -65,6 +65,30 @@ describe('parse — errors', () => {
   it('still returns spans for the part it understood', () => {
     expect(parse('(is-active').spans.length).toBeGreaterThan(0);
   });
+
+  it('reports an empty argument list', () => {
+    expect(parse('s()').errors[0]).toMatchObject({ code: 'ExpectedArgName' });
+  });
+
+  it('reports a missing `=` after an argument name', () => {
+    expect(parse('s(n 1)').errors[0]).toMatchObject({ code: 'ExpectedArgValue' });
+  });
+
+  it('reports a missing argument value', () => {
+    expect(parse('s(n = )').errors[0]).toMatchObject({ code: 'ExpectedArgValue' });
+  });
+
+  it('reports an unclosed argument list', () => {
+    expect(parse('s(n = 1').errors[0]).toMatchObject({ code: 'UnclosedArgs' });
+  });
+
+  it('reports a duplicate argument name', () => {
+    expect(parse('s(n = 1, n = 2)').errors[0]).toMatchObject({ code: 'DuplicateArg' });
+  });
+
+  it('rejects a bare word as an argument value', () => {
+    expect(parse('s(n = all)').errors[0]).toMatchObject({ code: 'ExpectedArgValue' });
+  });
 });
 
 describe('parse — unterminated literals', () => {
