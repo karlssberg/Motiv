@@ -612,6 +612,7 @@ body {
 .tok-paren,
 .tok-brace { color: var(--dsl-bracket); }
 .tok-colon,
+.tok-comma,
 .tok-equals { color: var(--dsl-punctuation); }
 .tok-string { color: var(--dsl-string); }
 .tok-expression { color: var(--dsl-expression); }
