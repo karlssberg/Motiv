@@ -129,7 +129,11 @@ function printBinary(node: BinaryNode, indent: string, layout: Layout): string {
   return parts.join(` ${OPERATOR_TEXT[operator]} `);
 }
 
-/** Renders one argument value. `String` covers number, boolean and null exactly. */
+/**
+ * Renders one argument value. Numbers use `String()`, which may produce exponential
+ * notation (e.g., `1e21`); the lexer's exponent grammar ensures these round-trip correctly.
+ * Strings are quoted; booleans and null render as `true`, `false`, `null`.
+ */
 function printArgValue(value: ArgValue): string {
   return typeof value === 'string' ? quote(value) : String(value);
 }
