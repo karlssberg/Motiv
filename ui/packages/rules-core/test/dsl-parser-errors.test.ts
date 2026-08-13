@@ -109,6 +109,17 @@ describe('parse — errors', () => {
     expect(parse('s(n 1)').errors[0]).toMatchObject({ code: 'ExpectedArgValue' });
   });
 
+  /**
+   * Without an explicit `equals` check the token after the name is consumed as if it were the
+   * `=`, so `s(n 1 2)` would silently parse as `{ n: 2 }` — an accepted document the author
+   * never wrote, rather than an error.
+   */
+  it('does not read the token after a missing `=` as the `=`', () => {
+    const result = parse('s(n 1 2)');
+    expect(result.errors[0]).toMatchObject({ code: 'ExpectedArgValue' });
+    expect(result.document).toBeUndefined();
+  });
+
   it('reports a missing argument value', () => {
     expect(parse('s(n = )').errors[0]).toMatchObject({ code: 'ExpectedArgValue' });
   });

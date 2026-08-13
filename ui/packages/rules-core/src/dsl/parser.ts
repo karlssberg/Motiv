@@ -1,5 +1,5 @@
 import type { ArgValue, ParameterDeclaration, RuleDocument, RuleNode } from '../document.js';
-import type { Catalog, CatalogParameter } from '../contracts.js';
+import type { Catalog, CatalogEntry, CatalogParameter } from '../contracts.js';
 import { tokenize } from './lexer.js';
 import type { DslError, NodeSpan, ParseResult, Token, TokenKind } from './types.js';
 
@@ -87,6 +87,11 @@ function parseIdentifier(state: ParserState, code: string, message: string): Tok
   return token;
 }
 
+/** The catalog's entry for `spec`, absent when there is no catalog or it does not name `spec`. */
+function catalogEntry(state: ParserState, spec: string): CatalogEntry | undefined {
+  return state.catalog?.specs.find((entry) => entry.name === spec);
+}
+
 /**
  * The declared parameters of `spec`, or `null`/`undefined` when the catalog cannot say — either
  * because there is no catalog, the spec is unknown to it, or its entry declares no parameters
@@ -96,7 +101,7 @@ function parseIdentifier(state: ParserState, code: string, message: string): Tok
 function declaredParameters(
   state: ParserState, spec: string,
 ): readonly CatalogParameter[] | null | undefined {
-  return state.catalog?.specs.find((entry) => entry.name === spec)?.parameters;
+  return catalogEntry(state, spec)?.parameters;
 }
 
 /** Consumes a trailing `as "name"` clause, returning the name when present. */
@@ -265,50 +270,37 @@ function parseArgs(state: ParserState, spec: string): Record<string, ArgValue> |
 
   for (;;) {
     // Anything that opens a value literal is positional; everything else (including a bare
-    // identifier with no following `=`) is an attempted name, so `s(n 1)` still reports a
-    // missing `=` rather than being mistaken for a positional argument with no catalog to
-    // resolve it against.
-    const isNamed = !looksLikeArgValue(state.peek());
-    let name: string;
-    let value: ArgValue | undefined;
+    // identifier with no following `=`) is an attempted name, so `s(n 1)` still reports the
+    // missing `=` rather than being mistaken for a positional argument.
+    const argToken = state.peek();
+    let name: string | undefined;
 
-    if (isNamed) {
-      const nameToken = parseIdentifier(state, 'ExpectedArgName', 'expected an argument name');
-      if (!nameToken) return undefined;
-      state.next(); // the '='
-      sawNamed = true;
-      name = nameToken.value;
-      value = parseArgValue(state);
-    } else {
+    if (looksLikeArgValue(argToken)) {
       if (sawNamed) {
         state.error('PositionalAfterNamed',
-          'a positional argument cannot follow a named one', state.peek());
+          'a positional argument cannot follow a named one', argToken);
         return undefined;
       }
-      const declared = declaredParameters(state, spec);
-      if (!declared) {
-        state.error(
-          state.catalog === undefined ? 'ExpectedArgName' : 'UnknownParameterisedSpec',
-          state.catalog === undefined
-            ? 'expected an argument name'
-            : `\`${spec}\` declares no parameters to supply positionally`,
-          state.peek());
-        return undefined;
-      }
-      if (positional >= declared.length) {
-        state.error('TooManyArguments',
-          `\`${spec}\` declares ${declared.length} parameter(s)`, state.peek());
-        return undefined;
-      }
-      name = declared[positional]!.name;
+      name = positionalName(state, spec, positional, argToken);
+      if (name === undefined) return undefined;
       positional++;
-      value = parseArgValue(state);
+    } else {
+      const nameToken = parseIdentifier(state, 'ExpectedArgName', 'expected an argument name');
+      if (!nameToken) return undefined;
+      if (state.peek()?.kind !== 'equals') {
+        state.error('ExpectedArgValue', 'expected `=` and an argument value', state.peek());
+        return undefined;
+      }
+      state.next();
+      sawNamed = true;
+      name = nameToken.value;
     }
 
+    const value = parseArgValue(state);
     if (value === undefined) return undefined;
 
     if (Object.prototype.hasOwnProperty.call(args, name)) {
-      state.error('DuplicateArg', `duplicate argument \`${name}\``, state.peek());
+      state.error('DuplicateArg', `duplicate argument \`${name}\``, argToken);
       return undefined;
     }
     // `defineProperty`, not assignment: an argument named `__proto__` would otherwise hit the
@@ -341,11 +333,13 @@ function parsePrimary(state: ParserState, path: string): RuleNode | undefined {
 
   if (token.kind === 'spec') {
     state.next();
-    const hasArgs = state.peek()?.value === '(';
-    if (hasArgs && state.catalog !== undefined && declaredParameters(state, token.value) == null
-        && state.catalog.specs.some((entry) => entry.name === token.value)) {
-      state.error('UnexpectedArguments',
-        `\`${token.value}\` takes no arguments`, state.peek());
+    // A spec the catalog names but gives no parameters takes no argument list at all, so say so
+    // outright rather than leaving `parseArgs` to complain about the first argument. `parameters`
+    // is an explicit `null` for a plain spec, so this must not test `undefined` alone.
+    const entry = catalogEntry(state, token.value);
+    const openArgs = state.peek();
+    if (openArgs?.value === '(' && entry !== undefined && entry.parameters == null) {
+      state.error('UnexpectedArguments', `\`${token.value}\` takes no arguments`, openArgs);
       state.next();
       return undefined;
     }
