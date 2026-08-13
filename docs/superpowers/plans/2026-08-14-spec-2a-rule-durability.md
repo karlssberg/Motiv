@@ -4,7 +4,7 @@
 
 **Goal:** Rules survive a restart — behind an `IRuleStore` seam symmetrical with `IPropositionStore`, backed by an append-only version log whose `(Name, Version)` primary key *is* the compare-and-set, on an authoring write path that is async and cancellable.
 
-**Architecture:** Two layered phases. Phase 1 introduces the seam and the log while the write path is still synchronous: the store records, `IRuleStore`, a bind/publish split in `RuleBase` so everything fallible runs before anything mutates, head-as-projection loading with quarantine, and rollback-appends. Phase 2 makes the authoring write path async via two-tier exclusion — an outer `SemaphoreSlim` on `BindingScope` for whole operations, the existing inner `Monitor` untouched for data-structure mutation — and ripples that through `PropositionSet`, `ChangeRequestSet` and the endpoints. Phase 3 discharges the spec's verification obligations.
+**Architecture:** Three phases. Phase 1 builds the seam, the exclusion gate, and the log: the store records, `IRuleStore`, a bind/publish split in `RuleBase` so everything fallible runs before anything mutates, the outer `SemaphoreSlim` on `BindingScope`, head-as-projection loading with quarantine, and an async persist step with rollback-appends. Phase 2 ripples the async write contract through `PropositionSet`, `ChangeRequestSet` and the endpoints. Phase 3 adds the file-backed reference store and discharges the spec's verification obligations.
 
 **Tech Stack:** C# / .NET (`Motiv.Serialization` multi-TFM incl. `netstandard2.0`; `Motiv.Serialization.AspNetCore` net10.0), xUnit + Shouldly, ASP.NET Core minimal APIs.
 
@@ -19,10 +19,10 @@ are separate plans because each is an independent subsystem that ships on its ow
 
 | Spec build step | Plan |
 |---|---|
-| 1. `IRuleStore` + records + quarantine (02) | **this plan**, Phase 1 |
-| 2. Async two-tier exclusion + `SaveAsync` path (09) | **this plan**, Phase 2 |
-| 3. Version log + head projection + rollback (10) | **this plan**, Phase 1 |
-| 6. PK-as-CAS; delete the in-memory CAS (21) | **this plan**, Phase 1 |
+| 1. `IRuleStore` + records + quarantine (02) | **this plan**, Tasks 1–2, 5 |
+| 2. Async two-tier exclusion + `SaveAsync` path (09) | **this plan**, Tasks 4, 6–9 |
+| 3. Version log + head projection + rollback (10) | **this plan**, Tasks 1–2, 6 |
+| 6. PK-as-CAS; delete the in-memory CAS (21) | **this plan**, Tasks 2–3, 6 |
 | 4. Generation + `RefreshAsync` + poller (20) | **plan 2B** — multi-instance refresh |
 | 5. EF reference store + migrations + importer (16) | **plan 2C** — `Motiv.Serialization.EntityFrameworkCore` |
 
@@ -30,9 +30,16 @@ are separate plans because each is an independent subsystem that ships on its ow
 Adding a member to a published-shaped interface later would break every implementer; the two
 implementations here satisfy it in three lines each. Plan 2B builds the poller on top.
 
-Steps 4 and 6 were resequenced relative to the spec (6 before 4) because the PK-as-CAS *is* the
-version log's primary key — separating them would mean writing the log, shipping it with the
-in-memory CAS still in place, then removing the CAS in a later pass over the same five files.
+The spec's build sequence is resequenced here for two reasons, both about never committing code that
+has to be undone:
+
+- **Step 6 before step 4**, because the PK-as-CAS *is* the version log's primary key. Separating them
+  would mean writing the log, shipping it with the in-memory CAS still in place, then removing the
+  CAS in a later pass over the same five files.
+- **The exclusion gate (Task 4) before the persist step (Task 6)**, so the write path is already async
+  the first time it touches a store. The alternative — persist synchronously, then convert — puts a
+  blocking `.GetAwaiter().GetResult()` inside the publish lock for the length of a task. That pattern
+  deadlocks under a synchronization context and would have to be deleted immediately afterwards.
 
 ---
 
@@ -42,10 +49,11 @@ in-memory CAS still in place, then removing the CAS in a later pass over the sam
 - There is **no `timeout` command on macOS** — never wrap a test run in it. It silently runs nothing and greps clean.
 - `Motiv.Serialization` targets `net8.0;net9.0;netstandard2.0;net10.0`. **No C# 8+ features needing runtime support**: no ranges (`[..^n]`), no `System.Index`/`System.Range`, no `IAsyncEnumerable`, no default interface methods. `SemaphoreSlim.WaitAsync(CancellationToken)` and `Task<T>` are available on all four. Use `Task<T>`, never `ValueTask<T>` (needs `System.Threading.Tasks.Extensions` on netstandard2.0).
 - Always `.ConfigureAwait(false)` on every `await` inside `Motiv.Serialization` — it is a library.
+- **Never block on a `Task`** — no `.Result`, no `.Wait()`, no `.GetAwaiter().GetResult()`. The write path is async precisely so a hung store can be cancelled; blocking on it inside the publish gate reintroduces the deadlock the gate exists to avoid.
 - **TDD strictly**: failing test → confirm it fails for the right reason → minimal code → confirm it passes → commit. Never write implementation before its test.
 - Test naming follows the repo: `public class {Subject}Tests`, `[Fact] public void Should_snake_case_phrase()` (`async Task` when the subject is async), `// Arrange` / `// Act` / `// Assert` comments, **Shouldly** assertions.
 - Run the **full solution suite** — including `src/examples/Motiv.Poker.Tests`, `Motiv.ECommerce.Tests`, `Motiv.SmartHome.Tests`, `Motiv.RulesEngine.Sample.Tests` — before calling any phase complete. Example projects assert on justification strings and break silently otherwise.
-- `Motiv.Serialization.AspNetCore` and `Motiv.Serialization` have **never been published** (ticket 06). Every breaking change here costs nothing. **No compatibility shims, no `[Obsolete]` bridges** — delete the old signature.
+- `Motiv.Serialization` and `Motiv.Serialization.AspNetCore` have **never been published** (ticket 06). Every breaking change here costs nothing. **No compatibility shims, no `[Obsolete]` bridges** — delete the old signature.
 - Published `Motiv` (v8.0.0) must **not** be touched. `git diff --stat` must show zero files changed under `src/Motiv/` at the end.
 - Per project convention (`CLAUDE.md`), after each phase's tests pass, spawn a `code-simplifier` agent over the changed files and apply its findings before moving on.
 
@@ -104,6 +112,10 @@ here so no task re-derives them.
    hosts that never asked for durability behave as they do today, and every existing test that
    constructs a bare `RuleSet` keeps compiling.
 
+10. **`Load()` stays synchronous and bypasses persistence.** Startup is synchronous and the DI factory
+    wall cannot await. A row that came *from* the store is committed directly, never re-appended —
+    appending it again would mint a duplicate version row and conflict on its own primary key.
+
 ---
 
 ## File Structure
@@ -114,10 +126,10 @@ here so no task re-derives them.
 | `src/Motiv.Serialization/Rules/RuleChangeProvenance.cs` | Who/when/why/which-build, + `BuildIdentity.Current` |
 | `src/Motiv.Serialization/Rules/IRuleStore.cs` | The seam, `RuleAppendResult`, `InMemoryRuleStore` |
 | `src/Motiv.Serialization/Rules/RulePreparation.cs` | `IRulePublication`, `RulePrepareResult` — the bind/publish split |
-| `src/Motiv.Serialization/Rules/RuleBase.cs` | `PrepareUpdate`/`PrepareRevert` replace `TryUpdate`/`TryRevert` |
+| `src/Motiv.Serialization/Rules/RuleBase.cs` | `PrepareUpdate`/`PrepareRevert` replace `TryUpdate`/`TryRevert`; `RestoreVersion` |
 | `src/Motiv.Serialization/Rules/Rule.cs` | Split implementation; **`Interlocked.CompareExchange` deleted** |
 | `src/Motiv.Serialization/Rules/AsyncRule.cs` | Same, for the async flavour |
-| `src/Motiv.Serialization/Rules/RuleSet.cs` | Takes a store; `Load`, `UpdateAsync`, `RevertAsync`, `…Core` |
+| `src/Motiv.Serialization/Rules/RuleSet.cs` | Takes a store; `Load`, `UpdateAsync`, `RevertAsync`, `RestoreAsync`, `…Core` |
 | `src/Motiv.Serialization/Rules/RuleLoadReport.cs` | Quarantine report + `ThrowIfQuarantined()` |
 | `src/Motiv.Serialization/Rules/RuleSetEntry.cs` | Gains `Quarantine` |
 | `src/Motiv.Serialization/Propositions/BindingScope.cs` | Outer `SemaphoreSlim`; `LockedAsync` |
@@ -130,10 +142,7 @@ here so no task re-derives them.
 
 ---
 
-# Phase 1 — The seam and the log
-
-The write path stays synchronous throughout this phase. Every test written here keeps passing
-unchanged through Phase 2 except for `await`.
+# Phase 1 — The seam, the gate, and the log
 
 ---
 
@@ -148,7 +157,7 @@ unchanged through Phase 2 except for `await`.
 - Produces: `StoredRule(string Name, int Version, string? DocumentJson)`;
   `StoredRuleVersion(string Name, int Version, string? DocumentJson, string Author, DateTimeOffset TimestampUtc, string? ChangeNote, string? ApprovalRef, string? BuildId)`;
   `RuleChangeProvenance(string Author, string? ChangeNote, string? ApprovalRef, string? BuildId)` with
-  `RuleChangeProvenance.System`; `BuildIdentity.Current`.
+  `RuleChangeProvenance.System` and `WithDefaults()`; `BuildIdentity.Current`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -685,14 +694,16 @@ a separate, already-decided step, and it is blind across processes anyway.
 - Modify: `src/Motiv.Serialization/Rules/RuleBase.cs:50-54`
 - Modify: `src/Motiv.Serialization/Rules/Rule.cs:76-115,180-192`
 - Modify: `src/Motiv.Serialization/Rules/AsyncRule.cs:81-120,~185-197`
-- Modify: `src/Motiv.Serialization/Rules/RuleSet.cs:176-181,250-259`
+- Modify: `src/Motiv.Serialization/Rules/RuleSet.cs:151-181,250-259`
+- Modify: `src/Motiv.Serialization/Governance/ChangeRequestSet.cs:437,439,810,811`
 - Test: `src/Motiv.Serialization.Tests/Rules/RulePreparationTests.cs`
 
 **Interfaces:**
 - Produces: `internal interface IRulePublication { int Version { get; } string? DocumentJson { get; } void Commit(); }`;
   `internal sealed class RulePrepareResult` with `Prepared(IRulePublication)`, `VersionConflict(int)`,
-  `Invalid(IReadOnlyList<RuleError>)`, `NotFound()`, and `ToUpdateResult()`.
-- Consumed by: Task 4 (`RuleSet.Load`), Task 7 (`RuleSet.UpdateAsync`), Task 9 (`ChangeRequestSet`).
+  `Invalid(IReadOnlyList<RuleError>)`, `NotFound()`, `ToFailureResult()`;
+  `internal RuleSet.PrepareUpdateCore/PrepareRevertCore/CommitCore`.
+- Consumed by: Task 5 (`RuleSet.Load`), Task 6 (`RuleSet.UpdateAsync`), Task 8 (`ChangeRequestSet`).
 
 - [ ] **Step 1: Write the failing test**
 
@@ -782,6 +793,20 @@ public class RulePreparationTests
     }
 
     [Fact]
+    public void Should_report_an_unknown_rule_as_not_found()
+    {
+        // Arrange
+        var (set, _) = Bound();
+
+        // Act
+        var prepared = set.PrepareUpdateCore("nope", Document, expectedVersion: 1);
+
+        // Assert
+        prepared.Outcome.ShouldBe(RuleUpdateOutcome.NotFound);
+        prepared.Publication.ShouldBeNull();
+    }
+
+    [Fact]
     public void Should_prepare_a_revert_carrying_the_defaults_document()
     {
         // Arrange
@@ -796,6 +821,17 @@ public class RulePreparationTests
         prepared.Publication!.Version.ShouldBe(3);
         prepared.Publication.DocumentJson.ShouldBeNull();
         rule.Version.ShouldBe(2);
+    }
+
+    [Fact]
+    public void Should_refuse_to_report_a_failure_result_for_a_successful_prepare()
+    {
+        // Arrange
+        var (set, _) = Bound();
+        var prepared = set.PrepareUpdateCore("sample", Document, expectedVersion: 1);
+
+        // Act / Assert — reporting a publish that has not happened is the bug this guards
+        Should.Throw<InvalidOperationException>(() => prepared.ToFailureResult());
     }
 }
 ```
@@ -1030,42 +1066,8 @@ In `src/Motiv.Serialization/Rules/RuleSet.cs`, replace `UpdateCore`/`RevertCore`
     }
 ```
 
-- [ ] **Step 8: Make the solution compile**
-
-`ChangeRequestSet` still calls `UpdateCore`/`RevertCore`. Bridge it for now with two private helpers
-in `ChangeRequestSet` so the whole solution builds and every existing test still passes — Task 9
-replaces them with the real persist-in-between path.
-
-Add to `src/Motiv.Serialization/Governance/ChangeRequestSet.cs`:
-
-```csharp
-    /// <summary>
-    /// Prepare-then-commit with nothing in between — the behaviour <c>UpdateCore</c> had before the
-    /// split. Task 9 of the durability plan replaces these with a persist step between the two halves;
-    /// until then they keep the governance path byte-identical.
-    /// </summary>
-    private static RuleUpdateResult UpdateCore(RuleSet rules, string name, string documentJson, int baseVersion)
-    {
-        var prepared = rules.PrepareUpdateCore(name, documentJson, baseVersion);
-        return prepared.Publication is { } publication
-            ? rules.CommitCore(name, publication)
-            : prepared.ToFailureResult();
-    }
-
-    private static RuleUpdateResult RevertCore(RuleSet rules, string name, int baseVersion)
-    {
-        var prepared = rules.PrepareRevertCore(name, baseVersion);
-        return prepared.Publication is { } publication
-            ? rules.CommitCore(name, publication)
-            : prepared.ToFailureResult();
-    }
-```
-
-and rewrite the four call sites (`ChangeRequestSet.cs:437`, `:439`, `:810`, `:811`) to use them, e.g.
-`_rules.UpdateCore(change.Name, change.DocumentJson!, change.BaseVersion)` becomes
-`UpdateCore(_rules, change.Name, change.DocumentJson!, change.BaseVersion)`.
-
-Also update `RuleSet.Update`/`Revert` (lines 151–163) to route through the same shape:
+and route the existing public `Update`/`Revert` (lines 151–163) through the same shape. They keep
+their current signatures in this task — Task 6 replaces them with the async, persisting versions:
 
 ```csharp
     public RuleUpdateResult Update(string name, string documentJson, int expectedVersion)
@@ -1091,13 +1093,47 @@ Also update `RuleSet.Update`/`Revert` (lines 151–163) to route through the sam
         });
 ```
 
-- [ ] **Step 9: Run the full serialization suite to verify nothing regressed**
+- [ ] **Step 8: Repoint `ChangeRequestSet`'s four call sites**
+
+`ChangeRequestSet.cs:437`, `:439`, `:810` and `:811` call `_rules.UpdateCore(...)` / `RevertCore(...)`,
+which no longer exist. Add two private static helpers in `ChangeRequestSet` and repoint the four
+sites at them:
+
+```csharp
+    /// <summary>
+    /// Prepare-then-commit under the caller's existing lock — the behaviour <c>UpdateCore</c> had
+    /// before the bind/publish split. Task 8 of the durability plan replaces these with a persist
+    /// step between the two halves; they exist so this task compiles without touching governance's
+    /// control flow, and are deleted there.
+    /// </summary>
+    private static RuleUpdateResult UpdateCore(RuleSet rules, string name, string documentJson, int baseVersion)
+    {
+        var prepared = rules.PrepareUpdateCore(name, documentJson, baseVersion);
+        return prepared.Publication is { } publication
+            ? rules.CommitCore(name, publication)
+            : prepared.ToFailureResult();
+    }
+
+    /// <summary>The revert companion to <see cref="UpdateCore"/>. Deleted in Task 8.</summary>
+    private static RuleUpdateResult RevertCore(RuleSet rules, string name, int baseVersion)
+    {
+        var prepared = rules.PrepareRevertCore(name, baseVersion);
+        return prepared.Publication is { } publication
+            ? rules.CommitCore(name, publication)
+            : prepared.ToFailureResult();
+    }
+```
+
+e.g. `_rules.UpdateCore(change.Name, change.DocumentJson!, change.BaseVersion)` becomes
+`UpdateCore(_rules, change.Name, change.DocumentJson!, change.BaseVersion)`.
+
+- [ ] **Step 9: Run the full serialization and AspNetCore suites**
 
 Run:
 ```bash
 export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet test src/Motiv.Serialization.Tests src/Motiv.Serialization.AspNetCore.Tests -f net10.0
 ```
-Expected: PASS — the 5 new `RulePreparationTests` plus every pre-existing test (682 serialization, 128 AspNetCore at time of writing). **A single regression here means the split changed behaviour and must be fixed before continuing.**
+Expected: PASS — the 7 new `RulePreparationTests` plus every pre-existing test (682 serialization, 128 AspNetCore at time of writing). **A single regression here means the split changed behaviour and must be fixed before continuing.**
 
 - [ ] **Step 10: Commit**
 
@@ -1107,20 +1143,213 @@ git add -A src/Motiv.Serialization src/Motiv.Serialization.Tests && git commit -
 
 ---
 
-### Task 4: `RuleSet` takes a store, loads heads, and quarantines what will not bind
+### Task 4: The outer `SemaphoreSlim` on `BindingScope`
+
+**Files:**
+- Modify: `src/Motiv.Serialization/Propositions/BindingScope.cs`
+- Test: `src/Motiv.Serialization.Tests/Propositions/BindingScopeExclusionTests.cs`
+
+**Interfaces:**
+- Produces: `BindingScope.LockedAsync<T>(Func<Task<T>>, CancellationToken)`,
+  `BindingScope.LockedAsync(Func<Task>, CancellationToken)`. `Locked<T>`/`Locked` are unchanged.
+- Consumed by: Tasks 6, 7, 8.
+
+- [ ] **Step 1: Write the failing test**
+
+```csharp
+using Motiv.Serialization;
+
+namespace Motiv.Serialization.Tests.Propositions;
+
+public class BindingScopeExclusionTests
+{
+    private static BindingScope Scope() => new(new SpecRegistry());
+
+    [Fact]
+    public async Task Should_serialise_whole_operations_across_awaits()
+    {
+        // Arrange — the inner Monitor cannot do this: it is released at the first await
+        var scope = Scope();
+        var observed = new List<string>();
+
+        async Task Operation(string id) =>
+            await scope.LockedAsync(async () =>
+            {
+                observed.Add($"{id}-enter");
+                await Task.Yield();
+                await Task.Delay(20);
+                observed.Add($"{id}-exit");
+            }, default);
+
+        // Act
+        await Task.WhenAll(Operation("a"), Operation("b"));
+
+        // Assert — neither operation may interleave with the other
+        observed.ShouldBeOneOf(
+            ["a-enter", "a-exit", "b-enter", "b-exit"],
+            ["b-enter", "b-exit", "a-enter", "a-exit"]);
+    }
+
+    [Fact]
+    public async Task Should_cancel_a_waiter_rather_than_hang_behind_a_stuck_store()
+    {
+        // Arrange — this is why the write path is async: a hung store must be escapable
+        var scope = Scope();
+        var held = new TaskCompletionSource<bool>();
+        var entered = new TaskCompletionSource<bool>();
+
+        var holder = scope.LockedAsync(async () =>
+        {
+            entered.SetResult(true);
+            await held.Task;
+        }, default);
+
+        await entered.Task;
+        using var cancellation = new CancellationTokenSource();
+
+        // Act
+        var waiter = scope.LockedAsync(() => Task.CompletedTask, cancellation.Token);
+        cancellation.Cancel();
+
+        // Assert
+        await Should.ThrowAsync<OperationCanceledException>(async () => await waiter);
+
+        held.SetResult(true);
+        await holder;
+    }
+
+    [Fact]
+    public async Task Should_release_the_gate_when_the_operation_throws()
+    {
+        // Arrange
+        var scope = Scope();
+
+        // Act
+        await Should.ThrowAsync<InvalidOperationException>(async () =>
+            await scope.LockedAsync<int>(() => throw new InvalidOperationException("boom"), default));
+
+        // Assert — a failed publish must not wedge every later one
+        var reentered = await scope.LockedAsync(() => Task.FromResult(42), default);
+        reentered.ShouldBe(42);
+    }
+
+    [Fact]
+    public async Task Should_leave_the_synchronous_gate_usable_alongside_it()
+    {
+        // Arrange — the two tiers coexist; the inner Monitor is for data-structure mutation
+        var scope = Scope();
+
+        // Act
+        var inner = scope.Locked(() => 1);
+        var outer = await scope.LockedAsync(() => Task.FromResult(2), default);
+
+        // Assert
+        inner.ShouldBe(1);
+        outer.ShouldBe(2);
+    }
+}
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run:
+```bash
+export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet test src/Motiv.Serialization.Tests -f net10.0 --filter "FullyQualifiedName~BindingScopeExclusionTests"
+```
+Expected: FAIL — `LockedAsync` does not exist (CS1061).
+
+- [ ] **Step 3: Add the outer tier**
+
+In `src/Motiv.Serialization/Propositions/BindingScope.cs`, add the field beside `_gate` and the two
+methods beside `Locked`:
+
+```csharp
+    /// <summary>
+    /// The outer tier: serialises whole publish operations await-safely. The inner
+    /// <see cref="_gate"/> monitor is deliberately left in place rather than replaced — every
+    /// <see cref="Enrol"/>/<see cref="Withdraw"/> site is reentrant, and a pure swap to a
+    /// non-reentrant semaphore would self-deadlock at startup.
+    /// </summary>
+    /// <remarks>
+    /// <strong>Acquired only at public entry points.</strong> <see cref="SemaphoreSlim"/> is not
+    /// reentrant, so anything already inside must call a <c>…Core</c> method, never a public one.
+    /// </remarks>
+    private readonly SemaphoreSlim _outer = new(1, 1);
+```
+
+```csharp
+    /// <summary>
+    /// Runs an operation holding the outer write gate, so a whole publish — including its store
+    /// round trip — serialises against every other publish.
+    /// </summary>
+    /// <remarks>
+    /// The reason this exists is <em>cancellation</em>, not throughput: the critical section is
+    /// mostly CPU, so awaiting frees a few milliseconds at most. What it buys is
+    /// <see cref="SemaphoreSlim.WaitAsync(CancellationToken)"/> — an answer to a store that has
+    /// stopped responding, which a monitor cannot give.
+    /// </remarks>
+    public async Task<T> LockedAsync<T>(Func<Task<T>> operation, CancellationToken cancellationToken)
+    {
+        await _outer.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            return await operation().ConfigureAwait(false);
+        }
+        finally
+        {
+            _outer.Release();
+        }
+    }
+
+    /// <summary>The void companion to <see cref="LockedAsync{T}"/>.</summary>
+    public async Task LockedAsync(Func<Task> operation, CancellationToken cancellationToken)
+    {
+        await _outer.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await operation().ConfigureAwait(false);
+        }
+        finally
+        {
+            _outer.Release();
+        }
+    }
+```
+
+Extend the class-level `<remarks>` to name the two tiers and why both exist.
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run:
+```bash
+export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet test src/Motiv.Serialization.Tests -f net10.0 --filter "FullyQualifiedName~BindingScopeExclusionTests"
+```
+Expected: PASS — 4 tests.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add -A src/Motiv.Serialization/Propositions/BindingScope.cs src/Motiv.Serialization.Tests/Propositions/BindingScopeExclusionTests.cs && git commit -m "feat(serialization): add the outer await-safe exclusion tier to BindingScope"
+```
+
+---
+
+### Task 5: `RuleSet` takes a store, loads heads, and quarantines what will not bind
 
 **Files:**
 - Create: `src/Motiv.Serialization/Rules/RuleLoadReport.cs`
 - Modify: `src/Motiv.Serialization/Rules/RuleSet.cs:14-71,126-132`
 - Modify: `src/Motiv.Serialization/Rules/RuleSetEntry.cs`
+- Modify: `src/Motiv.Serialization/Rules/RuleBase.cs`, `Rule.cs`, `AsyncRule.cs` (`RestoreVersion`)
 - Test: `src/Motiv.Serialization.Tests/Rules/RuleSetLoadTests.cs`
 
 **Interfaces:**
-- Consumes: `IRuleStore`, `StoredRule` (Task 2); `PrepareUpdateCore`, `CommitCore` (Task 3).
+- Consumes: `IRuleStore`, `StoredRule` (Task 2); `PrepareUpdateCore`, `PrepareRevertCore`, `CommitCore` (Task 3).
 - Produces: `RuleSet(SpecRegistry, IRuleStore?, RuleSerializerOptions?)`,
   `RuleSet(PropositionSet, IRuleStore?, RuleSerializerOptions?)`, `RuleSet.Load() → RuleLoadReport`,
-  `RuleLoadReport.Quarantined`, `RuleLoadReport.ThrowIfQuarantined()`,
-  `RuleSetEntry.Quarantine`.
+  `RuleLoadReport.Quarantined/Orphaned/HasQuarantine/ThrowIfQuarantined()`,
+  `QuarantinedRule(Name, Version, Errors)`, `RuleSetEntry.Quarantine`,
+  `internal RuleBase.RestoreVersion(int)`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1275,6 +1504,24 @@ public class RuleSetLoadTests
         report.Quarantined.ShouldBeEmpty();
         report.Orphaned.ShouldBe(["retired"]);
     }
+
+    [Fact]
+    public void Should_load_cleanly_with_an_empty_store()
+    {
+        // Arrange
+        var registry = new SpecRegistry().Register("customer.is-active", IsActive);
+        var rule = new SampleRule();
+        var set = new RuleSet(registry, new InMemoryRuleStore()).Add(rule);
+
+        // Act — a first boot is not an error
+        var report = set.Load();
+
+        // Assert
+        report.Quarantined.ShouldBeEmpty();
+        report.Orphaned.ShouldBeEmpty();
+        rule.Version.ShouldBe(1);
+        rule.DocumentJson.ShouldBeNull();
+    }
 }
 ```
 
@@ -1356,8 +1603,8 @@ public sealed class RuleLoadReport
 
 - [ ] **Step 4: Add `Quarantine` to `RuleSetEntry`**
 
-Add the property to the record in `src/Motiv.Serialization/Rules/RuleSetEntry.cs`, defaulted so no
-existing construction site breaks:
+`RuleSetEntry` is a positional record with explicit `{ get; } = X` bodies. Add a *new* property
+outside the positional list, so no existing construction site breaks:
 
 ```csharp
     /// <summary>
@@ -1367,17 +1614,44 @@ existing construction site breaks:
     public IReadOnlyList<RuleError> Quarantine { get; init; } = [];
 ```
 
-- [ ] **Step 5: Wire the store into `RuleSet`**
+- [ ] **Step 5: Add `RestoreVersion` to the rule hierarchy**
 
-In `src/Motiv.Serialization/Rules/RuleSet.cs`, add the field and thread the store through both public
-constructors and the internal one (defaulting to `InMemoryRuleStore` so every existing call site keeps
-compiling — see locked decision 9):
+`Load` publishes through the ordinary prepare/commit path — so a stored document binds exactly as a
+live edit would — which numbers the publication v2. The store's number is the real one, so it is
+written back afterwards. In `RuleBase`:
+
+```csharp
+    /// <summary>
+    /// Overwrites the live version without touching the binding — used only by
+    /// <see cref="RuleSet.Load"/>, to restore the number the store holds after a stored document has
+    /// been bound through the ordinary publish path. Renumbering anywhere else would break the
+    /// optimistic-concurrency contract.
+    /// </summary>
+    internal abstract void RestoreVersion(int version);
+```
+
+and in `Rule<TModel, TMetadata>` (identically in `AsyncRule<TModel, TMetadata>`):
+
+```csharp
+    internal sealed override void RestoreVersion(int version)
+    {
+        var current = Snapshot();
+        Volatile.Write(ref _state, new State(current.DocumentJson, version, current.Spec));
+    }
+```
+
+- [ ] **Step 6: Wire the store into `RuleSet` and add `Load`**
+
+Add the fields:
 
 ```csharp
     private readonly IRuleStore _store;
     private readonly Dictionary<string, IReadOnlyList<RuleError>> _quarantine = new(StringComparer.Ordinal);
     private bool _loaded;
 ```
+
+Thread the store through all three constructors, defaulting to `InMemoryRuleStore` so every existing
+call site keeps compiling (locked decision 9):
 
 ```csharp
     public RuleSet(SpecRegistry registry, IRuleStore? store = null, RuleSerializerOptions? options = null)
@@ -1399,7 +1673,7 @@ compiling — see locked decision 9):
     }
 ```
 
-Add `Load`:
+Add `Load` and its helper:
 
 ```csharp
     /// <summary>
@@ -1473,46 +1747,20 @@ Add `Load`:
             return prepared.Errors;
         }
 
+        // Committed directly, not through the persisting write path: this document came *from* the
+        // store, so appending it again would mint a duplicate version row and conflict on its own
+        // primary key.
         CommitCore(head.Name, publication);
-        // The store's version is authoritative — a restart must not renumber history — so the freshly
-        // committed v2 is overwritten with what was actually published.
-        SetVersion(head.Name, head.Version);
+
+        // The store's version is authoritative — a restart must not renumber history — so the
+        // freshly committed v2 is overwritten with what was actually published.
+        Find(head.Name)?.RestoreVersion(head.Version);
         return null;
     }
 ```
 
-`SetVersion` is the one piece of new plumbing: `Load` publishes through the ordinary prepare/commit
-path (so a stored document binds exactly as a live edit would), which numbers the publication v2,
-but the store's number is the real one. Add to `RuleBase`:
-
-```csharp
-    /// <summary>
-    /// Overwrites the live version without touching the binding — used only by
-    /// <see cref="RuleSet.Load"/>, to restore the number the store holds after a stored document has
-    /// been bound through the ordinary publish path. Renumbering anywhere else would break the
-    /// optimistic-concurrency contract.
-    /// </summary>
-    internal abstract void RestoreVersion(int version);
-```
-
-and in `Rule<TModel, TMetadata>` (identically in `AsyncRule<TModel, TMetadata>`):
-
-```csharp
-    internal sealed override void RestoreVersion(int version)
-    {
-        var current = Snapshot();
-        Volatile.Write(ref _state, new State(current.DocumentJson, version, current.Spec));
-    }
-```
-
-and in `RuleSet`:
-
-```csharp
-    private void SetVersion(string name, int version) => Find(name)?.RestoreVersion(version);
-```
-
 Finally, surface the quarantine on the entry — change `ToEntry` (line 126) from `static` to an
-instance method and add:
+instance method and add the initializer:
 
 ```csharp
     private RuleSetEntry ToEntry(RuleBase rule)
@@ -1527,25 +1775,25 @@ instance method and add:
     }
 ```
 
-- [ ] **Step 6: Run test to verify it passes**
+- [ ] **Step 7: Run test to verify it passes**
 
 Run:
 ```bash
 export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet test src/Motiv.Serialization.Tests -f net10.0 --filter "FullyQualifiedName~RuleSetLoadTests"
 ```
-Expected: PASS — 10 tests.
+Expected: PASS — 11 tests.
 
-- [ ] **Step 7: Run the full suite**
+- [ ] **Step 8: Run the full suite and fix positional call sites**
 
 Run:
 ```bash
 export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet test Motiv.slnx -f net10.0
 ```
 Expected: PASS across all projects. The new optional `store` parameter sits between `registry` and
-`options`, so any existing **positional** two-argument call `new RuleSet(registry, options)` now
-fails to compile — fix those call sites by naming the argument: `new RuleSet(registry, options: options)`.
+`options`, so any existing **positional** two-argument call `new RuleSet(registry, options)` now fails
+to compile — fix those call sites by naming the argument: `new RuleSet(registry, options: options)`.
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
 git add -A src/Motiv.Serialization src/Motiv.Serialization.Tests && git commit -m "feat(serialization): load rules from a store, quarantining documents that no longer bind"
@@ -1553,22 +1801,27 @@ git add -A src/Motiv.Serialization src/Motiv.Serialization.Tests && git commit -
 
 ---
 
-### Task 5: Persist on publish — the version log, and rollback-appends
+### Task 6: Persist on publish — the async version log, and rollback-appends
+
+The write path becomes async and starts persisting in the same change, so no commit ever blocks on a
+`Task` inside the publish gate.
 
 **Files:**
 - Modify: `src/Motiv.Serialization/Rules/RuleSet.cs`
+- Modify: `src/Motiv.Serialization/Governance/ChangeRequestSet.cs` (the Task 3 bridge helpers)
+- Modify: `src/Motiv.Serialization.AspNetCore/MotivRulesEndpoints.cs` (rule write handlers)
 - Test: `src/Motiv.Serialization.Tests/Rules/RuleVersionLogTests.cs`
 
 **Interfaces:**
-- Consumes: everything from Tasks 1–4.
-- Produces: `RuleSet.Update(name, documentJson, expectedVersion, provenance)`,
-  `RuleSet.Revert(name, expectedVersion, provenance)`,
-  `RuleSet.HistoryAsync(name, ct)`, `RuleSet.RestoreAsync(name, targetVersion, expectedVersion, provenance, ct)`.
-
-Both write methods stay synchronous in this task and become async in Task 7 — the store call is made
-through `.GetAwaiter().GetResult()` here and that bridge is **deleted** in Task 7. Doing it in this
-order keeps the version-log tests independent of the async refactor, so a failure in either is
-unambiguous.
+- Consumes: `BindingScope.LockedAsync` (Task 4); `IRuleStore.AppendAsync/HistoryAsync` (Task 2);
+  `PrepareUpdateCore`/`PrepareRevertCore`/`CommitCore` (Task 3); `RuleChangeProvenance` (Task 1).
+- Produces: `RuleSet.UpdateAsync(name, documentJson, expectedVersion, provenance, ct)`,
+  `RuleSet.RevertAsync(name, expectedVersion, provenance, ct)`,
+  `RuleSet.RestoreAsync(name, targetVersion, expectedVersion, provenance, ct)`,
+  `RuleSet.HistoryAsync(name, ct)`,
+  `internal RuleSet.PersistAndCommitCoreAsync(name, RulePrepareResult, provenance, ct)`,
+  `internal RuleSet.RowFor(name, IRulePublication, provenance)`.
+  **`RuleSet.Update` and `RuleSet.Revert` are deleted** — no shims (ticket 06: never published).
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1586,529 +1839,6 @@ public class RuleVersionLogTests
 
     private const string V2 = """{ "rule": { "spec": "customer.is-active" } }""";
     private const string V3 = """{ "rule": { "not": { "spec": "customer.is-active" } } }""";
-
-    private static (RuleSet Set, InMemoryRuleStore Store) Fresh()
-    {
-        var store = new InMemoryRuleStore();
-        var registry = new SpecRegistry().Register("customer.is-active", IsActive);
-        var set = new RuleSet(registry, store).Add(new SampleRule());
-        set.Load();
-        return (set, store);
-    }
-
-    [Fact]
-    public async Task Should_append_a_version_row_carrying_who_and_why()
-    {
-        // Arrange
-        var (set, store) = Fresh();
-
-        // Act
-        var result = set.Update("sample", V2, 1, new RuleChangeProvenance("alice", "tighten the check"));
-
-        // Assert
-        result.Outcome.ShouldBe(RuleUpdateOutcome.Updated);
-        var history = await store.HistoryAsync("sample", default);
-        history.ShouldHaveSingleItem();
-        history[0].Version.ShouldBe(2);
-        history[0].DocumentJson.ShouldBe(V2);
-        history[0].Author.ShouldBe("alice");
-        history[0].ChangeNote.ShouldBe("tighten the check");
-        history[0].BuildId.ShouldBe(BuildIdentity.Current);
-    }
-
-    [Fact]
-    public async Task Should_append_a_null_document_row_on_a_revert()
-    {
-        // Arrange
-        var (set, store) = Fresh();
-        set.Update("sample", V2, 1, new RuleChangeProvenance("alice"));
-
-        // Act
-        set.Revert("sample", 2, new RuleChangeProvenance("bob"));
-
-        // Assert — the version moves forward and the row records the return to code
-        var history = await store.HistoryAsync("sample", default);
-        history.Select(row => row.Version).ShouldBe([2, 3]);
-        history[1].DocumentJson.ShouldBeNull();
-        history[1].Author.ShouldBe("bob");
-    }
-
-    [Fact]
-    public void Should_leave_nothing_live_when_the_store_refuses_the_append()
-    {
-        // Arrange — a second replica already took version 2
-        var (set, store) = Fresh();
-        store.AppendAsync([new StoredRuleVersion(
-            "sample", 2, """{"other":"replica"}""", "carol",
-            DateTimeOffset.UnixEpoch, null, null, "test")], default).GetAwaiter().GetResult();
-
-        // Act
-        var result = set.Update("sample", V2, 1, new RuleChangeProvenance("alice"));
-
-        // Assert — the PK is the compare-and-set; the loser is told the current version
-        result.Outcome.ShouldBe(RuleUpdateOutcome.VersionConflict);
-        result.Version.ShouldBe(2);
-        set.FindEntry("sample")!.Version.ShouldBe(1);
-        set.FindEntry("sample")!.DocumentJson.ShouldBeNull();
-    }
-
-    [Fact]
-    public void Should_not_append_anything_when_the_document_does_not_bind()
-    {
-        // Arrange
-        var (set, store) = Fresh();
-
-        // Act
-        var result = set.Update(
-            "sample", """{ "rule": { "spec": "nope" } }""", 1, new RuleChangeProvenance("alice"));
-
-        // Assert — everything fallible runs before anything mutates, in both directions
-        result.Outcome.ShouldBe(RuleUpdateOutcome.Invalid);
-        store.Load().ShouldBeEmpty();
-    }
-
-    [Fact]
-    public async Task Should_restore_an_old_version_by_appending_a_copy_of_it()
-    {
-        // Arrange
-        var (set, store) = Fresh();
-        set.Update("sample", V2, 1, new RuleChangeProvenance("alice"));
-        set.Update("sample", V3, 2, new RuleChangeProvenance("alice"));
-
-        // Act — roll back to v2
-        var result = await set.RestoreAsync(
-            "sample", targetVersion: 2, expectedVersion: 3, new RuleChangeProvenance("bob", "rollback"), default);
-
-        // Assert — rollback appends: restoring v2 writes v4, which also records that it happened
-        result.Outcome.ShouldBe(RuleUpdateOutcome.Updated);
-        result.Version.ShouldBe(4);
-        set.FindEntry("sample")!.DocumentJson.ShouldBe(V2);
-
-        var history = await store.HistoryAsync("sample", default);
-        history.Select(row => row.Version).ShouldBe([2, 3, 4]);
-        history[2].DocumentJson.ShouldBe(V2);
-        history[2].ChangeNote.ShouldBe("rollback");
-    }
-
-    [Fact]
-    public async Task Should_refuse_to_restore_a_version_that_was_never_recorded()
-    {
-        // Arrange
-        var (set, _) = Fresh();
-        set.Update("sample", V2, 1, new RuleChangeProvenance("alice"));
-
-        // Act
-        var result = await set.RestoreAsync("sample", 99, 2, new RuleChangeProvenance("bob"), default);
-
-        // Assert
-        result.Outcome.ShouldBe(RuleUpdateOutcome.NotFound);
-    }
-
-    [Fact]
-    public async Task Should_survive_a_restart_with_the_document_and_version_intact()
-    {
-        // Arrange
-        var (set, store) = Fresh();
-        set.Update("sample", V2, 1, new RuleChangeProvenance("alice"));
-
-        // Act — a fresh RuleSet over the same store is what a restart looks like
-        var registry = new SpecRegistry().Register("customer.is-active", IsActive);
-        var restarted = new RuleSet(registry, store).Add(new SampleRule());
-        var report = restarted.Load();
-
-        // Assert — the thing an enterprise governs now survives a restart
-        report.Quarantined.ShouldBeEmpty();
-        restarted.FindEntry("sample")!.DocumentJson.ShouldBe(V2);
-        restarted.FindEntry("sample")!.Version.ShouldBe(2);
-        await Task.CompletedTask;
-    }
-}
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run:
-```bash
-export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet test src/Motiv.Serialization.Tests -f net10.0 --filter "FullyQualifiedName~RuleVersionLogTests"
-```
-Expected: FAIL — `Update` takes no provenance and `RestoreAsync` does not exist (CS1501/CS1061).
-
-- [ ] **Step 3: Persist between prepare and commit**
-
-In `src/Motiv.Serialization/Rules/RuleSet.cs`, replace the `Update`/`Revert` bodies written in Task 3
-step 8:
-
-```csharp
-    /// <summary>
-    /// Replaces a rule's implementation with a document: bind → persist → publish. The live rule is
-    /// untouched unless the document binds, the expected version holds, <em>and</em> the store accepts
-    /// the new version row.
-    /// </summary>
-    /// <remarks>
-    /// The ordering is the whole guarantee. Binding and persisting are the two steps that can fail and
-    /// both run before anything mutates, so a broken document or a version another replica already
-    /// took leaves nothing live — there is no rollback here because none is needed.
-    /// </remarks>
-    /// <param name="name">The rule name.</param>
-    /// <param name="documentJson">The replacement rule document.</param>
-    /// <param name="expectedVersion">The version the caller last observed.</param>
-    /// <param name="provenance">Who is publishing, and why. Written into the version log.</param>
-    /// <returns>The outcome: updated, version conflict, invalid document, or not found.</returns>
-    public RuleUpdateResult Update(
-        string name, string documentJson, int expectedVersion, RuleChangeProvenance provenance)
-    {
-        if (documentJson is null) throw new ArgumentNullException(nameof(documentJson));
-        if (provenance is null) throw new ArgumentNullException(nameof(provenance));
-
-        return Scope.Locked(() =>
-            PersistAndCommit(name, PrepareUpdateCore(name, documentJson, expectedVersion), provenance));
-    }
-
-    /// <summary>
-    /// Reverts a rule to its default. The version moves forward, never back, and the log records that
-    /// the rule went back to code.
-    /// </summary>
-    public RuleUpdateResult Revert(string name, int expectedVersion, RuleChangeProvenance provenance)
-    {
-        if (provenance is null) throw new ArgumentNullException(nameof(provenance));
-
-        return Scope.Locked(() =>
-            PersistAndCommit(name, PrepareRevertCore(name, expectedVersion), provenance));
-    }
-
-    /// <summary>
-    /// Restores the document a previous version carried by <em>appending</em> a copy of it. Restoring
-    /// v5 writes v9 — history is never rewritten, and the new row is itself the record that a rollback
-    /// happened.
-    /// </summary>
-    /// <param name="name">The rule name.</param>
-    /// <param name="targetVersion">The version whose document to republish.</param>
-    /// <param name="expectedVersion">The version the caller last observed.</param>
-    /// <param name="provenance">Who is rolling back, and why.</param>
-    /// <param name="cancellationToken">Cancels the history read.</param>
-    /// <returns>
-    /// The outcome. <see cref="RuleUpdateOutcome.NotFound"/> when the rule or the target version is
-    /// unknown — a version that was never recorded cannot be restored.
-    /// </returns>
-    public async Task<RuleUpdateResult> RestoreAsync(
-        string name, int targetVersion, int expectedVersion, RuleChangeProvenance provenance,
-        CancellationToken cancellationToken = default)
-    {
-        if (provenance is null) throw new ArgumentNullException(nameof(provenance));
-
-        // Read history outside the lock: it is a store read that cannot affect anything live, and
-        // holding an exclusion gate across it would serialise publishes behind an I/O round trip.
-        var history = await _store.HistoryAsync(name, cancellationToken).ConfigureAwait(false);
-        var target = history.FirstOrDefault(row => row.Version == targetVersion);
-        if (target is null)
-            return RuleUpdateResult.NotFound();
-
-        return target.DocumentJson is null
-            ? Revert(name, expectedVersion, provenance)
-            : Update(name, target.DocumentJson, expectedVersion, provenance);
-    }
-
-    /// <summary>Every recorded version of one rule, oldest first.</summary>
-    public Task<IReadOnlyList<StoredRuleVersion>> HistoryAsync(
-        string name, CancellationToken cancellationToken = default) =>
-        _store.HistoryAsync(name, cancellationToken);
-
-    /// <summary>
-    /// The middle of bind → persist → publish. Assumes the scope lock is held.
-    /// </summary>
-    /// <remarks>
-    /// The store call blocks here rather than awaiting: the write path is still synchronous at this
-    /// point in the build sequence and this bridge is removed when it goes async.
-    /// </remarks>
-    private RuleUpdateResult PersistAndCommit(
-        string name, RulePrepareResult prepared, RuleChangeProvenance provenance)
-    {
-        if (prepared.Publication is not { } publication)
-            return prepared.ToFailureResult();
-
-        var appended = _store
-            .AppendAsync([RowFor(name, publication, provenance)], CancellationToken.None)
-            .GetAwaiter().GetResult();
-
-        if (appended.IsConflict)
-            return RuleUpdateResult.VersionConflict(appended.CurrentVersion);
-
-        // Nothing below can fail.
-        _quarantine.Remove(name);
-        return CommitCore(name, publication);
-    }
-
-    private static StoredRuleVersion RowFor(
-        string name, IRulePublication publication, RuleChangeProvenance provenance)
-    {
-        var stamped = provenance.WithDefaults();
-        return new StoredRuleVersion(
-            name, publication.Version, publication.DocumentJson,
-            stamped.Author, DateTimeOffset.UtcNow,
-            stamped.ChangeNote, stamped.ApprovalRef, stamped.BuildId);
-    }
-```
-
-Also update `Load`'s `Apply` (Task 4) to bypass persistence — a row that came *from* the store must
-not be written back to it. Replace its `CommitCore(head.Name, publication);` call with a comment
-making that explicit:
-
-```csharp
-        // Committed directly, not through PersistAndCommit: this document came from the store, so
-        // appending it again would mint a duplicate version row and immediately conflict on the PK.
-        CommitCore(head.Name, publication);
-```
-
-- [ ] **Step 4: Run test to verify it passes**
-
-Run:
-```bash
-export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet test src/Motiv.Serialization.Tests -f net10.0 --filter "FullyQualifiedName~RuleVersionLogTests"
-```
-Expected: PASS — 7 tests.
-
-- [ ] **Step 5: Fix every caller of the old two-argument `Update`/`Revert`**
-
-`ChangeRequestSet` and `MotivRulesEndpoints` call them. Pass `RuleChangeProvenance.System` at the
-governance bridges added in Task 3 step 8 for now; Task 9 replaces those with the change request's
-real author and approval reference.
-
-Run:
-```bash
-export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet build Motiv.slnx -f net10.0
-```
-Expected: clean build.
-
-- [ ] **Step 6: Run the full solution suite**
-
-Run:
-```bash
-export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet test Motiv.slnx -f net10.0
-```
-Expected: PASS across all 10 projects.
-
-- [ ] **Step 7: Commit**
-
-```bash
-git add -A && git commit -m "feat(serialization): persist every rule publish to an append-only version log"
-```
-
-- [ ] **Step 8: Phase 1 code review**
-
-Spawn a `code-simplifier` agent over the files changed in Tasks 1–5 (per `CLAUDE.md`). Apply its
-findings, re-run `dotnet test Motiv.slnx -f net10.0`, and commit any changes separately.
-
----
-
-# Phase 2 — The async write contract
-
-Two-tier exclusion, then the ripple. Nothing in Phase 1's behaviour changes; only signatures do.
-
----
-
-### Task 6: The outer `SemaphoreSlim` on `BindingScope`
-
-**Files:**
-- Modify: `src/Motiv.Serialization/Propositions/BindingScope.cs`
-- Test: `src/Motiv.Serialization.Tests/Propositions/BindingScopeExclusionTests.cs`
-
-**Interfaces:**
-- Produces: `BindingScope.LockedAsync<T>(Func<Task<T>>, CancellationToken)`,
-  `BindingScope.LockedAsync(Func<Task>, CancellationToken)`. `Locked<T>`/`Locked` are unchanged.
-
-- [ ] **Step 1: Write the failing test**
-
-```csharp
-using Motiv.Serialization;
-
-namespace Motiv.Serialization.Tests.Propositions;
-
-public class BindingScopeExclusionTests
-{
-    private static BindingScope Scope() => new(new SpecRegistry());
-
-    [Fact]
-    public async Task Should_serialise_whole_operations_across_awaits()
-    {
-        // Arrange — the inner Monitor cannot do this: it is released at the first await
-        var scope = Scope();
-        var observed = new List<string>();
-
-        async Task Operation(string id)
-        {
-            await scope.LockedAsync(async () =>
-            {
-                observed.Add($"{id}-enter");
-                await Task.Yield();
-                await Task.Delay(20);
-                observed.Add($"{id}-exit");
-            }, default);
-        }
-
-        // Act
-        await Task.WhenAll(Operation("a"), Operation("b"));
-
-        // Assert — neither operation may interleave with the other
-        observed.ShouldBeOneOf(
-            ["a-enter", "a-exit", "b-enter", "b-exit"],
-            ["b-enter", "b-exit", "a-enter", "a-exit"]);
-    }
-
-    [Fact]
-    public async Task Should_cancel_a_waiter_rather_than_hang_behind_a_stuck_store()
-    {
-        // Arrange — this is why the write path is async: a hung store must be escapable
-        var scope = Scope();
-        var held = new TaskCompletionSource<bool>();
-        var entered = new TaskCompletionSource<bool>();
-
-        var holder = scope.LockedAsync(async () =>
-        {
-            entered.SetResult(true);
-            await held.Task;
-        }, default);
-
-        await entered.Task;
-        using var cancellation = new CancellationTokenSource();
-
-        // Act
-        var waiter = scope.LockedAsync(() => Task.CompletedTask, cancellation.Token);
-        cancellation.Cancel();
-
-        // Assert
-        await Should.ThrowAsync<OperationCanceledException>(async () => await waiter);
-
-        held.SetResult(true);
-        await holder;
-    }
-
-    [Fact]
-    public async Task Should_release_the_gate_when_the_operation_throws()
-    {
-        // Arrange
-        var scope = Scope();
-
-        // Act
-        await Should.ThrowAsync<InvalidOperationException>(async () =>
-            await scope.LockedAsync<int>(() => throw new InvalidOperationException("boom"), default));
-
-        // Assert — a failed publish must not wedge every later one
-        var reentered = await scope.LockedAsync(() => Task.FromResult(42), default);
-        reentered.ShouldBe(42);
-    }
-}
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run:
-```bash
-export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet test src/Motiv.Serialization.Tests -f net10.0 --filter "FullyQualifiedName~BindingScopeExclusionTests"
-```
-Expected: FAIL — `LockedAsync` does not exist (CS1061).
-
-- [ ] **Step 3: Add the outer tier**
-
-In `src/Motiv.Serialization/Propositions/BindingScope.cs`, add the field and the two methods, and
-extend the class remarks:
-
-```csharp
-    /// <summary>
-    /// The outer tier: serialises whole publish operations await-safely. The inner
-    /// <see cref="_gate"/> monitor is deliberately left in place rather than replaced — every
-    /// <see cref="Enrol"/>/<see cref="Withdraw"/> site is reentrant, and a pure swap to a
-    /// non-reentrant semaphore would self-deadlock at startup.
-    /// </summary>
-    /// <remarks>
-    /// <strong>Acquired only at public entry points.</strong> <see cref="SemaphoreSlim"/> is not
-    /// reentrant, so anything already inside must call a <c>…Core</c> method, never a public one.
-    /// </remarks>
-    private readonly SemaphoreSlim _outer = new(1, 1);
-```
-
-```csharp
-    /// <summary>
-    /// Runs an operation holding the outer write gate, so a whole publish — including its store
-    /// round trip — serialises against every other publish.
-    /// </summary>
-    /// <remarks>
-    /// The reason this exists is <em>cancellation</em>, not throughput: the critical section is
-    /// mostly CPU, so awaiting frees a few milliseconds at most. What it buys is
-    /// <see cref="SemaphoreSlim.WaitAsync(CancellationToken)"/> — an answer to a store that has
-    /// stopped responding, which a monitor cannot give.
-    /// </remarks>
-    public async Task<T> LockedAsync<T>(Func<Task<T>> operation, CancellationToken cancellationToken)
-    {
-        await _outer.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
-        {
-            return await operation().ConfigureAwait(false);
-        }
-        finally
-        {
-            _outer.Release();
-        }
-    }
-
-    /// <summary>The void companion to <see cref="LockedAsync{T}"/>.</summary>
-    public async Task LockedAsync(Func<Task> operation, CancellationToken cancellationToken)
-    {
-        await _outer.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
-        {
-            await operation().ConfigureAwait(false);
-        }
-        finally
-        {
-            _outer.Release();
-        }
-    }
-```
-
-- [ ] **Step 4: Run test to verify it passes**
-
-Run:
-```bash
-export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet test src/Motiv.Serialization.Tests -f net10.0 --filter "FullyQualifiedName~BindingScopeExclusionTests"
-```
-Expected: PASS — 3 tests.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add -A src/Motiv.Serialization/Propositions/BindingScope.cs src/Motiv.Serialization.Tests/Propositions/BindingScopeExclusionTests.cs && git commit -m "feat(serialization): add the outer await-safe exclusion tier to BindingScope"
-```
-
----
-
-### Task 7: `RuleSet` write path goes async
-
-**Files:**
-- Modify: `src/Motiv.Serialization/Rules/RuleSet.cs`
-- Modify: `src/Motiv.Serialization.Tests/Rules/RuleVersionLogTests.cs` (await the calls)
-- Test: `src/Motiv.Serialization.Tests/Rules/RuleSetAsyncWriteTests.cs`
-
-**Interfaces:**
-- Produces: `RuleSet.UpdateAsync(name, documentJson, expectedVersion, provenance, ct)`,
-  `RuleSet.RevertAsync(name, expectedVersion, provenance, ct)`,
-  `internal RuleSet.PersistAndCommitCoreAsync(name, RulePrepareResult, provenance, ct)`.
-  **`Update` and `Revert` are deleted** — no shims (ticket 06: never published).
-
-- [ ] **Step 1: Write the failing test**
-
-```csharp
-using Motiv.Serialization;
-
-namespace Motiv.Serialization.Tests.Rules;
-
-public class RuleSetAsyncWriteTests
-{
-    private static SpecBase<Customer, string> IsActive { get; } =
-        Spec.Build((Customer c) => c.IsActive).WhenTrue("active").WhenFalse("inactive").Create();
-
-    private sealed class SampleRule() : Rule<Customer, string>("sample", IsActive);
-
-    private const string Document = """{ "rule": { "spec": "customer.is-active" } }""";
 
     /// <summary>A store that blocks inside AppendAsync until released — a hung database.</summary>
     private sealed class StallingRuleStore : IRuleStore
@@ -2142,34 +1872,148 @@ public class RuleSetAsyncWriteTests
     }
 
     [Fact]
-    public async Task Should_publish_through_the_async_path()
+    public async Task Should_append_a_version_row_carrying_who_and_why()
     {
         // Arrange
-        var (set, _) = Fresh();
+        var (set, store) = Fresh();
 
         // Act
-        var result = await set.UpdateAsync("sample", Document, 1, new RuleChangeProvenance("alice"));
+        var result = await set.UpdateAsync(
+            "sample", V2, 1, new RuleChangeProvenance("alice", "tighten the check"));
 
         // Assert
         result.Outcome.ShouldBe(RuleUpdateOutcome.Updated);
-        set.FindEntry("sample")!.Version.ShouldBe(2);
+        var history = await ((InMemoryRuleStore)store).HistoryAsync("sample", default);
+        history.ShouldHaveSingleItem();
+        history[0].Version.ShouldBe(2);
+        history[0].DocumentJson.ShouldBe(V2);
+        history[0].Author.ShouldBe("alice");
+        history[0].ChangeNote.ShouldBe("tighten the check");
+        history[0].BuildId.ShouldBe(BuildIdentity.Current);
+    }
+
+    [Fact]
+    public async Task Should_append_a_null_document_row_on_a_revert()
+    {
+        // Arrange
+        var (set, store) = Fresh();
+        await set.UpdateAsync("sample", V2, 1, new RuleChangeProvenance("alice"));
+
+        // Act
+        await set.RevertAsync("sample", 2, new RuleChangeProvenance("bob"));
+
+        // Assert — the version moves forward and the row records the return to code
+        var history = await store.HistoryAsync("sample", default);
+        history.Select(row => row.Version).ShouldBe([2, 3]);
+        history[1].DocumentJson.ShouldBeNull();
+        history[1].Author.ShouldBe("bob");
+    }
+
+    [Fact]
+    public async Task Should_leave_nothing_live_when_the_store_refuses_the_append()
+    {
+        // Arrange — a second replica already took version 2
+        var (set, store) = Fresh();
+        await store.AppendAsync([new StoredRuleVersion(
+            "sample", 2, """{"other":"replica"}""", "carol",
+            DateTimeOffset.UnixEpoch, null, null, "test")], default);
+
+        // Act
+        var result = await set.UpdateAsync("sample", V2, 1, new RuleChangeProvenance("alice"));
+
+        // Assert — the PK is the compare-and-set; the loser is told the current version
+        result.Outcome.ShouldBe(RuleUpdateOutcome.VersionConflict);
+        result.Version.ShouldBe(2);
+        set.FindEntry("sample")!.Version.ShouldBe(1);
+        set.FindEntry("sample")!.DocumentJson.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Should_not_append_anything_when_the_document_does_not_bind()
+    {
+        // Arrange
+        var (set, store) = Fresh();
+
+        // Act
+        var result = await set.UpdateAsync(
+            "sample", """{ "rule": { "spec": "nope" } }""", 1, new RuleChangeProvenance("alice"));
+
+        // Assert — everything fallible runs before anything mutates, in both directions
+        result.Outcome.ShouldBe(RuleUpdateOutcome.Invalid);
+        store.Load().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Should_restore_an_old_version_by_appending_a_copy_of_it()
+    {
+        // Arrange
+        var (set, store) = Fresh();
+        await set.UpdateAsync("sample", V2, 1, new RuleChangeProvenance("alice"));
+        await set.UpdateAsync("sample", V3, 2, new RuleChangeProvenance("alice"));
+
+        // Act — roll back to v2
+        var result = await set.RestoreAsync(
+            "sample", targetVersion: 2, expectedVersion: 3,
+            new RuleChangeProvenance("bob", "rollback"), default);
+
+        // Assert — rollback appends: restoring v2 writes v4, which also records that it happened
+        result.Outcome.ShouldBe(RuleUpdateOutcome.Updated);
+        result.Version.ShouldBe(4);
+        set.FindEntry("sample")!.DocumentJson.ShouldBe(V2);
+
+        var history = await store.HistoryAsync("sample", default);
+        history.Select(row => row.Version).ShouldBe([2, 3, 4]);
+        history[2].DocumentJson.ShouldBe(V2);
+        history[2].ChangeNote.ShouldBe("rollback");
+    }
+
+    [Fact]
+    public async Task Should_refuse_to_restore_a_version_that_was_never_recorded()
+    {
+        // Arrange
+        var (set, _) = Fresh();
+        await set.UpdateAsync("sample", V2, 1, new RuleChangeProvenance("alice"));
+
+        // Act
+        var result = await set.RestoreAsync("sample", 99, 2, new RuleChangeProvenance("bob"), default);
+
+        // Assert
+        result.Outcome.ShouldBe(RuleUpdateOutcome.NotFound);
+    }
+
+    [Fact]
+    public async Task Should_survive_a_restart_with_the_document_and_version_intact()
+    {
+        // Arrange
+        var (set, store) = Fresh();
+        await set.UpdateAsync("sample", V2, 1, new RuleChangeProvenance("alice"));
+
+        // Act — a fresh RuleSet over the same store is what a restart looks like
+        var registry = new SpecRegistry().Register("customer.is-active", IsActive);
+        var restarted = new RuleSet(registry, store).Add(new SampleRule());
+        var report = restarted.Load();
+
+        // Assert — the thing an enterprise governs now survives a restart
+        report.Quarantined.ShouldBeEmpty();
+        restarted.FindEntry("sample")!.DocumentJson.ShouldBe(V2);
+        restarted.FindEntry("sample")!.Version.ShouldBe(2);
     }
 
     [Fact]
     public async Task Should_cancel_a_write_waiting_behind_a_stuck_store()
     {
-        // Arrange — the cancellation this whole refactor exists for
+        // Arrange — the cancellation this whole async contract exists for
         var store = new StallingRuleStore();
         var (set, _) = Fresh(store);
 
-        var stuck = set.UpdateAsync("sample", Document, 1, new RuleChangeProvenance("alice"));
+        var stuck = set.UpdateAsync("sample", V2, 1, new RuleChangeProvenance("alice"));
         await store.Entered.Task;
 
         using var cancellation = new CancellationTokenSource();
 
         // Act
         var queued = set.UpdateAsync(
-            "sample", Document, 1, new RuleChangeProvenance("bob"), cancellation.Token);
+            "sample", V2, 1, new RuleChangeProvenance("bob"), cancellation.Token);
         cancellation.Cancel();
 
         // Assert — the second writer escapes rather than hanging forever
@@ -2187,8 +2031,8 @@ public class RuleSetAsyncWriteTests
 
         // Act — both hold baseVersion 1
         var results = await Task.WhenAll(
-            set.UpdateAsync("sample", Document, 1, new RuleChangeProvenance("alice")),
-            set.UpdateAsync("sample", Document, 1, new RuleChangeProvenance("bob")));
+            set.UpdateAsync("sample", V2, 1, new RuleChangeProvenance("alice")),
+            set.UpdateAsync("sample", V2, 1, new RuleChangeProvenance("bob")));
 
         // Assert — one publishes, one is told the current version
         results.Count(r => r.Outcome == RuleUpdateOutcome.Updated).ShouldBe(1);
@@ -2202,20 +2046,25 @@ public class RuleSetAsyncWriteTests
 
 Run:
 ```bash
-export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet test src/Motiv.Serialization.Tests -f net10.0 --filter "FullyQualifiedName~RuleSetAsyncWriteTests"
+export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet test src/Motiv.Serialization.Tests -f net10.0 --filter "FullyQualifiedName~RuleVersionLogTests"
 ```
-Expected: FAIL — `UpdateAsync` does not exist (CS1061).
+Expected: FAIL — `UpdateAsync`/`RevertAsync`/`RestoreAsync` do not exist (CS1061).
 
-- [ ] **Step 3: Convert the write path**
+- [ ] **Step 3: Replace the write path**
 
-In `src/Motiv.Serialization/Rules/RuleSet.cs`, replace `Update`, `Revert` and `PersistAndCommit`:
+In `src/Motiv.Serialization/Rules/RuleSet.cs`, **delete** `Update` and `Revert` and add:
 
 ```csharp
     /// <summary>
     /// Replaces a rule's implementation with a document: bind → persist → publish, under the outer
     /// write gate. The live rule is untouched unless the document binds, the expected version holds,
-    /// and the store accepts the new version row.
+    /// <em>and</em> the store accepts the new version row.
     /// </summary>
+    /// <remarks>
+    /// The ordering is the whole guarantee. Binding and persisting are the two steps that can fail and
+    /// both run before anything mutates, so a broken document or a version another replica already
+    /// took leaves nothing live — there is no rollback here because none is needed.
+    /// </remarks>
     /// <param name="name">The rule name.</param>
     /// <param name="documentJson">The replacement rule document.</param>
     /// <param name="expectedVersion">The version the caller last observed.</param>
@@ -2235,7 +2084,10 @@ In `src/Motiv.Serialization/Rules/RuleSet.cs`, replace `Update`, `Revert` and `P
             cancellationToken);
     }
 
-    /// <summary>Reverts a rule to its default. The version moves forward, never back.</summary>
+    /// <summary>
+    /// Reverts a rule to its default. The version moves forward, never back, and the log records that
+    /// the rule went back to code.
+    /// </summary>
     public Task<RuleUpdateResult> RevertAsync(
         string name, int expectedVersion, RuleChangeProvenance provenance,
         CancellationToken cancellationToken = default)
@@ -2247,6 +2099,44 @@ In `src/Motiv.Serialization/Rules/RuleSet.cs`, replace `Update`, `Revert` and `P
                 name, PrepareRevertCore(name, expectedVersion), provenance, cancellationToken),
             cancellationToken);
     }
+
+    /// <summary>
+    /// Restores the document a previous version carried by <em>appending</em> a copy of it. Restoring
+    /// v5 writes v9 — history is never rewritten, and the new row is itself the record that a rollback
+    /// happened.
+    /// </summary>
+    /// <param name="name">The rule name.</param>
+    /// <param name="targetVersion">The version whose document to republish.</param>
+    /// <param name="expectedVersion">The version the caller last observed.</param>
+    /// <param name="provenance">Who is rolling back, and why.</param>
+    /// <param name="cancellationToken">Cancels the history read and the publish.</param>
+    /// <returns>
+    /// The outcome. <see cref="RuleUpdateOutcome.NotFound"/> when the rule or the target version is
+    /// unknown — a version that was never recorded cannot be restored.
+    /// </returns>
+    public async Task<RuleUpdateResult> RestoreAsync(
+        string name, int targetVersion, int expectedVersion, RuleChangeProvenance provenance,
+        CancellationToken cancellationToken = default)
+    {
+        if (provenance is null) throw new ArgumentNullException(nameof(provenance));
+
+        // Read history outside the gate: it is a store read that cannot affect anything live, and
+        // holding an exclusion gate across it would serialise publishes behind an I/O round trip.
+        var history = await _store.HistoryAsync(name, cancellationToken).ConfigureAwait(false);
+        var target = history.FirstOrDefault(row => row.Version == targetVersion);
+        if (target is null)
+            return RuleUpdateResult.NotFound();
+
+        return target.DocumentJson is null
+            ? await RevertAsync(name, expectedVersion, provenance, cancellationToken).ConfigureAwait(false)
+            : await UpdateAsync(name, target.DocumentJson, expectedVersion, provenance, cancellationToken)
+                .ConfigureAwait(false);
+    }
+
+    /// <summary>Every recorded version of one rule, oldest first.</summary>
+    public Task<IReadOnlyList<StoredRuleVersion>> HistoryAsync(
+        string name, CancellationToken cancellationToken = default) =>
+        _store.HistoryAsync(name, cancellationToken);
 
     /// <summary>
     /// The middle of bind → persist → publish, for a caller already holding the outer gate. The store
@@ -2266,37 +2156,81 @@ In `src/Motiv.Serialization/Rules/RuleSet.cs`, replace `Update`, `Revert` and `P
         if (appended.IsConflict)
             return RuleUpdateResult.VersionConflict(appended.CurrentVersion);
 
+        // Nothing below can fail.
         _quarantine.Remove(name);
         return CommitCore(name, publication);
     }
+
+    /// <summary>Builds the version row a prepared publication will be recorded as.</summary>
+    internal static StoredRuleVersion RowFor(
+        string name, IRulePublication publication, RuleChangeProvenance provenance)
+    {
+        var stamped = provenance.WithDefaults();
+        return new StoredRuleVersion(
+            name, publication.Version, publication.DocumentJson,
+            stamped.Author, DateTimeOffset.UtcNow,
+            stamped.ChangeNote, stamped.ApprovalRef, stamped.BuildId);
+    }
 ```
 
-Update `RestoreAsync` to call `UpdateAsync`/`RevertAsync` and thread its `cancellationToken`.
-
-- [ ] **Step 4: Update `RuleVersionLogTests` to await**
-
-Change every `set.Update(…)`/`set.Revert(…)` in `RuleVersionLogTests` to
-`await set.UpdateAsync(…)`/`await set.RevertAsync(…)`, and change the affected `[Fact] public void`
-signatures to `[Fact] public async Task`. The assertions are unchanged — that is the point of having
-written them in Phase 1.
-
-- [ ] **Step 5: Run both test classes to verify they pass**
+- [ ] **Step 4: Run test to verify it passes**
 
 Run:
 ```bash
-export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet test src/Motiv.Serialization.Tests -f net10.0 --filter "FullyQualifiedName~RuleSetAsyncWriteTests|FullyQualifiedName~RuleVersionLogTests"
+export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet test src/Motiv.Serialization.Tests -f net10.0 --filter "FullyQualifiedName~RuleVersionLogTests"
 ```
-Expected: PASS — 3 + 7 tests.
+Expected: PASS — 9 tests.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 5: Fix every caller of the deleted `Update`/`Revert`**
+
+Two call sites remain. Neither may block on a `Task` (global constraint):
+
+- **`ChangeRequestSet`'s Task 3 bridge helpers** become async, awaiting
+  `PersistAndCommitCoreAsync` with `RuleChangeProvenance.System` for now — Task 8 replaces them with
+  the batched, real-provenance path. Make their callers `async` up to the public surface, converting
+  `Scope.Locked` to `Scope.LockedAsync` on the enclosing methods.
+- **`MotivRulesEndpoints`'s rule write handlers** become `async` and await `UpdateAsync`/`RevertAsync`,
+  passing `new RuleChangeProvenance(http.User.Identity?.Name ?? "unknown")` and
+  `http.RequestAborted`. Task 9 adds the change-note plumbing.
+
+Run:
+```bash
+export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet build Motiv.slnx -f net10.0
+```
+Expected: clean build.
+
+- [ ] **Step 6: Run the full solution suite**
+
+Run:
+```bash
+export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet test Motiv.slnx -f net10.0
+```
+Expected: PASS across all 10 projects.
+
+Then confirm no blocking crept in:
+```bash
+grep -rn "GetAwaiter().GetResult()\|\.Result\b\|\.Wait()" src/Motiv.Serialization/ src/Motiv.Serialization.AspNetCore/
+```
+Expected: no output.
+
+- [ ] **Step 7: Commit**
 
 ```bash
-git add -A src/Motiv.Serialization/Rules src/Motiv.Serialization.Tests/Rules && git commit -m "feat(serialization): make the rule write path async and cancellable"
+git add -A && git commit -m "feat(serialization): persist every rule publish to an append-only version log"
 ```
+
+- [ ] **Step 8: Phase 1 code review**
+
+Spawn a `code-simplifier` agent over the files changed in Tasks 1–6 (per `CLAUDE.md`). Apply its
+findings, re-run `dotnet test Motiv.slnx -f net10.0`, and commit any changes separately.
 
 ---
 
-### Task 8: `IPropositionStore` and `PropositionSet` go async
+# Phase 2 — The async ripple
+
+---
+
+### Task 7: `IPropositionStore` and `PropositionSet` go async
 
 **Files:**
 - Modify: `src/Motiv.Serialization/Propositions/IPropositionStore.cs`
@@ -2305,10 +2239,13 @@ git add -A src/Motiv.Serialization/Rules src/Motiv.Serialization.Tests/Rules && 
 - Test: `src/Motiv.Serialization.Tests/Propositions/PropositionSetAsyncWriteTests.cs`
 
 **Interfaces:**
-- Produces: `PropositionBatch(IReadOnlyList<StoredProposition> Saves, IReadOnlyList<string> Deletes)`;
+- Consumes: `BindingScope.LockedAsync` (Task 4); `RuleSet.UpdateAsync` (Task 6).
+- Produces: `PropositionBatch(IReadOnlyList<StoredProposition> Saves, IReadOnlyList<string> Deletes)`
+  with `PropositionBatch.Save(…)`/`PropositionBatch.Delete(…)`;
   `IPropositionStore.WriteAsync(PropositionBatch, ct)` **replacing** `Save`/`Delete` (`Load` stays);
   `PropositionSet.CreateAsync/UpdateAsync/WithdrawAsync(..., ct)` **replacing** `Create`/`Update`/`Withdraw`;
-  `internal PropositionSet.PersistCoreAsync(PropositionBatch, ct)`.
+  `internal PropositionSet.CreateCoreAsync/UpdateCoreAsync/WithdrawCoreAsync(..., ct)`;
+  `internal PropositionSet.CommitPublish(Authored)`; `Authored` becomes `internal`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -2322,6 +2259,8 @@ public class PropositionSetAsyncWriteTests
     private static SpecBase<Customer, string> IsActive { get; } =
         Spec.Build((Customer c) => c.IsActive).WhenTrue("active").WhenFalse("inactive").Create();
 
+    private sealed class SampleRule() : Rule<Customer, string>("sample", IsActive);
+
     private const string Document = """{ "rule": { "spec": "customer.is-active" } }""";
 
     /// <summary>A store that refuses every write — the "persist failed" arm.</summary>
@@ -2331,6 +2270,44 @@ public class PropositionSetAsyncWriteTests
 
         public Task WriteAsync(PropositionBatch batch, CancellationToken cancellationToken) =>
             throw new IOException("disk full");
+    }
+
+    /// <summary>Records when a write enters and leaves the store, so an interleave is observable.</summary>
+    private sealed class TracingPropositionStore(List<string> timeline) : IPropositionStore
+    {
+        private readonly InMemoryPropositionStore _inner = new();
+
+        public IReadOnlyList<StoredProposition> Load() => _inner.Load();
+
+        public async Task WriteAsync(PropositionBatch batch, CancellationToken cancellationToken)
+        {
+            lock (timeline) timeline.Add("proposition-enter");
+            await Task.Yield();
+            await _inner.WriteAsync(batch, cancellationToken);
+            lock (timeline) timeline.Add("proposition-exit");
+        }
+    }
+
+    /// <summary>The rule-side twin of <see cref="TracingPropositionStore"/>.</summary>
+    private sealed class TracingRuleStore(List<string> timeline) : IRuleStore
+    {
+        private readonly InMemoryRuleStore _inner = new();
+
+        public IReadOnlyList<StoredRule> Load() => _inner.Load();
+        public Task<IReadOnlyList<StoredRule>> LoadAsync(CancellationToken ct) => _inner.LoadAsync(ct);
+        public Task<long> GetGenerationAsync(CancellationToken ct) => _inner.GetGenerationAsync(ct);
+        public Task<IReadOnlyList<StoredRuleVersion>> HistoryAsync(string n, CancellationToken ct) =>
+            _inner.HistoryAsync(n, ct);
+
+        public async Task<RuleAppendResult> AppendAsync(
+            IReadOnlyList<StoredRuleVersion> versions, CancellationToken ct)
+        {
+            lock (timeline) timeline.Add("rule-enter");
+            await Task.Yield();
+            var result = await _inner.AppendAsync(versions, ct);
+            lock (timeline) timeline.Add("rule-exit");
+            return result;
+        }
     }
 
     private static PropositionSet Fresh(IPropositionStore? store = null)
@@ -2387,26 +2364,47 @@ public class PropositionSetAsyncWriteTests
     }
 
     [Fact]
+    public async Task Should_write_a_save_and_a_delete_as_one_batch()
+    {
+        // Arrange — the batch shape is what makes an envelope all-or-nothing
+        var store = new InMemoryPropositionStore();
+        await store.WriteAsync(
+            new PropositionBatch(
+                [new StoredProposition("customer.a", "customer", Document, 1, null)],
+                ["customer.gone"]),
+            default);
+
+        // Assert
+        store.Load().ShouldHaveSingleItem();
+        store.Load()[0].Name.ShouldBe("customer.a");
+    }
+
+    [Fact]
     public async Task Should_serialise_a_proposition_write_against_a_rule_write()
     {
-        // Arrange — the two share one BindingScope, so they share one outer gate
+        // Arrange — the two sets share one BindingScope, so they share one outer gate. A store that
+        // records entry and exit is the only way to observe whether the two writes interleaved.
+        var timeline = new List<string>();
         var scope = new BindingScope(new SpecRegistry().Register("customer.is-active", IsActive));
-        var propositions = new PropositionSet(scope, new InMemoryPropositionStore())
+
+        var propositions = new PropositionSet(scope, new TracingPropositionStore(timeline))
             .AddModel<Customer>("customer");
         propositions.Load();
 
-        var rules = new RuleSet(scope, new InMemoryRuleStore());
+        var rules = new RuleSet(scope, new TracingRuleStore(timeline)).Add(new SampleRule());
+        rules.Load();
 
-        // Act — a rule write and a proposition write launched together must not interleave
-        var results = await Task.WhenAll(
-            propositions.CreateAsync("customer.a", "customer", Document, null)
-                .ContinueWith(t => t.Result.Outcome.ToString()),
-            propositions.CreateAsync("customer.b", "customer", Document, null)
-                .ContinueWith(t => t.Result.Outcome.ToString()));
+        // Act — launched together, they must not interleave
+        await Task.WhenAll(
+            propositions.CreateAsync("customer.a", "customer", Document, null),
+            rules.UpdateAsync("sample", Document, 1, new RuleChangeProvenance("alice")));
 
-        // Assert
-        results.ShouldAllBe(outcome => outcome == "Created");
-        rules.Rules.ShouldBeEmpty();
+        // Assert — each store's enter/exit pair must be contiguous; an interleave would read
+        // "proposition-enter, rule-enter, ...". This is what the outer gate buys that the inner
+        // Monitor cannot: the Monitor is released at the first await.
+        timeline.ShouldBeOneOf(
+            ["proposition-enter", "proposition-exit", "rule-enter", "rule-exit"],
+            ["rule-enter", "rule-exit", "proposition-enter", "proposition-exit"]);
     }
 }
 ```
@@ -2498,11 +2496,9 @@ public sealed class InMemoryPropositionStore : IPropositionStore
 - [ ] **Step 4: Convert `PropositionSet`'s write path**
 
 `Create`, `Update`, `Withdraw` become `CreateAsync`, `UpdateAsync`, `WithdrawAsync`, each
-`Scope.LockedAsync(…, cancellationToken)`. `CreateCore`, `UpdateCore`, `WithdrawCore` stay
-synchronous **prepare-only** methods and gain an async persist step, exactly as rules did.
-
-The key structural change is in `Publish` (line 629) and `WithdrawCore`'s store call (line 275): both
-become an awaited `WriteAsync` that runs *before* any in-memory mutation. Split `Publish`:
+`Scope.LockedAsync(…, cancellationToken)` over an async `…CoreAsync`. The structural change is in
+`Publish` (line 629) and `WithdrawCore`'s store call (line 275): both become an awaited `WriteAsync`
+that runs *before* any in-memory mutation. Split `Publish`:
 
 ```csharp
     /// <summary>
@@ -2532,13 +2528,13 @@ become an awaited `WriteAsync` that runs *before* any in-memory mutation. Split 
     }
 ```
 
-`Authored` must become `internal` rather than `private` for `ChangeRequestSet` to drive it in Task 9.
+`Authored` becomes `internal sealed class` rather than `private`, so Task 8 can drive it.
 
 - [ ] **Step 5: Update `JsonFilePropositionStore`**
 
 In `src/examples/Motiv.RulesEngine.Sample/JsonFilePropositionStore.cs`, collapse `Save`/`Delete` into
-one `WriteAsync` that applies both lists in a single rewrite — which is strictly better than before,
-since an envelope now costs one file write rather than N:
+one `WriteAsync` that applies both lists in a single rewrite — strictly better than before, since an
+envelope now costs one file write rather than N:
 
 ```csharp
     /// <inheritdoc />
@@ -2561,13 +2557,15 @@ since an envelope now costs one file write rather than N:
     }
 ```
 
+Update the class remarks: the "rewrites the whole file on every save" note now covers a whole batch.
+
 - [ ] **Step 6: Run test to verify it passes**
 
 Run:
 ```bash
 export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet test src/Motiv.Serialization.Tests -f net10.0 --filter "FullyQualifiedName~PropositionSetAsyncWriteTests"
 ```
-Expected: PASS — 4 tests.
+Expected: PASS — 5 tests.
 
 - [ ] **Step 7: Update every existing proposition test**
 
@@ -2589,22 +2587,22 @@ git add -A && git commit -m "feat(serialization): make the proposition write pat
 
 ---
 
-### Task 9: The governed publish persists before it applies
+### Task 8: The governed publish persists before it applies
 
 **Files:**
 - Modify: `src/Motiv.Serialization/Governance/ChangeRequestSet.cs:400-460,780-830`
 - Test: `src/Motiv.Serialization.Tests/Governance/GovernedPublishOrderingTests.cs`
 
 **Interfaces:**
-- Consumes: `RuleSet.PrepareUpdateCore/PrepareRevertCore/CommitCore` (Task 3),
-  `IRuleStore.AppendAsync` (Task 2), `PropositionSet.CommitPublish` (Task 8).
+- Consumes: `RuleSet.PrepareUpdateCore/PrepareRevertCore/CommitCore/RowFor` (Tasks 3, 6);
+  `IRuleStore.AppendAsync` (Task 2); `PropositionSet.…CoreAsync` (Task 7).
 - Produces: `ChangeRequestSet.PublishAsync(..., ct)` and `ChangeRequestSet.DirectWriteAsync(..., ct)`
-  **replacing** their synchronous forms. The envelope's author and id become the version rows'
-  `Author` and `ApprovalRef`.
+  **replacing** their synchronous forms; `internal RuleSet.AppendCoreAsync(prepared, provenance, ct)`.
+  The Task 3 bridge helpers `UpdateCore`/`RevertCore` in `ChangeRequestSet` are **deleted**.
+  The envelope's author, reason and id become the version rows' `Author`, `ChangeNote` and `ApprovalRef`.
 
 The existing `ApplyValidated` throws on any non-`Updated` outcome because everything was validated
-first. Persistence must therefore move *ahead* of it, so the three-phase shape becomes
-**validate all → persist all → apply all**.
+first. Persistence must therefore move *ahead* of it: **validate all → persist all → apply all**.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -2623,11 +2621,13 @@ public class GovernedPublishOrderingTests
 
     private const string Document = """{ "rule": { "spec": "customer.is-active" } }""";
 
-    /// <summary>Refuses the Nth append, so the envelope's persist phase fails part-way.</summary>
+    /// <summary>Refuses appends after the Nth call, so the envelope's persist phase can fail.</summary>
     private sealed class RefusingRuleStore(int refuseAfter) : IRuleStore
     {
         private readonly InMemoryRuleStore _inner = new();
         private int _appends;
+
+        public int Appends => _appends;
 
         public IReadOnlyList<StoredRule> Load() => _inner.Load();
         public Task<IReadOnlyList<StoredRule>> LoadAsync(CancellationToken ct) => _inner.LoadAsync(ct);
@@ -2650,11 +2650,11 @@ public class GovernedPublishOrderingTests
         var (governance, rules) = Harness(store);
 
         // Act
-        var result = await governance.PublishAsync(
-            Envelope(("a", Document), ("b", Document)), default);
+        var result = await governance.PublishAsync(Envelope(("a", Document), ("b", Document)), default);
 
         // Assert — one batch means one append, so refuseAfter: 1 lets it through
         result.Outcome.ShouldBe(ChangeRequestOutcome.Ok);
+        store.Appends.ShouldBe(1);
         rules.FindEntry("a")!.Version.ShouldBe(2);
         rules.FindEntry("b")!.Version.ShouldBe(2);
     }
@@ -2667,8 +2667,7 @@ public class GovernedPublishOrderingTests
         var (governance, rules) = Harness(store);
 
         // Act
-        var result = await governance.PublishAsync(
-            Envelope(("a", Document), ("b", Document)), default);
+        var result = await governance.PublishAsync(Envelope(("a", Document), ("b", Document)), default);
 
         // Assert — nothing live, and no exception: a conflict is an expected outcome
         result.Outcome.ShouldBe(ChangeRequestOutcome.VersionConflict);
@@ -2697,13 +2696,14 @@ public class GovernedPublishOrderingTests
 }
 ```
 
-> **Note for the implementer:** `Harness(...)` and `Envelope(...)` are helpers you write against the
-> `ChangeRequestSet` construction already used in `src/Motiv.Serialization.Tests/Governance/` — copy
-> the setup from `ApprovalGateTests` and the change-request builders from the existing governance
-> tests rather than inventing new ones. The outcome enum member is `ChangeRequestOutcome.VersionConflict`
+> **Note for the implementer:** write `Harness(...)` and `Envelope(...)` against the `ChangeRequestSet`
+> construction already used in `src/Motiv.Serialization.Tests/Governance/` — copy the setup from
+> `ApprovalGateTests` and the change-request builders from the existing governance tests rather than
+> inventing new ones. The outcome enum member is `ChangeRequestOutcome.VersionConflict`
 > (`ChangeRequestSet.cs:102`); results are built through the private `Failure(...)` helper
 > (`ChangeRequestSet.cs:518`), which takes `conflictVersion` as a named optional argument. There is no
-> `ChangeRequestResult.Conflict` factory — do not invent one.
+> `ChangeRequestResult.Conflict` factory — do not invent one. `PublishAsync`'s exact parameter list
+> follows whatever the current synchronous publish entry point takes, plus a `CancellationToken`.
 
 - [ ] **Step 2: Run test to verify it fails**
 
@@ -2713,16 +2713,30 @@ export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotne
 ```
 Expected: FAIL — `PublishAsync` does not exist.
 
-- [ ] **Step 3: Restructure `ApplyValidated` into three phases**
+- [ ] **Step 3: Add the batch helper to `RuleSet`**
 
-Replace `ApplyValidated` with an async three-phase method. The rule half prepares every publication
-first, appends them as one batch, then commits:
+```csharp
+    /// <summary>
+    /// Appends version rows for several prepared publications as one store call, so a governed
+    /// envelope's rule half lands all-or-nothing. Assumes the outer gate is held; commits nothing.
+    /// </summary>
+    internal Task<RuleAppendResult> AppendCoreAsync(
+        IReadOnlyList<(string Name, IRulePublication Publication)> prepared,
+        RuleChangeProvenance provenance, CancellationToken cancellationToken) =>
+        _store.AppendAsync(
+            [.. prepared.Select(entry => RowFor(entry.Name, entry.Publication, provenance))],
+            cancellationToken);
+```
+
+- [ ] **Step 4: Restructure `ApplyValidated` into three phases**
+
+Replace `ApplyValidated` with an async three-phase method, and delete the Task 3 bridge helpers:
 
 ```csharp
         /// <summary>
         /// Validate all → persist all → apply all. The middle phase is why this is not just a loop:
         /// every rule row goes to the store as a single batch, so an envelope cannot land half-way,
-        /// and the commit phase below is unable to fail.
+        /// and the apply phase below is unable to fail.
         /// </summary>
         private static async Task<ChangeRequestResult> ApplyValidatedAsync(
             RuleSet rules, PropositionSet? propositions, ChangeRequest change,
@@ -2748,8 +2762,7 @@ first, appends them as one batch, then commits:
                 {
                     // A conflict here is an expected outcome, not a bug: another replica moved the
                     // rule between this envelope's validation and its publish. Reported through the
-                    // existing Failure(...) helper — there is no dedicated Conflict factory, and
-                    // Mismatch(...) is the validation-phase path, not this one.
+                    // existing Failure(...) helper — Mismatch(...) is the validation-phase path.
                     if (result.Outcome == RuleUpdateOutcome.VersionConflict)
                         return Failure(
                             ChangeRequestOutcome.VersionConflict, change, proposed.Target,
@@ -2776,7 +2789,7 @@ first, appends them as one batch, then commits:
                         conflictVersion: appended.CurrentVersion);
             }
 
-            // --- Propositions, then rule commits, then withdrawals. Nothing below may fail.
+            // --- Propositions, then rule commits, then withdrawals.
             foreach (var proposed in Ordered(change, ChangeTargetKind.Proposition, deletions: false))
             {
                 var name = proposed.Target.Name;
@@ -2814,26 +2827,11 @@ first, appends them as one batch, then commits:
         }
 ```
 
-Add the batch helper to `RuleSet`:
-
-```csharp
-    /// <summary>
-    /// Appends version rows for several prepared publications as one store call, so a governed
-    /// envelope's rule half lands all-or-nothing. Assumes the outer gate is held; commits nothing.
-    /// </summary>
-    internal Task<RuleAppendResult> AppendCoreAsync(
-        IReadOnlyList<(string Name, IRulePublication Publication)> prepared,
-        RuleChangeProvenance provenance, CancellationToken cancellationToken) =>
-        _store.AppendAsync(
-            [.. prepared.Select(entry => RowFor(entry.Name, entry.Publication, provenance))],
-            cancellationToken);
-```
-
 Apply the same prepare→persist→commit shape to `DirectWrite`, renamed `DirectWriteAsync`, and make
 every enclosing method async up to the public surface, replacing `Scope.Locked` with
 `Scope.LockedAsync`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [ ] **Step 5: Run test to verify it passes**
 
 Run:
 ```bash
@@ -2841,18 +2839,19 @@ export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotne
 ```
 Expected: PASS — 3 tests.
 
-- [ ] **Step 5: Run the governance suite**
+- [ ] **Step 6: Run the governance suite**
 
 Run:
 ```bash
 export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet test src/Motiv.Serialization.Tests -f net10.0 --filter "FullyQualifiedName~Governance"
 ```
 Expected: PASS — every pre-existing governance test, converted to `await`, still green. **The six
-spec-1 invariants must all still hold** (no live-rule endpoint; the gate never governs itself; the
-last-administer invariant; fail-closed dev identity/grants/break-glass; audit-stamped break-glass
-publishes; no gate bypass on any write surface).
+spec-1 invariants must all still hold**: no endpoint evaluates a named live rule; the gate never
+governs itself; the app-owned grant store cannot remove its last `administer`; dev identity, dev
+grants and break-glass are each fail-closed and loud; every break-glass publish is audit-stamped; no
+write surface bypasses the gate.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add -A && git commit -m "feat(governance): persist a whole envelope before applying any of it"
@@ -2860,17 +2859,20 @@ git add -A && git commit -m "feat(governance): persist a whole envelope before a
 
 ---
 
-### Task 10: Endpoints and DI
+### Task 9: Endpoints and DI
 
 **Files:**
 - Modify: `src/Motiv.Serialization.AspNetCore/MotivRulesEndpoints.cs:336-380`
 - Modify: `src/Motiv.Serialization.AspNetCore/MotivRulesServiceCollectionExtensions.cs`
+- Modify: `src/Motiv.Serialization.AspNetCore.Tests/TestApp.cs`
 - Test: `src/Motiv.Serialization.AspNetCore.Tests/RuleStoreWiringTests.cs`
 
 **Interfaces:**
-- Produces: `MotivRulesBuilder.AddRuleStore(IRuleStore? store = null, bool failFastOnQuarantine = true)`.
-  Handlers become `async` and pass a `RuleChangeProvenance` built from the caller's
-  `ClaimsPrincipal` and `HttpContext.RequestAborted`.
+- Consumes: `RuleSet.Load`/`RuleLoadReport` (Task 5); `RuleSet.UpdateAsync`/`RevertAsync` (Task 6);
+  `ChangeRequestSet.DirectWriteAsync` (Task 8).
+- Produces: `MotivRulesBuilder.AddRuleStore(IRuleStore? store = null, bool failFastOnQuarantine = true)`;
+  `internal sealed record RuleStoreOptions(bool FailFastOnQuarantine)`;
+  `RulePutRequest.ChangeNote` (optional `string?`).
 
 - [ ] **Step 1: Write the failing test**
 
@@ -2936,13 +2938,37 @@ public class RuleStoreWiringTests
         // Assert — booted, but the catalog says so rather than pretending the default is what was published
         listed.GetProperty("quarantine").GetArrayLength().ShouldBeGreaterThan(0);
     }
+
+    [Fact]
+    public async Task Should_record_the_authenticated_principal_as_the_author()
+    {
+        // Arrange — spec 1 made every authoring endpoint authenticated, so there is always a principal
+        var store = new InMemoryRuleStore();
+        await using var app = TestApp.Create(builder => builder.AddRuleStore(store));
+
+        // Act
+        await app.Client.PutAsJsonAsync("/api/rules/rules/sample", new
+        {
+            documentJson = """{ "rule": { "spec": "customer.is-active" } }""",
+            baseVersion = 1,
+            changeNote = "via the endpoint"
+        });
+
+        // Assert
+        var history = await store.HistoryAsync("sample", default);
+        history.ShouldHaveSingleItem();
+        history[0].Author.ShouldNotBe("unknown");
+        history[0].ChangeNote.ShouldBe("via the endpoint");
+    }
 }
 ```
 
 > **Note for the implementer:** `TestApp` already exists at
-> `src/Motiv.Serialization.AspNetCore.Tests/TestApp.cs` (added by spec 1). Extend its factory to take
-> a `MotivRulesBuilder` callback rather than writing a second harness, and reuse its existing
-> registration of `customer.is-active` and the `sample` rule.
+> `src/Motiv.Serialization.AspNetCore.Tests/TestApp.cs` (added by spec 1), along with `TestAuthHandler`
+> for the authenticated principal. Extend its factory to take an optional `Action<MotivRulesBuilder>`
+> rather than writing a second harness, and reuse its existing registration of `customer.is-active`
+> and the `sample` rule. Check the actual base path and rule-listing shape it produces before
+> asserting on URLs and JSON property names.
 
 - [ ] **Step 2: Run test to verify it fails**
 
@@ -2977,7 +3003,9 @@ In `src/Motiv.Serialization.AspNetCore/MotivRulesServiceCollectionExtensions.cs`
     }
 ```
 
-and in the `RuleSet` factory (around line 158), after `Add`-ing every enrolled rule:
+with `internal sealed record RuleStoreOptions(bool FailFastOnQuarantine);` beside it. In the `RuleSet`
+factory (around line 158), pass the store to the constructor and, after every enrolled rule has been
+`Add`-ed:
 
 ```csharp
             // Load after every rule is registered — a stored head can only apply to a rule that
@@ -2991,12 +3019,10 @@ and in the `RuleSet` factory (around line 158), after `Add`-ing every enrolled r
             }
 ```
 
-Thread `IRuleStore` into the `new RuleSet(...)` construction on the same line.
+- [ ] **Step 4: Finish the write handlers**
 
-- [ ] **Step 4: Make the write handlers async**
-
-In `src/Motiv.Serialization.AspNetCore/MotivRulesEndpoints.cs`, convert the `MapPut("/rules/{name}")`
-and `MapDelete("/rules/{name}")` handlers to `async` and pass provenance and cancellation:
+In `src/Motiv.Serialization.AspNetCore/MotivRulesEndpoints.cs`, the rule write handlers were made
+async in Task 6. Add the change-note plumbing:
 
 ```csharp
         group.MapPut("/rules/{name}", async (string name, RulePutRequest request, HttpContext http) =>
@@ -3014,9 +3040,8 @@ and `MapDelete("/rules/{name}")` handlers to `async` and pass provenance and can
 ```
 
 with the matching change for `MapDelete` calling `RevertAsync`. Where governance is mounted, the
-handler calls `DirectWriteAsync` instead, unchanged apart from `await` and the token.
-
-Add `ChangeNote` to `RulePutRequest` as an optional `string?`.
+handler calls `DirectWriteAsync` instead. Add `ChangeNote` to `RulePutRequest` as an optional
+`string?`, and surface `RuleSetEntry.Quarantine` in the rule-listing response contract.
 
 - [ ] **Step 5: Run test to verify it passes**
 
@@ -3024,7 +3049,7 @@ Run:
 ```bash
 export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet test src/Motiv.Serialization.AspNetCore.Tests -f net10.0
 ```
-Expected: PASS — 3 new tests plus every pre-existing AspNetCore test.
+Expected: PASS — 4 new tests plus every pre-existing AspNetCore test.
 
 - [ ] **Step 6: Commit**
 
@@ -3032,9 +3057,18 @@ Expected: PASS — 3 new tests plus every pre-existing AspNetCore test.
 git add -A && git commit -m "feat(aspnetcore): register a rule store and load it at startup"
 ```
 
+- [ ] **Step 7: Phase 2 code review**
+
+Spawn a `code-simplifier` agent over the files changed in Tasks 7–9. Apply its findings, re-run
+`dotnet test Motiv.slnx -f net10.0`, and commit separately.
+
 ---
 
-### Task 11: The file-backed reference store
+# Phase 3 — Reference store and verification
+
+---
+
+### Task 10: The file-backed reference store
 
 **Files:**
 - Create: `src/examples/Motiv.RulesEngine.Sample/JsonFileRuleStore.cs`
@@ -3042,7 +3076,8 @@ git add -A && git commit -m "feat(aspnetcore): register a rule store and load it
 - Test: `src/examples/Motiv.RulesEngine.Sample.Tests/JsonFileRuleStoreTests.cs`
 
 **Interfaces:**
-- Consumes: `IRuleStore`, `StoredRule`, `StoredRuleVersion`, `RuleAppendResult` (Task 2).
+- Consumes: `IRuleStore`, `StoredRule`, `StoredRuleVersion`, `RuleAppendResult` (Task 2);
+  `AddRuleStore` (Task 9).
 - Produces: `JsonFileRuleStore(string path)`.
 
 This is the sample's durability, not the product's. Plan 2C ships the real EF Core store; this exists
@@ -3123,6 +3158,18 @@ public class JsonFileRuleStoreTests : IDisposable
         // Assert — the fencing token must be derived from the file, not from instance state
         (await new JsonFileRuleStore(_path).GetGenerationAsync(default))
             .ShouldBeGreaterThan(generation);
+    }
+
+    [Fact]
+    public async Task Should_refuse_to_read_an_unreadable_log_rather_than_overwrite_it()
+    {
+        // Arrange — a hand-edited or half-written file
+        await File.WriteAllTextAsync(_path, "{ not json");
+        var store = new JsonFileRuleStore(_path);
+
+        // Act / Assert — unlike the proposition store, appending over this would destroy the
+        // published history, so it refuses instead of continuing with an empty log
+        Should.Throw<InvalidOperationException>(() => store.Load());
     }
 }
 ```
@@ -3257,19 +3304,13 @@ Run:
 ```bash
 export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet test src/examples/Motiv.RulesEngine.Sample.Tests -f net10.0 --filter "FullyQualifiedName~JsonFileRuleStoreTests"
 ```
-Expected: PASS — 4 tests.
+Expected: PASS — 5 tests.
 
 - [ ] **Step 5: Wire it into the sample**
 
 In `src/examples/Motiv.RulesEngine.Sample/Program.cs`, alongside the existing
-`AddPropositions(new JsonFilePropositionStore(...))`, add:
-
-```csharp
-    .AddRuleStore(new JsonFileRuleStore(
-        Path.Combine(builder.Environment.ContentRootPath, "App_Data", "rules.json")))
-```
-
-matching whatever path convention the proposition store already uses in that file.
+`AddPropositions(new JsonFilePropositionStore(...))`, add an `.AddRuleStore(new JsonFileRuleStore(...))`
+using the same directory convention that file already uses for the proposition store.
 
 - [ ] **Step 6: Verify the sample end-to-end**
 
@@ -3279,7 +3320,7 @@ export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotne
 ```
 Expected: PASS across all projects.
 
-Then run the e2e suite — the demo edits rules through the very endpoints that just changed:
+Then run the e2e suite — the demo edits rules through the very endpoints that changed:
 ```bash
 MOTIV_E2E_PORT=5107 pnpm -C ui/apps/demo e2e
 ```
@@ -3292,36 +3333,25 @@ Use a port other than 5100 — this is a worktree, and another checkout may alre
 git add -A && git commit -m "feat(sample): persist rules to a file-backed version log"
 ```
 
-- [ ] **Step 8: Phase 2 code review**
-
-Spawn a `code-simplifier` agent over the files changed in Tasks 6–11. Apply its findings, re-run
-`dotnet test Motiv.slnx -f net10.0`, and commit separately.
-
 ---
 
-# Phase 3 — Verification obligations
-
-### Task 12: Discharge the spec's §7 obligations as named tests
+### Task 11: Discharge the spec's §7 obligations, and document the seam
 
 Spec §7 lists five obligations. Three are already covered by tests written above; this task adds the
 two that are not, in one file that names each obligation explicitly so a reviewer can check them off.
-The remaining two obligations belong to later plans and are recorded as such.
-
-**Files:**
-- Create: `src/Motiv.Serialization.Tests/Rules/DurabilityObligationsTests.cs`
-- Modify: `docs/live-rules/index.md` (or the nearest existing durability page)
-- Test: as above
-
-**Interfaces:**
-- Consumes: everything from Tasks 1–11.
 
 | Spec §7 obligation | Where discharged |
 |---|---|
 | A publish that validated then failed to persist leaves nothing live | `RuleVersionLogTests.Should_leave_nothing_live_when_the_store_refuses_the_append`, `PropositionSetAsyncWriteTests.Should_leave_nothing_live_when_the_store_refuses_the_write` |
-| Two replicas racing a write: one 200, one 409; audit shows one published version + one rejected attempt | **Task 12, below** |
-| A stale-base publish returns 409 with the current version | **Task 12, below** |
+| Two replicas racing a write: one 200, one 409; audit shows one published version + one rejected attempt | **this task** |
+| A stale-base publish returns 409 with the current version | **this task** |
 | Quarantine fires on load for a stored document that no longer binds | `RuleSetLoadTests.Should_quarantine_a_stored_document_that_no_longer_binds`, `RuleStoreWiringTests.Should_refuse_startup_when_a_stored_rule_no_longer_binds` |
 | The propositions importer round-trips a `JsonFilePropositionStore` file into the EF store | **plan 2C** — there is no EF store yet |
+
+**Files:**
+- Create: `src/Motiv.Serialization.Tests/Rules/DurabilityObligationsTests.cs`
+- Create: `docs/live-rules/durability.md`
+- Modify: `docs/live-rules/toc.yml`, `docs/toc.yml`, `docs/Overview.md`, `README.md`, `CONTEXT.md`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -3350,6 +3380,40 @@ public class DurabilityObligationsTests
         var set = new RuleSet(registry, store).Add(new SampleRule());
         set.Load();
         return set;
+    }
+
+    /// <summary>Delegates to an in-memory store, recording which names it was asked to write.</summary>
+    private sealed class RecordingRuleStore(List<string> written) : IRuleStore
+    {
+        private readonly InMemoryRuleStore _inner = new();
+
+        public IReadOnlyList<StoredRule> Load() => _inner.Load();
+        public Task<IReadOnlyList<StoredRule>> LoadAsync(CancellationToken ct) => _inner.LoadAsync(ct);
+        public Task<long> GetGenerationAsync(CancellationToken ct) => _inner.GetGenerationAsync(ct);
+        public Task<IReadOnlyList<StoredRuleVersion>> HistoryAsync(string n, CancellationToken ct) =>
+            _inner.HistoryAsync(n, ct);
+
+        public Task<RuleAppendResult> AppendAsync(
+            IReadOnlyList<StoredRuleVersion> versions, CancellationToken ct)
+        {
+            written.AddRange(versions.Select(row => row.Name));
+            return _inner.AppendAsync(versions, ct);
+        }
+    }
+
+    /// <summary>The proposition-side twin of <see cref="RecordingRuleStore"/>.</summary>
+    private sealed class RecordingPropositionStore(List<string> written) : IPropositionStore
+    {
+        private readonly InMemoryPropositionStore _inner = new();
+
+        public IReadOnlyList<StoredProposition> Load() => _inner.Load();
+
+        public Task WriteAsync(PropositionBatch batch, CancellationToken ct)
+        {
+            written.AddRange(batch.Saves.Select(p => p.Name));
+            written.AddRange(batch.Deletes);
+            return _inner.WriteAsync(batch, ct);
+        }
     }
 
     [Fact]
@@ -3413,13 +3477,13 @@ public class DurabilityObligationsTests
     [Fact]
     public async Task The_two_stores_are_never_written_together()
     {
-        // Arrange — a rule store that records when it is called, and a proposition store likewise
+        // Arrange — one scope, two stores, each recording what it was asked to write
         var ruleWrites = new List<string>();
         var propositionWrites = new List<string>();
 
         var scope = new BindingScope(new SpecRegistry().Register("customer.is-active", IsActive));
-        var propositions = new PropositionSet(
-            scope, new RecordingPropositionStore(propositionWrites)).AddModel<Customer>("customer");
+        var propositions = new PropositionSet(scope, new RecordingPropositionStore(propositionWrites))
+            .AddModel<Customer>("customer");
         propositions.Load();
 
         var rules = new RuleSet(scope, new RecordingRuleStore(ruleWrites)).Add(new SampleRule());
@@ -3436,20 +3500,17 @@ public class DurabilityObligationsTests
 }
 ```
 
-> **Note for the implementer:** write `RecordingRuleStore` and `RecordingPropositionStore` as small
-> private classes in the same file, each delegating to the in-memory store and appending the written
-> name to the supplied list.
-
 - [ ] **Step 2: Run test to verify it fails**
 
 Run:
 ```bash
 export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet test src/Motiv.Serialization.Tests -f net10.0 --filter "FullyQualifiedName~DurabilityObligationsTests"
 ```
-Expected: FAIL — the recording stores do not exist yet (CS0246). Every other assertion should pass
-once they do; **if any does not, the implementation is wrong, not the test.**
+Expected: FAIL initially only if something is genuinely wrong — these assert behaviour built in Tasks
+1–10. **If any assertion fails, the implementation is wrong, not the test**; diagnose rather than
+weakening the assertion.
 
-- [ ] **Step 3: Write the recording stores and make it pass**
+- [ ] **Step 3: Make it pass**
 
 Run:
 ```bash
@@ -3460,13 +3521,13 @@ Expected: PASS — 4 tests.
 - [ ] **Step 4: Document the seam**
 
 Per `CLAUDE.md`, user-facing feature documentation goes in `README.md` and `docs/`, not `CLAUDE.md`.
-Add a `docs/live-rules/durability.md` page covering: registering a store (`AddRuleStore`), what the
-version log records, quarantine and the fail-fast switch, reading history, and rolling back with
-`RestoreAsync`. Add it to `docs/live-rules/toc.yml` and `docs/toc.yml`, and add a short entry under
-Core Features in `README.md`.
+Write `docs/live-rules/durability.md` covering: registering a store (`AddRuleStore`), what the version
+log records, quarantine and the fail-fast switch, reading history with `HistoryAsync`, and rolling
+back with `RestoreAsync`. Add it to `docs/live-rules/toc.yml`, `docs/toc.yml` and `docs/Overview.md`,
+and add a short entry under Core Features in `README.md`.
 
-Also add to `CONTEXT.md`'s glossary the terms this plan introduces: **version log**, **head
-projection**, **quarantine (rule)**, **generation**, **provenance**.
+Add to `CONTEXT.md`'s glossary the terms this plan introduces: **version log**, **head projection**,
+**quarantine (rule)**, **generation**, **provenance**.
 
 - [ ] **Step 5: Full verification**
 
@@ -3485,11 +3546,14 @@ pnpm -C ui/packages/rules-core test && pnpm -C ui/apps/demo test && pnpm -C ui/a
 MOTIV_E2E_PORT=5107 pnpm -C ui/apps/demo e2e
 ```
 
-Then confirm published `Motiv` was not touched:
+Then confirm the two standing constraints:
 ```bash
 git diff --stat main -- src/Motiv/
 ```
-Expected: no output.
+```bash
+grep -rn "GetAwaiter().GetResult()\|\.Wait()" src/Motiv.Serialization/ src/Motiv.Serialization.AspNetCore/
+```
+Expected: no output from either.
 
 - [ ] **Step 6: Commit**
 
@@ -3501,26 +3565,26 @@ git add -A && git commit -m "test(serialization): discharge the durability spec'
 
 ## Self-Review
 
-**Spec coverage** — every §2, §3, §4, §5 item in scope maps to a task:
+**Spec coverage** — every §2, §4, §5 item in scope maps to a task:
 
 | Spec item | Task |
 |---|---|
-| §2 `IRuleStore` beside `IPropositionStore`, two symmetrical stores never in one transaction | 2, 12 |
-| §2 `StoredRule(Name, Version, DocumentJson?)`, null meaningful, never an absent row | 1, 2, 4 |
-| §2 quarantine + fail-fast left to the host | 4, 10 |
-| §2 two-tier exclusion, inner Monitor untouched | 6 |
-| §2 async `SaveAsync`/`DeleteAsync`, sync `Load()`, rationale is cancellation | 6, 7, 8 |
-| §2 outer gate at public entry points only | 6 (documented), 7, 8, 9 |
-| §2 ordering bind → check dependents → persist → mutate → commit | 3, 5, 7, 9 |
-| §2 append-only log, row shape, PK `(Name, Version)` | 1, 2, 5 |
-| §2 version as identity *and* concurrency token | 2, 5 |
-| §2 rollback appends | 5 (`RestoreAsync`) |
+| §2 `IRuleStore` beside `IPropositionStore`, two symmetrical stores never in one transaction | 2, 11 |
+| §2 `StoredRule(Name, Version, DocumentJson?)`, null meaningful, never an absent row | 1, 2, 5 |
+| §2 quarantine + fail-fast left to the host | 5, 9 |
+| §2 two-tier exclusion, inner Monitor untouched | 4 |
+| §2 async write path, sync `Load()`, rationale is cancellation | 4, 6, 7 |
+| §2 outer gate at public entry points only | 4 (documented), 6, 7, 8 |
+| §2 ordering bind → check dependents → persist → mutate → commit | 3, 6, 7, 8 |
+| §2 append-only log, row shape, PK `(Name, Version)` | 1, 2, 6 |
+| §2 version as identity *and* concurrency token | 2, 6 |
+| §2 rollback appends | 6 (`RestoreAsync`) |
 | §2 kept forever | 2 (no pruning path exists) |
-| §2 provenance anchors: document + `BuildId` | 1, 5 |
-| §2 remove the in-memory CAS; `VersionConflict` from the PK | 3, 5 |
-| §4 head never diverges (projection) | 2 |
-| §4 `GetGenerationAsync` is a scalar read | 2 (documented + enforced by the two implementations) |
-| §7 obligations 1–4 | 5, 8, 4, 10, 12 |
+| §2 provenance anchors: document + `BuildId` | 1, 6 |
+| §2 remove the in-memory CAS; `VersionConflict` from the PK | 3, 6 |
+| §4 head never diverges (projection) | 2, 10 |
+| §4 `GetGenerationAsync` is a scalar read | 2 (documented; both implementations comply) |
+| §7 obligations 1–4 | 5, 6, 7, 9, 11 |
 
 **Deliberately out of scope**, and recorded as such above: `RefreshAsync` + the `IHostedService`
 poller + the client-facing fencing token (spec §2 multi-instance → **plan 2B**); the EF Core store,
@@ -3528,13 +3592,13 @@ its three providers, migrations and the propositions importer (spec §3 → **pl
 obligation, which has nothing to import into until 2C.
 
 **Type consistency** — `RulePrepareResult.Publication` is `IRulePublication?` everywhere;
-`RuleAppendResult.IsConflict`/`Name`/`CurrentVersion` are used identically in Tasks 2, 5, 7, 9 and
-11; `RuleChangeProvenance` keeps the same four-parameter shape from Task 1 through Task 10;
-`CommitCore(name, publication)` returns `RuleUpdateResult` in Tasks 3, 5, 7 and 9. `RuleSet.Load`
-returns `RuleLoadReport` in Tasks 4, 5, 10 and 12.
+`RuleAppendResult.IsConflict`/`Name`/`CurrentVersion` are used identically in Tasks 2, 6, 8 and 10;
+`RuleChangeProvenance` keeps the same four-parameter shape from Task 1 through Task 9;
+`CommitCore(name, publication)` returns `RuleUpdateResult` in Tasks 3, 6 and 8; `RuleSet.Load` returns
+`RuleLoadReport` in Tasks 5, 9 and 11; `RowFor` is defined in Task 6 and reused by `AppendCoreAsync`
+in Task 8.
 
-**Known sequencing hazard** — Task 3 leaves `ChangeRequestSet` on a prepare-then-immediately-commit
-bridge and Task 5 leaves `RuleSet` on a `.GetAwaiter().GetResult()` bridge. **Both are deleted in
-Phase 2** (Tasks 9 and 7 respectively). If Phase 2 is deferred, neither bridge is safe to ship: the
-first reintroduces the mid-envelope failure point the batch exists to prevent, and the second blocks
-a thread-pool thread inside the publish gate.
+**Transitional code** — Task 3 leaves two private bridge helpers in `ChangeRequestSet`
+(`UpdateCore`/`RevertCore`) so the split compiles without restructuring governance's control flow in
+the same commit. They are made async in Task 6 and **deleted in Task 8**. This is the plan's only
+transitional code, and it never blocks on a `Task`.
