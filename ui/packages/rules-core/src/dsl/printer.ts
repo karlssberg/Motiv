@@ -1,8 +1,8 @@
 import {
   binaryOperator, higherOrderBody, higherOrderKey, isBinaryNode, isExpressionNode,
   isHigherOrderNode, isNotNode, isSpecNode, operandsOf,
-  type BinaryNode, type BinaryOperator, type HigherOrderKey, type HigherOrderNode,
-  type NotNode, type ParameterDeclaration, type RuleDocument, type RuleNode,
+  type ArgValue, type BinaryNode, type BinaryOperator, type HigherOrderKey, type HigherOrderNode,
+  type NotNode, type ParameterDeclaration, type RuleDocument, type RuleNode, type SpecNode,
 } from '../document.js';
 
 const INDENT = '    ';
@@ -129,9 +129,28 @@ function printBinary(node: BinaryNode, indent: string, layout: Layout): string {
   return parts.join(` ${OPERATOR_TEXT[operator]} `);
 }
 
+/** Renders one argument value. `String` covers number, boolean and null exactly. */
+function printArgValue(value: ArgValue): string {
+  return typeof value === 'string' ? quote(value) : String(value);
+}
+
+/**
+ * Renders an argument list, or `''` when there are none — so an empty `args` map prints as a bare
+ * spec and round-trips to a node without `args`. The two are semantically identical.
+ *
+ * Names print bare, never quoted: quoting a name would make it read as a value, and the parser's
+ * contextual identifier rule already accepts any word-shaped name here.
+ */
+function printArgs(args: SpecNode['args']): string {
+  const entries = Object.entries(args ?? {});
+  if (entries.length === 0) return '';
+  const rendered = entries.map(([name, value]) => `${name} = ${printArgValue(value)}`);
+  return `(${rendered.join(', ')})`;
+}
+
 /** Renders a node without its `as` clause. */
 function printBody(node: RuleNode, indent: string, layout: Layout): string {
-  if (isSpecNode(node)) return node.spec;
+  if (isSpecNode(node)) return `${node.spec}${printArgs(node.args)}`;
   if (isExpressionNode(node)) return `\`${node.expression}\``;
   if (isNotNode(node)) return printNegation(node, indent, layout);
   if (isHigherOrderNode(node)) return printQuantifier(node, indent, layout);

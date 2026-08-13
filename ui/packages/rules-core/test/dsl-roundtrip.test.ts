@@ -7,6 +7,16 @@ import type { RuleDocument } from '../src/document.js';
 const DOCUMENTS: Array<{ label: string; document: RuleDocument }> = [
   { label: 'spec', document: { rule: { spec: 'is-active' } } },
   { label: 'named spec', document: { rule: { spec: 'is-active', name: 'activity' } } },
+  { label: 'spec with args', document: { rule: { spec: 'gate', args: { n: 1 } } } },
+  {
+    label: 'spec with every arg literal kind',
+    document: {
+      rule: {
+        spec: 'gate',
+        args: { count: -2, ratio: 2.5, label: 'high', strict: true, note: null },
+      },
+    },
+  },
   { label: 'expression', document: { rule: { expression: 'n > 0' } } },
   { label: 'not', document: { rule: { not: { spec: 'is-flagged' } } } },
   { label: 'and', document: { rule: { and: [{ spec: 'a' }, { spec: 'b' }] } } },
