@@ -241,7 +241,7 @@ public static class MotivRulesEndpoints
 
         group.MapGet("/catalog", () => Results.Json(
             new CatalogResponse(
-                propositions is null ? CompiledSpecs(registry, options) : EffectiveSpecs(propositions),
+                propositions is null ? CompiledSpecs(registry, options) : EffectiveSpecs(propositions, registry),
                 collections,
                 metadataTypes,
                 modelTypes),
@@ -256,18 +256,45 @@ public static class MotivRulesEndpoints
             entry.MetadataType.Name,
             entry.IsAsync,
             entry.Description,
-            PropositionOrigin.Compiled))];
+            PropositionOrigin.Compiled,
+            Parameters(entry)))];
+
+    /// <summary>
+    /// A parameterised registration's declarations, in order, or <c>null</c> for a plain one.
+    /// The type name is lowercased to match the <c>parameterDeclaration.type</c> enum in
+    /// <c>rule.v1.json</c>, so one vocabulary spans the schema, the DSL and the catalog.
+    /// </summary>
+    private static IReadOnlyList<CatalogParameter>? Parameters(SpecRegistryEntry entry) =>
+        entry.Parameters is null
+            ? null
+            : [.. entry.Parameters.Select(parameter => new CatalogParameter(
+                parameter.Name,
+                parameter.Type.ToString().ToLowerInvariant(),
+                parameter.HasDefault ? parameter.DefaultValue : null))];
 
     /// <summary>
     /// The layered listing: <see cref="PropositionSet.Propositions"/> already folds compiled,
     /// overridden and authored definitions into one effective set.
     /// </summary>
-    private static IReadOnlyList<CatalogEntry> EffectiveSpecs(PropositionSet propositions) =>
+    private static IReadOnlyList<CatalogEntry> EffectiveSpecs(
+        PropositionSet propositions, SpecRegistry registry) =>
         [.. propositions.Propositions
             .Where(Resolves)
             .Select(entry => new CatalogEntry(
                 entry.Name, entry.ModelType, entry.MetadataType, entry.IsAsync,
-                entry.Description, entry.Origin))];
+                entry.Description, entry.Origin, CompiledParameters(entry, registry)))];
+
+    /// <summary>
+    /// The declarations of the compiled registration behind a proposition, or <c>null</c> when there
+    /// is none to report — an authored or overridden proposition's behaviour comes from a document,
+    /// not an argument contract, so it reports no parameters even where a compiled entry survives
+    /// beneath it.
+    /// </summary>
+    private static IReadOnlyList<CatalogParameter>? CompiledParameters(
+        PropositionEntry entry, SpecRegistry registry) =>
+        entry.Origin == PropositionOrigin.Compiled && registry.Find(entry.Name) is { } spec
+            ? Parameters(spec)
+            : null;
 
     /// <summary>
     /// Whether a proposition still resolves to a spec. A quarantined authored proposition resolves

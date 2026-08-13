@@ -105,6 +105,54 @@ public class CatalogEndpointTests
         metadataTypes.TryGetProperty("String", out _).ShouldBeTrue();
     }
 
+    [Fact]
+    public async Task Should_list_declared_parameters_in_order_for_a_parameterised_spec()
+    {
+        // Arrange
+        var registry = new SpecRegistry()
+            .RegisterParameterised(
+                "at-least",
+                [
+                    new RuleParameterDeclaration("floor", RuleParameterType.Integer, hasDefault: true, 2),
+                    new RuleParameterDeclaration("label", RuleParameterType.String, hasDefault: false, null),
+                ],
+                values => Spec.Build((int n) => n >= (int)values["floor"]!).Create("at-least"));
+        var options = new MotivRulesOptions().AddModel<int>("number");
+        await using var app = await TestApp.StartAsync(registry, options);
+
+        // Act
+        var response = await app.GetTestClient().GetAsync("/api/rules/catalog");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var parameters = body.GetProperty("specs")[0].GetProperty("parameters");
+
+        parameters.GetArrayLength().ShouldBe(2);
+        parameters[0].GetProperty("name").GetString()!.ShouldBe("floor");
+        parameters[0].GetProperty("type").GetString()!.ShouldBe("integer");
+        parameters[0].GetProperty("default").GetInt32().ShouldBe(2);
+        parameters[1].GetProperty("name").GetString()!.ShouldBe("label");
+        parameters[1].GetProperty("type").GetString()!.ShouldBe("string");
+        parameters[1].GetProperty("default").ValueKind.ShouldBe(JsonValueKind.Null);
+    }
+
+    [Fact]
+    public async Task Should_report_no_parameters_for_a_plain_spec()
+    {
+        // Arrange
+        var registry = new SpecRegistry().Register("is-positive", IsPositive);
+        var options = new MotivRulesOptions().AddModel<int>("number");
+        await using var app = await TestApp.StartAsync(registry, options);
+
+        // Act
+        var response = await app.GetTestClient().GetAsync("/api/rules/catalog");
+
+        // Assert
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("specs")[0].GetProperty("parameters").ValueKind.ShouldBe(JsonValueKind.Null);
+    }
+
     private static SpecBase<int, Verdict> HasVerdict { get; } =
         Spec.Build((int n) => n > 0)
             .WhenTrue(new Verdict("POSITIVE"))
