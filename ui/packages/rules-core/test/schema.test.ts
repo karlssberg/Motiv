@@ -25,6 +25,12 @@ const documents: RuleDocument[] = [
   { rule: { and: [{ spec: 'a' }, { spec: 'b' }] } },
   { rule: { orElse: [{ spec: 'a' }, { spec: 'b' }, { spec: 'c' }] } },
   { name: 'doc', rule: { xor: [{ spec: 'a' }, { not: { spec: 'b' } }] } },
+  { rule: { spec: 'approver-count-at-least', args: { n: 1 } } },
+  {
+    rule: {
+      spec: 'threshold', args: { limit: 2.5, label: 'high', strict: true, note: null },
+    },
+  },
 ];
 
 describe('rule.v1.json drift', () => {
