@@ -75,21 +75,33 @@ describe('Catalog schema maps typing', () => {
 
   it('a catalog entry carries ordered parameter declarations', () => {
     const catalog: Catalog = {
-      specs: [{
-        name: 'at-least',
-        modelType: 'customer',
-        metadataType: 'String',
-        isAsync: false,
-        origin: 'Compiled',
-        parameters: [
-          { name: 'floor', type: 'integer', default: 2 },
-          { name: 'label', type: 'string' },
-        ],
-      }],
+      specs: [
+        {
+          name: 'at-least',
+          modelType: 'customer',
+          metadataType: 'String',
+          isAsync: false,
+          origin: 'Compiled',
+          parameters: [
+            { name: 'floor', type: 'integer', default: 2 },
+            { name: 'label', type: 'string' },
+          ],
+        },
+        {
+          name: 'is-active',
+          modelType: 'customer',
+          metadataType: 'String',
+          isAsync: false,
+          origin: 'Compiled',
+          parameters: null,
+        },
+      ],
       collections: [],
     };
 
+    expect(catalog.specs[0]!.parameters).toHaveLength(2);
     expect(catalog.specs[0]!.parameters?.map((parameter) => parameter.name)).toEqual(['floor', 'label']);
+    expect(catalog.specs[1]!.parameters).toBeNull();
   });
 });
 

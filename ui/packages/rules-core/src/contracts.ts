@@ -19,10 +19,10 @@ export interface CatalogEntry {
   /** Whether the spec is compiled, overridden by an authored document, or authored. */
   origin: PropositionOrigin;
   /**
-   * The spec's declared parameters, in order — present only for a parameterised compiled
+   * The spec's declared parameters, in order — `null` for a plain (non-parameterised)
    * registration. Order is a hint for authoring positionally; the stored document is always named.
    */
-  parameters?: CatalogParameter[];
+  parameters?: CatalogParameter[] | null;
 }
 
 /** One catalog listing for a registered collection projection. */
