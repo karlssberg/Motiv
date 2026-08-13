@@ -2,6 +2,16 @@ import { describe, it, expect } from 'vitest';
 import { parse } from '../src/dsl/parser.js';
 import { print } from '../src/dsl/printer.js';
 import type { RuleDocument } from '../src/document.js';
+import type { Catalog } from '../src/contracts.js';
+
+const CATALOG: Catalog = {
+  specs: [{
+    name: 'at-least', modelType: 'customer', metadataType: 'String', isAsync: false,
+    origin: 'Compiled',
+    parameters: [{ name: 'floor', type: 'integer' }, { name: 'label', type: 'string' }],
+  }],
+  collections: [],
+};
 
 describe('print', () => {
   it('prints a bare spec', () => {
@@ -130,5 +140,41 @@ describe('print', () => {
     const text = print({ rule: { spec: 'gate', args: { 'not a name': 1 } } });
     expect(text).toBe('gate(not a name = 1)');
     expect(parse(text).errors.length).toBeGreaterThan(0);
+  });
+
+  it('prints args in declared order when a catalog is supplied', () => {
+    const document: RuleDocument = {
+      rule: { spec: 'at-least', args: { label: 'high', floor: 2 } },
+    };
+    expect(print(document, { catalog: CATALOG })).toBe('at-least(floor = 2, label = "high")');
+  });
+
+  it('prints args in insertion order without a catalog', () => {
+    const document: RuleDocument = {
+      rule: { spec: 'at-least', args: { label: 'high', floor: 2 } },
+    };
+    expect(print(document)).toBe('at-least(label = "high", floor = 2)');
+  });
+
+  it('prints an undeclared arg after the declared ones', () => {
+    const document: RuleDocument = {
+      rule: { spec: 'at-least', args: { extra: 1, floor: 2 } },
+    };
+    expect(print(document, { catalog: CATALOG })).toBe('at-least(floor = 2, extra = 1)');
+  });
+
+  it('falls back to insertion order when the catalog entry has parameters: null, without throwing', () => {
+    const catalogWithPlainSpec: Catalog = {
+      specs: [{
+        name: 'is-active', modelType: 'customer', metadataType: 'String', isAsync: false,
+        origin: 'Compiled', parameters: null,
+      }],
+      collections: [],
+    };
+    const document: RuleDocument = {
+      rule: { spec: 'is-active', args: { b: 1, a: 2 } },
+    };
+    expect(() => print(document, { catalog: catalogWithPlainSpec })).not.toThrow();
+    expect(print(document, { catalog: catalogWithPlainSpec })).toBe('is-active(b = 1, a = 2)');
   });
 });
