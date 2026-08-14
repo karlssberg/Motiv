@@ -1,5 +1,3 @@
-using Motiv.Serialization;
-
 namespace Motiv.Serialization.Tests.Rules;
 
 public class RuleVersionLogTests
@@ -201,20 +199,12 @@ public class RuleVersionLogTests
         (await stuck).Outcome.ShouldBe(RuleUpdateOutcome.Updated);
     }
 
-    [Fact]
-    public async Task Should_serialise_two_concurrent_writers_into_one_winner()
-    {
-        // Arrange
-        var (set, _) = Fresh();
-
-        // Act — both hold baseVersion 1
-        var results = await Task.WhenAll(
-            set.UpdateAsync("sample", V2, 1, new RuleChangeProvenance("alice")),
-            set.UpdateAsync("sample", V2, 1, new RuleChangeProvenance("bob")));
-
-        // Assert — one publishes, one is told the current version
-        results.Count(r => r.Outcome == RuleUpdateOutcome.Updated).ShouldBe(1);
-        results.Count(r => r.Outcome == RuleUpdateOutcome.VersionConflict).ShouldBe(1);
-        results.Single(r => r.Outcome == RuleUpdateOutcome.VersionConflict).Version.ShouldBe(2);
-    }
+    // Should_serialise_two_concurrent_writers_into_one_winner was deleted: its assertion (one
+    // Updated, one VersionConflict at version 2) is guaranteed by the store's own (Name, Version)
+    // primary key, not by BindingScope's exclusion gate — confirmed by disabling the gate entirely
+    // and observing the test still pass, even rewritten with a stalling store that forces the two
+    // writes to genuinely overlap. There is no gate-dependent property this shape of assertion can
+    // exercise; RuleTests.Should_report_a_version_conflict_for_a_stale_expected_version already
+    // covers the store's version-conflict behaviour sequentially, which is the whole of what this
+    // test could ever prove.
 }

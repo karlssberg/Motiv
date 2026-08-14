@@ -614,5 +614,106 @@ public class ChangeRequestSetTests
         rule.Evaluate(new Customer(IsActive: true, Age: 30)).Satisfied.ShouldBeTrue();
     }
 
+    /// <summary>
+    /// A store that blocks inside AppendAsync until released. Used to make a publish's apply window
+    /// deterministically wide — a concurrent Reject can be timed to land inside it on purpose,
+    /// instead of hoping two real requests overlap within a few CPU cycles.
+    /// </summary>
+    private sealed class StallingRuleStore : IRuleStore
+    {
+        private readonly InMemoryRuleStore _inner = new();
+        public TaskCompletionSource<bool> Released { get; } = new();
+        public TaskCompletionSource<bool> Entered { get; } = new();
+
+        public IReadOnlyList<StoredRule> Load() => _inner.Load();
+        public Task<IReadOnlyList<StoredRule>> LoadAsync(CancellationToken ct) => _inner.LoadAsync(ct);
+        public Task<long> GetGenerationAsync(CancellationToken ct) => _inner.GetGenerationAsync(ct);
+        public Task<IReadOnlyList<StoredRuleVersion>> HistoryAsync(string name, CancellationToken ct) =>
+            _inner.HistoryAsync(name, ct);
+
+        public async Task<RuleAppendResult> AppendAsync(
+            IReadOnlyList<StoredRuleVersion> versions, CancellationToken ct)
+        {
+            Entered.TrySetResult(true);
+            await Released.Task;
+            return await _inner.AppendAsync(versions, ct);
+        }
+    }
+
+    /// <summary>
+    /// The regression this task's Critical 2 fix exists for: <see cref="ChangeRequestSet.PublishAsync"/>
+    /// used to release its own lock for the span of the awaited apply, re-taking it only to record
+    /// <see cref="ChangeRequest.MarkPublished"/>. A concurrent <see cref="ChangeRequestSet.Reject"/>
+    /// landing in that gap would mark the request Rejected while the publish's edits were already
+    /// durably written — and then <c>MarkPublished</c> would throw <see cref="InvalidOperationException"/>
+    /// out of the endpoint, an unhandled exception hiding a publish that had, in fact, already happened.
+    /// Fixed by holding one <see cref="SemaphoreSlim"/> across the whole publish, so a concurrent
+    /// <see cref="ChangeRequestSet.Reject"/> genuinely blocks until the publish is fully resolved.
+    /// </summary>
+    [Fact]
+    public async Task Should_never_leave_a_rejected_requests_edits_live()
+    {
+        // Arrange — the rule half's store append stalls, so the window a concurrent Reject would
+        // need to race into is held open under the test's control rather than by timing luck.
+        var store = new StallingRuleStore();
+        var registry = new SpecRegistry().Register("customer.is-active", IsActive);
+        var scope = new BindingScope(registry);
+        var rule = new CanCheckoutRule();
+        var rules = new RuleSet(scope, store).Add(rule);
+        var changes = new ChangeRequestSet(new ApprovalGate(), rules, propositions: null);
+
+        var created = changes.Create("alice", "a note",
+        [
+            new(ChangeTargetKind.Rule, "can-checkout",
+                """{ "rule": { "not": { "spec": "customer.is-active" } } }""",
+                BaseVersion: 1, RollbackOfVersion: null)
+        ]);
+
+        // Act — the publish stalls mid-apply; a reject is started (and confirmed running) while it
+        // is stalled, then the store is released and both are allowed to resolve
+        var publishing = changes.PublishAsync(created.Change!.Id, breakGlassActive: false);
+        await store.Entered.Task;
+
+        var rejectStarting = new TaskCompletionSource<bool>();
+        var rejecting = Task.Run(() =>
+        {
+            rejectStarting.SetResult(true);
+            return changes.Reject(created.Change!.Id, "changed my mind");
+        });
+        await rejectStarting.Task;
+        await Task.Yield();
+
+        store.Released.SetResult(true);
+
+        ChangeRequestResult? published = null;
+        Exception? publishFailure = null;
+        try
+        {
+            published = await publishing;
+        }
+        catch (Exception exception)
+        {
+            publishFailure = exception;
+        }
+
+        var rejected = await rejecting;
+
+        // Assert — never "edits live and status Rejected". Either the reject won, in which case
+        // nothing may have gone live and the publish must not have thrown having already written
+        // it; or the publish won, in which case it must have completed cleanly and the reject must
+        // have been refused because the request was already terminal.
+        publishFailure.ShouldBeNull();
+        if (rejected.Outcome == ChangeRequestOutcome.Ok)
+        {
+            published!.Outcome.ShouldNotBe(ChangeRequestOutcome.Ok);
+            rules.FindEntry("can-checkout")!.Version.ShouldBe(1);
+        }
+        else
+        {
+            published!.Outcome.ShouldBe(ChangeRequestOutcome.Ok);
+            rejected.Outcome.ShouldBe(ChangeRequestOutcome.InvalidState);
+        }
+    }
+
     private sealed record Customer(bool IsActive, int Age);
 }

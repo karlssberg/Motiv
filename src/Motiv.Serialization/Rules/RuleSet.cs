@@ -254,7 +254,7 @@ public sealed class RuleSet
 
         return Scope.LockedAsync(
             () => PersistAndCommitCoreAsync(
-                name, PrepareUpdateCore(name, documentJson, expectedVersion), provenance, cancellationToken),
+                name, () => PrepareUpdateCore(name, documentJson, expectedVersion), provenance, cancellationToken),
             cancellationToken);
     }
 
@@ -262,6 +262,11 @@ public sealed class RuleSet
     /// Reverts a rule to its default. The version moves forward, never back, and the log records that
     /// the rule went back to code.
     /// </summary>
+    /// <param name="name">The rule name.</param>
+    /// <param name="expectedVersion">The version the caller last observed.</param>
+    /// <param name="provenance">Who is reverting, and why. Written into the version log.</param>
+    /// <param name="cancellationToken">Cancels while waiting for the gate or the store.</param>
+    /// <returns>The outcome: updated, version conflict, invalid default document, or not found.</returns>
     public Task<RuleUpdateResult> RevertAsync(
         string name, int expectedVersion, RuleChangeProvenance provenance,
         CancellationToken cancellationToken = default)
@@ -270,7 +275,7 @@ public sealed class RuleSet
 
         return Scope.LockedAsync(
             () => PersistAndCommitCoreAsync(
-                name, PrepareRevertCore(name, expectedVersion), provenance, cancellationToken),
+                name, () => PrepareRevertCore(name, expectedVersion), provenance, cancellationToken),
             cancellationToken);
     }
 
@@ -316,10 +321,36 @@ public sealed class RuleSet
     /// The middle of bind → persist → publish, for a caller already holding the outer gate. The store
     /// call is the last step that can fail; everything after it is a memory swap that cannot.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Holds <em>both</em> exclusion tiers, not just the outer gate. <see cref="BindingScope"/>'s
+    /// outer <see cref="SemaphoreSlim"/> (taken by <see cref="BindingScope.LockedAsync{T}"/>, which
+    /// every caller of this method is already inside) serialises whole write operations await-safely,
+    /// but it does not exclude the synchronous surface — <see cref="Add"/>, <see cref="Load"/>, and,
+    /// until it converts in a later task, <c>PropositionSet</c>'s write path — which still takes only
+    /// the inner <see cref="BindingScope.Locked{T}"/> monitor. A semaphore and a monitor do not
+    /// exclude each other, so a write that took only the semaphore could run <see cref="CommitCore"/>
+    /// → <see cref="Track"/> → <c>Scope.Graph.Set</c>/<c>Remove</c> concurrently with a monitor-held
+    /// reader or writer walking the same, deliberately-unsynchronized <c>DependencyGraph</c>. Prepare
+    /// needs the monitor too, not only commit: binding a document reads through
+    /// <c>Scope.Source</c> (the layered proposition overlay), which a concurrent
+    /// monitor-held proposition edit could be mutating mid-read.
+    /// </para>
+    /// <para>
+    /// The store round trip is the one span that must sit outside the monitor — holding a
+    /// <see cref="System.Threading.Monitor"/> across an <c>await</c> is never safe, since the monitor
+    /// is thread-affine and the continuation may resume on a different thread. So the shape is:
+    /// outer gate (already held) → <see cref="BindingScope.Locked{T}"/> { <paramref name="prepare"/> }
+    /// → <c>await</c> the store, unlocked → <see cref="BindingScope.Locked{T}"/> { <see cref="CommitCore"/> }.
+    /// The monitor is reentrant, so this composes with <see cref="Track"/>'s own
+    /// <see cref="BindingScope.Enrol"/>/<see cref="BindingScope.Withdraw"/> calls.
+    /// </para>
+    /// </remarks>
     internal async Task<RuleUpdateResult> PersistAndCommitCoreAsync(
-        string name, RulePrepareResult prepared, RuleChangeProvenance provenance,
+        string name, Func<RulePrepareResult> prepare, RuleChangeProvenance provenance,
         CancellationToken cancellationToken)
     {
+        var prepared = Scope.Locked(prepare);
         if (prepared.Publication is not { } publication)
             return prepared.ToFailureResult();
 
@@ -332,7 +363,7 @@ public sealed class RuleSet
 
         // Nothing below can fail. CommitCore also clears any quarantine on the rule — a successful
         // publish is exactly the repair that resolves one.
-        return CommitCore(name, publication);
+        return Scope.Locked(() => CommitCore(name, publication));
     }
 
     /// <summary>Builds the version row a prepared publication will be recorded as.</summary>
@@ -452,15 +483,10 @@ public sealed class RuleSet
     /// <param name="name">The rule name.</param>
     /// <param name="source">The source names resolve against — live, or prospective.</param>
     /// <returns>Why the default would not bind, or empty when it would.</returns>
-    internal IReadOnlyList<RuleError> ValidateDefaultCore(string name, ISpecSource source)
-    {
-        if (Find(name) is not { Default.DocumentJson: { } documentJson } rule)
-            return [];
-
-        var errors = new List<RuleError>();
-        rule.ValidateDocument(new RuleSerializer(source, _options), documentJson, errors);
-        return errors;
-    }
+    internal IReadOnlyList<RuleError> ValidateDefaultCore(string name, ISpecSource source) =>
+        Find(name) is { Default.DocumentJson: { } documentJson }
+            ? ValidateCore(name, documentJson, source)
+            : [];
 
     /// <summary>
     /// Records the rule's current outgoing references and its participation in rebinds. A rule on a

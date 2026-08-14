@@ -35,7 +35,7 @@ public sealed record NewProposedChange(
     string? Description = null);
 
 /// <summary>
-/// Which of the five ungoverned writes a <see cref="ChangeRequestSet.DirectWrite"/> is standing in
+/// Which of the five ungoverned writes a <see cref="ChangeRequestSet.DirectWriteAsync"/> is standing in
 /// for. Supplied rather than derived, because the caller's *intent* is what decides the refusal a
 /// caller sees: authoring over a name that already carries a document is a name-taken conflict, not
 /// a silent update, and the live state alone cannot tell the two apart.
@@ -59,7 +59,7 @@ internal enum DirectWriteOperation
 }
 
 /// <summary>
-/// The outcome of a <see cref="ChangeRequestSet.DirectWrite"/>: either the gate refused, or the
+/// The outcome of a <see cref="ChangeRequestSet.DirectWriteAsync"/>: either the gate refused, or the
 /// underlying write ran and reported in its own terms. Exactly one of the three is non-null.
 /// </summary>
 /// <param name="Blocked">The gate's refusal, when it refused; otherwise null.</param>
@@ -137,9 +137,17 @@ public sealed record ChangeRequestResult(
 /// because authorship is workflow state, not a grant.
 /// </para>
 /// <para>
-/// Two locks, deliberately: this set's own lock guards the change-request list, and the shared
-/// <see cref="BindingScope"/> lock is taken once, inside a publish, around the whole envelope. The
-/// scope lock is what makes an envelope atomic, so it must not be taken and released per artefact.
+/// Two locks, deliberately: this set's own <see cref="_lock"/> guards the change-request list and
+/// every request's own workflow state, and the shared <see cref="BindingScope"/> lock is taken once,
+/// inside a publish, around the whole envelope. The scope lock is what makes an envelope atomic, so
+/// it must not be taken and released per artefact. <see cref="_lock"/> is a <see cref="SemaphoreSlim"/>
+/// rather than a plain <c>lock</c>, specifically so <see cref="PublishAsync"/> can hold it across the
+/// <c>await</c> of the scope-locked apply — the whole publish is one critical section against
+/// <see cref="Approve"/>/<see cref="Reject"/>/<see cref="Withdraw"/>, not two with a gap between them.
+/// A <c>lock</c> statement cannot span an <c>await</c>, which is exactly the gap that would otherwise
+/// let a concurrent rejection land mid-publish and go live anyway. Not reentrant: every method that
+/// already holds it must call the non-acquiring <c>Core</c> counterpart, never a public method — see
+/// <see cref="FindCore"/>.
 /// </para>
 /// </remarks>
 public sealed class ChangeRequestSet
@@ -147,7 +155,7 @@ public sealed class ChangeRequestSet
     private readonly ApprovalGate _gate;
     private readonly RuleSet _rules;
     private readonly PropositionSet? _propositions;
-    private readonly object _lock = new();
+    private readonly SemaphoreSlim _lock = new(1, 1);
     private readonly List<ChangeRequest> _changes = [];
 
     /// <summary>Creates the governance workflow over a rule set and, optionally, a proposition set.</summary>
@@ -181,8 +189,15 @@ public sealed class ChangeRequestSet
     {
         get
         {
-            lock (_lock)
+            _lock.Wait(CancellationToken.None);
+            try
+            {
                 return [.. _changes];
+            }
+            finally
+            {
+                _lock.Release();
+            }
         }
     }
 
@@ -191,8 +206,15 @@ public sealed class ChangeRequestSet
     /// <returns>The request, or null when the id is unknown.</returns>
     public ChangeRequest? Find(Guid id)
     {
-        lock (_lock)
+        _lock.Wait(CancellationToken.None);
+        try
+        {
             return FindCore(id);
+        }
+        finally
+        {
+            _lock.Release();
+        }
     }
 
     /// <summary>
@@ -251,8 +273,15 @@ public sealed class ChangeRequestSet
         });
 
         var request = new ChangeRequest(Guid.NewGuid(), author, changeNote, proposed);
-        lock (_lock)
+        _lock.Wait(CancellationToken.None);
+        try
+        {
             _changes.Add(request);
+        }
+        finally
+        {
+            _lock.Release();
+        }
 
         return Ok(request);
     }
@@ -264,7 +293,8 @@ public sealed class ChangeRequestSet
     /// <returns>The updated request, or why the approval was refused.</returns>
     public ChangeRequestResult Approve(Guid id, string approver, IReadOnlyList<string> roles)
     {
-        lock (_lock)
+        _lock.Wait(CancellationToken.None);
+        try
         {
             if (FindCore(id) is not { } change)
                 return NotFound();
@@ -275,6 +305,10 @@ public sealed class ChangeRequestSet
             change.AddApproval(new Approval(approver, DateTimeOffset.UtcNow, roles ?? []));
             return Ok(change);
         }
+        finally
+        {
+            _lock.Release();
+        }
     }
 
     /// <summary>Rejects a change request, terminating it with a reason.</summary>
@@ -283,7 +317,8 @@ public sealed class ChangeRequestSet
     /// <returns>The updated request, or why the rejection was refused.</returns>
     public ChangeRequestResult Reject(Guid id, string reason)
     {
-        lock (_lock)
+        _lock.Wait(CancellationToken.None);
+        try
         {
             if (FindCore(id) is not { } change)
                 return NotFound();
@@ -293,6 +328,10 @@ public sealed class ChangeRequestSet
 
             change.MarkRejected(reason);
             return Ok(change);
+        }
+        finally
+        {
+            _lock.Release();
         }
     }
 
@@ -305,7 +344,8 @@ public sealed class ChangeRequestSet
     /// </returns>
     public ChangeRequestResult Withdraw(Guid id, string caller)
     {
-        lock (_lock)
+        _lock.Wait(CancellationToken.None);
+        try
         {
             if (FindCore(id) is not { } change)
                 return NotFound();
@@ -319,6 +359,10 @@ public sealed class ChangeRequestSet
             change.MarkWithdrawn();
             return Ok(change);
         }
+        finally
+        {
+            _lock.Release();
+        }
     }
 
     /// <summary>
@@ -326,14 +370,17 @@ public sealed class ChangeRequestSet
     /// atomically. Nothing is applied unless every edit validates.
     /// </summary>
     /// <remarks>
-    /// The status check and gate evaluation run under <c>_lock</c>, synchronously; the publish itself
-    /// awaits <see cref="BindingScope.LockedAsync{T}"/>, so it cannot run inside a plain C# <c>lock</c>
-    /// block (which forbids <c>await</c>). <c>_lock</c> is released for that span and re-taken only to
-    /// record the outcome — a narrow window in which a concurrent <see cref="Reject"/> or
-    /// <see cref="Withdraw"/> on the very same request could race a publish already in flight. That
-    /// race is bounded by <see cref="ChangeRequest"/>'s own transition guards (it throws rather than
-    /// corrupting state) and is accepted for now; the batched, provenance-aware rewrite in a later
-    /// task revisits this window along with everything else about how this method reaches the store.
+    /// Holds <see cref="_lock"/> for the whole method — status check, gate evaluation, the awaited
+    /// apply, and <see cref="ChangeRequest.MarkPublished"/> — as one critical section. That is the
+    /// entire reason <see cref="_lock"/> is a <see cref="SemaphoreSlim"/> rather than a plain C#
+    /// <c>lock</c>: a <c>lock</c> block cannot contain an <c>await</c>, so splitting this method
+    /// across two locked sections with the apply running unlocked in between would leave a window in
+    /// which <see cref="Reject"/> or <see cref="Withdraw"/> could land on the very request being
+    /// published — and unlike the version-conflict races the store's primary key already refuses,
+    /// this one has no such backstop: a rejected request whose edits already went live and durable,
+    /// durably recorded as "Rejected", with no audit trail of the publish that actually happened, is
+    /// the one outcome a governed publish exists to make impossible. Holding <see cref="_lock"/> across
+    /// the whole method removes the window instead of narrowing it.
     /// </remarks>
     /// <param name="id">The change request's identity.</param>
     /// <param name="breakGlassActive">
@@ -346,13 +393,11 @@ public sealed class ChangeRequestSet
     public async Task<ChangeRequestResult> PublishAsync(
         Guid id, bool breakGlassActive, CancellationToken cancellationToken = default)
     {
-        ChangeRequest change;
-        lock (_lock)
+        await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
         {
-            if (FindCore(id) is not { } found)
+            if (FindCore(id) is not { } change)
                 return NotFound();
-
-            change = found;
 
             if (change.Status is ChangeRequestStatus.Published
                 or ChangeRequestStatus.Rejected
@@ -366,17 +411,19 @@ public sealed class ChangeRequestSet
                     return new ChangeRequestResult(
                         ChangeRequestOutcome.GateBlocked, change, decision, [], null, null, null);
             }
-        }
 
-        var applied = await ChangeRequestPublisher.Apply(_rules, _propositions, change, cancellationToken)
-            .ConfigureAwait(false);
-        if (applied.Outcome != ChangeRequestOutcome.Ok)
-            return applied with { Change = change };
+            var applied = await ChangeRequestPublisher.Apply(_rules, _propositions, change, cancellationToken)
+                .ConfigureAwait(false);
+            if (applied.Outcome != ChangeRequestOutcome.Ok)
+                return applied with { Change = change };
 
-        lock (_lock)
             change.MarkPublished(breakGlassActive);
-
-        return applied with { Change = change };
+            return applied with { Change = change };
+        }
+        finally
+        {
+            _lock.Release();
+        }
     }
 
     /// <summary>
@@ -388,7 +435,7 @@ public sealed class ChangeRequestSet
     /// <remarks>
     /// <para>
     /// This is what makes "no bypass" true without the ordinary rule and proposition surfaces
-    /// growing a second vocabulary of refusals. A publish through <see cref="Publish"/> answers in
+    /// growing a second vocabulary of refusals. A publish through <see cref="PublishAsync"/> answers in
     /// <see cref="ChangeRequestResult"/> terms, which cannot restate a referenced proposition's
     /// referrer list or a cascade's broken dependents; running the core itself returns those
     /// verbatim. There is exactly one execution — the gate decides, then the write happens.
@@ -497,19 +544,19 @@ public sealed class ChangeRequestSet
     private static Task<RuleUpdateResult> UpdateCore(
         RuleSet rules, string name, string documentJson, int baseVersion, CancellationToken cancellationToken) =>
         rules.PersistAndCommitCoreAsync(
-            name, rules.PrepareUpdateCore(name, documentJson, baseVersion),
+            name, () => rules.PrepareUpdateCore(name, documentJson, baseVersion),
             RuleChangeProvenance.System, cancellationToken);
 
     /// <summary>The revert companion to <see cref="UpdateCore"/>.</summary>
     private static Task<RuleUpdateResult> RevertCore(
         RuleSet rules, string name, int baseVersion, CancellationToken cancellationToken) =>
         rules.PersistAndCommitCoreAsync(
-            name, rules.PrepareRevertCore(name, baseVersion),
+            name, () => rules.PrepareRevertCore(name, baseVersion),
             RuleChangeProvenance.System, cancellationToken);
 
     /// <summary>
     /// One edit classified against the target's current state. Shared by <see cref="Create"/> and
-    /// <see cref="DirectWrite"/> so a direct write is shown to the gate as exactly the change request
+    /// <see cref="DirectWriteAsync"/> so a direct write is shown to the gate as exactly the change request
     /// an author would have raised for it. Assumes the scope lock is held.
     /// </summary>
     private ProposedChange Classify(
@@ -545,7 +592,7 @@ public sealed class ChangeRequestSet
 
     /// <summary>
     /// Whether the request still accepts approve/reject/withdraw. Deliberately narrower than
-    /// "not terminal", which is what <see cref="Publish"/> asks: these three mirror exactly what
+    /// "not terminal", which is what <see cref="PublishAsync"/> asks: these three mirror exactly what
     /// <see cref="ChangeRequest"/>'s own transitions accept, so a refusal is a returned outcome
     /// rather than an exception thrown from inside the lock.
     /// </summary>
