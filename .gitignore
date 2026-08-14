@@ -38,3 +38,7 @@ src/examples/Motiv.RulesEngine.Sample/propositions.json
 # Sample host state: the file-backed gate store's active approval-gate document. Read at startup;
 # written once the gate is configured over HTTP (PUT /gate). Deployment state, not source.
 src/examples/Motiv.RulesEngine.Sample/gate.json
+
+# Sample host state: the file-backed rule store's append-only version log. Read at startup; grows
+# every time a rule is hot-swapped over HTTP. Deployment state, not source.
+src/examples/Motiv.RulesEngine.Sample/rules.json

@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Shouldly;
 using Xunit;
@@ -10,7 +11,7 @@ public class CheckoutEndpointTests : IClassFixture<WebApplicationFactory<Program
 {
     private readonly WebApplicationFactory<Program> _factory;
 
-    public CheckoutEndpointTests(WebApplicationFactory<Program> factory) => _factory = factory;
+    public CheckoutEndpointTests(WebApplicationFactory<Program> factory) => _factory = IsolatedRules(factory);
 
     [Fact]
     public async Task Should_approve_an_active_adult_customer()
@@ -52,7 +53,10 @@ public class CheckoutEndpointTests : IClassFixture<WebApplicationFactory<Program
     public async Task Should_reflect_a_rule_swap_on_the_next_checkout()
     {
         // Arrange — swap can-checkout to require orders, then re-run the same customer
-        await using var factory = new WebApplicationFactory<Program>();   // isolated host: mutates rule state
+        // isolated host + isolated rules file: mutates rule state, and the sample's default
+        // Rules:Path is a real file shared on disk by every WebApplicationFactory<Program> in this
+        // assembly, so a bare new instance alone would still publish into the shared fixtures' log
+        await using var factory = IsolatedRules(new WebApplicationFactory<Program>());
         var client = factory.CreateClient();
         var customer = new { age = 30, isActive = true, orderCount = 0 };
         (await CheckoutAsync(client, customer)).GetProperty("approved").GetBoolean().ShouldBeTrue();
@@ -107,4 +111,12 @@ public class CheckoutEndpointTests : IClassFixture<WebApplicationFactory<Program
         var response = await client.PostAsJsonAsync("/api/checkout", customer);
         return await response.Content.ReadFromJsonAsync<JsonElement>();
     }
+
+    // Points Rules:Path at a fresh temp file rather than the sample's real rules.json, which every
+    // WebApplicationFactory<Program> in this assembly (and `dotnet run` itself) shares on disk —
+    // this class reads a rule's version and expects it to still be 1, an assumption a shared file
+    // cannot make once anything else in the suite (or a prior run) has published to it.
+    private static WebApplicationFactory<Program> IsolatedRules(WebApplicationFactory<Program> factory) =>
+        factory.WithWebHostBuilder(builder => builder.UseSetting(
+            "Rules:Path", Path.Combine(Path.GetTempPath(), $"rules-{Guid.NewGuid():N}.json")));
 }

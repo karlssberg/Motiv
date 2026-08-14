@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Motiv.Serialization.AspNetCore;
@@ -15,12 +16,19 @@ public class GrantSourceTests(WebApplicationFactory<Program> factory)
     [Fact]
     public async Task Should_let_the_dev_principal_publish_anywhere_while_the_switch_is_on()
     {
-        // Arrange — Development enables the dev identity, and with it the dev grant source
-        var client = factory.CreateClient();
+        // Arrange — Development enables the dev identity, and with it the dev grant source. An
+        // isolated Rules:Path: the fixture's default points at the sample's real rules.json, which
+        // every WebApplicationFactory<Program> in this assembly shares on disk, and this test
+        // publishes a version — leaking that into another test's assumptions is exactly the kind of
+        // cross-process write the file-backed store is meant to model, just not against a shared
+        // fixture's own state.
+        var isolated = factory.WithWebHostBuilder(builder => builder.UseSetting(
+            "Rules:Path", Path.Combine(Path.GetTempPath(), $"rules-{Guid.NewGuid():N}.json")));
+        var client = isolated.CreateClient();
         var current = await client.GetFromJsonAsync<JsonElement>("/api/rules/rules/loyalty-discount");
 
         // First assertion: IGrantSource must be registered
-        var grantSource = factory.Services.GetRequiredService<IGrantSource>();
+        var grantSource = isolated.Services.GetRequiredService<IGrantSource>();
         grantSource.ShouldNotBeNull();
 
         // Act
