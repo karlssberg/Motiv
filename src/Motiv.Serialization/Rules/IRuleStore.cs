@@ -3,7 +3,9 @@ namespace Motiv.Serialization;
 /// <summary>
 /// Where published rules are kept between restarts — the rule-side twin of
 /// <see cref="IPropositionStore"/>. The two are symmetrical and are <em>never written in the same
-/// transaction</em>: they coordinate independently, and no operation spans both.
+/// transaction</em>: they coordinate independently, and no <em>write</em> spans both — not even inside
+/// a governed envelope that publishes a rule and a proposition together, which persists the rule half
+/// and the proposition half as two separate store calls.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -15,7 +17,20 @@ namespace Motiv.Serialization;
 /// </para>
 /// <para>
 /// The log is append-only and kept forever. A rollback does not rewrite history — restoring v5 appends
-/// v9 carrying v5's document, which also records <em>that a rollback happened</em>.
+/// v9 carrying v5's document. <see cref="RuleSet.RestoreAsync"/> defaults the written row's change note
+/// to name the version it restored from whenever the caller supplies none, so the appended row is
+/// itself readable evidence that a rollback happened, not merely a document that happens to match one.
+/// </para>
+/// <para>
+/// <strong><see cref="LoadAsync"/>, <see cref="GetGenerationAsync"/> and <see cref="HistoryAsync"/> are
+/// forward surface.</strong> Today only <see cref="Load"/> and <see cref="AppendAsync"/> have a
+/// production caller — a replica reads the store once, at its own startup, and every write goes
+/// through <see cref="AppendAsync"/>. The other three exist for a background poller (refreshing one
+/// replica from another's write, on the generation this async trio was built to support) that this
+/// release does not ship; an implementation still has to honour their contracts — <see cref="HistoryAsync"/>
+/// really is exercised today, by <see cref="RuleSet.RestoreAsync"/> — but <see cref="LoadAsync"/> and
+/// <see cref="GetGenerationAsync"/> specifically are, for now, contract-only: nothing in this codebase
+/// calls them.
 /// </para>
 /// </remarks>
 public interface IRuleStore
@@ -28,7 +43,9 @@ public interface IRuleStore
 
     /// <summary>
     /// Every rule's head, read on a refresh. Separate from <see cref="Load"/> rather than replacing it
-    /// because the two run at different times under different constraints.
+    /// because the two run at different times under different constraints. No production caller yet —
+    /// see the interface remarks on forward surface; it exists for the background poller a later plan
+    /// ships.
     /// </summary>
     Task<IReadOnlyList<StoredRule>> LoadAsync(CancellationToken cancellationToken);
 
@@ -40,7 +57,8 @@ public interface IRuleStore
     /// <strong>Must be a scalar read.</strong> An implementation that answers this by loading the
     /// store defeats the entire point — it is polled on a timer by every replica. It must also never
     /// move backwards while replicas are live, including across a restore: it is the fencing token
-    /// behind monotonic-read consistency.
+    /// behind monotonic-read consistency. No production caller yet — see the interface remarks on
+    /// forward surface; it exists for the background poller a later plan ships.
     /// </remarks>
     Task<long> GetGenerationAsync(CancellationToken cancellationToken);
 

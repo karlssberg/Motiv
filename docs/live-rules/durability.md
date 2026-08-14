@@ -164,10 +164,12 @@ its own startup.
 - **A store is a dumb sink.** It validates no document and enforces no rule-level invariant &mdash;
   `RuleSet` decides all of that before anything reaches the store. It is not, however, dumb about
   *structure*: the `(Name, Version)` primary key is load-bearing.
-- **Bind → persist → publish, in that order.** `RuleSet` binds and validates under its write gate,
-  releases the gate around the awaited store call, then re-takes it to publish &mdash; see
-  [`RuleSet`'s remarks](RuleSet.md#remarks). A slow store slows writers, not evaluators; a store that
-  throws or refuses leaves nothing live.
+- **Bind → persist → publish, in that order.** `RuleSet` binds and validates under its inner write
+  monitor, releases the monitor around the awaited store call, then re-takes it to publish &mdash; see
+  [`RuleSet`'s remarks](RuleSet.md#remarks). The outer write gate (a separate, coarser lock —
+  `BindingScope`'s semaphore) stays held for the whole operation regardless; it is the monitor, not the
+  gate, that is released around the store call. A slow store slows writers, not evaluators; a store
+  that throws or refuses leaves nothing live.
 
 ## Next Steps
 

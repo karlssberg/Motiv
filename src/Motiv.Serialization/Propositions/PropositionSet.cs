@@ -177,7 +177,7 @@ public sealed class PropositionSet
 
     /// <summary>
     /// The prepare half of <see cref="CreateCoreAsync"/>: a lone create, binding against a fresh
-    /// single-use copy of the live overlay. Assumes the scope lock is held.
+    /// single-use copy of the live overlay. Assumes <see cref="BindingScope"/>'s inner monitor is held.
     /// </summary>
     private WritePrepare PrepareCreateCascade(
         string name, string modelTypeId, string documentJson, string? description) =>
@@ -190,7 +190,8 @@ public sealed class PropositionSet
     /// <paramref name="prospective"/> rather than a fresh copy of the live overlay, so a proposition
     /// prepared earlier in the same envelope — not yet committed, since nothing commits until the
     /// whole envelope has persisted — is visible to this one. The caller owns <paramref name="prospective"/>
-    /// across the whole envelope and folds every member into it in turn. Assumes the scope lock is held.
+    /// across the whole envelope and folds every member into it in turn. Assumes
+    /// <see cref="BindingScope"/>'s inner monitor is held.
     /// </summary>
     /// <param name="excluding">
     /// Every node the envelope also explicitly publishes or withdraws elsewhere — see
@@ -249,7 +250,7 @@ public sealed class PropositionSet
 
     /// <summary>
     /// The prepare half of <see cref="UpdateCoreAsync"/>: a lone update, binding against a fresh
-    /// single-use copy of the live overlay. Assumes the scope lock is held.
+    /// single-use copy of the live overlay. Assumes <see cref="BindingScope"/>'s inner monitor is held.
     /// </summary>
     private WritePrepare PrepareUpdateCascade(string name, string documentJson, int expectedVersion) =>
         // See PrepareCreateCascade: a lone write's exclusion set is always empty.
@@ -355,7 +356,7 @@ public sealed class PropositionSet
     /// <see cref="PrepareUpdateCore"/> — the publish half of a governed envelope's apply phase,
     /// mirroring <see cref="RuleSet.CommitCore"/>. Has no failure outcome: everything a caller can get
     /// wrong was already decided by the prepare, and the store write in between has already succeeded
-    /// by the time this runs. Assumes the scope lock is held.
+    /// by the time this runs. Assumes <see cref="BindingScope"/>'s inner monitor is held.
     /// </summary>
     /// <param name="prepared">The prepared write, from the same overlay its closure was bound against.</param>
     /// <returns>The newly published version.</returns>
@@ -371,7 +372,7 @@ public sealed class PropositionSet
     /// Applies a withdrawal prepared earlier by <see cref="PrepareWithdraw"/> or
     /// <see cref="PrepareWithdrawCore"/>. The withdrawal counterpart of <see cref="CommitPublishCore"/>,
     /// and infallible for the same reasons. Leaves no authored document behind, so there is no version
-    /// to report. Assumes the scope lock is held.
+    /// to report. Assumes <see cref="BindingScope"/>'s inner monitor is held.
     /// </summary>
     internal void CommitWithdrawCore(WritePrepare prepared)
     {
@@ -423,7 +424,7 @@ public sealed class PropositionSet
     /// <see cref="BindingScope.PrepareClosure"/> call excludes nothing — there is no envelope, and
     /// therefore no other member's own prepare that could need protecting from this one's closure
     /// walk. See <see cref="PrepareWithdrawCore"/> for the governed counterpart, which takes the
-    /// envelope's exclusion set as a parameter instead. Assumes the scope lock is held.
+    /// envelope's exclusion set as a parameter instead. Assumes <see cref="BindingScope"/>'s inner monitor is held.
     /// </summary>
     private WritePrepare PrepareWithdraw(string name, int expectedVersion)
     {
@@ -463,7 +464,8 @@ public sealed class PropositionSet
     /// The governed-envelope counterpart of <see cref="PrepareWithdraw"/>: binds the compiled-default
     /// closure check (when one lies beneath) against <paramref name="prospective"/> rather than a
     /// fresh copy of the live overlay, so it reflects every proposition and rule already prepared
-    /// earlier in the same envelope. Assumes the scope lock is held.
+    /// earlier in the same envelope. Assumes <see cref="BindingScope"/>'s inner monitor is
+    /// held.
     /// </summary>
     /// <remarks>
     /// Deliberately does <em>not</em> repeat the direct-referrer check <see cref="PrepareWithdraw"/>
@@ -522,7 +524,7 @@ public sealed class PropositionSet
     /// Parses, cycle-checks and binds a proposed document against <paramref name="source"/> without
     /// publishing anything — the proposition half of a governed publish's validate-everything-first
     /// phase. Passing a prospective source lets one envelope member resolve against another that is
-    /// not live yet. Assumes the scope lock is held.
+    /// not live yet. Assumes <see cref="BindingScope"/>'s inner monitor is held.
     /// </summary>
     /// <returns>
     /// The bound entry to fold into the prospective overlay and the names it resolves, or the errors
@@ -816,9 +818,9 @@ public sealed class PropositionSet
     /// <summary>
     /// The infallible half of a publish, for a caller that has already persisted the document — the
     /// counterpart of <see cref="RuleSet.CommitCore"/>. Folds the authored proposition into the live
-    /// overlay, graph and participant table. Assumes the scope lock is held: this mutates
-    /// <see cref="DependencyGraph"/> and <see cref="PropositionOverlay"/> directly, both of which are
-    /// deliberately unsynchronized and rely on the caller holding <see cref="BindingScope"/>'s monitor.
+    /// overlay, graph and participant table. Assumes <see cref="BindingScope"/>'s inner monitor is
+    /// held: this mutates <see cref="DependencyGraph"/> and <see cref="PropositionOverlay"/> directly,
+    /// both of which are deliberately unsynchronized and rely on the caller holding that monitor.
     /// </summary>
     internal void CommitPublish(Authored authored)
     {

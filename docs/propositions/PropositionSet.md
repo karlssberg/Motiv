@@ -106,18 +106,19 @@ proposition. See [Startup: quarantine, don't crash](index.md#startup-quarantine-
 
 ## Remarks
 
-- **Every write is serialized.** `CreateAsync`, `UpdateAsync`, `WithdrawAsync` and `Load` run under
-  the shared write gate, which also covers rule updates &mdash; a proposition edit and a rule update
-  can never interleave. The gate is machine-scale &mdash; it stops two publishes interleaving their
-  graph walks &mdash; and is a separate concern from the version check, which is human-scale and
-  stops a save silently discarding an edit made while a tab sat open.
+- **Every write is serialized.** `CreateAsync`, `UpdateAsync` and `WithdrawAsync` run under the shared
+  outer write gate, which also covers rule updates &mdash; a proposition edit and a rule update can
+  never interleave. `Load`, called once at startup before concurrent use begins, takes only the inner
+  write monitor, not the outer gate. The gate is machine-scale &mdash; it serialises whole write
+  operations await-safely &mdash; and is a separate concern from the version check, which is
+  human-scale and stops a save silently discarding an edit made while a tab sat open.
 - **Nothing is published unless the outcome says so.** On any rejection neither the overlay, the
   dependency graph, nor the store is touched.
 - **Persist first.** The store write is the only step that can fail after the point of no return, so
-  it runs &mdash; awaited, with the gate released around it &mdash; before the in-memory swap. A
-  throwing store leaves no live proposition without a durable record; see
-  [`RuleSet`'s remarks](../live-rules/RuleSet.md#remarks) for why the rule-side write path holds the
-  same shape.
+  it runs &mdash; awaited, with the inner monitor released around it while the outer gate stays held
+  &mdash; before the in-memory swap. A throwing store leaves no live proposition without a durable
+  record; see [`RuleSet`'s remarks](../live-rules/RuleSet.md#remarks) for why the rule-side write path
+  holds the same shape.
 - **The evaluation path is untouched.** A reference binds to the spec instance itself, so an
   evaluation of a proposition costs exactly what an evaluation of the equivalent compiled
   composition costs.

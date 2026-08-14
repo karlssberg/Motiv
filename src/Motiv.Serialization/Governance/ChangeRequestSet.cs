@@ -156,33 +156,44 @@ public sealed record ChangeRequestResult(
 /// because authorship is workflow state, not a grant.
 /// </para>
 /// <para>
-/// Three locks, deliberately. The shared <see cref="BindingScope"/> lock is taken once, inside a
-/// publish, around the whole envelope — it is what makes an envelope atomic, so it must not be taken
-/// and released per artefact. <see cref="_lock"/> guards one request's own workflow-transition
-/// atomicity — <see cref="Approve"/>/<see cref="Reject"/>/<see cref="Withdraw"/>/<see cref="PublishAsync"/>
-/// must serialise against each other on the <em>same</em> request, or a rejection could land while
-/// its publish is mid-flight (see the remarks on <see cref="PublishAsync"/>). It is a
+/// Four exclusion mechanisms, deliberately — not three, and not all at the same layer. Two of them
+/// are the two tiers <see cref="BindingScope"/> itself already carries. Its outer semaphore
+/// (<see cref="BindingScope.LockedAsync{T}"/>) really is taken once, around the whole envelope
+/// (<see cref="ChangeRequestPublisher.Apply"/>) — that is what makes an envelope atomic against every
+/// other gate-holding write, so it must not be taken and released per artefact. Its inner monitor
+/// (<see cref="BindingScope.Locked{T}"/>) is a different story: within that one gate-held span it is
+/// taken and released three separate times per publish — once by <c>Validate</c>, once by
+/// <c>ApplyValidatedAsync</c>'s own <c>Prepare</c> call, once by its final commit — never held
+/// continuously across the envelope the way the outer semaphore is, because a monitor cannot span the
+/// store <c>await</c>s in between (see <see cref="BindingScope"/>'s own remarks). The third,
+/// <see cref="_lock"/>, guards one request's own workflow-transition atomicity —
+/// <see cref="Approve"/>/<see cref="Reject"/>/<see cref="Withdraw"/>/<see cref="PublishAsync"/> must
+/// serialise against each other on the <em>same</em> request, or a rejection could land while its
+/// publish is mid-flight (see the remarks on <see cref="PublishAsync"/>). It is a
 /// <see cref="SemaphoreSlim"/> rather than a plain <c>lock</c> specifically so <c>PublishAsync</c> can
 /// hold it across the <c>await</c> of the scope-locked apply — a <c>lock</c> statement cannot span an
 /// <c>await</c>. Not reentrant: every method that already holds it must call the non-acquiring
 /// <c>Core</c> counterpart, never a public method.
 /// </para>
 /// <para>
-/// <see cref="_listLock"/> is the third, separate from <see cref="_lock"/> on purpose: it guards only
+/// <see cref="_listLock"/> is the fourth, separate from <see cref="_lock"/> on purpose: it guards only
 /// <see cref="_changes"/>'s own structural integrity (a plain <see cref="List{T}"/> is not
 /// thread-safe for concurrent enumeration and <c>Add</c>), not any request's workflow state. Reading
 /// the list — <see cref="All"/>, <see cref="Find"/>, and every <c>Core</c> method's own
 /// <see cref="FindCore"/> lookup — never needs to wait behind a publish that is stuck on a slow
 /// store; only <c>Create</c>'s append and every lookup take it, and both are always instantaneous, so
 /// it is never held across an <c>await</c> either. This intentionally does not synchronise reads of
-/// a request's own mutable fields (<see cref="ChangeRequest.Status"/> and friends) against a
-/// concurrent <see cref="_lock"/>-held mutation of them — <see cref="All"/>/<see cref="Find"/> can
-/// observe a request mid-transition. Narrower than the memory-visibility gap this class had before
-/// two locks existed (everything shared one lock, so every read was synchronised with every write),
-/// but accepted for the same reason <see cref="RuleBase.Quarantine"/> was: an availability guarantee
-/// — the read surface must not go unresponsive behind a stalled store — outweighs strict
-/// linearizability here. A <see cref="System.Threading.Volatile"/>-based fix mirroring
-/// <c>RuleBase.Quarantine</c>'s would close it if the gap is ever load-bearing rather than cosmetic.
+/// a request's own mutable fields against a concurrent <see cref="_lock"/>-held mutation of them —
+/// <see cref="All"/>/<see cref="Find"/> can observe a request mid-transition. Narrower than the
+/// memory-visibility gap this class had before two locks existed (everything shared one lock, so
+/// every read was synchronised with every write), but accepted for the same reason
+/// <see cref="RuleBase.Quarantine"/> was: an availability guarantee — the read surface must not go
+/// unresponsive behind a stalled store — outweighs strict linearizability here.
+/// <see cref="ChangeRequest.Status"/> is the one field exempted: it is
+/// <see cref="System.Threading.Volatile"/>-backed, and its writers publish it last so that a reader
+/// seeing the new status also sees the detail fields that status implies — see the comment on
+/// <c>ChangeRequest._status</c>. Everything else a mid-transition read could observe partially (the
+/// approvals list, in particular) remains the accepted gap.
 /// </para>
 /// </remarks>
 public sealed class ChangeRequestSet
@@ -662,10 +673,22 @@ public sealed class ChangeRequestSet
             : ChangeTargetKind.Proposition;
 
     /// <summary>
-    /// One edit classified against the target's current state. Shared by <see cref="Create"/> and
-    /// <see cref="DirectWriteAsync"/> so a direct write is shown to the gate as exactly the change request
-    /// an author would have raised for it. Assumes the scope lock is held.
+    /// One edit classified against the target's current state, including a live read of whether the
+    /// target spec is async (<see cref="SpecIsAsync"/>, which reads <c>Scope.Source</c>). Shared by
+    /// <see cref="Create"/> and <see cref="DirectWriteAsync"/> so a direct write is shown to the gate
+    /// as exactly the change request an author would have raised for it.
     /// </summary>
+    /// <remarks>
+    /// Assumes <see cref="BindingScope"/>'s inner monitor is held — the <c>Scope.Source</c> read above
+    /// is exactly the kind a concurrent monitor-held write could be mutating mid-read (see
+    /// <see cref="RuleSet.PersistAndCommitCoreAsync"/>'s remarks on why binding needs the monitor, not
+    /// only commit). <see cref="Create"/> honours this: it wraps its whole classification pass in
+    /// <c>_rules.Scope.Locked</c>. <see cref="DirectWriteAsync"/> does not — it holds only the outer
+    /// semaphore (<c>_rules.Scope.LockedAsync</c>) around its call here, never the monitor itself. That
+    /// gap is real but narrow against today's other callers, all of which also take the outer gate for
+    /// any write — only <see cref="RuleSet.Add"/>/<see cref="RuleSet.Load"/>, both startup-only, take
+    /// the monitor without it — so it is left as a known gap rather than fixed here.
+    /// </remarks>
     private ProposedChange Classify(
         NewProposedChange change, ChangeTarget target, (bool Exists, string? DocumentJson) current) =>
         new(target,
@@ -849,9 +872,10 @@ public sealed class ChangeRequestSet
                 prospective.Set(entry);
 
                 // The document binding on its own says nothing about what already resolves *through*
-                // this name. PublishWithCascade rebinds the whole dependent closure and refuses the
-                // publish if any member stops binding, so the same closure is prepared here, over the
-                // prospective overlay, and a break is returned as a value rather than met at apply.
+                // this name. A cascading publish rebinds the whole dependent closure
+                // (BindingScope.PrepareClosure) and refuses the publish if any member stops binding, so
+                // the same closure is prepared here, over the prospective overlay, and a break is
+                // returned as a value rather than met at apply.
                 if (rules.Scope.PrepareClosure(name, prospective, [], envelopeNodes) is { Count: > 0 } broken)
                     return BrokenDependents(proposed.Target, broken);
 
@@ -1030,14 +1054,20 @@ public sealed class ChangeRequestSet
         /// <para>
         /// A prepare failure here is treated as a bug (see <see cref="Unexpected"/>) with one
         /// exception, <c>VersionConflict</c>: <see cref="Validate"/> already ruled out every other
-        /// refusal, but a version can still move between validation and this prepare — a background
-        /// refresh (<see cref="RuleSet.Load"/>-shaped) mutates state under the inner monitor alone, not
-        /// the outer gate this whole publish holds, so it can land in the gap between <see cref="Validate"/>'s
-        /// own <see cref="BindingScope.Locked{T}"/> call and this one. That is an expected race, not an
-        /// invariant breach, so it is reported as <see cref="ChangeRequestOutcome.VersionConflict"/>
-        /// rather than thrown. A store refusing to append or write is the same distinction one layer
-        /// down: expected (the store's own compare-and-set lost to a writer outside this process), not
-        /// a bug, so it also comes back as a value.
+        /// refusal, but a version can still move between validation and this prepare, because the two
+        /// are separate <see cref="BindingScope.Locked{T}"/> acquisitions of the inner monitor rather
+        /// than one held span — <see cref="Validate"/> takes and releases it, then this method's own
+        /// <c>Prepare</c> call (a few lines below) takes it again. The outer gate this whole publish
+        /// holds for its entire duration (<see cref="ChangeRequestPublisher.Apply"/>) rules out any
+        /// <em>other</em> gate-holding write landing in that gap — every steady-state write does hold
+        /// it — but <see cref="RuleSet.Add"/> and <see cref="RuleSet.Load"/> take only the monitor, not
+        /// the gate, so either could in principle land there. Both are startup-only in practice, so
+        /// this is a structural allowance rather than a race this branch expects to see often; it is
+        /// reported as <see cref="ChangeRequestOutcome.VersionConflict"/> rather than thrown regardless,
+        /// since a prepare that fails for exactly the reason a version check exists to catch is not a
+        /// bug however rarely it fires. A store refusing to append or write is the same distinction one
+        /// layer down: expected (the store's own compare-and-set lost to a writer outside this
+        /// process), not a bug, so it also comes back as a value.
         /// </para>
         /// </remarks>
         private static async Task<ChangeRequestResult> ApplyValidatedAsync(
@@ -1142,7 +1172,8 @@ public sealed class ChangeRequestSet
         /// <summary>
         /// Binds every edit in the envelope for real — producing publishable rule publications and
         /// proposition writes, not just errors — walking phases A/B/C in the same order
-        /// <see cref="Validate"/> already proved would work. Assumes the scope lock is held.
+        /// <see cref="Validate"/> already proved would work. Assumes <see cref="BindingScope"/>'s
+        /// inner monitor is held.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -1151,7 +1182,7 @@ public sealed class ChangeRequestSet
         /// referencing a proposition prepared earlier in this same envelope — phase B referencing
         /// something phase A just prepared — must still resolve it, and only a prospective source
         /// carries that. <see cref="RuleSet.PrepareUpdateCore(string,string,int,ISpecSource)"/> and
-        /// <see cref="PropositionSet.PrepareCreateCore"/>/<see cref="PropositionSet.PrepareUpdateCore(string,string,int,PropositionOverlay)"/>
+        /// <see cref="PropositionSet.PrepareCreateCore"/>/<see cref="PropositionSet.PrepareUpdateCore"/>
         /// exist for exactly this.
         /// </para>
         /// <para>

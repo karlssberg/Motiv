@@ -6,15 +6,31 @@ namespace Motiv.Serialization;
 /// source, the write lock, the dependency graph, and the rebind participants.
 /// </summary>
 /// <remarks>
+/// <para>
 /// Two tiers of exclusion cooperate here, plus a version check, and all three solve different
 /// problems. The inner <see cref="_gate"/> monitor is machine-scale: it stops two publishes
 /// interleaving their graph walks, but a monitor is released at the first <c>await</c>, so it
 /// cannot hold across a store round trip. The outer <see cref="_outer"/> semaphore is what does
 /// that — it serialises whole publish operations await-safely, and its real purpose is
 /// cancellation: an answer to a store that has stopped responding, which the inner monitor cannot
-/// give. The version check is human-scale: it stops a save silently discarding an edit made while
-/// a browser tab sat open, and today rests on the lock rather than a compare-and-swap — that will
-/// move to a store primary key in a later task.
+/// give. The version check is human-scale: it stops a save silently discarding an edit made while a
+/// browser tab sat open, and, for rules, is now also backed by a store primary key: every
+/// <see cref="RuleSet"/> write ends in an <see cref="IRuleStore.AppendAsync"/> call, whose
+/// <c>(Name, Version)</c> row is a cross-process compare-and-set on top of the in-process lock, not a
+/// replacement for it — the lock still decides who gets to attempt the write; the store decides
+/// whether that attempt actually lands.
+/// </para>
+/// <para>
+/// <strong>The <c>Core</c> suffix names no single tier.</strong> Across <see cref="RuleSet"/>,
+/// <c>PropositionSet</c> and <see cref="ChangeRequestSet"/> it always means "the caller already holds
+/// an exclusion this method depends on, and must not re-acquire it" — but <em>which</em> one differs
+/// by method, since the tiers are acquired at different call depths. <c>Prepare…Core</c> and
+/// <c>Commit…Core</c> mostly assume the inner monitor, so they are callable from inside a synchronous
+/// <see cref="Locked{T}"/> block; <c>PersistAndCommitCoreAsync</c>, <c>AppendCoreAsync</c> and
+/// <c>CreateCoreAsync</c> assume the outer gate, so only <see cref="LockedAsync{T}"/> satisfies them
+/// and a plain <see cref="Locked{T}"/> block does not. Read the method's own doc, which names its
+/// lock; never infer the tier from the suffix.
+/// </para>
 /// </remarks>
 internal sealed class BindingScope
 {
