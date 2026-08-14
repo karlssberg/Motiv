@@ -44,6 +44,15 @@ public abstract class RuleBase
 
     internal RuleDefault Default { get; }
 
+    /// <summary>
+    /// Why <see cref="RuleSet.Load"/> could not apply this rule's stored document, or empty. Non-empty
+    /// means the rule is evaluating its compiled default while the store holds something that would
+    /// not bind. Held here rather than in a table beside <see cref="RuleSet"/>'s rules — as
+    /// <c>PropositionSet</c> holds it on the authored proposition — so that a single reference write
+    /// keeps it coherent for the unsynchronised readers of <see cref="RuleSet.Rules"/>.
+    /// </summary>
+    internal IReadOnlyList<RuleError> Quarantine { get; set; } = [];
+
     /// <summary>Binds the default and publishes version 1. Called exactly once, by <see cref="RuleSet.Add"/>.</summary>
     internal abstract void Attach(RuleSerializer serializer);
 
@@ -78,4 +87,12 @@ public abstract class RuleBase
 
     /// <summary>Reads the version and document from one snapshot, so the pair is always coherent.</summary>
     internal abstract (int Version, string? DocumentJson) VersionedDocument();
+
+    /// <summary>
+    /// Overwrites the live version without touching the binding — used only by
+    /// <see cref="RuleSet.Load"/>, to restore the number the store holds after a stored document has
+    /// been bound through the ordinary publish path. Renumbering anywhere else would break the
+    /// optimistic-concurrency contract.
+    /// </summary>
+    internal abstract void RestoreVersion(int version);
 }

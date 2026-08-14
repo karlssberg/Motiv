@@ -42,4 +42,11 @@ public sealed record RuleSetEntry(
 
     /// <summary>The current document, or null while on a compiled default.</summary>
     public string? DocumentJson { get; } = DocumentJson;
+
+    /// <summary>
+    /// Why the stored document for this rule was not applied, or empty. Non-empty means the rule is
+    /// running on its compiled default while the store holds something that would not bind — which
+    /// the next successful update or revert resolves, and clears.
+    /// </summary>
+    public IReadOnlyList<RuleError> Quarantine { get; init; } = [];
 }

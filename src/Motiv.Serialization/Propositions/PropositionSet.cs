@@ -19,9 +19,10 @@ public sealed class PropositionSet
     /// given store.
     /// </summary>
     /// <remarks>
-    /// Mirrors <see cref="RuleSet(SpecRegistry, RuleSerializerOptions)"/>, and opens a binding scope
-    /// of its own over the registry. Rules that are to see these propositions must therefore be built
-    /// from *this set* — <see cref="RuleSet(PropositionSet, RuleSerializerOptions)"/> — not from the
+    /// Mirrors <see cref="RuleSet(SpecRegistry, IRuleStore, RuleSerializerOptions)"/>, and opens a
+    /// binding scope of its own over the registry. Rules that are to see these propositions must
+    /// therefore be built from *this set* —
+    /// <see cref="RuleSet(PropositionSet, IRuleStore, RuleSerializerOptions)"/> — not from the
     /// registry a second time; the registry refuses the latter rather than let the two drift apart
     /// unnoticed. The intended order is: construct, <see cref="AddModel{TModel}"/>,
     /// <see cref="Load"/>, then build the rule set, so a rule's default document may reference an

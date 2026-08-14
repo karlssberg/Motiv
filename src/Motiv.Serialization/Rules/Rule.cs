@@ -141,6 +141,12 @@ public class Rule<TModel, TMetadata> : RuleBase
         return (snapshot.Version, snapshot.DocumentJson);
     }
 
+    internal sealed override void RestoreVersion(int version)
+    {
+        var current = Snapshot();
+        Volatile.Write(ref _state, new State(current.DocumentJson, version, current.Spec));
+    }
+
     internal sealed override IRebindCommit? PrepareRebind(RuleSerializer serializer, List<RuleError> errors)
     {
         var current = Snapshot();

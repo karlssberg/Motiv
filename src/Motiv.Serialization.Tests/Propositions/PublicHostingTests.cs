@@ -259,7 +259,7 @@ public class PublicHostingTests
             [typeof(SpecRegistry), typeof(IPropositionStore), typeof(RuleSerializerOptions)], null);
         var ruleSetConstructor = typeof(RuleSet).GetConstructor(
             BindingFlags.Public | BindingFlags.Instance, null,
-            [typeof(PropositionSet), typeof(RuleSerializerOptions)], null);
+            [typeof(PropositionSet), typeof(IRuleStore), typeof(RuleSerializerOptions)], null);
 
         // Assert
         propositionSetConstructor.ShouldNotBeNull();

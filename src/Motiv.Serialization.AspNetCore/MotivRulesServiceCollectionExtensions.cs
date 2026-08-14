@@ -157,7 +157,7 @@ public static class MotivRulesServiceCollectionExtensions
 
             var rules = new RuleSet(
                 provider.GetRequiredService<BindingScope>(),
-                resolvedOptions.SerializerOptions);
+                options: resolvedOptions.SerializerOptions);
             foreach (var rule in provider.GetServices<RuleBase>())
                 rules.Add(rule);
             return rules;

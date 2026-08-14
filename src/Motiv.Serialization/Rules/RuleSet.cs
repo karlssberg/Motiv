@@ -16,23 +16,26 @@ public sealed class RuleSet
     private readonly Dictionary<string, RuleBase> _rules = new(StringComparer.Ordinal);
     private readonly RuleSerializer _serializer;
     private readonly RuleSerializerOptions _options;
+    private readonly IRuleStore _store;
+    private bool _loaded;
 
     /// <summary>Creates a rule set whose documents bind against the given registry.</summary>
     /// <remarks>
     /// For a host that also authors propositions, build the rule set from the
     /// <see cref="PropositionSet"/> instead — see
-    /// <see cref="RuleSet(PropositionSet, RuleSerializerOptions)"/>. This overload opens a binding
+    /// <see cref="RuleSet(PropositionSet, IRuleStore, RuleSerializerOptions)"/>. This overload opens a binding
     /// scope of its own, which a proposition set built from the same registry could never see into.
     /// </remarks>
     /// <param name="registry">The registry rule documents resolve spec references against.</param>
+    /// <param name="store">Where published rules persist between restarts, or null to keep them in memory only.</param>
     /// <param name="options">Options forwarded to the underlying serializer, or null for defaults.</param>
     /// <exception cref="ArgumentNullException"><paramref name="registry"/> is null.</exception>
     /// <exception cref="InvalidOperationException">
     /// A <see cref="PropositionSet"/> was already built from <paramref name="registry"/>, so this set
     /// could only ever be invisible to it.
     /// </exception>
-    public RuleSet(SpecRegistry registry, RuleSerializerOptions? options = null)
-        : this(BindingScope.For(registry, ScopeClaim.Rules), options)
+    public RuleSet(SpecRegistry registry, IRuleStore? store = null, RuleSerializerOptions? options = null)
+        : this(BindingScope.For(registry, ScopeClaim.Rules), store, options)
     {
     }
 
@@ -48,10 +51,11 @@ public sealed class RuleSet
     /// proposition that default references must already be live.
     /// </remarks>
     /// <param name="propositions">The proposition set these rules resolve authored propositions from.</param>
+    /// <param name="store">Where published rules persist between restarts, or null to keep them in memory only.</param>
     /// <param name="options">Options forwarded to the underlying serializer, or null for defaults.</param>
     /// <exception cref="ArgumentNullException"><paramref name="propositions"/> is null.</exception>
-    public RuleSet(PropositionSet propositions, RuleSerializerOptions? options = null)
-        : this((propositions ?? throw new ArgumentNullException(nameof(propositions))).Scope, options)
+    public RuleSet(PropositionSet propositions, IRuleStore? store = null, RuleSerializerOptions? options = null)
+        : this((propositions ?? throw new ArgumentNullException(nameof(propositions))).Scope, store, options)
     {
     }
 
@@ -60,9 +64,10 @@ public sealed class RuleSet
     /// a proposition edit and a rule update cannot interleave and a rule can be rebound by a
     /// proposition's republication.
     /// </summary>
-    internal RuleSet(BindingScope scope, RuleSerializerOptions? options = null)
+    internal RuleSet(BindingScope scope, IRuleStore? store = null, RuleSerializerOptions? options = null)
     {
         Scope = scope ?? throw new ArgumentNullException(nameof(scope));
+        _store = store ?? new InMemoryRuleStore();
         _options = options ?? new RuleSerializerOptions();
         _serializer = new RuleSerializer(scope.Source, _options);
     }
@@ -128,7 +133,100 @@ public sealed class RuleSet
         var (version, documentJson) = rule.VersionedDocument();
         return new RuleSetEntry(
             rule.Name, rule.ModelType, rule.MetadataType, rule.IsAsync, rule.IsPolicy,
-            version, rule.Description, documentJson);
+            version, rule.Description, documentJson)
+        {
+            Quarantine = rule.Quarantine
+        };
+    }
+
+    /// <summary>
+    /// Reads every stored rule head and applies it over the compiled default. A document that no
+    /// longer binds is <em>quarantined</em> rather than fatal: the rule keeps evaluating its compiled
+    /// default, its stored version is preserved so a repair can address it, and the reason is reported
+    /// on the returned <see cref="RuleLoadReport"/>.
+    /// </summary>
+    /// <remarks>
+    /// Call once, after every <see cref="Add"/>, and after the paired <see cref="PropositionSet.Load"/>
+    /// — a stored rule document may reference an authored proposition. Synchronous by design: startup
+    /// is, and the DI factory wall cannot await.
+    /// </remarks>
+    /// <returns>What was quarantined, and what was orphaned.</returns>
+    /// <exception cref="InvalidOperationException">Load has already been called on this set.</exception>
+    public RuleLoadReport Load() =>
+        Scope.Locked(() =>
+        {
+            // Same precondition as PropositionSet.Load, for the same reason: a second pass over rows
+            // that bound the first time and quarantine the second would leave the catalog reporting a
+            // rule broken while the evaluator still resolved the stale binding. A refresh has to be a
+            // whole rebuild, so refuse rather than half-do it.
+            if (_loaded)
+                throw new InvalidOperationException(
+                    "Load has already been called on this RuleSet. It reads the store once, at " +
+                    "startup; it is not a refresh.");
+
+            // Set only once the store has been read: reading is the one step that can throw rather
+            // than quarantine, and it mutates nothing, so an unreachable store leaves the set loadable.
+            var heads = _store.Load() ?? [];
+            _loaded = true;
+
+            var quarantined = new List<QuarantinedRule>();
+            var orphaned = new List<string>();
+
+            foreach (var head in heads)
+            {
+                // A quarantine is recorded on the rule it names, so a row with no usable name has
+                // nowhere to be recorded and skipping it is the only non-fatal option.
+                if (head?.Name is null)
+                    continue;
+
+                if (Find(head.Name) is not { } rule)
+                {
+                    // History outlives the code that produced it. Not a fault, and not a quarantine.
+                    orphaned.Add(head.Name);
+                    continue;
+                }
+
+                if (Apply(rule, head) is { } errors)
+                    quarantined.Add(new QuarantinedRule(head.Name, head.Version, errors));
+            }
+
+            return new RuleLoadReport(quarantined, orphaned);
+        });
+
+    /// <summary>
+    /// Applies one stored head over a rule's compiled default, returning the errors that quarantined
+    /// it or null when it bound. A null document is a recorded revert, not an absent row: the rule
+    /// stays on its default and only the version moves.
+    /// </summary>
+    private IReadOnlyList<RuleError>? Apply(RuleBase rule, StoredRule head)
+    {
+        // The expected version is read from the rule itself. This is a load, not a concurrent write —
+        // there is no caller holding a stale number — so the only outcome worth distinguishing is
+        // whether the document binds.
+        var prepared = head.DocumentJson is null
+            ? PrepareRevertCore(head.Name, expectedVersion: rule.Version)
+            : PrepareUpdateCore(head.Name, head.DocumentJson, expectedVersion: rule.Version);
+
+        if (prepared.Publication is { } publication)
+        {
+            // Committed directly, not through the persisting write path: this document came *from*
+            // the store, so appending it again would mint a duplicate version row and conflict on its
+            // own primary key.
+            CommitCore(head.Name, publication);
+        }
+        else
+        {
+            // The rule stays on its compiled default — a rule must be able to evaluate, and there is
+            // nothing else to bind — but says so rather than reverting silently.
+            rule.Quarantine = prepared.Errors;
+        }
+
+        // Either way the store's version is authoritative: a restart must not renumber history, and a
+        // repair must be addressed against the version the store actually holds, not the one this
+        // publish just minted or the one Add bound, or the very first repair attempt would conflict.
+        rule.RestoreVersion(head.Version);
+
+        return prepared.Publication is null ? prepared.Errors : null;
     }
 
     /// <summary>
@@ -214,6 +312,12 @@ public sealed class RuleSet
                 $"Rule '{name}' is no longer registered, so its prepared publication cannot be committed.");
 
         publication.Commit();
+
+        // A quarantine says "running a compiled default in place of a stored document that would not
+        // bind". A successful publish is exactly what stops that being true, so it must not outlive
+        // one — an operator who repairs a rule would otherwise be told it is still broken until the
+        // process restarts.
+        rule.Quarantine = [];
 
         // Track reads the rule's *current* document, so it must run after the commit, not before.
         Track(rule);
