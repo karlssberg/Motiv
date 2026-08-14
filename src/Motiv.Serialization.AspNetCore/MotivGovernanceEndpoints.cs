@@ -132,7 +132,7 @@ internal static class MotivGovernanceEndpoints
                     "Only the change request's author may withdraw it, and only while it is open.");
         });
 
-        group.MapPost("/change-requests/{id:guid}/publish", (Guid id, HttpContext http) =>
+        group.MapPost("/change-requests/{id:guid}/publish", async (Guid id, HttpContext http) =>
         {
             if (changes.Find(id) is not { } change)
                 return UnknownChangeRequest(json);
@@ -141,7 +141,7 @@ internal static class MotivGovernanceEndpoints
                 return refusal;
 
             var breakGlassActive = ResolveBreakGlass(http).Active(DateTimeOffset.UtcNow);
-            var result = changes.Publish(id, breakGlassActive);
+            var result = await changes.PublishAsync(id, breakGlassActive, http.RequestAborted);
 
             if (result is not { Outcome: ChangeRequestOutcome.Ok, Change: { } published })
                 return ToFailure(result, json, "The change request cannot be published once it is closed.");
@@ -244,7 +244,7 @@ internal static class MotivGovernanceEndpoints
     /// <param name="baseVersion">The version the caller authored against.</param>
     /// <param name="written">Maps the write's own outcome onto this surface's response.</param>
     /// <returns>The gate's 403 refusal, or whatever <paramref name="written"/> produced.</returns>
-    internal static IResult GovernedRuleWrite(
+    internal static async Task<IResult> GovernedRuleWrite(
         ChangeRequestSet governance,
         HttpContext http,
         JsonSerializerOptions json,
@@ -256,10 +256,10 @@ internal static class MotivGovernanceEndpoints
     {
         var author = PrincipalIdentity.Subject(http.User);
         var breakGlassActive = ResolveBreakGlass(http).Active(DateTimeOffset.UtcNow);
-        var result = governance.DirectWrite(
+        var result = await governance.DirectWriteAsync(
             author, operation,
             new NewProposedChange(ChangeTargetKind.Rule, name, documentJson, baseVersion, null),
-            breakGlassActive);
+            breakGlassActive, http.RequestAborted);
 
         if (result.Blocked is { } decision)
             return RefusedDirectWrite(decision, json);
@@ -286,7 +286,7 @@ internal static class MotivGovernanceEndpoints
     /// <param name="description">The description, when the write creates a proposition.</param>
     /// <param name="written">Maps the write's own outcome onto this surface's response.</param>
     /// <returns>The gate's 403 refusal, or whatever <paramref name="written"/> produced.</returns>
-    internal static IResult GovernedPropositionWrite(
+    internal static async Task<IResult> GovernedPropositionWrite(
         ChangeRequestSet governance,
         HttpContext http,
         JsonSerializerOptions json,
@@ -300,12 +300,12 @@ internal static class MotivGovernanceEndpoints
     {
         var author = PrincipalIdentity.Subject(http.User);
         var breakGlassActive = ResolveBreakGlass(http).Active(DateTimeOffset.UtcNow);
-        var result = governance.DirectWrite(
+        var result = await governance.DirectWriteAsync(
             author, operation,
             new NewProposedChange(
                 ChangeTargetKind.Proposition, name, documentJson, baseVersion, null,
                 modelTypeId, description),
-            breakGlassActive);
+            breakGlassActive, http.RequestAborted);
 
         if (result.Blocked is { } decision)
             return RefusedDirectWrite(decision, json);

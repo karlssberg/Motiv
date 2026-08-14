@@ -44,7 +44,7 @@ public class PublicHostingTests
     /// after its document is set.
     /// </summary>
     [Fact]
-    public void Should_cascade_a_proposition_edit_into_a_rule_over_the_public_api()
+    public async Task Should_cascade_a_proposition_edit_into_a_rule_over_the_public_api()
     {
         // Arrange — the supported public path: propositions first, then rules built from them
         var propositions = NewPropositions();
@@ -55,7 +55,8 @@ public class PublicHostingTests
 
         propositions.Create("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null)
             .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
-        rules.Update("can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1)
+        (await rules.UpdateAsync(
+            "can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1, new RuleChangeProvenance("test")))
             .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
 
         var inactiveAdult = new Customer(IsActive: false, Age: 30);
@@ -75,13 +76,14 @@ public class PublicHostingTests
     /// prepare-all-then-commit-all transaction span both.
     /// </summary>
     [Fact]
-    public void Should_see_a_publicly_built_rule_set_as_a_dependent()
+    public async Task Should_see_a_publicly_built_rule_set_as_a_dependent()
     {
         // Arrange
         var propositions = NewPropositions();
         var rules = new RuleSet(propositions).Add(new CanCheckoutRule());
         propositions.Create("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
-        rules.Update("can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1);
+        await rules.UpdateAsync(
+            "can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1, new RuleChangeProvenance("test"));
 
         // Act
         var dependents = propositions.Dependents("customer.eligible");

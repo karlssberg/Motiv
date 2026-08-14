@@ -2,14 +2,14 @@ namespace Motiv.Serialization;
 
 /// <summary>
 /// The set of live rules an application executes. Adding a rule binds its default immediately
-/// (fail-fast at startup); <see cref="Update"/> and <see cref="Revert"/> validate and bind
-/// first, then publish atomically — writers get optimistic version conflicts, evaluators
-/// always see a coherent snapshot.
+/// (fail-fast at startup); <see cref="UpdateAsync"/> and <see cref="RevertAsync"/> bind, persist,
+/// and publish in that order — writers get optimistic version conflicts, evaluators always see a
+/// coherent snapshot, and nothing is live unless it is also durable.
 /// </summary>
 /// <remarks>
 /// Like <see cref="SpecRegistry"/>, registration (<see cref="Add"/>) is intended to finish at
-/// startup before concurrent use; <see cref="Update"/>/<see cref="Revert"/>/lookups are safe
-/// concurrently thereafter.
+/// startup before concurrent use; <see cref="UpdateAsync"/>/<see cref="RevertAsync"/>/lookups are
+/// safe concurrently thereafter.
 /// </remarks>
 public sealed class RuleSet
 {
@@ -230,47 +230,121 @@ public sealed class RuleSet
     }
 
     /// <summary>
-    /// Replaces a rule's implementation with a document: validate → bind → atomic publish.
-    /// The live rule is untouched unless the document binds and the expected version holds.
+    /// Replaces a rule's implementation with a document: bind → persist → publish, under the outer
+    /// write gate. The live rule is untouched unless the document binds, the expected version holds,
+    /// <em>and</em> the store accepts the new version row.
     /// </summary>
     /// <remarks>
-    /// Runs under the <see cref="BindingScope"/> write lock, so concurrent writes to any rule in
-    /// the set serialize rather than interleave — a rule can now be rebound out from under a
-    /// caller by someone else's proposition edit, and <c>RebindCommit</c> publishes by writing the
-    /// rule's state directly too, so the two must never run concurrently. What refuses a stale
-    /// write is the expected-version check in <see cref="PrepareUpdateCore"/>, taken before the
-    /// lock is ever released — a caller holding an old version is still told the current one,
-    /// only now that refusal is decided by two writes queuing instead of racing.
+    /// The ordering is the whole guarantee. Binding and persisting are the two steps that can fail and
+    /// both run before anything mutates, so a broken document or a version another replica already
+    /// took leaves nothing live — there is no rollback here because none is needed.
     /// </remarks>
     /// <param name="name">The rule name.</param>
     /// <param name="documentJson">The replacement rule document.</param>
     /// <param name="expectedVersion">The version the caller last observed.</param>
+    /// <param name="provenance">Who is publishing, and why. Written into the version log.</param>
+    /// <param name="cancellationToken">Cancels while waiting for the gate or the store.</param>
     /// <returns>The outcome: updated, version conflict, invalid document, or not found.</returns>
-    public RuleUpdateResult Update(string name, string documentJson, int expectedVersion)
+    public Task<RuleUpdateResult> UpdateAsync(
+        string name, string documentJson, int expectedVersion, RuleChangeProvenance provenance,
+        CancellationToken cancellationToken = default)
     {
         if (documentJson is null) throw new ArgumentNullException(nameof(documentJson));
+        if (provenance is null) throw new ArgumentNullException(nameof(provenance));
 
-        return Scope.Locked(() =>
-        {
-            var prepared = PrepareUpdateCore(name, documentJson, expectedVersion);
-            return prepared.Publication is { } publication
-                ? CommitCore(name, publication)
-                : prepared.ToFailureResult();
-        });
+        return Scope.LockedAsync(
+            () => PersistAndCommitCoreAsync(
+                name, PrepareUpdateCore(name, documentJson, expectedVersion), provenance, cancellationToken),
+            cancellationToken);
     }
 
-    /// <summary>Reverts a rule to its default. The version moves forward, never back.</summary>
+    /// <summary>
+    /// Reverts a rule to its default. The version moves forward, never back, and the log records that
+    /// the rule went back to code.
+    /// </summary>
+    public Task<RuleUpdateResult> RevertAsync(
+        string name, int expectedVersion, RuleChangeProvenance provenance,
+        CancellationToken cancellationToken = default)
+    {
+        if (provenance is null) throw new ArgumentNullException(nameof(provenance));
+
+        return Scope.LockedAsync(
+            () => PersistAndCommitCoreAsync(
+                name, PrepareRevertCore(name, expectedVersion), provenance, cancellationToken),
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Restores the document a previous version carried by <em>appending</em> a copy of it. Restoring
+    /// v5 writes v9 — history is never rewritten, and the new row is itself the record that a rollback
+    /// happened.
+    /// </summary>
     /// <param name="name">The rule name.</param>
+    /// <param name="targetVersion">The version whose document to republish.</param>
     /// <param name="expectedVersion">The version the caller last observed.</param>
-    /// <returns>The outcome: updated, version conflict, invalid default document, or not found.</returns>
-    public RuleUpdateResult Revert(string name, int expectedVersion) =>
-        Scope.Locked(() =>
-        {
-            var prepared = PrepareRevertCore(name, expectedVersion);
-            return prepared.Publication is { } publication
-                ? CommitCore(name, publication)
-                : prepared.ToFailureResult();
-        });
+    /// <param name="provenance">Who is rolling back, and why.</param>
+    /// <param name="cancellationToken">Cancels the history read and the publish.</param>
+    /// <returns>
+    /// The outcome. <see cref="RuleUpdateOutcome.NotFound"/> when the rule or the target version is
+    /// unknown — a version that was never recorded cannot be restored.
+    /// </returns>
+    public async Task<RuleUpdateResult> RestoreAsync(
+        string name, int targetVersion, int expectedVersion, RuleChangeProvenance provenance,
+        CancellationToken cancellationToken = default)
+    {
+        if (provenance is null) throw new ArgumentNullException(nameof(provenance));
+
+        // Read history outside the gate: it is a store read that cannot affect anything live, and
+        // holding an exclusion gate across it would serialise publishes behind an I/O round trip.
+        var history = await _store.HistoryAsync(name, cancellationToken).ConfigureAwait(false);
+        var target = history.FirstOrDefault(row => row.Version == targetVersion);
+        if (target is null)
+            return RuleUpdateResult.NotFound();
+
+        return target.DocumentJson is null
+            ? await RevertAsync(name, expectedVersion, provenance, cancellationToken).ConfigureAwait(false)
+            : await UpdateAsync(name, target.DocumentJson, expectedVersion, provenance, cancellationToken)
+                .ConfigureAwait(false);
+    }
+
+    /// <summary>Every recorded version of one rule, oldest first.</summary>
+    public Task<IReadOnlyList<StoredRuleVersion>> HistoryAsync(
+        string name, CancellationToken cancellationToken = default) =>
+        _store.HistoryAsync(name, cancellationToken);
+
+    /// <summary>
+    /// The middle of bind → persist → publish, for a caller already holding the outer gate. The store
+    /// call is the last step that can fail; everything after it is a memory swap that cannot.
+    /// </summary>
+    internal async Task<RuleUpdateResult> PersistAndCommitCoreAsync(
+        string name, RulePrepareResult prepared, RuleChangeProvenance provenance,
+        CancellationToken cancellationToken)
+    {
+        if (prepared.Publication is not { } publication)
+            return prepared.ToFailureResult();
+
+        var appended = await _store
+            .AppendAsync([RowFor(name, publication, provenance)], cancellationToken)
+            .ConfigureAwait(false);
+
+        if (appended.IsConflict)
+            return RuleUpdateResult.VersionConflict(appended.CurrentVersion);
+
+        // Nothing below can fail. CommitCore also clears any quarantine on the rule — a successful
+        // publish is exactly the repair that resolves one.
+        return CommitCore(name, publication);
+    }
+
+    /// <summary>Builds the version row a prepared publication will be recorded as.</summary>
+    internal static StoredRuleVersion RowFor(
+        string name, IRulePublication publication, RuleChangeProvenance provenance)
+    {
+        var stamped = provenance.WithDefaults();
+        return new StoredRuleVersion(
+            name, publication.Version, publication.DocumentJson,
+            stamped.Author, DateTimeOffset.UtcNow,
+            stamped.ChangeNote, stamped.ApprovalRef, stamped.BuildId);
+    }
 
     /// <summary>
     /// Prepares an update without publishing it, for a caller already holding the scope lock. The
@@ -278,12 +352,14 @@ public sealed class RuleSet
     /// exists so that everything fallible runs before anything mutates.
     /// </summary>
     /// <remarks>
-    /// Two splits meet here. The <c>Core</c> suffix is the lock split: the lock is a plain monitor
-    /// and therefore reentrant, so calling <see cref="Update"/> from inside it would not in fact
-    /// deadlock. That split is about the *unit of atomicity* — a caller that means "these edits
-    /// publish together" must not be able to express it as a series of calls each of which releases
-    /// the lock in between. <c>Prepare</c>/<c>Commit</c> is the publish split, and is about where a
-    /// step that can still fail — the store write — is allowed to sit.
+    /// Two splits meet here. The <c>Core</c> suffix is the lock split: the outer gate
+    /// (<see cref="BindingScope.LockedAsync{T}"/>) is a <see cref="SemaphoreSlim"/> and therefore
+    /// <em>not</em> reentrant, so calling <see cref="UpdateAsync"/> from inside it would self-deadlock
+    /// with no error — a caller already holding the gate must call this <c>Core</c> method instead.
+    /// That split is about the *unit of atomicity* — a caller that means "these edits publish
+    /// together" must not be able to express it as a series of calls each of which releases the gate
+    /// in between. <c>Prepare</c>/<c>Commit</c> is the publish split, and is about where a step that
+    /// can still fail — the store write — is allowed to sit.
     /// </remarks>
     internal RulePrepareResult PrepareUpdateCore(string name, string documentJson, int expectedVersion) =>
         Find(name) is { } rule

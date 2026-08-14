@@ -58,7 +58,7 @@ public class RuleTests
     }
 
     [Fact]
-    public void Should_swap_to_an_updated_document_and_bump_the_version()
+    public async Task Should_swap_to_an_updated_document_and_bump_the_version()
     {
         // Arrange
         var rule = new ActiveRule();
@@ -66,7 +66,8 @@ public class RuleTests
         var document = """{ "rule": { "not": { "spec": "is-active" } } }""";
 
         // Act
-        var outcome = rules.Update("is-active-rule", document, expectedVersion: 1);
+        var outcome = await rules.UpdateAsync(
+            "is-active-rule", document, expectedVersion: 1, new RuleChangeProvenance("test"));
 
         // Assert
         outcome.Outcome.ShouldBe(RuleUpdateOutcome.Updated);
@@ -77,7 +78,7 @@ public class RuleTests
     }
 
     [Fact]
-    public void Should_report_a_version_conflict_for_a_stale_expected_version()
+    public async Task Should_report_a_version_conflict_for_a_stale_expected_version()
     {
         // Arrange — B saves first, so A's version-1 expectation is stale by the time it arrives.
         // Writes serialize under the BindingScope lock, so the two can no longer interleave
@@ -85,11 +86,14 @@ public class RuleTests
         // version — is unchanged, and is what this asserts.
         var rule = new ActiveRule();
         var rules = new RuleSet(Registry()).Add(rule);
-        rules.Update("is-active-rule", """{ "rule": { "spec": "is-active" } }""", 1)
+        (await rules.UpdateAsync(
+                "is-active-rule", """{ "rule": { "spec": "is-active" } }""", 1, new RuleChangeProvenance("test")))
             .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
 
         // Act — second writer still believes version 1
-        var outcome = rules.Update("is-active-rule", """{ "rule": { "not": { "spec": "is-active" } } }""", 1);
+        var outcome = await rules.UpdateAsync(
+            "is-active-rule", """{ "rule": { "not": { "spec": "is-active" } } }""", 1,
+            new RuleChangeProvenance("test"));
 
         // Assert
         outcome.Outcome.ShouldBe(RuleUpdateOutcome.VersionConflict);
@@ -99,14 +103,15 @@ public class RuleTests
     }
 
     [Fact]
-    public void Should_report_binding_errors_without_touching_the_live_rule()
+    public async Task Should_report_binding_errors_without_touching_the_live_rule()
     {
         // Arrange
         var rule = new ActiveRule();
         var rules = new RuleSet(Registry()).Add(rule);
 
         // Act
-        var outcome = rules.Update("is-active-rule", """{ "rule": { "spec": "missing" } }""", 1);
+        var outcome = await rules.UpdateAsync(
+            "is-active-rule", """{ "rule": { "spec": "missing" } }""", 1, new RuleChangeProvenance("test"));
 
         // Assert
         outcome.Outcome.ShouldBe(RuleUpdateOutcome.Invalid);
@@ -116,15 +121,16 @@ public class RuleTests
     }
 
     [Fact]
-    public void Should_revert_to_the_compiled_default_and_bump_the_version()
+    public async Task Should_revert_to_the_compiled_default_and_bump_the_version()
     {
         // Arrange
         var rule = new ActiveRule();
         var rules = new RuleSet(Registry()).Add(rule);
-        rules.Update("is-active-rule", """{ "rule": { "not": { "spec": "is-active" } } }""", 1);
+        await rules.UpdateAsync(
+            "is-active-rule", """{ "rule": { "not": { "spec": "is-active" } } }""", 1, new RuleChangeProvenance("test"));
 
         // Act
-        var outcome = rules.Revert("is-active-rule", expectedVersion: 2);
+        var outcome = await rules.RevertAsync("is-active-rule", expectedVersion: 2, new RuleChangeProvenance("test"));
 
         // Assert — revert is an update: version moves forward, never back (no ABA)
         outcome.Outcome.ShouldBe(RuleUpdateOutcome.Updated);
@@ -134,15 +140,16 @@ public class RuleTests
     }
 
     [Fact]
-    public void Should_report_a_version_conflict_when_reverting_with_a_stale_version()
+    public async Task Should_report_a_version_conflict_when_reverting_with_a_stale_version()
     {
         // Arrange
         var rule = new ActiveRule();
         var rules = new RuleSet(Registry()).Add(rule);
-        rules.Update("is-active-rule", """{ "rule": { "spec": "is-active" } }""", 1);
+        await rules.UpdateAsync(
+            "is-active-rule", """{ "rule": { "spec": "is-active" } }""", 1, new RuleChangeProvenance("test"));
 
         // Act — the caller still believes version 1
-        var outcome = rules.Revert("is-active-rule", expectedVersion: 1);
+        var outcome = await rules.RevertAsync("is-active-rule", expectedVersion: 1, new RuleChangeProvenance("test"));
 
         // Assert
         outcome.Outcome.ShouldBe(RuleUpdateOutcome.VersionConflict);
@@ -169,16 +176,17 @@ public class RuleTests
     }
 
     [Fact]
-    public void Should_report_binding_errors_from_revert_without_touching_the_live_rule()
+    public async Task Should_report_binding_errors_from_revert_without_touching_the_live_rule()
     {
         // Arrange — a document default that binds at Add but fails when revert rebinds it
         var rule = new FailingRevertRule();
         var rules = new RuleSet(Registry()).Add(rule);
-        rules.Update("failing-revert", """{ "rule": { "not": { "spec": "is-active" } } }""", 1);
+        await rules.UpdateAsync(
+            "failing-revert", """{ "rule": { "not": { "spec": "is-active" } } }""", 1, new RuleChangeProvenance("test"));
         rule.FailNextBind = true;
 
         // Act
-        var outcome = rules.Revert("failing-revert", expectedVersion: 2);
+        var outcome = await rules.RevertAsync("failing-revert", expectedVersion: 2, new RuleChangeProvenance("test"));
 
         // Assert
         outcome.Outcome.ShouldBe(RuleUpdateOutcome.Invalid);
@@ -194,7 +202,8 @@ public class RuleTests
         var rules = new RuleSet(Registry()).Add(new ActiveRule());
 
         // Act & Assert
-        Should.Throw<ArgumentNullException>(() => rules.Update("is-active-rule", null!, 1));
+        Should.Throw<ArgumentNullException>(
+            () => rules.UpdateAsync("is-active-rule", null!, 1, new RuleChangeProvenance("test")));
     }
 
     [Fact]
@@ -221,12 +230,13 @@ public class RuleTests
     }
 
     [Fact]
-    public void Should_list_registered_rules_with_live_versions()
+    public async Task Should_list_registered_rules_with_live_versions()
     {
         // Arrange
         var rule = new ActiveRule();
         var rules = new RuleSet(Registry()).Add(rule);
-        rules.Update("is-active-rule", """{ "rule": { "spec": "is-active" } }""", 1);
+        await rules.UpdateAsync(
+            "is-active-rule", """{ "rule": { "spec": "is-active" } }""", 1, new RuleChangeProvenance("test"));
 
         // Act
         var entry = rules.Rules.ShouldHaveSingleItem();
@@ -244,25 +254,28 @@ public class RuleTests
     }
 
     [Fact]
-    public void Should_report_not_found_for_unknown_rule_names()
+    public async Task Should_report_not_found_for_unknown_rule_names()
     {
         // Arrange
         var rules = new RuleSet(Registry());
 
         // Act & Assert
         rules.Find("nope").ShouldBeNull();
-        rules.Update("nope", """{ "rule": { "spec": "is-active" } }""", 1)
+        (await rules.UpdateAsync(
+                "nope", """{ "rule": { "spec": "is-active" } }""", 1, new RuleChangeProvenance("test")))
             .Outcome.ShouldBe(RuleUpdateOutcome.NotFound);
-        rules.Revert("nope", 1).Outcome.ShouldBe(RuleUpdateOutcome.NotFound);
+        (await rules.RevertAsync("nope", 1, new RuleChangeProvenance("test")))
+            .Outcome.ShouldBe(RuleUpdateOutcome.NotFound);
     }
 
     [Fact]
-    public void Should_find_a_single_entry_by_name()
+    public async Task Should_find_a_single_entry_by_name()
     {
         // Arrange
         var rule = new ActiveRule();
         var rules = new RuleSet(Registry()).Add(rule);
-        rules.Update("is-active-rule", """{ "rule": { "spec": "is-active" } }""", 1);
+        await rules.UpdateAsync(
+            "is-active-rule", """{ "rule": { "spec": "is-active" } }""", 1, new RuleChangeProvenance("test"));
 
         // Act
         var entry = rules.FindEntry("is-active-rule").ShouldNotBeNull();
@@ -289,7 +302,7 @@ public class RuleTests
     }
 
     [Fact]
-    public void Should_serve_a_coherent_version_and_document_from_find_entry()
+    public async Task Should_serve_a_coherent_version_and_document_from_find_entry()
     {
         // Arrange
         var rule = new ActiveRule();
@@ -301,7 +314,8 @@ public class RuleTests
         initial.DocumentJson.ShouldBeNull();
 
         // Act & Assert — after an update, both fields move together
-        rules.Update("is-active-rule", """{ "rule": { "not": { "spec": "is-active" } } }""", 1);
+        await rules.UpdateAsync(
+            "is-active-rule", """{ "rule": { "not": { "spec": "is-active" } } }""", 1, new RuleChangeProvenance("test"));
         var updated = rules.FindEntry("is-active-rule").ShouldNotBeNull();
         updated.Version.ShouldBe(2);
         updated.DocumentJson.ShouldNotBeNull();
@@ -356,12 +370,14 @@ public class RuleTests
         var model = new Customer(true);
         using var stop = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
 
-        var writer = Task.Run(() =>
+        var writer = Task.Run(async () =>
         {
             while (!stop.IsCancellationRequested)
             {
                 var version = rule.Version;
-                rules.Update("is-active-rule", version % 2 == 1 ? negated : positive, version);
+                await rules.UpdateAsync(
+                    "is-active-rule", version % 2 == 1 ? negated : positive, version,
+                    new RuleChangeProvenance("test"));
             }
         });
 

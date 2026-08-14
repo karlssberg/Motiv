@@ -109,7 +109,7 @@ public class RuleSetLoadTests
         set.FindEntry("sample")!.Quarantine.ShouldNotBeEmpty();
 
         // Act — an editor repairs it, addressing the version the store holds
-        var result = set.Update("sample", Document, 5);
+        var result = await set.UpdateAsync("sample", Document, 5, new RuleChangeProvenance("test"));
 
         // Assert — the rule is no longer running a default in place of a broken stored document, so
         // the catalog must stop reporting that it is

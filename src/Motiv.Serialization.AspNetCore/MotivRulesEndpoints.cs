@@ -333,7 +333,7 @@ public static class MotivRulesEndpoints
                 new RuleGetResponse(EndpointResponses.DocumentElement(entry.DocumentJson), entry.Version), json);
         });
 
-        group.MapPut("/rules/{name}", (string name, RulePutRequest request, HttpContext http) =>
+        group.MapPut("/rules/{name}", async (string name, RulePutRequest request, HttpContext http) =>
         {
             if (GrantGate.Refuse(http, GrantVerb.Publish, name, json) is { } refusal)
                 return refusal;
@@ -350,14 +350,18 @@ public static class MotivRulesEndpoints
             // may ask. Then the write itself, which with governance registered runs inside the gate
             // check rather than beside it: same core, same outcome, one execution.
             return governance is null
-                ? ToResult(rules.Update(name, documentJson, request.BaseVersion), name, json)
-                : MotivGovernanceEndpoints.GovernedRuleWrite(
+                ? ToResult(
+                    await rules.UpdateAsync(
+                        name, documentJson, request.BaseVersion,
+                        new RuleChangeProvenance(http.User.Identity?.Name ?? "unknown"), http.RequestAborted),
+                    name, json)
+                : await MotivGovernanceEndpoints.GovernedRuleWrite(
                     governance, http, json, DirectWriteOperation.RuleUpdate,
                     name, documentJson, request.BaseVersion,
                     written => ToResult(written, name, json));
         });
 
-        group.MapDelete("/rules/{name}", (string name, int baseVersion, HttpContext http) =>
+        group.MapDelete("/rules/{name}", async (string name, int baseVersion, HttpContext http) =>
         {
             if (GrantGate.Refuse(http, GrantVerb.Publish, name, json) is { } refusal)
                 return refusal;
@@ -368,8 +372,12 @@ public static class MotivRulesEndpoints
             // A rule is never removed, only reverted to its default — which the gate is shown as a
             // null document, the same shape a proposition withdrawal takes.
             return governance is null
-                ? ToResult(rules.Revert(name, baseVersion), name, json)
-                : MotivGovernanceEndpoints.GovernedRuleWrite(
+                ? ToResult(
+                    await rules.RevertAsync(
+                        name, baseVersion,
+                        new RuleChangeProvenance(http.User.Identity?.Name ?? "unknown"), http.RequestAborted),
+                    name, json)
+                : await MotivGovernanceEndpoints.GovernedRuleWrite(
                     governance, http, json, DirectWriteOperation.RuleRevert,
                     name, documentJson: null, baseVersion,
                     written => ToResult(written, name, json));

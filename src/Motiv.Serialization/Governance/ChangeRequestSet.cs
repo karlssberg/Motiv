@@ -325,19 +325,34 @@ public sealed class ChangeRequestSet
     /// Publishes a change request: gate first (unless break-glass), then the whole envelope applied
     /// atomically. Nothing is applied unless every edit validates.
     /// </summary>
+    /// <remarks>
+    /// The status check and gate evaluation run under <c>_lock</c>, synchronously; the publish itself
+    /// awaits <see cref="BindingScope.LockedAsync{T}"/>, so it cannot run inside a plain C# <c>lock</c>
+    /// block (which forbids <c>await</c>). <c>_lock</c> is released for that span and re-taken only to
+    /// record the outcome — a narrow window in which a concurrent <see cref="Reject"/> or
+    /// <see cref="Withdraw"/> on the very same request could race a publish already in flight. That
+    /// race is bounded by <see cref="ChangeRequest"/>'s own transition guards (it throws rather than
+    /// corrupting state) and is accepted for now; the batched, provenance-aware rewrite in a later
+    /// task revisits this window along with everything else about how this method reaches the store.
+    /// </remarks>
     /// <param name="id">The change request's identity.</param>
     /// <param name="breakGlassActive">
     /// Whether an active break-glass window is bypassing the gate. Bypassing is recorded on the
     /// request (<see cref="ChangeRequest.PublishedUnderBreakGlass"/>) — the ceremony is skipped, the
     /// fact that it was skipped is not.
     /// </param>
+    /// <param name="cancellationToken">Cancels while waiting for the publish gate or the store.</param>
     /// <returns>The published request with each target's new version, or why publication was refused.</returns>
-    public ChangeRequestResult Publish(Guid id, bool breakGlassActive)
+    public async Task<ChangeRequestResult> PublishAsync(
+        Guid id, bool breakGlassActive, CancellationToken cancellationToken = default)
     {
+        ChangeRequest change;
         lock (_lock)
         {
-            if (FindCore(id) is not { } change)
+            if (FindCore(id) is not { } found)
                 return NotFound();
+
+            change = found;
 
             if (change.Status is ChangeRequestStatus.Published
                 or ChangeRequestStatus.Rejected
@@ -351,14 +366,17 @@ public sealed class ChangeRequestSet
                     return new ChangeRequestResult(
                         ChangeRequestOutcome.GateBlocked, change, decision, [], null, null, null);
             }
-
-            var applied = ChangeRequestPublisher.Apply(_rules, _propositions, change);
-            if (applied.Outcome != ChangeRequestOutcome.Ok)
-                return applied with { Change = change };
-
-            change.MarkPublished(breakGlassActive);
-            return applied with { Change = change };
         }
+
+        var applied = await ChangeRequestPublisher.Apply(_rules, _propositions, change, cancellationToken)
+            .ConfigureAwait(false);
+        if (applied.Outcome != ChangeRequestOutcome.Ok)
+            return applied with { Change = change };
+
+        lock (_lock)
+            change.MarkPublished(breakGlassActive);
+
+        return applied with { Change = change };
     }
 
     /// <summary>
@@ -396,11 +414,13 @@ public sealed class ChangeRequestSet
     /// evaluated at all — the write always proceeds — and the result's
     /// <see cref="DirectWriteResult.PublishedUnderBreakGlass"/> is set so the caller can audit-log it.
     /// </param>
+    /// <param name="cancellationToken">Cancels while waiting for the publish gate or the store.</param>
     /// <returns>The gate's refusal, or the underlying write's own outcome.</returns>
     /// <exception cref="ArgumentException"><paramref name="change"/>'s kind contradicts <paramref name="operation"/>.</exception>
     /// <exception cref="InvalidOperationException">A proposition write was asked of a host with no <see cref="PropositionSet"/>.</exception>
-    internal DirectWriteResult DirectWrite(
-        string author, DirectWriteOperation operation, NewProposedChange change, bool breakGlassActive = false)
+    internal Task<DirectWriteResult> DirectWriteAsync(
+        string author, DirectWriteOperation operation, NewProposedChange change, bool breakGlassActive = false,
+        CancellationToken cancellationToken = default)
     {
         if (change is null) throw new ArgumentNullException(nameof(change));
 
@@ -415,7 +435,7 @@ public sealed class ChangeRequestSet
                 "This host has no PropositionSet, so a proposition cannot be written. The " +
                 "proposition endpoints are not mounted without one, so reaching here is a wiring bug.");
 
-        return _rules.Scope.Locked(() =>
+        return _rules.Scope.LockedAsync(async () =>
         {
             var target = new ChangeTarget(kind, change.Name);
             var proposed = Classify(change, target, CurrentStateOf(target));
@@ -433,10 +453,11 @@ public sealed class ChangeRequestSet
 
             return operation switch
             {
-                DirectWriteOperation.RuleUpdate => OfRule(
-                    UpdateCore(_rules, change.Name, change.DocumentJson!, change.BaseVersion)),
-                DirectWriteOperation.RuleRevert => OfRule(
-                    RevertCore(_rules, change.Name, change.BaseVersion)),
+                DirectWriteOperation.RuleUpdate => OfRule(await UpdateCore(
+                    _rules, change.Name, change.DocumentJson!, change.BaseVersion, cancellationToken)
+                    .ConfigureAwait(false)),
+                DirectWriteOperation.RuleRevert => OfRule(await RevertCore(
+                    _rules, change.Name, change.BaseVersion, cancellationToken).ConfigureAwait(false)),
                 DirectWriteOperation.PropositionCreate => OfProposition(
                     _propositions!.CreateCore(
                         change.Name, change.ModelTypeId!, change.DocumentJson!, change.Description)),
@@ -444,7 +465,7 @@ public sealed class ChangeRequestSet
                     _propositions!.UpdateCore(change.Name, change.DocumentJson!, change.BaseVersion)),
                 _ => OfProposition(_propositions!.WithdrawCore(change.Name, change.BaseVersion))
             };
-        });
+        }, cancellationToken);
 
         // breakGlassActive alone is not enough: it says the gate was skipped, not that the write
         // that followed actually landed. A stale base version, an invalid document, or an unknown
@@ -465,27 +486,26 @@ public sealed class ChangeRequestSet
             : ChangeTargetKind.Proposition;
 
     /// <summary>
-    /// Prepare-then-commit under the caller's existing lock — the behaviour <c>UpdateCore</c> had
-    /// before the bind/publish split. Task 8 of the durability plan replaces these with a persist
-    /// step between the two halves; they exist so this task compiles without touching governance's
-    /// control flow, and are deleted there.
+    /// Bind → persist → commit for a caller already holding the <see cref="BindingScope"/> outer
+    /// gate — the governance-side counterpart of <see cref="RuleSet.UpdateAsync"/>, calling the
+    /// <c>Core</c> persist step directly rather than the public method, which would re-acquire the
+    /// (non-reentrant) gate and self-deadlock. Attributed as <see cref="RuleChangeProvenance.System"/>
+    /// for now; a later task replaces that with the change request's real author and approval
+    /// reference, and batches every edit in an envelope into one store round trip instead of one
+    /// per artefact.
     /// </summary>
-    private static RuleUpdateResult UpdateCore(RuleSet rules, string name, string documentJson, int baseVersion)
-    {
-        var prepared = rules.PrepareUpdateCore(name, documentJson, baseVersion);
-        return prepared.Publication is { } publication
-            ? rules.CommitCore(name, publication)
-            : prepared.ToFailureResult();
-    }
+    private static Task<RuleUpdateResult> UpdateCore(
+        RuleSet rules, string name, string documentJson, int baseVersion, CancellationToken cancellationToken) =>
+        rules.PersistAndCommitCoreAsync(
+            name, rules.PrepareUpdateCore(name, documentJson, baseVersion),
+            RuleChangeProvenance.System, cancellationToken);
 
-    /// <summary>The revert companion to <see cref="UpdateCore"/>. Deleted in Task 8.</summary>
-    private static RuleUpdateResult RevertCore(RuleSet rules, string name, int baseVersion)
-    {
-        var prepared = rules.PrepareRevertCore(name, baseVersion);
-        return prepared.Publication is { } publication
-            ? rules.CommitCore(name, publication)
-            : prepared.ToFailureResult();
-    }
+    /// <summary>The revert companion to <see cref="UpdateCore"/>.</summary>
+    private static Task<RuleUpdateResult> RevertCore(
+        RuleSet rules, string name, int baseVersion, CancellationToken cancellationToken) =>
+        rules.PersistAndCommitCoreAsync(
+            name, rules.PrepareRevertCore(name, baseVersion),
+            RuleChangeProvenance.System, cancellationToken);
 
     /// <summary>
     /// One edit classified against the target's current state. Shared by <see cref="Create"/> and
@@ -554,8 +574,13 @@ public sealed class ChangeRequestSet
     /// </summary>
     private static class ChangeRequestPublisher
     {
-        public static ChangeRequestResult Apply(RuleSet rules, PropositionSet? propositions, ChangeRequest change) =>
-            rules.Scope.Locked(() => Validate(rules, propositions, change) ?? ApplyValidated(rules, propositions, change));
+        public static Task<ChangeRequestResult> Apply(
+            RuleSet rules, PropositionSet? propositions, ChangeRequest change,
+            CancellationToken cancellationToken) =>
+            rules.Scope.LockedAsync(
+                async () => Validate(rules, propositions, change)
+                    ?? await ApplyValidated(rules, propositions, change, cancellationToken).ConfigureAwait(false),
+                cancellationToken);
 
         /// <summary>
         /// Walks the envelope in exactly the order <see cref="ApplyValidated"/> will, against a
@@ -803,8 +828,9 @@ public sealed class ChangeRequestSet
         /// expected outcome that must be returned as a value, never thrown.
         /// </para>
         /// </remarks>
-        private static ChangeRequestResult ApplyValidated(
-            RuleSet rules, PropositionSet? propositions, ChangeRequest change)
+        private static async Task<ChangeRequestResult> ApplyValidated(
+            RuleSet rules, PropositionSet? propositions, ChangeRequest change,
+            CancellationToken cancellationToken)
         {
             var versions = new Dictionary<string, int>(StringComparer.Ordinal);
 
@@ -830,8 +856,9 @@ public sealed class ChangeRequestSet
 
                 var name = proposed.Target.Name;
                 var result = proposed.ProposedDocumentJson is null
-                    ? RevertCore(rules, name, proposed.BaseVersion)
-                    : UpdateCore(rules, name, proposed.ProposedDocumentJson, proposed.BaseVersion);
+                    ? await RevertCore(rules, name, proposed.BaseVersion, cancellationToken).ConfigureAwait(false)
+                    : await UpdateCore(rules, name, proposed.ProposedDocumentJson, proposed.BaseVersion, cancellationToken)
+                        .ConfigureAwait(false);
 
                 if (result.Outcome != RuleUpdateOutcome.Updated)
                     throw Unexpected(proposed.Target, result.Outcome.ToString(),

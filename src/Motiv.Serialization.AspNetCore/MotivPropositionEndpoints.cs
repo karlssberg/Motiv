@@ -39,7 +39,7 @@ internal static class MotivPropositionEndpoints
                 entry.Origin != PropositionOrigin.Authored), json);
         });
 
-        group.MapPost("/propositions", (PropositionCreateRequest request, HttpContext http) =>
+        group.MapPost("/propositions", async (PropositionCreateRequest request, HttpContext http) =>
         {
             if (string.IsNullOrWhiteSpace(request.Name))
                 return Results.Json(new ErrorResponse("The request must include a name."), json, statusCode: 400);
@@ -63,13 +63,13 @@ internal static class MotivPropositionEndpoints
                 ? ToResult(
                     propositions.Create(request.Name, request.ModelType, documentJson, request.Description),
                     request.Name, json)
-                : MotivGovernanceEndpoints.GovernedPropositionWrite(
+                : await MotivGovernanceEndpoints.GovernedPropositionWrite(
                     governance, http, json, DirectWriteOperation.PropositionCreate, request.Name,
                     documentJson, baseVersion: 0, request.ModelType, request.Description,
                     written => ToResult(written, request.Name, json));
         });
 
-        group.MapPut("/propositions/{name}", (string name, PropositionPutRequest request, HttpContext http) =>
+        group.MapPut("/propositions/{name}", async (string name, PropositionPutRequest request, HttpContext http) =>
         {
             if (GrantGate.Refuse(http, GrantVerb.Publish, name, json) is { } refusal)
                 return refusal;
@@ -83,13 +83,13 @@ internal static class MotivPropositionEndpoints
 
             return governance is null
                 ? ToResult(propositions.Update(name, documentJson, request.BaseVersion), name, json)
-                : MotivGovernanceEndpoints.GovernedPropositionWrite(
+                : await MotivGovernanceEndpoints.GovernedPropositionWrite(
                     governance, http, json, DirectWriteOperation.PropositionUpdate, name,
                     documentJson, request.BaseVersion, modelTypeId: null, description: null,
                     written => ToResult(written, name, json));
         });
 
-        group.MapDelete("/propositions/{name}", (string name, int baseVersion, HttpContext http) =>
+        group.MapDelete("/propositions/{name}", async (string name, int baseVersion, HttpContext http) =>
         {
             if (GrantGate.Refuse(http, GrantVerb.Publish, name, json) is { } refusal)
                 return refusal;
@@ -99,7 +99,7 @@ internal static class MotivPropositionEndpoints
 
             return governance is null
                 ? ToResult(propositions.Withdraw(name, baseVersion), name, json)
-                : MotivGovernanceEndpoints.GovernedPropositionWrite(
+                : await MotivGovernanceEndpoints.GovernedPropositionWrite(
                     governance, http, json, DirectWriteOperation.PropositionWithdraw, name,
                     documentJson: null, baseVersion, modelTypeId: null, description: null,
                     written => ToResult(written, name, json));

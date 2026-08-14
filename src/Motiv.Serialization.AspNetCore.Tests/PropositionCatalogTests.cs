@@ -61,7 +61,8 @@ public class PropositionCatalogTests
         AuthorDerived(app.Services).Outcome.ShouldBe(PropositionUpdateOutcome.Created);
 
         // Act
-        var update = ruleSet.Update("placeholder-rule", DerivedRuleDocument, expectedVersion: 1);
+        var update = await ruleSet.UpdateAsync(
+            "placeholder-rule", DerivedRuleDocument, expectedVersion: 1, new RuleChangeProvenance("test"));
 
         // Assert — resolves, and the live rule now evaluates through the shared scope
         update.Outcome.ShouldBe(RuleUpdateOutcome.Updated);
