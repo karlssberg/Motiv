@@ -793,6 +793,13 @@ public sealed class ChangeRequestSet
             var prospective = new PropositionOverlay(rules.Scope.Overlay);
             var prospectiveSource = new LayeredSpecSource(prospective, rules.Scope.Registry);
 
+            // Every node this envelope explicitly touches — computed once, up front, from the whole
+            // change rather than incrementally: PrepareClosure needs to exclude a phase-C withdrawal
+            // from a phase-A closure walk just as much as the reverse, and neither has happened yet
+            // when phase A runs. See PrepareClosure's own remarks for why exclusion, not order, is
+            // what keeps a node's own prepared change from being shadowed by a stale rebind of it.
+            var envelopeNodes = EnvelopeNodes(change);
+
             // What each republished node would reference once the envelope lands. The live graph
             // still holds these nodes' *old* edges, which phases A and B replace before any
             // withdrawal runs, so the referrer check in phase C has to prefer this. Keyed by NodeId
@@ -832,7 +839,7 @@ public sealed class ChangeRequestSet
                 // this name. PublishWithCascade rebinds the whole dependent closure and refuses the
                 // publish if any member stops binding, so the same closure is prepared here, over the
                 // prospective overlay, and a break is returned as a value rather than met at apply.
-                if (rules.Scope.PrepareClosure(name, prospective, []) is { Count: > 0 } broken)
+                if (rules.Scope.PrepareClosure(name, prospective, [], envelopeNodes) is { Count: > 0 } broken)
                     return BrokenDependents(proposed.Target, broken);
 
                 rebound[NodeId.Proposition(name)] = prepared.References;
@@ -904,7 +911,7 @@ public sealed class ChangeRequestSet
                 else
                 {
                     prospective.Remove(name);
-                    if (rules.Scope.PrepareClosure(name, prospective, []) is { Count: > 0 } broken)
+                    if (rules.Scope.PrepareClosure(name, prospective, [], envelopeNodes) is { Count: > 0 } broken)
                         return BrokenDependents(proposed.Target, broken);
                 }
 
@@ -913,6 +920,21 @@ public sealed class ChangeRequestSet
 
             return null;
         }
+
+        /// <summary>
+        /// Every node — rule or proposition — the envelope names, computed once up front so both
+        /// <see cref="Validate"/> and <see cref="Prepare"/> can exclude the same complete set from
+        /// every closure walk regardless of which phase runs first. Keyed by <see cref="NodeId"/>,
+        /// not by bare name, for the same reason <see cref="Referrers"/>'s <c>rebound</c> dictionary
+        /// is: a host may name a rule after a proposition, and merging the two would let one mask a
+        /// genuine, distinct exclusion for the other.
+        /// </summary>
+        private static HashSet<NodeId> EnvelopeNodes(ChangeRequest change) =>
+        [
+            .. change.ProposedChanges.Select(proposed => proposed.Target.Kind == ChangeTargetKind.Rule
+                ? NodeId.Rule(proposed.Target.Name)
+                : NodeId.Proposition(proposed.Target.Name))
+        ];
 
         /// <summary>
         /// Who would still reference <paramref name="name"/> at the moment the envelope withdraws
@@ -1048,29 +1070,31 @@ public sealed class ChangeRequestSet
                     // with the row this attempt already wrote, refusing forever — so this is a
                     // distinct outcome, not an ordinary conflict. See PersistenceDesynced's own
                     // remarks for what the caller must do instead of retrying.
+                    // ToString(), not Message: an infrastructure fault is exactly when whoever reads
+                    // this needs the exception's type and stack, not just its one-line message.
                     return new ChangeRequestResult(
                         ChangeRequestOutcome.PersistenceDesynced, change, null,
                         [new RuleError("$", RuleErrorCode.InvalidNode,
                             $"the proposition store failed after the rule half was already durably " +
-                            $"persisted: {exception.Message}")],
+                            $"persisted: {exception}")],
                         null, null, null);
                 }
             }
 
             // --- Phase 3: apply every prepared change. Nothing below can fail.
             //
-            // Propositions commit before rules, deliberately: a proposition's dependent-closure
-            // commit (Scope.CommitClosure, inside CommitPublishCore/CommitWithdrawCore) can include a
-            // rebind of a rule that is *also* being explicitly published in this same envelope — the
-            // rebind is built in phase 1 from that rule's pre-envelope snapshot, since nothing
-            // commits until now, so it is stale the instant the rule has its own explicit edit. Both
-            // write the same rule's live state; the one that runs last wins. Committing propositions
-            // first means every such stale rebind lands *before* the rule's own explicit CommitCore
-            // call, which then always has the last word — restoring the same "last write wins"
-            // outcome the pre-Task-8 code got for free by committing each artefact immediately as it
-            // was processed (propositions, in envelope order, before rules). This is order-dependent,
-            // not structurally impossible to get wrong — swapping this back would silently reintroduce
-            // the clobber a rule's own publish can suffer from a co-edited proposition's closure.
+            // Propositions commit before rules here, but — unlike an earlier version of this method —
+            // that ordering is no longer what keeps a rule's (or another proposition's) own explicit
+            // publish safe from a co-edited node's stale dependent-closure rebind. That guarantee now
+            // comes from Prepare's envelopeNodes exclusion set: PrepareClosure never builds a rebind
+            // for a node the envelope also explicitly publishes or withdraws, in any phase, so no
+            // commit here ever competes with another commit over the same node's live state — see
+            // BindingScope.PrepareClosure's remarks. An ordering-only fix was tried and found
+            // insufficient: a withdrawal's closure (phase C, structurally after every publish) can
+            // reach a node a publish already committed, and no commit order satisfies both that case
+            // and the reverse. Propositions-before-rules is kept here only because it happens to match
+            // the order this method builds `prepared.PropositionPublishes`/`PropositionWithdrawals`/
+            // `Rules` in — there is no correctness reason left to preserve it specifically.
             return rules.Scope.Locked(() =>
             {
                 var versions = new Dictionary<string, int>(StringComparer.Ordinal);
@@ -1120,6 +1144,11 @@ public sealed class ChangeRequestSet
             var prospective = new PropositionOverlay(rules.Scope.Overlay);
             var prospectiveSource = new LayeredSpecSource(prospective, rules.Scope.Registry);
 
+            // See Validate's own remarks on this — the same complete-up-front set, so a closure walk
+            // in any phase excludes every node this envelope also explicitly publishes or withdraws,
+            // not only the ones prepared so far.
+            var envelopeNodes = EnvelopeNodes(change);
+
             var ruleEdits = new List<(string Name, IRulePublication Publication)>();
             var publishes = new List<(string Name, PropositionSet.WritePrepare Edit)>();
             var withdrawals = new List<(string Name, PropositionSet.WritePrepare Edit)>();
@@ -1134,9 +1163,11 @@ public sealed class ChangeRequestSet
                 // PrepareUpdateCore, which reads both off the document it is replacing. Only a
                 // creation needs them, and a creation has no stored state to take them from.
                 var edit = propositions!.AuthoredStateCore(name).Exists
-                    ? propositions.PrepareUpdateCore(name, proposed.ProposedDocumentJson!, proposed.BaseVersion, prospective)
+                    ? propositions.PrepareUpdateCore(
+                        name, proposed.ProposedDocumentJson!, proposed.BaseVersion, prospective, envelopeNodes)
                     : propositions.PrepareCreateCore(
-                        name, proposed.ModelTypeId!, proposed.ProposedDocumentJson!, proposed.Description, prospective);
+                        name, proposed.ModelTypeId!, proposed.ProposedDocumentJson!, proposed.Description,
+                        prospective, envelopeNodes);
 
                 if (edit.Failure is { } failure)
                     return FailWith(PropositionFailure(change, proposed.Target, failure));
@@ -1175,7 +1206,7 @@ public sealed class ChangeRequestSet
             foreach (var proposed in Ordered(change, ChangeTargetKind.Proposition, deletions: true))
             {
                 var name = proposed.Target.Name;
-                var edit = propositions!.PrepareWithdrawCore(name, proposed.BaseVersion, prospective);
+                var edit = propositions!.PrepareWithdrawCore(name, proposed.BaseVersion, prospective, envelopeNodes);
 
                 if (edit.Failure is { } failure)
                     return FailWith(PropositionFailure(change, proposed.Target, failure));

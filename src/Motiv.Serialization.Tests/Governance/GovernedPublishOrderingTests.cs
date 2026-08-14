@@ -16,6 +16,14 @@ public class GovernedPublishOrderingTests
 
     private sealed class BRule() : Rule<Customer, string>("b", IsActive);
 
+    /// <summary>
+    /// Bound fresh, straight off <c>Scope.Source</c>, whenever a test needs to observe what
+    /// "customer.p2" *actually* resolves to after a publish — not what <see cref="PropositionSet.DocumentJsonOf"/>
+    /// or a reported version says, since a stale <c>Scope.Overlay</c> entry is invisible to both.
+    /// </summary>
+    private sealed class CheckRule()
+        : Rule<Customer, string>("check", RuleDocuments.FromJson("""{ "rule": { "spec": "customer.p2" } }"""));
+
     private const string Document = """{ "rule": { "spec": "customer.is-active" } }""";
 
     /// <summary>Refuses appends after the Nth call, so the envelope's persist phase can fail.</summary>
@@ -339,5 +347,129 @@ public class GovernedPublishOrderingTests
         history[0].Version.ShouldBe(2);
         host.Rules.FindEntry("a")!.Version.ShouldBe(1);
         host.Propositions.DocumentJsonOf("customer.p1").ShouldBeNull();
+    }
+
+    /// <summary>
+    /// The order-dependent proposition-to-proposition variant of the Critical apply-order defect.
+    /// "customer.p2" references "customer.p1"; both are updated in the same envelope, with p2 listed
+    /// *before* p1. p1's own phase-A prepare walks its dependent closure and finds p2 live there
+    /// (p2's *old* document references p1) — without excluding p2 (also independently, explicitly
+    /// updated in this same envelope) from that walk, it would rebind p2 from p2's stale document and
+    /// fold that rebind into the live overlay when p1 commits, landing *after* p2's own fresh commit
+    /// and clobbering it — even though <see cref="PropositionSet.DocumentJsonOf"/> and the reported
+    /// version both correctly show p2's new state, because those read <c>_authored</c>, not
+    /// <c>Scope.Overlay</c>.
+    /// </summary>
+    [Fact]
+    public async Task Should_not_let_an_updated_propositions_own_publish_be_clobbered_by_a_co_updated_dependencys_stale_closure_rebind()
+    {
+        // Arrange — "customer.also-active" is a second compiled spec with the same truth value as
+        // "customer.is-active", so p1's edit is a genuine, distinguishable document change without
+        // changing p1's *value* for the test customer below — isolating the clobber from the
+        // separate, already-accepted "phase A binds in envelope order, not dependency order"
+        // limitation, which would otherwise also perturb the result and mask what this test targets.
+        var registry = new SpecRegistry()
+            .Register("customer.is-active", IsActive)
+            .Register("customer.also-active", Spec.Build((Customer c) => c.IsActive).Create("also active"));
+        var scope = new BindingScope(registry);
+        var propositions = new PropositionSet(scope, new InMemoryPropositionStore()).AddModel<Customer>("customer");
+        var rules = new RuleSet(scope, new InMemoryRuleStore());
+        var governance = new ChangeRequestSet(new ApprovalGate(), rules, propositions);
+
+        (await propositions.CreateAsync(
+            "customer.p1", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null))
+            .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
+        (await propositions.CreateAsync(
+            "customer.p2", "customer", """{ "rule": { "spec": "customer.p1" } }""", null))
+            .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
+
+        // p2's edit inverts what it resolves through p1 (still true, for the active customer below,
+        // when correctly bound early against p1's *old* value). p1's edit swaps to the same-valued
+        // second spec — a real, distinguishable document change that leaves p1's value unchanged, so
+        // only the clobber (which reads p1's *new* prospective value through p2's *stale*, un-inverted
+        // document) can make the two paths disagree.
+        const string p2Inverted = """{ "rule": { "not": { "spec": "customer.p1" } } }""";
+        const string p1SameValueNewDocument = """{ "rule": { "spec": "customer.also-active" } }""";
+
+        var created = governance.Create("alice", "coordinated proposition edit",
+        [
+            // p2 listed before p1 — the order the reported bug needs.
+            new(ChangeTargetKind.Proposition, "customer.p2", p2Inverted, BaseVersion: 1, RollbackOfVersion: null),
+            new(ChangeTargetKind.Proposition, "customer.p1", p1SameValueNewDocument, BaseVersion: 1, RollbackOfVersion: null)
+        ]);
+        created.Outcome.ShouldBe(ChangeRequestOutcome.Ok);
+
+        // Act
+        var published = await governance.PublishAsync(created.Change!.Id, breakGlassActive: false);
+
+        // Assert — the reported state says success either way; only fresh evaluation off Scope.Source
+        // reveals whether the live overlay actually holds p2's new definition.
+        published.Outcome.ShouldBe(ChangeRequestOutcome.Ok);
+        published.PublishedVersions!["customer.p2"].ShouldBe(2);
+        propositions.DocumentJsonOf("customer.p2")!.ShouldBe(p2Inverted);
+
+        var check = new CheckRule();
+        rules.Add(check);
+        var activeCustomer = new Customer(IsActive: true, Age: 0);
+
+        // Correct: p2 binds early (phase A), before p1's own edit lands, against p1's *old* value
+        // (true) — p2_new = NOT true = false. A stale p2 (the clobber: rebound from p2's *old*,
+        // un-inverted document, "spec": "customer.p1", against p1's *new* prospective value — also
+        // true, since customer.also-active mirrors customer.is-active) would instead evaluate true.
+        check.Evaluate(activeCustomer).Satisfied.ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// The order-independent variant: no envelope authoring order avoids this one. "customer.p3" has
+    /// a compiled spec beneath an authored override; "customer.p2" references it. The envelope
+    /// updates p2 and withdraws p3. Phase 3 structurally commits every publish before every
+    /// withdrawal, so p3's withdrawal-closure rebind of p2 always runs *after* p2's own publish
+    /// commit, regardless of which order p2/p3 are listed — proving the fix must be exclusion, not
+    /// ordering.
+    /// </summary>
+    [Fact]
+    public async Task Should_not_let_an_updated_propositions_own_publish_be_clobbered_by_a_co_withdrawn_dependencys_closure_rebind()
+    {
+        // Arrange — a compiled spec named "customer.p3" sits beneath the authored override
+        var registry = new SpecRegistry()
+            .Register("customer.is-active", IsActive)
+            .Register("customer.p3", IsActive);
+        var scope = new BindingScope(registry);
+        var propositions = new PropositionSet(scope, new InMemoryPropositionStore()).AddModel<Customer>("customer");
+        var rules = new RuleSet(scope, new InMemoryRuleStore());
+        var governance = new ChangeRequestSet(new ApprovalGate(), rules, propositions);
+
+        (await propositions.CreateAsync(
+            "customer.p3", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null))
+            .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
+        (await propositions.CreateAsync(
+            "customer.p2", "customer", """{ "rule": { "spec": "customer.p3" } }""", null))
+            .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
+
+        const string p2Inverted = """{ "rule": { "not": { "spec": "customer.p3" } } }""";
+
+        var created = governance.Create("alice", "update-and-withdraw",
+        [
+            new(ChangeTargetKind.Proposition, "customer.p2", p2Inverted, BaseVersion: 1, RollbackOfVersion: null),
+            new(ChangeTargetKind.Proposition, "customer.p3", null, BaseVersion: 1, RollbackOfVersion: null)
+        ]);
+        created.Outcome.ShouldBe(ChangeRequestOutcome.Ok);
+
+        // Act
+        var published = await governance.PublishAsync(created.Change!.Id, breakGlassActive: false);
+
+        // Assert
+        published.Outcome.ShouldBe(ChangeRequestOutcome.Ok);
+        published.PublishedVersions!["customer.p2"].ShouldBe(2);
+        propositions.DocumentJsonOf("customer.p2")!.ShouldBe(p2Inverted);
+
+        var check = new CheckRule();
+        rules.Add(check);
+        var activeCustomer = new Customer(IsActive: true, Age: 0);
+
+        // Correct: p3 reverts to its compiled default (is-active = true); p2_new = NOT p3 = false. A
+        // stale p2 (rebound from its *old* document, "spec": "customer.p3") would instead mirror p3
+        // directly and evaluate true here.
+        check.Evaluate(activeCustomer).Satisfied.ShouldBeFalse();
     }
 }

@@ -181,7 +181,9 @@ public sealed class PropositionSet
     /// </summary>
     private WritePrepare PrepareCreateCascade(
         string name, string modelTypeId, string documentJson, string? description) =>
-        PrepareCreateCore(name, modelTypeId, documentJson, description, new PropositionOverlay(Scope.Overlay));
+        // A lone write has no other envelope members to protect from a stale rebind, so the
+        // exclusion set is empty.
+        PrepareCreateCore(name, modelTypeId, documentJson, description, new PropositionOverlay(Scope.Overlay), []);
 
     /// <summary>
     /// The governed-envelope counterpart of <see cref="PrepareCreateCascade"/>: binds against
@@ -190,8 +192,14 @@ public sealed class PropositionSet
     /// whole envelope has persisted — is visible to this one. The caller owns <paramref name="prospective"/>
     /// across the whole envelope and folds every member into it in turn. Assumes the scope lock is held.
     /// </summary>
+    /// <param name="excluding">
+    /// Every node the envelope also explicitly publishes or withdraws elsewhere — see
+    /// <see cref="BindingScope.PrepareClosure"/>'s remarks for why this must never be omitted for a
+    /// governed publish.
+    /// </param>
     internal WritePrepare PrepareCreateCore(
-        string name, string modelTypeId, string documentJson, string? description, PropositionOverlay prospective)
+        string name, string modelTypeId, string documentJson, string? description,
+        PropositionOverlay prospective, HashSet<NodeId> excluding)
     {
         if (_authored.ContainsKey(name))
             return WritePrepare.Rejected(PropositionUpdateResult.NameTaken());
@@ -213,7 +221,7 @@ public sealed class PropositionSet
             References = prepared.References
         };
 
-        return PrepareCascadeInto(authored, prospective);
+        return PrepareCascadeInto(authored, prospective, excluding);
     }
 
     /// <summary>
@@ -244,14 +252,16 @@ public sealed class PropositionSet
     /// single-use copy of the live overlay. Assumes the scope lock is held.
     /// </summary>
     private WritePrepare PrepareUpdateCascade(string name, string documentJson, int expectedVersion) =>
-        PrepareUpdateCore(name, documentJson, expectedVersion, new PropositionOverlay(Scope.Overlay));
+        // See PrepareCreateCascade: a lone write's exclusion set is always empty.
+        PrepareUpdateCore(name, documentJson, expectedVersion, new PropositionOverlay(Scope.Overlay), []);
 
     /// <summary>
     /// The governed-envelope counterpart of <see cref="PrepareUpdateCascade"/>. See
     /// <see cref="PrepareCreateCore"/>'s remarks — the same reasoning applies to a replacement.
     /// </summary>
     internal WritePrepare PrepareUpdateCore(
-        string name, string documentJson, int expectedVersion, PropositionOverlay prospective)
+        string name, string documentJson, int expectedVersion,
+        PropositionOverlay prospective, HashSet<NodeId> excluding)
     {
         if (!_authored.TryGetValue(name, out var current))
             return WritePrepare.Rejected(PropositionUpdateResult.NotFound());
@@ -272,7 +282,7 @@ public sealed class PropositionSet
             References = prepared.References
         };
 
-        return PrepareCascadeInto(replacement, prospective);
+        return PrepareCascadeInto(replacement, prospective, excluding);
     }
 
     /// <summary>
@@ -312,12 +322,13 @@ public sealed class PropositionSet
     /// for a lone write, and the envelope's own cumulative overlay for a governed publish. Assumes the
     /// scope lock is held.
     /// </summary>
-    private WritePrepare PrepareCascadeInto(Authored authored, PropositionOverlay prospective)
+    private WritePrepare PrepareCascadeInto(
+        Authored authored, PropositionOverlay prospective, HashSet<NodeId> excluding)
     {
         prospective.Set(authored.Bound!);
 
         var commits = new List<IRebindCommit>();
-        var broken = Scope.PrepareClosure(authored.Name, prospective, commits);
+        var broken = Scope.PrepareClosure(authored.Name, prospective, commits, excluding);
 
         return broken.Count > 0
             ? WritePrepare.Rejected(PropositionUpdateResult.BreaksDependents(broken))
@@ -394,7 +405,7 @@ public sealed class PropositionSet
     internal async Task<PropositionUpdateResult> WithdrawCoreAsync(
         string name, int expectedVersion, CancellationToken cancellationToken)
     {
-        var prepared = Scope.Locked(() => PrepareWithdraw(name, expectedVersion));
+        var prepared = Scope.Locked(() => PrepareWithdraw(name, expectedVersion, []));
         if (prepared.Failure is { } failure)
             return failure;
 
@@ -408,7 +419,7 @@ public sealed class PropositionSet
     }
 
     /// <summary>The prepare half of <see cref="WithdrawCoreAsync"/>. Assumes the scope lock is held.</summary>
-    private WritePrepare PrepareWithdraw(string name, int expectedVersion)
+    private WritePrepare PrepareWithdraw(string name, int expectedVersion, HashSet<NodeId> excluding)
     {
         if (!_authored.TryGetValue(name, out var current))
             return WritePrepare.Rejected(PropositionUpdateResult.NotFound());
@@ -434,7 +445,7 @@ public sealed class PropositionSet
             var prospective = new PropositionOverlay(Scope.Overlay);
             prospective.Remove(name);
 
-            var broken = Scope.PrepareClosure(name, prospective, commits);
+            var broken = Scope.PrepareClosure(name, prospective, commits, excluding);
             if (broken.Count > 0)
                 return WritePrepare.Rejected(PropositionUpdateResult.BreaksDependents(broken));
         }
@@ -457,7 +468,8 @@ public sealed class PropositionSet
     /// regress to the live-graph-only view <c>PrepareWithdraw</c> uses, which is exactly what would
     /// wrongly refuse a withdrawal whose only referrer is redirected earlier in the same envelope.
     /// </remarks>
-    internal WritePrepare PrepareWithdrawCore(string name, int expectedVersion, PropositionOverlay prospective)
+    internal WritePrepare PrepareWithdrawCore(
+        string name, int expectedVersion, PropositionOverlay prospective, HashSet<NodeId> excluding)
     {
         if (!_authored.TryGetValue(name, out var current))
             return WritePrepare.Rejected(PropositionUpdateResult.NotFound());
@@ -478,10 +490,12 @@ public sealed class PropositionSet
 
         // Reverting to the compiled default changes what referrers resolve, so — as in
         // PrepareWithdraw — the dependent closure is re-checked, here against the envelope's own
-        // cumulative prospective overlay.
+        // cumulative prospective overlay. excluding matters here exactly as it does for a publish's
+        // own cascade: a dependent this envelope is *also* explicitly publishing or withdrawing must
+        // not be rebound from its stale, pre-envelope definition — see PrepareClosure's remarks.
         prospective.Remove(name);
         var commits = new List<IRebindCommit>();
-        var broken = Scope.PrepareClosure(name, prospective, commits);
+        var broken = Scope.PrepareClosure(name, prospective, commits, excluding);
 
         return broken.Count > 0
             ? WritePrepare.Rejected(PropositionUpdateResult.BreaksDependents(broken))

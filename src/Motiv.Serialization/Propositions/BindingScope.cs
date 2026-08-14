@@ -145,6 +145,34 @@ internal sealed class BindingScope
     /// in dependency order, folding each prepared entry into <paramref name="prospective"/> so later
     /// members resolve the new definitions. Commits nothing.
     /// </summary>
+    /// <param name="propositionName">The name whose dependents are being prepared.</param>
+    /// <param name="prospective">The overlay to bind against and fold prepared entries into.</param>
+    /// <param name="commits">Filled with every prepared rebind, in the order it should be committed.</param>
+    /// <param name="excluding">
+    /// Nodes that must not be rebound here even if the live graph names them as a dependent —
+    /// see the remarks. Required rather than defaulted, so a caller cannot silently forget it: pass
+    /// an empty set for a lone write, which has no other envelope members to protect.
+    /// </param>
+    /// <remarks>
+    /// <para>
+    /// A node's own prepared change is always authoritative over a rebind found here. This walk
+    /// resolves <paramref name="propositionName"/>'s dependents from <see cref="Graph"/> — the
+    /// <em>live</em> edges, since nothing commits until the whole envelope's prepare phase has run —
+    /// and rebinds each one from whatever <see cref="_participants"/> currently holds, which is the
+    /// pre-envelope definition (<see cref="Enrol"/> is only called by a commit). If a governed
+    /// envelope is <em>also</em> explicitly publishing or withdrawing that same node elsewhere, that
+    /// explicit edit already has its own prepared, correct result — a rebind built here from the
+    /// stale definition would either overwrite that result at commit time (when both write the same
+    /// node's live state, whichever runs last wins) or, more subtly, immediately overwrite the
+    /// node's *fresh* entry in <paramref name="prospective"/> if that entry was folded in moments
+    /// earlier, poisoning what every later envelope member resolves. <paramref name="excluding"/> is
+    /// how a caller declares "this node is already spoken for": the walk still visits it (so its own
+    /// dependents are still discovered and rebound — a node's exclusion from being *rebound* does not
+    /// exclude anyone that references *it*), but skips building a commit for it and, critically, never
+    /// touches its entry in <paramref name="prospective"/> — leaving whatever the node's own prepare
+    /// already set there (or will set there, later in the same walk) untouched either way.
+    /// </para>
+    /// </remarks>
     /// <returns>
     /// The dependents that would stop binding — empty when the whole closure prepared, in which case
     /// <paramref name="commits"/> holds every prepared rebind in the order it should be committed. On
@@ -153,13 +181,21 @@ internal sealed class BindingScope
     /// discard both rather than act on either.
     /// </returns>
     public IReadOnlyList<BrokenDependent> PrepareClosure(
-        string propositionName, PropositionOverlay prospective, List<IRebindCommit> commits)
+        string propositionName, PropositionOverlay prospective, List<IRebindCommit> commits,
+        HashSet<NodeId> excluding)
     {
         var prospectiveSource = new LayeredSpecSource(prospective, Registry);
         var broken = new List<BrokenDependent>();
 
         foreach (var node in Graph.DependentClosure(propositionName))
         {
+            // This node's own prepared change — elsewhere in the same envelope — is authoritative;
+            // a rebind built from its pre-envelope definition would only shadow it. Its own
+            // dependents are unaffected: they are separate entries in this same closure, visited on
+            // their own merits regardless of whether this node itself was skipped.
+            if (excluding.Contains(node))
+                continue;
+
             // A graph edge can outlive its participant while a node is being torn down.
             if (!_participants.TryGetValue(node, out var participant))
                 continue;

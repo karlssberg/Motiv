@@ -66,7 +66,7 @@ public class BindingScopeTests
         var commits = new List<IRebindCommit>();
 
         // Act
-        var broken = scope.PrepareClosure("a", new PropositionOverlay(), commits);
+        var broken = scope.PrepareClosure("a", new PropositionOverlay(), commits, []);
 
         // Assert
         broken.ShouldBeEmpty();
@@ -88,7 +88,7 @@ public class BindingScopeTests
         var commits = new List<IRebindCommit>();
 
         // Act
-        var broken = scope.PrepareClosure("a", new PropositionOverlay(), commits);
+        var broken = scope.PrepareClosure("a", new PropositionOverlay(), commits, []);
 
         // Assert
         broken.ShouldBeEmpty();
@@ -106,7 +106,7 @@ public class BindingScopeTests
         scope.Graph.Set(NodeId.Proposition("b"), ["a"]);
 
         // Act
-        scope.PrepareClosure("a", prospective, []);
+        scope.PrepareClosure("a", prospective, [], []);
 
         // Assert
         prospective.Find("b").ShouldNotBeNull();
@@ -125,7 +125,7 @@ public class BindingScopeTests
         scope.Graph.Set(NodeId.Proposition("c"), ["b"]);
 
         // Act
-        scope.PrepareClosure("a", new PropositionOverlay(), []);
+        scope.PrepareClosure("a", new PropositionOverlay(), [], []);
 
         // Assert
         c.Resolved.ShouldNotBeNull();
@@ -144,7 +144,7 @@ public class BindingScopeTests
         scope.Graph.Set(NodeId.Proposition("b"), ["a"]);
 
         // Act
-        scope.PrepareClosure("a", new PropositionOverlay(), []);
+        scope.PrepareClosure("a", new PropositionOverlay(), [], []);
 
         // Assert
         b.PrepareCount.ShouldBe(1);
@@ -165,7 +165,7 @@ public class BindingScopeTests
         var commits = new List<IRebindCommit>();
 
         // Act
-        var broken = scope.PrepareClosure("a", new PropositionOverlay(), commits);
+        var broken = scope.PrepareClosure("a", new PropositionOverlay(), commits, []);
 
         // Assert
         broken.Count.ShouldBe(1);
@@ -185,7 +185,7 @@ public class BindingScopeTests
         scope.Graph.Set(NodeId.Proposition("b"), ["a"]);
 
         // Act
-        var broken = scope.PrepareClosure("a", new PropositionOverlay(), []);
+        var broken = scope.PrepareClosure("a", new PropositionOverlay(), [], []);
 
         // Assert
         broken.Count.ShouldBe(1);
@@ -203,7 +203,7 @@ public class BindingScopeTests
         scope.Graph.Set(NodeId.Rule("r"), ["a"]);
 
         // Act
-        var broken = scope.PrepareClosure("a", new PropositionOverlay(), []);
+        var broken = scope.PrepareClosure("a", new PropositionOverlay(), [], []);
 
         // Assert
         broken.Count.ShouldBe(2);
@@ -217,7 +217,7 @@ public class BindingScopeTests
         scope.Graph.Set(NodeId.Proposition("b"), ["a"]);
 
         // Act
-        var broken = scope.PrepareClosure("a", new PropositionOverlay(), []);
+        var broken = scope.PrepareClosure("a", new PropositionOverlay(), [], []);
 
         // Assert
         broken.ShouldBeEmpty();
@@ -234,7 +234,7 @@ public class BindingScopeTests
 
         // Act
         scope.Withdraw(NodeId.Proposition("b"));
-        scope.PrepareClosure("a", new PropositionOverlay(), []);
+        scope.PrepareClosure("a", new PropositionOverlay(), [], []);
 
         // Assert
         b.PrepareCount.ShouldBe(0);
