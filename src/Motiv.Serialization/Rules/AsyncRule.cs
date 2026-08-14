@@ -85,18 +85,9 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
         if (current.Version != expectedVersion)
             return RulePrepareResult.VersionConflict(current.Version);
 
-        AsyncSpecBase<TModel, TMetadata> spec;
-        try
-        {
-            spec = Bind(serializer, documentJson);
-        }
-        catch (RuleSerializationException ex)
-        {
-            return RulePrepareResult.Invalid(ex.Errors);
-        }
-
-        if (RequirePolicy(spec) is { } policyError)
-            return RulePrepareResult.Invalid([policyError]);
+        var errors = new List<RuleError>();
+        if (TryBind(serializer, documentJson, errors) is not { } spec)
+            return RulePrepareResult.Invalid(errors);
 
         return RulePrepareResult.Prepared(
             new Publication(this, new State(documentJson, current.Version + 1, spec)));
@@ -123,22 +114,9 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
     }
 
     internal sealed override void ValidateDocument(
-        RuleSerializer serializer, string documentJson, List<RuleError> errors)
-    {
-        AsyncSpecBase<TModel, TMetadata> spec;
-        try
-        {
-            spec = Bind(serializer, documentJson);
-        }
-        catch (RuleSerializationException exception)
-        {
-            errors.AddRange(exception.Errors);
-            return;
-        }
-
-        if (RequirePolicy(spec) is { } policyError)
-            errors.Add(policyError);
-    }
+        RuleSerializer serializer, string documentJson, List<RuleError> errors) =>
+        // The bound spec is discarded — this is the dry run, and the errors list is the whole answer.
+        TryBind(serializer, documentJson, errors);
 
     internal sealed override (int Version, string? DocumentJson) VersionedDocument()
     {
@@ -160,22 +138,8 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
         if (current.DocumentJson is null)
             return NoRebindCommit.Instance;
 
-        AsyncSpecBase<TModel, TMetadata> spec;
-        try
-        {
-            spec = Bind(serializer, current.DocumentJson);
-        }
-        catch (RuleSerializationException exception)
-        {
-            errors.AddRange(exception.Errors);
+        if (TryBind(serializer, current.DocumentJson, errors) is not { } spec)
             return null;
-        }
-
-        if (RequirePolicy(spec) is { } policyError)
-        {
-            errors.Add(policyError);
-            return null;
-        }
 
         // The version is carried across unchanged: the document did not change, only what it resolves
         // to, so bumping it would spuriously conflict with an editor's open draft.
@@ -216,6 +180,33 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
         if (RequirePolicy(spec) is { } policyError)
             throw new RuleSerializationException([policyError]);
         return new State(Default.DocumentJson, 1, spec);
+    }
+
+    /// <summary>
+    /// Binds a document and applies the flavour check, collecting every reason it would not bind into
+    /// <paramref name="errors"/>. The one failure shape behind the three callers that report a bad
+    /// document rather than throwing on one — each then says so in its own terms.
+    /// </summary>
+    /// <returns>The bound spec, or null when it did not bind, in which case <paramref name="errors"/> says why.</returns>
+    private AsyncSpecBase<TModel, TMetadata>? TryBind(
+        RuleSerializer serializer, string documentJson, List<RuleError> errors)
+    {
+        AsyncSpecBase<TModel, TMetadata> spec;
+        try
+        {
+            spec = Bind(serializer, documentJson);
+        }
+        catch (RuleSerializationException exception)
+        {
+            errors.AddRange(exception.Errors);
+            return null;
+        }
+
+        if (RequirePolicy(spec) is not { } policyError)
+            return spec;
+
+        errors.Add(policyError);
+        return null;
     }
 
     private protected virtual AsyncSpecBase<TModel, TMetadata> Bind(RuleSerializer serializer, string documentJson) =>

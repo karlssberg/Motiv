@@ -352,8 +352,7 @@ public static class MotivRulesEndpoints
             return governance is null
                 ? ToResult(
                     await rules.UpdateAsync(
-                        name, documentJson, request.BaseVersion,
-                        new RuleChangeProvenance(http.User.Identity?.Name ?? "unknown"), http.RequestAborted),
+                        name, documentJson, request.BaseVersion, ProvenanceOf(http), http.RequestAborted),
                     name, json)
                 : await MotivGovernanceEndpoints.GovernedRuleWrite(
                     governance, http, json, DirectWriteOperation.RuleUpdate,
@@ -373,9 +372,7 @@ public static class MotivRulesEndpoints
             // null document, the same shape a proposition withdrawal takes.
             return governance is null
                 ? ToResult(
-                    await rules.RevertAsync(
-                        name, baseVersion,
-                        new RuleChangeProvenance(http.User.Identity?.Name ?? "unknown"), http.RequestAborted),
+                    await rules.RevertAsync(name, baseVersion, ProvenanceOf(http), http.RequestAborted),
                     name, json)
                 : await MotivGovernanceEndpoints.GovernedRuleWrite(
                     governance, http, json, DirectWriteOperation.RuleRevert,
@@ -383,6 +380,14 @@ public static class MotivRulesEndpoints
                     written => ToResult(written, name, json));
         });
     }
+
+    /// <summary>
+    /// Who an ungoverned rule write is attributed to in the version log. Read through
+    /// <see cref="PrincipalIdentity.Subject"/>, the same way the governed path reads its author, so
+    /// one request is attributed identically whether or not governance is mounted.
+    /// </summary>
+    private static RuleChangeProvenance ProvenanceOf(HttpContext http) =>
+        new(PrincipalIdentity.Subject(http.User));
 
     private static IResult ToResult(RuleUpdateResult outcome, string name, JsonSerializerOptions json) =>
         outcome.Outcome switch
