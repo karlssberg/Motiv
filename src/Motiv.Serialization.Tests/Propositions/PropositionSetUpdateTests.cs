@@ -40,6 +40,37 @@ public class PropositionSetUpdateTests
         }
     }
 
+    /// <summary>
+    /// A participant whose <see cref="PrepareRebind"/> signals that it has been entered, then blocks
+    /// until the test releases it — so a test can park a publish mid-closure-walk and observe what is
+    /// excluded while it sits there.
+    /// </summary>
+    private sealed class BlockingParticipant(NodeId node) : IRebindable, IRebindCommit
+    {
+        private readonly ManualResetEventSlim _entered = new(initialState: false);
+        private readonly ManualResetEventSlim _release = new(initialState: false);
+
+        public NodeId Node { get; } = node;
+        public SpecRegistryEntry? OverlayEntry => null;
+
+        public IRebindCommit? PrepareRebind(ISpecSource prospective, List<RuleError> errors)
+        {
+            _entered.Set();
+            _release.Wait();
+            return this;
+        }
+
+        public void Commit()
+        {
+        }
+
+        /// <summary>Blocks until <see cref="PrepareRebind"/> has been entered.</summary>
+        public void WaitUntilEntered() => _entered.Wait();
+
+        /// <summary>Lets a blocked <see cref="PrepareRebind"/> return.</summary>
+        public void Release() => _release.Set();
+    }
+
     [Fact]
     public async Task Should_bump_the_version_of_an_updated_document()
     {
@@ -217,6 +248,55 @@ public class PropositionSetUpdateTests
         set.Find("customer.a")!.Version.ShouldBe(1);
         Evaluate(scope, "customer.a", inactiveAdult).ShouldBeFalse();
         store.Load()[0].DocumentJson.ShouldContain("customer.is-active");
+    }
+
+    /// <summary>
+    /// Pins the inner monitor tier that <c>PersistAndCommitCoreAsync</c>'s prepare phase is supposed to
+    /// hold — see the remarks on <c>RuleSet.PersistAndCommitCoreAsync</c>, whose shape this method's
+    /// <c>PropositionSet</c> counterpart mirrors. A synchronous read that also takes only the monitor
+    /// (<see cref="PropositionSet.Find"/>) must not be able to return while a publish is stalled inside
+    /// the closure walk the monitor is meant to guard. Nothing else covers this: deleting the
+    /// <c>Scope.Locked</c> wrapping in <c>PropositionSet.PersistAndCommitCoreAsync</c> leaves the rest
+    /// of the suite green, and only this test red.
+    /// </summary>
+    [Fact]
+    public async Task Should_hold_the_inner_monitor_across_a_publishs_prepare_phase()
+    {
+        // Arrange — "blocker" depends on "customer.a", so updating "a" must walk into "blocker"'s
+        // PrepareRebind as part of the cascade, which is where this stalls the writer deliberately.
+        var (set, scope, _) = NewSet();
+        await set.CreateAsync("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+
+        var blocker = new BlockingParticipant(NodeId.Rule("blocker"));
+        scope.Locked(() =>
+        {
+            scope.Enrol(blocker);
+            scope.Graph.Set(NodeId.Rule("blocker"), ["customer.a"]);
+            return 0;
+        });
+
+        // Act — start the update on a background thread: PrepareRebind blocks synchronously, so the
+        // calling thread must not be the test thread or the whole test would hang.
+        var updating = Task.Run(() =>
+            set.UpdateAsync("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1));
+        blocker.WaitUntilEntered();
+
+        // The updating thread is now parked inside Scope.Locked's prepare phase, holding the inner
+        // monitor. A concurrent Find, which takes only that same monitor, must not be able to
+        // interleave with it — so it must still be running after a comfortably-short wait. Recorded
+        // rather than asserted here so that a regression fails the test instead of leaving the stalled
+        // writer parked for the rest of the run.
+        var finding = Task.Run(() => set.Find("customer.a"));
+        await Task.Delay(100);
+        var readInterleaved = finding.IsCompleted;
+
+        // Assert — releasing the writer lets the blocked read through, and the write itself succeeds
+        blocker.Release();
+        await finding;
+        var result = await updating;
+
+        readInterleaved.ShouldBeFalse();
+        result.Outcome.ShouldBe(PropositionUpdateOutcome.Updated);
     }
 
     [Fact]
