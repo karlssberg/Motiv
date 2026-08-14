@@ -41,14 +41,14 @@ public class PropositionSetUpdateTests
     }
 
     [Fact]
-    public void Should_bump_the_version_of_an_updated_document()
+    public async Task Should_bump_the_version_of_an_updated_document()
     {
         // Arrange
         var (set, _, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await set.CreateAsync("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
 
         // Act
-        var result = set.Update("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
+        var result = await set.UpdateAsync("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Updated);
@@ -56,49 +56,49 @@ public class PropositionSetUpdateTests
     }
 
     [Fact]
-    public void Should_make_a_dependent_see_the_new_definition_without_touching_it()
+    public async Task Should_make_a_dependent_see_the_new_definition_without_touching_it()
     {
         // Arrange — this is the feature's central claim: b is never re-saved, yet its meaning follows a
         var (set, scope, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
-        set.Create("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
+        await set.CreateAsync("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await set.CreateAsync("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
         var inactiveAdult = new Customer(IsActive: false, Age: 30);
         Evaluate(scope, "customer.b", inactiveAdult).ShouldBeFalse();
 
         // Act — a now means "is an adult" instead of "is active"
-        set.Update("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
+        await set.UpdateAsync("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Assert
         Evaluate(scope, "customer.b", inactiveAdult).ShouldBeTrue();
     }
 
     [Fact]
-    public void Should_leave_a_dependents_version_alone_when_it_is_rebound()
+    public async Task Should_leave_a_dependents_version_alone_when_it_is_rebound()
     {
         // Arrange — bumping it would invalidate every colleague's open draft on an unrelated edit
         var (set, _, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
-        set.Create("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
+        await set.CreateAsync("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await set.CreateAsync("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
 
         // Act
-        set.Update("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
+        await set.UpdateAsync("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Assert
         set.Find("customer.b")!.Version.ShouldBe(1);
     }
 
     [Fact]
-    public void Should_cascade_through_a_chain()
+    public async Task Should_cascade_through_a_chain()
     {
         // Arrange — a <- b <- c, so editing a must reach c
         var (set, scope, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
-        set.Create("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
-        set.Create("customer.c", "customer", """{ "rule": { "spec": "customer.b" } }""", null);
+        await set.CreateAsync("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await set.CreateAsync("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
+        await set.CreateAsync("customer.c", "customer", """{ "rule": { "spec": "customer.b" } }""", null);
         var inactiveAdult = new Customer(IsActive: false, Age: 30);
 
         // Act
-        set.Update("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
+        await set.UpdateAsync("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Assert
         Evaluate(scope, "customer.c", inactiveAdult).ShouldBeTrue();
@@ -110,18 +110,18 @@ public class PropositionSetUpdateTests
     /// would rebind b from its superseded document — b would silently revert on someone else's edit.
     /// </summary>
     [Fact]
-    public void Should_rebind_an_updated_dependent_from_its_current_document()
+    public async Task Should_rebind_an_updated_dependent_from_its_current_document()
     {
         // Arrange — b is edited to mean "not a" before a itself is edited
         var (set, scope, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
-        set.Create("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
-        set.Update("customer.b", """{ "rule": { "not": { "spec": "customer.a" } } }""", 1)
+        await set.CreateAsync("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await set.CreateAsync("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
+        (await set.UpdateAsync("customer.b", """{ "rule": { "not": { "spec": "customer.a" } } }""", 1))
             .Outcome.ShouldBe(PropositionUpdateOutcome.Updated);
         var inactiveAdult = new Customer(IsActive: false, Age: 30);
 
         // Act — a now means "is an adult", which the adult satisfies
-        set.Update("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
+        await set.UpdateAsync("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Assert — b means "not a", so it must now be false. Rebinding b's superseded document
         // would make it a plain "a" again and report true.
@@ -129,15 +129,15 @@ public class PropositionSetUpdateTests
     }
 
     [Fact]
-    public void Should_reject_a_stale_expected_version()
+    public async Task Should_reject_a_stale_expected_version()
     {
         // Arrange
         var (set, _, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
-        set.Update("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
+        await set.CreateAsync("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await set.UpdateAsync("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Act — a second editor still holding version 1
-        var result = set.Update("customer.a", """{ "rule": { "spec": "customer.is-active" } }""", 1);
+        var result = await set.UpdateAsync("customer.a", """{ "rule": { "spec": "customer.is-active" } }""", 1);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.VersionConflict);
@@ -145,28 +145,28 @@ public class PropositionSetUpdateTests
     }
 
     [Fact]
-    public void Should_report_not_found_for_a_name_with_no_authored_document()
+    public async Task Should_report_not_found_for_a_name_with_no_authored_document()
     {
         // Arrange — a compiled spec must be overridden via Create before it can be updated
         var (set, _, _) = NewSet();
 
         // Act
-        var result = set.Update("customer.is-active", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
+        var result = await set.UpdateAsync("customer.is-active", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.NotFound);
     }
 
     [Fact]
-    public void Should_reject_an_update_that_would_close_a_cycle()
+    public async Task Should_reject_an_update_that_would_close_a_cycle()
     {
         // Arrange — b references a; pointing a at b closes the loop
         var (set, _, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
-        set.Create("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
+        await set.CreateAsync("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await set.CreateAsync("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
 
         // Act
-        var result = set.Update("customer.a", """{ "rule": { "spec": "customer.b" } }""", 1);
+        var result = await set.UpdateAsync("customer.a", """{ "rule": { "spec": "customer.b" } }""", 1);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Invalid);
@@ -174,11 +174,11 @@ public class PropositionSetUpdateTests
     }
 
     [Fact]
-    public void Should_reject_the_whole_update_when_a_dependent_would_break()
+    public async Task Should_reject_the_whole_update_when_a_dependent_would_break()
     {
         // Arrange — a stubbed dependent stands in for a sync rule that cannot bind the new definition
         var (set, scope, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await set.CreateAsync("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
         scope.Locked(() =>
         {
             scope.Enrol(new AlwaysBreaks(NodeId.Rule("can-checkout")));
@@ -187,7 +187,7 @@ public class PropositionSetUpdateTests
         });
 
         // Act
-        var result = set.Update("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
+        var result = await set.UpdateAsync("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Invalid);
@@ -197,11 +197,11 @@ public class PropositionSetUpdateTests
     }
 
     [Fact]
-    public void Should_leave_everything_untouched_when_a_dependent_would_break()
+    public async Task Should_leave_everything_untouched_when_a_dependent_would_break()
     {
         // Arrange
         var (set, scope, store) = NewSet();
-        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await set.CreateAsync("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
         scope.Locked(() =>
         {
             scope.Enrol(new AlwaysBreaks(NodeId.Rule("can-checkout")));
@@ -211,7 +211,7 @@ public class PropositionSetUpdateTests
         var inactiveAdult = new Customer(IsActive: false, Age: 30);
 
         // Act
-        set.Update("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
+        await set.UpdateAsync("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Assert — version, binding and persisted document all unmoved
         set.Find("customer.a")!.Version.ShouldBe(1);
@@ -220,16 +220,16 @@ public class PropositionSetUpdateTests
     }
 
     [Fact]
-    public void Should_revert_an_override_to_the_compiled_spec()
+    public async Task Should_revert_an_override_to_the_compiled_spec()
     {
         // Arrange — override is-active with something that inverts it
         var (set, scope, store) = NewSet();
-        set.Create("customer.is-active", "customer", """{ "rule": { "not": { "spec": "customer.is-adult" } } }""", null);
+        await set.CreateAsync("customer.is-active", "customer", """{ "rule": { "not": { "spec": "customer.is-adult" } } }""", null);
         var inactiveAdult = new Customer(IsActive: false, Age: 30);
         Evaluate(scope, "customer.is-active", inactiveAdult).ShouldBeFalse();
 
         // Act
-        var result = set.Withdraw("customer.is-active", 1);
+        var result = await set.WithdrawAsync("customer.is-active", 1);
 
         // Assert — the compiled spec, never copied or moved, resolves again
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Removed);
@@ -239,15 +239,15 @@ public class PropositionSetUpdateTests
     }
 
     [Fact]
-    public void Should_allow_reverting_an_override_that_others_reference()
+    public async Task Should_allow_reverting_an_override_that_others_reference()
     {
         // Arrange — referrers keep resolving, to the compiled spec beneath
         var (set, scope, _) = NewSet();
-        set.Create("customer.is-active", "customer", """{ "rule": { "not": { "spec": "customer.is-adult" } } }""", null);
-        set.Create("customer.b", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await set.CreateAsync("customer.is-active", "customer", """{ "rule": { "not": { "spec": "customer.is-adult" } } }""", null);
+        await set.CreateAsync("customer.b", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
 
         // Act
-        var result = set.Withdraw("customer.is-active", 1);
+        var result = await set.WithdrawAsync("customer.is-active", 1);
 
         // Assert — compiled "is active" says true; the withdrawn override (not is-adult) says false,
         // so this only passes if b genuinely rebound to the compiled spec
@@ -256,12 +256,12 @@ public class PropositionSetUpdateTests
     }
 
     [Fact]
-    public void Should_reject_a_revert_that_would_break_a_dependent()
+    public async Task Should_reject_a_revert_that_would_break_a_dependent()
     {
         // Arrange — reverting to the compiled spec is still an edit, so it takes the same
         // transactional check: the compiled spec may not satisfy every dependent.
         var (set, scope, _) = NewSet();
-        set.Create("customer.is-active", "customer", """{ "rule": { "not": { "spec": "customer.is-adult" } } }""", null);
+        await set.CreateAsync("customer.is-active", "customer", """{ "rule": { "not": { "spec": "customer.is-adult" } } }""", null);
         scope.Locked(() =>
         {
             scope.Enrol(new AlwaysBreaks(NodeId.Rule("can-checkout")));
@@ -270,7 +270,7 @@ public class PropositionSetUpdateTests
         });
 
         // Act
-        var result = set.Withdraw("customer.is-active", 1);
+        var result = await set.WithdrawAsync("customer.is-active", 1);
 
         // Assert — nothing withdrawn
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Invalid);
@@ -279,15 +279,15 @@ public class PropositionSetUpdateTests
     }
 
     [Fact]
-    public void Should_refuse_to_remove_an_authored_proposition_others_reference()
+    public async Task Should_refuse_to_remove_an_authored_proposition_others_reference()
     {
         // Arrange — nothing lies beneath, so removal would leave b dangling
         var (set, _, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
-        set.Create("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
+        await set.CreateAsync("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await set.CreateAsync("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
 
         // Act
-        var result = set.Withdraw("customer.a", 1);
+        var result = await set.WithdrawAsync("customer.a", 1);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Referenced);
@@ -295,14 +295,14 @@ public class PropositionSetUpdateTests
     }
 
     [Fact]
-    public void Should_remove_an_unreferenced_authored_proposition()
+    public async Task Should_remove_an_unreferenced_authored_proposition()
     {
         // Arrange
         var (set, scope, store) = NewSet();
-        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await set.CreateAsync("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
 
         // Act
-        var result = set.Withdraw("customer.a", 1);
+        var result = await set.WithdrawAsync("customer.a", 1);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Removed);
@@ -312,15 +312,15 @@ public class PropositionSetUpdateTests
     }
 
     [Fact]
-    public void Should_reject_withdrawing_with_a_stale_version()
+    public async Task Should_reject_withdrawing_with_a_stale_version()
     {
         // Arrange
         var (set, _, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
-        set.Update("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
+        await set.CreateAsync("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await set.UpdateAsync("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Act
-        var result = set.Withdraw("customer.a", 1);
+        var result = await set.WithdrawAsync("customer.a", 1);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.VersionConflict);
@@ -328,29 +328,29 @@ public class PropositionSetUpdateTests
     }
 
     [Fact]
-    public void Should_report_not_found_when_withdrawing_a_purely_compiled_spec()
+    public async Task Should_report_not_found_when_withdrawing_a_purely_compiled_spec()
     {
         // Arrange
         var (set, _, _) = NewSet();
 
         // Act
-        var result = set.Withdraw("customer.is-active", 1);
+        var result = await set.WithdrawAsync("customer.is-active", 1);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.NotFound);
     }
 
     [Fact]
-    public void Should_stop_rebinding_a_removed_proposition()
+    public async Task Should_stop_rebinding_a_removed_proposition()
     {
         // Arrange — a stale participant rebinding after removal would resurrect it
         var (set, scope, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
-        set.Create("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
-        set.Withdraw("customer.b", 1);
+        await set.CreateAsync("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await set.CreateAsync("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
+        await set.WithdrawAsync("customer.b", 1);
 
         // Act
-        var result = set.Update("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
+        var result = await set.UpdateAsync("customer.a", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Updated);
@@ -358,13 +358,13 @@ public class PropositionSetUpdateTests
     }
 
     [Fact]
-    public void Should_report_the_transitive_dependents_of_a_proposition()
+    public async Task Should_report_the_transitive_dependents_of_a_proposition()
     {
         // Arrange — a <- b <- c, for the UI's blast-radius strip
         var (set, _, _) = NewSet();
-        set.Create("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
-        set.Create("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
-        set.Create("customer.c", "customer", """{ "rule": { "spec": "customer.b" } }""", null);
+        await set.CreateAsync("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await set.CreateAsync("customer.b", "customer", """{ "rule": { "spec": "customer.a" } }""", null);
+        await set.CreateAsync("customer.c", "customer", """{ "rule": { "spec": "customer.b" } }""", null);
 
         // Act
         var dependents = set.Dependents("customer.a");

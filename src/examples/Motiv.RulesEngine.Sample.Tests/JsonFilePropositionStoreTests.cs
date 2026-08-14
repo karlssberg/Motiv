@@ -24,10 +24,10 @@ public class JsonFilePropositionStoreTests : IDisposable
     }
 
     [Fact]
-    public void Should_persist_across_instances()
+    public async Task Should_persist_across_instances()
     {
         // Arrange
-        new JsonFilePropositionStore(_path).Save(Stored("customer.a"));
+        await new JsonFilePropositionStore(_path).WriteAsync(PropositionBatch.Save(Stored("customer.a")), default);
 
         // Act — a second instance stands in for a restart
         var loaded = new JsonFilePropositionStore(_path).Load();
@@ -39,14 +39,14 @@ public class JsonFilePropositionStoreTests : IDisposable
     }
 
     [Fact]
-    public void Should_replace_a_proposition_of_the_same_name()
+    public async Task Should_replace_a_proposition_of_the_same_name()
     {
         // Arrange
         var store = new JsonFilePropositionStore(_path);
-        store.Save(Stored("customer.a", version: 1));
+        await store.WriteAsync(PropositionBatch.Save(Stored("customer.a", version: 1)), default);
 
         // Act
-        store.Save(Stored("customer.a", version: 2));
+        await store.WriteAsync(PropositionBatch.Save(Stored("customer.a", version: 2)), default);
 
         // Assert
         var loaded = new JsonFilePropositionStore(_path).Load();
@@ -55,15 +55,30 @@ public class JsonFilePropositionStoreTests : IDisposable
     }
 
     [Fact]
-    public void Should_delete_a_proposition()
+    public async Task Should_delete_a_proposition()
     {
         // Arrange
         var store = new JsonFilePropositionStore(_path);
-        store.Save(Stored("customer.a"));
-        store.Save(Stored("customer.b"));
+        await store.WriteAsync(PropositionBatch.Save(Stored("customer.a")), default);
+        await store.WriteAsync(PropositionBatch.Save(Stored("customer.b")), default);
 
         // Act
-        store.Delete("customer.a");
+        await store.WriteAsync(PropositionBatch.Delete("customer.a"), default);
+
+        // Assert
+        new JsonFilePropositionStore(_path).Load()
+            .Select(proposition => proposition.Name).ShouldBe(["customer.b"]);
+    }
+
+    [Fact]
+    public async Task Should_write_a_save_and_a_delete_in_one_batch()
+    {
+        // Arrange — an envelope's writes must land in a single file rewrite
+        var store = new JsonFilePropositionStore(_path);
+        await store.WriteAsync(PropositionBatch.Save(Stored("customer.a")), default);
+
+        // Act
+        await store.WriteAsync(new PropositionBatch([Stored("customer.b")], ["customer.a"]), default);
 
         // Assert
         new JsonFilePropositionStore(_path).Load()

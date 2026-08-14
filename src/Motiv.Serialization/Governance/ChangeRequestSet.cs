@@ -599,12 +599,13 @@ public sealed class ChangeRequestSet
                     .ConfigureAwait(false)),
                 DirectWriteOperation.RuleRevert => OfRule(await RevertCore(
                     _rules, change.Name, change.BaseVersion, cancellationToken).ConfigureAwait(false)),
-                DirectWriteOperation.PropositionCreate => OfProposition(
-                    _propositions!.CreateCore(
-                        change.Name, change.ModelTypeId!, change.DocumentJson!, change.Description)),
-                DirectWriteOperation.PropositionUpdate => OfProposition(
-                    _propositions!.UpdateCore(change.Name, change.DocumentJson!, change.BaseVersion)),
-                _ => OfProposition(_propositions!.WithdrawCore(change.Name, change.BaseVersion))
+                DirectWriteOperation.PropositionCreate => OfProposition(await _propositions!.CreateCoreAsync(
+                    change.Name, change.ModelTypeId!, change.DocumentJson!, change.Description, cancellationToken)
+                    .ConfigureAwait(false)),
+                DirectWriteOperation.PropositionUpdate => OfProposition(await _propositions!.UpdateCoreAsync(
+                    change.Name, change.DocumentJson!, change.BaseVersion, cancellationToken).ConfigureAwait(false)),
+                _ => OfProposition(await _propositions!.WithdrawCoreAsync(
+                    change.Name, change.BaseVersion, cancellationToken).ConfigureAwait(false))
             };
         }, cancellationToken);
 
@@ -733,16 +734,15 @@ public sealed class ChangeRequestSet
         /// wholly synchronous, so wrapping it in <see cref="BindingScope.Locked{T}"/> costs nothing and
         /// gives it one consistent snapshot for its whole walk.
         /// <para>
-        /// <see cref="ApplyValidated"/> is deliberately <em>not</em> wrapped here: its rule-side writes
-        /// already take the monitor themselves, one artefact at a time, via
-        /// <see cref="RuleSet.PersistAndCommitCoreAsync"/> — through <see cref="UpdateCore"/>/
-        /// <see cref="RevertCore"/> below. Its proposition-side writes
-        /// (<c>PropositionSet.CreateCore</c>/<c>UpdateCore</c>/<c>WithdrawCore</c>) do not yet take
-        /// either tier internally; that conversion belongs to the task that makes
-        /// <see cref="PropositionSet"/>'s write path async, and will bring its own graph mutations
-        /// under the same two-tier shape then. Until it lands, a proposition write inside a governed
-        /// publish is exposed to the same non-exclusion Critical 1 already named for the ungoverned
-        /// path — tracked there, not solved here.
+        /// <see cref="ApplyValidated"/> is deliberately <em>not</em> wrapped here: every write it
+        /// makes already takes the monitor itself, one artefact at a time. The rule-side writes go
+        /// through <see cref="RuleSet.PersistAndCommitCoreAsync"/> — via <see cref="UpdateCore"/>/
+        /// <see cref="RevertCore"/> below — and the proposition-side writes go through
+        /// <c>PropositionSet.CreateCoreAsync</c>/<c>UpdateCoreAsync</c>/<c>WithdrawCoreAsync</c>, which
+        /// hold the same shape: <see cref="BindingScope.Locked{T}"/> around prepare, the store
+        /// <c>await</c> outside it, then <see cref="BindingScope.Locked{T}"/> again around commit. Both
+        /// sides were converted together so a governed publish never has a write exposed to only the
+        /// outer semaphore.
         /// </para>
         /// </remarks>
         public static Task<ChangeRequestResult> Apply(
@@ -1010,9 +1010,12 @@ public sealed class ChangeRequestSet
                 var name = proposed.Target.Name;
                 var state = propositions!.AuthoredStateCore(name);
                 var result = state.Exists
-                    ? propositions.UpdateCore(name, proposed.ProposedDocumentJson!, proposed.BaseVersion)
-                    : propositions.CreateCore(
-                        name, proposed.ModelTypeId!, proposed.ProposedDocumentJson!, proposed.Description);
+                    ? await propositions.UpdateCoreAsync(
+                        name, proposed.ProposedDocumentJson!, proposed.BaseVersion, cancellationToken)
+                        .ConfigureAwait(false)
+                    : await propositions.CreateCoreAsync(
+                        name, proposed.ModelTypeId!, proposed.ProposedDocumentJson!, proposed.Description,
+                        cancellationToken).ConfigureAwait(false);
 
                 if (result.Outcome is not (PropositionUpdateOutcome.Created or PropositionUpdateOutcome.Updated))
                     throw Unexpected(proposed.Target, result.Outcome.ToString(), Detail(result));
@@ -1040,7 +1043,8 @@ public sealed class ChangeRequestSet
 
             foreach (var proposed in Ordered(change, ChangeTargetKind.Proposition, deletions: true))
             {
-                var result = propositions!.WithdrawCore(proposed.Target.Name, proposed.BaseVersion);
+                var result = await propositions!.WithdrawCoreAsync(
+                    proposed.Target.Name, proposed.BaseVersion, cancellationToken).ConfigureAwait(false);
                 if (result.Outcome != PropositionUpdateOutcome.Removed)
                     throw Unexpected(proposed.Target, result.Outcome.ToString(), Detail(result));
 

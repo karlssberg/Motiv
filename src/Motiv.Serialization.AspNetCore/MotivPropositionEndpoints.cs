@@ -61,7 +61,8 @@ internal static class MotivPropositionEndpoints
             // back verbatim — refusals a change request could not restate.
             return governance is null
                 ? ToResult(
-                    propositions.Create(request.Name, request.ModelType, documentJson, request.Description),
+                    await propositions.CreateAsync(
+                        request.Name, request.ModelType, documentJson, request.Description, http.RequestAborted),
                     request.Name, json)
                 : await MotivGovernanceEndpoints.GovernedPropositionWrite(
                     governance, http, json, DirectWriteOperation.PropositionCreate, request.Name,
@@ -82,7 +83,9 @@ internal static class MotivPropositionEndpoints
             var documentJson = request.Document.GetRawText();
 
             return governance is null
-                ? ToResult(propositions.Update(name, documentJson, request.BaseVersion), name, json)
+                ? ToResult(
+                    await propositions.UpdateAsync(name, documentJson, request.BaseVersion, http.RequestAborted),
+                    name, json)
                 : await MotivGovernanceEndpoints.GovernedPropositionWrite(
                     governance, http, json, DirectWriteOperation.PropositionUpdate, name,
                     documentJson, request.BaseVersion, modelTypeId: null, description: null,
@@ -98,7 +101,7 @@ internal static class MotivPropositionEndpoints
                 return EndpointResponses.NonPositiveBaseVersion(json);
 
             return governance is null
-                ? ToResult(propositions.Withdraw(name, baseVersion), name, json)
+                ? ToResult(await propositions.WithdrawAsync(name, baseVersion, http.RequestAborted), name, json)
                 : await MotivGovernanceEndpoints.GovernedPropositionWrite(
                     governance, http, json, DirectWriteOperation.PropositionWithdraw, name,
                     documentJson: null, baseVersion, modelTypeId: null, description: null,
@@ -115,7 +118,7 @@ internal static class MotivPropositionEndpoints
 
     /// <summary>
     /// The HTTP response for one attempted write. A single mapping serves create, update and
-    /// withdraw: each reaches only its own success outcome — <see cref="PropositionSet.Create"/>
+    /// withdraw: each reaches only its own success outcome — <see cref="PropositionSet.CreateAsync"/>
     /// alone reports Created, and so on — while every rejection is answered in the same terms
     /// whichever write provoked it.
     /// </summary>

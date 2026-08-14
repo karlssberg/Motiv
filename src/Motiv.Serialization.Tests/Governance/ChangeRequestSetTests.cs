@@ -138,7 +138,7 @@ public class ChangeRequestSetTests
     {
         // Arrange — the proposition already exists, so a base version of 0 is stale
         var host = NewHost();
-        host.Propositions.Create("customer.eligible", "customer", EligibleIsAdult, null)
+        (await host.Propositions.CreateAsync("customer.eligible", "customer", EligibleIsAdult, null))
             .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
         var created = host.Changes.Create("alice", "a note", CoordinatedPair());
 
@@ -349,7 +349,7 @@ public class ChangeRequestSetTests
     {
         // Arrange
         var host = NewHost();
-        host.Propositions.Create("customer.eligible", "customer", EligibleIsAdult, null)
+        (await host.Propositions.CreateAsync("customer.eligible", "customer", EligibleIsAdult, null))
             .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
 
         var created = host.Changes.Create("alice", "a note",
@@ -384,7 +384,7 @@ public class ChangeRequestSetTests
     {
         // Arrange
         var host = NewHost();
-        host.Propositions.Create("customer.eligible", "customer", EligibleIsAdult, null);
+        await host.Propositions.CreateAsync("customer.eligible", "customer", EligibleIsAdult, null);
         (await host.Rules.UpdateAsync("can-checkout", CheckoutUsesEligible, 1, new RuleChangeProvenance("test")))
             .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
 
@@ -413,7 +413,7 @@ public class ChangeRequestSetTests
     {
         // Arrange
         var host = NewHost();
-        host.Propositions.Create("customer.eligible", "customer", EligibleIsAdult, null);
+        await host.Propositions.CreateAsync("customer.eligible", "customer", EligibleIsAdult, null);
         await host.Rules.UpdateAsync("can-checkout", CheckoutUsesEligible, 1, new RuleChangeProvenance("test"));
 
         var created = host.Changes.Create("alice", "inline the proposition and retire it",
@@ -449,7 +449,7 @@ public class ChangeRequestSetTests
             .Register("customer.is-adult", IsAdult);
         var scope = new BindingScope(registry);
         var propositions = new PropositionSet(scope, new InMemoryPropositionStore()).AddModel<Customer>("customer");
-        propositions.Create("customer.eligible", "customer", EligibleIsAdult, null)
+        (await propositions.CreateAsync("customer.eligible", "customer", EligibleIsAdult, null))
             .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
 
         var rule = new AuthoredDefaultRule();
@@ -489,8 +489,8 @@ public class ChangeRequestSetTests
     {
         // Arrange — a proposition named exactly like the rule, and it is what references eligible
         var host = NewHost();
-        host.Propositions.Create("customer.eligible", "customer", EligibleIsAdult, null);
-        host.Propositions.Create("can-checkout", "customer", CheckoutUsesEligible, null)
+        await host.Propositions.CreateAsync("customer.eligible", "customer", EligibleIsAdult, null);
+        (await host.Propositions.CreateAsync("can-checkout", "customer", CheckoutUsesEligible, null))
             .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
 
         var created = host.Changes.Create("alice", "a note",
@@ -526,7 +526,7 @@ public class ChangeRequestSetTests
             .Register("customer.composed", ComposedNonPolicy);
         var scope = new BindingScope(registry);
         var propositions = new PropositionSet(scope, new InMemoryPropositionStore()).AddModel<Customer>("customer");
-        propositions.Create("customer.eligible-policy", "customer",
+        await propositions.CreateAsync("customer.eligible-policy", "customer",
             """{ "rule": { "spec": "customer.is-active-policy" } }""", null);
 
         var rule = new CanCheckoutPolicyRule();
@@ -575,8 +575,8 @@ public class ChangeRequestSetTests
             .Register("customer.composed", ComposedNonPolicy);
         var scope = new BindingScope(registry);
         var propositions = new PropositionSet(scope, new InMemoryPropositionStore()).AddModel<Customer>("customer");
-        propositions.Create("customer.eligible-policy", "customer",
-            """{ "rule": { "spec": "customer.is-active-policy" } }""", null)
+        (await propositions.CreateAsync("customer.eligible-policy", "customer",
+            """{ "rule": { "spec": "customer.is-active-policy" } }""", null))
             .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
 
         var rule = new AuthoredDefaultPolicyRule();
