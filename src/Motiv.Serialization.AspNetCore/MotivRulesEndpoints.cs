@@ -361,7 +361,7 @@ public static class MotivRulesEndpoints
                 : await MotivGovernanceEndpoints.GovernedRuleWrite(
                     governance, http, json, DirectWriteOperation.RuleUpdate,
                     name, documentJson, request.BaseVersion,
-                    written => ToResult(written, name, json));
+                    written => ToResult(written, name, json), request.ChangeNote);
         });
 
         group.MapDelete("/rules/{name}", async (string name, int baseVersion, HttpContext http) =>

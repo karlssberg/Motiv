@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Motiv.Serialization.AspNetCore.Tests;
 
@@ -100,5 +101,83 @@ public class RuleStoreWiringTests
         history.ShouldHaveSingleItem();
         history[0].Author.ShouldNotBe("unknown");
         history[0].ChangeNote!.ShouldBe("via the endpoint");
+    }
+
+    [Fact]
+    public async Task Should_record_the_callers_change_note_under_governance_too()
+    {
+        // Arrange — governance is permissive by default (no gate document installed), so a governed
+        // direct write publishes exactly like the ungoverned one, but through DirectWriteAsync, which
+        // used to synthesise its own note and silently drop whatever the caller sent.
+        var store = new InMemoryRuleStore();
+        await using var app = TestApp.Create(builder => builder
+            .AddRuleStore(store)
+            .AddGovernance());
+
+        // Act
+        var response = await app.Client.PutAsJsonAsync("/api/rules/rules/sample", new
+        {
+            document = DocumentReferencing("customer.is-active"),
+            baseVersion = 1,
+            changeNote = "via the governed endpoint"
+        });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var history = await store.HistoryAsync("sample", default);
+        history.ShouldHaveSingleItem();
+        history[0].ChangeNote!.ShouldBe("via the governed endpoint");
+    }
+
+    [Fact]
+    public async Task Should_load_a_stored_rule_referencing_an_authored_proposition_without_quarantine()
+    {
+        // Arrange — an authored proposition, and a stored rule document that references it. Only a
+        // clean load proves the ordering the DI factory promises: PropositionSet.Load() before every
+        // rule is Add-ed, and RuleSet.Load() only after that. Get either wrong and "customer.eligible"
+        // is unresolvable when the stored document is bound, and the rule quarantines despite being
+        // perfectly healthy.
+        var propositions = new InMemoryPropositionStore();
+        await propositions.WriteAsync(
+            PropositionBatch.Save(new StoredProposition(
+                "customer.eligible", "customer",
+                """{ "rule": { "spec": "customer.is-active" } }""", 1, null)),
+            default);
+
+        var rules = new InMemoryRuleStore();
+        await rules.AppendAsync([new StoredRuleVersion(
+            "sample", 2, """{ "rule": { "spec": "customer.eligible" } }""",
+            "alice", DateTimeOffset.UnixEpoch, null, null, "test")], default);
+
+        // Act
+        await using var app = TestApp.Create(builder => builder
+            .AddPropositions(propositions)
+            .AddRuleStore(rules));
+        var listed = await app.Client.GetFromJsonAsync<JsonElement>("/api/rules/rules/sample");
+
+        // Assert — a clean load: no quarantine, and the rule resolved the stored document, spec and
+        // all, rather than falling back to its compiled default
+        listed.GetProperty("quarantine").GetArrayLength().ShouldBe(0);
+        listed.GetProperty("version").GetInt32().ShouldBe(2);
+        listed.GetProperty("document").GetProperty("rule").GetProperty("spec")
+            .GetString()!.ShouldBe("customer.eligible");
+    }
+
+    [Fact]
+    public void Should_reject_a_second_AddRuleStore_call()
+    {
+        // Arrange — DI is last-wins, so a second call would silently discard the first store: no
+        // double Load, no exception, an argument quietly ignored. AddPropositions/AddGovernance
+        // already guard the same way; this is the same contract for the third builder method.
+        var registry = new SpecRegistry();
+        var options = new MotivRulesOptions();
+        var builder = new ServiceCollection().AddMotivRules(registry, options);
+        builder.AddRuleStore();
+
+        // Act
+        var second = () => builder.AddRuleStore(new InMemoryRuleStore());
+
+        // Assert
+        second.ShouldThrow<InvalidOperationException>();
     }
 }

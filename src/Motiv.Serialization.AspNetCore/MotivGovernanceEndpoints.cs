@@ -248,6 +248,11 @@ internal static class MotivGovernanceEndpoints
     /// <param name="documentJson">The proposed document, or null to revert to the default.</param>
     /// <param name="baseVersion">The version the caller authored against.</param>
     /// <param name="written">Maps the write's own outcome onto this surface's response.</param>
+    /// <param name="changeNote">
+    /// The caller's stated reason, or null to fall back to <see cref="ChangeRequestSet.DirectWriteAsync"/>'s
+    /// auto-generated one — the governed path's only way to honor the same <c>changeNote</c> the
+    /// ungoverned write records, since a direct write mints no <see cref="ChangeRequest"/> row of its own.
+    /// </param>
     /// <returns>The gate's 403 refusal, or whatever <paramref name="written"/> produced.</returns>
     internal static async Task<IResult> GovernedRuleWrite(
         ChangeRequestSet governance,
@@ -257,13 +262,14 @@ internal static class MotivGovernanceEndpoints
         string name,
         string? documentJson,
         int baseVersion,
-        Func<RuleUpdateResult, IResult> written)
+        Func<RuleUpdateResult, IResult> written,
+        string? changeNote = null)
     {
         var author = PrincipalIdentity.Subject(http.User);
         var breakGlassActive = ResolveBreakGlass(http).Active(DateTimeOffset.UtcNow);
         var result = await governance.DirectWriteAsync(
             author, operation,
-            new NewProposedChange(ChangeTargetKind.Rule, name, documentJson, baseVersion, null),
+            new NewProposedChange(ChangeTargetKind.Rule, name, documentJson, baseVersion, null, ChangeNote: changeNote),
             breakGlassActive, http.RequestAborted);
 
         if (result.Blocked is { } decision)

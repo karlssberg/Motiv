@@ -130,8 +130,16 @@ public sealed class MotivRulesBuilder
     /// false to boot anyway and read the quarantine from the catalog.
     /// </param>
     /// <returns>This builder, to allow chained registration.</returns>
+    /// <exception cref="InvalidOperationException">A rule store is already registered. DI is
+    /// last-wins, so a second call would silently discard the first store rather than layering onto
+    /// it — an argument quietly ignored is worse than a refusal.</exception>
     public MotivRulesBuilder AddRuleStore(IRuleStore? store = null, bool failFastOnQuarantine = true)
     {
+        if (Services.Any(descriptor => descriptor.ServiceType == typeof(RuleStoreOptions)))
+            throw new InvalidOperationException(
+                $"{nameof(AddRuleStore)} has already been called. Call it once — a second call " +
+                "would silently replace the first store, as DI registration is last-wins.");
+
         // Registered under the interface explicitly, as AddPropositions does for its own store: the
         // RuleSet factory resolves IRuleStore, and leaving the service type to type inference makes
         // that dependence on the parameter's declared type invisible.
@@ -197,7 +205,13 @@ public static class MotivRulesServiceCollectionExtensions
             if (store is not null)
             {
                 var report = rules.Load();
-                if (provider.GetRequiredService<RuleStoreOptions>().FailFastOnQuarantine)
+
+                // RuleStoreOptions is only absent when a host registered IRuleStore directly on
+                // Services instead of going through AddRuleStore — a supported escape hatch, not a
+                // wiring bug, so this tolerates the gap rather than GetRequiredService's opaque "no
+                // service for type" and degrades to AddRuleStore's own documented default.
+                var failFast = provider.GetService<RuleStoreOptions>()?.FailFastOnQuarantine ?? true;
+                if (failFast)
                     report.ThrowIfQuarantined();
             }
 

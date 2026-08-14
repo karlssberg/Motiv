@@ -25,6 +25,11 @@ namespace Motiv.Serialization;
 /// The human-readable description, applied when creating a proposition and ignored otherwise — an
 /// existing proposition keeps the description it was created with.
 /// </param>
+/// <param name="ChangeNote">
+/// A human-supplied reason for the write, or null to fall back to <see cref="DirectWriteAsync"/>'s
+/// auto-generated one. A direct write mints no <see cref="ChangeRequest"/> row, so this is the only
+/// place a caller's stated reason can reach the version log.
+/// </param>
 public sealed record NewProposedChange(
     ChangeTargetKind Kind,
     string Name,
@@ -32,7 +37,8 @@ public sealed record NewProposedChange(
     int BaseVersion,
     int? RollbackOfVersion,
     string? ModelTypeId = null,
-    string? Description = null);
+    string? Description = null,
+    string? ChangeNote = null);
 
 /// <summary>
 /// Which of the five ungoverned writes a <see cref="ChangeRequestSet.DirectWriteAsync"/> is standing in
@@ -593,10 +599,14 @@ public sealed class ChangeRequestSet
         {
             var target = new ChangeTarget(kind, change.Name);
             var proposed = Classify(change, target, CurrentStateOf(target));
-            var transient = new ChangeRequest(
-                Guid.NewGuid(), author,
-                $"direct {operation} of {kind.ToString().ToLowerInvariant()} '{change.Name}'",
-                [proposed]);
+
+            // The caller's own reason takes precedence — a direct write mints no ChangeRequest row
+            // (see the class remarks above: "nothing is recorded"), so this transient note is the
+            // only place it can land. Fall back to an auto-generated one only when none was supplied,
+            // so every direct write still gets *some* traceable note.
+            var changeNote = change.ChangeNote
+                ?? $"direct {operation} of {kind.ToString().ToLowerInvariant()} '{change.Name}'";
+            var transient = new ChangeRequest(Guid.NewGuid(), author, changeNote, [proposed]);
 
             if (!breakGlassActive)
             {
