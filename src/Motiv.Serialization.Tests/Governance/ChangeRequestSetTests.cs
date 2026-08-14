@@ -681,7 +681,14 @@ public class ChangeRequestSetTests
             return changes.Reject(created.Change!.Id, "changed my mind");
         });
         await rejectStarting.Task;
-        await Task.Yield();
+
+        // rejectStarting only proves the Task.Run body started, not that Reject is genuinely parked
+        // on ChangeRequestSet's lock — so confirm that directly: with the fix, PublishAsync holds
+        // that lock for its whole store round trip, and the store is still stalled here, so Reject
+        // must still be waiting. A brief, comfortably-short window is enough to distinguish this from
+        // the pre-fix shape, where Reject holds no lock at this point and returns almost instantly.
+        await Task.Delay(50);
+        rejecting.IsCompleted.ShouldBeFalse();
 
         store.Released.SetResult(true);
 

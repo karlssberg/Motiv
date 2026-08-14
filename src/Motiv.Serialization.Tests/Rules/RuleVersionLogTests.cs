@@ -16,6 +16,10 @@ public class RuleVersionLogTests
     private const string V2 = """{ "rule": { "spec": "customer.is-active" } }""";
     private const string V3 = """{ "rule": { "not": { "spec": "customer.is-active" } } }""";
 
+    // Built by hand rather than via DateTimeOffset.UnixEpoch — that static field is unavailable on
+    // net472/netstandard2.0, two of this project's target frameworks.
+    private static readonly DateTimeOffset Epoch = new(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
     /// <summary>A store that blocks inside AppendAsync until released — a hung database.</summary>
     private sealed class StallingRuleStore : IRuleStore
     {
@@ -92,7 +96,7 @@ public class RuleVersionLogTests
         var (set, store) = Fresh();
         await store.AppendAsync([new StoredRuleVersion(
             "sample", 2, """{"other":"replica"}""", "carol",
-            DateTimeOffset.UnixEpoch, null, null, "test")], default);
+            Epoch, null, null, "test")], default);
 
         // Act
         var result = await set.UpdateAsync("sample", V2, 1, new RuleChangeProvenance("alice"));

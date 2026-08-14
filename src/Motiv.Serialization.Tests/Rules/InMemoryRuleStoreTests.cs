@@ -4,8 +4,12 @@ namespace Motiv.Serialization.Tests.Rules;
 
 public class InMemoryRuleStoreTests
 {
+    // Built by hand rather than via DateTimeOffset.UnixEpoch — that static field is unavailable on
+    // net472/netstandard2.0, two of this project's target frameworks.
+    private static readonly DateTimeOffset Epoch = new(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
     private static StoredRuleVersion Row(string name, int version, string? documentJson = "{}") =>
-        new(name, version, documentJson, "alice", DateTimeOffset.UnixEpoch, null, null, "test");
+        new(name, version, documentJson, "alice", Epoch, null, null, "test");
 
     [Fact]
     public async Task Should_project_the_head_from_the_highest_version()

@@ -137,17 +137,33 @@ public sealed record ChangeRequestResult(
 /// because authorship is workflow state, not a grant.
 /// </para>
 /// <para>
-/// Two locks, deliberately: this set's own <see cref="_lock"/> guards the change-request list and
-/// every request's own workflow state, and the shared <see cref="BindingScope"/> lock is taken once,
-/// inside a publish, around the whole envelope. The scope lock is what makes an envelope atomic, so
-/// it must not be taken and released per artefact. <see cref="_lock"/> is a <see cref="SemaphoreSlim"/>
-/// rather than a plain <c>lock</c>, specifically so <see cref="PublishAsync"/> can hold it across the
-/// <c>await</c> of the scope-locked apply — the whole publish is one critical section against
-/// <see cref="Approve"/>/<see cref="Reject"/>/<see cref="Withdraw"/>, not two with a gap between them.
-/// A <c>lock</c> statement cannot span an <c>await</c>, which is exactly the gap that would otherwise
-/// let a concurrent rejection land mid-publish and go live anyway. Not reentrant: every method that
-/// already holds it must call the non-acquiring <c>Core</c> counterpart, never a public method — see
-/// <see cref="FindCore"/>.
+/// Three locks, deliberately. The shared <see cref="BindingScope"/> lock is taken once, inside a
+/// publish, around the whole envelope — it is what makes an envelope atomic, so it must not be taken
+/// and released per artefact. <see cref="_lock"/> guards one request's own workflow-transition
+/// atomicity — <see cref="Approve"/>/<see cref="Reject"/>/<see cref="Withdraw"/>/<see cref="PublishAsync"/>
+/// must serialise against each other on the <em>same</em> request, or a rejection could land while
+/// its publish is mid-flight (see the remarks on <see cref="PublishAsync"/>). It is a
+/// <see cref="SemaphoreSlim"/> rather than a plain <c>lock</c> specifically so <c>PublishAsync</c> can
+/// hold it across the <c>await</c> of the scope-locked apply — a <c>lock</c> statement cannot span an
+/// <c>await</c>. Not reentrant: every method that already holds it must call the non-acquiring
+/// <c>Core</c> counterpart, never a public method.
+/// </para>
+/// <para>
+/// <see cref="_listLock"/> is the third, separate from <see cref="_lock"/> on purpose: it guards only
+/// <see cref="_changes"/>'s own structural integrity (a plain <see cref="List{T}"/> is not
+/// thread-safe for concurrent enumeration and <c>Add</c>), not any request's workflow state. Reading
+/// the list — <see cref="All"/>, <see cref="Find"/>, and every <c>Core</c> method's own
+/// <see cref="FindCore"/> lookup — never needs to wait behind a publish that is stuck on a slow
+/// store; only <c>Create</c>'s append and every lookup take it, and both are always instantaneous, so
+/// it is never held across an <c>await</c> either. This intentionally does not synchronise reads of
+/// a request's own mutable fields (<see cref="ChangeRequest.Status"/> and friends) against a
+/// concurrent <see cref="_lock"/>-held mutation of them — <see cref="All"/>/<see cref="Find"/> can
+/// observe a request mid-transition. Narrower than the memory-visibility gap this class had before
+/// two locks existed (everything shared one lock, so every read was synchronised with every write),
+/// but accepted for the same reason <see cref="RuleBase.Quarantine"/> was: an availability guarantee
+/// — the read surface must not go unresponsive behind a stalled store — outweighs strict
+/// linearizability here. A <see cref="System.Threading.Volatile"/>-based fix mirroring
+/// <c>RuleBase.Quarantine</c>'s would close it if the gap is ever load-bearing rather than cosmetic.
 /// </para>
 /// </remarks>
 public sealed class ChangeRequestSet
@@ -155,7 +171,14 @@ public sealed class ChangeRequestSet
     private readonly ApprovalGate _gate;
     private readonly RuleSet _rules;
     private readonly PropositionSet? _propositions;
+
+    // Deliberately never disposed, and this class is deliberately not IDisposable: it lives for the
+    // host's lifetime (typically a DI singleton, alongside the RuleSet/PropositionSet it publishes
+    // into, neither of which is disposable either), and SemaphoreSlim's Dispose only matters if
+    // AvailableWaitHandle was ever called — which nothing here does. Same choice BindingScope's own
+    // outer SemaphoreSlim already made.
     private readonly SemaphoreSlim _lock = new(1, 1);
+    private readonly object _listLock = new();
     private readonly List<ChangeRequest> _changes = [];
 
     /// <summary>Creates the governance workflow over a rule set and, optionally, a proposition set.</summary>
@@ -184,38 +207,26 @@ public sealed class ChangeRequestSet
         _propositions = propositions;
     }
 
-    /// <summary>Every change request, in creation order.</summary>
+    /// <summary>
+    /// Every change request, in creation order. Reads only <see cref="_listLock"/> — never
+    /// <see cref="_lock"/> — so this never waits behind a publish, however long its store round trip
+    /// takes.
+    /// </summary>
     public IReadOnlyList<ChangeRequest> All
     {
         get
         {
-            _lock.Wait(CancellationToken.None);
-            try
-            {
+            lock (_listLock)
                 return [.. _changes];
-            }
-            finally
-            {
-                _lock.Release();
-            }
         }
     }
 
-    /// <summary>Looks up a change request by id.</summary>
+    /// <summary>
+    /// Looks up a change request by id. Reads only <see cref="_listLock"/> — see <see cref="All"/>.
+    /// </summary>
     /// <param name="id">The change request's identity.</param>
     /// <returns>The request, or null when the id is unknown.</returns>
-    public ChangeRequest? Find(Guid id)
-    {
-        _lock.Wait(CancellationToken.None);
-        try
-        {
-            return FindCore(id);
-        }
-        finally
-        {
-            _lock.Release();
-        }
-    }
+    public ChangeRequest? Find(Guid id) => FindCore(id);
 
     /// <summary>
     /// Records a new change request in <see cref="ChangeRequestStatus.Draft"/>, classifying each
@@ -272,38 +283,37 @@ public sealed class ChangeRequestSet
             return classified;
         });
 
+        // Only the list itself needs guarding here — a brand-new request cannot yet race any
+        // workflow transition on itself — so this takes _listLock, not _lock; see the class remarks.
         var request = new ChangeRequest(Guid.NewGuid(), author, changeNote, proposed);
-        _lock.Wait(CancellationToken.None);
-        try
-        {
+        lock (_listLock)
             _changes.Add(request);
-        }
-        finally
-        {
-            _lock.Release();
-        }
 
         return Ok(request);
     }
 
-    /// <summary>Records an approval, moving a draft request into review.</summary>
+    /// <summary>
+    /// Records an approval, moving a draft request into review. Blocks the calling thread while
+    /// <see cref="_lock"/> is held by a publish's store round trip — pass <paramref name="cancellationToken"/>
+    /// when one is available (an aborted HTTP request should not park a thread-pool thread), or use
+    /// <see cref="ApproveAsync"/> from an async caller instead.
+    /// </summary>
     /// <param name="id">The change request's identity.</param>
     /// <param name="approver">Who is approving.</param>
     /// <param name="roles">The roles the approver holds, captured as at the moment of approval.</param>
+    /// <param name="cancellationToken">Cancels the wait for <see cref="_lock"/>.</param>
     /// <returns>The updated request, or why the approval was refused.</returns>
-    public ChangeRequestResult Approve(Guid id, string approver, IReadOnlyList<string> roles)
+    public ChangeRequestResult Approve(
+        Guid id, string approver, IReadOnlyList<string> roles, CancellationToken cancellationToken = default)
     {
-        _lock.Wait(CancellationToken.None);
+        // Blocking wait: _lock can be held for a whole publish's store round trip, so this parks the
+        // calling thread for however long that takes. Acceptable for a synchronous caller with no
+        // event loop to give back (tests, direct library use); an ASP.NET Core handler should prefer
+        // ApproveAsync so the request thread is released back to the pool while it waits.
+        _lock.Wait(cancellationToken);
         try
         {
-            if (FindCore(id) is not { } change)
-                return NotFound();
-
-            if (!IsOpen(change))
-                return Failure(ChangeRequestOutcome.InvalidState, change);
-
-            change.AddApproval(new Approval(approver, DateTimeOffset.UtcNow, roles ?? []));
-            return Ok(change);
+            return ApproveCore(id, approver, roles);
         }
         finally
         {
@@ -311,23 +321,50 @@ public sealed class ChangeRequestSet
         }
     }
 
-    /// <summary>Rejects a change request, terminating it with a reason.</summary>
+    /// <summary>The async counterpart to <see cref="Approve"/>, for callers with an event loop to give back while waiting.</summary>
+    public async Task<ChangeRequestResult> ApproveAsync(
+        Guid id, string approver, IReadOnlyList<string> roles, CancellationToken cancellationToken = default)
+    {
+        // Waits on _lock, which a concurrent publish may hold for its whole store round trip;
+        // await-based, so this frees the calling thread back to the pool rather than parking it.
+        await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            return ApproveCore(id, approver, roles);
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
+    private ChangeRequestResult ApproveCore(Guid id, string approver, IReadOnlyList<string> roles)
+    {
+        if (FindCore(id) is not { } change)
+            return NotFound();
+
+        if (!IsOpen(change))
+            return Failure(ChangeRequestOutcome.InvalidState, change);
+
+        change.AddApproval(new Approval(approver, DateTimeOffset.UtcNow, roles ?? []));
+        return Ok(change);
+    }
+
+    /// <summary>
+    /// Rejects a change request, terminating it with a reason. See <see cref="Approve"/>'s remarks on
+    /// blocking and cancellation — the same apply here.
+    /// </summary>
     /// <param name="id">The change request's identity.</param>
     /// <param name="reason">Why the request is being rejected.</param>
+    /// <param name="cancellationToken">Cancels the wait for <see cref="_lock"/>.</param>
     /// <returns>The updated request, or why the rejection was refused.</returns>
-    public ChangeRequestResult Reject(Guid id, string reason)
+    public ChangeRequestResult Reject(Guid id, string reason, CancellationToken cancellationToken = default)
     {
-        _lock.Wait(CancellationToken.None);
+        // Blocking wait — see Approve's remark: _lock may be held for a publish's whole store round trip.
+        _lock.Wait(cancellationToken);
         try
         {
-            if (FindCore(id) is not { } change)
-                return NotFound();
-
-            if (!IsOpen(change))
-                return Failure(ChangeRequestOutcome.InvalidState, change);
-
-            change.MarkRejected(reason);
-            return Ok(change);
+            return RejectCore(id, reason);
         }
         finally
         {
@@ -335,34 +372,88 @@ public sealed class ChangeRequestSet
         }
     }
 
-    /// <summary>Withdraws a change request. Only its author may withdraw it.</summary>
+    /// <summary>The async counterpart to <see cref="Reject"/>. See <see cref="ApproveAsync"/>.</summary>
+    public async Task<ChangeRequestResult> RejectAsync(
+        Guid id, string reason, CancellationToken cancellationToken = default)
+    {
+        // Waits on _lock — see ApproveAsync's remark.
+        await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            return RejectCore(id, reason);
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
+    private ChangeRequestResult RejectCore(Guid id, string reason)
+    {
+        if (FindCore(id) is not { } change)
+            return NotFound();
+
+        if (!IsOpen(change))
+            return Failure(ChangeRequestOutcome.InvalidState, change);
+
+        change.MarkRejected(reason);
+        return Ok(change);
+    }
+
+    /// <summary>
+    /// Withdraws a change request. Only its author may withdraw it. See <see cref="Approve"/>'s
+    /// remarks on blocking and cancellation — the same apply here.
+    /// </summary>
     /// <param name="id">The change request's identity.</param>
     /// <param name="caller">Who is asking to withdraw it.</param>
+    /// <param name="cancellationToken">Cancels the wait for <see cref="_lock"/>.</param>
     /// <returns>
     /// The updated request, or <see cref="ChangeRequestOutcome.InvalidState"/> when the caller is
     /// not the author or the request is already terminal.
     /// </returns>
-    public ChangeRequestResult Withdraw(Guid id, string caller)
+    public ChangeRequestResult Withdraw(Guid id, string caller, CancellationToken cancellationToken = default)
     {
-        _lock.Wait(CancellationToken.None);
+        // Blocking wait — see Approve's remark: _lock may be held for a publish's whole store round trip.
+        _lock.Wait(cancellationToken);
         try
         {
-            if (FindCore(id) is not { } change)
-                return NotFound();
-
-            // Authorship is workflow state rather than a grant, so this one identity check belongs
-            // here: withdrawal is the author retracting their own proposal, and a third party doing
-            // it is a rejection, which has its own method and its own audit meaning.
-            if (!IsOpen(change) || change.Author != caller)
-                return Failure(ChangeRequestOutcome.InvalidState, change);
-
-            change.MarkWithdrawn();
-            return Ok(change);
+            return WithdrawCore(id, caller);
         }
         finally
         {
             _lock.Release();
         }
+    }
+
+    /// <summary>The async counterpart to <see cref="Withdraw"/>. See <see cref="ApproveAsync"/>.</summary>
+    public async Task<ChangeRequestResult> WithdrawAsync(
+        Guid id, string caller, CancellationToken cancellationToken = default)
+    {
+        // Waits on _lock — see ApproveAsync's remark.
+        await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            return WithdrawCore(id, caller);
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
+    private ChangeRequestResult WithdrawCore(Guid id, string caller)
+    {
+        if (FindCore(id) is not { } change)
+            return NotFound();
+
+        // Authorship is workflow state rather than a grant, so this one identity check belongs
+        // here: withdrawal is the author retracting their own proposal, and a third party doing
+        // it is a rejection, which has its own method and its own audit meaning.
+        if (!IsOpen(change) || change.Author != caller)
+            return Failure(ChangeRequestOutcome.InvalidState, change);
+
+        change.MarkWithdrawn();
+        return Ok(change);
     }
 
     /// <summary>
@@ -393,6 +484,9 @@ public sealed class ChangeRequestSet
     public async Task<ChangeRequestResult> PublishAsync(
         Guid id, bool breakGlassActive, CancellationToken cancellationToken = default)
     {
+        // Waits on _lock, then holds it for the whole method below — including the store round trip
+        // inside ChangeRequestPublisher.Apply. See the class remarks for why the whole span is one
+        // critical section rather than two with a gap between them.
         await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -588,7 +682,14 @@ public sealed class ChangeRequestSet
         return (authored is not null, authored);
     }
 
-    private ChangeRequest? FindCore(Guid id) => _changes.FirstOrDefault(change => change.Id == id);
+    // Despite the Core suffix, this always takes _listLock itself — every caller, whether or not it
+    // holds _lock, needs a torn-free read of the list, and _listLock's critical sections are always
+    // instantaneous, so acquiring it here costs nothing even from inside a _lock-held publish.
+    private ChangeRequest? FindCore(Guid id)
+    {
+        lock (_listLock)
+            return _changes.FirstOrDefault(change => change.Id == id);
+    }
 
     /// <summary>
     /// Whether the request still accepts approve/reject/withdraw. Deliberately narrower than
@@ -621,11 +722,34 @@ public sealed class ChangeRequestSet
     /// </summary>
     private static class ChangeRequestPublisher
     {
+        /// <remarks>
+        /// Holds both exclusion tiers, same shape as <see cref="RuleSet.PersistAndCommitCoreAsync"/>:
+        /// the outer semaphore (<see cref="BindingScope.LockedAsync{T}"/>) serialises the whole publish
+        /// await-safely, but <see cref="Validate"/> reads live scope state — <c>Scope.Graph</c> via
+        /// <see cref="BindingScope.PrepareClosure"/> and <c>Referrers</c>, and <c>Scope.Source</c> via
+        /// every <c>ValidateCore</c>/<c>PrepareCore</c> call — which is exactly the state a
+        /// monitor-held rule commit (<see cref="RuleSet.PersistAndCommitCoreAsync"/>) or a
+        /// monitor-held proposition write can be mutating concurrently. <see cref="Validate"/> is
+        /// wholly synchronous, so wrapping it in <see cref="BindingScope.Locked{T}"/> costs nothing and
+        /// gives it one consistent snapshot for its whole walk.
+        /// <para>
+        /// <see cref="ApplyValidated"/> is deliberately <em>not</em> wrapped here: its rule-side writes
+        /// already take the monitor themselves, one artefact at a time, via
+        /// <see cref="RuleSet.PersistAndCommitCoreAsync"/> — through <see cref="UpdateCore"/>/
+        /// <see cref="RevertCore"/> below. Its proposition-side writes
+        /// (<c>PropositionSet.CreateCore</c>/<c>UpdateCore</c>/<c>WithdrawCore</c>) do not yet take
+        /// either tier internally; that conversion belongs to the task that makes
+        /// <see cref="PropositionSet"/>'s write path async, and will bring its own graph mutations
+        /// under the same two-tier shape then. Until it lands, a proposition write inside a governed
+        /// publish is exposed to the same non-exclusion Critical 1 already named for the ungoverned
+        /// path — tracked there, not solved here.
+        /// </para>
+        /// </remarks>
         public static Task<ChangeRequestResult> Apply(
             RuleSet rules, PropositionSet? propositions, ChangeRequest change,
             CancellationToken cancellationToken) =>
             rules.Scope.LockedAsync(
-                async () => Validate(rules, propositions, change)
+                async () => rules.Scope.Locked(() => Validate(rules, propositions, change))
                     ?? await ApplyValidated(rules, propositions, change, cancellationToken).ConfigureAwait(false),
                 cancellationToken);
 

@@ -17,8 +17,12 @@ public class RuleSetLoadTests
     private const string Document = """{ "rule": { "spec": "customer.is-active" } }""";
     private const string Unbindable = """{ "rule": { "spec": "customer.was-renamed-away" } }""";
 
+    // Built by hand rather than via DateTimeOffset.UnixEpoch — that static field is unavailable on
+    // net472/netstandard2.0, two of this project's target frameworks.
+    private static readonly DateTimeOffset Epoch = new(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
     private static StoredRuleVersion Row(int version, string? documentJson) =>
-        new("sample", version, documentJson, "alice", DateTimeOffset.UnixEpoch, null, null, "test");
+        new("sample", version, documentJson, "alice", Epoch, null, null, "test");
 
     private static async Task<(RuleSet Set, SampleRule Rule, RuleLoadReport Report)> Loaded(
         params StoredRuleVersion[] rows)
@@ -156,7 +160,7 @@ public class RuleSetLoadTests
         // Arrange — a rule was deleted from the host, but its rows remain
         var store = new InMemoryRuleStore();
         await store.AppendAsync([new StoredRuleVersion(
-            "retired", 1, Document, "alice", DateTimeOffset.UnixEpoch, null, null, "test")], default);
+            "retired", 1, Document, "alice", Epoch, null, null, "test")], default);
 
         var registry = new SpecRegistry().Register("customer.is-active", IsActive);
         var set = new RuleSet(registry, store).Add(new SampleRule());

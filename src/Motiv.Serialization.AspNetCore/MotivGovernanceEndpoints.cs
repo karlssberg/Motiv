@@ -84,7 +84,7 @@ internal static class MotivGovernanceEndpoints
                 : ToFailure(result, json);
         });
 
-        group.MapPost("/change-requests/{id:guid}/approvals", (Guid id, HttpContext http) =>
+        group.MapPost("/change-requests/{id:guid}/approvals", async (Guid id, HttpContext http) =>
         {
             if (changes.Find(id) is not { } change)
                 return UnknownChangeRequest(json);
@@ -94,8 +94,11 @@ internal static class MotivGovernanceEndpoints
             if (RefuseUnlessGrantedEverywhere(http, json, GrantVerb.Publish, TargetNames(change)) is { } refusal)
                 return refusal;
 
-            var result = changes.Approve(
-                id, PrincipalIdentity.Subject(http.User), PrincipalIdentity.Roles(http.User));
+            // Async: a concurrent publish can hold ChangeRequestSet's lock for a whole store round
+            // trip, and the sync Approve would park this request's thread-pool thread for that long.
+            var result = await changes.ApproveAsync(
+                id, PrincipalIdentity.Subject(http.User), PrincipalIdentity.Roles(http.User),
+                http.RequestAborted);
 
             return result is { Outcome: ChangeRequestOutcome.Ok, Change: { } approved }
                 ? Results.Json(ToResponse(approved), json)
@@ -103,7 +106,7 @@ internal static class MotivGovernanceEndpoints
         });
 
         group.MapPost("/change-requests/{id:guid}/rejection",
-            (Guid id, ChangeRequestRejectionRequest request, HttpContext http) =>
+            async (Guid id, ChangeRequestRejectionRequest request, HttpContext http) =>
         {
             if (changes.Find(id) is not { } change)
                 return UnknownChangeRequest(json);
@@ -111,13 +114,14 @@ internal static class MotivGovernanceEndpoints
             if (RefuseUnlessGrantedEverywhere(http, json, GrantVerb.Publish, TargetNames(change)) is { } refusal)
                 return refusal;
 
-            var result = changes.Reject(id, request.Reason ?? string.Empty);
+            // Async — see the approvals route's remark.
+            var result = await changes.RejectAsync(id, request.Reason ?? string.Empty, http.RequestAborted);
             return result is { Outcome: ChangeRequestOutcome.Ok, Change: { } rejected }
                 ? Results.Json(ToResponse(rejected), json)
                 : ToFailure(result, json, "The change request cannot be rejected once it is closed.");
         });
 
-        group.MapPost("/change-requests/{id:guid}/withdrawal", (Guid id, HttpContext http) =>
+        group.MapPost("/change-requests/{id:guid}/withdrawal", async (Guid id, HttpContext http) =>
         {
             if (changes.Find(id) is null)
                 return UnknownChangeRequest(json);
@@ -125,7 +129,8 @@ internal static class MotivGovernanceEndpoints
             // No grant check: withdrawal is the author retracting their own proposal, which the set
             // enforces as workflow state. A third party ending it is a rejection, which has its own
             // route and its own grant.
-            var result = changes.Withdraw(id, PrincipalIdentity.Subject(http.User));
+            // Async — see the approvals route's remark.
+            var result = await changes.WithdrawAsync(id, PrincipalIdentity.Subject(http.User), http.RequestAborted);
             return result is { Outcome: ChangeRequestOutcome.Ok, Change: { } withdrawn }
                 ? Results.Json(ToResponse(withdrawn), json)
                 : ToFailure(result, json,
