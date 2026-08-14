@@ -102,7 +102,20 @@ public enum ChangeRequestOutcome
     VersionConflict,
 
     /// <summary>A proposed document is malformed, would not bind, or is otherwise unpublishable.</summary>
-    Invalid
+    Invalid,
+
+    /// <summary>
+    /// The rule half of an envelope's persist phase durably succeeded, but the proposition half then
+    /// failed — an infrastructure fault (the store threw), not a version conflict, since
+    /// <see cref="IPropositionStore.WriteAsync"/> has no compare-and-set to lose. Nothing is live for
+    /// either half — the apply phase never runs — but the rule store now holds a row this process's
+    /// live state does not reflect, and a bare retry of the same request would re-prepare against the
+    /// unchanged live version and collide with that row's primary key, refusing forever. This outcome
+    /// exists so that collision is never silently mistaken for an ordinary retryable conflict: the
+    /// caller must restart the process (which reloads both stores and quarantines anything that no
+    /// longer binds) rather than retry this request in place.
+    /// </summary>
+    PersistenceDesynced
 }
 
 /// <summary>The outcome of a <see cref="ChangeRequestSet"/> operation. Expected failures are values, not exceptions.</summary>
@@ -592,10 +605,13 @@ public sealed class ChangeRequestSet
                     return new DirectWriteResult(decision, null, null, false);
             }
 
-            // Every non-governed write still gets a real, traceable attribution: the transient
-            // change request minted above stands in for the change request a governed publish would
-            // have had, so its author, note and id are what the version row records — the same three
-            // fields ApplyValidatedAsync stamps from a real envelope.
+            // Every non-governed write still gets a real, traceable attribution: author and note come
+            // straight from the caller. ApprovalRef is deliberately still set, to transient.Id — but
+            // a direct write mints no ChangeRequest row (see the class remarks above: "nothing is
+            // recorded"), so unlike ApplyValidatedAsync's ApprovalRef, this one names no request any
+            // reader could ever look up. It is a correlation id only: stable for this one call, useful
+            // for tying a version row back to the specific write attempt in a log line, but with no
+            // backing record — not a claim that a governed request discharged this write.
             var provenance = new RuleChangeProvenance(
                 transient.Author, transient.ChangeNote, ApprovalRef: transient.Id.ToString());
 
@@ -972,7 +988,9 @@ public sealed class ChangeRequestSet
         /// corrupting: nothing has been <em>applied</em> either way — the rule rows are inert until
         /// the final commit phase runs, which never happens if the process dies first — and a rule row
         /// that no longer binds on the next <see cref="RuleSet.Load"/> is quarantined rather than
-        /// fatal, which is precisely why quarantine exists.
+        /// fatal, which is precisely why quarantine exists. A process that does <em>not</em> crash but
+        /// whose proposition store write throws is a related but distinct case — see
+        /// <see cref="ChangeRequestOutcome.PersistenceDesynced"/>.
         /// </para>
         /// <para>
         /// A prepare failure here is treated as a bug (see <see cref="Unexpected"/>) with one
@@ -1016,15 +1034,46 @@ public sealed class ChangeRequestSet
             }
 
             if (prepared.PropositionWrites is { } batch)
-                await propositions!.WriteBatchCoreAsync(batch, cancellationToken).ConfigureAwait(false);
+            {
+                try
+                {
+                    await propositions!.WriteBatchCoreAsync(batch, cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception exception) when (exception is not OperationCanceledException)
+                {
+                    // The rule row(s) above may already be durable (rules-then-propositions is
+                    // deliberate — see the remarks), but nothing has been applied to live memory for
+                    // either half: the apply phase below never runs. A bare retry of this same
+                    // request would re-prepare against the *unchanged* live rule version and collide
+                    // with the row this attempt already wrote, refusing forever — so this is a
+                    // distinct outcome, not an ordinary conflict. See PersistenceDesynced's own
+                    // remarks for what the caller must do instead of retrying.
+                    return new ChangeRequestResult(
+                        ChangeRequestOutcome.PersistenceDesynced, change, null,
+                        [new RuleError("$", RuleErrorCode.InvalidNode,
+                            $"the proposition store failed after the rule half was already durably " +
+                            $"persisted: {exception.Message}")],
+                        null, null, null);
+                }
+            }
 
             // --- Phase 3: apply every prepared change. Nothing below can fail.
+            //
+            // Propositions commit before rules, deliberately: a proposition's dependent-closure
+            // commit (Scope.CommitClosure, inside CommitPublishCore/CommitWithdrawCore) can include a
+            // rebind of a rule that is *also* being explicitly published in this same envelope — the
+            // rebind is built in phase 1 from that rule's pre-envelope snapshot, since nothing
+            // commits until now, so it is stale the instant the rule has its own explicit edit. Both
+            // write the same rule's live state; the one that runs last wins. Committing propositions
+            // first means every such stale rebind lands *before* the rule's own explicit CommitCore
+            // call, which then always has the last word — restoring the same "last write wins"
+            // outcome the pre-Task-8 code got for free by committing each artefact immediately as it
+            // was processed (propositions, in envelope order, before rules). This is order-dependent,
+            // not structurally impossible to get wrong — swapping this back would silently reintroduce
+            // the clobber a rule's own publish can suffer from a co-edited proposition's closure.
             return rules.Scope.Locked(() =>
             {
                 var versions = new Dictionary<string, int>(StringComparer.Ordinal);
-
-                foreach (var (name, publication) in prepared.Rules)
-                    versions[name] = rules.CommitCore(name, publication).Version;
 
                 foreach (var (name, edit) in prepared.PropositionPublishes)
                     versions[name] = propositions!.CommitPublishCore(edit);
@@ -1036,6 +1085,9 @@ public sealed class ChangeRequestSet
                     // No authored document remains, so there is no version left to report.
                     versions[name] = 0;
                 }
+
+                foreach (var (name, publication) in prepared.Rules)
+                    versions[name] = rules.CommitCore(name, publication).Version;
 
                 return new ChangeRequestResult(ChangeRequestOutcome.Ok, change, null, [], null, null, versions);
             });

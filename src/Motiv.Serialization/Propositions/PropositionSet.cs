@@ -466,7 +466,15 @@ public sealed class PropositionSet
             return WritePrepare.Rejected(PropositionUpdateResult.VersionConflict(current.Version));
 
         if (Scope.Registry.Find(name) is null)
+        {
+            // No direct-referrer check here — see the remarks — but the name still leaves the
+            // envelope's cumulative overlay, exactly as Validate's phase C does for this same arm:
+            // both passes must see the same sequence of worlds, and a later envelope member (a
+            // proposition created after this withdrawal, say) must not resolve a name this envelope
+            // is also removing.
+            prospective.Remove(name);
             return WritePrepare.Ready(current, []);
+        }
 
         // Reverting to the compiled default changes what referrers resolve, so — as in
         // PrepareWithdraw — the dependent closure is re-checked, here against the envelope's own
