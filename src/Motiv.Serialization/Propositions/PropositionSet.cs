@@ -405,7 +405,7 @@ public sealed class PropositionSet
     internal async Task<PropositionUpdateResult> WithdrawCoreAsync(
         string name, int expectedVersion, CancellationToken cancellationToken)
     {
-        var prepared = Scope.Locked(() => PrepareWithdraw(name, expectedVersion, []));
+        var prepared = Scope.Locked(() => PrepareWithdraw(name, expectedVersion));
         if (prepared.Failure is { } failure)
             return failure;
 
@@ -418,8 +418,14 @@ public sealed class PropositionSet
         });
     }
 
-    /// <summary>The prepare half of <see cref="WithdrawCoreAsync"/>. Assumes the scope lock is held.</summary>
-    private WritePrepare PrepareWithdraw(string name, int expectedVersion, HashSet<NodeId> excluding)
+    /// <summary>
+    /// The prepare half of <see cref="WithdrawCoreAsync"/>: a lone withdrawal, so its
+    /// <see cref="BindingScope.PrepareClosure"/> call excludes nothing — there is no envelope, and
+    /// therefore no other member's own prepare that could need protecting from this one's closure
+    /// walk. See <see cref="PrepareWithdrawCore"/> for the governed counterpart, which takes the
+    /// envelope's exclusion set as a parameter instead. Assumes the scope lock is held.
+    /// </summary>
+    private WritePrepare PrepareWithdraw(string name, int expectedVersion)
     {
         if (!_authored.TryGetValue(name, out var current))
             return WritePrepare.Rejected(PropositionUpdateResult.NotFound());
@@ -445,7 +451,7 @@ public sealed class PropositionSet
             var prospective = new PropositionOverlay(Scope.Overlay);
             prospective.Remove(name);
 
-            var broken = Scope.PrepareClosure(name, prospective, commits, excluding);
+            var broken = Scope.PrepareClosure(name, prospective, commits, []);
             if (broken.Count > 0)
                 return WritePrepare.Rejected(PropositionUpdateResult.BreaksDependents(broken));
         }

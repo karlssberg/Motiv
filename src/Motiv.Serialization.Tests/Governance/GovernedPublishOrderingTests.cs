@@ -12,9 +12,17 @@ public class GovernedPublishOrderingTests
     private static SpecBase<Customer, string> IsActive { get; } =
         Spec.Build((Customer c) => c.IsActive).WhenTrue("active").WhenFalse("inactive").Create();
 
+    private static PolicyBase<Customer, string> IsActivePolicy { get; } =
+        Spec.Build((Customer c) => c.IsActive).WhenTrue("active").WhenFalse("inactive").Create();
+
+    /// <summary>Composition returns a Spec, not a Policy, so this is what a PolicyRule must refuse to rebind to.</summary>
+    private static SpecBase<Customer, string> ComposedNonPolicy { get; } = IsActive & IsActive;
+
     private sealed class ARule() : Rule<Customer, string>("a", IsActive);
 
     private sealed class BRule() : Rule<Customer, string>("b", IsActive);
+
+    private sealed class CanCheckoutPolicyRule() : PolicyRule<Customer, string>("can-checkout-policy", IsActivePolicy);
 
     /// <summary>
     /// Bound fresh, straight off <c>Scope.Source</c>, whenever a test needs to observe what
@@ -471,5 +479,70 @@ public class GovernedPublishOrderingTests
         // stale p2 (rebound from its *old* document, "spec": "customer.p3") would instead mirror p3
         // directly and evaluate true here.
         check.Evaluate(activeCustomer).Satisfied.ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// The capability the exclusion set delivers, not just the bug it fixes: a coordinated repair —
+    /// a proposition edit that would break a dependent rule's *current* document, published together
+    /// with the rule edit that accommodates it — now succeeds as one envelope. Before <c>EnvelopeNodes</c>,
+    /// phase A's dependent-closure check rebound the rule from its live document (still referencing
+    /// the proposition about to change) and refused, naming the very rule the envelope repairs — the
+    /// coordinated edit had to be split into two change requests, the rule's first. See
+    /// <c>ChangeRequestPublisher.Validate</c>'s remarks, rewritten in the same commit as this test to
+    /// describe this, not the old refusal.
+    /// </summary>
+    [Fact]
+    public async Task Should_publish_a_proposition_edit_together_with_the_rule_edit_that_accommodates_it()
+    {
+        // Arrange — a policy-flavoured rule bound, by document, through a proposition. Editing the
+        // proposition alone to a non-policy spec is exactly Should_return_a_broken_dependent_cascade_as_a_value_rather_than_throwing
+        // in ChangeRequestSetTests — refused, because the rule's live document still resolves through
+        // it. Here the same envelope also redirects the rule straight to the still-policy spec.
+        var registry = new SpecRegistry()
+            .Register("customer.is-active-policy", IsActivePolicy)
+            .Register("customer.composed", ComposedNonPolicy);
+        var scope = new BindingScope(registry);
+        var propositions = new PropositionSet(scope, new InMemoryPropositionStore()).AddModel<Customer>("customer");
+        (await propositions.CreateAsync("customer.eligible-policy", "customer",
+            """{ "rule": { "spec": "customer.is-active-policy" } }""", null))
+            .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
+
+        var rule = new CanCheckoutPolicyRule();
+        var rules = new RuleSet(scope).Add(rule);
+        (await rules.UpdateAsync(
+            "can-checkout-policy", """{ "rule": { "spec": "customer.eligible-policy" } }""", 1,
+            new RuleChangeProvenance("setup")))
+            .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
+        var governance = new ChangeRequestSet(new ApprovalGate(), rules, propositions);
+
+        const string propositionTurnsNonPolicy = """{ "rule": { "spec": "customer.composed" } }""";
+        const string ruleRedirectedAroundIt = """{ "rule": { "spec": "customer.is-active-policy" } }""";
+
+        var created = governance.Create("alice", "coordinated repair",
+        [
+            new(ChangeTargetKind.Proposition, "customer.eligible-policy", propositionTurnsNonPolicy,
+                BaseVersion: 1, RollbackOfVersion: null),
+            new(ChangeTargetKind.Rule, "can-checkout-policy", ruleRedirectedAroundIt,
+                BaseVersion: 2, RollbackOfVersion: null)
+        ]);
+        created.Outcome.ShouldBe(ChangeRequestOutcome.Ok);
+
+        // Act
+        var published = await governance.PublishAsync(created.Change!.Id, breakGlassActive: false);
+
+        // Assert — both land, in one envelope, not two
+        published.Outcome.ShouldBe(ChangeRequestOutcome.Ok);
+        published.PublishedVersions!["customer.eligible-policy"].ShouldBe(2);
+        published.PublishedVersions!["can-checkout-policy"].ShouldBe(3);
+
+        // Through Scope.Source, not just the reported state: the proposition genuinely resolves its
+        // new, non-policy definition...
+        scope.Source.Find("customer.eligible-policy")!.Spec.ShouldNotBeSameAs(IsActivePolicy);
+
+        // ...and the rule genuinely resolves its new document — still policy-flavoured (it would
+        // throw PolicyRequired otherwise), still evaluable, and reflecting the redirect rather than
+        // the now-broken proposition.
+        rule.Evaluate(new Customer(IsActive: true, Age: 30)).Satisfied.ShouldBeTrue();
+        rule.Evaluate(new Customer(IsActive: false, Age: 30)).Satisfied.ShouldBeFalse();
     }
 }

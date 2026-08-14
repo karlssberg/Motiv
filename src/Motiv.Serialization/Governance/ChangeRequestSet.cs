@@ -774,16 +774,19 @@ public sealed class ChangeRequestSet
         /// be new machinery to paper over an authoring order that the caller can simply reverse.
         /// </para>
         /// <para>
-        /// A second, sharper limitation with the same shape: phase A prepares each dependent closure
-        /// against the dependents' <em>live</em> documents, because that is what
-        /// <c>PublishWithCascade</c> does at apply time. So an envelope that changes a proposition
-        /// <em>and</em> edits the dependent rule to accommodate the change is refused, naming the
-        /// very rule the envelope repairs — the rule is checked as it stands today, not as the
-        /// envelope would leave it. Validation and apply agree, so nothing is applied and the
-        /// refusal is safe; but the coordinated repair has to be split into two change requests, the
-        /// rule's first. Closing this would mean teaching <c>PrepareClosure</c> to substitute the
-        /// envelope's pending documents for the live ones, which is a change to the cascade engine
-        /// itself rather than to this validator.
+        /// A coordinated repair — an envelope that changes a proposition <em>and</em> edits the
+        /// dependent rule to accommodate the change — publishes as one envelope, not two. This used
+        /// to be refused: phase A's dependent-closure check rebound the rule from its <em>live</em>
+        /// document, which is exactly the document the envelope's own edit is replacing, so the
+        /// refusal named the very rule the envelope repairs. <see cref="EnvelopeNodes"/> closes this:
+        /// the accommodating rule is in the envelope's own node set, so phase A's closure walk
+        /// (<c>rules.Scope.PrepareClosure(name, prospective, [], envelopeNodes)</c> a few lines below)
+        /// skips rebinding it from the stale document entirely, and phase B goes on to validate the
+        /// rule's <em>proposed</em> document against the same prospective overlay
+        /// (<see cref="RuleSet.ValidateCore"/>, called with <c>prospectiveSource</c>) — the world the
+        /// envelope would actually leave behind, not the one it is replacing. <see cref="Prepare"/>
+        /// mirrors this with the real prepare (<see cref="RuleSet.PrepareUpdateCore(string,string,int,ISpecSource)"/>),
+        /// so the two passes agree and the envelope applies cleanly.
         /// </para>
         /// </remarks>
         /// <returns>The first failure found, or null when every edit would apply.</returns>
@@ -1084,17 +1087,26 @@ public sealed class ChangeRequestSet
             // --- Phase 3: apply every prepared change. Nothing below can fail.
             //
             // Propositions commit before rules here, but — unlike an earlier version of this method —
-            // that ordering is no longer what keeps a rule's (or another proposition's) own explicit
-            // publish safe from a co-edited node's stale dependent-closure rebind. That guarantee now
-            // comes from Prepare's envelopeNodes exclusion set: PrepareClosure never builds a rebind
-            // for a node the envelope also explicitly publishes or withdraws, in any phase, so no
-            // commit here ever competes with another commit over the same node's live state — see
+            // that ordering is no longer what keeps an *envelope-owned* node's own explicit publish
+            // safe from a co-edited node's stale dependent-closure rebind. That guarantee now comes
+            // from Prepare's envelopeNodes exclusion set: PrepareClosure never builds a rebind for a
+            // node the envelope also explicitly publishes or withdraws, in any phase — see
             // BindingScope.PrepareClosure's remarks. An ordering-only fix was tried and found
             // insufficient: a withdrawal's closure (phase C, structurally after every publish) can
             // reach a node a publish already committed, and no commit order satisfies both that case
-            // and the reverse. Propositions-before-rules is kept here only because it happens to match
-            // the order this method builds `prepared.PropositionPublishes`/`PropositionWithdrawals`/
-            // `Rules` in — there is no correctness reason left to preserve it specifically.
+            // and the reverse.
+            //
+            // Ordering is still load-bearing for one case exclusion does not — and cannot — cover: a
+            // *non-envelope* node genuinely depended on by two different envelope members (say, a
+            // rule referencing both a proposition this envelope publishes and one it withdraws) is
+            // not excluded from either closure walk, so it legitimately receives a separate rebind
+            // commit from each. Whichever runs last wins, and it must — the node has to end up bound
+            // against the envelope's *complete* final state, not a snapshot from partway through. The
+            // publishes-then-withdrawals order below (matching the order Prepare builds
+            // `prepared.PropositionPublishes`/`PropositionWithdrawals` in) is what makes that last
+            // rebind the one reflecting every proposition change in the envelope, not just some of
+            // them. Rules commit last of all for the same reason: nothing a rule's own document can
+            // reference is still moving once every proposition commit above has run.
             return rules.Scope.Locked(() =>
             {
                 var versions = new Dictionary<string, int>(StringComparer.Ordinal);

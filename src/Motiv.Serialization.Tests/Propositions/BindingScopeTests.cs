@@ -223,6 +223,53 @@ public class BindingScopeTests
         broken.ShouldBeEmpty();
     }
 
+    /// <summary>
+    /// Pins the exclusion set's three properties directly, at the level they actually live, rather
+    /// than only through the governed-envelope tests in <c>GovernedPublishOrderingTests</c>: an
+    /// excluded node is skipped by the walk (its own prepared change, elsewhere, is authoritative),
+    /// its own dependents are still discovered and prepared regardless, and its entry in
+    /// <paramref name="prospective"/> (a parameter of <see cref="BindingScope.PrepareClosure"/>) is
+    /// left exactly as the caller set it — neither cleared nor overwritten.
+    /// </summary>
+    [Fact]
+    public void Should_skip_an_excluded_node_but_still_prepare_its_own_dependents()
+    {
+        // Arrange — a <- b <- c, with b excluded. b's own prepare (elsewhere, not modelled here) is
+        // what put its entry in the prospective overlay; that entry must survive this walk untouched.
+        var scope = new BindingScope(new SpecRegistry());
+        var prospective = new PropositionOverlay();
+        var bsOwnEntry = Entry("b");
+        prospective.Set(bsOwnEntry);
+
+        var b = new StubParticipant(NodeId.Proposition("b"), succeeds: true);
+        var c = new StubParticipant(NodeId.Proposition("c"), succeeds: true) { Resolves = "b" };
+        scope.Enrol(b);
+        scope.Enrol(c);
+        scope.Graph.Set(NodeId.Proposition("b"), ["a"]);
+        scope.Graph.Set(NodeId.Proposition("c"), ["b"]);
+        var commits = new List<IRebindCommit>();
+
+        // Act
+        var broken = scope.PrepareClosure("a", prospective, commits, [NodeId.Proposition("b")]);
+
+        // Assert
+        broken.ShouldBeEmpty();
+
+        // b is excluded: never rebound, never committed, and its own already-set entry survives —
+        // PrepareClosure must not have called prospective.Set for it at all.
+        b.PrepareCount.ShouldBe(0);
+        b.Committed.ShouldBeFalse();
+        prospective.Find("b").ShouldBeSameAs(bsOwnEntry);
+
+        // c is not excluded — b's exclusion from being rebound does not exclude c, which references
+        // b, from being discovered and prepared in its own right.
+        c.PrepareCount.ShouldBe(1);
+        commits.ShouldBe([c]);
+
+        // c resolves "b" through the untouched entry b's own prepare set, not a rebind of it.
+        c.Resolved.ShouldBeSameAs(bsOwnEntry);
+    }
+
     [Fact]
     public void Should_stop_preparing_a_withdrawn_participant()
     {
