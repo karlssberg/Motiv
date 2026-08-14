@@ -44,6 +44,12 @@ public abstract class RuleBase
 
     internal RuleDefault Default { get; }
 
+    // Volatile, not a plain auto-property: RuleSet.Rules/FindEntry/ToEntry read this without
+    // holding the scope lock, while RuleSet.Apply and CommitCore write it under the lock. Without
+    // a memory barrier a lock-free reader could observe a stale value past the write — e.g. a
+    // repair clearing quarantine under CommitCore while a concurrent FindEntry still sees it set.
+    private IReadOnlyList<RuleError> _quarantine = [];
+
     /// <summary>
     /// Why <see cref="RuleSet.Load"/> could not apply this rule's stored document, or empty. Non-empty
     /// means the rule is evaluating its compiled default while the store holds something that would
@@ -51,7 +57,11 @@ public abstract class RuleBase
     /// <c>PropositionSet</c> holds it on the authored proposition — so that a single reference write
     /// keeps it coherent for the unsynchronised readers of <see cref="RuleSet.Rules"/>.
     /// </summary>
-    internal IReadOnlyList<RuleError> Quarantine { get; set; } = [];
+    internal IReadOnlyList<RuleError> Quarantine
+    {
+        get => Volatile.Read(ref _quarantine);
+        set => Volatile.Write(ref _quarantine, value);
+    }
 
     /// <summary>Binds the default and publishes version 1. Called exactly once, by <see cref="RuleSet.Add"/>.</summary>
     internal abstract void Attach(RuleSerializer serializer);
