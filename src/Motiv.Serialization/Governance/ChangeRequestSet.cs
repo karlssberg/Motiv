@@ -592,13 +592,21 @@ public sealed class ChangeRequestSet
                     return new DirectWriteResult(decision, null, null, false);
             }
 
+            // Every non-governed write still gets a real, traceable attribution: the transient
+            // change request minted above stands in for the change request a governed publish would
+            // have had, so its author, note and id are what the version row records — the same three
+            // fields ApplyValidatedAsync stamps from a real envelope.
+            var provenance = new RuleChangeProvenance(
+                transient.Author, transient.ChangeNote, ApprovalRef: transient.Id.ToString());
+
             return operation switch
             {
-                DirectWriteOperation.RuleUpdate => OfRule(await UpdateCore(
-                    _rules, change.Name, change.DocumentJson!, change.BaseVersion, cancellationToken)
-                    .ConfigureAwait(false)),
-                DirectWriteOperation.RuleRevert => OfRule(await RevertCore(
-                    _rules, change.Name, change.BaseVersion, cancellationToken).ConfigureAwait(false)),
+                DirectWriteOperation.RuleUpdate => OfRule(await _rules.PersistAndCommitCoreAsync(
+                    change.Name, () => _rules.PrepareUpdateCore(change.Name, change.DocumentJson!, change.BaseVersion),
+                    provenance, cancellationToken).ConfigureAwait(false)),
+                DirectWriteOperation.RuleRevert => OfRule(await _rules.PersistAndCommitCoreAsync(
+                    change.Name, () => _rules.PrepareRevertCore(change.Name, change.BaseVersion),
+                    provenance, cancellationToken).ConfigureAwait(false)),
                 DirectWriteOperation.PropositionCreate => OfProposition(await _propositions!.CreateCoreAsync(
                     change.Name, change.ModelTypeId!, change.DocumentJson!, change.Description, cancellationToken)
                     .ConfigureAwait(false)),
@@ -626,28 +634,6 @@ public sealed class ChangeRequestSet
         operation is DirectWriteOperation.RuleUpdate or DirectWriteOperation.RuleRevert
             ? ChangeTargetKind.Rule
             : ChangeTargetKind.Proposition;
-
-    /// <summary>
-    /// Bind → persist → commit for a caller already holding the <see cref="BindingScope"/> outer
-    /// gate — the governance-side counterpart of <see cref="RuleSet.UpdateAsync"/>, calling the
-    /// <c>Core</c> persist step directly rather than the public method, which would re-acquire the
-    /// (non-reentrant) gate and self-deadlock. Attributed as <see cref="RuleChangeProvenance.System"/>
-    /// for now; a later task replaces that with the change request's real author and approval
-    /// reference, and batches every edit in an envelope into one store round trip instead of one
-    /// per artefact.
-    /// </summary>
-    private static Task<RuleUpdateResult> UpdateCore(
-        RuleSet rules, string name, string documentJson, int baseVersion, CancellationToken cancellationToken) =>
-        rules.PersistAndCommitCoreAsync(
-            name, () => rules.PrepareUpdateCore(name, documentJson, baseVersion),
-            RuleChangeProvenance.System, cancellationToken);
-
-    /// <summary>The revert companion to <see cref="UpdateCore"/>.</summary>
-    private static Task<RuleUpdateResult> RevertCore(
-        RuleSet rules, string name, int baseVersion, CancellationToken cancellationToken) =>
-        rules.PersistAndCommitCoreAsync(
-            name, () => rules.PrepareRevertCore(name, baseVersion),
-            RuleChangeProvenance.System, cancellationToken);
 
     /// <summary>
     /// One edit classified against the target's current state. Shared by <see cref="Create"/> and
@@ -734,15 +720,12 @@ public sealed class ChangeRequestSet
         /// wholly synchronous, so wrapping it in <see cref="BindingScope.Locked{T}"/> costs nothing and
         /// gives it one consistent snapshot for its whole walk.
         /// <para>
-        /// <see cref="ApplyValidated"/> is deliberately <em>not</em> wrapped here: every write it
-        /// makes already takes the monitor itself, one artefact at a time. The rule-side writes go
-        /// through <see cref="RuleSet.PersistAndCommitCoreAsync"/> — via <see cref="UpdateCore"/>/
-        /// <see cref="RevertCore"/> below — and the proposition-side writes go through
-        /// <c>PropositionSet.CreateCoreAsync</c>/<c>UpdateCoreAsync</c>/<c>WithdrawCoreAsync</c>, which
-        /// hold the same shape: <see cref="BindingScope.Locked{T}"/> around prepare, the store
-        /// <c>await</c> outside it, then <see cref="BindingScope.Locked{T}"/> again around commit. Both
-        /// sides were converted together so a governed publish never has a write exposed to only the
-        /// outer semaphore.
+        /// <see cref="ApplyValidatedAsync"/> is deliberately <em>not</em> wrapped here: it takes the
+        /// monitor itself, twice — once to prepare the whole envelope, once to commit it — with the
+        /// store round trips in between left unlocked, mirroring
+        /// <see cref="RuleSet.PersistAndCommitCoreAsync"/> and <c>PropositionSet.PersistAndCommitCoreAsync</c>'s
+        /// own shape: <see cref="BindingScope.Locked{T}"/> around prepare, the store <c>await</c>s
+        /// outside it, then <see cref="BindingScope.Locked{T}"/> again around commit.
         /// </para>
         /// </remarks>
         public static Task<ChangeRequestResult> Apply(
@@ -750,7 +733,7 @@ public sealed class ChangeRequestSet
             CancellationToken cancellationToken) =>
             rules.Scope.LockedAsync(
                 async () => rules.Scope.Locked(() => Validate(rules, propositions, change))
-                    ?? await ApplyValidated(rules, propositions, change, cancellationToken).ConfigureAwait(false),
+                    ?? await ApplyValidatedAsync(rules, propositions, change, cancellationToken).ConfigureAwait(false),
                 cancellationToken);
 
         /// <summary>
@@ -976,53 +959,137 @@ public sealed class ChangeRequestSet
         }
 
         /// <summary>
-        /// Applies the validated envelope in the one order that lets its members reference each
-        /// other: propositions coming into existence first, then the rules that may reference them,
-        /// then the propositions going away — which nothing may still reference by then.
+        /// Validate all → persist all → apply all. Everything fallible — every bind, both store round
+        /// trips — runs before anything mutates, so an envelope cannot land half-way: the middle
+        /// phase writes the whole rule half as one <see cref="RuleSet.AppendCoreAsync"/> batch and the
+        /// whole proposition half as one <see cref="PropositionSet.WriteBatchCoreAsync"/> batch, and
+        /// the final phase — applying every prepared change — is unable to fail.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Every refusal a core can produce has been validated away by the time this runs, so a
-        /// refusal here is an invariant violation rather than an expected outcome, and it throws.
-        /// Returning it as a value is the one thing that must never happen: the caller would report
-        /// a clean refusal while some members of the envelope were already live and the change
-        /// request sat wedged in Draft — applied edits with no governance record. Throwing under the
-        /// lock leaves the same partially-applied state, but says so.
+        /// The two store calls run rules-then-propositions. A crash between them leaves the rule rows
+        /// durably written and the proposition rows not, but that is recoverable rather than
+        /// corrupting: nothing has been <em>applied</em> either way — the rule rows are inert until
+        /// the final commit phase runs, which never happens if the process dies first — and a rule row
+        /// that no longer binds on the next <see cref="RuleSet.Load"/> is quarantined rather than
+        /// fatal, which is precisely why quarantine exists.
         /// </para>
         /// <para>
-        /// Every refusal each core can produce has a counterpart in <see cref="Validate"/>:
-        /// existence and version checks cover <c>NotFound</c>, <c>NameTaken</c> and
-        /// <c>VersionConflict</c>; a prospective bind covers <c>Invalid</c>; the referrer check
-        /// covers <c>Referenced</c>; and preparing the dependent closure over the prospective
-        /// overlay — in phase A for a publish, in phase C for a withdrawal over a compiled spec —
-        /// covers <c>BreaksDependents</c>, which is a cascade failure and therefore an ordinary
-        /// expected outcome that must be returned as a value, never thrown.
+        /// A prepare failure here is treated as a bug (see <see cref="Unexpected"/>) with one
+        /// exception, <c>VersionConflict</c>: <see cref="Validate"/> already ruled out every other
+        /// refusal, but a version can still move between validation and this prepare — a background
+        /// refresh (<see cref="RuleSet.Load"/>-shaped) mutates state under the inner monitor alone, not
+        /// the outer gate this whole publish holds, so it can land in the gap between <see cref="Validate"/>'s
+        /// own <see cref="BindingScope.Locked{T}"/> call and this one. That is an expected race, not an
+        /// invariant breach, so it is reported as <see cref="ChangeRequestOutcome.VersionConflict"/>
+        /// rather than thrown. A store refusing to append or write is the same distinction one layer
+        /// down: expected (the store's own compare-and-set lost to a writer outside this process), not
+        /// a bug, so it also comes back as a value.
         /// </para>
         /// </remarks>
-        private static async Task<ChangeRequestResult> ApplyValidated(
+        private static async Task<ChangeRequestResult> ApplyValidatedAsync(
             RuleSet rules, PropositionSet? propositions, ChangeRequest change,
             CancellationToken cancellationToken)
         {
             var versions = new Dictionary<string, int>(StringComparer.Ordinal);
+            var provenance = new RuleChangeProvenance(
+                change.Author, change.ChangeNote, ApprovalRef: change.Id.ToString());
 
+            // --- Phase 1: prepare every rule and every proposition edit. Nothing is persisted or
+            // applied yet — every bind that can fail has already run by the time this returns.
+            var prepared = rules.Scope.Locked(() => Prepare(rules, propositions, change));
+            if (prepared.Failure is { } prepareFailure)
+                return prepareFailure;
+
+            // --- Phase 2: persist the whole envelope as two independent all-or-nothing batches,
+            // rules then propositions — see the remarks above for what a crash between them leaves.
+            if (prepared.Rules.Count > 0)
+            {
+                var appended = await rules
+                    .AppendCoreAsync(prepared.Rules, provenance, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (appended.IsConflict)
+                    return Failure(
+                        ChangeRequestOutcome.VersionConflict, change,
+                        new ChangeTarget(ChangeTargetKind.Rule, appended.Name!),
+                        conflictVersion: appended.CurrentVersion);
+            }
+
+            if (prepared.PropositionSaves.Count > 0 || prepared.PropositionDeletes.Count > 0)
+            {
+                await propositions!
+                    .WriteBatchCoreAsync(
+                        new PropositionBatch(prepared.PropositionSaves, prepared.PropositionDeletes),
+                        cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            // --- Phase 3: apply every prepared change. Nothing below can fail.
+            return rules.Scope.Locked(() =>
+            {
+                foreach (var (name, publication) in prepared.Rules)
+                    versions[name] = rules.CommitCore(name, publication).Version;
+
+                foreach (var (name, edit, isWithdraw) in prepared.PropositionEdits)
+                    versions[name] = propositions!.CommitPreparedCore(edit, isWithdraw);
+
+                return new ChangeRequestResult(ChangeRequestOutcome.Ok, change, null, [], null, null, versions);
+            });
+        }
+
+        /// <summary>
+        /// Binds every edit in the envelope for real — producing publishable rule publications and
+        /// proposition writes, not just errors — walking phases A/B/C in the same order
+        /// <see cref="Validate"/> already proved would work. Assumes the scope lock is held.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Mirrors <see cref="Validate"/>'s prospective-overlay trick for the same reason: nothing
+        /// commits to the live overlay until phase 3 of <see cref="ApplyValidatedAsync"/>, so a rule
+        /// referencing a proposition prepared earlier in this same envelope — phase B referencing
+        /// something phase A just prepared — must still resolve it, and only a prospective source
+        /// carries that. <see cref="RuleSet.PrepareUpdateCore(string,string,int,ISpecSource)"/> and
+        /// <see cref="PropositionSet.PrepareCreateCore"/>/<see cref="PropositionSet.PrepareUpdateCore(string,string,int,PropositionOverlay)"/>
+        /// exist for exactly this.
+        /// </para>
+        /// <para>
+        /// Phase C's withdrawal prepare deliberately skips re-deriving the direct-referrer check:
+        /// <see cref="Validate"/> already ran it, accounting for referrers this envelope redirects
+        /// away via its own <c>rebound</c> bookkeeping, under the same exclusive gate this whole
+        /// publish holds — see <see cref="PropositionSet.PrepareWithdrawCore"/>'s remarks.
+        /// </para>
+        /// </remarks>
+        private static EnvelopePrepare Prepare(RuleSet rules, PropositionSet? propositions, ChangeRequest change)
+        {
+            var prospective = new PropositionOverlay(rules.Scope.Overlay);
+            var prospectiveSource = new LayeredSpecSource(prospective, rules.Scope.Registry);
+
+            var ruleEdits = new List<(string Name, IRulePublication Publication)>();
+            var propositionEdits = new List<(string Name, PropositionSet.WritePrepare Edit, bool IsWithdraw)>();
+            var saves = new List<StoredProposition>();
+            var deletes = new List<string>();
+
+            // Phase A — propositions coming into existence or changing.
             foreach (var proposed in Ordered(change, ChangeTargetKind.Proposition, deletions: false))
             {
                 var name = proposed.Target.Name;
                 var state = propositions!.AuthoredStateCore(name);
-                var result = state.Exists
-                    ? await propositions.UpdateCoreAsync(
-                        name, proposed.ProposedDocumentJson!, proposed.BaseVersion, cancellationToken)
-                        .ConfigureAwait(false)
-                    : await propositions.CreateCoreAsync(
-                        name, proposed.ModelTypeId!, proposed.ProposedDocumentJson!, proposed.Description,
-                        cancellationToken).ConfigureAwait(false);
+                var modelTypeId = state.ModelTypeId ?? proposed.ModelTypeId;
+                var description = state.Description ?? proposed.Description;
 
-                if (result.Outcome is not (PropositionUpdateOutcome.Created or PropositionUpdateOutcome.Updated))
-                    throw Unexpected(proposed.Target, result.Outcome.ToString(), Detail(result));
+                var edit = state.Exists
+                    ? propositions.PrepareUpdateCore(name, proposed.ProposedDocumentJson!, proposed.BaseVersion, prospective)
+                    : propositions.PrepareCreateCore(name, modelTypeId!, proposed.ProposedDocumentJson!, description, prospective);
 
-                versions[name] = result.Version;
+                if (edit.Failure is { } failure)
+                    return FailWith(PropositionFailure(change, proposed.Target, failure));
+
+                propositionEdits.Add((name, edit, false));
+                saves.Add(PropositionSet.RowFor(edit.Authored!));
             }
 
+            // Phase B — rules, which may reference anything phase A just folded into the overlay.
             foreach (var proposed in change.ProposedChanges)
             {
                 if (proposed.Target.Kind != ChangeTargetKind.Rule)
@@ -1030,30 +1097,65 @@ public sealed class ChangeRequestSet
 
                 var name = proposed.Target.Name;
                 var result = proposed.ProposedDocumentJson is null
-                    ? await RevertCore(rules, name, proposed.BaseVersion, cancellationToken).ConfigureAwait(false)
-                    : await UpdateCore(rules, name, proposed.ProposedDocumentJson, proposed.BaseVersion, cancellationToken)
-                        .ConfigureAwait(false);
+                    ? rules.PrepareRevertCore(name, proposed.BaseVersion, prospectiveSource)
+                    : rules.PrepareUpdateCore(name, proposed.ProposedDocumentJson, proposed.BaseVersion, prospectiveSource);
 
-                if (result.Outcome != RuleUpdateOutcome.Updated)
+                if (result.Publication is not { } publication)
+                {
+                    // A conflict here is an expected outcome, not a bug — see ApplyValidatedAsync's
+                    // remarks. Reported through Failure(...); Mismatch(...) is the validation-phase path.
+                    if (result.Outcome == RuleUpdateOutcome.VersionConflict)
+                        return FailWith(Failure(
+                            ChangeRequestOutcome.VersionConflict, change, proposed.Target,
+                            conflictVersion: result.Version));
+
                     throw Unexpected(proposed.Target, result.Outcome.ToString(),
                         string.Join("; ", result.Errors));
+                }
 
-                versions[name] = result.Version;
+                ruleEdits.Add((name, publication));
             }
 
+            // Phase C — propositions going away, which nothing may still resolve through by then.
             foreach (var proposed in Ordered(change, ChangeTargetKind.Proposition, deletions: true))
             {
-                var result = await propositions!.WithdrawCoreAsync(
-                    proposed.Target.Name, proposed.BaseVersion, cancellationToken).ConfigureAwait(false);
-                if (result.Outcome != PropositionUpdateOutcome.Removed)
-                    throw Unexpected(proposed.Target, result.Outcome.ToString(), Detail(result));
+                var name = proposed.Target.Name;
+                var edit = propositions!.PrepareWithdrawCore(name, proposed.BaseVersion, prospective);
 
-                // No authored document remains, so there is no version left to report.
-                versions[proposed.Target.Name] = 0;
+                if (edit.Failure is { } failure)
+                    return FailWith(PropositionFailure(change, proposed.Target, failure));
+
+                propositionEdits.Add((name, edit, true));
+                deletes.Add(name);
             }
 
-            return new ChangeRequestResult(ChangeRequestOutcome.Ok, change, null, [], null, null, versions);
+            return new EnvelopePrepare(null, ruleEdits, propositionEdits, saves, deletes);
         }
+
+        /// <summary>
+        /// Turns a proposition prepare's refusal into the envelope's result: a version conflict is an
+        /// expected race (see <see cref="ApplyValidatedAsync"/>'s remarks), everything else is a bug
+        /// <see cref="Validate"/> should already have ruled out.
+        /// </summary>
+        private static ChangeRequestResult PropositionFailure(
+            ChangeRequest change, ChangeTarget target, PropositionUpdateResult failure) =>
+            failure.Outcome == PropositionUpdateOutcome.VersionConflict
+                ? Failure(ChangeRequestOutcome.VersionConflict, change, target, conflictVersion: failure.Version)
+                : throw Unexpected(target, failure.Outcome.ToString(), Detail(failure));
+
+        private static EnvelopePrepare FailWith(ChangeRequestResult failure) => new(failure, [], [], [], []);
+
+        /// <summary>
+        /// The outcome of <see cref="Prepare"/>: either the whole envelope's worth of publishable
+        /// edits, or why one member refused to bind. Exactly one of <see cref="Failure"/> or the four
+        /// collections is populated.
+        /// </summary>
+        private readonly record struct EnvelopePrepare(
+            ChangeRequestResult? Failure,
+            List<(string Name, IRulePublication Publication)> Rules,
+            List<(string Name, PropositionSet.WritePrepare Edit, bool IsWithdraw)> PropositionEdits,
+            List<StoredProposition> PropositionSaves,
+            List<string> PropositionDeletes);
 
         private static InvalidOperationException Unexpected(ChangeTarget target, string outcome, string detail) =>
             new($"Publishing {target.Kind.ToString().ToLowerInvariant()} '{target.Name}' was refused " +

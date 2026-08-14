@@ -366,6 +366,18 @@ public sealed class RuleSet
         return Scope.Locked(() => CommitCore(name, publication));
     }
 
+    /// <summary>
+    /// Appends version rows for several prepared publications as one store call, so a governed
+    /// envelope's rule half lands all-or-nothing. Assumes the outer gate is held; commits nothing —
+    /// the caller commits each prepared publication separately once the whole envelope has persisted.
+    /// </summary>
+    internal Task<RuleAppendResult> AppendCoreAsync(
+        IReadOnlyList<(string Name, IRulePublication Publication)> prepared,
+        RuleChangeProvenance provenance, CancellationToken cancellationToken) =>
+        _store.AppendAsync(
+            [.. prepared.Select(entry => RowFor(entry.Name, entry.Publication, provenance))],
+            cancellationToken);
+
     /// <summary>Builds the version row a prepared publication will be recorded as.</summary>
     internal static StoredRuleVersion RowFor(
         string name, IRulePublication publication, RuleChangeProvenance provenance)
@@ -401,6 +413,25 @@ public sealed class RuleSet
     internal RulePrepareResult PrepareRevertCore(string name, int expectedVersion) =>
         Find(name) is { } rule
             ? rule.PrepareRevert(_serializer, expectedVersion)
+            : RulePrepareResult.NotFound();
+
+    /// <summary>
+    /// <see cref="PrepareUpdateCore(string,string,int)"/> against an explicit source rather than the
+    /// live one, so a governed envelope's rule half can bind against a prospective overlay carrying
+    /// propositions the same envelope creates or changes — the live overlay does not hold them yet,
+    /// because nothing commits until the whole envelope has persisted. Mirrors
+    /// <see cref="ValidateCore"/>, which takes the same kind of source for the same reason.
+    /// </summary>
+    internal RulePrepareResult PrepareUpdateCore(
+        string name, string documentJson, int expectedVersion, ISpecSource source) =>
+        Find(name) is { } rule
+            ? rule.PrepareUpdate(new RuleSerializer(source, _options), documentJson, expectedVersion)
+            : RulePrepareResult.NotFound();
+
+    /// <summary>The prospective-source counterpart to <see cref="PrepareRevertCore(string,int)"/>. See <see cref="PrepareUpdateCore(string,string,int,ISpecSource)"/>.</summary>
+    internal RulePrepareResult PrepareRevertCore(string name, int expectedVersion, ISpecSource source) =>
+        Find(name) is { } rule
+            ? rule.PrepareRevert(new RuleSerializer(source, _options), expectedVersion)
             : RulePrepareResult.NotFound();
 
     /// <summary>
