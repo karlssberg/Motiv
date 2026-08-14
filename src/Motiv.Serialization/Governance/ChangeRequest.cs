@@ -80,7 +80,7 @@ public sealed record ChangeClassification(
 /// <param name="Description">
 /// The human-readable description a proposition *creation* is authored with. Null for rules, and for
 /// edits to a proposition that already exists — an existing proposition keeps the description it was
-/// created with, exactly as <see cref="PropositionSet.Update"/> does.
+/// created with, exactly as <see cref="PropositionSet.UpdateAsync"/> does.
 /// </param>
 public sealed record ProposedChange(
     ChangeTarget Target, string? ProposedDocumentJson, int BaseVersion, ChangeClassification Classification,
