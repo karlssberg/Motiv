@@ -2159,8 +2159,8 @@ In `src/Motiv.Serialization/Rules/RuleSet.cs`, **delete** `Update` and `Revert` 
         if (appended.IsConflict)
             return RuleUpdateResult.VersionConflict(appended.CurrentVersion);
 
-        // Nothing below can fail.
-        _quarantine.Remove(name);
+        // Nothing below can fail. CommitCore also clears any quarantine on the rule — a successful
+        // publish is exactly the repair that resolves one.
         return CommitCore(name, publication);
     }
 
