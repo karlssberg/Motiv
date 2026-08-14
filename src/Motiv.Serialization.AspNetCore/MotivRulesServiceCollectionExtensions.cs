@@ -129,9 +129,13 @@ public sealed class MotivRulesBuilder
     /// and under an approval gate booting quietly into unapproved behaviour is the worse failure. Set
     /// false to boot anyway and read the quarantine from the catalog.
     /// </param>
+    /// <returns>This builder, to allow chained registration.</returns>
     public MotivRulesBuilder AddRuleStore(IRuleStore? store = null, bool failFastOnQuarantine = true)
     {
-        Services.AddSingleton(store ?? new InMemoryRuleStore());
+        // Registered under the interface explicitly, as AddPropositions does for its own store: the
+        // RuleSet factory resolves IRuleStore, and leaving the service type to type inference makes
+        // that dependence on the parameter's declared type invisible.
+        Services.AddSingleton<IRuleStore>(store ?? new InMemoryRuleStore());
         Services.AddSingleton(new RuleStoreOptions(failFastOnQuarantine));
         return this;
     }
@@ -176,9 +180,13 @@ public static class MotivRulesServiceCollectionExtensions
             // alone — the RuleSet reaches the same propositions through the shared BindingScope.
             _ = provider.GetService<PropositionSet>();
 
+            // Resolved once: the same store instance both backs the RuleSet and decides, by its
+            // presence, whether there is anything to load below.
+            var store = provider.GetService<IRuleStore>();
+
             var rules = new RuleSet(
                 provider.GetRequiredService<BindingScope>(),
-                provider.GetService<IRuleStore>(),
+                store,
                 options: resolvedOptions.SerializerOptions);
             foreach (var rule in provider.GetServices<RuleBase>())
                 rules.Add(rule);
@@ -186,7 +194,7 @@ public static class MotivRulesServiceCollectionExtensions
             // Load after every rule is registered — a stored head can only apply to a rule that
             // exists — and after the PropositionSet has loaded, since a stored rule document may
             // reference an authored proposition.
-            if (provider.GetService<IRuleStore>() is not null)
+            if (store is not null)
             {
                 var report = rules.Load();
                 if (provider.GetRequiredService<RuleStoreOptions>().FailFastOnQuarantine)

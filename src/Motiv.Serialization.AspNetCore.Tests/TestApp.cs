@@ -47,7 +47,7 @@ internal static class TestApp
     /// already does elsewhere in this suite.
     /// </remarks>
     /// <param name="configure">Enrolls rules and configures the builder, e.g. <c>AddRuleStore</c>.</param>
-    public static Host Create(Action<MotivRulesBuilder>? configure = null)
+    public static TestHost Create(Action<MotivRulesBuilder>? configure = null)
     {
         var registry = new SpecRegistry().Register("customer.is-active", IsActive);
         var options = new MotivRulesOptions().AddModel<Customer>("customer");
@@ -64,15 +64,18 @@ internal static class TestApp
         app.MapMotivRules("/api/rules"); // resolves the RuleSet eagerly — may throw on a quarantined load
         app.Start();
 
-        return new Host(app);
+        return new TestHost(app);
     }
 
-    /// <summary>A started test host from <see cref="Create"/>, wrapping its <see cref="HttpClient"/>.</summary>
-    internal sealed class Host(WebApplication app) : IAsyncDisposable
+    /// <summary>
+    /// A started test host from <see cref="Create"/>, wrapping its <see cref="HttpClient"/>. Named
+    /// <c>TestHost</c> rather than <c>Host</c> so it does not shadow
+    /// <see cref="Microsoft.Extensions.Hosting.Host"/>, which this file's <c>using</c> for
+    /// <see cref="HostingAbstractionsHostExtensions.Start"/> brings into scope.
+    /// </summary>
+    internal sealed class TestHost(WebApplication app) : IAsyncDisposable
     {
         public HttpClient Client { get; } = app.GetTestClient();
-
-        public IServiceProvider Services => app.Services;
 
         public ValueTask DisposeAsync() => app.DisposeAsync();
     }

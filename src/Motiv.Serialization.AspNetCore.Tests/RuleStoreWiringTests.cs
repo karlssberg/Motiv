@@ -15,6 +15,20 @@ public class RuleStoreWiringTests
     private static JsonElement DocumentReferencing(string spec) =>
         JsonDocument.Parse($$"""{ "rule": { "spec": "{{spec}}" } }""").RootElement;
 
+    /// <summary>
+    /// A store holding one stored head for <c>sample</c> that no longer binds — the shape a redeploy
+    /// leaves behind when it renames the spec a published document referenced.
+    /// </summary>
+    private static async Task<InMemoryRuleStore> StoreWithAnUnbindableHead()
+    {
+        var store = new InMemoryRuleStore();
+        await store.AppendAsync([new StoredRuleVersion(
+            "sample", 2, """{ "rule": { "spec": "customer.was-renamed-away" } }""",
+            "alice", DateTimeOffset.UnixEpoch, null, null, "test")], default);
+
+        return store;
+    }
+
     [Fact]
     public async Task Should_survive_a_restart_when_a_rule_store_is_registered()
     {
@@ -43,10 +57,7 @@ public class RuleStoreWiringTests
     public async Task Should_refuse_startup_when_a_stored_rule_no_longer_binds()
     {
         // Arrange — a redeploy renamed the spec the stored document referenced
-        var store = new InMemoryRuleStore();
-        await store.AppendAsync([new StoredRuleVersion(
-            "sample", 2, """{ "rule": { "spec": "customer.was-renamed-away" } }""",
-            "alice", DateTimeOffset.UnixEpoch, null, null, "test")], default);
+        var store = await StoreWithAnUnbindableHead();
 
         // Act / Assert — fail-fast is the default: a silent revert to unapproved behaviour is worse
         var exception = Should.Throw<RuleSerializationException>(() =>
@@ -58,10 +69,7 @@ public class RuleStoreWiringTests
     public async Task Should_boot_with_the_quarantine_reported_when_fail_fast_is_off()
     {
         // Arrange
-        var store = new InMemoryRuleStore();
-        await store.AppendAsync([new StoredRuleVersion(
-            "sample", 2, """{ "rule": { "spec": "customer.was-renamed-away" } }""",
-            "alice", DateTimeOffset.UnixEpoch, null, null, "test")], default);
+        var store = await StoreWithAnUnbindableHead();
 
         // Act
         await using var app = TestApp.Create(
