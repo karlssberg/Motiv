@@ -737,7 +737,7 @@ public sealed class ChangeRequestSet
                 cancellationToken);
 
         /// <summary>
-        /// Walks the envelope in exactly the order <see cref="ApplyValidated"/> will, against a
+        /// Walks the envelope in exactly the order <see cref="Prepare"/> will, against a
         /// prospective overlay carrying the envelope's own edits — a rule edit may reference a
         /// proposition the same envelope creates, which the live source could not resolve.
         /// </summary>
@@ -991,10 +991,6 @@ public sealed class ChangeRequestSet
             RuleSet rules, PropositionSet? propositions, ChangeRequest change,
             CancellationToken cancellationToken)
         {
-            var versions = new Dictionary<string, int>(StringComparer.Ordinal);
-            var provenance = new RuleChangeProvenance(
-                change.Author, change.ChangeNote, ApprovalRef: change.Id.ToString());
-
             // --- Phase 1: prepare every rule and every proposition edit. Nothing is persisted or
             // applied yet — every bind that can fail has already run by the time this returns.
             var prepared = rules.Scope.Locked(() => Prepare(rules, propositions, change));
@@ -1005,6 +1001,9 @@ public sealed class ChangeRequestSet
             // rules then propositions — see the remarks above for what a crash between them leaves.
             if (prepared.Rules.Count > 0)
             {
+                var provenance = new RuleChangeProvenance(
+                    change.Author, change.ChangeNote, ApprovalRef: change.Id.ToString());
+
                 var appended = await rules
                     .AppendCoreAsync(prepared.Rules, provenance, cancellationToken)
                     .ConfigureAwait(false);
@@ -1016,23 +1015,27 @@ public sealed class ChangeRequestSet
                         conflictVersion: appended.CurrentVersion);
             }
 
-            if (prepared.PropositionSaves.Count > 0 || prepared.PropositionDeletes.Count > 0)
-            {
-                await propositions!
-                    .WriteBatchCoreAsync(
-                        new PropositionBatch(prepared.PropositionSaves, prepared.PropositionDeletes),
-                        cancellationToken)
-                    .ConfigureAwait(false);
-            }
+            if (prepared.PropositionWrites is { } batch)
+                await propositions!.WriteBatchCoreAsync(batch, cancellationToken).ConfigureAwait(false);
 
             // --- Phase 3: apply every prepared change. Nothing below can fail.
             return rules.Scope.Locked(() =>
             {
+                var versions = new Dictionary<string, int>(StringComparer.Ordinal);
+
                 foreach (var (name, publication) in prepared.Rules)
                     versions[name] = rules.CommitCore(name, publication).Version;
 
-                foreach (var (name, edit, isWithdraw) in prepared.PropositionEdits)
-                    versions[name] = propositions!.CommitPreparedCore(edit, isWithdraw);
+                foreach (var (name, edit) in prepared.PropositionPublishes)
+                    versions[name] = propositions!.CommitPublishCore(edit);
+
+                foreach (var (name, edit) in prepared.PropositionWithdrawals)
+                {
+                    propositions!.CommitWithdrawCore(edit);
+
+                    // No authored document remains, so there is no version left to report.
+                    versions[name] = 0;
+                }
 
                 return new ChangeRequestResult(ChangeRequestOutcome.Ok, change, null, [], null, null, versions);
             });
@@ -1066,27 +1069,27 @@ public sealed class ChangeRequestSet
             var prospectiveSource = new LayeredSpecSource(prospective, rules.Scope.Registry);
 
             var ruleEdits = new List<(string Name, IRulePublication Publication)>();
-            var propositionEdits = new List<(string Name, PropositionSet.WritePrepare Edit, bool IsWithdraw)>();
-            var saves = new List<StoredProposition>();
-            var deletes = new List<string>();
+            var publishes = new List<(string Name, PropositionSet.WritePrepare Edit)>();
+            var withdrawals = new List<(string Name, PropositionSet.WritePrepare Edit)>();
 
             // Phase A — propositions coming into existence or changing.
             foreach (var proposed in Ordered(change, ChangeTargetKind.Proposition, deletions: false))
             {
                 var name = proposed.Target.Name;
-                var state = propositions!.AuthoredStateCore(name);
-                var modelTypeId = state.ModelTypeId ?? proposed.ModelTypeId;
-                var description = state.Description ?? proposed.Description;
 
-                var edit = state.Exists
+                // Unlike Validate — which binds both arms through one PrepareCore call and so has to
+                // pick the model-type id and description itself — an update here goes through
+                // PrepareUpdateCore, which reads both off the document it is replacing. Only a
+                // creation needs them, and a creation has no stored state to take them from.
+                var edit = propositions!.AuthoredStateCore(name).Exists
                     ? propositions.PrepareUpdateCore(name, proposed.ProposedDocumentJson!, proposed.BaseVersion, prospective)
-                    : propositions.PrepareCreateCore(name, modelTypeId!, proposed.ProposedDocumentJson!, description, prospective);
+                    : propositions.PrepareCreateCore(
+                        name, proposed.ModelTypeId!, proposed.ProposedDocumentJson!, proposed.Description, prospective);
 
                 if (edit.Failure is { } failure)
                     return FailWith(PropositionFailure(change, proposed.Target, failure));
 
-                propositionEdits.Add((name, edit, false));
-                saves.Add(PropositionSet.RowFor(edit.Authored!));
+                publishes.Add((name, edit));
             }
 
             // Phase B — rules, which may reference anything phase A just folded into the overlay.
@@ -1125,11 +1128,10 @@ public sealed class ChangeRequestSet
                 if (edit.Failure is { } failure)
                     return FailWith(PropositionFailure(change, proposed.Target, failure));
 
-                propositionEdits.Add((name, edit, true));
-                deletes.Add(name);
+                withdrawals.Add((name, edit));
             }
 
-            return new EnvelopePrepare(null, ruleEdits, propositionEdits, saves, deletes);
+            return new EnvelopePrepare(null, ruleEdits, publishes, withdrawals);
         }
 
         /// <summary>
@@ -1143,19 +1145,34 @@ public sealed class ChangeRequestSet
                 ? Failure(ChangeRequestOutcome.VersionConflict, change, target, conflictVersion: failure.Version)
                 : throw Unexpected(target, failure.Outcome.ToString(), Detail(failure));
 
-        private static EnvelopePrepare FailWith(ChangeRequestResult failure) => new(failure, [], [], [], []);
+        private static EnvelopePrepare FailWith(ChangeRequestResult failure) => new(failure, [], [], []);
 
         /// <summary>
         /// The outcome of <see cref="Prepare"/>: either the whole envelope's worth of publishable
-        /// edits, or why one member refused to bind. Exactly one of <see cref="Failure"/> or the four
-        /// collections is populated.
+        /// edits, or why one member refused to bind. A failure carries no edits, and edits come with
+        /// no failure.
         /// </summary>
+        /// <param name="Failure">Why one member refused to bind, or null when every one of them did.</param>
+        /// <param name="Rules">Prepared rule publications, in phase B order.</param>
+        /// <param name="PropositionPublishes">Prepared creates and updates, in phase A order.</param>
+        /// <param name="PropositionWithdrawals">Prepared withdrawals, in phase C order.</param>
         private readonly record struct EnvelopePrepare(
             ChangeRequestResult? Failure,
             List<(string Name, IRulePublication Publication)> Rules,
-            List<(string Name, PropositionSet.WritePrepare Edit, bool IsWithdraw)> PropositionEdits,
-            List<StoredProposition> PropositionSaves,
-            List<string> PropositionDeletes);
+            List<(string Name, PropositionSet.WritePrepare Edit)> PropositionPublishes,
+            List<(string Name, PropositionSet.WritePrepare Edit)> PropositionWithdrawals)
+        {
+            /// <summary>
+            /// The single store round trip the whole proposition half lands as, or null when the
+            /// envelope touches no propositions and there is nothing to persist.
+            /// </summary>
+            public PropositionBatch? PropositionWrites =>
+                PropositionPublishes.Count == 0 && PropositionWithdrawals.Count == 0
+                    ? null
+                    : new PropositionBatch(
+                        [.. PropositionPublishes.Select(publish => PropositionSet.RowFor(publish.Edit.Authored!))],
+                        [.. PropositionWithdrawals.Select(withdrawal => withdrawal.Name)]);
+        }
 
         private static InvalidOperationException Unexpected(ChangeTarget target, string outcome, string detail) =>
             new($"Publishing {target.Kind.ToString().ToLowerInvariant()} '{target.Name}' was refused " +

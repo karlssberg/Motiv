@@ -175,10 +175,13 @@ public sealed class PropositionSet
             PropositionUpdateResult.Created,
             cancellationToken);
 
-    /// <summary>The prepare half of <see cref="CreateCoreAsync"/>. Assumes the scope lock is held.</summary>
+    /// <summary>
+    /// The prepare half of <see cref="CreateCoreAsync"/>: a lone create, binding against a fresh
+    /// single-use copy of the live overlay. Assumes the scope lock is held.
+    /// </summary>
     private WritePrepare PrepareCreateCascade(
         string name, string modelTypeId, string documentJson, string? description) =>
-        PrepareCreate(name, modelTypeId, documentJson, description, new PropositionOverlay(Scope.Overlay));
+        PrepareCreateCore(name, modelTypeId, documentJson, description, new PropositionOverlay(Scope.Overlay));
 
     /// <summary>
     /// The governed-envelope counterpart of <see cref="PrepareCreateCascade"/>: binds against
@@ -188,11 +191,6 @@ public sealed class PropositionSet
     /// across the whole envelope and folds every member into it in turn. Assumes the scope lock is held.
     /// </summary>
     internal WritePrepare PrepareCreateCore(
-        string name, string modelTypeId, string documentJson, string? description, PropositionOverlay prospective) =>
-        PrepareCreate(name, modelTypeId, documentJson, description, prospective);
-
-    /// <summary>Shared by <see cref="PrepareCreateCascade"/> and <see cref="PrepareCreateCore"/>, which differ only in whose overlay they bind against.</summary>
-    private WritePrepare PrepareCreate(
         string name, string modelTypeId, string documentJson, string? description, PropositionOverlay prospective)
     {
         if (_authored.ContainsKey(name))
@@ -241,20 +239,19 @@ public sealed class PropositionSet
             PropositionUpdateResult.Updated,
             cancellationToken);
 
-    /// <summary>The prepare half of <see cref="UpdateCoreAsync"/>. Assumes the scope lock is held.</summary>
+    /// <summary>
+    /// The prepare half of <see cref="UpdateCoreAsync"/>: a lone update, binding against a fresh
+    /// single-use copy of the live overlay. Assumes the scope lock is held.
+    /// </summary>
     private WritePrepare PrepareUpdateCascade(string name, string documentJson, int expectedVersion) =>
-        PrepareUpdate(name, documentJson, expectedVersion, new PropositionOverlay(Scope.Overlay));
+        PrepareUpdateCore(name, documentJson, expectedVersion, new PropositionOverlay(Scope.Overlay));
 
     /// <summary>
     /// The governed-envelope counterpart of <see cref="PrepareUpdateCascade"/>. See
     /// <see cref="PrepareCreateCore"/>'s remarks — the same reasoning applies to a replacement.
     /// </summary>
     internal WritePrepare PrepareUpdateCore(
-        string name, string documentJson, int expectedVersion, PropositionOverlay prospective) =>
-        PrepareUpdate(name, documentJson, expectedVersion, prospective);
-
-    /// <summary>Shared by <see cref="PrepareUpdateCascade"/> and <see cref="PrepareUpdateCore"/>.</summary>
-    private WritePrepare PrepareUpdate(string name, string documentJson, int expectedVersion, PropositionOverlay prospective)
+        string name, string documentJson, int expectedVersion, PropositionOverlay prospective)
     {
         if (!_authored.TryGetValue(name, out var current))
             return WritePrepare.Rejected(PropositionUpdateResult.NotFound());
@@ -303,16 +300,17 @@ public sealed class PropositionSet
 
         await _store.WriteAsync(SaveBatchFor(prepared.Authored!), cancellationToken).ConfigureAwait(false);
 
-        return Scope.Locked(() => success(CommitPreparedCore(prepared, isWithdraw: false)));
+        return Scope.Locked(() => success(CommitPublishCore(prepared)));
     }
 
     /// <summary>
     /// Prepares a cascading publish: binds the closure over a prospective overlay carrying
     /// <paramref name="authored"/>'s new definition, so a dependent is checked against what it
-    /// *would* resolve rather than what it resolves today. Shared by <see cref="PrepareCreateCascade"/>
-    /// and <see cref="PrepareUpdateCascade"/>, which differ only in how <paramref name="authored"/>
-    /// itself was built — both hand this a fresh, single-use overlay copied from the live one.
-    /// Assumes the scope lock is held.
+    /// *would* resolve rather than what it resolves today. Shared by <see cref="PrepareCreateCore"/>
+    /// and <see cref="PrepareUpdateCore"/>, which differ only in how <paramref name="authored"/>
+    /// itself was built. <paramref name="prospective"/> is a fresh single-use copy of the live overlay
+    /// for a lone write, and the envelope's own cumulative overlay for a governed publish. Assumes the
+    /// scope lock is held.
     /// </summary>
     private WritePrepare PrepareCascadeInto(Authored authored, PropositionOverlay prospective)
     {
@@ -342,37 +340,39 @@ public sealed class PropositionSet
         _store.WriteAsync(batch, cancellationToken);
 
     /// <summary>
-    /// Applies one write prepared earlier by <see cref="PrepareCreateCore"/>, <see cref="PrepareUpdateCore"/>
-    /// or <see cref="PrepareWithdrawCore"/> — the proposition half of a governed envelope's apply
-    /// phase, mirroring <see cref="RuleSet.CommitCore"/>. Has no failure outcome: everything a caller
-    /// can get wrong was already decided by the prepare, and the store write in between has already
-    /// succeeded by the time this runs. Assumes the scope lock is held.
+    /// Applies a create or update prepared earlier by <see cref="PrepareCreateCore"/> or
+    /// <see cref="PrepareUpdateCore"/> — the publish half of a governed envelope's apply phase,
+    /// mirroring <see cref="RuleSet.CommitCore"/>. Has no failure outcome: everything a caller can get
+    /// wrong was already decided by the prepare, and the store write in between has already succeeded
+    /// by the time this runs. Assumes the scope lock is held.
     /// </summary>
-    /// <param name="prepared">The prepared write, from the same envelope-scoped prospective overlay throughout.</param>
-    /// <param name="isWithdraw">Whether this commits a withdrawal rather than a create or update.</param>
-    /// <returns>The new version, or 0 for a withdrawal — no authored document remains to have one.</returns>
-    internal int CommitPreparedCore(WritePrepare prepared, bool isWithdraw)
+    /// <param name="prepared">The prepared write, from the same overlay its closure was bound against.</param>
+    /// <returns>The newly published version.</returns>
+    internal int CommitPublishCore(WritePrepare prepared)
     {
-        if (isWithdraw)
-        {
-            Scope.CommitClosure(prepared.Commits!);
-
-            var current = prepared.Authored!;
-            _authored.Remove(current.Name);
-            Scope.Overlay.Remove(current.Name);
-            Scope.Graph.Remove(current.Node);
-            // Defensive rather than load-bearing: a proposition is only ever enrolled by
-            // CommitPublish, which is also what put the graph edges above, so the two always come
-            // and go together.
-            Scope.Withdraw(current.Node);
-
-            return 0;
-        }
-
         var authored = prepared.Authored!;
         CommitPublish(authored);
         Scope.CommitClosure(prepared.Commits!);
         return authored.Version;
+    }
+
+    /// <summary>
+    /// Applies a withdrawal prepared earlier by <see cref="PrepareWithdraw"/> or
+    /// <see cref="PrepareWithdrawCore"/>. The withdrawal counterpart of <see cref="CommitPublishCore"/>,
+    /// and infallible for the same reasons. Leaves no authored document behind, so there is no version
+    /// to report. Assumes the scope lock is held.
+    /// </summary>
+    internal void CommitWithdrawCore(WritePrepare prepared)
+    {
+        Scope.CommitClosure(prepared.Commits!);
+
+        var current = prepared.Authored!;
+        _authored.Remove(current.Name);
+        Scope.Overlay.Remove(current.Name);
+        Scope.Graph.Remove(current.Node);
+        // Defensive rather than load-bearing: a proposition is only ever enrolled by CommitPublish,
+        // which is also what put the graph edges above, so the two always come and go together.
+        Scope.Withdraw(current.Node);
     }
 
     /// <summary>
@@ -402,7 +402,7 @@ public sealed class PropositionSet
 
         return Scope.Locked(() =>
         {
-            CommitPreparedCore(prepared, isWithdraw: true);
+            CommitWithdrawCore(prepared);
             return PropositionUpdateResult.Removed();
         });
     }
@@ -856,7 +856,7 @@ public sealed class PropositionSet
     /// Internal, not private: a governed envelope (<see cref="ChangeRequestSet"/>) prepares every
     /// proposition edit up front via <see cref="PrepareCreateCore"/>/<see cref="PrepareUpdateCore"/>/
     /// <see cref="PrepareWithdrawCore"/>, and needs this shape to carry each one through the persist
-    /// phase to <see cref="CommitPreparedCore"/>.
+    /// phase to <see cref="CommitPublishCore"/>/<see cref="CommitWithdrawCore"/>.
     /// </remarks>
     internal readonly record struct WritePrepare(
         Authored? Authored, List<IRebindCommit>? Commits, PropositionUpdateResult? Failure)
