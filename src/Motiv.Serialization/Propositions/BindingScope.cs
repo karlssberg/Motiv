@@ -6,14 +6,32 @@ namespace Motiv.Serialization;
 /// source, the write lock, the dependency graph, and the rebind participants.
 /// </summary>
 /// <remarks>
-/// The lock and the version check solve different problems and both are needed. The lock is
-/// machine-scale: it stops two publishes interleaving their graph walks. The version check
-/// (compare-and-swap, as rules already do) is human-scale: it stops a save silently discarding an
-/// edit made while a browser tab sat open.
+/// Two tiers of exclusion cooperate here, plus a version check, and all three solve different
+/// problems. The inner <see cref="_gate"/> monitor is machine-scale: it stops two publishes
+/// interleaving their graph walks, but a monitor is released at the first <c>await</c>, so it
+/// cannot hold across a store round trip. The outer <see cref="_outer"/> semaphore is what does
+/// that — it serialises whole publish operations await-safely, and its real purpose is
+/// cancellation: an answer to a store that has stopped responding, which the inner monitor cannot
+/// give. The version check is human-scale: it stops a save silently discarding an edit made while
+/// a browser tab sat open, and today rests on the lock rather than a compare-and-swap — that will
+/// move to a store primary key in a later task.
 /// </remarks>
 internal sealed class BindingScope
 {
     private readonly object _gate = new();
+
+    /// <summary>
+    /// The outer tier: serialises whole publish operations await-safely. The inner
+    /// <see cref="_gate"/> monitor is deliberately left in place rather than replaced — every
+    /// <see cref="Enrol"/>/<see cref="Withdraw"/> site is reentrant, and a pure swap to a
+    /// non-reentrant semaphore would self-deadlock at startup.
+    /// </summary>
+    /// <remarks>
+    /// <strong>Acquired only at public entry points.</strong> <see cref="SemaphoreSlim"/> is not
+    /// reentrant, so anything already inside must call a <c>…Core</c> method, never a public one.
+    /// </remarks>
+    private readonly SemaphoreSlim _outer = new(1, 1);
+
     private readonly Dictionary<NodeId, IRebindable> _participants = [];
 
     public BindingScope(SpecRegistry registry)
@@ -83,6 +101,43 @@ internal sealed class BindingScope
     {
         lock (_gate)
             action();
+    }
+
+    /// <summary>
+    /// Runs an operation holding the outer write gate, so a whole publish — including its store
+    /// round trip — serialises against every other publish.
+    /// </summary>
+    /// <remarks>
+    /// The reason this exists is <em>cancellation</em>, not throughput: the critical section is
+    /// mostly CPU, so awaiting frees a few milliseconds at most. What it buys is
+    /// <see cref="SemaphoreSlim.WaitAsync(CancellationToken)"/> — an answer to a store that has
+    /// stopped responding, which a monitor cannot give.
+    /// </remarks>
+    public async Task<T> LockedAsync<T>(Func<Task<T>> operation, CancellationToken cancellationToken)
+    {
+        await _outer.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            return await operation().ConfigureAwait(false);
+        }
+        finally
+        {
+            _outer.Release();
+        }
+    }
+
+    /// <summary>The void companion to <see cref="LockedAsync{T}"/>.</summary>
+    public async Task LockedAsync(Func<Task> operation, CancellationToken cancellationToken)
+    {
+        await _outer.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await operation().ConfigureAwait(false);
+        }
+        finally
+        {
+            _outer.Release();
+        }
     }
 
     /// <summary>
