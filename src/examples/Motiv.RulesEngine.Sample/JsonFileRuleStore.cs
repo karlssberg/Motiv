@@ -10,9 +10,16 @@ using Motiv.Serialization;
 /// Rereads the file on every operation rather than caching, so two processes over one file behave
 /// like two replicas over one database: the <c>(Name, Version)</c> check below really is a
 /// cross-process compare-and-set, which is what makes it a useful reference implementation rather
-/// than a mock. It is not, however, atomic — two processes appending at exactly the same instant can
-/// both read a stale file — so it is a sample store, not a production one. That is what plan 2C's
-/// EF Core store is for, where the primary key is enforced by the database.
+/// than a mock. It is not, however, atomic across processes — two processes appending at exactly the
+/// same instant can both read a stale file — so it is a sample store, not a production one. That is
+/// what plan 2C's EF Core store is for, where the primary key is enforced by the database.
+/// </para>
+/// <para>
+/// A torn write is a worse hazard than that lost race, though, and is closed rather than accepted: a
+/// crash or a full disk part-way through overwriting the log would destroy every version of every
+/// rule, not merely lose one writer's update, and would turn the fail-loud read below into an outage.
+/// So <see cref="AppendAsync"/> never writes over the log in place — see
+/// <see cref="WriteAllAtomically"/>.
 /// </para>
 /// <para>
 /// The generation is derived from the log's own size rather than held in a field, so it survives a
@@ -80,7 +87,7 @@ public sealed class JsonFileRuleStore(string path) : IRuleStore
             }
 
             log.AddRange(versions);
-            File.WriteAllText(path, JsonSerializer.Serialize(log, Json));
+            WriteAllAtomically(JsonSerializer.Serialize(log, Json));
             return Task.FromResult(RuleAppendResult.Appended);
         }
     }
@@ -93,6 +100,47 @@ public sealed class JsonFileRuleStore(string path) : IRuleStore
         {
             return Task.FromResult<IReadOnlyList<StoredRuleVersion>>(
                 [.. ReadAll().Where(row => row.Name == name).OrderBy(row => row.Version)]);
+        }
+    }
+
+    /// <summary>
+    /// Replaces the whole log without ever leaving a torn file at <c>path</c>. Writes a sibling temp
+    /// file first, then <see cref="File.Move(string,string,bool)"/>s it into place — a same-volume
+    /// rename is atomic, so a crash or a full disk can only ever be caught mid-write to the temp file,
+    /// leaving the previous log intact. See the class remarks for what a bare
+    /// <c>File.WriteAllText(path, ...)</c> would cost.
+    /// </summary>
+    private void WriteAllAtomically(string contents)
+    {
+        // Sibling of the target, not a system temp directory: a cross-volume Move is not atomic —
+        // .NET falls back to copy-then-delete, reopening the torn-write window this exists to close.
+        // Uniquely named so that a second process cannot rename this one's half-written file into place.
+        var tempPath = path + $".{Guid.NewGuid():N}.tmp";
+        try
+        {
+            File.WriteAllText(tempPath, contents);
+            File.Move(tempPath, path, overwrite: true);
+        }
+        catch
+        {
+            // A failed write leaves a partial temp file behind, and its name is never reused — without
+            // this, the disk that filled up mid-append accumulates fresh debris on every retry. Best
+            // effort: the original failure is what the caller needs to see, not a cleanup failure.
+            TryDelete(tempPath);
+            throw;
+        }
+    }
+
+    private static void TryDelete(string file)
+    {
+        try
+        {
+            File.Delete(file);
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            // Nothing useful to do: the append has already failed, and the leftover is inert — no
+            // reader ever looks at a .tmp sibling.
         }
     }
 

@@ -282,7 +282,9 @@ public sealed class RuleSet
     /// <summary>
     /// Restores the document a previous version carried by <em>appending</em> a copy of it. Restoring
     /// v5 writes v9 — history is never rewritten, and the new row is itself the record that a rollback
-    /// happened.
+    /// happened: when <paramref name="provenance"/> carries no <see cref="RuleChangeProvenance.ChangeNote"/>
+    /// of its own, this fills in one naming <paramref name="targetVersion"/>, so the appended row reads
+    /// as a restore rather than a document that merely happens to match an old one.
     /// </summary>
     /// <param name="name">The rule name.</param>
     /// <param name="targetVersion">The version whose document to republish.</param>
@@ -306,9 +308,15 @@ public sealed class RuleSet
         if (target is null)
             return RuleUpdateResult.NotFound();
 
+        // The caller's own note always wins — this only fills the gap when none was given, so the
+        // log still records a rollback even when the caller supplied nothing more than "who".
+        var stamped = string.IsNullOrWhiteSpace(provenance.ChangeNote)
+            ? provenance with { ChangeNote = $"Restored from version {targetVersion}." }
+            : provenance;
+
         return target.DocumentJson is null
-            ? await RevertAsync(name, expectedVersion, provenance, cancellationToken).ConfigureAwait(false)
-            : await UpdateAsync(name, target.DocumentJson, expectedVersion, provenance, cancellationToken)
+            ? await RevertAsync(name, expectedVersion, stamped, cancellationToken).ConfigureAwait(false)
+            : await UpdateAsync(name, target.DocumentJson, expectedVersion, stamped, cancellationToken)
                 .ConfigureAwait(false);
     }
 
@@ -326,15 +334,18 @@ public sealed class RuleSet
     /// Holds <em>both</em> exclusion tiers, not just the outer gate. <see cref="BindingScope"/>'s
     /// outer <see cref="SemaphoreSlim"/> (taken by <see cref="BindingScope.LockedAsync{T}"/>, which
     /// every caller of this method is already inside) serialises whole write operations await-safely,
-    /// but it does not exclude the synchronous surface — <see cref="Add"/>, <see cref="Load"/>, and,
-    /// until it converts in a later task, <c>PropositionSet</c>'s write path — which still takes only
-    /// the inner <see cref="BindingScope.Locked{T}"/> monitor. A semaphore and a monitor do not
-    /// exclude each other, so a write that took only the semaphore could run <see cref="CommitCore"/>
-    /// → <see cref="Track"/> → <c>Scope.Graph.Set</c>/<c>Remove</c> concurrently with a monitor-held
-    /// reader or writer walking the same, deliberately-unsynchronized <c>DependencyGraph</c>. Prepare
-    /// needs the monitor too, not only commit: binding a document reads through
-    /// <c>Scope.Source</c> (the layered proposition overlay), which a concurrent
-    /// monitor-held proposition edit could be mutating mid-read.
+    /// but it does not exclude the synchronous read surface — <c>PropositionSet.Propositions</c>,
+    /// <c>PropositionSet.Find</c>, <c>PropositionSet.DocumentJsonOf</c>, <c>PropositionSet.Dependents</c>
+    /// — nor <see cref="Add"/> or <see cref="Load"/>, all of which take only the inner
+    /// <see cref="BindingScope.Locked{T}"/> monitor and always will: a synchronous reader cannot await
+    /// the semaphore without either blocking a thread or becoming async itself, and both defeat the
+    /// point of a lock-free-shaped read surface. A semaphore and a monitor do not exclude each other,
+    /// so a write that took only the semaphore could run <see cref="CommitCore"/> → <see cref="Track"/>
+    /// → <c>Scope.Graph.Set</c>/<c>Remove</c> concurrently with any of those monitor-only readers
+    /// walking the same, deliberately-unsynchronized <c>DependencyGraph</c> or <c>PropositionOverlay</c>
+    /// mid-mutation. Prepare needs the monitor too, not only commit: binding a document reads through
+    /// <c>Scope.Source</c> (the layered proposition overlay), which a concurrent monitor-held
+    /// proposition edit could be mutating mid-read.
     /// </para>
     /// <para>
     /// The store round trip is the one span that must sit outside the monitor — holding a
@@ -390,19 +401,24 @@ public sealed class RuleSet
     }
 
     /// <summary>
-    /// Prepares an update without publishing it, for a caller already holding the scope lock. The
-    /// caller persists the prepared version, then commits — see <see cref="CommitCore"/>. The split
-    /// exists so that everything fallible runs before anything mutates.
+    /// Prepares an update without publishing it, for a caller already holding
+    /// <see cref="BindingScope"/>'s inner monitor. The caller persists the prepared version, then
+    /// commits — see <see cref="CommitCore"/>. The split exists so that everything fallible runs
+    /// before anything mutates.
     /// </summary>
     /// <remarks>
-    /// Two splits meet here. The <c>Core</c> suffix is the lock split: the outer gate
-    /// (<see cref="BindingScope.LockedAsync{T}"/>) is a <see cref="SemaphoreSlim"/> and therefore
-    /// <em>not</em> reentrant, so calling <see cref="UpdateAsync"/> from inside it would self-deadlock
-    /// with no error — a caller already holding the gate must call this <c>Core</c> method instead.
-    /// That split is about the *unit of atomicity* — a caller that means "these edits publish
-    /// together" must not be able to express it as a series of calls each of which releases the gate
-    /// in between. <c>Prepare</c>/<c>Commit</c> is the publish split, and is about where a step that
-    /// can still fail — the store write — is allowed to sit.
+    /// Two <c>Core</c> suffixes meet here and mean different things — see <see cref="BindingScope"/>'s
+    /// class remarks. This method's is the narrower one: every caller reaches it from inside
+    /// <see cref="PersistAndCommitCoreAsync"/>'s own <see cref="BindingScope.Locked{T}"/> call, so what
+    /// it assumes held is the monitor, not the gate — the same caller may well hold the gate too, but
+    /// nothing here depends on that. <see cref="PersistAndCommitCoreAsync"/>'s own suffix is the lock
+    /// split: the outer gate (<see cref="BindingScope.LockedAsync{T}"/>) is a
+    /// <see cref="SemaphoreSlim"/> and therefore <em>not</em> reentrant, so calling
+    /// <see cref="UpdateAsync"/> from inside it would self-deadlock with no error. That split is about
+    /// the *unit of atomicity* — a caller that means "these edits publish together" must not be able to
+    /// express it as a series of calls each of which releases the gate in between.
+    /// <c>Prepare</c>/<c>Commit</c> is a third, separate split, about where a step that can still fail —
+    /// the store write — is allowed to sit.
     /// </remarks>
     internal RulePrepareResult PrepareUpdateCore(string name, string documentJson, int expectedVersion) =>
         Find(name) is { } rule
@@ -436,13 +452,13 @@ public sealed class RuleSet
 
     /// <summary>
     /// Commits a prepared publication and re-tracks the rule's graph edges. Has no failure outcome —
-    /// everything a caller can get wrong was already decided by the prepare. Assumes the scope lock
-    /// is held.
+    /// everything a caller can get wrong was already decided by the prepare. Assumes
+    /// <see cref="BindingScope"/>'s inner monitor is held.
     /// </summary>
     internal RuleUpdateResult CommitCore(string name, IRulePublication publication)
     {
         // Resolved before the commit so that the unreachable arm fails with nothing yet moved.
-        // A publication only exists because a Prepare found the rule, the scope lock has been held
+        // A publication only exists because a Prepare found the rule, the monitor has been held
         // throughout, and rules are never unregistered — so this cannot miss. It throws rather than
         // skipping the tracking below, which would leave the rule published with stale graph edges.
         var rule = Find(name)
@@ -468,7 +484,7 @@ public sealed class RuleSet
     /// governed publish can discover that a rule half of an envelope would not bind while nothing
     /// has moved yet. Passing a prospective source is the point: an envelope's rule edit may
     /// reference a proposition the same envelope creates, which the live source cannot resolve.
-    /// Assumes the scope lock is held.
+    /// Assumes <see cref="BindingScope"/>'s inner monitor is held.
     /// </summary>
     /// <param name="name">The rule name.</param>
     /// <param name="documentJson">The proposed document.</param>

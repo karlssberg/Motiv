@@ -466,6 +466,19 @@ internal static class MotivGovernanceEndpoints
                     result.Errors, result.FailedTarget?.Name, null),
                 json, statusCode: 409),
 
+            // A server-side fault, not a client authoring error, and — per
+            // ChangeRequestOutcome.PersistenceDesynced's own remarks — one that no retry of this
+            // request can clear. So neither a 4xx (which reads as "fix your request and resend")
+            // nor a 503 (which reads as "try again shortly"): 500 is the only status that carries
+            // no retry connotation. The exception detail survives on Errors, same as elsewhere.
+            ChangeRequestOutcome.PersistenceDesynced => Results.Json(
+                new ChangeRequestErrorResponse(
+                    "The rule store and this process's live state have diverged after a partial " +
+                    "persist failure. This process must be restarted before this change — or any " +
+                    "other change to the same targets — can be retried.",
+                    result.Errors, result.FailedTarget?.Name, null),
+                json, statusCode: 500),
+
             _ => Results.Json(
                 new ChangeRequestErrorResponse(
                     "The change request is not publishable as authored.",

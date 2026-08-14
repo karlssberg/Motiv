@@ -149,8 +149,18 @@ public sealed class MotivRulesBuilder
     }
 }
 
-/// <summary>Whether <see cref="MotivRulesBuilder.AddRuleStore"/> should stop startup on quarantine.</summary>
-internal sealed record RuleStoreOptions(bool FailFastOnQuarantine);
+/// <summary>
+/// Whether <see cref="MotivRulesBuilder.AddRuleStore"/> should stop startup on quarantine. Public so a
+/// host that registers an <see cref="IRuleStore"/> directly on <see cref="IServiceCollection"/> —
+/// documented on <see cref="MotivRulesServiceCollectionExtensions.AddMotivRules"/> as a supported
+/// escape hatch from <see cref="MotivRulesBuilder.AddRuleStore"/> — can still register this and have
+/// its choice honoured, rather than the escape hatch silently and permanently fail-fasting because the
+/// type that carries the setting was unreachable outside this assembly.
+/// </summary>
+/// <param name="FailFastOnQuarantine">
+/// See <see cref="MotivRulesBuilder.AddRuleStore"/>'s parameter of the same name.
+/// </param>
+public sealed record RuleStoreOptions(bool FailFastOnQuarantine);
 
 /// <summary>DI registration for the Motiv rules endpoints and live rules.</summary>
 public static class MotivRulesServiceCollectionExtensions
