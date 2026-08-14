@@ -158,7 +158,7 @@ public sealed class PropositionSet
 
     /// <summary>
     /// <see cref="Create"/> without taking the scope lock, for a caller already holding it. See
-    /// <see cref="RuleSet.UpdateCore"/> for why the split exists — a governed publish takes the
+    /// <see cref="RuleSet.PrepareUpdateCore"/> for why the split exists — a governed publish takes the
     /// lock once so that a whole envelope of edits is one atomic step.
     /// </summary>
     internal PropositionUpdateResult CreateCore(

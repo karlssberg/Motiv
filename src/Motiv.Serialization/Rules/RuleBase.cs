@@ -47,11 +47,19 @@ public abstract class RuleBase
     /// <summary>Binds the default and publishes version 1. Called exactly once, by <see cref="RuleSet.Add"/>.</summary>
     internal abstract void Attach(RuleSerializer serializer);
 
-    /// <summary>Validates and binds the document, then CAS-publishes it over <paramref name="expectedVersion"/>.</summary>
-    internal abstract RuleUpdateResult TryUpdate(RuleSerializer serializer, string documentJson, int expectedVersion);
+    /// <summary>
+    /// Validates and binds the document against <paramref name="expectedVersion"/>, returning a
+    /// publication that is not yet live. Binding is the fallible half; committing is not — the split
+    /// is what lets the store write sit between them.
+    /// </summary>
+    internal abstract RulePrepareResult PrepareUpdate(
+        RuleSerializer serializer, string documentJson, int expectedVersion);
 
-    /// <summary>CAS-publishes the default back over <paramref name="expectedVersion"/>, bumping the version.</summary>
-    internal abstract RuleUpdateResult TryRevert(RuleSerializer serializer, int expectedVersion);
+    /// <summary>
+    /// Binds the default against <paramref name="expectedVersion"/>, returning a publication that
+    /// moves the version <em>forward</em> — a revert is a new version, never a return to an old one.
+    /// </summary>
+    internal abstract RulePrepareResult PrepareRevert(RuleSerializer serializer, int expectedVersion);
 
     /// <summary>
     /// Binds the rule's current document against a prospective source without publishing, so a

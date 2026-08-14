@@ -139,10 +139,10 @@ public sealed class RuleSet
     /// Runs under the <see cref="BindingScope"/> write lock, so concurrent writes to any rule in
     /// the set serialize rather than interleave — a rule can now be rebound out from under a
     /// caller by someone else's proposition edit, and <c>RebindCommit</c> publishes by writing the
-    /// rule's state directly rather than through the compare-and-swap here, so the two must never
-    /// run concurrently. The compare-and-swap itself is unchanged and still what refuses a stale
-    /// write: a caller holding an old version is still told the current one, only now that
-    /// refusal is decided by two writes queuing instead of racing.
+    /// rule's state directly too, so the two must never run concurrently. What refuses a stale
+    /// write is the expected-version check in <see cref="PrepareUpdateCore"/>, taken before the
+    /// lock is ever released — a caller holding an old version is still told the current one,
+    /// only now that refusal is decided by two writes queuing instead of racing.
     /// </remarks>
     /// <param name="name">The rule name.</param>
     /// <param name="documentJson">The replacement rule document.</param>
@@ -152,7 +152,13 @@ public sealed class RuleSet
     {
         if (documentJson is null) throw new ArgumentNullException(nameof(documentJson));
 
-        return Scope.Locked(() => UpdateCore(name, documentJson, expectedVersion));
+        return Scope.Locked(() =>
+        {
+            var prepared = PrepareUpdateCore(name, documentJson, expectedVersion);
+            return prepared.Publication is { } publication
+                ? CommitCore(name, publication)
+                : prepared.ToFailureResult();
+        });
     }
 
     /// <summary>Reverts a rule to its default. The version moves forward, never back.</summary>
@@ -160,25 +166,60 @@ public sealed class RuleSet
     /// <param name="expectedVersion">The version the caller last observed.</param>
     /// <returns>The outcome: updated, version conflict, invalid default document, or not found.</returns>
     public RuleUpdateResult Revert(string name, int expectedVersion) =>
-        Scope.Locked(() => RevertCore(name, expectedVersion));
+        Scope.Locked(() =>
+        {
+            var prepared = PrepareRevertCore(name, expectedVersion);
+            return prepared.Publication is { } publication
+                ? CommitCore(name, publication)
+                : prepared.ToFailureResult();
+        });
 
     /// <summary>
-    /// <see cref="Update"/> without taking the scope lock, for a caller already holding it — a
-    /// governed publish takes the lock once and drives several of these, so that the whole envelope
-    /// is one atomic step rather than a sequence of individually-atomic ones.
+    /// Prepares an update without publishing it, for a caller already holding the scope lock. The
+    /// caller persists the prepared version, then commits — see <see cref="CommitCore"/>. The split
+    /// exists so that everything fallible runs before anything mutates.
     /// </summary>
     /// <remarks>
-    /// The lock is a plain monitor and therefore reentrant, so calling the public method from inside
-    /// it would not in fact deadlock. The split is about the *unit of atomicity*, not about
-    /// deadlock avoidance: a caller that means "these edits publish together" must not be able to
-    /// express it as a series of calls each of which releases the lock in between.
+    /// Two splits meet here. The <c>Core</c> suffix is the lock split: the lock is a plain monitor
+    /// and therefore reentrant, so calling <see cref="Update"/> from inside it would not in fact
+    /// deadlock. That split is about the *unit of atomicity* — a caller that means "these edits
+    /// publish together" must not be able to express it as a series of calls each of which releases
+    /// the lock in between. <c>Prepare</c>/<c>Commit</c> is the publish split, and is about where a
+    /// step that can still fail — the store write — is allowed to sit.
     /// </remarks>
-    internal RuleUpdateResult UpdateCore(string name, string documentJson, int expectedVersion) =>
-        MutateCore(name, rule => rule.TryUpdate(_serializer, documentJson, expectedVersion));
+    internal RulePrepareResult PrepareUpdateCore(string name, string documentJson, int expectedVersion) =>
+        Find(name) is { } rule
+            ? rule.PrepareUpdate(_serializer, documentJson, expectedVersion)
+            : RulePrepareResult.NotFound();
 
-    /// <summary><see cref="Revert"/> without taking the scope lock. See <see cref="UpdateCore"/>.</summary>
-    internal RuleUpdateResult RevertCore(string name, int expectedVersion) =>
-        MutateCore(name, rule => rule.TryRevert(_serializer, expectedVersion));
+    /// <summary>Prepares a revert without publishing it. See <see cref="PrepareUpdateCore"/>.</summary>
+    internal RulePrepareResult PrepareRevertCore(string name, int expectedVersion) =>
+        Find(name) is { } rule
+            ? rule.PrepareRevert(_serializer, expectedVersion)
+            : RulePrepareResult.NotFound();
+
+    /// <summary>
+    /// Commits a prepared publication and re-tracks the rule's graph edges. Has no failure outcome —
+    /// everything a caller can get wrong was already decided by the prepare. Assumes the scope lock
+    /// is held.
+    /// </summary>
+    internal RuleUpdateResult CommitCore(string name, IRulePublication publication)
+    {
+        // Resolved before the commit so that the unreachable arm fails with nothing yet moved.
+        // A publication only exists because a Prepare found the rule, the scope lock has been held
+        // throughout, and rules are never unregistered — so this cannot miss. It throws rather than
+        // skipping the tracking below, which would leave the rule published with stale graph edges.
+        var rule = Find(name)
+            ?? throw new InvalidOperationException(
+                $"Rule '{name}' is no longer registered, so its prepared publication cannot be committed.");
+
+        publication.Commit();
+
+        // Track reads the rule's *current* document, so it must run after the commit, not before.
+        Track(rule);
+
+        return RuleUpdateResult.Updated(publication.Version);
+    }
 
     /// <summary>
     /// Binds a proposed document against <paramref name="source"/> without publishing anything, so a
@@ -220,13 +261,13 @@ public sealed class RuleSet
     /// <summary>
     /// Binds the document a revert would republish against <paramref name="source"/> without
     /// publishing — the counterpart of <see cref="ValidateCore"/> for the deletion arm of a governed
-    /// publish. A revert is not a return to something known-good: <see cref="RuleBase.TryRevert"/>
+    /// publish. A revert is not a return to something known-good: <see cref="RuleBase.PrepareRevert"/>
     /// re-binds the default against whatever the world looks like now, and a proposition edit landing
     /// earlier in the same envelope can be exactly what stops it binding.
     /// </summary>
     /// <remarks>
     /// A compiled default is skipped rather than checked. It resolves no names and was type-checked
-    /// at construction, so <see cref="RuleBase.TryRevert"/> cannot fail on it.
+    /// at construction, so <see cref="RuleBase.PrepareRevert"/> cannot fail on it.
     /// </remarks>
     /// <param name="name">The rule name.</param>
     /// <param name="source">The source names resolve against — live, or prospective.</param>
@@ -239,23 +280,6 @@ public sealed class RuleSet
         var errors = new List<RuleError>();
         rule.ValidateDocument(new RuleSerializer(source, _options), documentJson, errors);
         return errors;
-    }
-
-    /// <summary>
-    /// Looks up a rule and applies a publish operation to it — the shared shape behind
-    /// <see cref="UpdateCore"/> and <see cref="RevertCore"/>: find-or-not-found, publish, then
-    /// re-track the rule's graph edges whenever the publish actually took. Assumes the scope lock
-    /// is held.
-    /// </summary>
-    private RuleUpdateResult MutateCore(string name, Func<RuleBase, RuleUpdateResult> publish)
-    {
-        if (Find(name) is not { } rule)
-            return RuleUpdateResult.NotFound();
-
-        var result = publish(rule);
-        if (result.Outcome == RuleUpdateOutcome.Updated)
-            Track(rule);
-        return result;
     }
 
     /// <summary>

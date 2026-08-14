@@ -434,9 +434,9 @@ public sealed class ChangeRequestSet
             return operation switch
             {
                 DirectWriteOperation.RuleUpdate => OfRule(
-                    _rules.UpdateCore(change.Name, change.DocumentJson!, change.BaseVersion)),
+                    UpdateCore(_rules, change.Name, change.DocumentJson!, change.BaseVersion)),
                 DirectWriteOperation.RuleRevert => OfRule(
-                    _rules.RevertCore(change.Name, change.BaseVersion)),
+                    RevertCore(_rules, change.Name, change.BaseVersion)),
                 DirectWriteOperation.PropositionCreate => OfProposition(
                     _propositions!.CreateCore(
                         change.Name, change.ModelTypeId!, change.DocumentJson!, change.Description)),
@@ -463,6 +463,29 @@ public sealed class ChangeRequestSet
         operation is DirectWriteOperation.RuleUpdate or DirectWriteOperation.RuleRevert
             ? ChangeTargetKind.Rule
             : ChangeTargetKind.Proposition;
+
+    /// <summary>
+    /// Prepare-then-commit under the caller's existing lock — the behaviour <c>UpdateCore</c> had
+    /// before the bind/publish split. Task 8 of the durability plan replaces these with a persist
+    /// step between the two halves; they exist so this task compiles without touching governance's
+    /// control flow, and are deleted there.
+    /// </summary>
+    private static RuleUpdateResult UpdateCore(RuleSet rules, string name, string documentJson, int baseVersion)
+    {
+        var prepared = rules.PrepareUpdateCore(name, documentJson, baseVersion);
+        return prepared.Publication is { } publication
+            ? rules.CommitCore(name, publication)
+            : prepared.ToFailureResult();
+    }
+
+    /// <summary>The revert companion to <see cref="UpdateCore"/>. Deleted in Task 8.</summary>
+    private static RuleUpdateResult RevertCore(RuleSet rules, string name, int baseVersion)
+    {
+        var prepared = rules.PrepareRevertCore(name, baseVersion);
+        return prepared.Publication is { } publication
+            ? rules.CommitCore(name, publication)
+            : prepared.ToFailureResult();
+    }
 
     /// <summary>
     /// One edit classified against the target's current state. Shared by <see cref="Create"/> and
@@ -807,8 +830,8 @@ public sealed class ChangeRequestSet
 
                 var name = proposed.Target.Name;
                 var result = proposed.ProposedDocumentJson is null
-                    ? rules.RevertCore(name, proposed.BaseVersion)
-                    : rules.UpdateCore(name, proposed.ProposedDocumentJson, proposed.BaseVersion);
+                    ? RevertCore(rules, name, proposed.BaseVersion)
+                    : UpdateCore(rules, name, proposed.ProposedDocumentJson, proposed.BaseVersion);
 
                 if (result.Outcome != RuleUpdateOutcome.Updated)
                     throw Unexpected(proposed.Target, result.Outcome.ToString(),

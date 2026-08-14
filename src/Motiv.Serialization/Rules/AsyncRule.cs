@@ -78,11 +78,12 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
         Volatile.Write(ref _state, BindDefault(serializer));
     }
 
-    internal sealed override RuleUpdateResult TryUpdate(RuleSerializer serializer, string documentJson, int expectedVersion)
+    internal sealed override RulePrepareResult PrepareUpdate(
+        RuleSerializer serializer, string documentJson, int expectedVersion)
     {
         var current = Snapshot();
         if (current.Version != expectedVersion)
-            return RuleUpdateResult.VersionConflict(current.Version);
+            return RulePrepareResult.VersionConflict(current.Version);
 
         AsyncSpecBase<TModel, TMetadata> spec;
         try
@@ -91,20 +92,21 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
         }
         catch (RuleSerializationException ex)
         {
-            return RuleUpdateResult.Invalid(ex.Errors);
+            return RulePrepareResult.Invalid(ex.Errors);
         }
 
         if (RequirePolicy(spec) is { } policyError)
-            return RuleUpdateResult.Invalid([policyError]);
+            return RulePrepareResult.Invalid([policyError]);
 
-        return Publish(current, new State(documentJson, current.Version + 1, spec));
+        return RulePrepareResult.Prepared(
+            new Publication(this, new State(documentJson, current.Version + 1, spec)));
     }
 
-    internal sealed override RuleUpdateResult TryRevert(RuleSerializer serializer, int expectedVersion)
+    internal sealed override RulePrepareResult PrepareRevert(RuleSerializer serializer, int expectedVersion)
     {
         var current = Snapshot();
         if (current.Version != expectedVersion)
-            return RuleUpdateResult.VersionConflict(current.Version);
+            return RulePrepareResult.VersionConflict(current.Version);
 
         State @default;
         try
@@ -113,10 +115,11 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
         }
         catch (RuleSerializationException ex)
         {
-            return RuleUpdateResult.Invalid(ex.Errors);
+            return RulePrepareResult.Invalid(ex.Errors);
         }
 
-        return Publish(current, new State(@default.DocumentJson, current.Version + 1, @default.Spec));
+        return RulePrepareResult.Prepared(
+            new Publication(this, new State(@default.DocumentJson, current.Version + 1, @default.Spec)));
     }
 
     internal sealed override void ValidateDocument(
@@ -182,18 +185,20 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
         public void Commit() => Volatile.Write(ref rule._state, replacement);
     }
 
-    private RuleUpdateResult Publish(State expected, State replacement)
+    /// <summary>
+    /// A prepared rule change, published by swapping the state snapshot. A plain
+    /// <see cref="Volatile.Write{T}"/>, not a compare-and-swap: the outer gate on
+    /// <see cref="BindingScope"/> serialises whole operations, so no second writer can be in flight,
+    /// and a CAS was never able to see a <em>different process</em> anyway. Enforcement lives in the
+    /// store's <c>(Name, Version)</c> primary key, which can.
+    /// </summary>
+    private sealed class Publication(AsyncRule<TModel, TMetadata> rule, State replacement) : IRulePublication
     {
-        // Defensive rather than load-bearing: RuleSet.Update/Revert (the only public callers that
-        // reach here) and RebindCommit's direct Volatile.Write both run under the same
-        // BindingScope write lock, so no second writer can ever be in flight and the CAS-miss arm
-        // below is unreachable through the public API. Kept as a CAS regardless — cheap, and it
-        // fails safe rather than silently overwriting a concurrent write if that invariant is
-        // ever broken.
-        var witnessed = Interlocked.CompareExchange(ref _state, replacement, expected);
-        return ReferenceEquals(witnessed, expected)
-            ? RuleUpdateResult.Updated(replacement.Version)
-            : RuleUpdateResult.VersionConflict(witnessed!.Version);
+        public int Version => replacement.Version;
+
+        public string? DocumentJson => replacement.DocumentJson;
+
+        public void Commit() => Volatile.Write(ref rule._state, replacement);
     }
 
     private State BindDefault(RuleSerializer serializer)
