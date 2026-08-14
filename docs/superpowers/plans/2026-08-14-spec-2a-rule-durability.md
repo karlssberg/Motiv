@@ -50,6 +50,7 @@ has to be undone:
 - `Motiv.Serialization` targets `net8.0;net9.0;netstandard2.0;net10.0`. **No C# 8+ features needing runtime support**: no ranges (`[..^n]`), no `System.Index`/`System.Range`, no `IAsyncEnumerable`, no default interface methods. `SemaphoreSlim.WaitAsync(CancellationToken)` and `Task<T>` are available on all four. Use `Task<T>`, never `ValueTask<T>` (needs `System.Threading.Tasks.Extensions` on netstandard2.0).
 - Always `.ConfigureAwait(false)` on every `await` inside `Motiv.Serialization` — it is a library.
 - **Never block on a `Task`** — no `.Result`, no `.Wait()`, no `.GetAwaiter().GetResult()`. The write path is async precisely so a hung store can be cancelled; blocking on it inside the publish gate reintroduces the deadlock the gate exists to avoid.
+- **Never hold a `Monitor` across an `await`**, and never take only one of the two exclusion tiers on a write path. See locked decision 11 for the required shape.
 - **TDD strictly**: failing test → confirm it fails for the right reason → minimal code → confirm it passes → commit. Never write implementation before its test.
 - Test naming follows the repo: `public class {Subject}Tests`, `[Fact] public void Should_snake_case_phrase()` (`async Task` when the subject is async), `// Arrange` / `// Act` / `// Assert` comments, **Shouldly** assertions.
 - Run the **full solution suite** — including `src/examples/Motiv.Poker.Tests`, `Motiv.ECommerce.Tests`, `Motiv.SmartHome.Tests`, `Motiv.RulesEngine.Sample.Tests` — before calling any phase complete. Example projects assert on justification strings and break silently otherwise.
@@ -107,6 +108,21 @@ here so no task re-derives them.
    reentrant, so an inner call to a public method self-deadlocks. Every `…Core` method keeps its
    "assumes the caller holds the gate" contract, and the public/`Core` split that already exists for
    governance is exactly the seam this needs.
+
+11. **A write holds BOTH tiers — outer for the operation, inner for the mutation.** Spec §2 says the
+    outer semaphore "serialises whole operations await-safely" while the inner `Monitor` is left
+    untouched "for data-structure mutation". Both halves are load-bearing: a semaphore and a monitor
+    do not exclude each other, so a write that took only the semaphore would run `Track` →
+    `DependencyGraph.Set` concurrently with a synchronous reader or a not-yet-converted path holding
+    the monitor — and `DependencyGraph` is explicitly unsynchronized, documented as relying on the
+    scope lock. The required shape on every write path is therefore:
+
+    ```
+    LockedAsync  →  Locked { prepare }  →  await store  →  Locked { commit }
+    ```
+
+    with the store `await` **outside** the monitor — never hold a monitor across an await. The
+    monitor is reentrant, so this composes with the existing `Enrol`/`Withdraw` sites.
 
 9. **`RuleSet` without a store is still legal.** The default is `InMemoryRuleStore`, so existing
    hosts that never asked for durability behave as they do today, and every existing test that
@@ -2503,7 +2519,16 @@ public sealed class InMemoryPropositionStore : IPropositionStore
 - [ ] **Step 4: Convert `PropositionSet`'s write path**
 
 `Create`, `Update`, `Withdraw` become `CreateAsync`, `UpdateAsync`, `WithdrawAsync`, each
-`Scope.LockedAsync(…, cancellationToken)` over an async `…CoreAsync`. The structural change is in
+`Scope.LockedAsync(…, cancellationToken)` over an async `…CoreAsync`.
+
+**Hold both tiers, per locked decision 11** — the same shape Task 6 established for rules:
+`LockedAsync` → `Locked { prepare }` → `await` the store → `Locked { commit }`, with the store
+`await` outside the monitor. The outer semaphore serialises whole operations; the inner monitor is
+what actually excludes the synchronous readers (`Propositions`, `Find`, `DocumentJsonOf`) and keeps
+`DependencyGraph` — which is unsynchronized by design — safe. Taking only the semaphore leaves the
+graph racing against every reader.
+
+The structural change is in
 `Publish` (line 629) and `WithdrawCore`'s store call (line 275): both become an awaited `WriteAsync`
 that runs *before* any in-memory mutation. Split `Publish`:
 
