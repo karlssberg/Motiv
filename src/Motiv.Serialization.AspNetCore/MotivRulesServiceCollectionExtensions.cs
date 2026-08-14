@@ -117,7 +117,50 @@ public sealed class MotivRulesBuilder
         Services.TryAddSingleton(BreakGlass.Off);
         return this;
     }
+
+    /// <summary>
+    /// Registers where rules persist, and loads them when the <see cref="RuleSet"/> is first resolved.
+    /// Without this, rules live for the lifetime of the process, as they always have.
+    /// </summary>
+    /// <param name="store">The store, or null for <see cref="InMemoryRuleStore"/>.</param>
+    /// <param name="failFastOnQuarantine">
+    /// Whether a stored document that no longer binds should stop startup. Defaults to <c>true</c>:
+    /// a quarantined rule is running its compiled default, which is <em>not what was published</em>,
+    /// and under an approval gate booting quietly into unapproved behaviour is the worse failure. Set
+    /// false to boot anyway and read the quarantine from the catalog.
+    /// </param>
+    /// <returns>This builder, to allow chained registration.</returns>
+    /// <exception cref="InvalidOperationException">A rule store is already registered. DI is
+    /// last-wins, so a second call would silently discard the first store rather than layering onto
+    /// it — an argument quietly ignored is worse than a refusal.</exception>
+    public MotivRulesBuilder AddRuleStore(IRuleStore? store = null, bool failFastOnQuarantine = true)
+    {
+        if (Services.Any(descriptor => descriptor.ServiceType == typeof(RuleStoreOptions)))
+            throw new InvalidOperationException(
+                $"{nameof(AddRuleStore)} has already been called. Call it once — a second call " +
+                "would silently replace the first store, as DI registration is last-wins.");
+
+        // Registered under the interface explicitly, as AddPropositions does for its own store: the
+        // RuleSet factory resolves IRuleStore, and leaving the service type to type inference makes
+        // that dependence on the parameter's declared type invisible.
+        Services.AddSingleton<IRuleStore>(store ?? new InMemoryRuleStore());
+        Services.AddSingleton(new RuleStoreOptions(failFastOnQuarantine));
+        return this;
+    }
 }
+
+/// <summary>
+/// Whether <see cref="MotivRulesBuilder.AddRuleStore"/> should stop startup on quarantine. Public so a
+/// host that registers an <see cref="IRuleStore"/> directly on <see cref="IServiceCollection"/> —
+/// documented on <see cref="MotivRulesServiceCollectionExtensions.AddMotivRules"/> as a supported
+/// escape hatch from <see cref="MotivRulesBuilder.AddRuleStore"/> — can still register this and have
+/// its choice honoured, rather than the escape hatch silently and permanently fail-fasting because the
+/// type that carries the setting was unreachable outside this assembly.
+/// </summary>
+/// <param name="FailFastOnQuarantine">
+/// See <see cref="MotivRulesBuilder.AddRuleStore"/>'s parameter of the same name.
+/// </param>
+public sealed record RuleStoreOptions(bool FailFastOnQuarantine);
 
 /// <summary>DI registration for the Motiv rules endpoints and live rules.</summary>
 public static class MotivRulesServiceCollectionExtensions
@@ -155,11 +198,33 @@ public static class MotivRulesServiceCollectionExtensions
             // alone — the RuleSet reaches the same propositions through the shared BindingScope.
             _ = provider.GetService<PropositionSet>();
 
+            // Resolved once: the same store instance both backs the RuleSet and decides, by its
+            // presence, whether there is anything to load below.
+            var store = provider.GetService<IRuleStore>();
+
             var rules = new RuleSet(
                 provider.GetRequiredService<BindingScope>(),
-                resolvedOptions.SerializerOptions);
+                store,
+                options: resolvedOptions.SerializerOptions);
             foreach (var rule in provider.GetServices<RuleBase>())
                 rules.Add(rule);
+
+            // Load after every rule is registered — a stored head can only apply to a rule that
+            // exists — and after the PropositionSet has loaded, since a stored rule document may
+            // reference an authored proposition.
+            if (store is not null)
+            {
+                var report = rules.Load();
+
+                // RuleStoreOptions is only absent when a host registered IRuleStore directly on
+                // Services instead of going through AddRuleStore — a supported escape hatch, not a
+                // wiring bug, so this tolerates the gap rather than GetRequiredService's opaque "no
+                // service for type" and degrades to AddRuleStore's own documented default.
+                var failFast = provider.GetService<RuleStoreOptions>()?.FailFastOnQuarantine ?? true;
+                if (failFast)
+                    report.ThrowIfQuarantined();
+            }
+
             return rules;
         });
         return new MotivRulesBuilder(services);

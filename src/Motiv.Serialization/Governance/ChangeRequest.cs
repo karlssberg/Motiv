@@ -80,7 +80,7 @@ public sealed record ChangeClassification(
 /// <param name="Description">
 /// The human-readable description a proposition *creation* is authored with. Null for rules, and for
 /// edits to a proposition that already exists — an existing proposition keeps the description it was
-/// created with, exactly as <see cref="PropositionSet.Update"/> does.
+/// created with, exactly as <see cref="PropositionSet.UpdateAsync"/> does.
 /// </param>
 public sealed record ProposedChange(
     ChangeTarget Target, string? ProposedDocumentJson, int BaseVersion, ChangeClassification Classification,
@@ -108,7 +108,7 @@ public sealed class ChangeRequest
         Author = author;
         ChangeNote = changeNote;
         ProposedChanges = new List<ProposedChange>(proposedChanges).AsReadOnly();
-        Status = ChangeRequestStatus.Draft;
+        // Status starts at Draft via _status's own initializer — no barrier needed before publication.
     }
 
     /// <summary>The change request's identity.</summary>
@@ -126,8 +126,21 @@ public sealed class ChangeRequest
     /// <summary>The accumulating positive assents recorded against this request.</summary>
     public IReadOnlyList<Approval> Approvals => _approvals.AsReadOnly();
 
+    // Volatile, not a plain auto-property, mirroring RuleBase.Quarantine: ChangeRequestSet.All/Find
+    // read this without taking _lock, while MarkPublished/MarkRejected write it under _lock. Status
+    // is the signal those lock-free readers key off, so every field it implies must already be
+    // visible by the time its write is — hence both writers assign PublishedUnderBreakGlass /
+    // RejectionReason first and Status last, and the release barrier here carries them along.
+    // Without that, a reader could see Published with PublishedUnderBreakGlass still false, and
+    // report a control as not bypassed when it was.
+    private int _status = (int)ChangeRequestStatus.Draft;
+
     /// <summary>The current workflow state.</summary>
-    public ChangeRequestStatus Status { get; private set; }
+    public ChangeRequestStatus Status
+    {
+        get => (ChangeRequestStatus)Volatile.Read(ref _status);
+        private set => Volatile.Write(ref _status, (int)value);
+    }
 
     /// <summary>
     /// Why the request was rejected, when <see cref="Status"/> is
@@ -178,8 +191,9 @@ public sealed class ChangeRequest
             throw new InvalidOperationException(
                 $"Cannot publish a change request in the '{Status}' state.");
 
-        Status = ChangeRequestStatus.Published;
+        // PublishedUnderBreakGlass first, Status last — see the comment on _status.
         PublishedUnderBreakGlass = underBreakGlass;
+        Status = ChangeRequestStatus.Published;
     }
 
     /// <summary>Rejects the request, terminating it with a reason.</summary>
@@ -194,8 +208,9 @@ public sealed class ChangeRequest
             throw new InvalidOperationException(
                 $"Cannot reject a change request in the '{Status}' state.");
 
-        Status = ChangeRequestStatus.Rejected;
+        // RejectionReason first, Status last — see the comment on _status.
         RejectionReason = reason;
+        Status = ChangeRequestStatus.Rejected;
     }
 
     /// <summary>Withdraws the request.</summary>

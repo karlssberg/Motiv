@@ -66,3 +66,35 @@ _Avoid_: Four-eyes, dual control
 The deploy-time escape that disables the Approval Gate when it is misconfigured — loud and fully audited,
 an infrastructure-layer act above any in-application permission.
 _Avoid_: Override, bypass, admin mode
+
+### Durability
+
+**Version log**:
+The append-only, immutable record of every rule publish — one row per `(Name, Version)`, kept forever
+and never rewritten. The primary key is also the cross-process compare-and-set: two replicas racing
+the same version race on the insert, and the key lets exactly one win.
+_Avoid_: History table, audit log (the log *is* the audit trail, not a copy of one), changelog
+
+**Head projection**:
+A rule's current state as a store reports it — the highest-versioned row in that rule's version log,
+reduced to name, version, and document. Never stored separately; always derived, so it cannot drift
+from the log it summarizes.
+_Avoid_: Snapshot, current row, latest version (as a stored thing rather than a computed one)
+
+**Quarantine (rule)**:
+The non-fatal state of a stored rule document that no longer binds after a load — a redeploy renamed
+a spec it referenced, say. The rule keeps evaluating its compiled default, its stored version is
+preserved for repair, and the reason is reported rather than silently swallowed or fatal at startup.
+Mirrors proposition quarantine.
+_Avoid_: Broken, corrupted, disabled
+
+**Generation**:
+A monotonically increasing, store-wide counter that moves whenever any write lands — a scalar fencing
+token a replica can poll to tell whether it is behind without re-reading the whole store.
+_Avoid_: Version (reserved for one rule's own counter), revision, sequence number
+
+**Provenance**:
+The who/why attached to a publish — author, an optional change note, the change request it discharged
+when governed, and the build that was live — carried as one value and written into the version log
+with every row.
+_Avoid_: Metadata (too generic), audit fields, attribution

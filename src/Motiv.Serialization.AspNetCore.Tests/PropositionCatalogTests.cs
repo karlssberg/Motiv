@@ -26,9 +26,9 @@ public class PropositionCatalogTests
     /// </summary>
     private sealed class PlaceholderRule() : Rule<Customer, string>("placeholder-rule", IsActive);
 
-    private static PropositionUpdateResult AuthorDerived(IServiceProvider services) =>
+    private static Task<PropositionUpdateResult> AuthorDerived(IServiceProvider services) =>
         services.GetRequiredService<PropositionSet>()
-            .Create("customer.derived", "customer", DerivedDocument, null);
+            .CreateAsync("customer.derived", "customer", DerivedDocument, null);
 
     private static (SpecRegistry Registry, MotivRulesOptions Options) Fixture() =>
         (new SpecRegistry().Register("customer.is-active", IsActive),
@@ -58,10 +58,11 @@ public class PropositionCatalogTests
         // the update would fail as an unknown spec, not merely "not throw".
         await using var app = await StartAsync(rules => rules.AddPropositions().AddRule<PlaceholderRule>());
         var ruleSet = app.Services.GetRequiredService<RuleSet>();
-        AuthorDerived(app.Services).Outcome.ShouldBe(PropositionUpdateOutcome.Created);
+        (await AuthorDerived(app.Services)).Outcome.ShouldBe(PropositionUpdateOutcome.Created);
 
         // Act
-        var update = ruleSet.Update("placeholder-rule", DerivedRuleDocument, expectedVersion: 1);
+        var update = await ruleSet.UpdateAsync(
+            "placeholder-rule", DerivedRuleDocument, expectedVersion: 1, new RuleChangeProvenance("test"));
 
         // Assert — resolves, and the live rule now evaluates through the shared scope
         update.Outcome.ShouldBe(RuleUpdateOutcome.Updated);
@@ -76,19 +77,21 @@ public class PropositionCatalogTests
         await using var app = await StartAsync(rules => rules.AddPropositions());
 
         // Act
-        var result = AuthorDerived(app.Services);
+        var result = await AuthorDerived(app.Services);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Created);
     }
 
     [Fact]
-    public void Should_load_stored_propositions_before_rule_defaults_bind()
+    public async Task Should_load_stored_propositions_before_rule_defaults_bind()
     {
         // Arrange — a rule whose *default* document references an authored proposition only binds
         // if propositions loaded first, so this pins the startup ordering.
         var store = new InMemoryPropositionStore();
-        store.Save(new StoredProposition("customer.derived", "customer", DerivedDocument, 1, null));
+        await store.WriteAsync(
+            PropositionBatch.Save(new StoredProposition("customer.derived", "customer", DerivedDocument, 1, null)),
+            default);
 
         var (registry, options) = Fixture();
         var services = new ServiceCollection();
@@ -127,7 +130,7 @@ public class PropositionCatalogTests
         // Arrange — the regression guard for the catalog being a closed-over constant
         await using var app = await StartAsync(rules => rules.AddPropositions());
         var client = app.GetTestClient();
-        AuthorDerived(app.Services);
+        await AuthorDerived(app.Services);
 
         // Act
         var catalog = await client.GetFromJsonAsync<CatalogPeek>("/api/rules/catalog");
@@ -143,7 +146,7 @@ public class PropositionCatalogTests
         // Arrange
         await using var app = await StartAsync(rules => rules.AddPropositions());
         var client = app.GetTestClient();
-        AuthorDerived(app.Services);
+        await AuthorDerived(app.Services);
 
         // Act
         var catalog = await client.GetFromJsonAsync<CatalogPeek>("/api/rules/catalog");

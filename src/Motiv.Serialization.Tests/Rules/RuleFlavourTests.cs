@@ -72,7 +72,7 @@ public class RuleFlavourTests
     }
 
     [Fact]
-    public void Should_reject_document_updates_that_do_not_bind_to_a_policy()
+    public async Task Should_reject_document_updates_that_do_not_bind_to_a_policy()
     {
         // Arrange — a bare 'and' composition binds to a spec, not a policy
         var rule = new ActivePolicyRule();
@@ -80,7 +80,7 @@ public class RuleFlavourTests
         var nonPolicy = """{ "rule": { "and": [ { "spec": "is-active" }, { "spec": "is-active" } ] } }""";
 
         // Act
-        var outcome = rules.Update("active-policy", nonPolicy, 1);
+        var outcome = await rules.UpdateAsync("active-policy", nonPolicy, 1, new RuleChangeProvenance("test"));
 
         // Assert
         outcome.Outcome.ShouldBe(RuleUpdateOutcome.Invalid);
@@ -89,14 +89,15 @@ public class RuleFlavourTests
     }
 
     [Fact]
-    public void Should_accept_document_updates_that_bind_to_a_policy()
+    public async Task Should_accept_document_updates_that_bind_to_a_policy()
     {
         // Arrange — a leaf referencing a registered policy stays a policy at runtime
         var rule = new ActivePolicyRule();
         var rules = new RuleSet(Registry()).Add(rule);
 
         // Act
-        var outcome = rules.Update("active-policy", """{ "rule": { "spec": "is-active" } }""", 1);
+        var outcome = await rules.UpdateAsync(
+            "active-policy", """{ "rule": { "spec": "is-active" } }""", 1, new RuleChangeProvenance("test"));
 
         // Assert
         outcome.Outcome.ShouldBe(RuleUpdateOutcome.Updated);
@@ -128,8 +129,9 @@ public class RuleFlavourTests
 
         // Act — default, then a swapped mixed document
         var before = await rule.EvaluateAsync(new Customer(true));
-        var outcome = rules.Update("credit",
-            """{ "rule": { "and": [ { "spec": "is-active" }, { "spec": "credit-check" } ] } }""", 1);
+        var outcome = await rules.UpdateAsync("credit",
+            """{ "rule": { "and": [ { "spec": "is-active" }, { "spec": "credit-check" } ] } }""", 1,
+            new RuleChangeProvenance("test"));
         var after = await rule.EvaluateAsync(new Customer(true));
 
         // Assert
@@ -145,12 +147,13 @@ public class RuleFlavourTests
         // Arrange
         var rule = new CreditRule();
         var rules = new RuleSet(Registry()).Add(rule);
-        rules.Update("credit",
-            """{ "rule": { "and": [ { "spec": "is-active" }, { "spec": "credit-check" } ] } }""", 1)
+        (await rules.UpdateAsync("credit",
+            """{ "rule": { "and": [ { "spec": "is-active" }, { "spec": "credit-check" } ] } }""", 1,
+            new RuleChangeProvenance("test")))
             .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
 
         // Act
-        var outcome = rules.Revert("credit", expectedVersion: 2);
+        var outcome = await rules.RevertAsync("credit", expectedVersion: 2, new RuleChangeProvenance("test"));
         var result = await rule.EvaluateAsync(new Customer(true));
 
         // Assert — revert is an update: version moves forward, never back
@@ -163,14 +166,15 @@ public class RuleFlavourTests
     private sealed class RuleFlavourSyncProbe() : Rule<Customer, string>("sync-probe", IsActivePolicy);
 
     [Fact]
-    public void Should_reject_sync_documents_with_async_leaves_on_sync_rules()
+    public async Task Should_reject_sync_documents_with_async_leaves_on_sync_rules()
     {
         // Arrange — a sync Rule must not accept a document referencing an async spec
         var rule = new RuleFlavourSyncProbe();
         var rules = new RuleSet(Registry()).Add(rule);
 
         // Act
-        var outcome = rules.Update("sync-probe", """{ "rule": { "spec": "credit-check" } }""", 1);
+        var outcome = await rules.UpdateAsync(
+            "sync-probe", """{ "rule": { "spec": "credit-check" } }""", 1, new RuleChangeProvenance("test"));
 
         // Assert
         outcome.Outcome.ShouldBe(RuleUpdateOutcome.Invalid);
@@ -195,7 +199,7 @@ public class RuleFlavourTests
     }
 
     [Fact]
-    public void Should_reject_async_document_updates_that_do_not_bind_to_a_policy()
+    public async Task Should_reject_async_document_updates_that_do_not_bind_to_a_policy()
     {
         // Arrange — a bare 'and' composition binds to an async spec, not an async policy
         var rule = new CreditPolicyRule();
@@ -203,7 +207,7 @@ public class RuleFlavourTests
         var nonPolicy = """{ "rule": { "and": [ { "spec": "is-active" }, { "spec": "credit-check" } ] } }""";
 
         // Act
-        var outcome = rules.Update("credit-policy", nonPolicy, 1);
+        var outcome = await rules.UpdateAsync("credit-policy", nonPolicy, 1, new RuleChangeProvenance("test"));
 
         // Assert
         outcome.Outcome.ShouldBe(RuleUpdateOutcome.Invalid);
@@ -221,7 +225,7 @@ public class RuleFlavourTests
             """{ "rule": { "spec": "credit-check", "whenTrue": "credit ok", "whenFalse": "credit not ok" } }""";
 
         // Act
-        var outcome = rules.Update("credit-policy", policyShaped, 1);
+        var outcome = await rules.UpdateAsync("credit-policy", policyShaped, 1, new RuleChangeProvenance("test"));
         var result = await rule.EvaluateAsync(new Customer(false));
 
         // Assert
@@ -250,12 +254,13 @@ public class RuleFlavourTests
         // Arrange
         var rule = new CreditPolicyRule();
         var rules = new RuleSet(Registry()).Add(rule);
-        rules.Update("credit-policy",
-            """{ "rule": { "spec": "credit-check", "whenTrue": "credit ok", "whenFalse": "credit not ok" } }""", 1)
+        (await rules.UpdateAsync("credit-policy",
+            """{ "rule": { "spec": "credit-check", "whenTrue": "credit ok", "whenFalse": "credit not ok" } }""", 1,
+            new RuleChangeProvenance("test")))
             .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
 
         // Act
-        var outcome = rules.Revert("credit-policy", expectedVersion: 2);
+        var outcome = await rules.RevertAsync("credit-policy", expectedVersion: 2, new RuleChangeProvenance("test"));
         var result = await rule.EvaluateAsync(new Customer(true));
 
         // Assert — back on the compiled default, still yielding the typed policy value
@@ -277,16 +282,18 @@ public class RuleFlavourTests
     }
 
     [Fact]
-    public void Should_report_a_version_conflict_for_a_stale_async_update()
+    public async Task Should_report_a_version_conflict_for_a_stale_async_update()
     {
         // Arrange
         var rule = new CreditRule();
         var rules = new RuleSet(Registry()).Add(rule);
-        rules.Update("credit", """{ "rule": { "spec": "credit-check" } }""", 1)
+        (await rules.UpdateAsync("credit", """{ "rule": { "spec": "credit-check" } }""", 1,
+            new RuleChangeProvenance("test")))
             .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
 
         // Act — second writer still believes version 1
-        var outcome = rules.Update("credit", """{ "rule": { "spec": "credit-check" } }""", 1);
+        var outcome = await rules.UpdateAsync(
+            "credit", """{ "rule": { "spec": "credit-check" } }""", 1, new RuleChangeProvenance("test"));
 
         // Assert
         outcome.Outcome.ShouldBe(RuleUpdateOutcome.VersionConflict);

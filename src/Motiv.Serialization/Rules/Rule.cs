@@ -73,33 +73,26 @@ public class Rule<TModel, TMetadata> : RuleBase
         Volatile.Write(ref _state, BindDefault(serializer));
     }
 
-    internal sealed override RuleUpdateResult TryUpdate(RuleSerializer serializer, string documentJson, int expectedVersion)
+    internal sealed override RulePrepareResult PrepareUpdate(
+        RuleSerializer serializer, string documentJson, int expectedVersion)
     {
         var current = Snapshot();
         if (current.Version != expectedVersion)
-            return RuleUpdateResult.VersionConflict(current.Version);
+            return RulePrepareResult.VersionConflict(current.Version);
 
-        SpecBase<TModel, TMetadata> spec;
-        try
-        {
-            spec = Bind(serializer, documentJson);
-        }
-        catch (RuleSerializationException ex)
-        {
-            return RuleUpdateResult.Invalid(ex.Errors);
-        }
+        var errors = new List<RuleError>();
+        if (TryBind(serializer, documentJson, errors) is not { } spec)
+            return RulePrepareResult.Invalid(errors);
 
-        if (RequirePolicy(spec) is { } policyError)
-            return RuleUpdateResult.Invalid([policyError]);
-
-        return Publish(current, new State(documentJson, current.Version + 1, spec));
+        return RulePrepareResult.Prepared(
+            new Publication(this, new State(documentJson, current.Version + 1, spec)));
     }
 
-    internal sealed override RuleUpdateResult TryRevert(RuleSerializer serializer, int expectedVersion)
+    internal sealed override RulePrepareResult PrepareRevert(RuleSerializer serializer, int expectedVersion)
     {
         var current = Snapshot();
         if (current.Version != expectedVersion)
-            return RuleUpdateResult.VersionConflict(current.Version);
+            return RulePrepareResult.VersionConflict(current.Version);
 
         State @default;
         try
@@ -108,34 +101,28 @@ public class Rule<TModel, TMetadata> : RuleBase
         }
         catch (RuleSerializationException ex)
         {
-            return RuleUpdateResult.Invalid(ex.Errors);
+            return RulePrepareResult.Invalid(ex.Errors);
         }
 
-        return Publish(current, new State(@default.DocumentJson, current.Version + 1, @default.Spec));
+        return RulePrepareResult.Prepared(
+            new Publication(this, new State(@default.DocumentJson, current.Version + 1, @default.Spec)));
     }
 
     internal sealed override void ValidateDocument(
-        RuleSerializer serializer, string documentJson, List<RuleError> errors)
-    {
-        SpecBase<TModel, TMetadata> spec;
-        try
-        {
-            spec = Bind(serializer, documentJson);
-        }
-        catch (RuleSerializationException exception)
-        {
-            errors.AddRange(exception.Errors);
-            return;
-        }
-
-        if (RequirePolicy(spec) is { } policyError)
-            errors.Add(policyError);
-    }
+        RuleSerializer serializer, string documentJson, List<RuleError> errors) =>
+        // The bound spec is discarded — this is the dry run, and the errors list is the whole answer.
+        TryBind(serializer, documentJson, errors);
 
     internal sealed override (int Version, string? DocumentJson) VersionedDocument()
     {
         var snapshot = Snapshot();
         return (snapshot.Version, snapshot.DocumentJson);
+    }
+
+    internal sealed override void RestoreVersion(int version)
+    {
+        var current = Snapshot();
+        Volatile.Write(ref _state, new State(current.DocumentJson, version, current.Spec));
     }
 
     internal sealed override IRebindCommit? PrepareRebind(RuleSerializer serializer, List<RuleError> errors)
@@ -146,22 +133,8 @@ public class Rule<TModel, TMetadata> : RuleBase
         if (current.DocumentJson is null)
             return NoRebindCommit.Instance;
 
-        SpecBase<TModel, TMetadata> spec;
-        try
-        {
-            spec = Bind(serializer, current.DocumentJson);
-        }
-        catch (RuleSerializationException exception)
-        {
-            errors.AddRange(exception.Errors);
+        if (TryBind(serializer, current.DocumentJson, errors) is not { } spec)
             return null;
-        }
-
-        if (RequirePolicy(spec) is { } policyError)
-        {
-            errors.Add(policyError);
-            return null;
-        }
 
         // The version is carried across unchanged: the document did not change, only what it resolves
         // to, so bumping it would spuriously conflict with an editor's open draft.
@@ -177,18 +150,20 @@ public class Rule<TModel, TMetadata> : RuleBase
         public void Commit() => Volatile.Write(ref rule._state, replacement);
     }
 
-    private RuleUpdateResult Publish(State expected, State replacement)
+    /// <summary>
+    /// A prepared rule change, published by swapping the state snapshot. A plain
+    /// <see cref="Volatile.Write{T}"/>, not a compare-and-swap: the outer gate on
+    /// <see cref="BindingScope"/> serialises whole operations, so no second writer can be in flight,
+    /// and a CAS was never able to see a <em>different process</em> anyway. Enforcement lives in the
+    /// store's <c>(Name, Version)</c> primary key, which can.
+    /// </summary>
+    private sealed class Publication(Rule<TModel, TMetadata> rule, State replacement) : IRulePublication
     {
-        // Defensive rather than load-bearing: RuleSet.Update/Revert (the only public callers that
-        // reach here) and RebindCommit's direct Volatile.Write both run under the same
-        // BindingScope write lock, so no second writer can ever be in flight and the CAS-miss arm
-        // below is unreachable through the public API. Kept as a CAS regardless — cheap, and it
-        // fails safe rather than silently overwriting a concurrent write if that invariant is
-        // ever broken.
-        var witnessed = Interlocked.CompareExchange(ref _state, replacement, expected);
-        return ReferenceEquals(witnessed, expected)
-            ? RuleUpdateResult.Updated(replacement.Version)
-            : RuleUpdateResult.VersionConflict(witnessed!.Version);
+        public int Version => replacement.Version;
+
+        public string? DocumentJson => replacement.DocumentJson;
+
+        public void Commit() => Volatile.Write(ref rule._state, replacement);
     }
 
     private State BindDefault(RuleSerializer serializer)
@@ -200,6 +175,33 @@ public class Rule<TModel, TMetadata> : RuleBase
         if (RequirePolicy(spec) is { } policyError)
             throw new RuleSerializationException([policyError]);
         return new State(Default.DocumentJson, 1, spec);
+    }
+
+    /// <summary>
+    /// Binds a document and applies the flavour check, collecting every reason it would not bind into
+    /// <paramref name="errors"/>. The one failure shape behind the three callers that report a bad
+    /// document rather than throwing on one — each then says so in its own terms.
+    /// </summary>
+    /// <returns>The bound spec, or null when it did not bind, in which case <paramref name="errors"/> says why.</returns>
+    private SpecBase<TModel, TMetadata>? TryBind(
+        RuleSerializer serializer, string documentJson, List<RuleError> errors)
+    {
+        SpecBase<TModel, TMetadata> spec;
+        try
+        {
+            spec = Bind(serializer, documentJson);
+        }
+        catch (RuleSerializationException exception)
+        {
+            errors.AddRange(exception.Errors);
+            return null;
+        }
+
+        if (RequirePolicy(spec) is not { } policyError)
+            return spec;
+
+        errors.Add(policyError);
+        return null;
     }
 
     private protected virtual SpecBase<TModel, TMetadata> Bind(RuleSerializer serializer, string documentJson) =>

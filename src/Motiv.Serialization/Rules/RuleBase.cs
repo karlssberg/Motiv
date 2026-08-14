@@ -44,14 +44,41 @@ public abstract class RuleBase
 
     internal RuleDefault Default { get; }
 
+    // Volatile, not a plain auto-property: RuleSet.Rules/FindEntry/ToEntry read this without
+    // holding the scope lock, while RuleSet.Apply and CommitCore write it under the lock. Without
+    // a memory barrier a lock-free reader could observe a stale value past the write — e.g. a
+    // repair clearing quarantine under CommitCore while a concurrent FindEntry still sees it set.
+    private IReadOnlyList<RuleError> _quarantine = [];
+
+    /// <summary>
+    /// Why <see cref="RuleSet.Load"/> could not apply this rule's stored document, or empty. Non-empty
+    /// means the rule is evaluating its compiled default while the store holds something that would
+    /// not bind. Held here rather than in a table beside <see cref="RuleSet"/>'s rules — as
+    /// <c>PropositionSet</c> holds it on the authored proposition — so that a single reference write
+    /// keeps it coherent for the unsynchronised readers of <see cref="RuleSet.Rules"/>.
+    /// </summary>
+    internal IReadOnlyList<RuleError> Quarantine
+    {
+        get => Volatile.Read(ref _quarantine);
+        set => Volatile.Write(ref _quarantine, value);
+    }
+
     /// <summary>Binds the default and publishes version 1. Called exactly once, by <see cref="RuleSet.Add"/>.</summary>
     internal abstract void Attach(RuleSerializer serializer);
 
-    /// <summary>Validates and binds the document, then CAS-publishes it over <paramref name="expectedVersion"/>.</summary>
-    internal abstract RuleUpdateResult TryUpdate(RuleSerializer serializer, string documentJson, int expectedVersion);
+    /// <summary>
+    /// Validates and binds the document against <paramref name="expectedVersion"/>, returning a
+    /// publication that is not yet live. Binding is the fallible half; committing is not — the split
+    /// is what lets the store write sit between them.
+    /// </summary>
+    internal abstract RulePrepareResult PrepareUpdate(
+        RuleSerializer serializer, string documentJson, int expectedVersion);
 
-    /// <summary>CAS-publishes the default back over <paramref name="expectedVersion"/>, bumping the version.</summary>
-    internal abstract RuleUpdateResult TryRevert(RuleSerializer serializer, int expectedVersion);
+    /// <summary>
+    /// Binds the default against <paramref name="expectedVersion"/>, returning a publication that
+    /// moves the version <em>forward</em> — a revert is a new version, never a return to an old one.
+    /// </summary>
+    internal abstract RulePrepareResult PrepareRevert(RuleSerializer serializer, int expectedVersion);
 
     /// <summary>
     /// Binds the rule's current document against a prospective source without publishing, so a
@@ -70,4 +97,12 @@ public abstract class RuleBase
 
     /// <summary>Reads the version and document from one snapshot, so the pair is always coherent.</summary>
     internal abstract (int Version, string? DocumentJson) VersionedDocument();
+
+    /// <summary>
+    /// Overwrites the live version without touching the binding — used only by
+    /// <see cref="RuleSet.Load"/>, to restore the number the store holds after a stored document has
+    /// been bound through the ordinary publish path. Renumbering anywhere else would break the
+    /// optimistic-concurrency contract.
+    /// </summary>
+    internal abstract void RestoreVersion(int version);
 }

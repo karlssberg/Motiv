@@ -44,7 +44,7 @@ public class PublicHostingTests
     /// after its document is set.
     /// </summary>
     [Fact]
-    public void Should_cascade_a_proposition_edit_into_a_rule_over_the_public_api()
+    public async Task Should_cascade_a_proposition_edit_into_a_rule_over_the_public_api()
     {
         // Arrange — the supported public path: propositions first, then rules built from them
         var propositions = NewPropositions();
@@ -53,16 +53,17 @@ public class PublicHostingTests
         var rule = new CanCheckoutRule();
         var rules = new RuleSet(propositions).Add(rule);
 
-        propositions.Create("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null)
+        (await propositions.CreateAsync("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null))
             .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
-        rules.Update("can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1)
+        (await rules.UpdateAsync(
+            "can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1, new RuleChangeProvenance("test")))
             .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
 
         var inactiveAdult = new Customer(IsActive: false, Age: 30);
         rule.Evaluate(inactiveAdult).Satisfied.ShouldBeFalse();
 
         // Act — only the proposition moves
-        propositions.Update("customer.eligible", """{ "rule": { "spec": "customer.is-adult" } }""", 1)
+        (await propositions.UpdateAsync("customer.eligible", """{ "rule": { "spec": "customer.is-adult" } }""", 1))
             .Outcome.ShouldBe(PropositionUpdateOutcome.Updated);
 
         // Assert — the rule's evaluation follows
@@ -75,13 +76,14 @@ public class PublicHostingTests
     /// prepare-all-then-commit-all transaction span both.
     /// </summary>
     [Fact]
-    public void Should_see_a_publicly_built_rule_set_as_a_dependent()
+    public async Task Should_see_a_publicly_built_rule_set_as_a_dependent()
     {
         // Arrange
         var propositions = NewPropositions();
         var rules = new RuleSet(propositions).Add(new CanCheckoutRule());
-        propositions.Create("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
-        rules.Update("can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1);
+        await propositions.CreateAsync("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await rules.UpdateAsync(
+            "can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1, new RuleChangeProvenance("test"));
 
         // Act
         var dependents = propositions.Dependents("customer.eligible");
@@ -90,7 +92,7 @@ public class PublicHostingTests
         dependents.Count.ShouldBe(1);
         dependents[0].Name.ShouldBe("can-checkout");
         dependents[0].Kind.ShouldBe("rule");
-        propositions.Withdraw("customer.eligible", 1).Outcome.ShouldBe(PropositionUpdateOutcome.Referenced);
+        (await propositions.WithdrawAsync("customer.eligible", 1)).Outcome.ShouldBe(PropositionUpdateOutcome.Referenced);
     }
 
     /// <summary>
@@ -98,12 +100,14 @@ public class PublicHostingTests
     /// the public path has to let propositions be authored and loaded before the rule set exists.
     /// </summary>
     [Fact]
-    public void Should_bind_a_rule_default_against_a_proposition_loaded_from_the_store()
+    public async Task Should_bind_a_rule_default_against_a_proposition_loaded_from_the_store()
     {
         // Arrange — a store already holding a proposition, as it would be after a restart
         var store = new InMemoryPropositionStore();
-        store.Save(new StoredProposition(
-            "customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", 1, null));
+        await store.WriteAsync(
+            PropositionBatch.Save(new StoredProposition(
+                "customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", 1, null)),
+            default);
 
         var propositions = NewPropositions(store);
         propositions.Load();
@@ -115,7 +119,7 @@ public class PublicHostingTests
         rule.Evaluate(inactiveAdult).Satisfied.ShouldBeFalse();
 
         // Assert — and the cascade still reaches it
-        propositions.Update("customer.eligible", """{ "rule": { "spec": "customer.is-adult" } }""", 1)
+        (await propositions.UpdateAsync("customer.eligible", """{ "rule": { "spec": "customer.is-adult" } }""", 1))
             .Outcome.ShouldBe(PropositionUpdateOutcome.Updated);
         rule.Evaluate(inactiveAdult).Satisfied.ShouldBeTrue();
     }
@@ -259,7 +263,7 @@ public class PublicHostingTests
             [typeof(SpecRegistry), typeof(IPropositionStore), typeof(RuleSerializerOptions)], null);
         var ruleSetConstructor = typeof(RuleSet).GetConstructor(
             BindingFlags.Public | BindingFlags.Instance, null,
-            [typeof(PropositionSet), typeof(RuleSerializerOptions)], null);
+            [typeof(PropositionSet), typeof(IRuleStore), typeof(RuleSerializerOptions)], null);
 
         // Assert
         propositionSetConstructor.ShouldNotBeNull();

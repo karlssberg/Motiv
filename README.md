@@ -273,6 +273,26 @@ combine specs that already exist, because new primitive facts still come from C#
 Available via the `Motiv.Serialization` and `Motiv.Serialization.AspNetCore`
 packages.
 
+### Rule Durability
+
+Register a store so a published rule survives a restart instead of reverting to
+its compiled default:
+
+```csharp
+builder.Services.AddMotivRules(registry, options)
+    .AddRuleStore(new JsonFileRuleStore("rules.json"))
+    .AddRule<CanCheckoutRule>();
+```
+
+Every publish appends an immutable, provenance-carrying row to an append-only
+version log — who published, when, and why — rather than overwriting the last
+one, so history is auditable and a rollback (`RestoreAsync`) appends a fresh
+copy of an old version instead of rewriting it. A stored document that no
+longer binds after a redeploy is *quarantined* — the rule keeps running its
+compiled default rather than failing to evaluate — and, by default, stops
+startup so nobody boots quietly into unapproved behaviour. Available via the
+`Motiv.Serialization` and `Motiv.Serialization.AspNetCore` packages.
+
 ### Governance and Access Control
 
 Live rules are secure by default: `MapMotivRules()` requires authentication on

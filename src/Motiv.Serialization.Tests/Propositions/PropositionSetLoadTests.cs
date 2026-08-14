@@ -13,11 +13,11 @@ public class PropositionSetLoadTests
     private static StoredProposition Stored(string name, string documentJson, int version = 1) =>
         new(name, "customer", documentJson, version, null);
 
-    private static (PropositionSet Set, BindingScope Scope) Load(params StoredProposition[] stored)
+    private static async Task<(PropositionSet Set, BindingScope Scope)> Load(params StoredProposition[] stored)
     {
         var store = new InMemoryPropositionStore();
         foreach (var proposition in stored)
-            store.Save(proposition);
+            await store.WriteAsync(PropositionBatch.Save(proposition), default);
 
         var scope = new BindingScope(new SpecRegistry().Register("customer.is-active", IsActive));
         var set = new PropositionSet(scope, store).AddModel<Customer>("customer");
@@ -26,10 +26,10 @@ public class PropositionSetLoadTests
     }
 
     [Fact]
-    public void Should_bind_a_stored_proposition()
+    public async Task Should_bind_a_stored_proposition()
     {
         // Act
-        var (set, scope) = Load(Stored("customer.a", """{ "rule": { "spec": "customer.is-active" } }"""));
+        var (set, scope) = await Load(Stored("customer.a", """{ "rule": { "spec": "customer.is-active" } }"""));
 
         // Assert
         scope.Source.Find("customer.a").ShouldNotBeNull();
@@ -37,17 +37,17 @@ public class PropositionSetLoadTests
     }
 
     [Fact]
-    public void Should_preserve_the_stored_version()
+    public async Task Should_preserve_the_stored_version()
     {
         // Act
-        var (set, _) = Load(Stored("customer.a", """{ "rule": { "spec": "customer.is-active" } }""", version: 7));
+        var (set, _) = await Load(Stored("customer.a", """{ "rule": { "spec": "customer.is-active" } }""", version: 7));
 
         // Assert — versions must survive a restart or every reader's next save would conflict
         set.Find("customer.a")!.Version.ShouldBe(7);
     }
 
     [Fact]
-    public void Should_bind_dependencies_before_dependents_regardless_of_store_order()
+    public async Task Should_bind_dependencies_before_dependents_regardless_of_store_order()
     {
         // Arrange — b depends on a, deliberately stored first
         var stored = new[]
@@ -57,7 +57,7 @@ public class PropositionSetLoadTests
         };
 
         // Act
-        var (set, scope) = Load(stored);
+        var (set, scope) = await Load(stored);
 
         // Assert
         scope.Source.Find("customer.b").ShouldNotBeNull();
@@ -65,11 +65,11 @@ public class PropositionSetLoadTests
     }
 
     [Fact]
-    public void Should_quarantine_a_document_referencing_a_spec_that_no_longer_exists()
+    public async Task Should_quarantine_a_document_referencing_a_spec_that_no_longer_exists()
     {
         // Arrange — the redeploy case: the C# spec this document referenced was renamed away
         // Act
-        var (set, scope) = Load(Stored("customer.a", """{ "rule": { "spec": "customer.removed-in-a-redeploy" } }"""));
+        var (set, scope) = await Load(Stored("customer.a", """{ "rule": { "spec": "customer.removed-in-a-redeploy" } }"""));
 
         // Assert
         var entry = set.Find("customer.a").ShouldNotBeNull();
@@ -78,17 +78,17 @@ public class PropositionSetLoadTests
     }
 
     [Fact]
-    public void Should_keep_the_document_of_a_quarantined_proposition_for_repair()
+    public async Task Should_keep_the_document_of_a_quarantined_proposition_for_repair()
     {
         // Act
-        var (set, _) = Load(Stored("customer.a", """{ "rule": { "spec": "gone" } }"""));
+        var (set, _) = await Load(Stored("customer.a", """{ "rule": { "spec": "gone" } }"""));
 
         // Assert
         set.DocumentJsonOf("customer.a").ShouldNotBeNull();
     }
 
     [Fact]
-    public void Should_quarantine_a_dependent_of_a_quarantined_proposition()
+    public async Task Should_quarantine_a_dependent_of_a_quarantined_proposition()
     {
         // Arrange
         var stored = new[]
@@ -98,7 +98,7 @@ public class PropositionSetLoadTests
         };
 
         // Act
-        var (set, scope) = Load(stored);
+        var (set, scope) = await Load(stored);
 
         // Assert — b is quarantined for the right reason: a never bound, so it never reached the
         // overlay, and b's own reference to it is what fails to resolve
@@ -108,11 +108,11 @@ public class PropositionSetLoadTests
     }
 
     [Fact]
-    public void Should_let_a_compiled_spec_resolve_beneath_a_quarantined_override()
+    public async Task Should_let_a_compiled_spec_resolve_beneath_a_quarantined_override()
     {
         // Arrange — a broken override must reveal the compiled spec, not a hole
         // Act
-        var (set, scope) = Load(Stored("customer.is-active", """{ "rule": { "spec": "gone" } }"""));
+        var (set, scope) = await Load(Stored("customer.is-active", """{ "rule": { "spec": "gone" } }"""));
 
         // Assert
         set.Find("customer.is-active")!.Quarantine.ShouldNotBeEmpty();
@@ -121,7 +121,7 @@ public class PropositionSetLoadTests
     }
 
     [Fact]
-    public void Should_load_the_healthy_propositions_alongside_the_quarantined_ones()
+    public async Task Should_load_the_healthy_propositions_alongside_the_quarantined_ones()
     {
         // Arrange — one bad row must not cost the whole store
         var stored = new[]
@@ -131,7 +131,7 @@ public class PropositionSetLoadTests
         };
 
         // Act
-        var (set, scope) = Load(stored);
+        var (set, scope) = await Load(stored);
 
         // Assert
         scope.Source.Find("customer.fine").ShouldNotBeNull();
@@ -139,11 +139,11 @@ public class PropositionSetLoadTests
     }
 
     [Fact]
-    public void Should_never_throw_on_a_malformed_stored_document()
+    public async Task Should_never_throw_on_a_malformed_stored_document()
     {
         // Arrange — a hand-edited JSON file must not stop the application booting
         var store = new InMemoryPropositionStore();
-        store.Save(Stored("customer.a", "{ not json"));
+        await store.WriteAsync(PropositionBatch.Save(Stored("customer.a", "{ not json")), default);
         var scope = new BindingScope(new SpecRegistry().Register("customer.is-active", IsActive));
         var set = new PropositionSet(scope, store).AddModel<Customer>("customer");
 
@@ -156,13 +156,13 @@ public class PropositionSetLoadTests
     }
 
     [Fact]
-    public void Should_allow_repairing_a_quarantined_proposition_by_updating_it()
+    public async Task Should_allow_repairing_a_quarantined_proposition_by_updating_it()
     {
         // Arrange
-        var (set, scope) = Load(Stored("customer.a", """{ "rule": { "spec": "gone" } }""", version: 3));
+        var (set, scope) = await Load(Stored("customer.a", """{ "rule": { "spec": "gone" } }""", version: 3));
 
         // Act
-        var result = set.Update("customer.a", """{ "rule": { "spec": "customer.is-active" } }""", 3);
+        var result = await set.UpdateAsync("customer.a", """{ "rule": { "spec": "customer.is-active" } }""", 3);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Updated);
@@ -171,13 +171,13 @@ public class PropositionSetLoadTests
     }
 
     [Fact]
-    public void Should_allow_deleting_a_quarantined_proposition()
+    public async Task Should_allow_deleting_a_quarantined_proposition()
     {
         // Arrange
-        var (set, _) = Load(Stored("customer.a", """{ "rule": { "spec": "gone" } }""", version: 2));
+        var (set, _) = await Load(Stored("customer.a", """{ "rule": { "spec": "gone" } }""", version: 2));
 
         // Act
-        var result = set.Withdraw("customer.a", 2);
+        var result = await set.WithdrawAsync("customer.a", 2);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Removed);
@@ -185,13 +185,17 @@ public class PropositionSetLoadTests
     }
 
     [Fact]
-    public void Should_quarantine_both_members_of_a_cycle_in_the_store()
+    public async Task Should_quarantine_both_members_of_a_cycle_in_the_store()
     {
         // Arrange — a hand-edited store can contain a reference cycle that Create/Update, which run
         // DependencyGraph.FindCycle, would have rejected outright
         var store = new InMemoryPropositionStore();
-        store.Save(Stored("customer.is-active", """{ "rule": { "spec": "customer.is-eligible" } }"""));
-        store.Save(Stored("customer.is-eligible", """{ "rule": { "spec": "customer.is-active" } }"""));
+        await store.WriteAsync(
+            PropositionBatch.Save(Stored("customer.is-active", """{ "rule": { "spec": "customer.is-eligible" } }""")),
+            default);
+        await store.WriteAsync(
+            PropositionBatch.Save(Stored("customer.is-eligible", """{ "rule": { "spec": "customer.is-active" } }""")),
+            default);
 
         var scope = new BindingScope(new SpecRegistry()
             .Register("customer.is-active", IsActive)
@@ -216,10 +220,10 @@ public class PropositionSetLoadTests
     /// a NullReferenceException out of startup.
     /// </summary>
     [Fact]
-    public void Should_quarantine_a_stored_document_with_no_rule()
+    public async Task Should_quarantine_a_stored_document_with_no_rule()
     {
         // Act
-        var (set, scope) = Load(Stored("customer.a", "{ }"));
+        var (set, scope) = await Load(Stored("customer.a", "{ }"));
 
         // Assert
         set.Find("customer.a")!.Quarantine.ShouldContain(error => error.Code == RuleErrorCode.InvalidNode);
@@ -250,9 +254,7 @@ public class PropositionSetLoadTests
     {
         public IReadOnlyList<StoredProposition> Load() => rows!;
 
-        public void Save(StoredProposition proposition) { }
-
-        public void Delete(string name) { }
+        public Task WriteAsync(PropositionBatch batch, CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
     [Theory]
@@ -313,10 +315,10 @@ public class PropositionSetLoadTests
     /// proposition broken while the evaluator carried on resolving the stale binding.
     /// </summary>
     [Fact]
-    public void Should_refuse_a_second_load()
+    public async Task Should_refuse_a_second_load()
     {
         // Arrange
-        var (set, scope) = Load(Stored("customer.a", """{ "rule": { "spec": "customer.is-active" } }"""));
+        var (set, scope) = await Load(Stored("customer.a", """{ "rule": { "spec": "customer.is-active" } }"""));
 
         // Act
         var second = () => set.Load();
@@ -330,11 +332,11 @@ public class PropositionSetLoadTests
     }
 
     [Fact]
-    public void Should_quarantine_a_stored_proposition_with_an_invalid_name()
+    public async Task Should_quarantine_a_stored_proposition_with_an_invalid_name()
     {
         // Arrange — a hand-edited store is not bound by the grammar Create enforces
         // Act
-        var (set, scope) = Load(Stored("1bad", """{ "rule": { "spec": "customer.is-active" } }"""));
+        var (set, scope) = await Load(Stored("1bad", """{ "rule": { "spec": "customer.is-active" } }"""));
 
         // Assert
         set.Find("1bad")!.Quarantine.ShouldContain(error => error.Code == RuleErrorCode.InvalidSpecName);

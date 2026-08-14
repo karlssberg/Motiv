@@ -98,12 +98,13 @@ Motiv reports every top-level evaluation via OpenTelemetry &mdash; a `motiv.eval
 
 ## Live Rules
 
-Live rules (in the `Motiv.Serialization` and `Motiv.Serialization.AspNetCore` packages) wrap serialized rule documents in typed, hot-swappable handles: declare a rule as a sealed class, inject the concrete type wherever the decision is made, and replace the implementation at runtime &mdash; through HTTP endpoints with optimistic concurrency, or directly through a `RuleSet` &mdash; without a restart and without tearing in-flight evaluations. See [Live Rules](./live-rules/index.md) for the four rule flavours, the concurrency model, and the async loading boundary.
+Live rules (in the `Motiv.Serialization` and `Motiv.Serialization.AspNetCore` packages) wrap serialized rule documents in typed, hot-swappable handles: declare a rule as a sealed class, inject the concrete type wherever the decision is made, and replace the implementation at runtime &mdash; through HTTP endpoints with optimistic concurrency, or directly through a `RuleSet` &mdash; without a restart and without tearing in-flight evaluations. Registering a store makes every publish durable, in an append-only version log a rule set can be restored from. See [Live Rules](./live-rules/index.md) for the four rule flavours, the concurrency model, and the async loading boundary.
 
 | Type / Method                                                            | Description                                                                                       |
 |---------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
 | [Rule Classes](./live-rules/Rules.md)                                     | `Rule`, `PolicyRule`, `AsyncRule`, `AsyncPolicyRule` &mdash; declaring and evaluating live rules. |
-| [RuleSet](./live-rules/RuleSet.md)                                        | Registers rules, binds defaults at startup, and applies `Update()`/`Revert()` with optimistic concurrency. |
+| [RuleSet](./live-rules/RuleSet.md)                                        | Registers rules, binds defaults at startup, and applies `UpdateAsync()`/`RevertAsync()` with optimistic concurrency. |
+| [Rule Durability](./live-rules/durability.md)                             | `AddRuleStore()`, the append-only version log, quarantine, `HistoryAsync()`, and rolling back with `RestoreAsync()`. |
 | [RuleDocuments](./live-rules/RuleDocuments.md)                            | `FromJson()` and `Embedded()` &mdash; rule-document sources for rule defaults.                    |
 | [ASP.NET Core Integration](./live-rules/AspNetCore.md)                    | `AddMotivRules()`, `AddRule()`, `MapMotivRules()`, and the `GET`/`PUT`/`DELETE` rule endpoints.   |
 | [DeserializeAsyncSpec()](./live-rules/DeserializeAsyncSpec.md)            | Loads rule documents into the async hierarchy, lifting sync references and enforcing the sync/async boundary. |

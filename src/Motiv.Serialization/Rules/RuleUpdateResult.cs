@@ -1,6 +1,6 @@
 namespace Motiv.Serialization;
 
-/// <summary>The outcome kind of a <see cref="RuleSet.Update"/> or <see cref="RuleSet.Revert"/> call.</summary>
+/// <summary>The outcome kind of a <see cref="RuleSet.UpdateAsync"/> or <see cref="RuleSet.RevertAsync"/> call.</summary>
 public enum RuleUpdateOutcome
 {
     /// <summary>The rule was replaced; <see cref="RuleUpdateResult.Version"/> is the new version.</summary>

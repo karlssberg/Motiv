@@ -107,7 +107,8 @@ registry into a single `AsyncSpecBase`:
 | Page                                              | Description                                                                       |
 |-----------------------------------------------------|-------------------------------------------------------------------------------------|
 | [Rule Classes](Rules.md)                            | `Rule`, `PolicyRule`, `AsyncRule`, `AsyncPolicyRule` — declaring and evaluating rules. |
-| [RuleSet](RuleSet.md)                               | Registering rules, binding defaults at startup, `Update()`/`Revert()` with optimistic concurrency. |
+| [RuleSet](RuleSet.md)                               | Registering rules, binding defaults at startup, `UpdateAsync()`/`RevertAsync()` with optimistic concurrency. |
+| [Rule Durability](durability.md)                    | `AddRuleStore()`, the version log, quarantine and fail-fast, `HistoryAsync()`, `RestoreAsync()`.  |
 | [RuleDocuments](RuleDocuments.md)                   | `FromJson()` and `Embedded()` — document sources for rule defaults.               |
 | [ASP.NET Core Integration](AspNetCore.md)           | `AddMotivRules()`, `AddRule()`, `MapMotivRules()`, and the HTTP endpoint contract. |
 | [DeserializeAsyncSpec()](DeserializeAsyncSpec.md)   | Loading rule documents into the async hierarchy, and the sync/async boundary rules. |
@@ -115,5 +116,7 @@ registry into a single `AsyncSpecBase`:
 ## Next Steps
 
 - See [Rule Classes](Rules.md) for the four flavours and their evaluation surfaces.
+- See [Rule Durability](durability.md) for surviving a restart: registering a store, the version log,
+  quarantine, and rolling back.
 - See [ASP.NET Core Integration](AspNetCore.md) for wiring rules into a web application.
 - Read about [Asynchronous Propositions](../async/index.md), the hierarchy async rules evaluate over.

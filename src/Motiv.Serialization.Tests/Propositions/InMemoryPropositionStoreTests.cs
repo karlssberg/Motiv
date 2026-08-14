@@ -15,13 +15,13 @@ public class InMemoryPropositionStoreTests
     }
 
     [Fact]
-    public void Should_round_trip_a_saved_proposition()
+    public async Task Should_round_trip_a_saved_proposition()
     {
         // Arrange
         var store = new InMemoryPropositionStore();
 
         // Act
-        store.Save(Stored("customer.is-eligible"));
+        await store.WriteAsync(PropositionBatch.Save(Stored("customer.is-eligible")), default);
 
         // Assert
         var loaded = store.Load();
@@ -32,14 +32,14 @@ public class InMemoryPropositionStoreTests
     }
 
     [Fact]
-    public void Should_replace_a_proposition_saved_under_the_same_name()
+    public async Task Should_replace_a_proposition_saved_under_the_same_name()
     {
         // Arrange
         var store = new InMemoryPropositionStore();
-        store.Save(Stored("a", version: 1));
+        await store.WriteAsync(PropositionBatch.Save(Stored("a", version: 1)), default);
 
         // Act
-        store.Save(Stored("a", version: 2));
+        await store.WriteAsync(PropositionBatch.Save(Stored("a", version: 2)), default);
 
         // Assert
         store.Load().Count.ShouldBe(1);
@@ -47,30 +47,42 @@ public class InMemoryPropositionStoreTests
     }
 
     [Fact]
-    public void Should_delete_by_name()
+    public async Task Should_delete_by_name()
     {
         // Arrange
         var store = new InMemoryPropositionStore();
-        store.Save(Stored("a"));
-        store.Save(Stored("b"));
+        await store.WriteAsync(PropositionBatch.Save(Stored("a")), default);
+        await store.WriteAsync(PropositionBatch.Save(Stored("b")), default);
 
         // Act
-        store.Delete("a");
+        await store.WriteAsync(PropositionBatch.Delete("a"), default);
 
         // Assert
         store.Load().Select(proposition => proposition.Name).ShouldBe(["b"]);
     }
 
     [Fact]
-    public void Should_ignore_deleting_an_absent_name()
+    public async Task Should_ignore_deleting_an_absent_name()
     {
         // Arrange
         var store = new InMemoryPropositionStore();
 
-        // Act
-        var delete = () => store.Delete("absent");
+        // Act & Assert — the store is a dumb sink; the set decides what is legal. Not throwing is the assertion.
+        await store.WriteAsync(PropositionBatch.Delete("absent"), default);
+    }
 
-        // Assert — the store is a dumb sink; the set decides what is legal
-        delete.ShouldNotThrow();
+    [Fact]
+    public async Task Should_write_a_save_and_a_delete_in_one_batch()
+    {
+        // Arrange — the batch shape is what makes an envelope all-or-nothing
+        var store = new InMemoryPropositionStore();
+        await store.WriteAsync(PropositionBatch.Save(Stored("a")), default);
+
+        // Act
+        await store.WriteAsync(
+            new PropositionBatch([Stored("b")], ["a"]), default);
+
+        // Assert
+        store.Load().Select(proposition => proposition.Name).ShouldBe(["b"]);
     }
 }

@@ -19,9 +19,10 @@ public sealed class PropositionSet
     /// given store.
     /// </summary>
     /// <remarks>
-    /// Mirrors <see cref="RuleSet(SpecRegistry, RuleSerializerOptions)"/>, and opens a binding scope
-    /// of its own over the registry. Rules that are to see these propositions must therefore be built
-    /// from *this set* — <see cref="RuleSet(PropositionSet, RuleSerializerOptions)"/> — not from the
+    /// Mirrors <see cref="RuleSet(SpecRegistry, IRuleStore, RuleSerializerOptions)"/>, and opens a
+    /// binding scope of its own over the registry. Rules that are to see these propositions must
+    /// therefore be built from *this set* —
+    /// <see cref="RuleSet(PropositionSet, IRuleStore, RuleSerializerOptions)"/> — not from the
     /// registry a second time; the registry refuses the latter rather than let the two drift apart
     /// unnoticed. The intended order is: construct, <see cref="AddModel{TModel}"/>,
     /// <see cref="Load"/>, then build the rule set, so a rule's default document may reference an
@@ -142,37 +143,74 @@ public sealed class PropositionSet
     /// Authors a new proposition. A name already carrying an authored document is a conflict; a name
     /// carrying only a compiled spec is accepted and creates an override — which, because existing
     /// documents already reference that name, rebinds everything that does, transactionally, as
-    /// <see cref="Update"/> would.
+    /// <see cref="UpdateAsync"/> would.
     /// </summary>
     /// <param name="name">The dot-separated name.</param>
     /// <param name="modelTypeId">A registered model-type id.</param>
     /// <param name="documentJson">The rule document defining the proposition.</param>
     /// <param name="description">An optional description.</param>
+    /// <param name="cancellationToken">Cancels while waiting for the gate or the store.</param>
     /// <returns>
     /// The outcome, carrying the dependents that broke when an override is why it was rejected.
     /// Nothing is published or persisted unless it is <c>Created</c>.
     /// </returns>
-    public PropositionUpdateResult Create(
-        string name, string modelTypeId, string documentJson, string? description) =>
-        Scope.Locked(() => CreateCore(name, modelTypeId, documentJson, description));
+    public Task<PropositionUpdateResult> CreateAsync(
+        string name, string modelTypeId, string documentJson, string? description,
+        CancellationToken cancellationToken = default) =>
+        Scope.LockedAsync(
+            () => CreateCoreAsync(name, modelTypeId, documentJson, description, cancellationToken),
+            cancellationToken);
 
     /// <summary>
-    /// <see cref="Create"/> without taking the scope lock, for a caller already holding it. See
-    /// <see cref="RuleSet.UpdateCore"/> for why the split exists — a governed publish takes the
-    /// lock once so that a whole envelope of edits is one atomic step.
+    /// <see cref="CreateAsync"/> without taking the outer scope gate, for a caller already holding it.
+    /// Differs from <see cref="UpdateCoreAsync"/> only in what it prepares and what a success is
+    /// called; the persist-and-commit choreography the two share — and the locking that choreography
+    /// exists to get right — lives in <see cref="PersistAndCommitCoreAsync"/>.
     /// </summary>
-    internal PropositionUpdateResult CreateCore(
-        string name, string modelTypeId, string documentJson, string? description)
+    internal Task<PropositionUpdateResult> CreateCoreAsync(
+        string name, string modelTypeId, string documentJson, string? description,
+        CancellationToken cancellationToken) =>
+        PersistAndCommitCoreAsync(
+            () => PrepareCreateCascade(name, modelTypeId, documentJson, description),
+            PropositionUpdateResult.Created,
+            cancellationToken);
+
+    /// <summary>
+    /// The prepare half of <see cref="CreateCoreAsync"/>: a lone create, binding against a fresh
+    /// single-use copy of the live overlay. Assumes <see cref="BindingScope"/>'s inner monitor is held.
+    /// </summary>
+    private WritePrepare PrepareCreateCascade(
+        string name, string modelTypeId, string documentJson, string? description) =>
+        // A lone write has no other envelope members to protect from a stale rebind, so the
+        // exclusion set is empty.
+        PrepareCreateCore(name, modelTypeId, documentJson, description, new PropositionOverlay(Scope.Overlay), []);
+
+    /// <summary>
+    /// The governed-envelope counterpart of <see cref="PrepareCreateCascade"/>: binds against
+    /// <paramref name="prospective"/> rather than a fresh copy of the live overlay, so a proposition
+    /// prepared earlier in the same envelope — not yet committed, since nothing commits until the
+    /// whole envelope has persisted — is visible to this one. The caller owns <paramref name="prospective"/>
+    /// across the whole envelope and folds every member into it in turn. Assumes
+    /// <see cref="BindingScope"/>'s inner monitor is held.
+    /// </summary>
+    /// <param name="excluding">
+    /// Every node the envelope also explicitly publishes or withdraws elsewhere — see
+    /// <see cref="BindingScope.PrepareClosure"/>'s remarks for why this must never be omitted for a
+    /// governed publish.
+    /// </param>
+    internal WritePrepare PrepareCreateCore(
+        string name, string modelTypeId, string documentJson, string? description,
+        PropositionOverlay prospective, HashSet<NodeId> excluding)
     {
         if (_authored.ContainsKey(name))
-            return PropositionUpdateResult.NameTaken();
+            return WritePrepare.Rejected(PropositionUpdateResult.NameTaken());
 
         if (ValidateName(name) is { } nameError)
-            return PropositionUpdateResult.Invalid([nameError]);
+            return WritePrepare.Rejected(PropositionUpdateResult.Invalid([nameError]));
 
-        var prepared = Prepare(name, modelTypeId, documentJson, description);
+        var prepared = Prepare(name, modelTypeId, documentJson, description, new LayeredSpecSource(prospective, Scope.Registry));
         if (prepared.Entry is not { } entry)
-            return PropositionUpdateResult.Invalid(prepared.Errors);
+            return WritePrepare.Rejected(PropositionUpdateResult.Invalid(prepared.Errors));
 
         // A brand-new name has no referrers, so its closure is empty and the cascade below is a
         // no-op. An *override* is the exception, and the reason a create cascades at all: it
@@ -184,10 +222,7 @@ public sealed class PropositionSet
             References = prepared.References
         };
 
-        var broken = PublishWithCascade(authored);
-        return broken.Count > 0
-            ? PropositionUpdateResult.BreaksDependents(broken)
-            : PropositionUpdateResult.Created(authored.Version);
+        return PrepareCascadeInto(authored, prospective, excluding);
     }
 
     /// <summary>
@@ -197,22 +232,49 @@ public sealed class PropositionSet
     /// <param name="name">The dot-separated name.</param>
     /// <param name="documentJson">The replacement document.</param>
     /// <param name="expectedVersion">The version the caller last observed.</param>
+    /// <param name="cancellationToken">Cancels while waiting for the gate or the store.</param>
     /// <returns>The outcome, carrying the dependents that broke when that is why it was rejected.</returns>
-    public PropositionUpdateResult Update(string name, string documentJson, int expectedVersion) =>
-        Scope.Locked(() => UpdateCore(name, documentJson, expectedVersion));
+    public Task<PropositionUpdateResult> UpdateAsync(
+        string name, string documentJson, int expectedVersion, CancellationToken cancellationToken = default) =>
+        Scope.LockedAsync(
+            () => UpdateCoreAsync(name, documentJson, expectedVersion, cancellationToken),
+            cancellationToken);
 
-    /// <summary><see cref="Update"/> without taking the scope lock. See <see cref="CreateCore"/>.</summary>
-    internal PropositionUpdateResult UpdateCore(string name, string documentJson, int expectedVersion)
+    /// <summary><see cref="UpdateAsync"/> without taking the outer scope gate. See <see cref="CreateCoreAsync"/>.</summary>
+    internal Task<PropositionUpdateResult> UpdateCoreAsync(
+        string name, string documentJson, int expectedVersion, CancellationToken cancellationToken) =>
+        PersistAndCommitCoreAsync(
+            () => PrepareUpdateCascade(name, documentJson, expectedVersion),
+            PropositionUpdateResult.Updated,
+            cancellationToken);
+
+    /// <summary>
+    /// The prepare half of <see cref="UpdateCoreAsync"/>: a lone update, binding against a fresh
+    /// single-use copy of the live overlay. Assumes <see cref="BindingScope"/>'s inner monitor is held.
+    /// </summary>
+    private WritePrepare PrepareUpdateCascade(string name, string documentJson, int expectedVersion) =>
+        // See PrepareCreateCascade: a lone write's exclusion set is always empty.
+        PrepareUpdateCore(name, documentJson, expectedVersion, new PropositionOverlay(Scope.Overlay), []);
+
+    /// <summary>
+    /// The governed-envelope counterpart of <see cref="PrepareUpdateCascade"/>. See
+    /// <see cref="PrepareCreateCore"/>'s remarks — the same reasoning applies to a replacement.
+    /// </summary>
+    internal WritePrepare PrepareUpdateCore(
+        string name, string documentJson, int expectedVersion,
+        PropositionOverlay prospective, HashSet<NodeId> excluding)
     {
         if (!_authored.TryGetValue(name, out var current))
-            return PropositionUpdateResult.NotFound();
+            return WritePrepare.Rejected(PropositionUpdateResult.NotFound());
 
         if (current.Version != expectedVersion)
-            return PropositionUpdateResult.VersionConflict(current.Version);
+            return WritePrepare.Rejected(PropositionUpdateResult.VersionConflict(current.Version));
 
-        var prepared = Prepare(name, current.ModelTypeId, documentJson, current.Description);
+        var prepared = Prepare(
+            name, current.ModelTypeId, documentJson, current.Description,
+            new LayeredSpecSource(prospective, Scope.Registry));
         if (prepared.Entry is not { } entry)
-            return PropositionUpdateResult.Invalid(prepared.Errors);
+            return WritePrepare.Rejected(PropositionUpdateResult.Invalid(prepared.Errors));
 
         var replacement = new Authored(
             this, name, current.ModelTypeId, documentJson, current.Version + 1, current.Description)
@@ -221,10 +283,108 @@ public sealed class PropositionSet
             References = prepared.References
         };
 
-        var broken = PublishWithCascade(replacement);
+        return PrepareCascadeInto(replacement, prospective, excluding);
+    }
+
+    /// <summary>
+    /// The middle of bind → persist → publish, for a caller already holding the outer gate — see
+    /// <see cref="RuleSet.PersistAndCommitCoreAsync"/>, whose shape this mirrors. The store call is
+    /// the last step that can fail; everything after it is a memory swap that cannot.
+    /// </summary>
+    /// <remarks>
+    /// Holds the inner scope monitor around <paramref name="prepare"/> and around the commit, with
+    /// the store round trip in between left unlocked — see the class remarks on
+    /// <see cref="BindingScope"/> for why both tiers matter and why the store call must sit outside
+    /// the monitor. Create and update share this method precisely because that shape is a
+    /// correctness requirement rather than a convenience: one copy is one thing to audit.
+    /// </remarks>
+    /// <param name="prepare">Binds the closure and decides whether the write may proceed.</param>
+    /// <param name="success">Names the outcome of a committed write, given its new version.</param>
+    /// <param name="cancellationToken">Cancels the store round trip.</param>
+    private async Task<PropositionUpdateResult> PersistAndCommitCoreAsync(
+        Func<WritePrepare> prepare, Func<int, PropositionUpdateResult> success,
+        CancellationToken cancellationToken)
+    {
+        var prepared = Scope.Locked(prepare);
+        if (prepared.Failure is { } failure)
+            return failure;
+
+        await _store.WriteAsync(SaveBatchFor(prepared.Authored!), cancellationToken).ConfigureAwait(false);
+
+        return Scope.Locked(() => success(CommitPublishCore(prepared)));
+    }
+
+    /// <summary>
+    /// Prepares a cascading publish: binds the closure over a prospective overlay carrying
+    /// <paramref name="authored"/>'s new definition, so a dependent is checked against what it
+    /// *would* resolve rather than what it resolves today. Shared by <see cref="PrepareCreateCore"/>
+    /// and <see cref="PrepareUpdateCore"/>, which differ only in how <paramref name="authored"/>
+    /// itself was built. <paramref name="prospective"/> is a fresh single-use copy of the live overlay
+    /// for a lone write, and the envelope's own cumulative overlay for a governed publish. Assumes the
+    /// scope lock is held.
+    /// </summary>
+    private WritePrepare PrepareCascadeInto(
+        Authored authored, PropositionOverlay prospective, HashSet<NodeId> excluding)
+    {
+        prospective.Set(authored.Bound!);
+
+        var commits = new List<IRebindCommit>();
+        var broken = Scope.PrepareClosure(authored.Name, prospective, commits, excluding);
+
         return broken.Count > 0
-            ? PropositionUpdateResult.BreaksDependents(broken)
-            : PropositionUpdateResult.Updated(replacement.Version);
+            ? WritePrepare.Rejected(PropositionUpdateResult.BreaksDependents(broken))
+            : WritePrepare.Ready(authored, commits);
+    }
+
+    /// <summary>The batch a publish of <paramref name="authored"/> writes: one save, nothing removed.</summary>
+    private static PropositionBatch SaveBatchFor(Authored authored) => PropositionBatch.Save(RowFor(authored));
+
+    /// <summary>The stored row a publish of <paramref name="authored"/> writes — the save half of a governed envelope's batch.</summary>
+    internal static StoredProposition RowFor(Authored authored) =>
+        new(authored.Name, authored.ModelTypeId, authored.DocumentJson, authored.Version, authored.Description);
+
+    /// <summary>
+    /// Applies a batch of prepared writes to the store as one round trip — the proposition half of a
+    /// governed envelope's persist phase, mirroring <see cref="RuleSet.AppendCoreAsync"/>. Assumes the
+    /// outer gate is held; commits nothing.
+    /// </summary>
+    internal Task WriteBatchCoreAsync(PropositionBatch batch, CancellationToken cancellationToken) =>
+        _store.WriteAsync(batch, cancellationToken);
+
+    /// <summary>
+    /// Applies a create or update prepared earlier by <see cref="PrepareCreateCore"/> or
+    /// <see cref="PrepareUpdateCore"/> — the publish half of a governed envelope's apply phase,
+    /// mirroring <see cref="RuleSet.CommitCore"/>. Has no failure outcome: everything a caller can get
+    /// wrong was already decided by the prepare, and the store write in between has already succeeded
+    /// by the time this runs. Assumes <see cref="BindingScope"/>'s inner monitor is held.
+    /// </summary>
+    /// <param name="prepared">The prepared write, from the same overlay its closure was bound against.</param>
+    /// <returns>The newly published version.</returns>
+    internal int CommitPublishCore(WritePrepare prepared)
+    {
+        var authored = prepared.Authored!;
+        CommitPublish(authored);
+        Scope.CommitClosure(prepared.Commits!);
+        return authored.Version;
+    }
+
+    /// <summary>
+    /// Applies a withdrawal prepared earlier by <see cref="PrepareWithdraw"/> or
+    /// <see cref="PrepareWithdrawCore"/>. The withdrawal counterpart of <see cref="CommitPublishCore"/>,
+    /// and infallible for the same reasons. Leaves no authored document behind, so there is no version
+    /// to report. Assumes <see cref="BindingScope"/>'s inner monitor is held.
+    /// </summary>
+    internal void CommitWithdrawCore(WritePrepare prepared)
+    {
+        Scope.CommitClosure(prepared.Commits!);
+
+        var current = prepared.Authored!;
+        _authored.Remove(current.Name);
+        Scope.Overlay.Remove(current.Name);
+        Scope.Graph.Remove(current.Node);
+        // Defensive rather than load-bearing: a proposition is only ever enrolled by CommitPublish,
+        // which is also what put the graph edges above, so the two always come and go together.
+        Scope.Withdraw(current.Node);
     }
 
     /// <summary>
@@ -234,18 +394,45 @@ public sealed class PropositionSet
     /// </summary>
     /// <param name="name">The dot-separated name.</param>
     /// <param name="expectedVersion">The version the caller last observed.</param>
+    /// <param name="cancellationToken">Cancels while waiting for the gate or the store.</param>
     /// <returns>The outcome.</returns>
-    public PropositionUpdateResult Withdraw(string name, int expectedVersion) =>
-        Scope.Locked(() => WithdrawCore(name, expectedVersion));
+    public Task<PropositionUpdateResult> WithdrawAsync(
+        string name, int expectedVersion, CancellationToken cancellationToken = default) =>
+        Scope.LockedAsync(
+            () => WithdrawCoreAsync(name, expectedVersion, cancellationToken),
+            cancellationToken);
 
-    /// <summary><see cref="Withdraw"/> without taking the scope lock. See <see cref="CreateCore"/>.</summary>
-    internal PropositionUpdateResult WithdrawCore(string name, int expectedVersion)
+    /// <summary><see cref="WithdrawAsync"/> without taking the outer scope gate. See <see cref="CreateCoreAsync"/>.</summary>
+    internal async Task<PropositionUpdateResult> WithdrawCoreAsync(
+        string name, int expectedVersion, CancellationToken cancellationToken)
+    {
+        var prepared = Scope.Locked(() => PrepareWithdraw(name, expectedVersion));
+        if (prepared.Failure is { } failure)
+            return failure;
+
+        await _store.WriteAsync(PropositionBatch.Delete(name), cancellationToken).ConfigureAwait(false);
+
+        return Scope.Locked(() =>
+        {
+            CommitWithdrawCore(prepared);
+            return PropositionUpdateResult.Removed();
+        });
+    }
+
+    /// <summary>
+    /// The prepare half of <see cref="WithdrawCoreAsync"/>: a lone withdrawal, so its
+    /// <see cref="BindingScope.PrepareClosure"/> call excludes nothing — there is no envelope, and
+    /// therefore no other member's own prepare that could need protecting from this one's closure
+    /// walk. See <see cref="PrepareWithdrawCore"/> for the governed counterpart, which takes the
+    /// envelope's exclusion set as a parameter instead. Assumes <see cref="BindingScope"/>'s inner monitor is held.
+    /// </summary>
+    private WritePrepare PrepareWithdraw(string name, int expectedVersion)
     {
         if (!_authored.TryGetValue(name, out var current))
-            return PropositionUpdateResult.NotFound();
+            return WritePrepare.Rejected(PropositionUpdateResult.NotFound());
 
         if (current.Version != expectedVersion)
-            return PropositionUpdateResult.VersionConflict(current.Version);
+            return WritePrepare.Rejected(PropositionUpdateResult.VersionConflict(current.Version));
 
         var compiled = Scope.Registry.Find(name);
         var commits = new List<IRebindCommit>();
@@ -255,7 +442,8 @@ public sealed class PropositionSet
             // Removal would leave referrers pointing at nothing, so direct referrers block it.
             var referrers = Scope.Graph.Referrers(name);
             if (referrers.Count > 0)
-                return PropositionUpdateResult.Referenced([.. referrers.Select(node => node.Name)]);
+                return WritePrepare.Rejected(
+                    PropositionUpdateResult.Referenced([.. referrers.Select(node => node.Name)]));
         }
         else
         {
@@ -264,25 +452,62 @@ public sealed class PropositionSet
             var prospective = new PropositionOverlay(Scope.Overlay);
             prospective.Remove(name);
 
-            var broken = Scope.PrepareClosure(name, prospective, commits);
+            var broken = Scope.PrepareClosure(name, prospective, commits, []);
             if (broken.Count > 0)
-                return PropositionUpdateResult.BreaksDependents(broken);
+                return WritePrepare.Rejected(PropositionUpdateResult.BreaksDependents(broken));
         }
 
-        // The store is the only step in this method that can fail, so it runs first — as Publish
-        // does — keeping "all of it, or none" true even though there is no explicit rollback for
-        // the in-memory mutations, including dependent commits, that follow.
-        _store.Delete(name);
-        Scope.CommitClosure(commits);
+        return WritePrepare.Ready(current, commits);
+    }
 
-        _authored.Remove(name);
-        Scope.Overlay.Remove(name);
-        Scope.Graph.Remove(current.Node);
-        // Defensive rather than load-bearing: a proposition is only ever enrolled by Publish,
-        // which is also what put the graph edges above, so the two always come and go together.
-        Scope.Withdraw(current.Node);
+    /// <summary>
+    /// The governed-envelope counterpart of <see cref="PrepareWithdraw"/>: binds the compiled-default
+    /// closure check (when one lies beneath) against <paramref name="prospective"/> rather than a
+    /// fresh copy of the live overlay, so it reflects every proposition and rule already prepared
+    /// earlier in the same envelope. Assumes <see cref="BindingScope"/>'s inner monitor is
+    /// held.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately does <em>not</em> repeat the direct-referrer check <see cref="PrepareWithdraw"/>
+    /// runs when nothing is compiled beneath the name. A governed publish's <c>Validate</c> pass
+    /// already ran that exact check — accounting for referrers this same envelope redirects away, via
+    /// its own <c>rebound</c>/<c>withdrawn</c> bookkeeping — before this prepare phase is ever reached,
+    /// under the same exclusive gate. Re-deriving it here would either duplicate that bookkeeping or
+    /// regress to the live-graph-only view <c>PrepareWithdraw</c> uses, which is exactly what would
+    /// wrongly refuse a withdrawal whose only referrer is redirected earlier in the same envelope.
+    /// </remarks>
+    internal WritePrepare PrepareWithdrawCore(
+        string name, int expectedVersion, PropositionOverlay prospective, HashSet<NodeId> excluding)
+    {
+        if (!_authored.TryGetValue(name, out var current))
+            return WritePrepare.Rejected(PropositionUpdateResult.NotFound());
 
-        return PropositionUpdateResult.Removed();
+        if (current.Version != expectedVersion)
+            return WritePrepare.Rejected(PropositionUpdateResult.VersionConflict(current.Version));
+
+        if (Scope.Registry.Find(name) is null)
+        {
+            // No direct-referrer check here — see the remarks — but the name still leaves the
+            // envelope's cumulative overlay, exactly as Validate's phase C does for this same arm:
+            // both passes must see the same sequence of worlds, and a later envelope member (a
+            // proposition created after this withdrawal, say) must not resolve a name this envelope
+            // is also removing.
+            prospective.Remove(name);
+            return WritePrepare.Ready(current, []);
+        }
+
+        // Reverting to the compiled default changes what referrers resolve, so — as in
+        // PrepareWithdraw — the dependent closure is re-checked, here against the envelope's own
+        // cumulative prospective overlay. excluding matters here exactly as it does for a publish's
+        // own cascade: a dependent this envelope is *also* explicitly publishing or withdrawing must
+        // not be rebound from its stale, pre-envelope definition — see PrepareClosure's remarks.
+        prospective.Remove(name);
+        var commits = new List<IRebindCommit>();
+        var broken = Scope.PrepareClosure(name, prospective, commits, excluding);
+
+        return broken.Count > 0
+            ? WritePrepare.Rejected(PropositionUpdateResult.BreaksDependents(broken))
+            : WritePrepare.Ready(current, commits);
     }
 
     /// <summary>
@@ -299,7 +524,7 @@ public sealed class PropositionSet
     /// Parses, cycle-checks and binds a proposed document against <paramref name="source"/> without
     /// publishing anything — the proposition half of a governed publish's validate-everything-first
     /// phase. Passing a prospective source lets one envelope member resolve against another that is
-    /// not live yet. Assumes the scope lock is held.
+    /// not live yet. Assumes <see cref="BindingScope"/>'s inner monitor is held.
     /// </summary>
     /// <returns>
     /// The bound entry to fold into the prospective overlay and the names it resolves, or the errors
@@ -327,7 +552,7 @@ public sealed class PropositionSet
     /// failing to bind is an operational reality — a redeploy renames a C# spec a saved proposition
     /// referenced — and refusing to boot would turn a stale row into an outage. Call once, before
     /// rules are added, so a rule's default document may reference an authored proposition.
-    /// Repairing a quarantined proposition via <see cref="Update"/> does not retroactively
+    /// Repairing a quarantined proposition via <see cref="UpdateAsync"/> does not retroactively
     /// un-quarantine anything that depended on it while it was broken — quarantine leaves no graph
     /// edges, so those dependents are not tracked as needing a rebind and stay quarantined until they
     /// are themselves updated.
@@ -433,12 +658,10 @@ public sealed class PropositionSet
             return;
         }
 
-        // The same three steps Publish takes to go live, minus the store write — this row came
+        // The same steps CommitPublish takes to go live, minus the store write — this row came
         // *from* the store, so saving it back would be a no-op at best.
         commit.Commit();
-        Scope.Overlay.Set(authored.Bound!);
-        Scope.Graph.Set(authored.Node, authored.References);
-        Scope.Enrol(authored);
+        CommitPublish(authored);
     }
 
     /// <summary>Parses without letting malformed JSON escape — a hand-edited store must not stop startup.</summary>
@@ -593,43 +816,14 @@ public sealed class PropositionSet
     }
 
     /// <summary>
-    /// Publishes an authored proposition and rebinds everything that references its name — all of
-    /// it, or none. Shared by <see cref="Create"/> and <see cref="Update"/>, which differ only in
-    /// how they arrive here: whether a name may be published at all, and what the outcome is called.
-    /// Once a definition is going live under a name, what that does to the name's dependents is the
-    /// same question either way, and answering it twice is how the two would drift.
+    /// The infallible half of a publish, for a caller that has already persisted the document — the
+    /// counterpart of <see cref="RuleSet.CommitCore"/>. Folds the authored proposition into the live
+    /// overlay, graph and participant table. Assumes <see cref="BindingScope"/>'s inner monitor is
+    /// held: this mutates <see cref="DependencyGraph"/> and <see cref="PropositionOverlay"/> directly,
+    /// both of which are deliberately unsynchronized and rely on the caller holding that monitor.
     /// </summary>
-    /// <returns>
-    /// The dependents that would stop binding, in which case nothing was published. Empty when the
-    /// whole closure rebound and <paramref name="authored"/> is live.
-    /// </returns>
-    private IReadOnlyList<BrokenDependent> PublishWithCascade(Authored authored)
+    internal void CommitPublish(Authored authored)
     {
-        // Bind the closure against a prospective overlay carrying the new definition, so a dependent
-        // is checked against what it *would* resolve rather than what it resolves today.
-        var prospective = new PropositionOverlay(Scope.Overlay);
-        prospective.Set(authored.Bound!);
-
-        var commits = new List<IRebindCommit>();
-        var broken = Scope.PrepareClosure(authored.Name, prospective, commits);
-        if (broken.Count > 0)
-            return broken;
-
-        Publish(authored);
-        Scope.CommitClosure(commits);
-        return [];
-    }
-
-    /// <summary>
-    /// Publishes an authored proposition: store first, then overlay, graph and participant. The
-    /// store runs first and is the only step that can fail — none of the in-memory mutations can —
-    /// so a store failure leaves nothing live behind it, keeping "all of it, or none" true even
-    /// though there is no explicit rollback.
-    /// </summary>
-    private void Publish(Authored authored)
-    {
-        _store.Save(new StoredProposition(
-            authored.Name, authored.ModelTypeId, authored.DocumentJson, authored.Version, authored.Description));
         _authored[authored.Name] = authored;
         Scope.Overlay.Set(authored.Bound!);
         Scope.Graph.Set(authored.Node, authored.References);
@@ -677,9 +871,38 @@ public sealed class PropositionSet
         StoredProposition Stored, IReadOnlyList<string> References, List<RuleError> Errors);
 
     /// <summary>
+    /// The outcome of preparing a write — create, update or withdraw: either what a caller must
+    /// persist and then commit, or why it failed, in which case nothing is persisted or committed.
+    /// Exactly one of <see cref="Authored"/>/<see cref="Commits"/> or <see cref="Failure"/> is
+    /// non-null. The proposition half of <see cref="RulePrepareResult"/>.
+    /// </summary>
+    /// <param name="Authored">
+    /// The proposition the write turns on: the definition to publish for a create or an update, the
+    /// one to remove for a withdraw.
+    /// </param>
+    /// <param name="Commits">The dependent rebinds that go live with it.</param>
+    /// <param name="Failure">Why the write was refused, or null when it may proceed.</param>
+    /// <remarks>
+    /// Internal, not private: a governed envelope (<see cref="ChangeRequestSet"/>) prepares every
+    /// proposition edit up front via <see cref="PrepareCreateCore"/>/<see cref="PrepareUpdateCore"/>/
+    /// <see cref="PrepareWithdrawCore"/>, and needs this shape to carry each one through the persist
+    /// phase to <see cref="CommitPublishCore"/>/<see cref="CommitWithdrawCore"/>.
+    /// </remarks>
+    internal readonly record struct WritePrepare(
+        Authored? Authored, List<IRebindCommit>? Commits, PropositionUpdateResult? Failure)
+    {
+        /// <summary>A write that may proceed to the store.</summary>
+        public static WritePrepare Ready(Authored authored, List<IRebindCommit> commits) =>
+            new(authored, commits, null);
+
+        /// <summary>A write refused before anything was persisted.</summary>
+        public static WritePrepare Rejected(PropositionUpdateResult failure) => new(null, null, failure);
+    }
+
+    /// <summary>
     /// One authored proposition's live state, and its participation in the rebind transaction.
     /// </summary>
-    private sealed class Authored(
+    internal sealed class Authored(
         PropositionSet owner, string name, string modelTypeId, string documentJson, int version, string? description)
         : IRebindable
     {

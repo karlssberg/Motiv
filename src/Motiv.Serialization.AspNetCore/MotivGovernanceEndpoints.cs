@@ -84,7 +84,7 @@ internal static class MotivGovernanceEndpoints
                 : ToFailure(result, json);
         });
 
-        group.MapPost("/change-requests/{id:guid}/approvals", (Guid id, HttpContext http) =>
+        group.MapPost("/change-requests/{id:guid}/approvals", async (Guid id, HttpContext http) =>
         {
             if (changes.Find(id) is not { } change)
                 return UnknownChangeRequest(json);
@@ -94,8 +94,11 @@ internal static class MotivGovernanceEndpoints
             if (RefuseUnlessGrantedEverywhere(http, json, GrantVerb.Publish, TargetNames(change)) is { } refusal)
                 return refusal;
 
-            var result = changes.Approve(
-                id, PrincipalIdentity.Subject(http.User), PrincipalIdentity.Roles(http.User));
+            // Async: a concurrent publish can hold ChangeRequestSet's lock for a whole store round
+            // trip, and the sync Approve would park this request's thread-pool thread for that long.
+            var result = await changes.ApproveAsync(
+                id, PrincipalIdentity.Subject(http.User), PrincipalIdentity.Roles(http.User),
+                http.RequestAborted);
 
             return result is { Outcome: ChangeRequestOutcome.Ok, Change: { } approved }
                 ? Results.Json(ToResponse(approved), json)
@@ -103,7 +106,7 @@ internal static class MotivGovernanceEndpoints
         });
 
         group.MapPost("/change-requests/{id:guid}/rejection",
-            (Guid id, ChangeRequestRejectionRequest request, HttpContext http) =>
+            async (Guid id, ChangeRequestRejectionRequest request, HttpContext http) =>
         {
             if (changes.Find(id) is not { } change)
                 return UnknownChangeRequest(json);
@@ -111,13 +114,14 @@ internal static class MotivGovernanceEndpoints
             if (RefuseUnlessGrantedEverywhere(http, json, GrantVerb.Publish, TargetNames(change)) is { } refusal)
                 return refusal;
 
-            var result = changes.Reject(id, request.Reason ?? string.Empty);
+            // Async — see the approvals route's remark.
+            var result = await changes.RejectAsync(id, request.Reason ?? string.Empty, http.RequestAborted);
             return result is { Outcome: ChangeRequestOutcome.Ok, Change: { } rejected }
                 ? Results.Json(ToResponse(rejected), json)
                 : ToFailure(result, json, "The change request cannot be rejected once it is closed.");
         });
 
-        group.MapPost("/change-requests/{id:guid}/withdrawal", (Guid id, HttpContext http) =>
+        group.MapPost("/change-requests/{id:guid}/withdrawal", async (Guid id, HttpContext http) =>
         {
             if (changes.Find(id) is null)
                 return UnknownChangeRequest(json);
@@ -125,14 +129,15 @@ internal static class MotivGovernanceEndpoints
             // No grant check: withdrawal is the author retracting their own proposal, which the set
             // enforces as workflow state. A third party ending it is a rejection, which has its own
             // route and its own grant.
-            var result = changes.Withdraw(id, PrincipalIdentity.Subject(http.User));
+            // Async — see the approvals route's remark.
+            var result = await changes.WithdrawAsync(id, PrincipalIdentity.Subject(http.User), http.RequestAborted);
             return result is { Outcome: ChangeRequestOutcome.Ok, Change: { } withdrawn }
                 ? Results.Json(ToResponse(withdrawn), json)
                 : ToFailure(result, json,
                     "Only the change request's author may withdraw it, and only while it is open.");
         });
 
-        group.MapPost("/change-requests/{id:guid}/publish", (Guid id, HttpContext http) =>
+        group.MapPost("/change-requests/{id:guid}/publish", async (Guid id, HttpContext http) =>
         {
             if (changes.Find(id) is not { } change)
                 return UnknownChangeRequest(json);
@@ -141,7 +146,7 @@ internal static class MotivGovernanceEndpoints
                 return refusal;
 
             var breakGlassActive = ResolveBreakGlass(http).Active(DateTimeOffset.UtcNow);
-            var result = changes.Publish(id, breakGlassActive);
+            var result = await changes.PublishAsync(id, breakGlassActive, http.RequestAborted);
 
             if (result is not { Outcome: ChangeRequestOutcome.Ok, Change: { } published })
                 return ToFailure(result, json, "The change request cannot be published once it is closed.");
@@ -243,8 +248,13 @@ internal static class MotivGovernanceEndpoints
     /// <param name="documentJson">The proposed document, or null to revert to the default.</param>
     /// <param name="baseVersion">The version the caller authored against.</param>
     /// <param name="written">Maps the write's own outcome onto this surface's response.</param>
+    /// <param name="changeNote">
+    /// The caller's stated reason, or null to fall back to <see cref="ChangeRequestSet.DirectWriteAsync"/>'s
+    /// auto-generated one — the governed path's only way to honor the same <c>changeNote</c> the
+    /// ungoverned write records, since a direct write mints no <see cref="ChangeRequest"/> row of its own.
+    /// </param>
     /// <returns>The gate's 403 refusal, or whatever <paramref name="written"/> produced.</returns>
-    internal static IResult GovernedRuleWrite(
+    internal static async Task<IResult> GovernedRuleWrite(
         ChangeRequestSet governance,
         HttpContext http,
         JsonSerializerOptions json,
@@ -252,14 +262,15 @@ internal static class MotivGovernanceEndpoints
         string name,
         string? documentJson,
         int baseVersion,
-        Func<RuleUpdateResult, IResult> written)
+        Func<RuleUpdateResult, IResult> written,
+        string? changeNote = null)
     {
         var author = PrincipalIdentity.Subject(http.User);
         var breakGlassActive = ResolveBreakGlass(http).Active(DateTimeOffset.UtcNow);
-        var result = governance.DirectWrite(
+        var result = await governance.DirectWriteAsync(
             author, operation,
-            new NewProposedChange(ChangeTargetKind.Rule, name, documentJson, baseVersion, null),
-            breakGlassActive);
+            new NewProposedChange(ChangeTargetKind.Rule, name, documentJson, baseVersion, null, ChangeNote: changeNote),
+            breakGlassActive, http.RequestAborted);
 
         if (result.Blocked is { } decision)
             return RefusedDirectWrite(decision, json);
@@ -286,7 +297,7 @@ internal static class MotivGovernanceEndpoints
     /// <param name="description">The description, when the write creates a proposition.</param>
     /// <param name="written">Maps the write's own outcome onto this surface's response.</param>
     /// <returns>The gate's 403 refusal, or whatever <paramref name="written"/> produced.</returns>
-    internal static IResult GovernedPropositionWrite(
+    internal static async Task<IResult> GovernedPropositionWrite(
         ChangeRequestSet governance,
         HttpContext http,
         JsonSerializerOptions json,
@@ -300,12 +311,12 @@ internal static class MotivGovernanceEndpoints
     {
         var author = PrincipalIdentity.Subject(http.User);
         var breakGlassActive = ResolveBreakGlass(http).Active(DateTimeOffset.UtcNow);
-        var result = governance.DirectWrite(
+        var result = await governance.DirectWriteAsync(
             author, operation,
             new NewProposedChange(
                 ChangeTargetKind.Proposition, name, documentJson, baseVersion, null,
                 modelTypeId, description),
-            breakGlassActive);
+            breakGlassActive, http.RequestAborted);
 
         if (result.Blocked is { } decision)
             return RefusedDirectWrite(decision, json);
@@ -454,6 +465,19 @@ internal static class MotivGovernanceEndpoints
                     result.Change is { } change ? $"{invalidState} It is '{change.Status}'." : invalidState,
                     result.Errors, result.FailedTarget?.Name, null),
                 json, statusCode: 409),
+
+            // A server-side fault, not a client authoring error, and — per
+            // ChangeRequestOutcome.PersistenceDesynced's own remarks — one that no retry of this
+            // request can clear. So neither a 4xx (which reads as "fix your request and resend")
+            // nor a 503 (which reads as "try again shortly"): 500 is the only status that carries
+            // no retry connotation. The exception detail survives on Errors, same as elsewhere.
+            ChangeRequestOutcome.PersistenceDesynced => Results.Json(
+                new ChangeRequestErrorResponse(
+                    "The rule store and this process's live state have diverged after a partial " +
+                    "persist failure. This process must be restarted before this change — or any " +
+                    "other change to the same targets — can be retried.",
+                    result.Errors, result.FailedTarget?.Name, null),
+                json, statusCode: 500),
 
             _ => Results.Json(
                 new ChangeRequestErrorResponse(

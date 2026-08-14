@@ -227,7 +227,7 @@ public class CatalogEndpointTests
         await using var app = await StartWithPropositionsAsync(registry, options);
 
         var propositions = app.Services.GetRequiredService<PropositionSet>();
-        var created = propositions.Create("at-least", "number", """{ "rule": { "spec": "is-positive" } }""", null);
+        var created = await propositions.CreateAsync("at-least", "number", """{ "rule": { "spec": "is-positive" } }""", null);
         created.Outcome.ShouldBe(PropositionUpdateOutcome.Created);
 
         // Act

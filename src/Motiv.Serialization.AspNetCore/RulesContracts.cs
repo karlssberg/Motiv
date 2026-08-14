@@ -76,18 +76,28 @@ public sealed record ErrorResponse(string Error);
 /// <param name="IsPolicy">Whether the rule yields a single value.</param>
 /// <param name="Version">The current version.</param>
 /// <param name="Description">An optional human-readable description.</param>
+/// <param name="Quarantine">
+/// Why a stored document was not applied at load; empty when the rule is running what was published.
+/// A quarantined rule is running its compiled default in place of the stored one.
+/// </param>
 public sealed record RuleListEntry(
-    string Name, string ModelType, string MetadataType, bool IsAsync, bool IsPolicy, int Version, string? Description);
+    string Name, string ModelType, string MetadataType, bool IsAsync, bool IsPolicy, int Version,
+    string? Description, IReadOnlyList<RuleError> Quarantine);
 
 /// <summary>One rule's current document and version.</summary>
 /// <param name="Document">The current rule document, or null while on a compiled (code-defined) default.</param>
 /// <param name="Version">The current version; pass it back as <c>baseVersion</c> when updating.</param>
-public sealed record RuleGetResponse(JsonElement? Document, int Version);
+/// <param name="Quarantine">
+/// Why a stored document was not applied at load; empty when the rule is running what was published.
+/// A quarantined rule is running its compiled default in place of the stored one.
+/// </param>
+public sealed record RuleGetResponse(JsonElement? Document, int Version, IReadOnlyList<RuleError> Quarantine);
 
 /// <summary>A request to replace a rule's implementation.</summary>
 /// <param name="Document">The replacement rule document.</param>
 /// <param name="BaseVersion">The version the caller last observed; a stale value yields 409.</param>
-public sealed record RulePutRequest(JsonElement Document, int BaseVersion);
+/// <param name="ChangeNote">An optional human-supplied reason, written into the version log.</param>
+public sealed record RulePutRequest(JsonElement Document, int BaseVersion, string? ChangeNote = null);
 
 /// <summary>A successful update or revert.</summary>
 /// <param name="Version">The rule's new version.</param>

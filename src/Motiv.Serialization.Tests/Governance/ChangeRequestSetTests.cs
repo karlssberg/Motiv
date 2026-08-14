@@ -73,7 +73,7 @@ public class ChangeRequestSetTests
     ];
 
     [Fact]
-    public void Should_publish_a_two_change_envelope_atomically()
+    public async Task Should_publish_a_two_change_envelope_atomically()
     {
         // Arrange
         var host = NewHost();
@@ -82,7 +82,7 @@ public class ChangeRequestSetTests
         host.Rule.Evaluate(inactiveAdult).Satisfied.ShouldBeFalse();
 
         // Act
-        var published = host.Changes.Publish(created.Change!.Id, breakGlassActive: false);
+        var published = await host.Changes.PublishAsync(created.Change!.Id, breakGlassActive: false);
 
         // Assert
         published.Outcome.ShouldBe(ChangeRequestOutcome.Ok);
@@ -113,14 +113,14 @@ public class ChangeRequestSetTests
     /// refused — including the proposition half, which on its own would have published cleanly.
     /// </summary>
     [Fact]
-    public void Should_publish_neither_change_when_one_base_version_is_stale()
+    public async Task Should_publish_neither_change_when_one_base_version_is_stale()
     {
         // Arrange
         var host = NewHost();
         var created = host.Changes.Create("alice", "a note", CoordinatedPair(ruleBaseVersion: 7));
 
         // Act
-        var published = host.Changes.Publish(created.Change!.Id, breakGlassActive: false);
+        var published = await host.Changes.PublishAsync(created.Change!.Id, breakGlassActive: false);
 
         // Assert
         published.Outcome.ShouldBe(ChangeRequestOutcome.VersionConflict);
@@ -134,16 +134,16 @@ public class ChangeRequestSetTests
     }
 
     [Fact]
-    public void Should_publish_neither_change_when_the_proposition_half_is_stale()
+    public async Task Should_publish_neither_change_when_the_proposition_half_is_stale()
     {
         // Arrange — the proposition already exists, so a base version of 0 is stale
         var host = NewHost();
-        host.Propositions.Create("customer.eligible", "customer", EligibleIsAdult, null)
+        (await host.Propositions.CreateAsync("customer.eligible", "customer", EligibleIsAdult, null))
             .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
         var created = host.Changes.Create("alice", "a note", CoordinatedPair());
 
         // Act
-        var published = host.Changes.Publish(created.Change!.Id, breakGlassActive: false);
+        var published = await host.Changes.PublishAsync(created.Change!.Id, breakGlassActive: false);
 
         // Assert
         published.Outcome.ShouldBe(ChangeRequestOutcome.VersionConflict);
@@ -152,7 +152,7 @@ public class ChangeRequestSetTests
     }
 
     [Fact]
-    public void Should_block_publication_when_the_gate_is_unsatisfied()
+    public async Task Should_block_publication_when_the_gate_is_unsatisfied()
     {
         // Arrange
         var host = NewHost();
@@ -160,7 +160,7 @@ public class ChangeRequestSetTests
         var created = host.Changes.Create("alice", "a note", CoordinatedPair());
 
         // Act
-        var published = host.Changes.Publish(created.Change!.Id, breakGlassActive: false);
+        var published = await host.Changes.PublishAsync(created.Change!.Id, breakGlassActive: false);
 
         // Assert
         published.Outcome.ShouldBe(ChangeRequestOutcome.GateBlocked);
@@ -174,7 +174,7 @@ public class ChangeRequestSetTests
     }
 
     [Fact]
-    public void Should_publish_once_a_peer_approval_satisfies_the_gate()
+    public async Task Should_publish_once_a_peer_approval_satisfies_the_gate()
     {
         // Arrange
         var host = NewHost();
@@ -184,7 +184,7 @@ public class ChangeRequestSetTests
         // Act — the request is one mutable object, so its post-approval status is captured here
         var approved = host.Changes.Approve(created.Change!.Id, "bob", ["reviewer"]);
         var statusAfterApproval = approved.Change!.Status;
-        var published = host.Changes.Publish(created.Change!.Id, breakGlassActive: false);
+        var published = await host.Changes.PublishAsync(created.Change!.Id, breakGlassActive: false);
 
         // Assert
         approved.Outcome.ShouldBe(ChangeRequestOutcome.Ok);
@@ -197,7 +197,7 @@ public class ChangeRequestSetTests
     }
 
     [Fact]
-    public void Should_bypass_a_blocking_gate_under_break_glass_and_stamp_the_request()
+    public async Task Should_bypass_a_blocking_gate_under_break_glass_and_stamp_the_request()
     {
         // Arrange
         var host = NewHost();
@@ -205,7 +205,7 @@ public class ChangeRequestSetTests
         var created = host.Changes.Create("alice", "production is down", CoordinatedPair());
 
         // Act
-        var published = host.Changes.Publish(created.Change!.Id, breakGlassActive: true);
+        var published = await host.Changes.PublishAsync(created.Change!.Id, breakGlassActive: true);
 
         // Assert
         published.Outcome.ShouldBe(ChangeRequestOutcome.Ok);
@@ -245,7 +245,7 @@ public class ChangeRequestSetTests
     }
 
     [Fact]
-    public void Should_refuse_to_publish_a_rejected_change_request()
+    public async Task Should_refuse_to_publish_a_rejected_change_request()
     {
         // Arrange
         var host = NewHost();
@@ -253,7 +253,7 @@ public class ChangeRequestSetTests
         host.Changes.Reject(created.Change!.Id, "not now").Outcome.ShouldBe(ChangeRequestOutcome.Ok);
 
         // Act
-        var published = host.Changes.Publish(created.Change!.Id, breakGlassActive: false);
+        var published = await host.Changes.PublishAsync(created.Change!.Id, breakGlassActive: false);
 
         // Assert
         published.Outcome.ShouldBe(ChangeRequestOutcome.InvalidState);
@@ -263,13 +263,13 @@ public class ChangeRequestSetTests
     }
 
     [Fact]
-    public void Should_report_an_unknown_change_request_as_not_found()
+    public async Task Should_report_an_unknown_change_request_as_not_found()
     {
         // Arrange
         var host = NewHost();
 
         // Act
-        var published = host.Changes.Publish(Guid.NewGuid(), breakGlassActive: false);
+        var published = await host.Changes.PublishAsync(Guid.NewGuid(), breakGlassActive: false);
 
         // Assert
         published.Outcome.ShouldBe(ChangeRequestOutcome.NotFound);
@@ -290,7 +290,7 @@ public class ChangeRequestSetTests
     }
 
     [Fact]
-    public void Should_report_an_unbindable_document_as_invalid_without_touching_anything()
+    public async Task Should_report_an_unbindable_document_as_invalid_without_touching_anything()
     {
         // Arrange — the rule half references a proposition nothing in the envelope creates
         var host = NewHost();
@@ -301,7 +301,7 @@ public class ChangeRequestSetTests
         ]);
 
         // Act
-        var published = host.Changes.Publish(created.Change!.Id, breakGlassActive: false);
+        var published = await host.Changes.PublishAsync(created.Change!.Id, breakGlassActive: false);
 
         // Assert
         published.Outcome.ShouldBe(ChangeRequestOutcome.Invalid);
@@ -345,11 +345,11 @@ public class ChangeRequestSetTests
     /// would see it — and the withdrawal is then refused while nothing has moved.
     /// </summary>
     [Fact]
-    public void Should_refuse_an_envelope_that_creates_a_proposition_referencing_one_it_withdraws()
+    public async Task Should_refuse_an_envelope_that_creates_a_proposition_referencing_one_it_withdraws()
     {
         // Arrange
         var host = NewHost();
-        host.Propositions.Create("customer.eligible", "customer", EligibleIsAdult, null)
+        (await host.Propositions.CreateAsync("customer.eligible", "customer", EligibleIsAdult, null))
             .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
 
         var created = host.Changes.Create("alice", "a note",
@@ -361,7 +361,7 @@ public class ChangeRequestSetTests
         ]);
 
         // Act
-        var published = host.Changes.Publish(created.Change!.Id, breakGlassActive: false);
+        var published = await host.Changes.PublishAsync(created.Change!.Id, breakGlassActive: false);
 
         // Assert
         published.Outcome.ShouldBe(ChangeRequestOutcome.Invalid);
@@ -380,12 +380,12 @@ public class ChangeRequestSetTests
     /// core mid-apply.
     /// </summary>
     [Fact]
-    public void Should_refuse_to_withdraw_a_proposition_a_live_rule_still_references()
+    public async Task Should_refuse_to_withdraw_a_proposition_a_live_rule_still_references()
     {
         // Arrange
         var host = NewHost();
-        host.Propositions.Create("customer.eligible", "customer", EligibleIsAdult, null);
-        host.Rules.Update("can-checkout", CheckoutUsesEligible, 1)
+        await host.Propositions.CreateAsync("customer.eligible", "customer", EligibleIsAdult, null);
+        (await host.Rules.UpdateAsync("can-checkout", CheckoutUsesEligible, 1, new RuleChangeProvenance("test")))
             .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
 
         var created = host.Changes.Create("alice", "a note",
@@ -395,7 +395,7 @@ public class ChangeRequestSetTests
         ]);
 
         // Act
-        var published = host.Changes.Publish(created.Change!.Id, breakGlassActive: false);
+        var published = await host.Changes.PublishAsync(created.Change!.Id, breakGlassActive: false);
 
         // Assert
         published.Outcome.ShouldBe(ChangeRequestOutcome.Invalid);
@@ -409,12 +409,12 @@ public class ChangeRequestSetTests
     /// validation time, so reading it alone would refuse a perfectly good envelope.
     /// </summary>
     [Fact]
-    public void Should_allow_a_withdrawal_whose_only_referrer_is_redirected_by_the_same_envelope()
+    public async Task Should_allow_a_withdrawal_whose_only_referrer_is_redirected_by_the_same_envelope()
     {
         // Arrange
         var host = NewHost();
-        host.Propositions.Create("customer.eligible", "customer", EligibleIsAdult, null);
-        host.Rules.Update("can-checkout", CheckoutUsesEligible, 1);
+        await host.Propositions.CreateAsync("customer.eligible", "customer", EligibleIsAdult, null);
+        await host.Rules.UpdateAsync("can-checkout", CheckoutUsesEligible, 1, new RuleChangeProvenance("test"));
 
         var created = host.Changes.Create("alice", "inline the proposition and retire it",
         [
@@ -425,7 +425,7 @@ public class ChangeRequestSetTests
         ]);
 
         // Act
-        var published = host.Changes.Publish(created.Change!.Id, breakGlassActive: false);
+        var published = await host.Changes.PublishAsync(created.Change!.Id, breakGlassActive: false);
 
         // Assert
         published.Outcome.ShouldBe(ChangeRequestOutcome.Ok);
@@ -441,7 +441,7 @@ public class ChangeRequestSetTests
     /// nothing" would clear the only referrer standing between the withdrawal and a dangling name.
     /// </summary>
     [Fact]
-    public void Should_refuse_a_withdrawal_whose_referrer_is_a_rule_reverting_to_a_document_default()
+    public async Task Should_refuse_a_withdrawal_whose_referrer_is_a_rule_reverting_to_a_document_default()
     {
         // Arrange — the default document itself references the proposition
         var registry = new SpecRegistry()
@@ -449,12 +449,14 @@ public class ChangeRequestSetTests
             .Register("customer.is-adult", IsAdult);
         var scope = new BindingScope(registry);
         var propositions = new PropositionSet(scope, new InMemoryPropositionStore()).AddModel<Customer>("customer");
-        propositions.Create("customer.eligible", "customer", EligibleIsAdult, null)
+        (await propositions.CreateAsync("customer.eligible", "customer", EligibleIsAdult, null))
             .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
 
         var rule = new AuthoredDefaultRule();
         var rules = new RuleSet(scope).Add(rule);
-        rules.Update("can-checkout-authored", """{ "rule": { "spec": "customer.is-active" } }""", 1)
+        (await rules.UpdateAsync(
+            "can-checkout-authored", """{ "rule": { "spec": "customer.is-active" } }""", 1,
+            new RuleChangeProvenance("test")))
             .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
         var changes = new ChangeRequestSet(new ApprovalGate(), rules, propositions);
 
@@ -465,7 +467,7 @@ public class ChangeRequestSetTests
         ]);
 
         // Act — reverting re-acquires the default's reference to customer.eligible
-        var published = changes.Publish(created.Change!.Id, breakGlassActive: false);
+        var published = await changes.PublishAsync(created.Change!.Id, breakGlassActive: false);
 
         // Assert
         published.Outcome.ShouldBe(ChangeRequestOutcome.Invalid);
@@ -483,12 +485,12 @@ public class ChangeRequestSetTests
     /// from the check.
     /// </summary>
     [Fact]
-    public void Should_not_let_a_rule_edit_mask_a_same_named_proposition_referrer()
+    public async Task Should_not_let_a_rule_edit_mask_a_same_named_proposition_referrer()
     {
         // Arrange — a proposition named exactly like the rule, and it is what references eligible
         var host = NewHost();
-        host.Propositions.Create("customer.eligible", "customer", EligibleIsAdult, null);
-        host.Propositions.Create("can-checkout", "customer", CheckoutUsesEligible, null)
+        await host.Propositions.CreateAsync("customer.eligible", "customer", EligibleIsAdult, null);
+        (await host.Propositions.CreateAsync("can-checkout", "customer", CheckoutUsesEligible, null))
             .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
 
         var created = host.Changes.Create("alice", "a note",
@@ -499,7 +501,7 @@ public class ChangeRequestSetTests
         ]);
 
         // Act — the RULE is edited; the same-named PROPOSITION still references customer.eligible
-        var published = host.Changes.Publish(created.Change!.Id, breakGlassActive: false);
+        var published = await host.Changes.PublishAsync(created.Change!.Id, breakGlassActive: false);
 
         // Assert
         published.Outcome.ShouldBe(ChangeRequestOutcome.Invalid);
@@ -516,7 +518,7 @@ public class ChangeRequestSetTests
     /// it entirely and let it reach the apply phase, where it can only throw.
     /// </summary>
     [Fact]
-    public void Should_return_a_broken_dependent_cascade_as_a_value_rather_than_throwing()
+    public async Task Should_return_a_broken_dependent_cascade_as_a_value_rather_than_throwing()
     {
         // Arrange — a policy rule bound through a proposition, which the change turns into a spec
         var registry = new SpecRegistry()
@@ -524,12 +526,14 @@ public class ChangeRequestSetTests
             .Register("customer.composed", ComposedNonPolicy);
         var scope = new BindingScope(registry);
         var propositions = new PropositionSet(scope, new InMemoryPropositionStore()).AddModel<Customer>("customer");
-        propositions.Create("customer.eligible-policy", "customer",
+        await propositions.CreateAsync("customer.eligible-policy", "customer",
             """{ "rule": { "spec": "customer.is-active-policy" } }""", null);
 
         var rule = new CanCheckoutPolicyRule();
         var rules = new RuleSet(scope).Add(rule);
-        rules.Update("can-checkout-policy", """{ "rule": { "spec": "customer.eligible-policy" } }""", 1)
+        (await rules.UpdateAsync(
+            "can-checkout-policy", """{ "rule": { "spec": "customer.eligible-policy" } }""", 1,
+            new RuleChangeProvenance("test")))
             .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
         var changes = new ChangeRequestSet(new ApprovalGate(), rules, propositions);
 
@@ -541,7 +545,7 @@ public class ChangeRequestSetTests
         ]);
 
         // Act
-        var published = changes.Publish(created.Change!.Id, breakGlassActive: false);
+        var published = await changes.PublishAsync(created.Change!.Id, breakGlassActive: false);
 
         // Assert — a value, not an exception
         published.Outcome.ShouldBe(ChangeRequestOutcome.Invalid);
@@ -563,7 +567,7 @@ public class ChangeRequestSetTests
     /// phase, where earlier members are live and the only recourse is to throw.
     /// </summary>
     [Fact]
-    public void Should_refuse_a_revert_whose_default_stops_binding_against_the_envelopes_own_edit()
+    public async Task Should_refuse_a_revert_whose_default_stops_binding_against_the_envelopes_own_edit()
     {
         // Arrange — a policy rule whose default document resolves through an authored proposition
         var registry = new SpecRegistry()
@@ -571,8 +575,8 @@ public class ChangeRequestSetTests
             .Register("customer.composed", ComposedNonPolicy);
         var scope = new BindingScope(registry);
         var propositions = new PropositionSet(scope, new InMemoryPropositionStore()).AddModel<Customer>("customer");
-        propositions.Create("customer.eligible-policy", "customer",
-            """{ "rule": { "spec": "customer.is-active-policy" } }""", null)
+        (await propositions.CreateAsync("customer.eligible-policy", "customer",
+            """{ "rule": { "spec": "customer.is-active-policy" } }""", null))
             .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
 
         var rule = new AuthoredDefaultPolicyRule();
@@ -580,8 +584,8 @@ public class ChangeRequestSetTests
 
         // Move the rule off its default, so it is not a live dependent of the proposition and the
         // phase-A closure check cannot be what catches this.
-        rules.Update("can-checkout-authored-policy",
-            """{ "rule": { "spec": "customer.is-active-policy" } }""", 1)
+        (await rules.UpdateAsync("can-checkout-authored-policy",
+            """{ "rule": { "spec": "customer.is-active-policy" } }""", 1, new RuleChangeProvenance("test")))
             .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
         var changes = new ChangeRequestSet(new ApprovalGate(), rules, propositions);
 
@@ -595,7 +599,7 @@ public class ChangeRequestSetTests
         ]);
 
         // Act — the revert's default would now resolve to a non-policy spec
-        var published = changes.Publish(created.Change!.Id, breakGlassActive: false);
+        var published = await changes.PublishAsync(created.Change!.Id, breakGlassActive: false);
 
         // Assert — a value, not an exception
         published.Outcome.ShouldBe(ChangeRequestOutcome.Invalid);
@@ -608,6 +612,114 @@ public class ChangeRequestSetTests
             .ShouldBe("""{ "rule": { "spec": "customer.is-active-policy" } }""");
         rules.FindEntry("can-checkout-authored-policy")!.Version.ShouldBe(2);
         rule.Evaluate(new Customer(IsActive: true, Age: 30)).Satisfied.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// A store that blocks inside AppendAsync until released. Used to make a publish's apply window
+    /// deterministically wide — a concurrent Reject can be timed to land inside it on purpose,
+    /// instead of hoping two real requests overlap within a few CPU cycles.
+    /// </summary>
+    private sealed class StallingRuleStore : IRuleStore
+    {
+        private readonly InMemoryRuleStore _inner = new();
+        public TaskCompletionSource<bool> Released { get; } = new();
+        public TaskCompletionSource<bool> Entered { get; } = new();
+
+        public IReadOnlyList<StoredRule> Load() => _inner.Load();
+        public Task<IReadOnlyList<StoredRule>> LoadAsync(CancellationToken ct) => _inner.LoadAsync(ct);
+        public Task<long> GetGenerationAsync(CancellationToken ct) => _inner.GetGenerationAsync(ct);
+        public Task<IReadOnlyList<StoredRuleVersion>> HistoryAsync(string name, CancellationToken ct) =>
+            _inner.HistoryAsync(name, ct);
+
+        public async Task<RuleAppendResult> AppendAsync(
+            IReadOnlyList<StoredRuleVersion> versions, CancellationToken ct)
+        {
+            Entered.TrySetResult(true);
+            await Released.Task;
+            return await _inner.AppendAsync(versions, ct);
+        }
+    }
+
+    /// <summary>
+    /// The regression this task's Critical 2 fix exists for: <see cref="ChangeRequestSet.PublishAsync"/>
+    /// used to release its own lock for the span of the awaited apply, re-taking it only to record
+    /// <see cref="ChangeRequest.MarkPublished"/>. A concurrent <see cref="ChangeRequestSet.Reject"/>
+    /// landing in that gap would mark the request Rejected while the publish's edits were already
+    /// durably written — and then <c>MarkPublished</c> would throw <see cref="InvalidOperationException"/>
+    /// out of the endpoint, an unhandled exception hiding a publish that had, in fact, already happened.
+    /// Fixed by holding one <see cref="SemaphoreSlim"/> across the whole publish, so a concurrent
+    /// <see cref="ChangeRequestSet.Reject"/> genuinely blocks until the publish is fully resolved.
+    /// </summary>
+    [Fact]
+    public async Task Should_never_leave_a_rejected_requests_edits_live()
+    {
+        // Arrange — the rule half's store append stalls, so the window a concurrent Reject would
+        // need to race into is held open under the test's control rather than by timing luck.
+        var store = new StallingRuleStore();
+        var registry = new SpecRegistry().Register("customer.is-active", IsActive);
+        var scope = new BindingScope(registry);
+        var rule = new CanCheckoutRule();
+        var rules = new RuleSet(scope, store).Add(rule);
+        var changes = new ChangeRequestSet(new ApprovalGate(), rules, propositions: null);
+
+        var created = changes.Create("alice", "a note",
+        [
+            new(ChangeTargetKind.Rule, "can-checkout",
+                """{ "rule": { "not": { "spec": "customer.is-active" } } }""",
+                BaseVersion: 1, RollbackOfVersion: null)
+        ]);
+
+        // Act — the publish stalls mid-apply; a reject is started (and confirmed running) while it
+        // is stalled, then the store is released and both are allowed to resolve
+        var publishing = changes.PublishAsync(created.Change!.Id, breakGlassActive: false);
+        await store.Entered.Task;
+
+        var rejectStarting = new TaskCompletionSource<bool>();
+        var rejecting = Task.Run(() =>
+        {
+            rejectStarting.SetResult(true);
+            return changes.Reject(created.Change!.Id, "changed my mind");
+        });
+        await rejectStarting.Task;
+
+        // rejectStarting only proves the Task.Run body started, not that Reject is genuinely parked
+        // on ChangeRequestSet's lock — so confirm that directly: with the fix, PublishAsync holds
+        // that lock for its whole store round trip, and the store is still stalled here, so Reject
+        // must still be waiting. A brief, comfortably-short window is enough to distinguish this from
+        // the pre-fix shape, where Reject holds no lock at this point and returns almost instantly.
+        await Task.Delay(50);
+        rejecting.IsCompleted.ShouldBeFalse();
+
+        store.Released.SetResult(true);
+
+        ChangeRequestResult? published = null;
+        Exception? publishFailure = null;
+        try
+        {
+            published = await publishing;
+        }
+        catch (Exception exception)
+        {
+            publishFailure = exception;
+        }
+
+        var rejected = await rejecting;
+
+        // Assert — never "edits live and status Rejected". Either the reject won, in which case
+        // nothing may have gone live and the publish must not have thrown having already written
+        // it; or the publish won, in which case it must have completed cleanly and the reject must
+        // have been refused because the request was already terminal.
+        publishFailure.ShouldBeNull();
+        if (rejected.Outcome == ChangeRequestOutcome.Ok)
+        {
+            published!.Outcome.ShouldNotBe(ChangeRequestOutcome.Ok);
+            rules.FindEntry("can-checkout")!.Version.ShouldBe(1);
+        }
+        else
+        {
+            published!.Outcome.ShouldBe(ChangeRequestOutcome.Ok);
+            rejected.Outcome.ShouldBe(ChangeRequestOutcome.InvalidState);
+        }
     }
 
     private sealed record Customer(bool IsActive, int Age);

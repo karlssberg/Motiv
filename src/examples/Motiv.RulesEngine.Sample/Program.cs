@@ -174,9 +174,18 @@ var propositionsPath = builder.Configuration["Propositions:Path"]
 var gatePath = builder.Configuration["Motiv:Gate:Path"]
     ?? Path.Combine(builder.Environment.ContentRootPath, "gate.json");
 
+// Seam: rule persistence. AddRuleStore points the live rules at a store so a hot-swapped rule
+// survives a restart instead of reverting to its compiled default; without it rules live only for
+// the process lifetime, as they always have. failFastOnQuarantine keeps its default (true): under
+// an approval gate, booting quietly into a quarantined rule's compiled default — behaviour nobody
+// approved — is worse than a demo that refuses to boot until a stale row is repaired.
+var rulesPath = builder.Configuration["Rules:Path"]
+    ?? Path.Combine(builder.Environment.ContentRootPath, "rules.json");
+
 builder.Services.AddMotivRules(registry, options)
     .AddPropositions(new JsonFilePropositionStore(propositionsPath))
     .AddGovernance(new JsonFileGateStore(gatePath))
+    .AddRuleStore(new JsonFileRuleStore(rulesPath))
     .AddRule<CanCheckoutRule>()
     .AddRule<FraudScreeningRule>()
     .AddRule<LoyaltyDiscountRule>();

@@ -59,17 +59,18 @@ public class RuleCascadeTests
     }
 
     [Fact]
-    public void Should_rebind_a_rule_when_a_proposition_it_references_changes()
+    public async Task Should_rebind_a_rule_when_a_proposition_it_references_changes()
     {
         // Arrange — the feature's central claim, now across the rule boundary
         var (propositions, rules, rule) = NewHost();
-        propositions.Create("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
-        rules.Update("can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1);
+        await propositions.CreateAsync("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await rules.UpdateAsync(
+            "can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1, new RuleChangeProvenance("test"));
         var inactiveAdult = new Customer(IsActive: false, Age: 30);
         rule.Evaluate(inactiveAdult).Satisfied.ShouldBeFalse();
 
         // Act — the rule is never touched again
-        propositions.Update("customer.eligible", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
+        await propositions.UpdateAsync("customer.eligible", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Assert
         rule.Evaluate(inactiveAdult).Satisfied.ShouldBeTrue();
@@ -77,11 +78,11 @@ public class RuleCascadeTests
 
     /// <summary>
     /// A rule registered with a *document* default already references propositions the moment it is
-    /// added, so registration — not just <see cref="RuleSet.Update"/> — has to record its edges.
+    /// added, so registration — not just <see cref="RuleSet.UpdateAsync"/> — has to record its edges.
     /// Every other cascade test starts from a compiled default, which references nothing.
     /// </summary>
     [Fact]
-    public void Should_track_a_rule_whose_default_document_references_a_proposition()
+    public async Task Should_track_a_rule_whose_default_document_references_a_proposition()
     {
         // Arrange — the proposition has to exist before the rule's default can bind against it
         var registry = new SpecRegistry()
@@ -89,7 +90,7 @@ public class RuleCascadeTests
             .Register("customer.is-adult", IsAdult);
         var scope = new BindingScope(registry);
         var propositions = new PropositionSet(scope, new InMemoryPropositionStore()).AddModel<Customer>("customer");
-        propositions.Create("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await propositions.CreateAsync("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
 
         var rule = new AuthoredDefaultRule();
         new RuleSet(scope).Add(rule);
@@ -97,7 +98,7 @@ public class RuleCascadeTests
         rule.Evaluate(inactiveAdult).Satisfied.ShouldBeFalse();
 
         // Act — the rule is never updated; only the proposition beneath it moves
-        propositions.Update("customer.eligible", """{ "rule": { "spec": "customer.is-adult" } }""", 1)
+        (await propositions.UpdateAsync("customer.eligible", """{ "rule": { "spec": "customer.is-adult" } }""", 1))
             .Outcome.ShouldBe(PropositionUpdateOutcome.Updated);
 
         // Assert
@@ -116,13 +117,15 @@ public class RuleCascadeTests
         var rule = new CanCheckoutAsyncRule();
         var rules = new RuleSet(scope).Add(rule);
 
-        propositions.Create("customer.eligible-async", "customer", """{ "rule": { "spec": "customer.passes-check" } }""", null);
-        rules.Update("can-checkout-async", """{ "rule": { "spec": "customer.eligible-async" } }""", 1);
+        await propositions.CreateAsync("customer.eligible-async", "customer", """{ "rule": { "spec": "customer.passes-check" } }""", null);
+        await rules.UpdateAsync(
+            "can-checkout-async", """{ "rule": { "spec": "customer.eligible-async" } }""", 1,
+            new RuleChangeProvenance("test"));
         var inactiveAdult = new Customer(IsActive: false, Age: 30);
         (await rule.EvaluateAsync(inactiveAdult)).Satisfied.ShouldBeFalse();
 
         // Act — the rule is never touched again
-        propositions.Update("customer.eligible-async", """{ "rule": { "spec": "customer.passes-adult-check" } }""", 1);
+        await propositions.UpdateAsync("customer.eligible-async", """{ "rule": { "spec": "customer.passes-adult-check" } }""", 1);
 
         // Assert
         (await rule.EvaluateAsync(inactiveAdult)).Satisfied.ShouldBeTrue();
@@ -136,7 +139,7 @@ public class RuleCascadeTests
     /// this guards the check that stands between a bad rebind and a crash on the hot path.
     /// </summary>
     [Fact]
-    public void Should_reject_a_cascade_rebind_that_would_turn_a_policy_rule_into_a_spec()
+    public async Task Should_reject_a_cascade_rebind_that_would_turn_a_policy_rule_into_a_spec()
     {
         // Arrange
         var registry = new SpecRegistry()
@@ -147,12 +150,14 @@ public class RuleCascadeTests
         var rule = new CanCheckoutPolicyRule();
         var rules = new RuleSet(scope).Add(rule);
 
-        propositions.Create("customer.eligible-policy", "customer", """{ "rule": { "spec": "customer.is-active-policy" } }""", null);
-        rules.Update("can-checkout-policy", """{ "rule": { "spec": "customer.eligible-policy" } }""", 1)
+        await propositions.CreateAsync("customer.eligible-policy", "customer", """{ "rule": { "spec": "customer.is-active-policy" } }""", null);
+        (await rules.UpdateAsync(
+            "can-checkout-policy", """{ "rule": { "spec": "customer.eligible-policy" } }""", 1,
+            new RuleChangeProvenance("test")))
             .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
 
         // Act — eligible-policy now resolves to a non-policy spec; can-checkout-policy requires a policy
-        var result = propositions.Update("customer.eligible-policy", """{ "rule": { "spec": "customer.composed" } }""", 1);
+        var result = await propositions.UpdateAsync("customer.eligible-policy", """{ "rule": { "spec": "customer.composed" } }""", 1);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Invalid);
@@ -178,12 +183,14 @@ public class RuleCascadeTests
         var rule = new CanCheckoutAsyncPolicyRule();
         var rules = new RuleSet(scope).Add(rule);
 
-        propositions.Create("customer.eligible-async-policy", "customer", """{ "rule": { "spec": "customer.passes-check-policy" } }""", null);
-        rules.Update("can-checkout-async-policy", """{ "rule": { "spec": "customer.eligible-async-policy" } }""", 1)
+        await propositions.CreateAsync("customer.eligible-async-policy", "customer", """{ "rule": { "spec": "customer.passes-check-policy" } }""", null);
+        (await rules.UpdateAsync(
+            "can-checkout-async-policy", """{ "rule": { "spec": "customer.eligible-async-policy" } }""", 1,
+            new RuleChangeProvenance("test")))
             .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
 
         // Act — eligible-async-policy now resolves to a non-policy async spec
-        var result = propositions.Update("customer.eligible-async-policy", """{ "rule": { "spec": "customer.composed-async" } }""", 1);
+        var result = await propositions.UpdateAsync("customer.eligible-async-policy", """{ "rule": { "spec": "customer.composed-async" } }""", 1);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Invalid);
@@ -199,16 +206,17 @@ public class RuleCascadeTests
     }
 
     [Fact]
-    public void Should_leave_a_rebound_rules_version_alone()
+    public async Task Should_leave_a_rebound_rules_version_alone()
     {
         // Arrange
         var (propositions, rules, rule) = NewHost();
-        propositions.Create("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
-        rules.Update("can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1);
+        await propositions.CreateAsync("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await rules.UpdateAsync(
+            "can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1, new RuleChangeProvenance("test"));
         var versionBefore = rule.Version;
 
         // Act
-        propositions.Update("customer.eligible", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
+        await propositions.UpdateAsync("customer.eligible", """{ "rule": { "spec": "customer.is-adult" } }""", 1);
 
         // Assert — its document did not change, so neither does its version
         rule.Version.ShouldBe(versionBefore);
@@ -219,15 +227,16 @@ public class RuleCascadeTests
     /// design exists to catch: a sync rule cannot bind a proposition that has just become async.
     /// </summary>
     [Fact]
-    public void Should_reject_a_proposition_edit_that_makes_a_sync_rule_unbindable()
+    public async Task Should_reject_a_proposition_edit_that_makes_a_sync_rule_unbindable()
     {
         // Arrange
         var (propositions, rules, rule) = NewHost();
-        propositions.Create("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
-        rules.Update("can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1);
+        await propositions.CreateAsync("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await rules.UpdateAsync(
+            "can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1, new RuleChangeProvenance("test"));
 
         // Act — the new definition is perfectly valid on its own, but async
-        var result = propositions.Update(
+        var result = await propositions.UpdateAsync(
             "customer.eligible", """{ "rule": { "spec": "customer.passes-check" } }""", 1);
 
         // Assert
@@ -240,16 +249,17 @@ public class RuleCascadeTests
     }
 
     [Fact]
-    public void Should_leave_the_proposition_and_the_rule_untouched_when_the_rule_would_break()
+    public async Task Should_leave_the_proposition_and_the_rule_untouched_when_the_rule_would_break()
     {
         // Arrange
         var (propositions, rules, rule) = NewHost();
-        propositions.Create("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
-        rules.Update("can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1);
+        await propositions.CreateAsync("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await rules.UpdateAsync(
+            "can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1, new RuleChangeProvenance("test"));
         var inactiveAdult = new Customer(IsActive: false, Age: 30);
 
         // Act
-        propositions.Update("customer.eligible", """{ "rule": { "spec": "customer.passes-check" } }""", 1);
+        await propositions.UpdateAsync("customer.eligible", """{ "rule": { "spec": "customer.passes-check" } }""", 1);
 
         // Assert
         propositions.Find("customer.eligible")!.Version.ShouldBe(1);
@@ -264,17 +274,18 @@ public class RuleCascadeTests
     /// proposition existed, which is why this one is not a duplicate of them.
     /// </summary>
     [Fact]
-    public void Should_rebind_a_rule_when_a_create_overrides_the_compiled_spec_it_references()
+    public async Task Should_rebind_a_rule_when_a_create_overrides_the_compiled_spec_it_references()
     {
         // Arrange — the rule references the *compiled* spec, by the name about to be overridden
         var (propositions, rules, rule) = NewHost();
-        rules.Update("can-checkout", """{ "rule": { "spec": "customer.is-active" } }""", 1)
+        (await rules.UpdateAsync(
+            "can-checkout", """{ "rule": { "spec": "customer.is-active" } }""", 1, new RuleChangeProvenance("test")))
             .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
         var activeMinor = new Customer(IsActive: true, Age: 10);
         rule.Evaluate(activeMinor).Satisfied.ShouldBeTrue();
 
         // Act — the rule is never touched again
-        propositions.Create("customer.is-active", "customer", """{ "rule": { "spec": "customer.is-adult" } }""", null)
+        (await propositions.CreateAsync("customer.is-active", "customer", """{ "rule": { "spec": "customer.is-adult" } }""", null))
             .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
 
         // Assert
@@ -282,12 +293,13 @@ public class RuleCascadeTests
     }
 
     [Fact]
-    public void Should_list_a_rule_as_a_dependent_of_the_proposition_it_references()
+    public async Task Should_list_a_rule_as_a_dependent_of_the_proposition_it_references()
     {
         // Arrange
         var (propositions, rules, _) = NewHost();
-        propositions.Create("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
-        rules.Update("can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1);
+        await propositions.CreateAsync("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await rules.UpdateAsync(
+            "can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1, new RuleChangeProvenance("test"));
 
         // Act
         var dependents = propositions.Dependents("customer.eligible");
@@ -299,15 +311,16 @@ public class RuleCascadeTests
     }
 
     [Fact]
-    public void Should_refuse_to_remove_a_proposition_a_rule_references()
+    public async Task Should_refuse_to_remove_a_proposition_a_rule_references()
     {
         // Arrange
         var (propositions, rules, _) = NewHost();
-        propositions.Create("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
-        rules.Update("can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1);
+        await propositions.CreateAsync("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await rules.UpdateAsync(
+            "can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1, new RuleChangeProvenance("test"));
 
         // Act
-        var result = propositions.Withdraw("customer.eligible", 1);
+        var result = await propositions.WithdrawAsync("customer.eligible", 1);
 
         // Assert
         result.Outcome.ShouldBe(PropositionUpdateOutcome.Referenced);
@@ -315,23 +328,24 @@ public class RuleCascadeTests
     }
 
     [Fact]
-    public void Should_stop_tracking_a_rule_reverted_to_its_compiled_default()
+    public async Task Should_stop_tracking_a_rule_reverted_to_its_compiled_default()
     {
         // Arrange — a compiled default references nothing, so the rule leaves the graph
         var (propositions, rules, _) = NewHost();
-        propositions.Create("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
-        rules.Update("can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1);
+        await propositions.CreateAsync("customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await rules.UpdateAsync(
+            "can-checkout", """{ "rule": { "spec": "customer.eligible" } }""", 1, new RuleChangeProvenance("test"));
 
         // Act
-        rules.Revert("can-checkout", 2);
+        await rules.RevertAsync("can-checkout", 2, new RuleChangeProvenance("test"));
 
         // Assert
         propositions.Dependents("customer.eligible").ShouldBeEmpty();
-        propositions.Withdraw("customer.eligible", 1).Outcome.ShouldBe(PropositionUpdateOutcome.Removed);
+        (await propositions.WithdrawAsync("customer.eligible", 1)).Outcome.ShouldBe(PropositionUpdateOutcome.Removed);
     }
 
     [Fact]
-    public void Should_keep_working_when_constructed_without_a_proposition_set()
+    public async Task Should_keep_working_when_constructed_without_a_proposition_set()
     {
         // Arrange — the public constructor must stay usable for hosts that never author propositions
         var registry = new SpecRegistry().Register("customer.is-active", IsActive);
@@ -341,7 +355,8 @@ public class RuleCascadeTests
         var rules = new RuleSet(registry).Add(rule);
 
         // Assert
-        rules.Update("can-checkout", """{ "rule": { "spec": "customer.is-active" } }""", 1)
+        (await rules.UpdateAsync(
+            "can-checkout", """{ "rule": { "spec": "customer.is-active" } }""", 1, new RuleChangeProvenance("test")))
             .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
         rule.Evaluate(new Customer(IsActive: true, Age: 30)).Satisfied.ShouldBeTrue();
     }

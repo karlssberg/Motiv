@@ -16,9 +16,13 @@ PropositionEntry? Find(string name);
 string? DocumentJsonOf(string name);
 IReadOnlyList<PropositionDependent> Dependents(string name);
 
-PropositionUpdateResult Create(string name, string modelTypeId, string documentJson, string? description);
-PropositionUpdateResult Update(string name, string documentJson, int expectedVersion);
-PropositionUpdateResult Withdraw(string name, int expectedVersion);
+Task<PropositionUpdateResult> CreateAsync(
+    string name, string modelTypeId, string documentJson, string? description,
+    CancellationToken cancellationToken = default);
+Task<PropositionUpdateResult> UpdateAsync(
+    string name, string documentJson, int expectedVersion, CancellationToken cancellationToken = default);
+Task<PropositionUpdateResult> WithdrawAsync(
+    string name, int expectedVersion, CancellationToken cancellationToken = default);
 void Load();
 ```
 
@@ -42,24 +46,24 @@ In ASP.NET Core this is replayed automatically from
 ## Authoring, Editing and Withdrawing
 
 ```csharp
-var created = propositions.Create(
+var created = await propositions.CreateAsync(
     "customer.eligibility.is-eligible",
     "customer",
     """{ "rule": { "andAlso": [ { "spec": "customer.is-active" }, { "spec": "customer.is-adult" } ] } }""",
     "Whether the customer may check out");
 
-var edited = propositions.Update("customer.eligibility.is-eligible", replacementJson, expectedVersion: 1);
-var gone = propositions.Withdraw("customer.eligibility.is-eligible", expectedVersion: 2);
+var edited = await propositions.UpdateAsync("customer.eligibility.is-eligible", replacementJson, expectedVersion: 1);
+var gone = await propositions.WithdrawAsync("customer.eligibility.is-eligible", expectedVersion: 2);
 ```
 
-`Create()` publishes version 1. A name already carrying an authored document is a conflict; a name
-carrying only a compiled spec is accepted and creates an override.
+`CreateAsync()` publishes version 1. A name already carrying an authored document is a conflict; a
+name carrying only a compiled spec is accepted and creates an override.
 
 The document must compose specs that already resolve &mdash; every leaf is a `spec` reference, never
 a new predicate. See [Composition Only](index.md#composition-only).
 
-`Withdraw()` means *revert* when a compiled spec lies beneath the name and *remove* when none does
-&mdash; the two differ in what they may do to referrers, so they are ruled separately. See
+`WithdrawAsync()` means *revert* when a compiled spec lies beneath the name and *remove* when none
+does &mdash; the two differ in what they may do to referrers, so they are ruled separately. See
 [the integrity rules](index.md#removal-and-reverting).
 
 Expected outcomes are values, not exceptions. `PropositionUpdateResult` carries the `Outcome`, the
@@ -102,24 +106,29 @@ proposition. See [Startup: quarantine, don't crash](index.md#startup-quarantine-
 
 ## Remarks
 
-- **Every write is serialized.** `Create`, `Update`, `Withdraw` and `Load` run under the shared write
-  lock, which also covers rule updates. The lock is machine-scale &mdash; it stops two publishes
-  interleaving their graph walks &mdash; and is a separate concern from the version check, which is
+- **Every write is serialized.** `CreateAsync`, `UpdateAsync` and `WithdrawAsync` run under the shared
+  outer write gate, which also covers rule updates &mdash; a proposition edit and a rule update can
+  never interleave. `Load`, called once at startup before concurrent use begins, takes only the inner
+  write monitor, not the outer gate. The gate is machine-scale &mdash; it serialises whole write
+  operations await-safely &mdash; and is a separate concern from the version check, which is
   human-scale and stops a save silently discarding an edit made while a tab sat open.
 - **Nothing is published unless the outcome says so.** On any rejection neither the overlay, the
   dependency graph, nor the store is touched.
 - **Persist first.** The store write is the only step that can fail after the point of no return, so
-  it runs before the in-memory swap &mdash; a throwing store leaves no live proposition without a
-  durable record.
+  it runs &mdash; awaited, with the inner monitor released around it while the outer gate stays held
+  &mdash; before the in-memory swap. A throwing store leaves no live proposition without a durable
+  record; see [`RuleSet`'s remarks](../live-rules/RuleSet.md#remarks) for why the rule-side write path
+  holds the same shape.
 - **The evaluation path is untouched.** A reference binds to the spec instance itself, so an
   evaluation of a proposition costs exactly what an evaluation of the equivalent compiled
   composition costs.
 
 ## Next Steps
 
-- Serve `Create()`/`Update()`/`Withdraw()` over HTTP with
+- Serve `CreateAsync()`/`UpdateAsync()`/`WithdrawAsync()` over HTTP with
   [ASP.NET Core Integration](AspNetCore.md).
 - Choose where authored documents persist with [`IPropositionStore`](IPropositionStore.md).
 - See the [Runtime Propositions overview](index.md) for the name grammar, the cascade, and startup
   quarantine.
-- See [`RuleSet`](../live-rules/RuleSet.md) for the rule-side write path this mirrors.
+- See [`RuleSet`](../live-rules/RuleSet.md) for the rule-side write path this mirrors, and
+  [Rule Durability](../live-rules/durability.md) for the version log this write path's twin appends to.
