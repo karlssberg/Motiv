@@ -117,7 +117,28 @@ public sealed class MotivRulesBuilder
         Services.TryAddSingleton(BreakGlass.Off);
         return this;
     }
+
+    /// <summary>
+    /// Registers where rules persist, and loads them when the <see cref="RuleSet"/> is first resolved.
+    /// Without this, rules live for the lifetime of the process, as they always have.
+    /// </summary>
+    /// <param name="store">The store, or null for <see cref="InMemoryRuleStore"/>.</param>
+    /// <param name="failFastOnQuarantine">
+    /// Whether a stored document that no longer binds should stop startup. Defaults to <c>true</c>:
+    /// a quarantined rule is running its compiled default, which is <em>not what was published</em>,
+    /// and under an approval gate booting quietly into unapproved behaviour is the worse failure. Set
+    /// false to boot anyway and read the quarantine from the catalog.
+    /// </param>
+    public MotivRulesBuilder AddRuleStore(IRuleStore? store = null, bool failFastOnQuarantine = true)
+    {
+        Services.AddSingleton(store ?? new InMemoryRuleStore());
+        Services.AddSingleton(new RuleStoreOptions(failFastOnQuarantine));
+        return this;
+    }
 }
+
+/// <summary>Whether <see cref="MotivRulesBuilder.AddRuleStore"/> should stop startup on quarantine.</summary>
+internal sealed record RuleStoreOptions(bool FailFastOnQuarantine);
 
 /// <summary>DI registration for the Motiv rules endpoints and live rules.</summary>
 public static class MotivRulesServiceCollectionExtensions
@@ -157,9 +178,21 @@ public static class MotivRulesServiceCollectionExtensions
 
             var rules = new RuleSet(
                 provider.GetRequiredService<BindingScope>(),
+                provider.GetService<IRuleStore>(),
                 options: resolvedOptions.SerializerOptions);
             foreach (var rule in provider.GetServices<RuleBase>())
                 rules.Add(rule);
+
+            // Load after every rule is registered — a stored head can only apply to a rule that
+            // exists — and after the PropositionSet has loaded, since a stored rule document may
+            // reference an authored proposition.
+            if (provider.GetService<IRuleStore>() is not null)
+            {
+                var report = rules.Load();
+                if (provider.GetRequiredService<RuleStoreOptions>().FailFastOnQuarantine)
+                    report.ThrowIfQuarantined();
+            }
+
             return rules;
         });
         return new MotivRulesBuilder(services);
