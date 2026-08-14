@@ -1184,10 +1184,13 @@ public class BindingScopeExclusionTests
         // Act
         await Task.WhenAll(Operation("a"), Operation("b"));
 
-        // Assert — neither operation may interleave with the other
-        observed.ShouldBeOneOf(
-            ["a-enter", "a-exit", "b-enter", "b-exit"],
-            ["b-enter", "b-exit", "a-enter", "a-exit"]);
+        // Assert — neither operation may interleave with the other.
+        // Joined to a string on purpose: Shouldly's ShouldBeOneOf compares with
+        // EqualityComparer<T>.Default, which for List<string> is reference equality and can never
+        // match a literal. Comparing the joined string also puts the real order in the failure message.
+        string.Join(",", observed).ShouldBeOneOf(
+            "a-enter,a-exit,b-enter,b-exit",
+            "b-enter,b-exit,a-enter,a-exit");
     }
 
     [Fact]
@@ -2402,9 +2405,13 @@ public class PropositionSetAsyncWriteTests
         // Assert — each store's enter/exit pair must be contiguous; an interleave would read
         // "proposition-enter, rule-enter, ...". This is what the outer gate buys that the inner
         // Monitor cannot: the Monitor is released at the first await.
-        timeline.ShouldBeOneOf(
-            ["proposition-enter", "proposition-exit", "rule-enter", "rule-exit"],
-            ["rule-enter", "rule-exit", "proposition-enter", "proposition-exit"]);
+        //
+        // Joined to a string on purpose: Shouldly's ShouldBeOneOf compares with
+        // EqualityComparer<T>.Default, which for List<string> is reference equality and can never
+        // match a literal. Comparing the joined string also puts the real order in the failure message.
+        string.Join(",", timeline).ShouldBeOneOf(
+            "proposition-enter,proposition-exit,rule-enter,rule-exit",
+            "rule-enter,rule-exit,proposition-enter,proposition-exit");
     }
 }
 ```
