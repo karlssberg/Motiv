@@ -2636,6 +2636,33 @@ git add -A && git commit -m "feat(serialization): make the proposition write pat
 The existing `ApplyValidated` throws on any non-`Updated` outcome because everything was validated
 first. Persistence must therefore move *ahead* of it: **validate all → persist all → apply all**.
 
+**Both halves batch, not just the rule half.** Today each artefact persists individually inside its
+own `…CoreAsync`, so an envelope of three propositions where the third conflicts leaves the first two
+live *and then throws* — the exact failure spec §4 forbids. The rule half becomes one
+`IRuleStore.AppendAsync` call and the proposition half becomes one `IPropositionStore.WriteAsync`
+call, carrying every save and every delete in the envelope. The two stores are still never written in
+the same transaction (spec §2) — they are two independent batches, each all-or-nothing, which is
+exactly what `PropositionBatch(Saves, Deletes)` was introduced for and what nothing has produced yet.
+
+This needs a prepare/commit split on the proposition side mirroring the rule side. Task 7 already did
+the hard part: `PublishWithCascade` was split into a monitor-side `PrepareCascade` (pure prepare) plus
+a shared persist/commit step. Expose that split to `ChangeRequestSet` as internal
+`PrepareCreateCore`/`PrepareUpdateCore`/`PrepareWithdrawCore` returning a prepared value plus the
+`StoredProposition` (or name to delete) it would write, and an internal `CommitPreparedCore` that
+applies it under the monitor and cannot fail. Then the publisher's shape is:
+
+```
+Locked { prepare every rule and every proposition }
+  → await ruleStore.AppendAsync(all rule rows)          // fallible
+  → await propositionStore.WriteAsync(one batch)         // fallible
+  → Locked { commit every prepared change }              // infallible
+```
+
+If either store refuses, nothing has been committed and the envelope reports a conflict rather than
+throwing. Order the two store calls rules-then-propositions and document that a crash between them
+leaves the rule rows written and the proposition rows not — recoverable, because a rule row that no
+longer binds is quarantined on the next load, which is precisely why quarantine exists.
+
 - [ ] **Step 1: Write the failing test**
 
 ```csharp
