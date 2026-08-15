@@ -18,6 +18,10 @@ internal sealed class MotivRefreshService(
 {
     private RefreshReport? _lastReport;
 
+    // Test seam, capped at one permit: see WaitForTickAsync's doc for why a cap of one is enough
+    // and why nothing here can overflow or fault the loop.
+    private readonly SemaphoreSlim _tickSignal = new(initialCount: 0, maxCount: 1);
+
     /// <summary>
     /// The most recent outcome, for the health check to report. Null until the first tick.
     /// </summary>
@@ -42,6 +46,38 @@ internal sealed class MotivRefreshService(
         internal set => Volatile.Write(ref _lastReport, value);
     }
 
+    /// <summary>
+    /// Test seam: completes once a poll cycle — success or a caught failure, whatever
+    /// <see cref="LogOutcome"/> or the catch-all below just handled — has finished since the last
+    /// time this was awaited (or since startup, if this has never been awaited before). Reached
+    /// through this assembly's <c>InternalsVisibleTo</c>, the same way <see cref="LastReport"/>'s
+    /// setter is; nothing in production ever awaits it, only this class's own loop signals it.
+    /// </summary>
+    /// <remarks>
+    /// A tick that completes before a caller ever awaits this is not lost. The signal is a
+    /// <see cref="SemaphoreSlim"/> capped at one pending permit: a completed tick releases it if it
+    /// is not already held, and awaiting later still consumes whatever is pending. One permit is
+    /// enough because a caller only ever needs to know "has at least one more tick happened since I
+    /// last checked" — it re-reads <see cref="LastReport"/> (or whatever else it is polling for)
+    /// itself after waking, rather than trusting the permit count to carry state. This is what makes
+    /// it safe to await *after* attaching late: a naive single-shot signal (e.g. a
+    /// <see cref="TaskCompletionSource"/> replaced per tick) can be missed entirely if a waiter
+    /// attaches between one tick completing and the next one starting, reintroducing the exact
+    /// wall-clock race this exists to remove. It also means nothing here can overflow or fault the
+    /// loop even if a test never drains it: releasing an already-full semaphore would normally throw
+    /// <see cref="SemaphoreFullException"/>, so the loop checks first rather than relying on a
+    /// try/catch, and the check-then-release has a single producer — this loop — so it cannot race
+    /// with itself.
+    /// </remarks>
+    /// <param name="cancellationToken">
+    /// Cancels the wait. Callers should bound this — e.g. from a test-side timeout — so a service
+    /// that has stopped ticking entirely (a real hang) surfaces as a failed wait rather than one that
+    /// never returns; a healthy run never approaches the bound, since progress is driven by real
+    /// ticks, not by how much of the bound has elapsed.
+    /// </param>
+    internal Task WaitForTickAsync(CancellationToken cancellationToken = default) =>
+        _tickSignal.WaitAsync(cancellationToken);
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
@@ -61,7 +97,19 @@ internal sealed class MotivRefreshService(
             {
                 logger.LogWarning(exception, "Motiv refresh failed; keeping the current world and retrying.");
             }
+
+            SignalTick();
         }
+    }
+
+    /// <summary>
+    /// Wakes anything awaiting <see cref="WaitForTickAsync"/>. See that method's doc for why a
+    /// single pending permit is sufficient and why this check-then-release cannot race with itself.
+    /// </summary>
+    private void SignalTick()
+    {
+        if (_tickSignal.CurrentCount == 0)
+            _tickSignal.Release();
     }
 
     /// <summary>

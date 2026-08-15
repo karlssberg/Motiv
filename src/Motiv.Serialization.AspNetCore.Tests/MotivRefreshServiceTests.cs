@@ -16,26 +16,35 @@ public class MotivRefreshServiceTests
     }
 
     /// <summary>
-    /// Waits for the poller to get somewhere, rather than sleeping a fixed time: a fixed sleep is
-    /// either flaky or slow. Bounded, so a hang goes red rather than hanging CI. Returns whether the
-    /// condition was actually observed true, rather than just falling through the deadline — a caller
-    /// asserting on state read *after* this returns must know the wait itself succeeded, or a slow
-    /// machine turns a timeout into a confusing failure somewhere else entirely.
+    /// Waits for a condition using <see cref="MotivRefreshService.WaitForTickAsync"/> — the service's
+    /// own per-tick completion signal — instead of polling against a wall-clock deadline. Each
+    /// iteration awaits the next completed poll cycle (or, if one already completed before this was
+    /// first called, the pending signal it left behind — see that method's doc for why that can never
+    /// be lost) and rechecks <paramref name="condition"/>. This is what makes the wait itself
+    /// deadline-free: progress here is driven entirely by the service actually ticking, not by how
+    /// much wall-clock time a possibly-contended test runner has burned through.
     /// </summary>
     /// <remarks>
-    /// 30 seconds, not 5: this loop polls every 10ms, so on a healthy, idle machine it exits within a
-    /// tick or two regardless of the deadline — a generous budget costs nothing there. It is only
-    /// spent in full when something is genuinely broken, or when CI runs this alongside other test
-    /// projects and a real poller tick gets starved of CPU for a few seconds. A tight deadline turns
-    /// that ordinary contention into a false red; a generous one still fails, just slower, when the
-    /// condition truly never holds.
+    /// A bounded backstop remains, so a genuine hang — the service never ticking at all — still goes
+    /// red instead of hanging CI. A healthy run never approaches it: the loop only ever waits on real
+    /// ticks, so its actual running time tracks how many ticks the condition needed, not the backstop.
+    /// Returns whether the condition was actually observed true, rather than just falling through the
+    /// backstop — a caller asserting on state read *after* this returns must know the wait itself
+    /// succeeded.
     /// </remarks>
-    private static async Task<bool> WaitUntil(Func<bool> condition)
+    private static async Task<bool> WaitForTickWhereAsync(MotivRefreshService service, Func<bool> condition)
     {
-        var deadline = DateTimeOffset.UtcNow.AddSeconds(30);
-        while (!condition() && DateTimeOffset.UtcNow < deadline)
-            await Task.Delay(10);
-        return condition();
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        try
+        {
+            while (!condition())
+                await service.WaitForTickAsync(cts.Token);
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
     }
 
     [Fact]
@@ -53,15 +62,18 @@ public class MotivRefreshServiceTests
 
         // Act — wait on the outcome itself, not on the version and then a separate read of
         // LastReport: the version moving and LastReport being set are two different writes from the
-        // same tick, and a poller that keeps ticking on a 20ms interval can overwrite LastReport with
-        // a later "Unchanged" tick's report between this test observing the version change and it
-        // reading LastReport, making that read flaky by construction rather than by environment.
-        // Waiting on the outcome directly removes the check-then-act gap.
+        // same tick, and a poller that keeps ticking can overwrite LastReport with a later
+        // "Unchanged" tick's report between this test observing the version change and it reading
+        // LastReport, making that read flaky by construction rather than by environment. Waiting on
+        // the outcome directly removes the check-then-act gap. And waiting via the service's own
+        // per-tick signal, rather than a wall-clock deadline, means this cannot time out just because
+        // the machine was briefly too busy to schedule the poller's next tick promptly — it only
+        // times out if the poller genuinely stops ticking.
         await service.StartAsync(default);
         bool converged;
         try
         {
-            converged = await WaitUntil(() => service.LastReport?.Outcome == RefreshOutcome.Applied);
+            converged = await WaitForTickWhereAsync(service, () => service.LastReport?.Outcome == RefreshOutcome.Applied);
         }
         finally
         {
@@ -88,11 +100,14 @@ public class MotivRefreshServiceTests
 
         // Act — wait for several ticks to have actually failed, rather than sleeping a fixed time
         // and hoping: on a slow machine a fixed sleep can span no ticks at all, and the test would
-        // then pass without ever having exercised the failure it exists to cover.
+        // then pass without ever having exercised the failure it exists to cover. Waiting via the
+        // service's own per-tick signal means each iteration corresponds to one real completed poll
+        // cycle — success or caught failure — rather than a fixed wall-clock interval.
         await service.StartAsync(default);
+        bool observedThreeFailures;
         try
         {
-            await WaitUntil(() => store.Failures >= 3);
+            observedThreeFailures = await WaitForTickWhereAsync(service, () => store.Failures >= 3);
         }
         finally
         {
@@ -101,6 +116,7 @@ public class MotivRefreshServiceTests
 
         // Assert — the loop absorbed every failure. Taking the host down over an unreachable store
         // would trade a stale replica for no replica.
+        observedThreeFailures.ShouldBeTrue();
         store.Failures.ShouldBeGreaterThanOrEqualTo(3);
         service.ExecuteTask!.IsFaulted.ShouldBeFalse();
         rules.FindEntry("number")!.Version.ShouldBe(1);
