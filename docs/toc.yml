@@ -24,4 +24,6 @@ items:
     href: propositions/toc.yml
   - name: Governance
     href: governance/toc.yml
+  - name: Multi-Instance Refresh
+    href: multi-instance/toc.yml
 
