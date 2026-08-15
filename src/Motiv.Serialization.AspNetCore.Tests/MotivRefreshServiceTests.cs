@@ -17,13 +17,17 @@ public class MotivRefreshServiceTests
 
     /// <summary>
     /// Waits for the poller to get somewhere, rather than sleeping a fixed time: a fixed sleep is
-    /// either flaky or slow. Bounded, so a hang goes red rather than hanging CI.
+    /// either flaky or slow. Bounded, so a hang goes red rather than hanging CI. Returns whether the
+    /// condition was actually observed true, rather than just falling through the deadline — a caller
+    /// asserting on state read *after* this returns must know the wait itself succeeded, or a slow
+    /// machine turns a timeout into a confusing failure somewhere else entirely.
     /// </summary>
-    private static async Task WaitUntil(Func<bool> condition)
+    private static async Task<bool> WaitUntil(Func<bool> condition)
     {
         var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
         while (!condition() && DateTimeOffset.UtcNow < deadline)
             await Task.Delay(10);
+        return condition();
     }
 
     [Fact]
@@ -39,11 +43,17 @@ public class MotivRefreshServiceTests
 
         await a.UpdateAsync("number", """{"rule":{"not":{"spec":"positive"}}}""", 1, new RuleChangeProvenance("alice"));
 
-        // Act
+        // Act — wait on the outcome itself, not on the version and then a separate read of
+        // LastReport: the version moving and LastReport being set are two different writes from the
+        // same tick, and a poller that keeps ticking on a 20ms interval can overwrite LastReport with
+        // a later "Unchanged" tick's report between this test observing the version change and it
+        // reading LastReport, making that read flaky by construction rather than by environment.
+        // Waiting on the outcome directly removes the check-then-act gap.
         await service.StartAsync(default);
+        bool converged;
         try
         {
-            await WaitUntil(() => b.FindEntry("number")!.Version != 1);
+            converged = await WaitUntil(() => service.LastReport?.Outcome == RefreshOutcome.Applied);
         }
         finally
         {
@@ -51,8 +61,8 @@ public class MotivRefreshServiceTests
         }
 
         // Assert
+        converged.ShouldBeTrue();
         b.FindEntry("number")!.Version.ShouldBe(2);
-        service.LastReport!.Outcome.ShouldBe(RefreshOutcome.Applied);
     }
 
     [Fact]

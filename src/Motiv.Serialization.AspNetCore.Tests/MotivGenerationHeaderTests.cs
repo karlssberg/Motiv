@@ -77,6 +77,62 @@ public class MotivGenerationHeaderTests
     }
 
     [Fact]
+    public async Task Should_stamp_a_publishing_put_with_the_pre_write_generation()
+    {
+        // The pin is taken at request start, before the write commits, so a successful PUT's own
+        // response header names the world the request STARTED in — not the one its body just
+        // described. That is intentional, not an oversight (see GenerationHeader's remarks): this
+        // token exists so a client can detect being routed *backwards*, and a client remembers the
+        // highest generation it has ever seen. Reporting the pre-write generation here means the
+        // header always names a world the response was genuinely read against; reporting the
+        // post-write generation instead would have the client record a value for a world its own
+        // eyes never actually saw, so the next ordinary response from a not-yet-caught-up replica
+        // would look like a regression and raise a false alarm. The real, documented consequence: a
+        // writer cannot use its own write's response header to detect a later stale read.
+        //
+        // Arrange
+        await using var app = await StartAsync();
+        var client = app.GetTestClient();
+        var before = await ReadGeneration(client);
+        var document = JsonDocument.Parse("""{ "rule": { "spec": "positive" } }""").RootElement;
+
+        // Act
+        var put = await client.PutAsJsonAsync("/api/rules/rules/number", new { document, baseVersion = 1 });
+
+        // Assert — the PUT's own header still names the pre-write world...
+        put.Headers.TryGetValues(MotivRulesEndpoints.GenerationHeader, out var values).ShouldBeTrue();
+        StoreGeneration.TryParseToken(values!.Single(), out var putGeneration).ShouldBeTrue();
+        putGeneration.ShouldBe(before);
+
+        // ...while its body reports the write that just happened...
+        (await put.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("version").GetInt32().ShouldBe(2);
+
+        // ...and the world genuinely did move — a later read proves it
+        var after = await ReadGeneration(client);
+        after.MovedFrom(before).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Should_omit_the_header_on_an_unauthenticated_refusal()
+    {
+        // A 401 from RequireAuthorization() short-circuits above routing, before a Motiv endpoint —
+        // and therefore MotivGenerationFilter — is ever selected. Not a gap: a caller refused for
+        // lacking credentials has no generation worth comparing against.
+        //
+        // Arrange
+        await using var app = await StartAsync();
+        var client = app.GetTestClient();
+        client.DefaultRequestHeaders.Add(TestAuthHandler.AnonymousHeader, "true");
+
+        // Act
+        var response = await client.GetAsync("/api/rules/rules");
+
+        // Assert
+        response.StatusCode.ShouldBe(System.Net.HttpStatusCode.Unauthorized);
+        response.Headers.TryGetValues(MotivRulesEndpoints.GenerationHeader, out _).ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task Should_omit_the_header_on_a_registry_only_mount()
     {
         // Arrange — no RuleSet and no PropositionSet: there is no scope to pin and no generation to

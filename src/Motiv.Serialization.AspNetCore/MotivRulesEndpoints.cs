@@ -16,6 +16,7 @@ public static class MotivRulesEndpoints
     /// <see cref="StoreGeneration"/>, as produced by <see cref="StoreGeneration.ToToken"/>.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// A client polling several replicas behind a load balancer has no other way to tell it was
     /// routed to one that has not caught up: the response itself looks perfectly well-formed, and
     /// nothing about HTTP distinguishes a fresh answer from a stale one. Comparing the last generation
@@ -24,6 +25,32 @@ public static class MotivRulesEndpoints
     /// the header name is spelled once and shared, not duplicated, between this project's tests and
     /// any client (including the TypeScript client) that needs to parse it with
     /// <see cref="StoreGeneration.TryParseToken"/>.
+    /// </para>
+    /// <para>
+    /// <strong>Present on every response the Motiv endpoints themselves produce — not on a refusal
+    /// issued above them.</strong> <c>MotivGenerationFilter</c> stamps it, and a filter only runs once
+    /// routing has selected a Motiv endpoint and cleared whatever ASP.NET middleware sits in front of
+    /// it. An unauthenticated request refused by <c>RequireAuthorization()</c> short-circuits before
+    /// the filter ever runs, so its 401 carries no header — which is the right outcome, not a gap: a
+    /// caller refused for lacking credentials has no generation to compare against anyway. A document
+    /// this endpoint itself rejects (a 404 unknown rule, a 400 invalid document) is different — that
+    /// refusal is produced *inside* the pipeline the filter wraps, so it is stamped like any other
+    /// response.
+    /// </para>
+    /// <para>
+    /// <strong>Names the world the response body was read from, which for a write is the world
+    /// <em>before</em> the write.</strong> The pin is taken at request start, before a <c>PUT</c>'s
+    /// publish commits, so a successful write's header reports the pre-write generation while its body
+    /// reports the post-write version — two true facts about two different moments, not a bug. That
+    /// direction is the safe one: this token exists so a client can detect being routed *backwards*,
+    /// and a client tracks the highest generation it has ever seen. Understating what a response
+    /// carries can only make a client miss a genuine improvement it just received — a false negative
+    /// on skew detection. Overstating would have it record a generation it was never actually served,
+    /// so the very next correct response would look like a regression and raise a false alarm. The one
+    /// real consequence worth naming: a writer cannot use its own write's response header to tell
+    /// whether a later read from the same connection is stale — that comparison needs the header from
+    /// the later read, not this one.
+    /// </para>
     /// </remarks>
     public const string GenerationHeader = "Motiv-Generation";
 
