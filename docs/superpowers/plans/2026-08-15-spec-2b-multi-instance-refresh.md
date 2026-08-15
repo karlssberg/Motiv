@@ -2352,11 +2352,13 @@ Both sets already receive the scope in their constructors. Add to each construct
                 _rules is null ? 0 : await _rules.StoreGenerationAsync(cancellationToken).ConfigureAwait(false),
                 _propositions is null ? 0 : await _propositions.StoreGenerationAsync(cancellationToken).ConfigureAwait(false));
 
-            var current = Current;
+            // Snapshot() reads the stamp and the world in the only safe order — see its own doc.
+            // Reading them separately here, in the wrong order, would hand this rebuild a stale
+            // world with a fresh stamp, so its swap would succeed and silently overwrite a publish.
+            var (stamp, current) = Snapshot();
             if (!sequence.MovedFrom(current.Sequence))
                 return RefreshReport.Unchanged(current.Sequence);
 
-            var stamp = WriteStamp;
             var builder = new ScopeGenerationBuilder(Registry, current.RuleSlots.Length);
             var regressions = new List<RefreshFailure>();
             var quarantined = new List<RefreshFailure>();
