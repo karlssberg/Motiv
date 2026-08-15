@@ -13,11 +13,11 @@ export interface RulesApiClientOptions {
   /** Injectable fetch implementation; defaults to the global fetch. */
   fetch?: typeof fetch;
   /**
-   * Called when a response reports a generation behind the highest one already seen — the
-   * client was routed to a replica that has not caught up yet. Detection, not policy: the
-   * caller decides whether to retry, warn, or ignore.
+   * Called when a response reports a generation behind the one this client last accepted (see
+   * {@link RulesApiClient.generation}) — the client was routed to a replica that has not caught up
+   * yet. Detection, not policy: the caller decides whether to retry, warn, or ignore.
    */
-  onStaleGeneration?: (observed: StoreGeneration, highest: StoreGeneration) => void;
+  onStaleGeneration?: (observed: StoreGeneration, accepted: StoreGeneration) => void;
 }
 
 /** Where both stores stood in the world a response was served from. */
@@ -60,7 +60,7 @@ export class RulesApiError extends Error {
 export class RulesApiClient {
   readonly #baseUrl: string;
   readonly #fetch: typeof fetch;
-  readonly #onStaleGeneration: ((observed: StoreGeneration, highest: StoreGeneration) => void) | undefined;
+  readonly #onStaleGeneration: ((observed: StoreGeneration, accepted: StoreGeneration) => void) | undefined;
   #generation: StoreGeneration | undefined;
 
   constructor(options: RulesApiClientOptions) {
@@ -69,7 +69,17 @@ export class RulesApiClient {
     this.#onStaleGeneration = options.onStaleGeneration;
   }
 
-  /** The highest `Motiv-Generation` observed so far, if any response has carried one. */
+  /**
+   * The most recent `Motiv-Generation` that was not behind the one before it — the newest world this
+   * client accepts as having really been served to it. Undefined until a response carries one.
+   *
+   * Not a component-wise maximum, deliberately. A response is kept whole or discarded whole, so a
+   * mixed-direction observation (`r5.p9` after `r7.p3`) alarms and is dropped entire, and its `p9` is
+   * never recorded. Combining the two halves would synthesise a world no replica ever served, and
+   * every subsequent honest response would then look like a regression against it. The cost is
+   * under-detection: after a discarded observation, a later response carrying that same `p9` raises
+   * no alarm on the proposition half, because this client never claimed to have seen it.
+   */
   get generation(): StoreGeneration | undefined {
     return this.#generation;
   }
@@ -203,25 +213,27 @@ export class RulesApiClient {
    * Records the world a response came from, and reports a backwards move.
    *
    * Replicas converge eventually, so a client can be routed to one that has not caught up yet.
-   * That is explicable staleness rather than incoherence — but only if the client can see it, so
-   * the highest generation observed is kept and a lower one is surfaced rather than swallowed.
+   * That is explicable staleness rather than incoherence — but only if the client can see it, so a
+   * backwards move is surfaced rather than swallowed, and the generation kept is the last one that
+   * was not behind.
    *
    * The two components come from stores that are never written in the same transaction, so
    * there is no total order between generations — a response is a backwards move if *either*
-   * component is behind, even when the other has advanced.
+   * component is behind, even when the other has advanced. Such a response is then discarded whole
+   * rather than merged component-wise; see `generation` for what that costs and why it is right.
    */
   #trackGeneration(response: Response): void {
     const observed = parseGeneration(response.headers.get('motiv-generation'));
     if (!observed) return;
 
-    const highest = this.#generation;
-    if (!highest) {
+    const accepted = this.#generation;
+    if (!accepted) {
       this.#generation = observed;
       return;
     }
 
-    if (observed.rules < highest.rules || observed.propositions < highest.propositions) {
-      this.#onStaleGeneration?.(observed, highest);
+    if (observed.rules < accepted.rules || observed.propositions < accepted.propositions) {
+      this.#onStaleGeneration?.(observed, accepted);
       return;
     }
 

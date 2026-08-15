@@ -27,7 +27,8 @@ public class GovernedPublishOrderingTests
     /// <summary>
     /// Bound fresh, straight off <c>Scope.Source</c>, whenever a test needs to observe what
     /// "customer.p2" *actually* resolves to after a publish — not what <see cref="PropositionSet.DocumentJsonOf"/>
-    /// or a reported version says, since a stale <c>Scope.Overlay</c> entry is invisible to both.
+    /// or a reported version says, since a stale overlay entry in the published generation is
+    /// invisible to both.
     /// </summary>
     private sealed class CheckRule()
         : Rule<Customer, string>("check", RuleDocuments.FromJson("""{ "rule": { "spec": "customer.p2" } }"""));
@@ -370,8 +371,8 @@ public class GovernedPublishOrderingTests
     /// updated in this same envelope) from that walk, it would rebind p2 from p2's stale document and
     /// fold that rebind into the live overlay when p1 commits, landing *after* p2's own fresh commit
     /// and clobbering it — even though <see cref="PropositionSet.DocumentJsonOf"/> and the reported
-    /// version both correctly show p2's new state, because those read <c>_authored</c>, not
-    /// <c>Scope.Overlay</c>.
+    /// version both correctly show p2's new state, because those read the generation's
+    /// <c>Authored</c> table, not its <c>Overlay</c>.
     /// </summary>
     [Fact]
     public async Task Should_not_let_an_updated_propositions_own_publish_be_clobbered_by_a_co_updated_dependencys_stale_closure_rebind()

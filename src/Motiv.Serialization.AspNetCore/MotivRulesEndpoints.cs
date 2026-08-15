@@ -38,12 +38,17 @@ public static class MotivRulesEndpoints
     /// response.
     /// </para>
     /// <para>
-    /// <strong>Names the world the response body was read from, which for a write is the world
-    /// <em>before</em> the write.</strong> The pin is taken at request start, before a <c>PUT</c>'s
-    /// publish commits, so a successful write's header reports the pre-write generation while its body
-    /// reports the post-write version — two true facts about two different moments, not a bug. That
-    /// direction is the safe one: this token exists so a client can detect being routed *backwards*,
-    /// and a client tracks the highest generation it has ever seen. Understating what a response
+    /// <strong>Names the world the request was pinned to, which is the world the catalog and the rule
+    /// and proposition listings are read from — and, for a write, the world <em>before</em> the
+    /// write.</strong> The pin is taken at request start, before a <c>PUT</c>'s publish commits, so a
+    /// successful write's header reports the pre-write generation while its body reports the
+    /// post-write version — two true facts about two different moments, not a bug.
+    /// <c>POST /validate</c> and <c>POST /evaluate</c> are a second, milder exception in the same
+    /// direction: they bind an ad-hoc document, and binding reads the <em>live</em> world by the
+    /// settled rule that anything which binds or publishes does — so their bodies may reflect a world
+    /// at or ahead of the one the header names, never behind it. That direction is the safe one: this
+    /// token exists so a client can detect being routed *backwards*, and a client tracks the
+    /// generation it last accepted as served to it. Understating what a response
     /// carries can only make a client miss a genuine improvement it just received — a false negative
     /// on skew detection. Overstating would have it record a generation it was never actually served,
     /// so the very next correct response would look like a regression and raise a false alarm. The one

@@ -62,8 +62,10 @@ a caller polling for convergence should retry rather than read it as success.
 public MotivRulesBuilder AddRefresh(TimeSpan? interval = null);
 ```
 
-`AddRefresh()` registers an `IHostedService` that polls `GetGenerationAsync()` on both stores and calls
-`RefreshAsync()` when either has moved:
+`AddRefresh()` registers an `IHostedService` that calls `RefreshAsync()` on a timer. The generation
+check lives inside `RefreshAsync()` itself, which reads `GetGenerationAsync()` on both stores and
+returns `Unchanged` without loading anything unless one of them has moved — so a tick costs two
+scalar reads in the steady state:
 
 ```csharp
 builder.Services.AddMotivRules(registry, options)
@@ -188,18 +190,18 @@ function logGeneration(response: Response) {
 }
 ```
 
-`@motiv-rules/core`'s `RulesApiClient` does this tracking for you: it keeps the highest generation any
-response has carried and calls `onStaleGeneration(observed, highest)` when a later response reports one
-that's behind in *either* component — the same non-total-order rule `StoreGeneration.IsBehind` encodes
-server-side:
+`@motiv-rules/core`'s `RulesApiClient` does this tracking for you: it keeps the last generation a
+response carried that was not behind the one before it, and calls
+`onStaleGeneration(observed, accepted)` when a later response reports one that's behind in *either*
+component — the same non-total-order rule `StoreGeneration.IsBehind` encodes server-side:
 
 ```ts
 import { RulesApiClient } from '@motiv-rules/core';
 
 const client = new RulesApiClient({
   baseUrl: '/api/rules',
-  onStaleGeneration: (observed, highest) =>
-    console.warn(`served ${JSON.stringify(observed)}, expected at least ${JSON.stringify(highest)}`),
+  onStaleGeneration: (observed, accepted) =>
+    console.warn(`served ${JSON.stringify(observed)}, expected at least ${JSON.stringify(accepted)}`),
 });
 ```
 
