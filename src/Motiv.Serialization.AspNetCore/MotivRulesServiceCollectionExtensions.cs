@@ -153,8 +153,20 @@ public sealed class MotivRulesBuilder
     /// single-replica host does not need it.
     /// </summary>
     /// <param name="interval">How often to poll, or null for the five-second default.</param>
+    /// <returns>This builder, to allow chained registration.</returns>
+    /// <exception cref="InvalidOperationException">Refresh is already enabled. DI is last-wins, so a
+    /// second call would silently discard the first interval and, worse, register a second
+    /// <see cref="IHostedService"/> slot resolving the same <see cref="MotivRefreshService"/>
+    /// singleton — two concurrent poll loops against one store and one <c>LastReport</c> — rather
+    /// than layering onto the first call.</exception>
     public MotivRulesBuilder AddRefresh(TimeSpan? interval = null)
     {
+        if (Services.Any(descriptor => descriptor.ServiceType == typeof(MotivRefreshOptions)))
+            throw new InvalidOperationException(
+                $"{nameof(AddRefresh)} has already been called. Call it once — a second call " +
+                "would start a second poll loop against the same MotivRefreshService singleton, " +
+                "as DI registration is last-wins.");
+
         var options = new MotivRefreshOptions();
         if (interval is { } value)
             options.Interval = value;

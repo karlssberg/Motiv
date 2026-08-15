@@ -16,8 +16,23 @@ internal sealed class MotivRefreshService(
     RuleSet rules, MotivRefreshOptions options, ILogger<MotivRefreshService> logger)
     : BackgroundService
 {
-    /// <summary>The most recent outcome, for the health check to report. Null until the first tick.</summary>
-    public RefreshReport? LastReport { get; private set; }
+    private RefreshReport? _lastReport;
+
+    /// <summary>
+    /// The most recent outcome, for the health check to report. Null until the first tick.
+    /// </summary>
+    /// <remarks>
+    /// Written by this service's own loop, read from whatever thread handles the health-check
+    /// request — a plain auto-property gives no guarantee the reader ever observes a write from a
+    /// different thread. <see cref="Volatile.Read{T}"/>/<see cref="Volatile.Write{T}"/> is this
+    /// codebase's convention for exactly that cross-thread pairing — see
+    /// <c>BindingScope.Current</c> and <c>ChangeRequest.Status</c> — so this follows it too.
+    /// </remarks>
+    public RefreshReport? LastReport
+    {
+        get => Volatile.Read(ref _lastReport);
+        private set => Volatile.Write(ref _lastReport, value);
+    }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
