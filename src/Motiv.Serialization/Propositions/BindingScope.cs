@@ -113,6 +113,29 @@ internal sealed class BindingScope
     /// </summary>
     public long WriteStamp => Volatile.Read(ref _writes);
 
+    /// <summary>The live world and the stamp that guards it, read in the only safe order.</summary>
+    /// <remarks>
+    /// <para>
+    /// A rebuild that means to offer its result back to <see cref="TrySwap"/> must read both, and the
+    /// order is not a matter of taste. Take the stamp first and the worst case is that a publish lands
+    /// immediately afterwards, so the world read is newer than the stamp implies: the swap is refused
+    /// and the rebuild retries. That is conservative — a wasted rebuild, never a wrong one. Take the
+    /// world first and the publish lands in between, so the stamp is newer than the world: the swap is
+    /// <em>accepted</em>, and it overwrites the publish with a world built before it. A needless retry
+    /// is cheap; a silently discarded publish is the failure the stamp exists to prevent.
+    /// </para>
+    /// <para>
+    /// This method exists so that ordering is a property of the code rather than of whoever read the
+    /// documentation. <see cref="Current"/> and <see cref="WriteStamp"/> remain for callers that
+    /// genuinely need only one of the two and are not going to swap.
+    /// </para>
+    /// </remarks>
+    public (long Stamp, ScopeGeneration World) Snapshot()
+    {
+        var stamp = WriteStamp;
+        return (stamp, Current);
+    }
+
     /// <summary>
     /// Builds a successor from the live world and swaps it in as one write. Assumes the inner monitor
     /// is held.
@@ -281,7 +304,13 @@ internal sealed class BindingScope
     {
         var broken = new List<BrokenDependent>();
 
-        foreach (var node in Current.Graph.DependentClosure(propositionName))
+        // One read, not one per use: the graph being walked and the participants being rebound have
+        // to come from the same world, or a publish landing mid-walk would have this rebind nodes one
+        // world names against definitions from another. The inner monitor makes that unreachable
+        // today; reading twice would leave it a lock away from being reachable.
+        var world = Current;
+
+        foreach (var node in world.Graph.DependentClosure(propositionName))
         {
             // This node's own prepared change — elsewhere in the same envelope — is authoritative;
             // a rebind built from its pre-envelope definition would only shadow it. Its own
@@ -291,7 +320,7 @@ internal sealed class BindingScope
                 continue;
 
             // A graph edge can outlive its participant while a node is being torn down.
-            if (!Current.Participants.TryGetValue(node, out var participant))
+            if (!world.Participants.TryGetValue(node, out var participant))
                 continue;
 
             var errors = new List<RuleError>();

@@ -37,10 +37,9 @@ public class ScopeGenerationTests
     [Fact]
     public void Should_refuse_a_swap_whose_write_stamp_is_stale()
     {
-        // Arrange
+        // Arrange — a rebuild reads both halves through Snapshot, which is the only safe order
         var scope = new BindingScope(new SpecRegistry());
-        var stamp = scope.WriteStamp;
-        var successor = scope.Current;
+        var (stamp, successor) = scope.Snapshot();
 
         // Act — a publish lands after the successor was built
         scope.Mutate(builder => builder.SetSequence(new StoreGeneration(9, 9)));
@@ -57,7 +56,7 @@ public class ScopeGenerationTests
         // Arrange — Build hands the generation the builder's own collections, so a second Build would
         // hand a second world the same ones
         var scope = new BindingScope(new SpecRegistry());
-        var builder = new ScopeGenerationBuilder(scope.Registry, scope.Current);
+        var builder = new ScopeGenerationBuilder(scope.Registry, scope.Snapshot().World);
         builder.Build();
 
         // Act & Assert
@@ -69,8 +68,9 @@ public class ScopeGenerationTests
     {
         // Arrange
         var scope = new BindingScope(new SpecRegistry());
-        var builder = new ScopeGenerationBuilder(scope.Registry, scope.Current);
-        scope.TrySwap(builder.Build(), scope.WriteStamp);
+        var (stamp, world) = scope.Snapshot();
+        var builder = new ScopeGenerationBuilder(scope.Registry, world);
+        scope.TrySwap(builder.Build(), stamp);
 
         // Act & Assert — this write would edit a world other threads are already reading
         Should.Throw<InvalidOperationException>(() => builder.SetSequence(new StoreGeneration(1, 1)));
@@ -82,8 +82,8 @@ public class ScopeGenerationTests
     {
         // Arrange
         var scope = new BindingScope(new SpecRegistry());
-        var stamp = scope.WriteStamp;
-        var builder = new ScopeGenerationBuilder(scope.Registry, scope.Current);
+        var (stamp, world) = scope.Snapshot();
+        var builder = new ScopeGenerationBuilder(scope.Registry, world);
         builder.SetSequence(new StoreGeneration(4, 4));
 
         // Act

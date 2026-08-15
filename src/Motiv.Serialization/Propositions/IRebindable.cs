@@ -33,10 +33,27 @@ internal interface IRebindCommit
 
     /// <summary>
     /// The remainder of the publish that <see cref="ApplyTo"/> cannot yet express, because it lands
-    /// on a field the node still owns rather than in the generation. Called only by
-    /// <see cref="ScopeGenerationBuilder.Apply"/> — never during a prepare, which may be discarded.
-    /// Goes away once the authored proposition and the rule slot own that state instead.
+    /// on a field the node still owns rather than in the generation. Transitional, and due to be
+    /// deleted — read the remarks before doing so.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <strong>There are exactly two callers</strong>, and both must be accounted for when this is
+    /// removed: <see cref="ScopeGenerationBuilder.Apply"/>, which publishes a prepared closure, and
+    /// <c>PropositionSet.LoadOne</c>, which commits a rebind directly at startup because the row it is
+    /// publishing came *from* the store and so has no closure and nothing to persist. Nothing else may
+    /// call it — in particular <see cref="BindingScope.PrepareClosure"/> must not, since it applies
+    /// commits into a world that may yet be discarded, and a live write from there would publish a
+    /// binding the caller went on to reject.
+    /// </para>
+    /// <para>
+    /// <strong>It comes out in two halves.</strong> <c>PropositionSet.Authored.RebindCommit</c>'s
+    /// implementation goes when the authored proposition becomes immutable and carries its own binding
+    /// into the builder; <c>Rule</c>'s and <c>AsyncRule</c>'s go when rule state moves into
+    /// <see cref="RuleSlot"/>. This member — and <see cref="NoRebindCommit"/>'s empty body — can only
+    /// be deleted once both have landed.
+    /// </para>
+    /// </remarks>
     void Commit();
 }
 

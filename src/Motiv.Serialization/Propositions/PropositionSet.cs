@@ -672,7 +672,9 @@ public sealed class PropositionSet
         }
 
         // The same steps CommitPublish takes to go live, minus the store write — this row came
-        // *from* the store, so saving it back would be a no-op at best.
+        // *from* the store, so saving it back would be a no-op at best. One of only two callers of
+        // IRebindCommit.Commit, and the one a reader of ScopeGenerationBuilder.Apply would miss; see
+        // that member's remarks before removing it.
         commit.Commit();
         CommitPublish(authored);
     }
