@@ -25,39 +25,11 @@ internal interface IRebindable
 internal interface IRebindCommit
 {
     /// <summary>
-    /// Publishes the prepared binding into the world being built. Must not fail. Replaces the older
-    /// pair of an overlay entry plus a <c>Commit()</c> that mutated live state: a commit now has one
-    /// destination, and it is the world nobody is reading yet.
+    /// Publishes the prepared binding into the world being built. Must not fail, and is the whole of a
+    /// rebind: there is no second, live-state half any more. That is what lets
+    /// <see cref="BindingScope.PrepareClosure"/> apply a commit into a world it may still discard.
     /// </summary>
     void ApplyTo(ScopeGenerationBuilder builder);
-
-    /// <summary>
-    /// The remainder of the publish that <see cref="ApplyTo"/> cannot yet express, because it lands
-    /// on a field the node still owns rather than in the generation. Transitional, and due to be
-    /// deleted — read the remarks before doing so.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// <strong>There is exactly one caller</strong>, and it must be accounted for when this is
-    /// removed: <see cref="ScopeGenerationBuilder.Apply"/>, which publishes a prepared closure.
-    /// Nothing else may call it — in particular <see cref="BindingScope.PrepareClosure"/> must not,
-    /// since it applies commits into a world that may yet be discarded, and a live write from there
-    /// would publish a binding the caller went on to reject.
-    /// </para>
-    /// <para>
-    /// <strong>It comes out in two halves; the authored half has landed.</strong>
-    /// <c>AuthoredProposition.RebindCommit.Commit</c> is now empty:
-    /// <c>PropositionSet._authored</c> is gone, <see cref="ScopeGeneration.Authored"/> is the read
-    /// path, and <see cref="ApplyTo"/>'s <c>builder.SetAuthored</c> already reaches it — Spec 2B's
-    /// Task 6. What remains is the rule half: <c>Rule</c>'s and <c>AsyncRule</c>'s own
-    /// implementations, which still mutate live rule state in place. That retires when rule state
-    /// moves into <see cref="RuleSlot"/> — Task 8, at which point this member, the empty authored
-    /// body, and <see cref="NoRebindCommit"/>'s empty body can all be deleted together. Apply calls it
-    /// unconditionally rather than only for rule commits, so it never has to know which half of a
-    /// mixed closure it is looking at.
-    /// </para>
-    /// </remarks>
-    void Commit();
 }
 
 /// <summary>
@@ -70,10 +42,6 @@ internal sealed class NoRebindCommit : IRebindCommit
     public static NoRebindCommit Instance { get; } = new();
 
     public void ApplyTo(ScopeGenerationBuilder builder)
-    {
-    }
-
-    public void Commit()
     {
     }
 }

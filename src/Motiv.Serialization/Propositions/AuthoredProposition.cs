@@ -91,14 +91,5 @@ internal sealed class AuthoredProposition(
             builder.SetAuthored(rebound);
             builder.SetOverlayEntry(rebound.Bound!);
         }
-
-        /// <summary>
-        /// Nothing left to do: the authored half of <see cref="IRebindCommit.Commit"/> retired once
-        /// <see cref="ScopeGeneration.Authored"/> became the read path. The member itself stays until
-        /// the rule half retires too — see <see cref="IRebindCommit.Commit"/>'s remarks.
-        /// </summary>
-        public void Commit()
-        {
-        }
     }
 }

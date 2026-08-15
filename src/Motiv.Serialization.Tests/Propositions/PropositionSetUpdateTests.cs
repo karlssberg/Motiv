@@ -68,10 +68,6 @@ public class PropositionSetUpdateTests
         {
         }
 
-        public void Commit()
-        {
-        }
-
         /// <summary>Blocks until <see cref="PrepareRebind"/> has been entered.</summary>
         public void WaitUntilEntered() => _entered.Wait();
 

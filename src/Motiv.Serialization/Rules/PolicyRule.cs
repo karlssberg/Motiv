@@ -33,11 +33,16 @@ public class PolicyRule<TModel, TMetadata> : Rule<TModel, TMetadata>
     public override bool IsPolicy => true;
 
     /// <summary>Evaluates the current rule implementation, yielding the policy's single value.</summary>
-    /// <remarks>Shadows the base method: a <see cref="Rule{TModel,TMetadata}"/>-typed reference resolves to the base method and yields the spec-flavoured result.</remarks>
+    /// <remarks>
+    /// Shadows the base method: a <see cref="Rule{TModel,TMetadata}"/>-typed reference resolves to the
+    /// base method and yields the spec-flavoured result. Reads the <em>pinned</em> world for the same
+    /// reason the base method does — an evaluation belongs to one decision, not to whatever is live at
+    /// the instant each rule is reached.
+    /// </remarks>
     /// <param name="model">The model to evaluate.</param>
     /// <returns>The single-value policy result of the current implementation.</returns>
     public new PolicyResultBase<TMetadata> Evaluate(TModel model) =>
-        ((PolicyBase<TModel, TMetadata>)Snapshot().Spec).Evaluate(model);
+        ((PolicyBase<TModel, TMetadata>)StateIn(Scope.Active).Spec).Evaluate(model);
 
     private protected override RuleError? RequirePolicy(SpecBase<TModel, TMetadata> spec) =>
         spec is PolicyBase<TModel, TMetadata>

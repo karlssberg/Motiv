@@ -9,11 +9,10 @@ public class BindingScopeTests
     private static SpecRegistryEntry Entry(string name) =>
         new SpecRegistry().Register(name, AnySpec).Find(name)!;
 
-    /// <summary>A participant that rebinds successfully, or fails on demand, and records that it committed.</summary>
+    /// <summary>A participant that rebinds successfully, or fails on demand.</summary>
     private sealed class StubParticipant(NodeId node, bool succeeds) : IRebindable, IRebindCommit
     {
         public NodeId Node { get; } = node;
-        public bool Committed { get; private set; }
         public int PrepareCount { get; private set; }
 
         /// <summary>Set by the test to record the global commit order.</summary>
@@ -43,8 +42,6 @@ public class BindingScopeTests
             if (Node.Kind == NodeKind.Proposition)
                 builder.SetOverlayEntry(Entry(Node.Name));
         }
-
-        public void Commit() => Committed = true;
     }
 
     [Fact]
@@ -196,8 +193,12 @@ public class BindingScopeTests
         broken[0].Name.ShouldBe("can-checkout");
         broken[0].Kind.ShouldBe("rule");
         broken[0].Errors.ShouldNotBeEmpty();
-        good.Committed.ShouldBeFalse();
-        bad.Committed.ShouldBeFalse();
+
+        // Nothing went live. The one participant that did rebind wrote its entry into the prospective
+        // builder, which this test never builds — that write is the whole of a commit now, so a
+        // discarded builder is a discarded publish.
+        good.PrepareCount.ShouldBe(1);
+        scope.Source.Find("b").ShouldBeNull();
     }
 
     [Fact]
@@ -279,10 +280,9 @@ public class BindingScopeTests
         // Assert
         broken.ShouldBeEmpty();
 
-        // b is excluded: never rebound, never committed, and its own already-set entry survives —
-        // PrepareClosure must not have called prospective.SetOverlayEntry for it at all.
+        // b is excluded: never rebound, and its own already-set entry survives — PrepareClosure must
+        // not have called prospective.SetOverlayEntry for it at all.
         b.PrepareCount.ShouldBe(0);
-        b.Committed.ShouldBeFalse();
         prospective.Source.Find("b").ShouldBeSameAs(bsOwnEntry);
 
         // c is not excluded — b's exclusion from being rebound does not exclude c, which references

@@ -34,12 +34,17 @@ public class AsyncPolicyRule<TModel, TMetadata> : AsyncRule<TModel, TMetadata>
     public override bool IsPolicy => true;
 
     /// <summary>Evaluates the current rule implementation, yielding the policy's single value.</summary>
-    /// <remarks>Shadows the base method: an <see cref="AsyncRule{TModel,TMetadata}"/>-typed reference resolves to the base method and yields the spec-flavoured result.</remarks>
+    /// <remarks>
+    /// Shadows the base method: an <see cref="AsyncRule{TModel,TMetadata}"/>-typed reference resolves
+    /// to the base method and yields the spec-flavoured result. Reads the <em>pinned</em> world for the
+    /// same reason the base method does — an evaluation belongs to one decision, not to whatever is
+    /// live at the instant each rule is reached.
+    /// </remarks>
     /// <param name="model">The model to evaluate.</param>
     /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
     /// <returns>The single-value policy result of the current implementation.</returns>
     public new ValueTask<PolicyResultBase<TMetadata>> EvaluateAsync(TModel model, CancellationToken cancellationToken = default) =>
-        ((AsyncPolicyBase<TModel, TMetadata>)Snapshot().Spec).EvaluateAsync(model, cancellationToken);
+        ((AsyncPolicyBase<TModel, TMetadata>)StateIn(Scope.Active).Spec).EvaluateAsync(model, cancellationToken);
 
     private protected override RuleError? RequirePolicy(AsyncSpecBase<TModel, TMetadata> spec) =>
         spec is AsyncPolicyBase<TModel, TMetadata>

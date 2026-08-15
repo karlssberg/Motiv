@@ -98,9 +98,18 @@ public sealed class RuleSet
             if (_rules.ContainsKey(rule.Name))
                 throw new ArgumentException($"A rule is already registered under the name '{rule.Name}'.", nameof(rule));
 
+            // Asked before the bind, because "you already added this rule" is the more useful answer
+            // than whatever this registry makes of a document another scope already bound.
+            rule.EnsureUnbound();
+
+            // Bound before the slot is claimed, so a default that does not bind leaves the rule
+            // exactly as it was found: unregistered, unslotted, and re-addable once repaired. Claiming
+            // first would strand the instance on a slot number the next successful Add would reuse,
+            // and a stranded rule of the same closed type would then evaluate its successor's state.
+            object state;
             try
             {
-                rule.Attach(_serializer);
+                state = rule.BindDefaultState(_serializer);
             }
             catch (RuleSerializationException ex)
             {
@@ -108,8 +117,23 @@ public sealed class RuleSet
                 throw new RuleSerializationException($"Rule '{rule.Name}': {ex.Message}", ex.Errors);
             }
 
+            var slot = _rules.Count;
+            rule.Occupy(Scope, slot);
+
+            // One swap for the binding and the edges that describe it. Track reads the document out
+            // of the builder, so the state must be written into it first.
+            Scope.Mutate(builder =>
+            {
+                builder.SetRuleState(slot, state);
+                Track(rule, builder);
+            });
+
+            // Registered last, and deliberately after the swap. Rules/FindEntry read _rules without
+            // the lock, and a rule they can reach must already have state to report — publishing the
+            // slot second would leave a window in which a listing found the rule and then threw
+            // reading its version. Nothing inside the swap above consults _rules.
             _rules[rule.Name] = rule;
-            Track(rule);
+
             return this;
         });
     }
@@ -229,19 +253,24 @@ public sealed class RuleSet
             // own primary key.
             CommitCore(head.Name, publication, builder);
         }
-        else
-        {
-            // The rule stays on its compiled default — a rule must be able to evaluate, and there is
-            // nothing else to bind — but says so rather than reverting silently.
-            rule.Quarantine = prepared.Errors;
-        }
 
         // Either way the store's version is authoritative: a restart must not renumber history, and a
         // repair must be addressed against the version the store actually holds, not the one this
         // publish just minted or the one Add bound, or the very first repair attempt would conflict.
-        rule.RestoreVersion(head.Version);
+        // Written *before* the quarantine below, because SetRuleState clears quarantine — see
+        // RuleSlot.WithState — and this is a state write.
+        if (builder.FindRuleState(rule.Slot) is { } state)
+            builder.SetRuleState(rule.Slot, rule.WithVersion(state, head.Version));
 
-        return prepared.Publication is null ? prepared.Errors : null;
+        if (prepared.Publication is null)
+        {
+            // The rule stays on its compiled default — a rule must be able to evaluate, and there is
+            // nothing else to bind — but says so rather than reverting silently.
+            builder.SetRuleQuarantine(rule.Slot, prepared.Errors);
+            return prepared.Errors;
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -495,15 +524,13 @@ public sealed class RuleSet
             ?? throw new InvalidOperationException(
                 $"Rule '{name}' is no longer registered, so its prepared publication cannot be committed.");
 
+        // Also clears any quarantine on the slot: a quarantine says "running a compiled default in
+        // place of a stored document that would not bind", and a successful publish is exactly what
+        // stops that being true — see RuleSlot.WithState.
         publication.ApplyTo(builder);
 
-        // A quarantine says "running a compiled default in place of a stored document that would not
-        // bind". A successful publish is exactly what stops that being true, so it must not outlive
-        // one — an operator who repairs a rule would otherwise be told it is still broken until the
-        // process restarts.
-        rule.Quarantine = [];
-
-        // Track reads the rule's *published* document, so it must run after ApplyTo, not before.
+        // Track reads the rule's *prospective* document out of the builder, so it must run after
+        // ApplyTo, not before.
         Track(rule, builder);
 
         return RuleUpdateResult.Updated(publication.Version);
@@ -566,15 +593,10 @@ public sealed class RuleSet
             : [];
 
     /// <summary>
-    /// Records the rule's current outgoing references and its participation in rebinds. A rule on a
-    /// compiled default resolves no names, so it leaves the graph entirely.
-    /// </summary>
-    private void Track(RuleBase rule) => Scope.Mutate(builder => Track(rule, builder));
-
-    /// <summary>
-    /// <see cref="Track(RuleBase)"/> folded into a successor the caller owns — the edges and the
-    /// participant they name reach a reader together or not at all, and a caller committing several
-    /// rules at once gets one swap rather than one per rule.
+    /// Records the rule's current outgoing references and its participation in rebinds, into a
+    /// successor the caller owns — the edges and the participant they name reach a reader together or
+    /// not at all, and a caller committing several rules at once gets one swap rather than one per
+    /// rule. A rule on a compiled default resolves no names, so it leaves the graph entirely.
     /// </summary>
     private void Track(RuleBase rule, ScopeGenerationBuilder builder)
     {

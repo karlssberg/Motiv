@@ -15,12 +15,11 @@ internal interface IRulePublication
     string? DocumentJson { get; }
 
     /// <summary>
-    /// Makes the change live. Cannot fail, and must be called under the scope lock, inside the same
-    /// <see cref="BindingScope.Mutate(Action{ScopeGenerationBuilder})"/> that re-tracks the rule's
-    /// graph edges — so the binding and the edges that describe it publish in one swap rather than
-    /// two. <paramref name="builder"/> is threaded through for that reason, not because a rule's
-    /// state lives in it yet — it still lives in a field on the rule itself, swapped by a plain
-    /// <see cref="Volatile.Write{T}"/>.
+    /// Writes the prepared binding into <paramref name="builder"/>'s rule slot. Cannot fail, and
+    /// changes nothing a reader can see until the builder is swapped in — so it must be called inside
+    /// the same <see cref="BindingScope.Mutate(Action{ScopeGenerationBuilder})"/> that re-tracks the
+    /// rule's graph edges, and the binding and the edges describing it then publish in one swap rather
+    /// than two.
     /// </summary>
     void ApplyTo(ScopeGenerationBuilder builder);
 }

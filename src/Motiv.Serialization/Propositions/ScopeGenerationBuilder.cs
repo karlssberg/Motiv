@@ -137,22 +137,17 @@ internal sealed class ScopeGenerationBuilder
     /// successor, so the whole closure goes live in the one swap that publishes it.
     /// </summary>
     /// <remarks>
-    /// <see cref="IRebindCommit.Commit"/> is called here and nowhere else. A rebound rule's state is
-    /// still a field the rule owns rather than part of the generation, and that part must move only
-    /// once the caller has confirmed nothing broke — <see cref="BindingScope.PrepareClosure"/> applies
-    /// the same commits into a world that may yet be discarded, so a commit that moved live state from
-    /// <see cref="IRebindCommit.ApplyTo"/> would publish a rejected binding. Propositions no longer
-    /// need it: their whole rebind is <see cref="IRebindCommit.ApplyTo"/>'s write into this builder.
+    /// A rebind is now nothing but <see cref="IRebindCommit.ApplyTo"/>'s write into this builder —
+    /// for a rule as much as for a proposition. That is what lets
+    /// <see cref="BindingScope.PrepareClosure"/> apply the very same commits into a world it may yet
+    /// discard: applying one moves no live state, so a rejected closure leaves nothing behind.
     /// </remarks>
     public void Apply(IReadOnlyList<IRebindCommit> commits)
     {
         ThrowIfBuilt();
 
         foreach (var commit in commits)
-        {
             commit.ApplyTo(this);
-            commit.Commit();
-        }
     }
 
     /// <summary>Grows the slot array so <paramref name="count"/> rules fit. Never shrinks: slots are permanent.</summary>
@@ -176,6 +171,10 @@ internal sealed class ScopeGenerationBuilder
             ? existing.WithState(state)
             : new RuleSlot(state, []);
     }
+
+    /// <summary>The state a slot will carry once this builder is published, or null when it has none.</summary>
+    public object? FindRuleState(int slot) =>
+        slot >= 0 && slot < _ruleSlots.Length ? _ruleSlots[slot]?.State : null;
 
     /// <summary>Records why a stored document could not be applied, keeping the binding in place.</summary>
     public void SetRuleQuarantine(int slot, IReadOnlyList<RuleError> quarantine)
