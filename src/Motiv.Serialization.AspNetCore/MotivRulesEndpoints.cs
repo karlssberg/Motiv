@@ -12,6 +12,22 @@ namespace Motiv.Serialization.AspNetCore;
 public static class MotivRulesEndpoints
 {
     /// <summary>
+    /// The response header carrying the world a response was served from — the wire form of a
+    /// <see cref="StoreGeneration"/>, as produced by <see cref="StoreGeneration.ToToken"/>.
+    /// </summary>
+    /// <remarks>
+    /// A client polling several replicas behind a load balancer has no other way to tell it was
+    /// routed to one that has not caught up: the response itself looks perfectly well-formed, and
+    /// nothing about HTTP distinguishes a fresh answer from a stale one. Comparing the last generation
+    /// it saw against this header is how it finds out — the difference between eventual consistency,
+    /// which a client can reason about, and silent divergence, which it cannot. A public constant so
+    /// the header name is spelled once and shared, not duplicated, between this project's tests and
+    /// any client (including the TypeScript client) that needs to parse it with
+    /// <see cref="StoreGeneration.TryParseToken"/>.
+    /// </remarks>
+    public const string GenerationHeader = "Motiv-Generation";
+
+    /// <summary>
     /// Maps <c>GET {basePath}/catalog</c>, <c>POST {basePath}/validate</c>, and
     /// <c>POST {basePath}/evaluate</c>, backed by the given registry and options. When a
     /// <see cref="RuleSet"/> is supplied, also maps <c>GET {basePath}/rules</c>,
@@ -64,6 +80,16 @@ public static class MotivRulesEndpoints
             group.AllowAnonymous();
         else
             group.RequireAuthorization();
+
+        // Either set pins the same scope when they share one; a registry-only mount has no scope to
+        // pin and no generation to report, so it is left alone.
+        Func<DecisionSnapshot>? pin =
+            rules is not null ? rules.PinSnapshot
+            : propositions is not null ? propositions.PinSnapshot
+            : null;
+
+        if (pin is not null)
+            group.AddEndpointFilter(new MotivGenerationFilter(pin));
 
         MapCatalogEndpoint(group, registry, options, rules, propositions, json);
 
