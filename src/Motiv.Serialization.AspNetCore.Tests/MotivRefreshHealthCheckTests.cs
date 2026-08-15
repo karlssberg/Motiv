@@ -46,6 +46,28 @@ public class MotivRefreshHealthCheckTests
         result.Status.ShouldBe(HealthStatus.Healthy);
         result.Data["generation"].ShouldBe("r4.p1");
         result.Data["outcome"].ShouldBe(nameof(RefreshOutcome.Applied));
+        result.Data["quarantined"].ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Should_surface_quarantined_debt_carried_forward_on_a_successful_apply()
+    {
+        // Arrange — Applied does not mean nothing is wrong: a quarantined row has no live binding to
+        // protect, so it does not block the rebuild, but it is carried forward still broken. The
+        // poller's own log line already reports this count on Applied, so the health endpoint must
+        // not be less informative than the logs about the same event.
+        var check = new MotivRefreshHealthCheck(ServiceReporting(
+            RefreshReport.Applied(
+                new StoreGeneration(4, 1),
+                [new RefreshFailure("stale-rule", "rule", [])])));
+
+        // Act
+        var result = await check.CheckHealthAsync(new HealthCheckContext(), default);
+
+        // Assert — still healthy (quarantine never blocks convergence), but the debt is visible
+        result.Status.ShouldBe(HealthStatus.Healthy);
+        result.Data["quarantined"].ShouldBe(1);
+        result.Description.ShouldNotBeNull().ShouldContain("stale-rule");
     }
 
     [Fact]
@@ -83,6 +105,7 @@ public class MotivRefreshHealthCheckTests
         result.Description.ShouldNotBeNull().ShouldContain("number");
         result.Data["generation"].ShouldBe("r4.p1");
         result.Data["outcome"].ShouldBe(nameof(RefreshOutcome.Aborted));
+        result.Data["quarantined"].ShouldBe(0);
     }
 
     [Fact]
@@ -103,5 +126,50 @@ public class MotivRefreshHealthCheckTests
         var description = result.Description.ShouldNotBeNull();
         description.ShouldContain("number");
         description.ShouldContain("is-adult");
+    }
+
+    [Fact]
+    public async Task Should_surface_quarantined_alongside_regressions_when_aborted()
+    {
+        // Arrange — regressions and quarantined rows come from the same pass and may well be
+        // related: the same redeploy that made one document unbindable is a plausible cause of the
+        // other. An operator diagnosing a stall wants both halves in one place, which is the whole
+        // reason RefreshReport.Aborted carries quarantined alongside regressions in the first place.
+        var check = new MotivRefreshHealthCheck(ServiceReporting(
+            RefreshReport.Aborted(
+                new StoreGeneration(4, 1),
+                [new RefreshFailure("number", "rule", [])],
+                [new RefreshFailure("stale-rule", "rule", [])])));
+
+        // Act
+        var result = await check.CheckHealthAsync(new HealthCheckContext(), default);
+
+        // Assert — both the blocking cause and the pre-existing debt are visible
+        result.Data["quarantined"].ShouldBe(1);
+        var description = result.Description.ShouldNotBeNull();
+        description.ShouldContain("number");
+        description.ShouldContain("stale-rule");
+    }
+
+    [Fact]
+    public async Task Should_report_only_the_quarantined_count_when_the_list_is_long()
+    {
+        // Arrange — six quarantined rows, one past MaxNamedInDescription: naming all of them would
+        // turn a one-line diagnostic hint into a catalog dump. The count still lands in Data either
+        // way — only the description's name-list is proportionate.
+        var quarantined = Enumerable.Range(1, 6)
+            .Select(i => new RefreshFailure($"stale-{i}", "rule", []))
+            .ToArray();
+        var check = new MotivRefreshHealthCheck(ServiceReporting(
+            RefreshReport.Applied(new StoreGeneration(4, 1), quarantined)));
+
+        // Act
+        var result = await check.CheckHealthAsync(new HealthCheckContext(), default);
+
+        // Assert
+        result.Data["quarantined"].ShouldBe(6);
+        var description = result.Description.ShouldNotBeNull();
+        description.ShouldContain("6");
+        description.ShouldNotContain("stale-1");
     }
 }
