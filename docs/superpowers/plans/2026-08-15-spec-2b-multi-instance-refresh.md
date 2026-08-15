@@ -28,7 +28,7 @@
   `Motiv` v8.0.0 is published; nothing in this plan belongs to it.
 - **TDD is mandatory** (CLAUDE.md): failing test → confirm it fails for the right reason → minimal
   implementation → confirm it passes → commit.
-- **A `code-simplifier` review is mandatory** after implementation, per CLAUDE.md. It is Task 19.
+- **A `code-simplifier` review is mandatory** after implementation, per CLAUDE.md. It is Task 18.
 - **Test latches take timeouts.** A latch with no timeout hangs CI instead of going red — 2A shipped
   one and disclosed it. Every `ManualResetEventSlim.Wait` / `Task.Wait` in a new test passes a
   timeout and asserts the wait succeeded.
@@ -2025,130 +2025,7 @@ git commit -m "feat(serialization): add DecisionSnapshot, so one decision sees o
 
 ## Phase 5 — Refresh
 
-### Task 10: `RefreshReport`
-
-**Files:**
-- Create: `src/Motiv.Serialization/Rules/RefreshReport.cs`
-- Test: covered by Task 11's tests; this task only introduces types.
-
-**Interfaces:**
-- Produces: `public enum RefreshOutcome { Unchanged, Applied, Aborted, Contended }`;
-  `public sealed record RefreshFailure(string Name, string Kind, IReadOnlyList<RuleError> Errors)`;
-  `public sealed class RefreshReport` with `RefreshOutcome Outcome`, `StoreGeneration Generation`,
-  `IReadOnlyList<RefreshFailure> Regressions`, `IReadOnlyList<RefreshFailure> Quarantined`, and the
-  factories `Unchanged(StoreGeneration)`, `Applied(StoreGeneration, IReadOnlyList<RefreshFailure>)`,
-  `Aborted(StoreGeneration, IReadOnlyList<RefreshFailure>)`, `Contended(StoreGeneration)`.
-
-**A clarification this task locks in.** The design says a refresh that cannot bind a row aborts
-entirely. Read literally that stalls a replica forever on a row that never bound in the first place —
-a hand-edited document quarantined at startup would abort every subsequent refresh, and the replica
-would never converge on anything. What abort exists to protect is a *live, correct, approved* binding
-from regressing to a compiled default. So the rule is sharper than "anything fails":
-
-> A refresh aborts when applying it would quarantine something that is **not quarantined today**.
-> A row that is already quarantined carries its quarantine into the new world and blocks nothing.
-
-`Regressions` are the blocking kind. `Quarantined` are the carried kind, reported so an operator can
-still see them.
-
-- [ ] **Step 1: Write the implementation**
-
-```csharp
-namespace Motiv.Serialization;
-
-/// <summary>What a refresh did.</summary>
-public enum RefreshOutcome
-{
-    /// <summary>Neither store had moved, so nothing was rebuilt. The common case, every tick.</summary>
-    Unchanged,
-
-    /// <summary>A new world was built and swapped in.</summary>
-    Applied,
-
-    /// <summary>
-    /// The rebuild would have regressed a live binding to its compiled default, so it was discarded
-    /// and the current world kept.
-    /// </summary>
-    Aborted,
-
-    /// <summary>A publish landed while the rebuild was being built, so it was discarded. Retry.</summary>
-    Contended
-}
-
-/// <summary>One node a refresh could not bind, and why.</summary>
-/// <param name="Name">The rule or proposition name.</param>
-/// <param name="Kind">"rule" or "proposition", matching <c>NodeId.KindLabel</c>.</param>
-/// <param name="Errors">Why it would not bind.</param>
-public sealed record RefreshFailure(string Name, string Kind, IReadOnlyList<RuleError> Errors);
-
-/// <summary>
-/// The outcome of a <see cref="RuleSet.RefreshAsync"/>: what happened, where the stores stood, and
-/// anything that would not bind.
-/// </summary>
-/// <remarks>
-/// <see cref="Regressions"/> and <see cref="Quarantined"/> are different in kind, not in degree. A
-/// regression is a document that binds in the world being served and would not bind in the world
-/// being built — applying it would drop a live, approved rule back to compiled behaviour nobody
-/// approved, so the refresh refuses. Something already quarantined has no live binding to protect, so
-/// it is carried forward and reported without blocking convergence.
-/// </remarks>
-public sealed class RefreshReport
-{
-    private RefreshReport(
-        RefreshOutcome outcome, StoreGeneration generation,
-        IReadOnlyList<RefreshFailure> regressions, IReadOnlyList<RefreshFailure> quarantined)
-    {
-        Outcome = outcome;
-        Generation = generation;
-        Regressions = regressions;
-        Quarantined = quarantined;
-    }
-
-    /// <summary>What happened.</summary>
-    public RefreshOutcome Outcome { get; }
-
-    /// <summary>Where both stores stood in the world now being served.</summary>
-    public StoreGeneration Generation { get; }
-
-    /// <summary>What would have regressed, and therefore why an <see cref="RefreshOutcome.Aborted"/> refresh aborted.</summary>
-    public IReadOnlyList<RefreshFailure> Regressions { get; }
-
-    /// <summary>What was carried forward still quarantined. Never blocks a refresh.</summary>
-    public IReadOnlyList<RefreshFailure> Quarantined { get; }
-
-    /// <summary>Whether this replica converged, or is knowingly serving an older world.</summary>
-    public bool IsConverged => Outcome is RefreshOutcome.Applied or RefreshOutcome.Unchanged;
-
-    public static RefreshReport Unchanged(StoreGeneration generation) =>
-        new(RefreshOutcome.Unchanged, generation, [], []);
-
-    public static RefreshReport Applied(StoreGeneration generation, IReadOnlyList<RefreshFailure> quarantined) =>
-        new(RefreshOutcome.Applied, generation, [], quarantined);
-
-    public static RefreshReport Aborted(StoreGeneration generation, IReadOnlyList<RefreshFailure> regressions) =>
-        new(RefreshOutcome.Aborted, generation, regressions, []);
-
-    public static RefreshReport Contended(StoreGeneration generation) =>
-        new(RefreshOutcome.Contended, generation, [], []);
-}
-```
-
-- [ ] **Step 2: Build**
-
-```bash
-export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet build Motiv.slnx
-```
-
-Expected: 0 warnings / 0 errors.
-
-- [ ] **Step 3: Commit**
-
-```bash
-git add src/Motiv.Serialization/Rules/RefreshReport.cs
-git commit -m "feat(serialization): add RefreshReport, and name the regression-versus-quarantine split"
-```
-
-### Task 11: `RefreshAsync`
+### Task 10: `RefreshAsync`
 
 **Files:**
 - Modify: `src/Motiv.Serialization/Propositions/BindingScope.cs` (`Join`, `RefreshAsync`)
@@ -2157,7 +2034,7 @@ git commit -m "feat(serialization): add RefreshReport, and name the regression-v
 - Test: `src/Motiv.Serialization.Tests/Rules/RefreshTests.cs`
 
 **Interfaces:**
-- Consumes: `RefreshReport` (Task 10), `BindingScope.TrySwap`/`WriteStamp` (Task 4),
+- Consumes: `RefreshReport` (this task), `BindingScope.TrySwap`/`WriteStamp` (Task 4),
   `IPropositionStore.LoadAsync`/`GetGenerationAsync` (Task 1).
 - Produces: `RuleSet.RefreshAsync(CancellationToken) : Task<RefreshReport>`,
   `PropositionSet.RefreshAsync(CancellationToken) : Task<RefreshReport>` — both routing to
@@ -2323,7 +2200,103 @@ export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotne
 
 Expected: compile error — `RefreshAsync` does not exist.
 
-- [ ] **Step 3: Let the sets join the scope**
+**A clarification this task locks in.** The design says a refresh that cannot bind a row aborts
+entirely. Read literally that stalls a replica forever on a row that never bound in the first place —
+a hand-edited document quarantined at startup would abort every subsequent refresh, and the replica
+would never converge on anything. What abort exists to protect is a *live, correct, approved* binding
+from regressing to a compiled default. So the rule is sharper than "anything fails":
+
+> A refresh aborts when applying it would quarantine something that is **not quarantined today**.
+> A row that is already quarantined carries its quarantine into the new world and blocks nothing.
+
+`Regressions` are the blocking kind. `Quarantined` are the carried kind, reported so an operator can
+still see them.
+
+- [ ] **Step 3: Write the report types**
+
+Create `src/Motiv.Serialization/Rules/RefreshReport.cs`:
+
+```csharp
+namespace Motiv.Serialization;
+
+/// <summary>What a refresh did.</summary>
+public enum RefreshOutcome
+{
+    /// <summary>Neither store had moved, so nothing was rebuilt. The common case, every tick.</summary>
+    Unchanged,
+
+    /// <summary>A new world was built and swapped in.</summary>
+    Applied,
+
+    /// <summary>
+    /// The rebuild would have regressed a live binding to its compiled default, so it was discarded
+    /// and the current world kept.
+    /// </summary>
+    Aborted,
+
+    /// <summary>A publish landed while the rebuild was being built, so it was discarded. Retry.</summary>
+    Contended
+}
+
+/// <summary>One node a refresh could not bind, and why.</summary>
+/// <param name="Name">The rule or proposition name.</param>
+/// <param name="Kind">"rule" or "proposition", matching <c>NodeId.KindLabel</c>.</param>
+/// <param name="Errors">Why it would not bind.</param>
+public sealed record RefreshFailure(string Name, string Kind, IReadOnlyList<RuleError> Errors);
+
+/// <summary>
+/// The outcome of a <see cref="RuleSet.RefreshAsync"/>: what happened, where the stores stood, and
+/// anything that would not bind.
+/// </summary>
+/// <remarks>
+/// <see cref="Regressions"/> and <see cref="Quarantined"/> are different in kind, not in degree. A
+/// regression is a document that binds in the world being served and would not bind in the world
+/// being built — applying it would drop a live, approved rule back to compiled behaviour nobody
+/// approved, so the refresh refuses. Something already quarantined has no live binding to protect, so
+/// it is carried forward and reported without blocking convergence.
+/// </remarks>
+public sealed class RefreshReport
+{
+    private RefreshReport(
+        RefreshOutcome outcome, StoreGeneration generation,
+        IReadOnlyList<RefreshFailure> regressions, IReadOnlyList<RefreshFailure> quarantined)
+    {
+        Outcome = outcome;
+        Generation = generation;
+        Regressions = regressions;
+        Quarantined = quarantined;
+    }
+
+    /// <summary>What happened.</summary>
+    public RefreshOutcome Outcome { get; }
+
+    /// <summary>Where both stores stood in the world now being served.</summary>
+    public StoreGeneration Generation { get; }
+
+    /// <summary>What would have regressed, and therefore why an <see cref="RefreshOutcome.Aborted"/> refresh aborted.</summary>
+    public IReadOnlyList<RefreshFailure> Regressions { get; }
+
+    /// <summary>What was carried forward still quarantined. Never blocks a refresh.</summary>
+    public IReadOnlyList<RefreshFailure> Quarantined { get; }
+
+    /// <summary>Whether this replica converged, or is knowingly serving an older world.</summary>
+    public bool IsConverged => Outcome is RefreshOutcome.Applied or RefreshOutcome.Unchanged;
+
+    public static RefreshReport Unchanged(StoreGeneration generation) =>
+        new(RefreshOutcome.Unchanged, generation, [], []);
+
+    public static RefreshReport Applied(StoreGeneration generation, IReadOnlyList<RefreshFailure> quarantined) =>
+        new(RefreshOutcome.Applied, generation, [], quarantined);
+
+    public static RefreshReport Aborted(StoreGeneration generation, IReadOnlyList<RefreshFailure> regressions) =>
+        new(RefreshOutcome.Aborted, generation, regressions, []);
+
+    public static RefreshReport Contended(StoreGeneration generation) =>
+        new(RefreshOutcome.Contended, generation, [], []);
+}
+```
+
+- [ ] **Step 4: Let the sets join the scope**
 
 Both sets already receive the scope in their constructors. Add to each constructor body
 `scope.Join(this);`, and to `BindingScope`:
@@ -2339,7 +2312,7 @@ Both sets already receive the scope in their constructors. Add to each construct
     public void Join(RuleSet rules) => _rules = rules;
 ```
 
-- [ ] **Step 4: Write `BindingScope.RefreshAsync`**
+- [ ] **Step 5: Write `BindingScope.RefreshAsync`**
 
 ```csharp
     /// <summary>
@@ -2400,7 +2373,7 @@ Both sets already receive the scope in their constructors. Add to each construct
     }
 ```
 
-- [ ] **Step 5: Write the two `RebuildIntoAsync` halves**
+- [ ] **Step 6: Write the two `RebuildIntoAsync` halves**
 
 On `PropositionSet`:
 
@@ -2586,7 +2559,7 @@ On `RuleSet`, the mirror:
 default, which is version 1 by construction. The store's version is written afterwards by
 `WithVersion`, exactly as `Load` does — a restart, or a refresh, must not renumber history.
 
-- [ ] **Step 6: Expose `RefreshAsync` on both sets**
+- [ ] **Step 7: Expose `RefreshAsync` on both sets**
 
 ```csharp
     /// <summary>
@@ -2604,7 +2577,7 @@ default, which is version 1 by construction. The store's version is written afte
 
 Add the same to `PropositionSet`, with `RuleSet` and `PropositionSet` swapped in the prose.
 
-- [ ] **Step 7: Run the tests**
+- [ ] **Step 8: Run the tests**
 
 ```bash
 export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet test src/Motiv.Serialization.Tests -f net10.0 --filter "FullyQualifiedName~RefreshTests"
@@ -2612,13 +2585,13 @@ export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotne
 
 Expected: PASS — 5 tests.
 
-- [ ] **Step 8: Run the full solution and the all-TFM build**
+- [ ] **Step 9: Run the full solution and the all-TFM build**
 
 ```bash
 export DOTNET_ROOT="$HOME/.dotnet" && export PATH="$HOME/.dotnet:$PATH" && dotnet test Motiv.slnx -f net10.0 && dotnet build Motiv.slnx
 ```
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 10: Commit**
 
 ```bash
 git add src/Motiv.Serialization src/Motiv.Serialization.Tests
@@ -2627,7 +2600,7 @@ git commit -m "feat(serialization): add RefreshAsync, so a live replica can conv
 
 ## Phase 6 — Hosting
 
-### Task 12: The opt-in poller
+### Task 11: The opt-in poller
 
 `Motiv.Serialization` is a plain library and cannot own a lifecycle. The hosting package already
 registers singletons and maps endpoints, so the timer lives here — and adopters get convergence by
@@ -2640,11 +2613,11 @@ configuration rather than by each writing the same loop.
 - Test: `src/Motiv.Serialization.AspNetCore.Tests/MotivRefreshServiceTests.cs`
 
 **Interfaces:**
-- Consumes: `RuleSet.RefreshAsync` (Task 11).
+- Consumes: `RuleSet.RefreshAsync` (Task 10).
 - Produces: `public sealed class MotivRefreshOptions { TimeSpan Interval { get; set; } }` defaulting to
   5 seconds; `internal sealed class MotivRefreshService : BackgroundService`;
   `MotivRulesBuilder.AddRefresh(TimeSpan? interval = null) : MotivRulesBuilder`;
-  `MotivRefreshService.LastReport : RefreshReport?` (read by Task 14's health check).
+  `MotivRefreshService.LastReport : RefreshReport?` (read by Task 13's health check).
 
 - [ ] **Step 1: Write the failing test**
 
@@ -2864,7 +2837,7 @@ In `MotivRulesServiceCollectionExtensions`, on `MotivRulesBuilder`:
     }
 ```
 
-Registering the singleton separately and resolving it for the hosted service is deliberate: Task 14's
+Registering the singleton separately and resolving it for the hosted service is deliberate: Task 13's
 health check needs the same instance, and `AddHostedService<T>()` would give it a second one.
 
 - [ ] **Step 6: Run the tests, then commit**
@@ -2875,7 +2848,7 @@ git add src/Motiv.Serialization.AspNetCore src/Motiv.Serialization.AspNetCore.Te
 git commit -m "feat(aspnetcore): add the opt-in refresh poller"
 ```
 
-### Task 13: Per-request pin and the generation header
+### Task 12: Per-request pin and the generation header
 
 **Files:**
 - Create: `src/Motiv.Serialization.AspNetCore/MotivGenerationFilter.cs`
@@ -3018,7 +2991,7 @@ git add src/Motiv.Serialization.AspNetCore src/Motiv.Serialization.AspNetCore.Te
 git commit -m "feat(aspnetcore): pin one world per request and stamp it on the response"
 ```
 
-### Task 14: The health check
+### Task 13: The health check
 
 A stalled replica must be an operational fact, not a log-grep. This is what makes abort-on-regression
 a tolerable policy rather than a silent one.
@@ -3029,7 +3002,7 @@ a tolerable policy rather than a silent one.
 - Test: `src/Motiv.Serialization.AspNetCore.Tests/MotivRefreshHealthCheckTests.cs`
 
 **Interfaces:**
-- Consumes: `MotivRefreshService.LastReport` (Task 12).
+- Consumes: `MotivRefreshService.LastReport` (Task 11).
 - Produces: `internal sealed class MotivRefreshHealthCheck : IHealthCheck`, registered as
   `"motiv-refresh"` by `AddRefresh`.
 
@@ -3137,14 +3110,14 @@ git commit -m "feat(aspnetcore): report a stalled replica as degraded rather tha
 
 ## Phase 7 — The client
 
-### Task 15: Monotonic-read detection in `@motiv-rules/core`
+### Task 14: Monotonic-read detection in `@motiv-rules/core`
 
 **Files:**
 - Modify: `ui/packages/rules-core/src/client.ts`
 - Test: `ui/packages/rules-core/src/client.test.ts` (append; create if absent)
 
 **Interfaces:**
-- Consumes: the `Motiv-Generation` header (Task 13).
+- Consumes: the `Motiv-Generation` header (Task 12).
 - Produces: `RulesApiClientOptions.onStaleGeneration?: (observed: StoreGeneration, highest: StoreGeneration) => void`;
   `RulesApiClient.generation: StoreGeneration | undefined`;
   `export interface StoreGeneration { rules: number; propositions: number }`;
@@ -3282,7 +3255,7 @@ git commit -m "feat(rules-core): let the client detect that it was routed to an 
 
 ## Phase 8 — The app, the docs, and verification
 
-### Task 16: Sample wiring and e2e
+### Task 15: Sample wiring and e2e
 
 **Files:**
 - Modify: `src/examples/Motiv.RulesEngine.Sample/Program.cs`
@@ -3323,7 +3296,7 @@ git add src/examples/Motiv.RulesEngine.Sample ui/apps/demo
 git commit -m "feat(sample): opt into the refresh poller, and assert the generation header end to end"
 ```
 
-### Task 17: Documentation
+### Task 16: Documentation
 
 **Files:**
 - Modify: `README.md` (a short example under Core Features)
@@ -3350,7 +3323,7 @@ git add README.md docs
 git commit -m "docs: document multi-instance refresh, the generation, and the pin"
 ```
 
-### Task 18: Full verification
+### Task 17: Full verification
 
 - [ ] **Step 1: Whole suite, every project**
 
@@ -3394,7 +3367,7 @@ a fresh worktree the dists are absent and the errors are spurious.
 cd ui/apps/demo && pnpm e2e
 ```
 
-### Task 19: Mandatory `code-simplifier` review
+### Task 18: Mandatory `code-simplifier` review
 
 CLAUDE.md requires this after implementation and it is not optional.
 
@@ -3403,7 +3376,7 @@ CLAUDE.md requires this after implementation and it is not optional.
   duplication that remains is still the deliberate kind CLAUDE.md endorses, or has become accidental),
   convoluted design, long methods, and anti-patterns.
 - [ ] **Step 2: Apply what it finds**, re-running the affected tests after each change.
-- [ ] **Step 3: Re-run Task 18 in full.**
+- [ ] **Step 3: Re-run Task 17 in full.**
 - [ ] **Step 4: Commit**
 
 ```bash
@@ -3414,11 +3387,11 @@ git commit -am "refactor: apply code-simplifier findings"
 
 ## Self-review notes
 
-**Spec coverage.** Every locked decision in the design maps to a task: 1 → Task 1; 2 → Tasks 11;
-3 → Task 4; 4 → Tasks 4, 6, 7; 5 → Task 8; 6 → Tasks 9, 13; 7 → Tasks 10, 11; 8 → Tasks 4, 11;
-9 → Task 2; 10 → Tasks 2, 13, 15; 11 → Task 12; 12 → Task 14 (health check only, no spans).
-Verification obligations: two-replica convergence → Task 11; abort keeps the live world → Task 11;
-scalar-read poll → Task 11; atomicity → Tasks 6, 7, 9; slot stability and pin nesting → Tasks 8, 9.
+**Spec coverage.** Every locked decision in the design maps to a task: 1 → Task 1; 2 → Task 10;
+3 → Task 4; 4 → Tasks 4, 6, 7; 5 → Task 8; 6 → Tasks 9, 12; 7 → Task 10; 8 → Tasks 4, 10;
+9 → Task 2; 10 → Tasks 2, 12, 14; 11 → Task 11; 12 → Task 13 (health check only, no spans).
+Verification obligations: two-replica convergence → Task 10; abort keeps the live world → Task 10;
+scalar-read poll → Task 10; atomicity → Tasks 6, 7, 9; slot stability and pin nesting → Tasks 8, 9.
 
 **One clarification the plan makes to the design**, recorded in Task 10: "a refresh that cannot bind
 a row aborts entirely" is sharpened to "aborts when applying it would quarantine something that is
