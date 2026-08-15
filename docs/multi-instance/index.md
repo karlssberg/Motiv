@@ -30,13 +30,20 @@ running replica to converge, and a way for a caller to tell when it hasn't.
 ```csharp
 public readonly record struct StoreGeneration(long Rules, long Propositions)
 {
-    public static StoreGeneration Zero { get; }
-    public bool MovedFrom(StoreGeneration other);
-    public bool IsBehind(StoreGeneration other);
-    public string ToToken();                                   // "r7.p3"
-    public static bool TryParseToken(string? token, out StoreGeneration generation);
+    public static StoreGeneration Zero => default;
+
+    public bool MovedFrom(StoreGeneration other) => this != other;
+
+    public bool IsBehind(StoreGeneration other) =>
+        Rules < other.Rules || Propositions < other.Propositions;
+
+    public string ToToken() => $"r{Rules}.p{Propositions}";   // e.g. "r7.p3"
 }
 ```
+
+It also exposes `static bool TryParseToken(string? token, out StoreGeneration generation)`, the inverse
+of `ToToken()` — used to read a token back off a header; anything that isn't `ToToken()`'s own format is
+refused.
 
 It is a **pair, not a scalar**, because the rule store and the proposition store are never written in
 the same transaction — there is no shared sequence to derive a single number from. That has a

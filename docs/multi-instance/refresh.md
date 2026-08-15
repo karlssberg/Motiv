@@ -20,11 +20,11 @@ operation, rebuilding both halves together.
 ```csharp
 var report = await rules.RefreshAsync();
 
-report.Outcome;         // RefreshOutcome — Unchanged, Applied, Aborted, or Contended
-report.Generation;      // StoreGeneration — where both stores stood in the world now being served
-report.Regressions;     // why an Aborted refresh aborted
-report.Quarantined;     // what's still quarantined, carried forward — populated on Applied too
-report.IsConverged;     // true for Unchanged/Applied; false for Aborted and Contended
+var outcome = report.Outcome;         // RefreshOutcome — Unchanged, Applied, Aborted, or Contended
+var generation = report.Generation;   // StoreGeneration — where both stores stood in the world now being served
+var regressions = report.Regressions; // why an Aborted refresh aborted
+var quarantined = report.Quarantined; // what's still quarantined, carried forward — populated on Applied too
+var converged = report.IsConverged;   // true for Unchanged/Applied; false for Aborted and Contended
 ```
 
 ### Why a whole rebuild, not a re-read
@@ -82,11 +82,8 @@ singleton rather than layering onto the first.
 
 ### Choosing an interval
 
-```csharp
-.AddRefresh(TimeSpan.FromSeconds(2))
-```
-
-The default is five seconds. The interval is the bound on how long two replicas can disagree — shorter
+Pass an interval explicitly to override the default: `.AddRefresh(TimeSpan.FromSeconds(2))` in place of
+the parameterless call above. The default is five seconds. The interval is the bound on how long two replicas can disagree — shorter
 means fresher, at the cost of one extra scalar read per store per replica per tick. Since
 `GetGenerationAsync()` is a cheap read rather than a full store load, a short interval is inexpensive;
 pick a value proportional to how long your organization is comfortable with two replicas serving
@@ -119,13 +116,12 @@ staleness, which is explicable ("you got yesterday's policy"), but incoherence, 
 `DecisionSnapshot` closes that gap:
 
 ```csharp
-public sealed class DecisionSnapshot : IDisposable
-{
-    public StoreGeneration Generation { get; }   // what a response stamps as its fencing token
-    public void Dispose();                       // releases the pin
-}
+// sealed class DecisionSnapshot : IDisposable
+StoreGeneration Generation { get; }   // what a response stamps as its fencing token
+void Dispose();                       // releases the pin
 
-public DecisionSnapshot PinSnapshot();            // on both RuleSet and PropositionSet
+// on both RuleSet and PropositionSet
+DecisionSnapshot PinSnapshot();
 ```
 
 Every rule evaluated while a `DecisionSnapshot` is open resolves against the generation it pinned, no
@@ -133,14 +129,18 @@ matter how many reads the decision performs. The pin follows the async flow, so 
 and nesting is safe — an inner pin reuses the outer one, and disposing it doesn't end the decision.
 
 **`MapMotivRules` opens one per request automatically.** A handler that evaluates several rules inside
-one HTTP request already gets a coherent world with no extra code:
+one HTTP request already gets a coherent world with no extra code — including when one of those rules
+is async, since the pin follows the async flow and survives the `await`:
 
 ```csharp
-app.MapPost("/api/checkout", (CanCheckoutRule canCheckout, FraudScreeningRule fraudScreening, Customer customer) =>
+app.MapPost("/api/checkout", async (
+    CanCheckoutRule canCheckout, FraudScreeningRule fraudScreening,
+    Customer customer, CancellationToken cancellationToken) =>
 {
-    // Both evaluations, whatever the request, see one pinned world — no straddle possible.
+    // Both evaluations, whatever the request, see one pinned world — no straddle possible,
+    // and no different because the second read happens after an await.
     var eligible = canCheckout.Evaluate(customer);
-    var screened = fraudScreening.Evaluate(customer);
+    var screened = await fraudScreening.EvaluateAsync(customer, cancellationToken);
     return Results.Json(new { approved = eligible.Satisfied && screened.Satisfied });
 });
 ```
@@ -149,12 +149,15 @@ app.MapPost("/api/checkout", (CanCheckoutRule canCheckout, FraudScreeningRule fr
 `PinSnapshot()`:
 
 ```csharp
-using var snapshot = rules.PinSnapshot();
+async Task RecordCheckoutDecisionAsync(Customer customer, CancellationToken cancellationToken)
+{
+    using var snapshot = rules.PinSnapshot();
 
-var eligible = canCheckout.Evaluate(customer);      // both resolve against the pinned world,
-var screened = fraudScreening.Evaluate(customer);   // even if a refresh swaps in a new one mid-call
+    var eligible = canCheckout.Evaluate(customer);
+    var screened = await fraudScreening.EvaluateAsync(customer, cancellationToken); // pin survives the await
 
-RecordDecision(snapshot.Generation, eligible, screened);
+    RecordDecision(snapshot.Generation, eligible, screened);
+}
 ```
 
 Without a pin, two independent reads inside a background job, a message handler, or any code path that
@@ -179,8 +182,10 @@ generation it has already seen is how it finds out:
 ```ts
 import { parseGeneration } from '@motiv-rules/core';
 
-const observed = parseGeneration(response.headers.get('motiv-generation'));
-// { rules: 7, propositions: 3 }
+function logGeneration(response: Response) {
+  const observed = parseGeneration(response.headers.get('motiv-generation'));
+  console.log(observed); // { rules: 7, propositions: 3 }
+}
 ```
 
 `@motiv-rules/core`'s `RulesApiClient` does this tracking for you: it keeps the highest generation any
@@ -189,6 +194,8 @@ that's behind in *either* component — the same non-total-order rule `StoreGene
 server-side:
 
 ```ts
+import { RulesApiClient } from '@motiv-rules/core';
+
 const client = new RulesApiClient({
   baseUrl: '/api/rules',
   onStaleGeneration: (observed, highest) =>
