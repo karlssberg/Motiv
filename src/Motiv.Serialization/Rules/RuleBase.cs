@@ -37,9 +37,16 @@ public abstract class RuleBase
     public abstract bool IsPolicy { get; }
 
     /// <summary>The current version, starting at 1 and incremented by every successful update or revert.</summary>
+    /// <remarks>
+    /// The <em>live</em> version, even inside an open pin — this is the number a writer passes back as
+    /// <c>expectedVersion</c>, so it must name the world a publish would commit into. The catalog
+    /// listing's version, which is a read for display, comes from <see cref="VersionedDocument"/> and
+    /// is pinned instead. See <see cref="BindingScope.Active"/>.
+    /// </remarks>
     public abstract int Version { get; }
 
     /// <summary>The current document JSON, or null while the rule is on a compiled default.</summary>
+    /// <remarks>The live document, for the same reason <see cref="Version"/> is the live version.</remarks>
     public abstract string? DocumentJson { get; }
 
     /// <summary>
@@ -91,9 +98,16 @@ public abstract class RuleBase
     /// repaired it.
     /// </summary>
     /// <remarks>
-    /// Reads <see cref="BindingScope.Current"/> through <c>_scope</c> rather than <see cref="Scope"/>:
-    /// an unregistered rule has no quarantine rather than an error, which is what the field this
-    /// replaced reported.
+    /// <para>
+    /// Reads <see cref="BindingScope.Active"/>, not <see cref="BindingScope.Current"/>. Its only caller
+    /// is the catalog listing, and it must come from the same world as the
+    /// <see cref="VersionedDocument"/> it is rendered beside — see there.
+    /// </para>
+    /// <para>
+    /// Reached through <c>_scope</c> rather than the throwing <see cref="Scope"/> property, because an
+    /// unregistered rule has no quarantine rather than an error, which is what the field this replaced
+    /// reported.
+    /// </para>
     /// </remarks>
     internal IReadOnlyList<RuleError> Quarantine
     {
@@ -104,7 +118,7 @@ public abstract class RuleBase
             if (_scope is null || Slot < 0)
                 return [];
 
-            var slots = _scope.Current.RuleSlots;
+            var slots = _scope.Active.RuleSlots;
             return Slot < slots.Length && slots[Slot] is { } slot ? slot.Quarantine : [];
         }
     }
@@ -149,5 +163,12 @@ public abstract class RuleBase
     internal abstract void ValidateDocument(RuleSerializer serializer, string documentJson, List<RuleError> errors);
 
     /// <summary>Reads the version and document from one snapshot, so the pair is always coherent.</summary>
+    /// <remarks>
+    /// Serves <see cref="RuleSet.Rules"/>/<see cref="RuleSet.FindEntry"/> and nothing else, so it reads
+    /// the <em>pinned</em> world: a catalog listing binds nothing and publishes nothing, and a pinned
+    /// request stamps the generation it pinned onto its response, so a listing read from the live world
+    /// would describe a world its own header disclaims — and <c>GET /rules</c> would disagree with
+    /// <c>GET /propositions</c> served in the same request. See <see cref="BindingScope.Active"/>.
+    /// </remarks>
     internal abstract (int Version, string? DocumentJson) VersionedDocument();
 }

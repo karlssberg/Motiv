@@ -187,8 +187,12 @@ public sealed record ChangeRequestResult(
 /// <see cref="All"/>/<see cref="Find"/> can observe a request mid-transition. Narrower than the
 /// memory-visibility gap this class had before two locks existed (everything shared one lock, so
 /// every read was synchronised with every write), but accepted for the same reason
-/// <see cref="RuleBase.Quarantine"/> was: an availability guarantee — the read surface must not go
-/// unresponsive behind a stalled store — outweighs strict linearizability here.
+/// <see cref="RuleSet.Rules"/>/<see cref="RuleSet.FindEntry"/> read without the scope lock: an
+/// availability guarantee — the read surface must not go unresponsive behind a stalled store —
+/// outweighs strict linearizability here. Those two have since stopped paying for it at all, because
+/// a rule's version, document and quarantine now come from one immutable
+/// <see cref="ScopeGeneration"/> reached by a single volatile read; this class still pays, because a
+/// <see cref="ChangeRequest"/> remains a bag of independently-written fields.
 /// <see cref="ChangeRequest.Status"/> is the one field exempted: it is
 /// <see cref="System.Threading.Volatile"/>-backed, and its writers publish it last so that a reader
 /// seeing the new status also sees the detail fields that status implies — see the comment on

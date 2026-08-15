@@ -108,13 +108,17 @@ internal sealed class BindingScope
     /// </item>
     /// <item>
     /// <description>
-    /// <strong>Evaluates, or reads for display → <see cref="Active"/>.</strong> Evaluation, so one
-    /// decision sees one world rather than one world per rule; and the read-only catalog listings
-    /// (<c>PropositionSet.Propositions</c>, <c>Find</c>, <c>DocumentJsonOf</c>, <c>Dependents</c>),
-    /// which bind nothing and publish nothing. A pinned request stamps the generation it pinned onto
-    /// its response as a fencing token, and that token is only worth trusting if the body came from
-    /// the world the token names — so a listing read from <see cref="Current"/> under a pin would
-    /// describe a world its own header disclaims.
+    /// <strong>Evaluates, or reads for display → <see cref="Active"/>.</strong> Evaluation
+    /// (<c>Rule.Evaluate</c>, <c>AsyncRule.EvaluateAsync</c> and their policy-flavoured shadows), so
+    /// one decision sees one world rather than one world per rule; and the read-only catalog
+    /// listings — <c>PropositionSet.Propositions</c>, <c>Find</c>, <c>DocumentJsonOf</c>,
+    /// <c>Dependents</c>, <em>and</em> <see cref="RuleSet.Rules"/>/<see cref="RuleSet.FindEntry"/>
+    /// via <see cref="RuleBase.VersionedDocument"/> and <see cref="RuleBase.Quarantine"/> — which bind
+    /// nothing and publish nothing. A pinned request stamps the generation it pinned onto its response
+    /// as a fencing token, and that token is only worth trusting if the body came from the world the
+    /// token names — so a listing read from <see cref="Current"/> under a pin would describe a world
+    /// its own header disclaims, and <c>GET /rules</c> would disagree with <c>GET /propositions</c>
+    /// served under the very same pin.
     /// </description>
     /// </item>
     /// </list>
@@ -124,6 +128,14 @@ internal sealed class BindingScope
     /// administration by *who calls them* and evaluation by *what they do*, and it is the second that
     /// decides. Note also that a bound spec holds direct references to whatever it resolved at bind
     /// time, so evaluation never reaches back through <see cref="Source"/>.
+    /// </para>
+    /// <para>
+    /// <strong>The public <see cref="RuleBase.Version"/> and <see cref="RuleBase.DocumentJson"/> stay
+    /// on <see cref="Current"/>, and that is not an exception to the rule.</strong> They are what a
+    /// writer reads back as the next <c>expectedVersion</c>, so they belong to the binds-or-publishes
+    /// side; the number an endpoint <em>renders</em> comes from
+    /// <see cref="RuleBase.VersionedDocument"/> instead, which is pinned. Two members, two acts, two
+    /// worlds — the split is drawn per member, never per type.
     /// </para>
     /// </remarks>
     public ScopeGeneration Active => _pinned.Value ?? Current;

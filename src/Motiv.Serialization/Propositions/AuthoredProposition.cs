@@ -46,6 +46,15 @@ internal sealed class AuthoredProposition(
     /// not change, only what it resolves to, so bumping it would spuriously conflict with an editor's
     /// open draft. Quarantine is dropped — binding again is what resolves one.
     /// </summary>
+    /// <remarks>
+    /// <strong>The rule side deliberately does the opposite</strong>: <see cref="RuleSlot.WithBinding"/>
+    /// carries a quarantine across a rebind rather than dropping it. Not an inconsistency — here the
+    /// document being re-bound <em>is</em> the quarantined one, because a quarantined proposition
+    /// resolves to nothing (no overlay entry, no graph edges, no participant enrolment), so nothing can
+    /// reach this without having just re-bound what was broken. A quarantined rule instead keeps
+    /// running, and stays enrolled on, its compiled default, so a cascade reaching it re-binds the
+    /// default and learns nothing about the stored document. See <see cref="RuleSlot.WithBinding"/>.
+    /// </remarks>
     public AuthoredProposition WithBinding(SpecRegistryEntry rebound) =>
         new(owner, Name, ModelTypeId, DocumentJson, Version, Description, rebound, [], References);
 

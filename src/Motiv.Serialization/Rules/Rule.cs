@@ -132,8 +132,10 @@ public class Rule<TModel, TMetadata> : RuleBase
 
     internal sealed override (int Version, string? DocumentJson) VersionedDocument()
     {
-        var live = Live();
-        return (live.Version, live.DocumentJson);
+        // Active, not Current — this serves the catalog listing, which is a read for display and
+        // therefore the pinned side of the split. See RuleBase.VersionedDocument.
+        var listed = StateIn(Scope.Active);
+        return (listed.Version, listed.DocumentJson);
     }
 
     internal sealed override IRebindCommit? PrepareRebind(RuleSerializer serializer, List<RuleError> errors)
@@ -152,10 +154,14 @@ public class Rule<TModel, TMetadata> : RuleBase
         return new RebindCommit(this, new State(current.DocumentJson, current.Version, spec));
     }
 
-    /// <summary>A prepared rebind of this rule, published by writing its state into the successor.</summary>
+    /// <summary>
+    /// A prepared rebind of this rule, published by writing its binding into the successor. A binding
+    /// write, not a state write: a rebind must not clear a quarantine — see
+    /// <see cref="RuleSlot.WithBinding"/>.
+    /// </summary>
     private sealed class RebindCommit(Rule<TModel, TMetadata> rule, State replacement) : IRebindCommit
     {
-        public void ApplyTo(ScopeGenerationBuilder builder) => builder.SetRuleState(rule.Slot, replacement);
+        public void ApplyTo(ScopeGenerationBuilder builder) => builder.SetRuleBinding(rule.Slot, replacement);
     }
 
     /// <summary>

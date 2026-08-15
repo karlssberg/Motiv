@@ -172,6 +172,20 @@ internal sealed class ScopeGenerationBuilder
             : new RuleSlot(state, []);
     }
 
+    /// <summary>
+    /// Publishes a rule's re-bound implementation, <em>keeping</em> any quarantine — see
+    /// <see cref="RuleSlot.WithBinding"/>. The cascade's write, and only the cascade's: a rebind
+    /// changes what the rule's current document resolves to, which is not an answer to the question a
+    /// quarantine asks.
+    /// </summary>
+    public void SetRuleBinding(int slot, object state)
+    {
+        EnsureRuleSlots(slot + 1);
+        _ruleSlots[slot] = _ruleSlots[slot] is { } existing
+            ? existing.WithBinding(state)
+            : new RuleSlot(state, []);
+    }
+
     /// <summary>The state a slot will carry once this builder is published, or null when it has none.</summary>
     public object? FindRuleState(int slot) =>
         slot >= 0 && slot < _ruleSlots.Length ? _ruleSlots[slot]?.State : null;

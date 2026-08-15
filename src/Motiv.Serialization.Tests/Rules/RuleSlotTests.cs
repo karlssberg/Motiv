@@ -56,10 +56,12 @@ public class RuleSlotTests
     }
 
     /// <summary>
-    /// Evaluation is pinned; administration is live. Both halves in one test, because the split is
-    /// drawn member by member and has been drawn the wrong way before: a rule evaluated inside an open
-    /// pin must keep seeing the world the pin froze, while the same rule's <c>Version</c> and
-    /// <c>DocumentJson</c> must report the publish that has since landed.
+    /// The <c>Active</c>/<c>Current</c> split, drawn member by member, all three cases in one test —
+    /// because it has been drawn the wrong way before. Inside an open pin: evaluation keeps seeing the
+    /// world the pin froze; the catalog listing does too, since it is a read for display and a pinned
+    /// response stamps the generation it describes; but the rule's own <c>Version</c> and
+    /// <c>DocumentJson</c> report the publish that has since landed, because those are what a writer
+    /// reads back as the next <c>expectedVersion</c> and a publish must address the live world.
     /// </summary>
     [Fact]
     public async Task Should_evaluate_the_pinned_world_while_reporting_the_live_one()
@@ -80,8 +82,14 @@ public class RuleSlotTests
         // Assert — the decision still resolves against the world it pinned
         rule.Evaluate(1).Satisfied.ShouldBeTrue();
 
-        // ...while the administrative reads see the publish, or a repair would be addressed against a
-        // version the store no longer holds.
+        // ...and so does the catalog listing served under the same pin, or GET /rules would describe a
+        // world the response's own generation stamp disclaims, and disagree with GET /propositions
+        var entry = rules.FindEntry("first")!;
+        entry.Version.ShouldBe(1);
+        entry.DocumentJson.ShouldBeNull();
+
+        // ...while the writer's own read is live, or a repair would be addressed against a version the
+        // store no longer holds.
         rule.Version.ShouldBe(2);
         rule.DocumentJson.ShouldNotBeNull();
     }

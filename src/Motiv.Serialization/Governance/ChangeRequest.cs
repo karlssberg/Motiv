@@ -126,7 +126,7 @@ public sealed class ChangeRequest
     /// <summary>The accumulating positive assents recorded against this request.</summary>
     public IReadOnlyList<Approval> Approvals => _approvals.AsReadOnly();
 
-    // Volatile, not a plain auto-property, mirroring RuleBase.Quarantine: ChangeRequestSet.All/Find
+    // Volatile, not a plain auto-property: ChangeRequestSet.All/Find
     // read this without taking _lock, while MarkPublished/MarkRejected write it under _lock. Status
     // is the signal those lock-free readers key off, so every field it implies must already be
     // visible by the time its write is — hence both writers assign PublishedUnderBreakGlass /
