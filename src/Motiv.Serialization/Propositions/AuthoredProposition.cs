@@ -8,10 +8,10 @@ namespace Motiv.Serialization;
 /// <remarks>
 /// "Immutable" describes this instance's own state, not the graph it can reach: it keeps a back-pointer
 /// to the mutable <see cref="PropositionSet"/> that owns it, purely so <see cref="Rebind"/> can reach
-/// <c>ResolveModel</c> and <c>Options</c>. <see cref="RebindCommit.Commit"/> uses that same back-pointer
-/// — via <see cref="Owner"/> — to write the rebound replacement into the owning set's own live
-/// dictionary, which is not yet part of the generation. That coupling is exactly what made it easy to
-/// lose that write during the first cut of this class; see <see cref="Owner"/>'s remarks.
+/// <c>ResolveModel</c> and <c>Options</c> — the two things a replacement has to be built *with*, not
+/// written *to*. Nothing here writes live state any more: a rebind's only destination is the
+/// <see cref="ScopeGenerationBuilder"/> handed to <see cref="RebindCommit.ApplyTo"/>, whose authored
+/// map is the one the catalog reads.
 /// </remarks>
 internal sealed class AuthoredProposition(
     PropositionSet owner,
@@ -25,14 +25,6 @@ internal sealed class AuthoredProposition(
     IReadOnlyList<string> references)
     : IRebindable
 {
-    /// <summary>
-    /// The set this proposition belongs to. Exists so a rebind's <see cref="RebindCommit"/> can refresh
-    /// this set's own authored dictionary at commit time — see
-    /// <see cref="PropositionSet.SetAuthoredState"/>. A true value type would not need this; it stays
-    /// only because <c>PropositionSet._authored</c> has not yet moved into the generation.
-    /// </summary>
-    internal PropositionSet Owner => owner;
-
     public NodeId Node { get; } = NodeId.Proposition(name);
     public string Name { get; } = name;
     public string ModelTypeId { get; } = modelTypeId;
@@ -87,6 +79,13 @@ internal sealed class AuthoredProposition(
 
     private sealed class RebindCommit(AuthoredProposition rebound) : IRebindCommit
     {
+        /// <summary>
+        /// The whole of a proposition rebind. <c>builder.SetAuthored</c> is what makes the catalog
+        /// (<c>Find</c>, <c>Propositions</c>, <c>DocumentJsonOf</c>) report a cascaded dependent's new
+        /// binding: those read <see cref="ScopeGeneration.Authored"/>, which is the very map written
+        /// here. Nothing lands live until the builder is swapped in, which is what lets
+        /// <see cref="BindingScope.PrepareClosure"/> call this against a world it may still discard.
+        /// </summary>
         public void ApplyTo(ScopeGenerationBuilder builder)
         {
             builder.SetAuthored(rebound);
@@ -94,21 +93,12 @@ internal sealed class AuthoredProposition(
         }
 
         /// <summary>
-        /// The one write <see cref="ApplyTo"/> cannot make: <see cref="PropositionSet"/> still keeps
-        /// its own live dictionary of authored propositions — <c>_authored</c> — and that dictionary,
-        /// not the generation, is what the public listing (<c>Find</c>, <c>Propositions</c>,
-        /// <c>DocumentJsonOf</c>) reads. <see cref="ApplyTo"/> only reaches the generation's own
-        /// authored map, via the builder, so without this a cascaded dependent's live entry would go
-        /// stale — its <c>Bound</c> would keep pointing at what it resolved to *before* this rebind,
-        /// which is exactly the kind of drift a generation swap exists to make impossible. This has to
-        /// happen here rather than in <see cref="ApplyTo"/> because <see cref="BindingScope.PrepareClosure"/>
-        /// also calls <see cref="ApplyTo"/>, against a prospective world that may still be discarded —
-        /// a live write from there would publish a binding the caller went on to reject.
-        /// <see cref="Commit"/> is reached only from <see cref="ScopeGenerationBuilder.Apply"/>, i.e.
-        /// at commit time, which is the right moment for it. Retires once
-        /// <see cref="ScopeGeneration.Authored"/> becomes the read path and <c>PropositionSet._authored</c>
-        /// is deleted.
+        /// Nothing left to do: the authored half of <see cref="IRebindCommit.Commit"/> retired once
+        /// <see cref="ScopeGeneration.Authored"/> became the read path. The member itself stays until
+        /// the rule half retires too — see <see cref="IRebindCommit.Commit"/>'s remarks.
         /// </summary>
-        public void Commit() => rebound.Owner.SetAuthoredState(rebound);
+        public void Commit()
+        {
+        }
     }
 }

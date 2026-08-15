@@ -137,12 +137,12 @@ internal sealed class ScopeGenerationBuilder
     /// successor, so the whole closure goes live in the one swap that publishes it.
     /// </summary>
     /// <remarks>
-    /// <see cref="IRebindCommit.Commit"/> is called here and nowhere else. Until a rebound node's
-    /// state lives wholly in the generation, part of it is still a field the node owns, and that part
-    /// must move only once the caller has confirmed nothing broke —
-    /// <see cref="BindingScope.PrepareClosure"/> applies the same commits into a world that may yet be
-    /// discarded, so a commit that moved live state from <see cref="IRebindCommit.ApplyTo"/> would
-    /// publish a rejected binding.
+    /// <see cref="IRebindCommit.Commit"/> is called here and nowhere else. A rebound rule's state is
+    /// still a field the rule owns rather than part of the generation, and that part must move only
+    /// once the caller has confirmed nothing broke — <see cref="BindingScope.PrepareClosure"/> applies
+    /// the same commits into a world that may yet be discarded, so a commit that moved live state from
+    /// <see cref="IRebindCommit.ApplyTo"/> would publish a rejected binding. Propositions no longer
+    /// need it: their whole rebind is <see cref="IRebindCommit.ApplyTo"/>'s write into this builder.
     /// </remarks>
     public void Apply(IReadOnlyList<IRebindCommit> commits)
     {

@@ -148,6 +148,20 @@ internal sealed class BindingScope
     }
 
     /// <summary>
+    /// <see cref="Mutate(Action{ScopeGenerationBuilder})"/> for a write that also yields a value — the
+    /// version a publish minted, say. The companion to <see cref="Locked{T}"/>, and for the same
+    /// reason: without it every such caller has to smuggle its result out through a captured local the
+    /// compiler cannot prove was assigned, and then suppress it. Assumes the inner monitor is held.
+    /// </summary>
+    public T Mutate<T>(Func<ScopeGenerationBuilder, T> mutate)
+    {
+        var builder = new ScopeGenerationBuilder(Registry, Current);
+        var result = mutate(builder);
+        Publish(builder.Build());
+        return result;
+    }
+
+    /// <summary>
     /// Swaps in a successor built elsewhere, unless the world moved since
     /// <paramref name="expectedWriteStamp"/> was taken. Assumes the inner monitor is held.
     /// </summary>

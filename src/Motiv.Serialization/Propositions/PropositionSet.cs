@@ -11,7 +11,6 @@ public sealed class PropositionSet
     private readonly IPropositionStore _store;
     private readonly RuleSerializerOptions _options;
     private readonly Dictionary<string, PropositionModelBinding> _models = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, AuthoredProposition> _authored = new(StringComparer.Ordinal);
     private bool _loaded;
 
     /// <summary>
@@ -111,6 +110,11 @@ public sealed class PropositionSet
     /// <summary>
     /// Every proposition in scope — compiled, overridden and authored — as one effective listing.
     /// </summary>
+    /// <remarks>
+    /// Reads the authored half out of the live generation rather than a dictionary of this set's own,
+    /// which is what makes a listing consistent with what the evaluator resolves: a cascaded rebind
+    /// lands in the generation and nowhere else, so a second copy could only ever go stale.
+    /// </remarks>
     public IReadOnlyCollection<PropositionEntry> Propositions =>
         Scope.Locked(() =>
         {
@@ -119,7 +123,7 @@ public sealed class PropositionSet
             foreach (var compiled in Scope.Registry.Entries)
                 entries[compiled.Name] = ToEntry(compiled);
 
-            foreach (var authored in _authored.Values)
+            foreach (var authored in Scope.Current.Authored.Values)
                 entries[authored.Name] = ToEntry(authored);
 
             return (IReadOnlyCollection<PropositionEntry>)[.. entries.Values];
@@ -129,7 +133,7 @@ public sealed class PropositionSet
     public PropositionEntry? Find(string name) =>
         Scope.Locked<PropositionEntry?>(() =>
         {
-            if (_authored.TryGetValue(name, out var authored))
+            if (Scope.Current.Authored.TryGetValue(name, out var authored))
                 return ToEntry(authored);
 
             return Scope.Registry.Find(name) is { } compiled ? ToEntry(compiled) : null;
@@ -137,7 +141,8 @@ public sealed class PropositionSet
 
     /// <summary>The authored document behind a name, or null when the name has no authored document.</summary>
     public string? DocumentJsonOf(string name) =>
-        Scope.Locked(() => _authored.TryGetValue(name, out var authored) ? authored.DocumentJson : null);
+        Scope.Locked(() =>
+            Scope.Current.Authored.TryGetValue(name, out var authored) ? authored.DocumentJson : null);
 
     /// <summary>The nodes that reference the given proposition, transitively, in rebind order.</summary>
     public IReadOnlyList<PropositionDependent> Dependents(string name) =>
@@ -210,7 +215,10 @@ public sealed class PropositionSet
         string name, string modelTypeId, string documentJson, string? description,
         ScopeGenerationBuilder prospective, HashSet<NodeId> excluding)
     {
-        if (_authored.ContainsKey(name))
+        // The *live* world, deliberately, not prospective.Source's: a governed envelope that creates
+        // two propositions must judge each one against what is actually published, exactly as it did
+        // when this read came from a dictionary of the set's own.
+        if (Scope.Current.Authored.ContainsKey(name))
             return WritePrepare.Rejected(PropositionUpdateResult.NameTaken());
 
         if (ValidateName(name) is { } nameError)
@@ -272,7 +280,7 @@ public sealed class PropositionSet
         string name, string documentJson, int expectedVersion,
         ScopeGenerationBuilder prospective, HashSet<NodeId> excluding)
     {
-        if (!_authored.TryGetValue(name, out var current))
+        if (!Scope.Current.Authored.TryGetValue(name, out var current))
             return WritePrepare.Rejected(PropositionUpdateResult.NotFound());
 
         if (current.Version != expectedVersion)
@@ -315,7 +323,8 @@ public sealed class PropositionSet
 
         await _store.WriteAsync(SaveBatchFor(prepared.Authored!), cancellationToken).ConfigureAwait(false);
 
-        return Scope.Locked(() => success(CommitPublishCore(prepared)));
+        return Scope.Locked(() =>
+            success(Scope.Mutate(builder => CommitPublishCore(prepared, builder))));
     }
 
     /// <summary>
@@ -363,12 +372,16 @@ public sealed class PropositionSet
     /// by the time this runs. Assumes <see cref="BindingScope"/>'s inner monitor is held.
     /// </summary>
     /// <param name="prepared">The prepared write, from the same overlay its closure was bound against.</param>
+    /// <param name="builder">
+    /// The successor being built. Taken rather than opened here so a governed envelope can pass one
+    /// builder through every member it commits and publish the lot in a single swap.
+    /// </param>
     /// <returns>The newly published version.</returns>
-    internal int CommitPublishCore(WritePrepare prepared)
+    internal static int CommitPublishCore(WritePrepare prepared, ScopeGenerationBuilder builder)
     {
         var authored = prepared.Authored!;
-        CommitPublish(authored);
-        Scope.Mutate(builder => builder.Apply(prepared.Commits!));
+        CommitPublish(authored, builder);
+        builder.Apply(prepared.Commits!);
         return authored.Version;
     }
 
@@ -378,29 +391,21 @@ public sealed class PropositionSet
     /// and infallible for the same reasons. Leaves no authored document behind, so there is no version
     /// to report. Assumes <see cref="BindingScope"/>'s inner monitor is held.
     /// </summary>
-    internal void CommitWithdrawCore(WritePrepare prepared)
+    internal static void CommitWithdrawCore(WritePrepare prepared, ScopeGenerationBuilder builder)
     {
+        builder.Apply(prepared.Commits!);
+
+        // After the closure rather than before, which the order otherwise implies matters: it does
+        // not. A cascaded rebind writes only a dependent's own name, never current.Name, so the two
+        // can never touch the same key — and neither is visible to anyone until this builder is
+        // swapped in.
         var current = prepared.Authored!;
-
-        // Dropped before the closure commits rather than after, which the order below otherwise
-        // implies matters: it does not. A cascaded rebind commit does reach this same dictionary now
-        // — AuthoredProposition.RebindCommit.Commit calls SetAuthoredState — but only for a
-        // dependent's own name, never current.Name, so the two writes cannot race on the same key.
-        // Every reader of the dictionary takes the same monitor this method already holds, which is
-        // what actually makes the ordering unobservable even if that changed.
-        _authored.Remove(current.Name);
-
-        Scope.Mutate(builder =>
-        {
-            builder.Apply(prepared.Commits!);
-
-            builder.RemoveAuthored(current.Name);
-            builder.RemoveOverlayEntry(current.Name);
-            builder.Graph.Remove(current.Node);
-            // Defensive rather than load-bearing: a proposition is only ever enrolled by CommitPublish,
-            // which is also what put the graph edges above, so the two always come and go together.
-            builder.Withdraw(current.Node);
-        });
+        builder.RemoveAuthored(current.Name);
+        builder.RemoveOverlayEntry(current.Name);
+        builder.Graph.Remove(current.Node);
+        // Defensive rather than load-bearing: a proposition is only ever enrolled by CommitPublish,
+        // which is also what put the graph edges above, so the two always come and go together.
+        builder.Withdraw(current.Node);
     }
 
     /// <summary>
@@ -430,7 +435,7 @@ public sealed class PropositionSet
 
         return Scope.Locked(() =>
         {
-            CommitWithdrawCore(prepared);
+            Scope.Mutate(builder => CommitWithdrawCore(prepared, builder));
             return PropositionUpdateResult.Removed();
         });
     }
@@ -444,7 +449,7 @@ public sealed class PropositionSet
     /// </summary>
     private WritePrepare PrepareWithdraw(string name, int expectedVersion)
     {
-        if (!_authored.TryGetValue(name, out var current))
+        if (!Scope.Current.Authored.TryGetValue(name, out var current))
             return WritePrepare.Rejected(PropositionUpdateResult.NotFound());
 
         if (current.Version != expectedVersion)
@@ -495,7 +500,7 @@ public sealed class PropositionSet
     internal WritePrepare PrepareWithdrawCore(
         string name, int expectedVersion, ScopeGenerationBuilder prospective, HashSet<NodeId> excluding)
     {
-        if (!_authored.TryGetValue(name, out var current))
+        if (!Scope.Current.Authored.TryGetValue(name, out var current))
             return WritePrepare.Rejected(PropositionUpdateResult.NotFound());
 
         if (current.Version != expectedVersion)
@@ -532,7 +537,7 @@ public sealed class PropositionSet
     /// compiled spec resolves beneath it — authoring over a compiled spec is a creation.
     /// </summary>
     internal (bool Exists, int Version, string? ModelTypeId, string? Description) AuthoredStateCore(string name) =>
-        _authored.TryGetValue(name, out var authored)
+        Scope.Current.Authored.TryGetValue(name, out var authored)
             ? (true, authored.Version, authored.ModelTypeId, authored.Description)
             : (false, 0, null, null);
 
@@ -606,8 +611,21 @@ public sealed class PropositionSet
                     "forms a reference cycle"));
             }
 
-            foreach (var name in ordered)
-                LoadOne(candidates[name]);
+            // An empty store publishes nothing at all. A successor identical to its predecessor would
+            // still move the write stamp, and that stamp is a refresh's compare-and-set signal — see
+            // BindingScope.WriteStamp — so a swap with nothing in it is not free.
+            if (ordered.Count == 0)
+                return;
+
+            // One builder for the whole store, not one world per row. Each row binds against the
+            // builder's own prospective source, so a proposition still resolves the ones it references
+            // — they were folded in earlier in this same dependency-ordered pass — while startup
+            // publishes a single generation instead of forking one per row.
+            Scope.Mutate(builder =>
+            {
+                foreach (var name in ordered)
+                    LoadOne(candidates[name], builder);
+            });
         });
 
     /// <summary>
@@ -642,8 +660,11 @@ public sealed class PropositionSet
         return candidates;
     }
 
-    /// <summary>Binds one stored proposition, publishing it or quarantining it.</summary>
-    private void LoadOne(LoadCandidate candidate)
+    /// <summary>
+    /// Binds one stored proposition into <paramref name="builder"/>, publishing it or quarantining it.
+    /// Writes nothing live: the caller swaps the whole load in as one generation.
+    /// </summary>
+    private void LoadOne(LoadCandidate candidate, ScopeGenerationBuilder builder)
     {
         var stored = candidate.Stored;
         var authored = new AuthoredProposition(
@@ -655,18 +676,20 @@ public sealed class PropositionSet
             // A name failure, a parse failure or a cycle already rules out binding — attempting it
             // anyway could only succeed by resolving through a name that is itself unresolvable or
             // by binding on top of an unresolved cyclic reference, neither of which is a real bind.
-            _authored[stored.Name] = authored.WithQuarantine(candidate.Errors);
+            builder.SetAuthored(authored.WithQuarantine(candidate.Errors));
             return;
         }
 
         var errors = new List<RuleError>();
-        var rebound = authored.Rebind(Scope.Source, errors);
+        var rebound = authored.Rebind(builder.Source, errors);
 
         if (rebound is null)
         {
             // Quarantined: no overlay entry and no graph edges, so nothing resolves *to* it and
             // nothing is rebound *because* of it. Any compiled spec under the name still resolves.
-            _authored[stored.Name] = authored.WithQuarantine(errors);
+            // It is still recorded as authored, so the catalog can list it and an operator can repair
+            // the document it came from.
+            builder.SetAuthored(authored.WithQuarantine(errors));
             return;
         }
 
@@ -674,7 +697,7 @@ public sealed class PropositionSet
         // — which CommitPublish does not do either: this row came *from* the store, so saving it
         // back would be a no-op at best. Rebind is what makes that reuse possible; PrepareRebind
         // would seal the replacement inside a commit only a ScopeGenerationBuilder can open.
-        CommitPublish(rebound);
+        CommitPublish(rebound, builder);
     }
 
     /// <summary>Parses without letting malformed JSON escape — a hand-edited store must not stop startup.</summary>
@@ -830,36 +853,18 @@ public sealed class PropositionSet
 
     /// <summary>
     /// The infallible half of a publish, for a caller that has already persisted the document — the
-    /// counterpart of <see cref="RuleSet.CommitCore"/>. Folds the authored proposition into a
-    /// successor's overlay, graph and participant table, and swaps that successor in. Assumes
-    /// <see cref="BindingScope"/>'s inner monitor is held: the fork-and-swap relies on no second
-    /// writer being in flight.
+    /// counterpart of <see cref="RuleSet.CommitCore"/>. Folds the authored proposition into the
+    /// successor's authored table, overlay, graph and participant table — all into one builder, so all
+    /// four facts go live in the single swap that publishes it. Assumes <see cref="BindingScope"/>'s
+    /// inner monitor is held: the caller's fork-and-swap relies on no second writer being in flight.
     /// </summary>
-    internal void CommitPublish(AuthoredProposition authored)
+    internal static void CommitPublish(AuthoredProposition authored, ScopeGenerationBuilder builder)
     {
-        _authored[authored.Name] = authored;
-
-        // One builder, not three calls that each swap: the enrolment and the graph write would
-        // otherwise be separate worlds a reader could land between.
-        Scope.Mutate(builder =>
-        {
-            builder.SetAuthored(authored);
-            builder.SetOverlayEntry(authored.Bound!);
-            builder.Graph.Set(authored.Node, authored.References);
-            builder.Enrol(authored);
-        });
+        builder.SetAuthored(authored);
+        builder.SetOverlayEntry(authored.Bound!);
+        builder.Graph.Set(authored.Node, authored.References);
+        builder.Enrol(authored);
     }
-
-    /// <summary>
-    /// Refreshes this set's own authored dictionary with a rebound replacement — the live-write half
-    /// of a cascaded rebind that <see cref="AuthoredProposition.WithBinding"/> cannot reach on its own,
-    /// because <c>_authored</c> is a field this set owns rather than part of the generation. Called
-    /// only from <see cref="AuthoredProposition"/>'s own <c>RebindCommit.Commit</c>, at the one moment
-    /// a rebind is actually committed — see that member's remarks for why it must not happen any
-    /// earlier. Retires once <c>ScopeGeneration.Authored</c> becomes the read path and this dictionary
-    /// is deleted.
-    /// </summary>
-    internal void SetAuthoredState(AuthoredProposition authored) => _authored[authored.Name] = authored;
 
     private PropositionEntry ToEntry(AuthoredProposition authored)
     {

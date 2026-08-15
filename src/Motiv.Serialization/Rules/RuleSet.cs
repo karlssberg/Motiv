@@ -455,7 +455,22 @@ public sealed class RuleSet
     /// everything a caller can get wrong was already decided by the prepare. Assumes
     /// <see cref="BindingScope"/>'s inner monitor is held.
     /// </summary>
-    internal RuleUpdateResult CommitCore(string name, IRulePublication publication)
+    internal RuleUpdateResult CommitCore(string name, IRulePublication publication) =>
+        Scope.Mutate(builder => CommitCore(name, publication, builder));
+
+    /// <summary>
+    /// <see cref="CommitCore(string,IRulePublication)"/> folded into a successor the caller owns, so a
+    /// governed envelope can commit every one of its members into one builder and publish them in a
+    /// single swap. Assumes <see cref="BindingScope"/>'s inner monitor is held.
+    /// </summary>
+    /// <remarks>
+    /// The builder has to be threaded rather than opened here. A commit re-tracks the rule's graph
+    /// edges, and a nested <see cref="BindingScope.Mutate(Action{ScopeGenerationBuilder})"/> would fork
+    /// from the live world while an outer builder — forked before it — was still open, so the outer
+    /// swap would discard the inner one's writes entirely.
+    /// </remarks>
+    internal RuleUpdateResult CommitCore(
+        string name, IRulePublication publication, ScopeGenerationBuilder builder)
     {
         // Resolved before the commit so that the unreachable arm fails with nothing yet moved.
         // A publication only exists because a Prepare found the rule, the monitor has been held
@@ -474,7 +489,7 @@ public sealed class RuleSet
         rule.Quarantine = [];
 
         // Track reads the rule's *current* document, so it must run after the commit, not before.
-        Track(rule);
+        Track(rule, builder);
 
         return RuleUpdateResult.Updated(publication.Version);
     }
@@ -539,28 +554,29 @@ public sealed class RuleSet
     /// Records the rule's current outgoing references and its participation in rebinds. A rule on a
     /// compiled default resolves no names, so it leaves the graph entirely.
     /// </summary>
-    private void Track(RuleBase rule)
+    private void Track(RuleBase rule) => Scope.Mutate(builder => Track(rule, builder));
+
+    /// <summary>
+    /// <see cref="Track(RuleBase)"/> folded into a successor the caller owns — the edges and the
+    /// participant they name reach a reader together or not at all, and a caller committing several
+    /// rules at once gets one swap rather than one per rule.
+    /// </summary>
+    private void Track(RuleBase rule, ScopeGenerationBuilder builder)
     {
         var node = NodeId.Rule(rule.Name);
         var references = ReferencesOf(rule.DocumentJson);
 
-        // One builder, not a graph write and an enrolment that each swap: the edges and the
-        // participant they name have to reach a reader together or not at all.
-        Scope.Mutate(builder =>
+        if (references.Count == 0)
         {
-            if (references.Count == 0)
-            {
-                builder.Graph.Remove(node);
-                // Defensive rather than load-bearing: a rule is only ever enrolled by the branch
-                // below, which is also what put the graph edges there, so the two always come and go
-                // together.
-                builder.Withdraw(node);
-                return;
-            }
+            builder.Graph.Remove(node);
+            // Defensive rather than load-bearing: a rule is only ever enrolled by the branch below,
+            // which is also what put the graph edges there, so the two always come and go together.
+            builder.Withdraw(node);
+            return;
+        }
 
-            builder.Graph.Set(node, references);
-            builder.Enrol(new RuleParticipant(rule, _options));
-        });
+        builder.Graph.Set(node, references);
+        builder.Enrol(new RuleParticipant(rule, _options));
     }
 
     private IReadOnlyList<string> ReferencesOf(string? documentJson)

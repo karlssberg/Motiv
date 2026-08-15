@@ -45,19 +45,16 @@ internal interface IRebindCommit
     /// would publish a binding the caller went on to reject.
     /// </para>
     /// <para>
-    /// <strong>It comes out in two halves, and neither has landed yet.</strong> The authored half's
-    /// *shape* changed but the write did not go away: <c>AuthoredProposition.RebindCommit.Commit</c>
-    /// no longer mutates the proposition in place — it can't, the proposition is immutable — but it
-    /// still writes the rebound replacement into <c>PropositionSet</c>'s own authored dictionary,
-    /// because that dictionary is a field the set owns rather than part of the generation, and
-    /// <see cref="ApplyTo"/> only reaches the generation's own authored map via the builder. That half
-    /// retires only once <c>ScopeGeneration.Authored</c> becomes the read path and
-    /// <c>PropositionSet._authored</c> is deleted — Spec 2B's Task 6. The rule half is <c>Rule</c>'s
-    /// and <c>AsyncRule</c>'s own implementations, which still mutate live rule state in place; that
-    /// half retires when rule state moves into <see cref="RuleSlot"/> — Task 8. This member — and
-    /// <see cref="NoRebindCommit"/>'s empty body — can only be deleted once both have landed. Apply
-    /// calls it unconditionally rather than only for rule commits, so it never has to know which half
-    /// of a mixed closure it is looking at.
+    /// <strong>It comes out in two halves; the authored half has landed.</strong>
+    /// <c>AuthoredProposition.RebindCommit.Commit</c> is now empty:
+    /// <c>PropositionSet._authored</c> is gone, <see cref="ScopeGeneration.Authored"/> is the read
+    /// path, and <see cref="ApplyTo"/>'s <c>builder.SetAuthored</c> already reaches it — Spec 2B's
+    /// Task 6. What remains is the rule half: <c>Rule</c>'s and <c>AsyncRule</c>'s own
+    /// implementations, which still mutate live rule state in place. That retires when rule state
+    /// moves into <see cref="RuleSlot"/> — Task 8, at which point this member, the empty authored
+    /// body, and <see cref="NoRebindCommit"/>'s empty body can all be deleted together. Apply calls it
+    /// unconditionally rather than only for rule commits, so it never has to know which half of a
+    /// mixed closure it is looking at.
     /// </para>
     /// </remarks>
     void Commit();

@@ -1151,19 +1151,27 @@ public sealed class ChangeRequestSet
             {
                 var versions = new Dictionary<string, int>(StringComparer.Ordinal);
 
-                foreach (var (name, edit) in prepared.PropositionPublishes)
-                    versions[name] = propositions!.CommitPublishCore(edit);
-
-                foreach (var (name, edit) in prepared.PropositionWithdrawals)
+                // One builder for the whole envelope, and therefore one swap. "These edits publish
+                // together" has to be true for a reader as well as for the store: a swap per member
+                // would let one land between two of them and observe a combination this envelope
+                // never published. The ordering below is unchanged and still load-bearing for what
+                // ends up in that single successor — see the remarks above.
+                rules.Scope.Mutate(builder =>
                 {
-                    propositions!.CommitWithdrawCore(edit);
+                    foreach (var (name, edit) in prepared.PropositionPublishes)
+                        versions[name] = PropositionSet.CommitPublishCore(edit, builder);
 
-                    // No authored document remains, so there is no version left to report.
-                    versions[name] = 0;
-                }
+                    foreach (var (name, edit) in prepared.PropositionWithdrawals)
+                    {
+                        PropositionSet.CommitWithdrawCore(edit, builder);
 
-                foreach (var (name, publication) in prepared.Rules)
-                    versions[name] = rules.CommitCore(name, publication).Version;
+                        // No authored document remains, so there is no version left to report.
+                        versions[name] = 0;
+                    }
+
+                    foreach (var (name, publication) in prepared.Rules)
+                        versions[name] = rules.CommitCore(name, publication, builder).Version;
+                });
 
                 return new ChangeRequestResult(ChangeRequestOutcome.Ok, change, null, [], null, null, versions);
             });
