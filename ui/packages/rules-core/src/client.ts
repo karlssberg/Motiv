@@ -12,6 +12,25 @@ export interface RulesApiClientOptions {
   baseUrl: string;
   /** Injectable fetch implementation; defaults to the global fetch. */
   fetch?: typeof fetch;
+  /**
+   * Called when a response reports a generation behind the highest one already seen — the
+   * client was routed to a replica that has not caught up yet. Detection, not policy: the
+   * caller decides whether to retry, warn, or ignore.
+   */
+  onStaleGeneration?: (observed: StoreGeneration, highest: StoreGeneration) => void;
+}
+
+/** Where both stores stood in the world a response was served from. */
+export interface StoreGeneration {
+  rules: number;
+  propositions: number;
+}
+
+/** Reads the `Motiv-Generation` header. Anything the server did not write is refused. */
+export function parseGeneration(token: string | null | undefined): StoreGeneration | undefined {
+  if (!token) return undefined;
+  const match = /^r(\d+)\.p(\d+)$/.exec(token);
+  return match ? { rules: Number(match[1]), propositions: Number(match[2]) } : undefined;
 }
 
 /** The union of shapes a failed proposition write's body can take (see `#readPropositionResult`). */
@@ -41,10 +60,18 @@ export class RulesApiError extends Error {
 export class RulesApiClient {
   readonly #baseUrl: string;
   readonly #fetch: typeof fetch;
+  readonly #onStaleGeneration: ((observed: StoreGeneration, highest: StoreGeneration) => void) | undefined;
+  #generation: StoreGeneration | undefined;
 
   constructor(options: RulesApiClientOptions) {
     this.#baseUrl = options.baseUrl.replace(/\/$/, '');
     this.#fetch = options.fetch ?? globalThis.fetch.bind(globalThis);
+    this.#onStaleGeneration = options.onStaleGeneration;
+  }
+
+  /** The highest `Motiv-Generation` observed so far, if any response has carried one. */
+  get generation(): StoreGeneration | undefined {
+    return this.#generation;
   }
 
   /** GET {baseUrl}/catalog */
@@ -172,7 +199,37 @@ export class RulesApiClient {
     });
   }
 
+  /**
+   * Records the world a response came from, and reports a backwards move.
+   *
+   * Replicas converge eventually, so a client can be routed to one that has not caught up yet.
+   * That is explicable staleness rather than incoherence — but only if the client can see it, so
+   * the highest generation observed is kept and a lower one is surfaced rather than swallowed.
+   *
+   * The two components come from stores that are never written in the same transaction, so
+   * there is no total order between generations — a response is a backwards move if *either*
+   * component is behind, even when the other has advanced.
+   */
+  #trackGeneration(response: Response): void {
+    const observed = parseGeneration(response.headers.get('motiv-generation'));
+    if (!observed) return;
+
+    const highest = this.#generation;
+    if (!highest) {
+      this.#generation = observed;
+      return;
+    }
+
+    if (observed.rules < highest.rules || observed.propositions < highest.propositions) {
+      this.#onStaleGeneration?.(observed, highest);
+      return;
+    }
+
+    this.#generation = observed;
+  }
+
   async #readSaveResult(response: Response): Promise<RuleSaveResult> {
+    this.#trackGeneration(response);
     if (response.ok) {
       const body = (await response.json()) as { version: number };
       return { outcome: 'updated', version: body.version };
@@ -195,7 +252,7 @@ export class RulesApiClient {
         : `Request failed (${response.status}).`;
       throw new RulesApiError(response.status, message);
     }
-    return this.#read<never>(response); // 404 etc. → RulesApiError as elsewhere
+    return this.#throwFromErrorResponse(response); // 404 etc. → RulesApiError as elsewhere
   }
 
   /**
@@ -210,6 +267,7 @@ export class RulesApiClient {
     response: Response,
     options: { unmatchedConflictIsNameTaken?: boolean } = {},
   ): Promise<PropositionSaveResult> {
+    this.#trackGeneration(response);
     if (response.ok) {
       const body = (await response.json()) as { version: number };
       return { outcome: 'saved', version: body.version };
@@ -239,7 +297,20 @@ export class RulesApiClient {
   }
 
   async #read<T>(response: Response): Promise<T> {
+    this.#trackGeneration(response);
     if (response.ok) return (await response.json()) as T;
+    return this.#throwFromErrorResponse(response);
+  }
+
+  /**
+   * Shared error-body parsing for a non-2xx response, without tracking the generation header.
+   *
+   * `#readSaveResult`'s 404-etc. fallback delegates here rather than to `#read`: it has already
+   * called `#trackGeneration` once for this response, and `#read` also tracks — calling it a
+   * second time on the same response would report a single backwards move to `onStaleGeneration`
+   * twice.
+   */
+  async #throwFromErrorResponse(response: Response): Promise<never> {
     const body = (await response.json().catch(() => undefined)) as
       | ValidationResponse | ErrorResponse | undefined;
     if (body && 'errors' in body) {
