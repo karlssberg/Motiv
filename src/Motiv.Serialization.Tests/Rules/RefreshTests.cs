@@ -250,6 +250,39 @@ public class RefreshTests
         propsB.DocumentJsonOf("negative")!.ShouldBe(NotPositive);
     }
 
+    private sealed class GatedRule()
+        : Rule<int, string>("gated", RuleDocuments.FromJson("""{"rule":{"spec":"gate"}}"""));
+
+    /// <summary>
+    /// A rebuilt world has to carry the rebind graph, not merely the bindings. A rule declared with a
+    /// document default references propositions from the moment it is added, so a refresh that
+    /// re-bound it without re-recording its edges would leave it bound correctly and <em>silently
+    /// unenrolled</em> — every later proposition publish would stop cascading to it, and the rule
+    /// would go on resolving a definition nobody could see it was resolving.
+    /// </summary>
+    [Fact]
+    public async Task Should_keep_a_document_defaults_edges_across_a_rebuild()
+    {
+        // Arrange — the proposition has to exist before the rule's default can bind against it
+        var registry = new SpecRegistry().Register("positive", Positive);
+        var propositions = new PropositionSet(registry, new InMemoryPropositionStore()).AddModel<int>("number");
+        propositions.Load();
+        await propositions.CreateAsync("gate", "number", IsPositive, null);
+
+        var rules = new RuleSet(propositions, new InMemoryRuleStore());
+        var rule = new GatedRule();
+        rules.Add(rule);
+        rules.Load();
+        rule.Evaluate(1).Satisfied.ShouldBeTrue();
+
+        // Act — a rebuild, and only then the proposition beneath the rule moves
+        (await rules.RefreshAsync(default)).Outcome.ShouldBe(RefreshOutcome.Applied);
+        await propositions.UpdateAsync("gate", NotPositive, 1);
+
+        // Assert — the cascade still reaches a rule the refresh re-bound
+        rule.Evaluate(1).Satisfied.ShouldBeFalse();
+    }
+
     /// <summary>A replica whose rules and authored propositions share one scope, as a real host's do.</summary>
     private static (PropositionSet Propositions, RuleSet Rules, NumberRule Rule) PairedReplica(
         IPropositionStore propositionStore, IRuleStore ruleStore, params string[] extraSpecs)
