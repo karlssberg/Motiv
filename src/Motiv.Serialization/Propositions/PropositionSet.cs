@@ -69,6 +69,13 @@ public sealed class PropositionSet
     internal BindingScope Scope { get; }
 
     /// <summary>
+    /// Pins the current world for the duration of a decision, so several evaluations resolve against
+    /// one published set. Dispose to release. Hosts using <c>MapMotivRules</c> get one per request
+    /// automatically and need not call this.
+    /// </summary>
+    public DecisionSnapshot PinSnapshot() => new(Scope);
+
+    /// <summary>
     /// Options forwarded to the document parser and binder. Reachable by <see cref="AuthoredProposition"/>,
     /// which parses its own document again when preparing a rebind.
     /// </summary>

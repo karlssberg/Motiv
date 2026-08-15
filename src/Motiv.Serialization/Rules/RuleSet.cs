@@ -83,6 +83,13 @@ public sealed class RuleSet
         _rules.Values.Select(ToEntry).ToArray();
 
     /// <summary>
+    /// Pins the current world for the duration of a decision, so several evaluations resolve against
+    /// one published set. Dispose to release. Hosts using <c>MapMotivRules</c> get one per request
+    /// automatically and need not call this.
+    /// </summary>
+    public DecisionSnapshot PinSnapshot() => new(Scope);
+
+    /// <summary>
     /// Registers a rule and binds its default immediately — an invalid default document throws
     /// here, at startup, rather than at first evaluation.
     /// </summary>
