@@ -383,9 +383,11 @@ public sealed class PropositionSet
         var current = prepared.Authored!;
 
         // Dropped before the closure commits rather than after, which the order below otherwise
-        // implies matters: it does not. A rebind commit reaches its Authored object directly, never
-        // through this dictionary, and every reader of the dictionary takes the same monitor this
-        // method already holds — so no one can observe either order.
+        // implies matters: it does not. A cascaded rebind commit does reach this same dictionary now
+        // — AuthoredProposition.RebindCommit.Commit calls SetAuthoredState — but only for a
+        // dependent's own name, never current.Name, so the two writes cannot race on the same key.
+        // Every reader of the dictionary takes the same monitor this method already holds, which is
+        // what actually makes the ordering unobservable even if that changed.
         _authored.Remove(current.Name);
 
         Scope.Mutate(builder =>
@@ -847,6 +849,17 @@ public sealed class PropositionSet
             builder.Enrol(authored);
         });
     }
+
+    /// <summary>
+    /// Refreshes this set's own authored dictionary with a rebound replacement — the live-write half
+    /// of a cascaded rebind that <see cref="AuthoredProposition.WithBinding"/> cannot reach on its own,
+    /// because <c>_authored</c> is a field this set owns rather than part of the generation. Called
+    /// only from <see cref="AuthoredProposition"/>'s own <c>RebindCommit.Commit</c>, at the one moment
+    /// a rebind is actually committed — see that member's remarks for why it must not happen any
+    /// earlier. Retires once <c>ScopeGeneration.Authored</c> becomes the read path and this dictionary
+    /// is deleted.
+    /// </summary>
+    internal void SetAuthoredState(AuthoredProposition authored) => _authored[authored.Name] = authored;
 
     private PropositionEntry ToEntry(AuthoredProposition authored)
     {
