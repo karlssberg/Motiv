@@ -26,7 +26,7 @@ internal sealed class ScopeGeneration
         PropositionOverlay overlay,
         DependencyGraph graph,
         IReadOnlyDictionary<NodeId, IRebindable> participants,
-        IReadOnlyDictionary<string, PropositionSet.Authored> authored,
+        IReadOnlyDictionary<string, AuthoredProposition> authored,
         RuleSlot?[] ruleSlots)
     {
         Sequence = sequence;
@@ -51,7 +51,7 @@ internal sealed class ScopeGeneration
     public IReadOnlyDictionary<NodeId, IRebindable> Participants { get; }
 
     /// <summary>Every authored proposition, by name.</summary>
-    public IReadOnlyDictionary<string, PropositionSet.Authored> Authored { get; }
+    public IReadOnlyDictionary<string, AuthoredProposition> Authored { get; }
 
     /// <summary>
     /// Every rule's state, indexed by the slot assigned at registration. Null only for a slot whose

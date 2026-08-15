@@ -11,7 +11,7 @@ public sealed class PropositionSet
     private readonly IPropositionStore _store;
     private readonly RuleSerializerOptions _options;
     private readonly Dictionary<string, PropositionModelBinding> _models = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, Authored> _authored = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, AuthoredProposition> _authored = new(StringComparer.Ordinal);
     private bool _loaded;
 
     /// <summary>
@@ -68,6 +68,12 @@ public sealed class PropositionSet
 
     /// <summary>The coordinator this set publishes under, and what a paired <see cref="RuleSet"/> joins.</summary>
     internal BindingScope Scope { get; }
+
+    /// <summary>
+    /// Options forwarded to the document parser and binder. Reachable by <see cref="AuthoredProposition"/>,
+    /// which parses its own document again when preparing a rebind.
+    /// </summary>
+    internal RuleSerializerOptions Options => _options;
 
     /// <summary>
     /// Registers a model type authored propositions may be written against, capturing
@@ -218,11 +224,9 @@ public sealed class PropositionSet
         // no-op. An *override* is the exception, and the reason a create cascades at all: it
         // lands on a name existing documents already reference, so publishing it changes what
         // they resolve exactly as an update would, on the same all-or-nothing terms.
-        var authored = new Authored(this, name, modelTypeId, documentJson, version: 1, description)
-        {
-            Bound = entry,
-            References = prepared.References
-        };
+        var authored = new AuthoredProposition(
+            this, name, modelTypeId, documentJson, version: 1, description,
+            bound: entry, quarantine: [], references: prepared.References);
 
         return PrepareCascadeInto(authored, prospective, excluding);
     }
@@ -279,12 +283,9 @@ public sealed class PropositionSet
         if (prepared.Entry is not { } entry)
             return WritePrepare.Rejected(PropositionUpdateResult.Invalid(prepared.Errors));
 
-        var replacement = new Authored(
-            this, name, current.ModelTypeId, documentJson, current.Version + 1, current.Description)
-        {
-            Bound = entry,
-            References = prepared.References
-        };
+        var replacement = new AuthoredProposition(
+            this, name, current.ModelTypeId, documentJson, current.Version + 1, current.Description,
+            bound: entry, quarantine: [], references: prepared.References);
 
         return PrepareCascadeInto(replacement, prospective, excluding);
     }
@@ -327,7 +328,7 @@ public sealed class PropositionSet
     /// the scope lock is held.
     /// </summary>
     private WritePrepare PrepareCascadeInto(
-        Authored authored, ScopeGenerationBuilder prospective, HashSet<NodeId> excluding)
+        AuthoredProposition authored, ScopeGenerationBuilder prospective, HashSet<NodeId> excluding)
     {
         prospective.SetOverlayEntry(authored.Bound!);
 
@@ -340,10 +341,10 @@ public sealed class PropositionSet
     }
 
     /// <summary>The batch a publish of <paramref name="authored"/> writes: one save, nothing removed.</summary>
-    private static PropositionBatch SaveBatchFor(Authored authored) => PropositionBatch.Save(RowFor(authored));
+    private static PropositionBatch SaveBatchFor(AuthoredProposition authored) => PropositionBatch.Save(RowFor(authored));
 
     /// <summary>The stored row a publish of <paramref name="authored"/> writes — the save half of a governed envelope's batch.</summary>
-    internal static StoredProposition RowFor(Authored authored) =>
+    internal static StoredProposition RowFor(AuthoredProposition authored) =>
         new(authored.Name, authored.ModelTypeId, authored.DocumentJson, authored.Version, authored.Description);
 
     /// <summary>
@@ -643,40 +644,35 @@ public sealed class PropositionSet
     private void LoadOne(LoadCandidate candidate)
     {
         var stored = candidate.Stored;
-        var authored = new Authored(
-            this, stored.Name, stored.ModelType, stored.DocumentJson, stored.Version, stored.Description)
-        {
-            References = candidate.References
-        };
-
-        _authored[stored.Name] = authored;
+        var authored = new AuthoredProposition(
+            this, stored.Name, stored.ModelType, stored.DocumentJson, stored.Version, stored.Description,
+            bound: null, quarantine: [], references: candidate.References);
 
         if (candidate.Errors.Count > 0)
         {
             // A name failure, a parse failure or a cycle already rules out binding — attempting it
             // anyway could only succeed by resolving through a name that is itself unresolvable or
             // by binding on top of an unresolved cyclic reference, neither of which is a real bind.
-            authored.Quarantine = candidate.Errors;
+            _authored[stored.Name] = authored.WithQuarantine(candidate.Errors);
             return;
         }
 
         var errors = new List<RuleError>();
-        var commit = authored.PrepareRebind(Scope.Source, errors);
+        var rebound = authored.Rebind(Scope.Source, errors);
 
-        if (commit is null)
+        if (rebound is null)
         {
             // Quarantined: no overlay entry and no graph edges, so nothing resolves *to* it and
             // nothing is rebound *because* of it. Any compiled spec under the name still resolves.
-            authored.Quarantine = errors;
+            _authored[stored.Name] = authored.WithQuarantine(errors);
             return;
         }
 
-        // The same steps CommitPublish takes to go live, minus the store write — this row came
-        // *from* the store, so saving it back would be a no-op at best. One of only two callers of
-        // IRebindCommit.Commit, and the one a reader of ScopeGenerationBuilder.Apply would miss; see
-        // that member's remarks before removing it.
-        commit.Commit();
-        CommitPublish(authored);
+        // The publish path itself rather than a copy of its steps, and missing only the store write
+        // — which CommitPublish does not do either: this row came *from* the store, so saving it
+        // back would be a no-op at best. Rebind is what makes that reuse possible; PrepareRebind
+        // would seal the replacement inside a commit only a ScopeGenerationBuilder can open.
+        CommitPublish(rebound);
     }
 
     /// <summary>Parses without letting malformed JSON escape — a hand-edited store must not stop startup.</summary>
@@ -775,7 +771,7 @@ public sealed class PropositionSet
     /// is non-nullable, but a hand-edited or null-serialized store is not bound by that — and an
     /// unusable model type is a quarantine reason, never a reason to throw and fail startup.
     /// </summary>
-    private PropositionModelBinding? ResolveModel(string? modelTypeId, List<RuleError> errors)
+    internal PropositionModelBinding? ResolveModel(string? modelTypeId, List<RuleError> errors)
     {
         if (modelTypeId is not null && _models.TryGetValue(modelTypeId, out var model))
             return model;
@@ -794,7 +790,7 @@ public sealed class PropositionSet
     /// an entry's own IsAsync already accounts for anything it references, so consulting the direct
     /// references is enough to know how the document must bind.
     /// </summary>
-    private static bool BindsAsync(ISpecSource source, IReadOnlyList<string> references) =>
+    internal static bool BindsAsync(ISpecSource source, IReadOnlyList<string> references) =>
         references.Any(reference => source.Find(reference) is { IsAsync: true });
 
     /// <summary>Parses, cycle-checks, and binds a document without publishing anything.</summary>
@@ -837,7 +833,7 @@ public sealed class PropositionSet
     /// <see cref="BindingScope"/>'s inner monitor is held: the fork-and-swap relies on no second
     /// writer being in flight.
     /// </summary>
-    internal void CommitPublish(Authored authored)
+    internal void CommitPublish(AuthoredProposition authored)
     {
         _authored[authored.Name] = authored;
 
@@ -852,7 +848,7 @@ public sealed class PropositionSet
         });
     }
 
-    private PropositionEntry ToEntry(Authored authored)
+    private PropositionEntry ToEntry(AuthoredProposition authored)
     {
         var compiled = Scope.Registry.Find(authored.Name);
         var origin = compiled is null ? PropositionOrigin.Authored : PropositionOrigin.Overridden;
@@ -911,64 +907,13 @@ public sealed class PropositionSet
     /// phase to <see cref="CommitPublishCore"/>/<see cref="CommitWithdrawCore"/>.
     /// </remarks>
     internal readonly record struct WritePrepare(
-        Authored? Authored, List<IRebindCommit>? Commits, PropositionUpdateResult? Failure)
+        AuthoredProposition? Authored, List<IRebindCommit>? Commits, PropositionUpdateResult? Failure)
     {
         /// <summary>A write that may proceed to the store.</summary>
-        public static WritePrepare Ready(Authored authored, List<IRebindCommit> commits) =>
+        public static WritePrepare Ready(AuthoredProposition authored, List<IRebindCommit> commits) =>
             new(authored, commits, null);
 
         /// <summary>A write refused before anything was persisted.</summary>
         public static WritePrepare Rejected(PropositionUpdateResult failure) => new(null, null, failure);
-    }
-
-    /// <summary>
-    /// One authored proposition's live state, and its participation in the rebind transaction.
-    /// </summary>
-    internal sealed class Authored(
-        PropositionSet owner, string name, string modelTypeId, string documentJson, int version, string? description)
-        : IRebindable
-    {
-        public NodeId Node { get; } = NodeId.Proposition(name);
-        public string Name { get; } = name;
-        public string ModelTypeId { get; } = modelTypeId;
-        public string DocumentJson { get; } = documentJson;
-        public int Version { get; } = version;
-        public string? Description { get; } = description;
-
-        /// <summary>The current binding, or null while quarantined.</summary>
-        public SpecRegistryEntry? Bound { get; set; }
-
-        /// <summary>Why this proposition is excluded from the effective set, or empty.</summary>
-        public IReadOnlyList<RuleError> Quarantine { get; set; } = [];
-
-        public IReadOnlyList<string> References { get; set; } = [];
-
-        public IRebindCommit? PrepareRebind(ISpecSource prospective, List<RuleError> errors)
-        {
-            var model = owner.ResolveModel(ModelTypeId, errors);
-            if (model is null)
-                return null;
-
-            var document = new RuleDocumentParser(owner._options).Parse(DocumentJson, errors);
-            if (document is null || errors.Count > 0)
-                return null;
-
-            var isAsync = BindsAsync(prospective, References);
-            var entry = model.Bind(prospective, Name, Description, document, isAsync, errors);
-            return entry is null ? null : new RebindCommit(this, entry);
-        }
-
-        private sealed class RebindCommit(Authored authored, SpecRegistryEntry entry) : IRebindCommit
-        {
-            public void ApplyTo(ScopeGenerationBuilder builder) => builder.SetOverlayEntry(entry);
-
-            public void Commit()
-            {
-                authored.Bound = entry;
-                authored.Quarantine = [];
-                // The version is deliberately untouched: this proposition's document did not change,
-                // so bumping it would spuriously conflict with an editor's open draft.
-            }
-        }
     }
 }

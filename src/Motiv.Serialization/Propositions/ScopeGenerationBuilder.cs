@@ -24,7 +24,7 @@ internal sealed class ScopeGenerationBuilder
     private readonly PropositionOverlay _overlay;
     private readonly DependencyGraph _graph;
     private readonly Dictionary<NodeId, IRebindable> _participants;
-    private readonly Dictionary<string, PropositionSet.Authored> _authored;
+    private readonly Dictionary<string, AuthoredProposition> _authored;
     private RuleSlot?[] _ruleSlots;
     private StoreGeneration _sequence;
     private bool _built;
@@ -42,7 +42,7 @@ internal sealed class ScopeGenerationBuilder
         foreach (var entry in from.Participants)
             _participants[entry.Key] = entry.Value;
 
-        _authored = new Dictionary<string, PropositionSet.Authored>(StringComparer.Ordinal);
+        _authored = new Dictionary<string, AuthoredProposition>(StringComparer.Ordinal);
         foreach (var entry in from.Authored)
             _authored[entry.Key] = entry.Value;
 
@@ -62,7 +62,7 @@ internal sealed class ScopeGenerationBuilder
         _graph = new DependencyGraph();
         Source = new LayeredSpecSource(_overlay, registry);
         _participants = [];
-        _authored = new Dictionary<string, PropositionSet.Authored>(StringComparer.Ordinal);
+        _authored = new Dictionary<string, AuthoredProposition>(StringComparer.Ordinal);
         _ruleSlots = new RuleSlot?[ruleCount];
         _sequence = StoreGeneration.Zero;
     }
@@ -105,7 +105,7 @@ internal sealed class ScopeGenerationBuilder
         _overlay.Remove(name);
     }
 
-    public void SetAuthored(PropositionSet.Authored authored)
+    public void SetAuthored(AuthoredProposition authored)
     {
         ThrowIfBuilt();
         _authored[authored.Name] = authored;
@@ -117,7 +117,7 @@ internal sealed class ScopeGenerationBuilder
         _authored.Remove(name);
     }
 
-    public PropositionSet.Authored? FindAuthored(string name) =>
+    public AuthoredProposition? FindAuthored(string name) =>
         _authored.TryGetValue(name, out var authored) ? authored : null;
 
     public void Enrol(IRebindable participant)
