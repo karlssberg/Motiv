@@ -693,17 +693,10 @@ public sealed class RuleSet
             : RulePrepareResult.NotFound();
 
     /// <summary>
-    /// Commits a prepared publication and re-tracks the rule's graph edges. Has no failure outcome —
-    /// everything a caller can get wrong was already decided by the prepare. Assumes
-    /// <see cref="BindingScope"/>'s inner monitor is held.
-    /// </summary>
-    internal RuleUpdateResult CommitCore(string name, IRulePublication publication) =>
-        Scope.Mutate(builder => CommitCore(name, publication, builder));
-
-    /// <summary>
-    /// <see cref="CommitCore(string,IRulePublication)"/> folded into a successor the caller owns, so a
-    /// governed envelope can commit every one of its members into one builder and publish them in a
-    /// single swap. Assumes <see cref="BindingScope"/>'s inner monitor is held.
+    /// Commits a prepared publication into a successor the caller owns and re-tracks the rule's graph
+    /// edges, so a governed envelope can commit every one of its members into one builder and publish
+    /// them in a single swap. Has no failure outcome — everything a caller can get wrong was already
+    /// decided by the prepare. Assumes <see cref="BindingScope"/>'s inner monitor is held.
     /// </summary>
     /// <remarks>
     /// The builder has to be threaded rather than opened here. A commit re-tracks the rule's graph

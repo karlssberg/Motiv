@@ -1132,13 +1132,13 @@ public sealed class ChangeRequestSet
             // RuleSet.PersistAndCommitCoreAsync. Only the halves this envelope actually wrote are
             // read: an envelope touching one store must leave the other's component exactly as it
             // found it, which is why the successor is stamped per component rather than as a pair.
-            var ruleGeneration = prepared.Rules.Count > 0
+            long? ruleGeneration = prepared.Rules.Count > 0
                 ? await rules.StoreGenerationAsync(cancellationToken).ConfigureAwait(false)
-                : (long?)null;
+                : null;
 
-            var propositionGeneration = prepared.PropositionWrites is not null
+            long? propositionGeneration = prepared.PropositionWrites is not null
                 ? await propositions!.StoreGenerationAsync(cancellationToken).ConfigureAwait(false)
-                : (long?)null;
+                : null;
 
             // --- Phase 3: apply every prepared change. Nothing below can fail.
             //

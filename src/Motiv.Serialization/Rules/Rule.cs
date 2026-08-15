@@ -65,18 +65,22 @@ public class Rule<TModel, TMetadata> : RuleBase
     /// <summary>The live state — what an administrative read or a publish must see, pinned or not.</summary>
     private protected State Live() => StateIn(Scope.Current);
 
-    private protected State StateIn(ScopeGeneration generation)
+    /// <summary>This rule's state in <paramref name="generation"/>, or null when it has none there.</summary>
+    /// <remarks>
+    /// The bounds check is not redundant: Add claims the slot before it publishes the state into it,
+    /// so a concurrent read in that window must still get an answer rather than an
+    /// IndexOutOfRangeException.
+    /// </remarks>
+    private protected State? FindStateIn(ScopeGeneration generation)
     {
-        // The bounds check is not redundant: Add claims the slot before it publishes the state into
-        // it, so a concurrent evaluation in that window must still get the message below rather than
-        // an IndexOutOfRangeException.
         var slots = generation.RuleSlots;
-        if (Slot >= 0 && Slot < slots.Length && slots[Slot]?.State is State state)
-            return state;
-
-        throw new InvalidOperationException(
-            $"Rule '{Name}' has not been bound; add it to a RuleSet before evaluating.");
+        return Slot >= 0 && Slot < slots.Length ? slots[Slot]?.State as State : null;
     }
+
+    private protected State StateIn(ScopeGeneration generation) =>
+        FindStateIn(generation)
+        ?? throw new InvalidOperationException(
+            $"Rule '{Name}' has not been bound; add it to a RuleSet before evaluating.");
 
     internal sealed override object BindDefaultState(RuleSerializer serializer) => BindDefault(serializer);
 
@@ -91,15 +95,10 @@ public class Rule<TModel, TMetadata> : RuleBase
         builder.FindRuleState(Slot) is State state ? state.DocumentJson : null;
 
     /// <inheritdoc />
-    internal sealed override string? DocumentJsonIn(ScopeGeneration generation)
-    {
-        // Bounds-checked and null-tolerant rather than routed through StateIn, which throws: a world
-        // snapshotted before this rule was registered simply has no slot for it, and that is an answer.
-        var slots = generation.RuleSlots;
-        return Slot >= 0 && Slot < slots.Length && slots[Slot]?.State is State state
-            ? state.DocumentJson
-            : null;
-    }
+    internal sealed override string? DocumentJsonIn(ScopeGeneration generation) =>
+        // Null-tolerant rather than routed through StateIn, which throws: a world snapshotted before
+        // this rule was registered simply has no slot for it, and that is an answer.
+        FindStateIn(generation)?.DocumentJson;
 
     /// <inheritdoc />
     internal sealed override object? BindStoredState(
