@@ -136,7 +136,7 @@ public sealed class PropositionSet
     /// <summary>The nodes that reference the given proposition, transitively, in rebind order.</summary>
     public IReadOnlyList<PropositionDependent> Dependents(string name) =>
         Scope.Locked(() => (IReadOnlyList<PropositionDependent>)
-            [.. Scope.Graph.DependentClosure(name)
+            [.. Scope.Current.Graph.DependentClosure(name)
                 .Select(node => new PropositionDependent(node.Name, node.KindLabel))]);
 
     /// <summary>
@@ -177,17 +177,19 @@ public sealed class PropositionSet
 
     /// <summary>
     /// The prepare half of <see cref="CreateCoreAsync"/>: a lone create, binding against a fresh
-    /// single-use copy of the live overlay. Assumes <see cref="BindingScope"/>'s inner monitor is held.
+    /// single-use fork of the live world. Assumes <see cref="BindingScope"/>'s inner monitor is held.
     /// </summary>
     private WritePrepare PrepareCreateCascade(
         string name, string modelTypeId, string documentJson, string? description) =>
         // A lone write has no other envelope members to protect from a stale rebind, so the
         // exclusion set is empty.
-        PrepareCreateCore(name, modelTypeId, documentJson, description, new PropositionOverlay(Scope.Overlay), []);
+        PrepareCreateCore(
+            name, modelTypeId, documentJson, description,
+            new ScopeGenerationBuilder(Scope.Registry, Scope.Current), []);
 
     /// <summary>
     /// The governed-envelope counterpart of <see cref="PrepareCreateCascade"/>: binds against
-    /// <paramref name="prospective"/> rather than a fresh copy of the live overlay, so a proposition
+    /// <paramref name="prospective"/> rather than a fresh fork of the live world, so a proposition
     /// prepared earlier in the same envelope — not yet committed, since nothing commits until the
     /// whole envelope has persisted — is visible to this one. The caller owns <paramref name="prospective"/>
     /// across the whole envelope and folds every member into it in turn. Assumes
@@ -200,7 +202,7 @@ public sealed class PropositionSet
     /// </param>
     internal WritePrepare PrepareCreateCore(
         string name, string modelTypeId, string documentJson, string? description,
-        PropositionOverlay prospective, HashSet<NodeId> excluding)
+        ScopeGenerationBuilder prospective, HashSet<NodeId> excluding)
     {
         if (_authored.ContainsKey(name))
             return WritePrepare.Rejected(PropositionUpdateResult.NameTaken());
@@ -208,7 +210,7 @@ public sealed class PropositionSet
         if (ValidateName(name) is { } nameError)
             return WritePrepare.Rejected(PropositionUpdateResult.Invalid([nameError]));
 
-        var prepared = Prepare(name, modelTypeId, documentJson, description, new LayeredSpecSource(prospective, Scope.Registry));
+        var prepared = Prepare(name, modelTypeId, documentJson, description, prospective.Source);
         if (prepared.Entry is not { } entry)
             return WritePrepare.Rejected(PropositionUpdateResult.Invalid(prepared.Errors));
 
@@ -250,11 +252,13 @@ public sealed class PropositionSet
 
     /// <summary>
     /// The prepare half of <see cref="UpdateCoreAsync"/>: a lone update, binding against a fresh
-    /// single-use copy of the live overlay. Assumes <see cref="BindingScope"/>'s inner monitor is held.
+    /// single-use fork of the live world. Assumes <see cref="BindingScope"/>'s inner monitor is held.
     /// </summary>
     private WritePrepare PrepareUpdateCascade(string name, string documentJson, int expectedVersion) =>
         // See PrepareCreateCascade: a lone write's exclusion set is always empty.
-        PrepareUpdateCore(name, documentJson, expectedVersion, new PropositionOverlay(Scope.Overlay), []);
+        PrepareUpdateCore(
+            name, documentJson, expectedVersion,
+            new ScopeGenerationBuilder(Scope.Registry, Scope.Current), []);
 
     /// <summary>
     /// The governed-envelope counterpart of <see cref="PrepareUpdateCascade"/>. See
@@ -262,7 +266,7 @@ public sealed class PropositionSet
     /// </summary>
     internal WritePrepare PrepareUpdateCore(
         string name, string documentJson, int expectedVersion,
-        PropositionOverlay prospective, HashSet<NodeId> excluding)
+        ScopeGenerationBuilder prospective, HashSet<NodeId> excluding)
     {
         if (!_authored.TryGetValue(name, out var current))
             return WritePrepare.Rejected(PropositionUpdateResult.NotFound());
@@ -271,8 +275,7 @@ public sealed class PropositionSet
             return WritePrepare.Rejected(PropositionUpdateResult.VersionConflict(current.Version));
 
         var prepared = Prepare(
-            name, current.ModelTypeId, documentJson, current.Description,
-            new LayeredSpecSource(prospective, Scope.Registry));
+            name, current.ModelTypeId, documentJson, current.Description, prospective.Source);
         if (prepared.Entry is not { } entry)
             return WritePrepare.Rejected(PropositionUpdateResult.Invalid(prepared.Errors));
 
@@ -315,18 +318,18 @@ public sealed class PropositionSet
     }
 
     /// <summary>
-    /// Prepares a cascading publish: binds the closure over a prospective overlay carrying
+    /// Prepares a cascading publish: binds the closure over a prospective world carrying
     /// <paramref name="authored"/>'s new definition, so a dependent is checked against what it
     /// *would* resolve rather than what it resolves today. Shared by <see cref="PrepareCreateCore"/>
     /// and <see cref="PrepareUpdateCore"/>, which differ only in how <paramref name="authored"/>
-    /// itself was built. <paramref name="prospective"/> is a fresh single-use copy of the live overlay
-    /// for a lone write, and the envelope's own cumulative overlay for a governed publish. Assumes the
-    /// scope lock is held.
+    /// itself was built. <paramref name="prospective"/> is a fresh single-use fork of the live world
+    /// for a lone write, and the envelope's own cumulative successor for a governed publish. Assumes
+    /// the scope lock is held.
     /// </summary>
     private WritePrepare PrepareCascadeInto(
-        Authored authored, PropositionOverlay prospective, HashSet<NodeId> excluding)
+        Authored authored, ScopeGenerationBuilder prospective, HashSet<NodeId> excluding)
     {
-        prospective.Set(authored.Bound!);
+        prospective.SetOverlayEntry(authored.Bound!);
 
         var commits = new List<IRebindCommit>();
         var broken = Scope.PrepareClosure(authored.Name, prospective, commits, excluding);
@@ -364,7 +367,7 @@ public sealed class PropositionSet
     {
         var authored = prepared.Authored!;
         CommitPublish(authored);
-        Scope.CommitClosure(prepared.Commits!);
+        Scope.Mutate(builder => BindingScope.CommitClosure(prepared.Commits!, builder));
         return authored.Version;
     }
 
@@ -376,15 +379,20 @@ public sealed class PropositionSet
     /// </summary>
     internal void CommitWithdrawCore(WritePrepare prepared)
     {
-        Scope.CommitClosure(prepared.Commits!);
-
         var current = prepared.Authored!;
         _authored.Remove(current.Name);
-        Scope.Overlay.Remove(current.Name);
-        Scope.Graph.Remove(current.Node);
-        // Defensive rather than load-bearing: a proposition is only ever enrolled by CommitPublish,
-        // which is also what put the graph edges above, so the two always come and go together.
-        Scope.Withdraw(current.Node);
+
+        Scope.Mutate(builder =>
+        {
+            BindingScope.CommitClosure(prepared.Commits!, builder);
+
+            builder.RemoveAuthored(current.Name);
+            builder.RemoveOverlayEntry(current.Name);
+            builder.Graph.Remove(current.Node);
+            // Defensive rather than load-bearing: a proposition is only ever enrolled by CommitPublish,
+            // which is also what put the graph edges above, so the two always come and go together.
+            builder.Withdraw(current.Node);
+        });
     }
 
     /// <summary>
@@ -440,7 +448,7 @@ public sealed class PropositionSet
         if (compiled is null)
         {
             // Removal would leave referrers pointing at nothing, so direct referrers block it.
-            var referrers = Scope.Graph.Referrers(name);
+            var referrers = Scope.Current.Graph.Referrers(name);
             if (referrers.Count > 0)
                 return WritePrepare.Rejected(
                     PropositionUpdateResult.Referenced([.. referrers.Select(node => node.Name)]));
@@ -449,8 +457,8 @@ public sealed class PropositionSet
         {
             // Reverting changes what referrers resolve, so it takes the same transactional check
             // as any other edit — the compiled spec may not satisfy every dependent.
-            var prospective = new PropositionOverlay(Scope.Overlay);
-            prospective.Remove(name);
+            var prospective = new ScopeGenerationBuilder(Scope.Registry, Scope.Current);
+            prospective.RemoveOverlayEntry(name);
 
             var broken = Scope.PrepareClosure(name, prospective, commits, []);
             if (broken.Count > 0)
@@ -477,7 +485,7 @@ public sealed class PropositionSet
     /// wrongly refuse a withdrawal whose only referrer is redirected earlier in the same envelope.
     /// </remarks>
     internal WritePrepare PrepareWithdrawCore(
-        string name, int expectedVersion, PropositionOverlay prospective, HashSet<NodeId> excluding)
+        string name, int expectedVersion, ScopeGenerationBuilder prospective, HashSet<NodeId> excluding)
     {
         if (!_authored.TryGetValue(name, out var current))
             return WritePrepare.Rejected(PropositionUpdateResult.NotFound());
@@ -492,7 +500,7 @@ public sealed class PropositionSet
             // both passes must see the same sequence of worlds, and a later envelope member (a
             // proposition created after this withdrawal, say) must not resolve a name this envelope
             // is also removing.
-            prospective.Remove(name);
+            prospective.RemoveOverlayEntry(name);
             return WritePrepare.Ready(current, []);
         }
 
@@ -501,7 +509,7 @@ public sealed class PropositionSet
         // cumulative prospective overlay. excluding matters here exactly as it does for a publish's
         // own cascade: a dependent this envelope is *also* explicitly publishing or withdrawing must
         // not be rebound from its stale, pre-envelope definition — see PrepareClosure's remarks.
-        prospective.Remove(name);
+        prospective.RemoveOverlayEntry(name);
         var commits = new List<IRebindCommit>();
         var broken = Scope.PrepareClosure(name, prospective, commits, excluding);
 
@@ -803,7 +811,7 @@ public sealed class PropositionSet
 
         var references = DocumentReferences.From(document);
 
-        if (Scope.Graph.FindCycle(name, references) is { } cycle)
+        if (Scope.Current.Graph.FindCycle(name, references) is { } cycle)
         {
             errors.Add(new RuleError("$", RuleErrorCode.CycleDetected,
                 $"publishing '{name}' would create a reference cycle: {string.Join(" → ", cycle)}"));
@@ -817,17 +825,24 @@ public sealed class PropositionSet
 
     /// <summary>
     /// The infallible half of a publish, for a caller that has already persisted the document — the
-    /// counterpart of <see cref="RuleSet.CommitCore"/>. Folds the authored proposition into the live
-    /// overlay, graph and participant table. Assumes <see cref="BindingScope"/>'s inner monitor is
-    /// held: this mutates <see cref="DependencyGraph"/> and <see cref="PropositionOverlay"/> directly,
-    /// both of which are deliberately unsynchronized and rely on the caller holding that monitor.
+    /// counterpart of <see cref="RuleSet.CommitCore"/>. Folds the authored proposition into a
+    /// successor's overlay, graph and participant table, and swaps that successor in. Assumes
+    /// <see cref="BindingScope"/>'s inner monitor is held: the fork-and-swap relies on no second
+    /// writer being in flight.
     /// </summary>
     internal void CommitPublish(Authored authored)
     {
         _authored[authored.Name] = authored;
-        Scope.Overlay.Set(authored.Bound!);
-        Scope.Graph.Set(authored.Node, authored.References);
-        Scope.Enrol(authored);
+
+        // One builder, not three calls that each swap: the enrolment and the graph write would
+        // otherwise be separate worlds a reader could land between.
+        Scope.Mutate(builder =>
+        {
+            builder.SetAuthored(authored);
+            builder.SetOverlayEntry(authored.Bound!);
+            builder.Graph.Set(authored.Node, authored.References);
+            builder.Enrol(authored);
+        });
     }
 
     private PropositionEntry ToEntry(Authored authored)
@@ -938,7 +953,7 @@ public sealed class PropositionSet
 
         private sealed class RebindCommit(Authored authored, SpecRegistryEntry entry) : IRebindCommit
         {
-            public SpecRegistryEntry? OverlayEntry => entry;
+            public void ApplyTo(ScopeGenerationBuilder builder) => builder.SetOverlayEntry(entry);
 
             public void Commit()
             {

@@ -25,9 +25,6 @@ public class BindingScopeTests
         /// <summary>What <see cref="Resolves"/> resolved to on the last prepare, if anything.</summary>
         public SpecRegistryEntry? Resolved { get; private set; }
 
-        public SpecRegistryEntry? OverlayEntry =>
-            Node.Kind == NodeKind.Proposition ? Entry(Node.Name) : null;
-
         public IRebindCommit? PrepareRebind(ISpecSource prospective, List<RuleError> errors)
         {
             PrepareCount++;
@@ -38,6 +35,13 @@ public class BindingScopeTests
                 return this;
             errors.Add(new RuleError("$", RuleErrorCode.UnknownSpec, $"{Node.Name} cannot bind"));
             return null;
+        }
+
+        public void ApplyTo(ScopeGenerationBuilder builder)
+        {
+            // Only a proposition is referenceable, so only a proposition contributes an entry.
+            if (Node.Kind == NodeKind.Proposition)
+                builder.SetOverlayEntry(Entry(Node.Name));
         }
 
         public void Commit() => Committed = true;
@@ -54,7 +58,7 @@ public class BindingScopeTests
         scope.Source.Find("compiled").ShouldNotBeNull();
         scope.Source.Find("authored").ShouldBeNull();
 
-        scope.Overlay.Set(Entry("authored"));
+        scope.Mutate(builder => builder.SetOverlayEntry(Entry("authored")));
         scope.Source.Find("authored").ShouldNotBeNull();
     }
 
@@ -66,7 +70,7 @@ public class BindingScopeTests
         var commits = new List<IRebindCommit>();
 
         // Act
-        var broken = scope.PrepareClosure("a", new PropositionOverlay(), commits, []);
+        var broken = scope.PrepareClosure("a", new ScopeGenerationBuilder(scope.Registry, scope.Current), commits, []);
 
         // Assert
         broken.ShouldBeEmpty();
@@ -83,12 +87,12 @@ public class BindingScopeTests
         var c = new StubParticipant(NodeId.Proposition("c"), succeeds: true) { OrderLog = order };
         scope.Enrol(b);
         scope.Enrol(c);
-        scope.Graph.Set(NodeId.Proposition("b"), ["a"]);
-        scope.Graph.Set(NodeId.Proposition("c"), ["b"]);
+        scope.Mutate(builder => builder.Graph.Set(NodeId.Proposition("b"), ["a"]));
+        scope.Mutate(builder => builder.Graph.Set(NodeId.Proposition("c"), ["b"]));
         var commits = new List<IRebindCommit>();
 
         // Act
-        var broken = scope.PrepareClosure("a", new PropositionOverlay(), commits, []);
+        var broken = scope.PrepareClosure("a", new ScopeGenerationBuilder(scope.Registry, scope.Current), commits, []);
 
         // Assert
         broken.ShouldBeEmpty();
@@ -101,15 +105,15 @@ public class BindingScopeTests
     {
         // Arrange — 'c' must be able to see the freshly bound 'b' while preparing
         var scope = new BindingScope(new SpecRegistry());
-        var prospective = new PropositionOverlay();
+        var prospective = new ScopeGenerationBuilder(scope.Registry, scope.Current);
         scope.Enrol(new StubParticipant(NodeId.Proposition("b"), succeeds: true));
-        scope.Graph.Set(NodeId.Proposition("b"), ["a"]);
+        scope.Mutate(builder => builder.Graph.Set(NodeId.Proposition("b"), ["a"]));
 
         // Act
         scope.PrepareClosure("a", prospective, [], []);
 
         // Assert
-        prospective.Find("b").ShouldNotBeNull();
+        prospective.Source.Find("b").ShouldNotBeNull();
     }
 
     [Fact]
@@ -121,11 +125,11 @@ public class BindingScopeTests
         var c = new StubParticipant(NodeId.Proposition("c"), succeeds: true) { Resolves = "b" };
         scope.Enrol(new StubParticipant(NodeId.Proposition("b"), succeeds: true));
         scope.Enrol(c);
-        scope.Graph.Set(NodeId.Proposition("b"), ["a"]);
-        scope.Graph.Set(NodeId.Proposition("c"), ["b"]);
+        scope.Mutate(builder => builder.Graph.Set(NodeId.Proposition("b"), ["a"]));
+        scope.Mutate(builder => builder.Graph.Set(NodeId.Proposition("c"), ["b"]));
 
         // Act
-        scope.PrepareClosure("a", new PropositionOverlay(), [], []);
+        scope.PrepareClosure("a", new ScopeGenerationBuilder(scope.Registry, scope.Current), [], []);
 
         // Assert
         c.Resolved.ShouldNotBeNull();
@@ -141,10 +145,10 @@ public class BindingScopeTests
         var x = new StubParticipant(NodeId.Proposition("x"), succeeds: true);
         scope.Enrol(b);
         scope.Enrol(x);
-        scope.Graph.Set(NodeId.Proposition("b"), ["a"]);
+        scope.Mutate(builder => builder.Graph.Set(NodeId.Proposition("b"), ["a"]));
 
         // Act
-        scope.PrepareClosure("a", new PropositionOverlay(), [], []);
+        scope.PrepareClosure("a", new ScopeGenerationBuilder(scope.Registry, scope.Current), [], []);
 
         // Assert
         b.PrepareCount.ShouldBe(1);
@@ -160,12 +164,12 @@ public class BindingScopeTests
         var bad = new StubParticipant(NodeId.Rule("can-checkout"), succeeds: false);
         scope.Enrol(good);
         scope.Enrol(bad);
-        scope.Graph.Set(NodeId.Proposition("b"), ["a"]);
-        scope.Graph.Set(NodeId.Rule("can-checkout"), ["a"]);
+        scope.Mutate(builder => builder.Graph.Set(NodeId.Proposition("b"), ["a"]));
+        scope.Mutate(builder => builder.Graph.Set(NodeId.Rule("can-checkout"), ["a"]));
         var commits = new List<IRebindCommit>();
 
         // Act
-        var broken = scope.PrepareClosure("a", new PropositionOverlay(), commits, []);
+        var broken = scope.PrepareClosure("a", new ScopeGenerationBuilder(scope.Registry, scope.Current), commits, []);
 
         // Assert
         broken.Count.ShouldBe(1);
@@ -182,10 +186,10 @@ public class BindingScopeTests
         // Arrange
         var scope = new BindingScope(new SpecRegistry());
         scope.Enrol(new StubParticipant(NodeId.Proposition("b"), succeeds: false));
-        scope.Graph.Set(NodeId.Proposition("b"), ["a"]);
+        scope.Mutate(builder => builder.Graph.Set(NodeId.Proposition("b"), ["a"]));
 
         // Act
-        var broken = scope.PrepareClosure("a", new PropositionOverlay(), [], []);
+        var broken = scope.PrepareClosure("a", new ScopeGenerationBuilder(scope.Registry, scope.Current), [], []);
 
         // Assert
         broken.Count.ShouldBe(1);
@@ -199,11 +203,11 @@ public class BindingScopeTests
         var scope = new BindingScope(new SpecRegistry());
         scope.Enrol(new StubParticipant(NodeId.Proposition("b"), succeeds: false));
         scope.Enrol(new StubParticipant(NodeId.Rule("r"), succeeds: false));
-        scope.Graph.Set(NodeId.Proposition("b"), ["a"]);
-        scope.Graph.Set(NodeId.Rule("r"), ["a"]);
+        scope.Mutate(builder => builder.Graph.Set(NodeId.Proposition("b"), ["a"]));
+        scope.Mutate(builder => builder.Graph.Set(NodeId.Rule("r"), ["a"]));
 
         // Act
-        var broken = scope.PrepareClosure("a", new PropositionOverlay(), [], []);
+        var broken = scope.PrepareClosure("a", new ScopeGenerationBuilder(scope.Registry, scope.Current), [], []);
 
         // Assert
         broken.Count.ShouldBe(2);
@@ -214,10 +218,10 @@ public class BindingScopeTests
     {
         // Arrange — a graph edge can outlive its participant during teardown; that must not throw
         var scope = new BindingScope(new SpecRegistry());
-        scope.Graph.Set(NodeId.Proposition("b"), ["a"]);
+        scope.Mutate(builder => builder.Graph.Set(NodeId.Proposition("b"), ["a"]));
 
         // Act
-        var broken = scope.PrepareClosure("a", new PropositionOverlay(), [], []);
+        var broken = scope.PrepareClosure("a", new ScopeGenerationBuilder(scope.Registry, scope.Current), [], []);
 
         // Assert
         broken.ShouldBeEmpty();
@@ -237,16 +241,16 @@ public class BindingScopeTests
         // Arrange — a <- b <- c, with b excluded. b's own prepare (elsewhere, not modelled here) is
         // what put its entry in the prospective overlay; that entry must survive this walk untouched.
         var scope = new BindingScope(new SpecRegistry());
-        var prospective = new PropositionOverlay();
+        var prospective = new ScopeGenerationBuilder(scope.Registry, scope.Current);
         var bsOwnEntry = Entry("b");
-        prospective.Set(bsOwnEntry);
+        prospective.SetOverlayEntry(bsOwnEntry);
 
         var b = new StubParticipant(NodeId.Proposition("b"), succeeds: true);
         var c = new StubParticipant(NodeId.Proposition("c"), succeeds: true) { Resolves = "b" };
         scope.Enrol(b);
         scope.Enrol(c);
-        scope.Graph.Set(NodeId.Proposition("b"), ["a"]);
-        scope.Graph.Set(NodeId.Proposition("c"), ["b"]);
+        scope.Mutate(builder => builder.Graph.Set(NodeId.Proposition("b"), ["a"]));
+        scope.Mutate(builder => builder.Graph.Set(NodeId.Proposition("c"), ["b"]));
         var commits = new List<IRebindCommit>();
 
         // Act
@@ -256,10 +260,10 @@ public class BindingScopeTests
         broken.ShouldBeEmpty();
 
         // b is excluded: never rebound, never committed, and its own already-set entry survives —
-        // PrepareClosure must not have called prospective.Set for it at all.
+        // PrepareClosure must not have called prospective.SetOverlayEntry for it at all.
         b.PrepareCount.ShouldBe(0);
         b.Committed.ShouldBeFalse();
-        prospective.Find("b").ShouldBeSameAs(bsOwnEntry);
+        prospective.Source.Find("b").ShouldBeSameAs(bsOwnEntry);
 
         // c is not excluded — b's exclusion from being rebound does not exclude c, which references
         // b, from being discovered and prepared in its own right.
@@ -277,11 +281,11 @@ public class BindingScopeTests
         var scope = new BindingScope(new SpecRegistry());
         var b = new StubParticipant(NodeId.Proposition("b"), succeeds: true);
         scope.Enrol(b);
-        scope.Graph.Set(NodeId.Proposition("b"), ["a"]);
+        scope.Mutate(builder => builder.Graph.Set(NodeId.Proposition("b"), ["a"]));
 
         // Act
         scope.Withdraw(NodeId.Proposition("b"));
-        scope.PrepareClosure("a", new PropositionOverlay(), [], []);
+        scope.PrepareClosure("a", new ScopeGenerationBuilder(scope.Registry, scope.Current), [], []);
 
         // Assert
         b.PrepareCount.ShouldBe(0);

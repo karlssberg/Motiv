@@ -51,13 +51,16 @@ public class PropositionSetUpdateTests
         private readonly ManualResetEventSlim _release = new(initialState: false);
 
         public NodeId Node { get; } = node;
-        public SpecRegistryEntry? OverlayEntry => null;
 
         public IRebindCommit? PrepareRebind(ISpecSource prospective, List<RuleError> errors)
         {
             _entered.Set();
             _release.Wait();
             return this;
+        }
+
+        public void ApplyTo(ScopeGenerationBuilder builder)
+        {
         }
 
         public void Commit()
@@ -213,7 +216,7 @@ public class PropositionSetUpdateTests
         scope.Locked(() =>
         {
             scope.Enrol(new AlwaysBreaks(NodeId.Rule("can-checkout")));
-            scope.Graph.Set(NodeId.Rule("can-checkout"), ["customer.a"]);
+            scope.Mutate(builder => builder.Graph.Set(NodeId.Rule("can-checkout"), ["customer.a"]));
             return 0;
         });
 
@@ -236,7 +239,7 @@ public class PropositionSetUpdateTests
         scope.Locked(() =>
         {
             scope.Enrol(new AlwaysBreaks(NodeId.Rule("can-checkout")));
-            scope.Graph.Set(NodeId.Rule("can-checkout"), ["customer.a"]);
+            scope.Mutate(builder => builder.Graph.Set(NodeId.Rule("can-checkout"), ["customer.a"]));
             return 0;
         });
         var inactiveAdult = new Customer(IsActive: false, Age: 30);
@@ -271,7 +274,7 @@ public class PropositionSetUpdateTests
         scope.Locked(() =>
         {
             scope.Enrol(blocker);
-            scope.Graph.Set(NodeId.Rule("blocker"), ["customer.a"]);
+            scope.Mutate(builder => builder.Graph.Set(NodeId.Rule("blocker"), ["customer.a"]));
             return 0;
         });
 
@@ -345,7 +348,7 @@ public class PropositionSetUpdateTests
         scope.Locked(() =>
         {
             scope.Enrol(new AlwaysBreaks(NodeId.Rule("can-checkout")));
-            scope.Graph.Set(NodeId.Rule("can-checkout"), ["customer.is-active"]);
+            scope.Mutate(builder => builder.Graph.Set(NodeId.Rule("can-checkout"), ["customer.is-active"]));
             return 0;
         });
 

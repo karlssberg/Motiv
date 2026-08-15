@@ -235,7 +235,7 @@ public class PropositionSetCreateTests
         scope.Locked(() =>
         {
             scope.Enrol(new AlwaysBreaks(NodeId.Rule("can-checkout")));
-            scope.Graph.Set(NodeId.Rule("can-checkout"), ["customer.is-active"]);
+            scope.Mutate(builder => builder.Graph.Set(NodeId.Rule("can-checkout"), ["customer.is-active"]));
         });
 
         // Act
@@ -258,7 +258,7 @@ public class PropositionSetCreateTests
         scope.Locked(() =>
         {
             scope.Enrol(new AlwaysBreaks(NodeId.Rule("can-checkout")));
-            scope.Graph.Set(NodeId.Rule("can-checkout"), ["customer.is-active"]);
+            scope.Mutate(builder => builder.Graph.Set(NodeId.Rule("can-checkout"), ["customer.is-active"]));
         });
         var active = new Customer(IsActive: true);
 
@@ -378,7 +378,7 @@ public class PropositionSetCreateTests
         // Assert
         set.Find("customer.derived").ShouldBeNull();
         scope.Source.Find("customer.derived").ShouldBeNull();
-        scope.Graph.Referrers("customer.is-active").ShouldBeEmpty();
+        scope.Current.Graph.Referrers("customer.is-active").ShouldBeEmpty();
     }
 
     private sealed record Customer(bool IsActive);

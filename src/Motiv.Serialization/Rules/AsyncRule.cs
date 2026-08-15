@@ -149,8 +149,11 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
     /// <summary>A prepared rebind of this rule, published by swapping its state snapshot.</summary>
     private sealed class RebindCommit(AsyncRule<TModel, TMetadata> rule, State replacement) : IRebindCommit
     {
-        // A rule is not referenceable from a document, so it contributes nothing to the overlay.
-        public SpecRegistryEntry? OverlayEntry => null;
+        // A rule is not referenceable from a document, so it contributes nothing to the world being
+        // built. Its binding is still a field of its own, so the swap below is all there is to do.
+        public void ApplyTo(ScopeGenerationBuilder builder)
+        {
+        }
 
         public void Commit() => Volatile.Write(ref rule._state, replacement);
     }

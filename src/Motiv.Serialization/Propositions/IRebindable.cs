@@ -25,12 +25,18 @@ internal interface IRebindable
 internal interface IRebindCommit
 {
     /// <summary>
-    /// The entry this node contributes to the overlay so later members of the closure resolve it,
-    /// or null for a node that is not itself referenceable (a rule).
+    /// Publishes the prepared binding into the world being built. Must not fail. Replaces the older
+    /// pair of an overlay entry plus a <c>Commit()</c> that mutated live state: a commit now has one
+    /// destination, and it is the world nobody is reading yet.
     /// </summary>
-    SpecRegistryEntry? OverlayEntry { get; }
+    void ApplyTo(ScopeGenerationBuilder builder);
 
-    /// <summary>Publishes the prepared binding. Must not fail.</summary>
+    /// <summary>
+    /// The remainder of the publish that <see cref="ApplyTo"/> cannot yet express, because it lands
+    /// on a field the node still owns rather than in the generation. Called only by
+    /// <see cref="BindingScope.CommitClosure"/> — never during a prepare, which may be discarded.
+    /// Goes away once the authored proposition and the rule slot own that state instead.
+    /// </summary>
     void Commit();
 }
 
@@ -43,7 +49,9 @@ internal sealed class NoRebindCommit : IRebindCommit
 {
     public static NoRebindCommit Instance { get; } = new();
 
-    public SpecRegistryEntry? OverlayEntry => null;
+    public void ApplyTo(ScopeGenerationBuilder builder)
+    {
+    }
 
     public void Commit()
     {

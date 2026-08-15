@@ -544,17 +544,23 @@ public sealed class RuleSet
         var node = NodeId.Rule(rule.Name);
         var references = ReferencesOf(rule.DocumentJson);
 
-        if (references.Count == 0)
+        // One builder, not a graph write and an enrolment that each swap: the edges and the
+        // participant they name have to reach a reader together or not at all.
+        Scope.Mutate(builder =>
         {
-            Scope.Graph.Remove(node);
-            // Defensive rather than load-bearing: a rule is only ever enrolled by the branch below,
-            // which is also what put the graph edges there, so the two always come and go together.
-            Scope.Withdraw(node);
-            return;
-        }
+            if (references.Count == 0)
+            {
+                builder.Graph.Remove(node);
+                // Defensive rather than load-bearing: a rule is only ever enrolled by the branch
+                // below, which is also what put the graph edges there, so the two always come and go
+                // together.
+                builder.Withdraw(node);
+                return;
+            }
 
-        Scope.Graph.Set(node, references);
-        Scope.Enrol(new RuleParticipant(rule, _options));
+            builder.Graph.Set(node, references);
+            builder.Enrol(new RuleParticipant(rule, _options));
+        });
     }
 
     private IReadOnlyList<string> ReferencesOf(string? documentJson)

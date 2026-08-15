@@ -826,8 +826,8 @@ public sealed class ChangeRequestSet
         private static ChangeRequestResult? Validate(
             RuleSet rules, PropositionSet? propositions, ChangeRequest change)
         {
-            var prospective = new PropositionOverlay(rules.Scope.Overlay);
-            var prospectiveSource = new LayeredSpecSource(prospective, rules.Scope.Registry);
+            var prospective = new ScopeGenerationBuilder(rules.Scope.Registry, rules.Scope.Current);
+            var prospectiveSource = prospective.Source;
 
             // Every node this envelope explicitly touches — computed once, up front, from the whole
             // change rather than incrementally: PrepareClosure needs to exclude a phase-C withdrawal
@@ -869,7 +869,7 @@ public sealed class ChangeRequestSet
                 if (prepared.Entry is not { } entry)
                     return Failed(ChangeRequestOutcome.Invalid, proposed.Target, prepared.Errors);
 
-                prospective.Set(entry);
+                prospective.SetOverlayEntry(entry);
 
                 // The document binding on its own says nothing about what already resolves *through*
                 // this name. A cascading publish rebinds the whole dependent closure
@@ -943,11 +943,11 @@ public sealed class ChangeRequestSet
                         return Invalid(proposed.Target,
                             $"'{name}' is still referenced by {string.Join(", ", referrers)}");
 
-                    prospective.Remove(name);
+                    prospective.RemoveOverlayEntry(name);
                 }
                 else
                 {
-                    prospective.Remove(name);
+                    prospective.RemoveOverlayEntry(name);
                     if (rules.Scope.PrepareClosure(name, prospective, [], envelopeNodes) is { Count: > 0 } broken)
                         return BrokenDependents(proposed.Target, broken);
                 }
@@ -993,7 +993,7 @@ public sealed class ChangeRequestSet
         {
             var referrers = new List<string>();
 
-            foreach (var node in rules.Scope.Graph.Referrers(name))
+            foreach (var node in rules.Scope.Current.Graph.Referrers(name))
             {
                 if (!rebound.ContainsKey(node) && !withdrawn.Contains(node))
                     referrers.Add($"{node.KindLabel} '{node.Name}'");
@@ -1194,8 +1194,8 @@ public sealed class ChangeRequestSet
         /// </remarks>
         private static EnvelopePrepare Prepare(RuleSet rules, PropositionSet? propositions, ChangeRequest change)
         {
-            var prospective = new PropositionOverlay(rules.Scope.Overlay);
-            var prospectiveSource = new LayeredSpecSource(prospective, rules.Scope.Registry);
+            var prospective = new ScopeGenerationBuilder(rules.Scope.Registry, rules.Scope.Current);
+            var prospectiveSource = prospective.Source;
 
             // See Validate's own remarks on this — the same complete-up-front set, so a closure walk
             // in any phase excludes every node this envelope also explicitly publishes or withdraws,

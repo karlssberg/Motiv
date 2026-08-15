@@ -48,13 +48,15 @@ internal sealed class BindingScope
     /// </remarks>
     private readonly SemaphoreSlim _outer = new(1, 1);
 
-    private readonly Dictionary<NodeId, IRebindable> _participants = [];
+    private readonly AsyncLocal<ScopeGeneration?> _pinned = new();
+    private ScopeGeneration _current;
+    private long _writes;
 
     public BindingScope(SpecRegistry registry)
     {
         Registry = registry ?? throw new ArgumentNullException(nameof(registry));
-        Overlay = new PropositionOverlay();
-        Source = new LayeredSpecSource(Overlay, registry);
+        _current = new ScopeGenerationBuilder(Registry, ruleCount: 0).Build();
+        Source = new ScopeSource(this);
     }
 
     /// <summary>
@@ -79,28 +81,76 @@ internal sealed class BindingScope
     /// <summary>The immutable compiled catalog.</summary>
     public SpecRegistry Registry { get; }
 
-    /// <summary>Who references whom.</summary>
-    public DependencyGraph Graph { get; } = new();
-
-    /// <summary>The live authored layer.</summary>
-    public PropositionOverlay Overlay { get; }
-
     /// <summary>The live resolution order: authored first, then compiled.</summary>
     public ISpecSource Source { get; }
 
-    /// <summary>Registers a node as rebindable. Replaces any participant already under that id.</summary>
-    public void Enrol(IRebindable participant)
+    /// <summary>The live world. One volatile read; never edited in place.</summary>
+    public ScopeGeneration Current => Volatile.Read(ref _current);
+
+    /// <summary>
+    /// The world this call resolves against: the pinned one when a <c>DecisionSnapshot</c> is
+    /// open on this async flow, otherwise the live one. Every evaluation goes through here, which is
+    /// what makes a pinned decision see one world rather than one world per rule.
+    /// </summary>
+    public ScopeGeneration Active => _pinned.Value ?? Current;
+
+    /// <summary>
+    /// How many times the world has been replaced. A refresh records this before building and refuses
+    /// to swap if it has moved — the world's own compare-and-set, and the reason a slow store need not
+    /// hold the write gate.
+    /// </summary>
+    public long WriteStamp => Volatile.Read(ref _writes);
+
+    /// <summary>
+    /// Builds a successor from the live world and swaps it in as one write. Assumes the inner monitor
+    /// is held.
+    /// </summary>
+    public void Mutate(Action<ScopeGenerationBuilder> mutate)
     {
-        lock (_gate)
-            _participants[participant.Node] = participant;
+        var builder = new ScopeGenerationBuilder(Registry, Current);
+        mutate(builder);
+        Publish(builder.Build());
     }
 
-    /// <summary>Unregisters a node, so it is no longer rebound.</summary>
-    public void Withdraw(NodeId node)
+    /// <summary>
+    /// Swaps in a successor built elsewhere, unless the world moved since
+    /// <paramref name="expectedWriteStamp"/> was taken. Assumes the inner monitor is held.
+    /// </summary>
+    /// <returns>Whether the successor went live.</returns>
+    public bool TrySwap(ScopeGeneration successor, long expectedWriteStamp)
     {
-        lock (_gate)
-            _participants.Remove(node);
+        if (Volatile.Read(ref _writes) != expectedWriteStamp)
+            return false;
+
+        Publish(successor);
+        return true;
     }
+
+    /// <summary>Pins the live world for the current async flow. A nested pin reuses the outer one.</summary>
+    public IDisposable Pin()
+    {
+        if (_pinned.Value is not null)
+            return NestedPin.Instance;
+
+        _pinned.Value = Current;
+        return new OuterPin(this);
+    }
+
+    private void Publish(ScopeGeneration successor)
+    {
+        // The stamp moves first: a reader that sees the new world must never also see a stamp that
+        // would let a stale rebuild overwrite it.
+        Volatile.Write(ref _writes, _writes + 1);
+        Volatile.Write(ref _current, successor);
+    }
+
+    /// <summary>Registers a node as rebindable. Replaces any participant already under that id.</summary>
+    public void Enrol(IRebindable participant) =>
+        Locked(() => Mutate(builder => builder.Enrol(participant)));
+
+    /// <summary>Unregisters a node, so it is no longer rebound.</summary>
+    public void Withdraw(NodeId node) =>
+        Locked(() => Mutate(builder => builder.Withdraw(node)));
 
     /// <summary>Runs an action holding the write lock, so a publish sees a still graph.</summary>
     public T Locked<T>(Func<T> action)
@@ -162,7 +212,7 @@ internal sealed class BindingScope
     /// members resolve the new definitions. Commits nothing.
     /// </summary>
     /// <param name="propositionName">The name whose dependents are being prepared.</param>
-    /// <param name="prospective">The overlay to bind against and fold prepared entries into.</param>
+    /// <param name="prospective">The successor being built: bound against, and folded prepared entries into.</param>
     /// <param name="commits">Filled with every prepared rebind, in the order it should be committed.</param>
     /// <param name="excluding">
     /// Nodes that must not be rebound here even if the live graph names them as a dependent —
@@ -172,9 +222,9 @@ internal sealed class BindingScope
     /// <remarks>
     /// <para>
     /// A node's own prepared change is always authoritative over a rebind found here. This walk
-    /// resolves <paramref name="propositionName"/>'s dependents from <see cref="Graph"/> — the
+    /// resolves <paramref name="propositionName"/>'s dependents from <c>Current.Graph</c> — the
     /// <em>live</em> edges, since nothing commits until the whole envelope's prepare phase has run —
-    /// and rebinds each one from whatever <see cref="_participants"/> currently holds, which is the
+    /// and rebinds each one from whatever <c>Current.Participants</c> currently holds, which is the
     /// pre-envelope definition (<see cref="Enrol"/> is only called by a commit). If a governed
     /// envelope is <em>also</em> explicitly publishing or withdrawing that same node elsewhere, that
     /// explicit edit already has its own prepared, correct result — a rebind built here from the
@@ -197,13 +247,12 @@ internal sealed class BindingScope
     /// discard both rather than act on either.
     /// </returns>
     public IReadOnlyList<BrokenDependent> PrepareClosure(
-        string propositionName, PropositionOverlay prospective, List<IRebindCommit> commits,
+        string propositionName, ScopeGenerationBuilder prospective, List<IRebindCommit> commits,
         HashSet<NodeId> excluding)
     {
-        var prospectiveSource = new LayeredSpecSource(prospective, Registry);
         var broken = new List<BrokenDependent>();
 
-        foreach (var node in Graph.DependentClosure(propositionName))
+        foreach (var node in Current.Graph.DependentClosure(propositionName))
         {
             // This node's own prepared change — elsewhere in the same envelope — is authoritative;
             // a rebind built from its pre-envelope definition would only shadow it. Its own
@@ -213,11 +262,11 @@ internal sealed class BindingScope
                 continue;
 
             // A graph edge can outlive its participant while a node is being torn down.
-            if (!_participants.TryGetValue(node, out var participant))
+            if (!Current.Participants.TryGetValue(node, out var participant))
                 continue;
 
             var errors = new List<RuleError>();
-            var commit = participant.PrepareRebind(prospectiveSource, errors);
+            var commit = participant.PrepareRebind(prospective.Source, errors);
 
             if (commit is null)
             {
@@ -227,9 +276,7 @@ internal sealed class BindingScope
                 continue;
             }
 
-            if (commit.OverlayEntry is { } entry)
-                prospective.Set(entry);
-
+            commit.ApplyTo(prospective);
             commits.Add(commit);
         }
 
@@ -237,21 +284,50 @@ internal sealed class BindingScope
     }
 
     /// <summary>
-    /// Publishes commits prepared earlier by <see cref="PrepareClosure"/>, folding each one's entry
-    /// into the live overlay so the closure resolves to what it was rebound against. Deliberately
-    /// separate from <see cref="PrepareClosure"/> — preparing every member before committing any of
-    /// them is what makes a publish all-or-nothing — and called only once the caller has confirmed
-    /// nothing broke. Commits cannot fail, so this cannot be interrupted part-way.
+    /// Applies commits prepared earlier by <see cref="PrepareClosure"/> into the successor being
+    /// built, so the whole closure goes live in the one swap that publishes it.
     /// </summary>
-    /// <remarks>Runs under the write lock, like every other publish step, via the caller's <see cref="Locked{T}"/>.</remarks>
-    public void CommitClosure(IReadOnlyList<IRebindCommit> commits)
+    /// <remarks>
+    /// <see cref="IRebindCommit.Commit"/> is called here and nowhere else. Until a rebound node's
+    /// state lives wholly in the generation, part of it is still a field the node owns, and that part
+    /// must move only once the caller has confirmed nothing broke — <see cref="PrepareClosure"/>
+    /// applies the same commits into a world that may yet be discarded, so a commit that moved live
+    /// state from <see cref="IRebindCommit.ApplyTo"/> would publish a rejected binding.
+    /// </remarks>
+    public static void CommitClosure(IReadOnlyList<IRebindCommit> commits, ScopeGenerationBuilder builder)
     {
         foreach (var commit in commits)
         {
+            commit.ApplyTo(builder);
             commit.Commit();
-            if (commit.OverlayEntry is { } entry)
-                Overlay.Set(entry);
         }
+    }
+
+    private sealed class OuterPin(BindingScope scope) : IDisposable
+    {
+        public void Dispose() => scope._pinned.Value = null;
+    }
+
+    private sealed class NestedPin : IDisposable
+    {
+        public static NestedPin Instance { get; } = new();
+
+        // The outer pin owns the lifetime; releasing here would end the decision early.
+        public void Dispose()
+        {
+        }
+    }
+
+    /// <summary>
+    /// A stable façade over an unstable world: <see cref="RuleSerializer"/> is built once and must
+    /// keep resolving through whatever generation is current — or pinned — at the moment of the call.
+    /// </summary>
+    private sealed class ScopeSource(BindingScope scope) : ISpecSource
+    {
+        public SpecRegistryEntry? Find(string name) => scope.Active.Source.Find(name);
+
+        public CollectionBinding<TParent>? FindCollection<TParent>(string path) =>
+            scope.Registry.FindCollection<TParent>(path);
     }
 }
 
