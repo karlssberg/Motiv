@@ -147,6 +147,23 @@ public sealed class MotivRulesBuilder
         Services.AddSingleton(new RuleStoreOptions(failFastOnQuarantine));
         return this;
     }
+
+    /// <summary>
+    /// Polls the stores and rebuilds this replica when another one publishes. Opt-in, because a
+    /// single-replica host does not need it.
+    /// </summary>
+    /// <param name="interval">How often to poll, or null for the five-second default.</param>
+    public MotivRulesBuilder AddRefresh(TimeSpan? interval = null)
+    {
+        var options = new MotivRefreshOptions();
+        if (interval is { } value)
+            options.Interval = value;
+
+        Services.AddSingleton(options);
+        Services.AddSingleton<MotivRefreshService>();
+        Services.AddHostedService(provider => provider.GetRequiredService<MotivRefreshService>());
+        return this;
+    }
 }
 
 /// <summary>
