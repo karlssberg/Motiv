@@ -15,19 +15,26 @@ public class RefreshTests
 
     private static RuleChangeProvenance By(string author) => new(author);
 
-    /// <summary>Two independent replicas over one store — the shape a second pod has.</summary>
-    /// <param name="store">The store both replicas share, as two pods share one database.</param>
+    /// <summary>One build's compiled catalog.</summary>
     /// <param name="extraSpecs">
-    /// Names this replica's build knows and another's need not. A replica is a *build* as much as a
-    /// process, and the interesting refresh failures are the ones where the two builds differ.
+    /// Names this build knows and another's need not. A replica is a *build* as much as a process,
+    /// and the interesting refresh failures are the ones where the two builds differ.
     /// </param>
-    private static (RuleSet Rules, NumberRule Rule) Replica(IRuleStore store, params string[] extraSpecs)
+    private static SpecRegistry RegistryWith(params string[] extraSpecs)
     {
         var registry = new SpecRegistry().Register("positive", Positive);
         foreach (var name in extraSpecs)
             registry.Register(name, Positive);
 
-        var rules = new RuleSet(registry, store);
+        return registry;
+    }
+
+    /// <summary>Two independent replicas over one store — the shape a second pod has.</summary>
+    /// <param name="store">The store both replicas share, as two pods share one database.</param>
+    /// <param name="extraSpecs">See <see cref="RegistryWith"/>.</param>
+    private static (RuleSet Rules, NumberRule Rule) Replica(IRuleStore store, params string[] extraSpecs)
+    {
+        var rules = new RuleSet(RegistryWith(extraSpecs), store);
         var rule = new NumberRule();
         rules.Add(rule);
         rules.Load();
@@ -264,8 +271,7 @@ public class RefreshTests
     public async Task Should_keep_a_document_defaults_edges_across_a_rebuild()
     {
         // Arrange — the proposition has to exist before the rule's default can bind against it
-        var registry = new SpecRegistry().Register("positive", Positive);
-        var propositions = new PropositionSet(registry, new InMemoryPropositionStore()).AddModel<int>("number");
+        var propositions = new PropositionSet(RegistryWith(), new InMemoryPropositionStore()).AddModel<int>("number");
         propositions.Load();
         await propositions.CreateAsync("gate", "number", IsPositive, null);
 
@@ -287,11 +293,7 @@ public class RefreshTests
     private static (PropositionSet Propositions, RuleSet Rules, NumberRule Rule) PairedReplica(
         IPropositionStore propositionStore, IRuleStore ruleStore, params string[] extraSpecs)
     {
-        var registry = new SpecRegistry().Register("positive", Positive);
-        foreach (var name in extraSpecs)
-            registry.Register(name, Positive);
-
-        var propositions = new PropositionSet(registry, propositionStore).AddModel<int>("number");
+        var propositions = new PropositionSet(RegistryWith(extraSpecs), propositionStore).AddModel<int>("number");
         propositions.Load();
 
         var rules = new RuleSet(propositions, ruleStore);

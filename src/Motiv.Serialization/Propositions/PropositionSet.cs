@@ -693,9 +693,7 @@ public sealed class PropositionSet
         List<RefreshFailure> regressions, List<RefreshFailure> quarantined)
     {
         var stored = candidate.Stored;
-        var authored = new AuthoredProposition(
-            this, stored.Name, stored.ModelType, stored.DocumentJson, stored.Version, stored.Description,
-            bound: null, quarantine: [], references: candidate.References);
+        var authored = Unbound(candidate);
 
         // Carried forward rather than started fresh, and only attempted when empty — exactly as
         // LoadOne does, and for the same reason: a name failure, a parse failure or a cycle already
@@ -788,6 +786,24 @@ public sealed class PropositionSet
     }
 
     /// <summary>
+    /// The stored row as an authored proposition that has not bound yet — what both
+    /// <see cref="LoadOne"/> and <see cref="RebuildOne"/> start from, and what each either rebinds or
+    /// quarantines.
+    /// </summary>
+    /// <remarks>
+    /// Shared rather than written out twice for the same reason <see cref="CandidatesFrom"/> is: the
+    /// two paths must differ only in what they do with a row that will not bind, and a nine-argument
+    /// constructor copied into both is exactly where that promise would quietly stop holding.
+    /// </remarks>
+    private AuthoredProposition Unbound(LoadCandidate candidate)
+    {
+        var stored = candidate.Stored;
+        return new AuthoredProposition(
+            this, stored.Name, stored.ModelType, stored.DocumentJson, stored.Version, stored.Description,
+            bound: null, quarantine: [], references: candidate.References);
+    }
+
+    /// <summary>
     /// Binds one stored proposition into <paramref name="builder"/>, publishing it or quarantining it.
     /// Writes nothing live: the caller swaps the whole load in as one generation.
     /// </summary>
@@ -807,10 +823,7 @@ public sealed class PropositionSet
     /// </remarks>
     private void LoadOne(LoadCandidate candidate, ScopeGenerationBuilder builder)
     {
-        var stored = candidate.Stored;
-        var authored = new AuthoredProposition(
-            this, stored.Name, stored.ModelType, stored.DocumentJson, stored.Version, stored.Description,
-            bound: null, quarantine: [], references: candidate.References);
+        var authored = Unbound(candidate);
 
         if (candidate.Errors.Count > 0)
         {

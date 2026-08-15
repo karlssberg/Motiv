@@ -302,7 +302,6 @@ public sealed class RuleSet
         // Bind every default first, so a rule with no stored head is complete and a rule with one has
         // something to be applied over. Version 1, as Add binds it; a stored head restores the store's
         // number below.
-        var unbound = new HashSet<int>();
         foreach (var rule in _rules.Values)
         {
             var errors = new List<RuleError>();
@@ -319,7 +318,7 @@ public sealed class RuleSet
             // references was quarantined by this same refresh. The rule would have no binding at all
             // in the new world — nothing to evaluate, and nothing for a quarantine to hang off — and
             // every registered rule is bound in the world being served, so this is always a regression.
-            unbound.Add(rule.Slot);
+            // The empty slot it leaves behind is what the head loop reads to know it happened.
             regressions.Add(new RefreshFailure(rule.Name, NodeId.Rule(rule.Name).KindLabel, errors));
         }
 
@@ -330,10 +329,11 @@ public sealed class RuleSet
             if (head?.Name is null || Find(head.Name) is not { } rule)
                 continue;
 
-            // Its default did not bind, so the slot has no state for a head to be applied over and
-            // the refresh is already aborting. Recording a second failure for it would only obscure
-            // the first.
-            if (unbound.Contains(rule.Slot))
+            // An empty slot means the loop above could not bind this rule's default, so there is no
+            // state for a head to be applied over and the refresh is already aborting. Read off the
+            // builder rather than tracked in a set beside it: the builder is what owns the answer, and
+            // a second copy of it could only ever disagree.
+            if (builder.FindRuleState(rule.Slot) is null)
                 continue;
 
             var errors = new List<RuleError>();
@@ -357,12 +357,8 @@ public sealed class RuleSet
                 continue;
             }
 
-            // Carried. The store's version is authoritative even when its document is not — a repair
-            // must be addressed against the version the store holds. Written *before* the quarantine,
-            // because SetRuleState clears quarantine — see RuleSlot.WithState.
-            if (builder.FindRuleState(rule.Slot) is { } fallback)
-                builder.SetRuleState(rule.Slot, rule.WithVersion(fallback, head.Version));
-
+            // Carried, on whatever the default pass left in the slot, at the store's number.
+            RestoreStoredVersion(rule, head.Version, builder);
             builder.SetRuleQuarantine(rule.Slot, errors);
             quarantined.Add(failure);
         }
@@ -392,13 +388,9 @@ public sealed class RuleSet
             CommitCore(head.Name, publication, builder);
         }
 
-        // Either way the store's version is authoritative: a restart must not renumber history, and a
-        // repair must be addressed against the version the store actually holds, not the one this
-        // publish just minted or the one Add bound, or the very first repair attempt would conflict.
-        // Written *before* the quarantine below, because SetRuleState clears quarantine — see
-        // RuleSlot.WithState — and this is a state write.
-        if (builder.FindRuleState(rule.Slot) is { } state)
-            builder.SetRuleState(rule.Slot, rule.WithVersion(state, head.Version));
+        // Either way the store's number is what the slot must report — the publish above minted one of
+        // its own, and Add bound version 1 before that.
+        RestoreStoredVersion(rule, head.Version, builder);
 
         if (prepared.Publication is null)
         {
@@ -409,6 +401,32 @@ public sealed class RuleSet
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Renumbers whatever binding <paramref name="builder"/> holds for <paramref name="rule"/> to the
+    /// version the store holds, leaving the binding itself alone. Does nothing when the slot is empty.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The store's version is authoritative even when its document is not. A restart must not renumber
+    /// history, and a repair must be addressed against the version the store actually holds — not the
+    /// one a <see cref="Load"/> publish just minted, and not the version 1 <see cref="Add"/> bound —
+    /// or the very first repair attempt would conflict. This is why both the startup path
+    /// (<see cref="Apply"/>) and the refresh path (<see cref="RebuildIntoAsync"/>) end a row the same
+    /// way, whether its document bound or not.
+    /// </para>
+    /// <para>
+    /// <strong>Call this before <see cref="ScopeGenerationBuilder.SetRuleQuarantine"/>, never after.</strong>
+    /// It is a state write, and a state write clears the slot's quarantine — see
+    /// <see cref="RuleSlot.WithState"/>. Reversing the two would renumber the rule and silently drop
+    /// the reasons it was quarantined for.
+    /// </para>
+    /// </remarks>
+    private static void RestoreStoredVersion(RuleBase rule, int version, ScopeGenerationBuilder builder)
+    {
+        if (builder.FindRuleState(rule.Slot) is { } state)
+            builder.SetRuleState(rule.Slot, rule.WithVersion(state, version));
     }
 
     /// <summary>
