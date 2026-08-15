@@ -30,14 +30,13 @@ public sealed record PropositionBatch(
 /// A store is a dumb sink — it validates nothing and enforces no invariant. Legality is decided by
 /// <see cref="PropositionSet"/> before anything reaches here.
 /// <para>
-/// <strong><see cref="LoadAsync"/> and <see cref="GetGenerationAsync"/> are forward surface,</strong>
-/// the proposition-side twin of the pair <see cref="IRuleStore"/> already carries for the same reason.
-/// Today only <see cref="Load"/> and <see cref="WriteAsync"/> have a production caller — a replica
-/// reads the store once, at its own startup, and every write goes through <see cref="WriteAsync"/>.
-/// These two exist for the background poller this plan's later tasks wire up (refreshing one replica
-/// from another's write, on the generation this pair was built to support); an implementation still
-/// has to honour their contracts, but for now they are contract-only — nothing in this codebase calls
-/// them yet.
+/// <see cref="LoadAsync"/> and <see cref="GetGenerationAsync"/> — the proposition-side twin of the
+/// pair <see cref="IRuleStore"/> carries, for the same reason — back
+/// <see cref="PropositionSet.RefreshAsync"/>: a replica polls <see cref="GetGenerationAsync"/> on a
+/// timer (see <c>Motiv.Serialization.AspNetCore.MotivRefreshService</c>, an opt-in background poller)
+/// and only calls <see cref="LoadAsync"/> — the expensive rebuild path — once that scalar has actually
+/// moved. <see cref="GetGenerationAsync"/> is also read straight after every write, so the successor
+/// generation records where the store stood in the same swap that publishes what it stands on.
 /// </para>
 /// </remarks>
 public interface IPropositionStore
@@ -48,8 +47,8 @@ public interface IPropositionStore
     /// <summary>
     /// Every persisted proposition, read on a refresh. Separate from <see cref="Load"/> rather than
     /// replacing it because the two run at different times under different constraints: startup
-    /// cannot await, a refresh can. No production caller yet — see the interface remarks on forward
-    /// surface; it exists for the background poller this plan's later tasks wire up.
+    /// cannot await, a refresh can. Called by <see cref="PropositionSet.RefreshAsync"/>, and only once
+    /// <see cref="GetGenerationAsync"/> has shown the store moved — see the interface remarks.
     /// </summary>
     Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken cancellationToken);
 
@@ -59,10 +58,10 @@ public interface IPropositionStore
     /// </summary>
     /// <remarks>
     /// <strong>Must be a scalar read.</strong> An implementation that answers this by loading the
-    /// store defeats the point — every replica polls it on a timer. It must never move backwards
-    /// while replicas are live: it is half of the fencing token behind monotonic-read consistency.
-    /// No production caller yet — see the interface remarks on forward surface; it exists for the
-    /// background poller this plan's later tasks wire up.
+    /// store defeats the point — every replica polls it on a timer, via
+    /// <see cref="PropositionSet.RefreshAsync"/> and, opt-in,
+    /// <c>Motiv.Serialization.AspNetCore.MotivRefreshService</c>. It must never move backwards while
+    /// replicas are live: it is half of the fencing token behind monotonic-read consistency.
     /// </remarks>
     Task<long> GetGenerationAsync(CancellationToken cancellationToken);
 

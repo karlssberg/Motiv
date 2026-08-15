@@ -117,9 +117,6 @@ internal sealed class ScopeGenerationBuilder
         _authored.Remove(name);
     }
 
-    public AuthoredProposition? FindAuthored(string name) =>
-        _authored.TryGetValue(name, out var authored) ? authored : null;
-
     public void Enrol(IRebindable participant)
     {
         ThrowIfBuilt();
@@ -150,8 +147,12 @@ internal sealed class ScopeGenerationBuilder
             commit.ApplyTo(this);
     }
 
-    /// <summary>Grows the slot array so <paramref name="count"/> rules fit. Never shrinks: slots are permanent.</summary>
-    public void EnsureRuleSlots(int count)
+    /// <summary>
+    /// Grows the slot array so <paramref name="count"/> rules fit, and guards the builder against
+    /// being written to after <see cref="Build"/> — which is why the three slot writers below need no
+    /// <see cref="ThrowIfBuilt"/> of their own. Never shrinks: slots are permanent.
+    /// </summary>
+    private void EnsureRuleSlots(int count)
     {
         ThrowIfBuilt();
 

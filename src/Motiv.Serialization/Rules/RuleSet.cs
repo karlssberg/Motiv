@@ -294,7 +294,7 @@ public sealed class RuleSet
     /// <strong>The default pass is not an optimisation, it is the whole reason this compiles into a
     /// world that can evaluate.</strong> A refresh forks nothing: its builder is the
     /// <c>(registry, ruleCount)</c> one, whose slots all start null, and a rule on a compiled default
-    /// is withdrawn from the participant table and has no graph edges, so nothing else in this method
+    /// is withdrawn from the participant table and has no graph edges, so nothing else in a refresh
     /// would ever refill it. Bind the heads alone and every rule without a stored row — which at
     /// startup is every rule there is — would swap in unbound, and the next evaluation would throw
     /// "has not been bound; add it to a RuleSet". The pass also gives a rule that <em>does</em> have a
@@ -323,9 +323,21 @@ public sealed class RuleSet
         // and the builder already holds the authored layer this refresh is rebuilding.
         var serializer = new RuleSerializer(builder.Source, _options);
 
-        // Bind every default first, so a rule with no stored head is complete and a rule with one has
-        // something to be applied over. Version 1, as Add binds it; a stored head restores the store's
-        // number below.
+        RebuildDefaultsInto(builder, serializer, regressions);
+        RebuildHeadsInto(heads, builder, serializer, current, regressions, quarantined);
+    }
+
+    /// <summary>
+    /// Binds every registered rule's compiled default into <paramref name="builder"/>, at version 1
+    /// exactly as <see cref="Add"/> does — so a rule with no stored head is complete, and a rule with
+    /// one has something for <see cref="RebuildHeadsInto"/> to apply over. Version 1 is not the last
+    /// word for a rule that has a head: <see cref="RebuildHeadsInto"/> restores the store's number
+    /// over it. See <see cref="RebuildIntoAsync"/>'s remarks for why this pass is load-bearing rather
+    /// than an optimisation.
+    /// </summary>
+    private void RebuildDefaultsInto(
+        ScopeGenerationBuilder builder, RuleSerializer serializer, List<RefreshFailure> regressions)
+    {
         foreach (var rule in _rules.Values)
         {
             var errors = new List<RuleError>();
@@ -342,10 +354,21 @@ public sealed class RuleSet
             // references was quarantined by this same refresh. The rule would have no binding at all
             // in the new world — nothing to evaluate, and nothing for a quarantine to hang off — and
             // every registered rule is bound in the world being served, so this is always a regression.
-            // The empty slot it leaves behind is what the head loop reads to know it happened.
+            // The empty slot it leaves behind is what RebuildHeadsInto reads to know it happened.
             regressions.Add(new RefreshFailure(rule.Name, NodeId.Rule(rule.Name).KindLabel, errors));
         }
+    }
 
+    /// <summary>
+    /// Applies each stored head over the default <see cref="RebuildDefaultsInto"/> left in its slot,
+    /// sorting a head that will not bind into <paramref name="regressions"/> or
+    /// <paramref name="quarantined"/> by whether <paramref name="current"/> has that rule bound and
+    /// healthy. See <see cref="RebuildIntoAsync"/>'s remarks.
+    /// </summary>
+    private void RebuildHeadsInto(
+        IReadOnlyList<StoredRule>? heads, ScopeGenerationBuilder builder, RuleSerializer serializer,
+        ScopeGeneration current, List<RefreshFailure> regressions, List<RefreshFailure> quarantined)
+    {
         foreach (var head in heads ?? [])
         {
             // A row with no usable name has nowhere to be recorded, and history outlives the code
@@ -353,8 +376,8 @@ public sealed class RuleSet
             if (head?.Name is null || Find(head.Name) is not { } rule)
                 continue;
 
-            // An empty slot means the loop above could not bind this rule's default, so there is no
-            // state for a head to be applied over and the refresh is already aborting. Read off the
+            // An empty slot means the defaults pass could not bind this rule's default, so there is
+            // no state for a head to be applied over and the refresh is already aborting. Read off the
             // builder rather than tracked in a set beside it: the builder is what owns the answer, and
             // a second copy of it could only ever disagree.
             if (builder.FindRuleState(rule.Slot) is null)

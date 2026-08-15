@@ -110,10 +110,11 @@ public static class MotivRulesEndpoints
 
         // Either set pins the same scope when they share one; a registry-only mount has no scope to
         // pin and no generation to report, so it is left alone.
-        Func<DecisionSnapshot>? pin =
-            rules is not null ? rules.PinSnapshot
-            : propositions is not null ? propositions.PinSnapshot
-            : null;
+        Func<DecisionSnapshot>? pin = null;
+        if (rules is not null)
+            pin = rules.PinSnapshot;
+        else if (propositions is not null)
+            pin = propositions.PinSnapshot;
 
         if (pin is not null)
             group.AddEndpointFilter(new MotivGenerationFilter(pin));
