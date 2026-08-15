@@ -19,6 +19,16 @@ using Motiv.Serialization;
 /// retains a bad *file*. So the read failure is reported on <see cref="Console.Error"/> the moment it
 /// happens: a real store would log it, refuse to write over an unread file, or both.
 /// </para>
+/// <para>
+/// The generation mirrors <c>JsonFileRuleStore</c>'s: the file's own row count, read fresh rather
+/// than cached, so it survives a restart and moves for every process the way the rule store's does.
+/// It is a coarser signal here than on the rule log, though — that log is append-only, so its count
+/// grows on every accepted write; this store overwrites a row of the same name in place, so a batch
+/// that only replaces existing rows leaves the count, and therefore the generation, unchanged. A
+/// poller would then not know a replace happened until some other write also changed the row count.
+/// Acceptable for a sample twin of the rule store; a production store would derive this from
+/// something that moves on every write, such as a row version or the file's last-write time.
+/// </para>
 /// </remarks>
 public sealed class JsonFilePropositionStore(string path) : IPropositionStore
 {
@@ -31,6 +41,17 @@ public sealed class JsonFilePropositionStore(string path) : IPropositionStore
     {
         lock (_gate)
             return ReadAll();
+    }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken cancellationToken) =>
+        Task.FromResult(Load());
+
+    /// <inheritdoc />
+    public Task<long> GetGenerationAsync(CancellationToken cancellationToken)
+    {
+        lock (_gate)
+            return Task.FromResult((long)ReadAll().Count);
     }
 
     /// <inheritdoc />

@@ -36,6 +36,24 @@ public interface IPropositionStore
     IReadOnlyList<StoredProposition> Load();
 
     /// <summary>
+    /// Every persisted proposition, read on a refresh. Separate from <see cref="Load"/> rather than
+    /// replacing it because the two run at different times under different constraints: startup
+    /// cannot await, a refresh can.
+    /// </summary>
+    Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// A monotonically increasing number that moves whenever a write lands, so a replica can tell
+    /// whether it is behind without re-reading anything.
+    /// </summary>
+    /// <remarks>
+    /// <strong>Must be a scalar read.</strong> An implementation that answers this by loading the
+    /// store defeats the point — every replica polls it on a timer. It must never move backwards
+    /// while replicas are live: it is half of the fencing token behind monotonic-read consistency.
+    /// </remarks>
+    Task<long> GetGenerationAsync(CancellationToken cancellationToken);
+
+    /// <summary>
     /// Applies a batch — all of it, or none. Called under the publish gate with a cancellation token,
     /// so a store that stops responding can be escaped rather than waited on forever.
     /// </summary>
@@ -47,12 +65,24 @@ public sealed class InMemoryPropositionStore : IPropositionStore
 {
     private readonly object _gate = new();
     private readonly Dictionary<string, StoredProposition> _propositions = new(StringComparer.Ordinal);
+    private long _generation;
 
     /// <inheritdoc />
     public IReadOnlyList<StoredProposition> Load()
     {
         lock (_gate)
             return [.. _propositions.Values];
+    }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken cancellationToken) =>
+        Task.FromResult(Load());
+
+    /// <inheritdoc />
+    public Task<long> GetGenerationAsync(CancellationToken cancellationToken)
+    {
+        lock (_gate)
+            return Task.FromResult(_generation);
     }
 
     /// <inheritdoc />
@@ -65,6 +95,11 @@ public sealed class InMemoryPropositionStore : IPropositionStore
 
             foreach (var name in batch.Deletes)
                 _propositions.Remove(name);
+
+            // An empty batch is not a write. A generation that moved anyway would make every
+            // replica rebuild its whole world for nothing, on a timer.
+            if (batch.Saves.Count > 0 || batch.Deletes.Count > 0)
+                _generation++;
         }
 
         return Task.CompletedTask;

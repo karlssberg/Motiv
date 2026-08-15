@@ -62,6 +62,8 @@ public class GovernedPublishOrderingTests
         public int Writes { get; private set; }
 
         public IReadOnlyList<StoredProposition> Load() => _inner.Load();
+        public Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken ct) => _inner.LoadAsync(ct);
+        public Task<long> GetGenerationAsync(CancellationToken ct) => _inner.GetGenerationAsync(ct);
 
         public Task WriteAsync(PropositionBatch batch, CancellationToken cancellationToken)
         {
@@ -78,6 +80,9 @@ public class GovernedPublishOrderingTests
     private sealed class ThrowingPropositionStore : IPropositionStore
     {
         public IReadOnlyList<StoredProposition> Load() => [];
+        public Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<StoredProposition>>([]);
+        public Task<long> GetGenerationAsync(CancellationToken ct) => Task.FromResult(0L);
 
         public Task WriteAsync(PropositionBatch batch, CancellationToken cancellationToken) =>
             throw new InvalidOperationException("simulated proposition store outage");

@@ -253,6 +253,8 @@ public class PropositionSetLoadTests
     private sealed class RawStore(IReadOnlyList<StoredProposition>? rows) : IPropositionStore
     {
         public IReadOnlyList<StoredProposition> Load() => rows!;
+        public Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken ct) => Task.FromResult(Load());
+        public Task<long> GetGenerationAsync(CancellationToken ct) => Task.FromResult(0L);
 
         public Task WriteAsync(PropositionBatch batch, CancellationToken cancellationToken) => Task.CompletedTask;
     }

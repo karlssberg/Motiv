@@ -15,6 +15,9 @@ public class PropositionSetAsyncWriteTests
     private sealed class FailingPropositionStore : IPropositionStore
     {
         public IReadOnlyList<StoredProposition> Load() => [];
+        public Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<StoredProposition>>([]);
+        public Task<long> GetGenerationAsync(CancellationToken ct) => Task.FromResult(0L);
 
         public Task WriteAsync(PropositionBatch batch, CancellationToken cancellationToken) =>
             throw new IOException("disk full");
@@ -26,6 +29,8 @@ public class PropositionSetAsyncWriteTests
         private readonly InMemoryPropositionStore _inner = new();
 
         public IReadOnlyList<StoredProposition> Load() => _inner.Load();
+        public Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken ct) => _inner.LoadAsync(ct);
+        public Task<long> GetGenerationAsync(CancellationToken ct) => _inner.GetGenerationAsync(ct);
 
         public async Task WriteAsync(PropositionBatch batch, CancellationToken cancellationToken)
         {

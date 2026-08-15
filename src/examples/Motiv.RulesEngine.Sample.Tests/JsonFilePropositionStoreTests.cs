@@ -99,6 +99,37 @@ public class JsonFilePropositionStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task Should_move_the_generation_forward_after_a_write()
+    {
+        // Arrange
+        var store = new JsonFilePropositionStore(_path);
+        await store.WriteAsync(PropositionBatch.Save(Stored("customer.a")), default);
+        var generation = await store.GetGenerationAsync(default);
+
+        // Act
+        await store.WriteAsync(PropositionBatch.Save(Stored("customer.b")), default);
+
+        // Assert
+        (await store.GetGenerationAsync(default)).ShouldBeGreaterThan(generation);
+    }
+
+    [Fact]
+    public async Task Should_move_the_generation_forward_across_instances()
+    {
+        // Arrange
+        var store = new JsonFilePropositionStore(_path);
+        await store.WriteAsync(PropositionBatch.Save(Stored("customer.a")), default);
+        var generation = await store.GetGenerationAsync(default);
+
+        // Act
+        await new JsonFilePropositionStore(_path).WriteAsync(PropositionBatch.Save(Stored("customer.b")), default);
+
+        // Assert — the fencing token must be derived from the file, not from instance state
+        (await new JsonFilePropositionStore(_path).GetGenerationAsync(default))
+            .ShouldBeGreaterThan(generation);
+    }
+
+    [Fact]
     public void Should_treat_a_file_it_cannot_read_as_empty_rather_than_throwing()
     {
         // Arrange — a permission-denied state file must not stop the host booting. Unix-only:
