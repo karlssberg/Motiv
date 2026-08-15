@@ -95,6 +95,31 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
     internal sealed override string? DocumentJsonIn(ScopeGenerationBuilder builder) =>
         builder.FindRuleState(Slot) is State state ? state.DocumentJson : null;
 
+    /// <inheritdoc />
+    internal sealed override object? BindStoredState(
+        RuleSerializer serializer, string? documentJson, int version, List<RuleError> errors)
+    {
+        if (documentJson is not null)
+        {
+            return TryBind(serializer, documentJson, errors) is { } spec
+                ? new State(documentJson, version, spec)
+                : null;
+        }
+
+        // A recorded revert: the rule is on its default at the store's version. See the synchronous
+        // twin in Rule<TModel, TMetadata> for why the throw is caught rather than allowed to escape.
+        try
+        {
+            var @default = BindDefault(serializer);
+            return new State(@default.DocumentJson, version, @default.Spec);
+        }
+        catch (RuleSerializationException exception)
+        {
+            errors.AddRange(exception.Errors);
+            return null;
+        }
+    }
+
     internal sealed override RulePrepareResult PrepareUpdate(
         RuleSerializer serializer, string documentJson, int expectedVersion)
     {

@@ -51,6 +51,8 @@ internal sealed class BindingScope
     private readonly AsyncLocal<ScopeGeneration?> _pinned = new();
     private ScopeGeneration _current;
     private long _writes;
+    private PropositionSet? _propositions;
+    private RuleSet? _rules;
 
     public BindingScope(SpecRegistry registry)
     {
@@ -170,6 +172,81 @@ internal sealed class BindingScope
     {
         var stamp = WriteStamp;
         return (stamp, Current);
+    }
+
+    /// <summary>Records the proposition set that rebuilds this scope's authored half on a refresh.</summary>
+    /// <remarks>
+    /// A scope is the unit a refresh rebuilds, not a set: an authored proposition and a rule that
+    /// references it must reach a reader in the same swap, so whichever set a caller happens to hold
+    /// has to be able to rebuild both halves. Recording the sets here is how the scope finds the other
+    /// half. Called by the set's own constructor, so a scope is never half-joined once construction
+    /// returns.
+    /// </remarks>
+    public void Join(PropositionSet propositions) => _propositions = propositions;
+
+    /// <summary>Records the rule set that rebuilds this scope's rule half on a refresh.</summary>
+    /// <remarks>See <see cref="Join(PropositionSet)"/>.</remarks>
+    public void Join(RuleSet rules) => _rules = rules;
+
+    /// <summary>
+    /// Rebuilds the whole world from both stores and swaps it in, if either store has moved.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Deliberately does <em>not</em> take the outer gate. Holding it across the store read would let
+    /// a slow store block every publish, which is the hazard the async write contract exists to avoid.
+    /// Instead the rebuild runs unlocked against a builder nobody else can see, and the swap validates
+    /// under the monitor that <see cref="WriteStamp"/> has not moved — a compare-and-set on the world,
+    /// mirroring how the store's <c>(Name, Version)</c> primary key guards a row.
+    /// </para>
+    /// <para>
+    /// Two concurrent refreshes are safe and uninteresting: both build, one swaps, the other is told
+    /// it was contended and retries.
+    /// </para>
+    /// </remarks>
+    /// <param name="cancellationToken">Cancels the store reads.</param>
+    /// <returns>What the refresh did, and anything that would not bind.</returns>
+    public async Task<RefreshReport> RefreshAsync(CancellationToken cancellationToken)
+    {
+        // Three attempts, then leave it to the next tick. A refresh that loses the swap has been
+        // overtaken by a publish, which is a world at least as new as the one it was building.
+        for (var attempt = 0; attempt < 3; attempt++)
+        {
+            var sequence = new StoreGeneration(
+                _rules is null ? 0 : await _rules.StoreGenerationAsync(cancellationToken).ConfigureAwait(false),
+                _propositions is null ? 0 : await _propositions.StoreGenerationAsync(cancellationToken).ConfigureAwait(false));
+
+            // Snapshot() reads the stamp and the world in the only safe order — see its own doc.
+            // Reading them separately here, in the wrong order, would hand this rebuild a stale
+            // world with a fresh stamp, so its swap would succeed and silently overwrite a publish.
+            var (stamp, current) = Snapshot();
+            if (!sequence.MovedFrom(current.Sequence))
+                return RefreshReport.Unchanged(current.Sequence);
+
+            var builder = new ScopeGenerationBuilder(Registry, current.RuleSlots.Length);
+            var regressions = new List<RefreshFailure>();
+            var quarantined = new List<RefreshFailure>();
+
+            // Propositions first: a rule document may reference an authored proposition, so the
+            // authored layer has to be in the builder before any rule binds against it.
+            if (_propositions is not null)
+                await _propositions.RebuildIntoAsync(builder, current, regressions, quarantined, cancellationToken)
+                    .ConfigureAwait(false);
+
+            if (_rules is not null)
+                await _rules.RebuildIntoAsync(builder, current, regressions, quarantined, cancellationToken)
+                    .ConfigureAwait(false);
+
+            if (regressions.Count > 0)
+                return RefreshReport.Aborted(current.Sequence, regressions);
+
+            builder.SetSequence(sequence);
+
+            if (Locked(() => TrySwap(builder.Build(), stamp)))
+                return RefreshReport.Applied(sequence, quarantined);
+        }
+
+        return RefreshReport.Contended(Current.Sequence);
     }
 
     /// <summary>

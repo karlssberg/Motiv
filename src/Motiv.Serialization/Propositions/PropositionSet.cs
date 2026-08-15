@@ -63,6 +63,10 @@ public sealed class PropositionSet
         Scope = scope ?? throw new ArgumentNullException(nameof(scope));
         _store = store ?? throw new ArgumentNullException(nameof(store));
         _options = options ?? new RuleSerializerOptions();
+
+        // Last, and only once everything a rebuild reads is assigned: Join publishes this set to the
+        // scope, and a refresh arriving immediately afterwards would call straight into it.
+        Scope.Join(this);
     }
 
     /// <summary>The coordinator this set publishes under, and what a paired <see cref="RuleSet"/> joins.</summary>
@@ -614,21 +618,10 @@ public sealed class PropositionSet
             // Set only once the store has actually been read. Reading is the one step here that can
             // throw rather than quarantine, and it mutates nothing — so a store that was briefly
             // unreachable leaves the set in its pre-load state and genuinely may be loaded again.
-            var candidates = ReadCandidates();
+            var candidates = CandidatesFrom(_store.Load());
             _loaded = true;
 
-            // A hand-edited store can contain a reference cycle that Create/Update would have
-            // rejected outright — nothing here goes through DependencyGraph.FindCycle. Every member
-            // of a detected cycle is quarantined with the real reason instead of being bound.
-            var cycles = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
-            var ordered = OrderByDependency(candidates, cycles);
-
-            foreach (var (name, cycle) in cycles)
-            {
-                candidates[name].Errors.Add(new RuleError("$", RuleErrorCode.CycleDetected,
-                    $"the stored proposition '{name}' cannot be bound: {string.Join(" → ", cycle)} " +
-                    "forms a reference cycle"));
-            }
+            var ordered = OrderAndRecordCycles(candidates);
 
             // An empty store publishes nothing at all. A successor identical to its predecessor would
             // still move the write stamp, and that stamp is a refresh's compare-and-set signal — see
@@ -648,18 +641,133 @@ public sealed class PropositionSet
         });
 
     /// <summary>
-    /// Reads every stored row into a candidate keyed by name, parsing each document up front purely
-    /// to order the binding. Name and parse failures are carried forward on the candidate rather
-    /// than thrown, so the document is still listed, quarantined, rather than silently dropped.
+    /// Rebuilds this replica's world from the stores, if either has moved since it was last built.
     /// </summary>
-    private Dictionary<string, LoadCandidate> ReadCandidates()
+    /// <remarks>
+    /// The whole world is rebuilt, not a part of it: a row that binds on one pass and quarantines on
+    /// the next has already written its overlay entry and graph edges, and the quarantine path clears
+    /// neither — which is why <see cref="Load"/> refuses to run twice and this exists instead. A scope
+    /// shared with a <see cref="RuleSet"/> rebuilds both halves whichever set you call.
+    /// </remarks>
+    /// <param name="cancellationToken">Cancels the store reads.</param>
+    /// <returns>What the refresh did, and anything that would not bind.</returns>
+    public Task<RefreshReport> RefreshAsync(CancellationToken cancellationToken = default) =>
+        Scope.RefreshAsync(cancellationToken);
+
+    /// <summary>Where the proposition store stands. One scalar; polled on a timer.</summary>
+    internal Task<long> StoreGenerationAsync(CancellationToken cancellationToken) =>
+        _store.GetGenerationAsync(cancellationToken);
+
+    /// <summary>
+    /// Rebuilds the authored layer into <paramref name="builder"/> from the store. Mirrors
+    /// <see cref="Load"/> step for step — read rows, order by dependency, quarantine cycles, bind —
+    /// with one difference: a row that will not bind is a <em>regression</em> when the world being
+    /// served has it bound, and merely carried when it does not.
+    /// </summary>
+    /// <param name="builder">The successor being built. Nobody else can see it, so nothing is locked.</param>
+    /// <param name="current">The world being served, which decides which failures are regressions.</param>
+    /// <param name="regressions">Filled with every failure that must abort the refresh.</param>
+    /// <param name="quarantined">Filled with every failure carried forward instead.</param>
+    /// <param name="cancellationToken">Cancels the store read.</param>
+    internal async Task RebuildIntoAsync(
+        ScopeGenerationBuilder builder, ScopeGeneration current,
+        List<RefreshFailure> regressions, List<RefreshFailure> quarantined,
+        CancellationToken cancellationToken)
+    {
+        var rows = await _store.LoadAsync(cancellationToken).ConfigureAwait(false);
+
+        // Everything below is CPU over a builder nobody else can see, so no lock is held or needed.
+        var candidates = CandidatesFrom(rows);
+
+        foreach (var name in OrderAndRecordCycles(candidates))
+            RebuildOne(candidates[name], builder, current, regressions, quarantined);
+    }
+
+    /// <summary>
+    /// <see cref="LoadOne"/> for a refresh: binds one stored proposition into <paramref name="builder"/>,
+    /// and where <see cref="LoadOne"/> would simply quarantine a row that will not bind, decides first
+    /// whether losing it would take a live binding away.
+    /// </summary>
+    private void RebuildOne(
+        LoadCandidate candidate, ScopeGenerationBuilder builder, ScopeGeneration current,
+        List<RefreshFailure> regressions, List<RefreshFailure> quarantined)
+    {
+        var stored = candidate.Stored;
+        var authored = new AuthoredProposition(
+            this, stored.Name, stored.ModelType, stored.DocumentJson, stored.Version, stored.Description,
+            bound: null, quarantine: [], references: candidate.References);
+
+        // Carried forward rather than started fresh, and only attempted when empty — exactly as
+        // LoadOne does, and for the same reason: a name failure, a parse failure or a cycle already
+        // rules out binding, and an attempt on top of one could only succeed by resolving through a
+        // name that is itself unresolvable.
+        var errors = new List<RuleError>(candidate.Errors);
+
+        if (errors.Count == 0 && authored.Rebind(builder.Source, errors) is { } rebound)
+        {
+            CommitPublish(rebound, builder);
+            return;
+        }
+
+        var failure = new RefreshFailure(stored.Name, authored.Node.KindLabel, errors);
+
+        // Bound in the world being served? Then applying the rebuild would take a working, approved
+        // proposition away, and every dependent that resolves through it with it. Refuse.
+        if (current.Authored.TryGetValue(stored.Name, out var live) && live.Bound is not null)
+        {
+            regressions.Add(failure);
+            return;
+        }
+
+        // Carried, with the same SetAuthored both of LoadOne's quarantine arms make — see there for
+        // why a world that cannot resolve a proposition must still list it.
+        builder.SetAuthored(authored.WithQuarantine(errors));
+        quarantined.Add(failure);
+    }
+
+    /// <summary>
+    /// Orders candidates so each follows what it references, and records a cycle on every member of
+    /// one. A hand-edited store can contain a reference cycle that Create/Update would have rejected
+    /// outright — nothing on this path goes through <see cref="DependencyGraph.FindCycle"/> — so every
+    /// member is quarantined with the real reason instead of being bound.
+    /// </summary>
+    private static IReadOnlyList<string> OrderAndRecordCycles(Dictionary<string, LoadCandidate> candidates)
+    {
+        var cycles = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+        var ordered = OrderByDependency(candidates, cycles);
+
+        foreach (var pair in cycles)
+        {
+            candidates[pair.Key].Errors.Add(new RuleError("$", RuleErrorCode.CycleDetected,
+                $"the stored proposition '{pair.Key}' cannot be bound: {string.Join(" → ", pair.Value)} " +
+                "forms a reference cycle"));
+        }
+
+        return ordered;
+    }
+
+    /// <summary>
+    /// Turns stored rows into candidates keyed by name, parsing each document up front purely to
+    /// order the binding. Name and parse failures are carried forward on the candidate rather than
+    /// thrown, so the document is still listed, quarantined, rather than silently dropped.
+    /// </summary>
+    /// <remarks>
+    /// Takes the rows rather than reading them, so <see cref="Load"/> (synchronous, at startup) and
+    /// <see cref="RebuildIntoAsync"/> (asynchronous, on a refresh) share this one copy. The two differ
+    /// only in how they got the rows and in what they do with a row that will not bind; everything
+    /// between those two ends must not be able to drift.
+    /// </remarks>
+    /// <param name="rows">
+    /// The store's rows. Nullable throughout — a store is a dumb sink, so a hand-edited or
+    /// null-serialized one can hand back a null list as readily as a null row;
+    /// <c>Deserialize&lt;List&lt;StoredProposition&gt;&gt;("[null]")</c> yields exactly that. Neither
+    /// may be fatal: quarantine exists so a bad row costs its own row.
+    /// </param>
+    private Dictionary<string, LoadCandidate> CandidatesFrom(IReadOnlyList<StoredProposition>? rows)
     {
         var candidates = new Dictionary<string, LoadCandidate>(StringComparer.Ordinal);
 
-        // A store is a dumb sink, so a hand-edited or null-serialized one can hand back a null list
-        // as readily as a null row — `Deserialize<List<StoredProposition>>("[null]")` yields exactly
-        // that. Neither may be fatal: quarantine exists so a bad row costs its own row.
-        foreach (var proposition in _store.Load() ?? [])
+        foreach (var proposition in rows ?? [])
         {
             // A quarantine entry is keyed by name, so a row with no usable name has nowhere to be
             // recorded and skipping it is the only non-fatal option. Every other malformed shape

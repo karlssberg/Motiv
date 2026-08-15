@@ -134,6 +134,39 @@ public abstract class RuleBase
     internal abstract object WithVersion(object state, int version);
 
     /// <summary>
+    /// Binds <paramref name="documentJson"/> — or the compiled default, when it is null — as this
+    /// rule's state at <paramref name="version"/>. What <see cref="RuleSet.RefreshAsync"/> rebuilds a
+    /// slot with.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <strong>Deliberately not <see cref="PrepareUpdate"/>.</strong> That is a <em>publish</em>: it
+    /// checks a caller's expected version against the live world, mints the next version, and hands
+    /// back a publication to commit once the store has accepted it. A refresh does none of those
+    /// things. The store's version is already authoritative — a rebuild that renumbered would rewrite
+    /// history — and there is no caller holding a number that could be stale, because the numbers
+    /// being reconciled both came from the store.
+    /// </para>
+    /// <para>
+    /// Routing a rebuild through the publish path is not merely redundant, it is wrong in a way that
+    /// only shows up in production. The rebuild would have to invent an expected version to satisfy
+    /// the check, and the only defensible invention is the one the slot was just re-bound to. But
+    /// <c>PrepareUpdate</c> reads the version from the <em>live</em> world, not from the successor
+    /// being built — so on any replica past version 1 the check fails, the head is read as a document
+    /// that no longer binds, and the refresh aborts. Every subsequent refresh aborts identically: a
+    /// replica that converged once could never converge again. Binding without a version check is not
+    /// a relaxation of optimistic concurrency; it is the recognition that a rebuild is not a write.
+    /// </para>
+    /// </remarks>
+    /// <param name="serializer">Binds against the successor's source, so it sees this refresh's authored layer.</param>
+    /// <param name="documentJson">The stored document, or null for "on the compiled default at this version".</param>
+    /// <param name="version">The version the store holds, which the rebuilt slot must report.</param>
+    /// <param name="errors">Filled with why the document would not bind, when it would not.</param>
+    /// <returns>The state to write into the slot, or null when it did not bind.</returns>
+    internal abstract object? BindStoredState(
+        RuleSerializer serializer, string? documentJson, int version, List<RuleError> errors);
+
+    /// <summary>
     /// Validates and binds the document against <paramref name="expectedVersion"/>, returning a
     /// publication that is not yet live. Binding is the fallible half; committing is not — the split
     /// is what lets the store write sit between them.

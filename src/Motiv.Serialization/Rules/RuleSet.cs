@@ -70,6 +70,10 @@ public sealed class RuleSet
         _store = store ?? new InMemoryRuleStore();
         _options = options ?? new RuleSerializerOptions();
         _serializer = new RuleSerializer(scope.Source, _options);
+
+        // Last, and only once everything a rebuild reads is assigned: Join publishes this set to the
+        // scope, and a refresh arriving immediately afterwards would call straight into it.
+        Scope.Join(this);
     }
 
     /// <summary>The coordinator this set publishes under.</summary>
@@ -236,6 +240,133 @@ public sealed class RuleSet
 
             return new RuleLoadReport(quarantined, orphaned);
         });
+
+    /// <summary>
+    /// Rebuilds this replica's world from the stores, if either has moved since it was last built.
+    /// </summary>
+    /// <remarks>
+    /// The whole world is rebuilt, not a part of it: a row that binds on one pass and quarantines on
+    /// the next has already written its overlay entry and graph edges, and the quarantine path clears
+    /// neither — which is why <see cref="Load"/> refuses to run twice and this exists instead. A scope
+    /// shared with a <see cref="PropositionSet"/> rebuilds both halves whichever set you call.
+    /// </remarks>
+    /// <param name="cancellationToken">Cancels the store reads.</param>
+    /// <returns>What the refresh did, and anything that would not bind.</returns>
+    public Task<RefreshReport> RefreshAsync(CancellationToken cancellationToken = default) =>
+        Scope.RefreshAsync(cancellationToken);
+
+    /// <summary>Where the rule store stands. One scalar; polled on a timer.</summary>
+    internal Task<long> StoreGenerationAsync(CancellationToken cancellationToken) =>
+        _store.GetGenerationAsync(cancellationToken);
+
+    /// <summary>
+    /// Rebuilds every rule into <paramref name="builder"/>: compiled default first, then the stored
+    /// head over it, which is the order <see cref="Add"/> and <see cref="Load"/> already establish
+    /// between them. A head that will not bind is a <em>regression</em> when the rule is bound and
+    /// unquarantined in the world being served, and merely carried when it is not.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <strong>The default pass is not an optimisation, it is the whole reason this compiles into a
+    /// world that can evaluate.</strong> A refresh forks nothing: its builder is the
+    /// <c>(registry, ruleCount)</c> one, whose slots all start null, and a rule on a compiled default
+    /// is withdrawn from the participant table and has no graph edges, so nothing else in this method
+    /// would ever refill it. Bind the heads alone and every rule without a stored row — which at
+    /// startup is every rule there is — would swap in unbound, and the next evaluation would throw
+    /// "has not been bound; add it to a RuleSet". The pass also gives a rule that <em>does</em> have a
+    /// head something to be applied over, exactly as <see cref="Add"/> does before <see cref="Load"/>.
+    /// </para>
+    /// <para>
+    /// Runs unlocked, over a builder nobody else can see. It reads <c>_rules</c>, which
+    /// <see cref="Add"/> writes under the monitor — the same startup-then-concurrent-use contract the
+    /// class remarks already state, and the same one <see cref="Rules"/> and <see cref="FindEntry"/>
+    /// rely on.
+    /// </para>
+    /// </remarks>
+    /// <param name="builder">The successor being built.</param>
+    /// <param name="current">The world being served, which decides which failures are regressions.</param>
+    /// <param name="regressions">Filled with every failure that must abort the refresh.</param>
+    /// <param name="quarantined">Filled with every failure carried forward instead.</param>
+    /// <param name="cancellationToken">Cancels the store read.</param>
+    internal async Task RebuildIntoAsync(
+        ScopeGenerationBuilder builder, ScopeGeneration current,
+        List<RefreshFailure> regressions, List<RefreshFailure> quarantined,
+        CancellationToken cancellationToken)
+    {
+        var heads = await _store.LoadAsync(cancellationToken).ConfigureAwait(false);
+
+        // A serializer over the *prospective* world: rule documents resolve authored propositions,
+        // and the builder already holds the authored layer this refresh is rebuilding.
+        var serializer = new RuleSerializer(builder.Source, _options);
+
+        // Bind every default first, so a rule with no stored head is complete and a rule with one has
+        // something to be applied over. Version 1, as Add binds it; a stored head restores the store's
+        // number below.
+        var unbound = new HashSet<int>();
+        foreach (var rule in _rules.Values)
+        {
+            var errors = new List<RuleError>();
+            if (rule.BindStoredState(serializer, documentJson: null, version: 1, errors) is { } state)
+            {
+                builder.SetRuleState(rule.Slot, state);
+                // After the state write, never before: Track reads the document back out of the
+                // builder to recompute the rule's edges.
+                Track(rule, builder);
+                continue;
+            }
+
+            // Only a RuleDocumentSource default can reach here, and only because a proposition it
+            // references was quarantined by this same refresh. The rule would have no binding at all
+            // in the new world — nothing to evaluate, and nothing for a quarantine to hang off — and
+            // every registered rule is bound in the world being served, so this is always a regression.
+            unbound.Add(rule.Slot);
+            regressions.Add(new RefreshFailure(rule.Name, NodeId.Rule(rule.Name).KindLabel, errors));
+        }
+
+        foreach (var head in heads ?? [])
+        {
+            // A row with no usable name has nowhere to be recorded, and history outlives the code
+            // that produced it — an orphan is not a fault. Both are skipped, as Load skips them.
+            if (head?.Name is null || Find(head.Name) is not { } rule)
+                continue;
+
+            // Its default did not bind, so the slot has no state for a head to be applied over and
+            // the refresh is already aborting. Recording a second failure for it would only obscure
+            // the first.
+            if (unbound.Contains(rule.Slot))
+                continue;
+
+            var errors = new List<RuleError>();
+            if (rule.BindStoredState(serializer, head.DocumentJson, head.Version, errors) is { } state)
+            {
+                builder.SetRuleState(rule.Slot, state);
+                Track(rule, builder);
+                continue;
+            }
+
+            var failure = new RefreshFailure(head.Name, NodeId.Rule(head.Name).KindLabel, errors);
+
+            // Bound and healthy in the world being served? Then applying this rebuild would drop a
+            // live, approved rule back to compiled behaviour nobody approved. Refuse the whole thing.
+            // The length check is not paranoia: a rule added since `current` was snapshotted has a
+            // slot that world never had.
+            var live = rule.Slot < current.RuleSlots.Length ? current.RuleSlots[rule.Slot] : null;
+            if (live is not null && live.Quarantine.Count == 0 && rule.DocumentJson is not null)
+            {
+                regressions.Add(failure);
+                continue;
+            }
+
+            // Carried. The store's version is authoritative even when its document is not — a repair
+            // must be addressed against the version the store holds. Written *before* the quarantine,
+            // because SetRuleState clears quarantine — see RuleSlot.WithState.
+            if (builder.FindRuleState(rule.Slot) is { } fallback)
+                builder.SetRuleState(rule.Slot, rule.WithVersion(fallback, head.Version));
+
+            builder.SetRuleQuarantine(rule.Slot, errors);
+            quarantined.Add(failure);
+        }
+    }
 
     /// <summary>
     /// Applies one stored head over a rule's compiled default, returning the errors that quarantined

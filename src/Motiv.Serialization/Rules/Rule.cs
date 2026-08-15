@@ -90,6 +90,33 @@ public class Rule<TModel, TMetadata> : RuleBase
     internal sealed override string? DocumentJsonIn(ScopeGenerationBuilder builder) =>
         builder.FindRuleState(Slot) is State state ? state.DocumentJson : null;
 
+    /// <inheritdoc />
+    internal sealed override object? BindStoredState(
+        RuleSerializer serializer, string? documentJson, int version, List<RuleError> errors)
+    {
+        if (documentJson is not null)
+        {
+            return TryBind(serializer, documentJson, errors) is { } spec
+                ? new State(documentJson, version, spec)
+                : null;
+        }
+
+        // A recorded revert: the rule is on its default at the store's version. A compiled default
+        // cannot fail, but a RuleDocumentSource one can — an authored proposition it references may
+        // have been quarantined by the very refresh calling this — and a poller must be told rather
+        // than thrown at.
+        try
+        {
+            var @default = BindDefault(serializer);
+            return new State(@default.DocumentJson, version, @default.Spec);
+        }
+        catch (RuleSerializationException exception)
+        {
+            errors.AddRange(exception.Errors);
+            return null;
+        }
+    }
+
     internal sealed override RulePrepareResult PrepareUpdate(
         RuleSerializer serializer, string documentJson, int expectedVersion)
     {
