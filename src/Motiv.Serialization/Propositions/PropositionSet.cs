@@ -111,9 +111,18 @@ public sealed class PropositionSet
     /// Every proposition in scope — compiled, overridden and authored — as one effective listing.
     /// </summary>
     /// <remarks>
-    /// Reads the authored half out of the live generation rather than a dictionary of this set's own,
-    /// which is what makes a listing consistent with what the evaluator resolves: a cascaded rebind
-    /// lands in the generation and nowhere else, so a second copy could only ever go stale.
+    /// <para>
+    /// Reads the authored half out of a generation rather than a dictionary of this set's own, which
+    /// is what makes a listing consistent with what the evaluator resolves: a cascaded rebind lands in
+    /// the generation and nowhere else, so a second copy could only ever go stale.
+    /// </para>
+    /// <para>
+    /// <see cref="BindingScope.Active"/>, not <see cref="BindingScope.Current"/> — the read-only side
+    /// of the split described in <see cref="BindingScope.Active"/>'s own remarks. This listing binds
+    /// nothing and publishes nothing, so a pin cannot make it stale in any way that matters; what a
+    /// pin does buy is that a request describing a world in its headers returns a body from that same
+    /// world.
+    /// </para>
     /// </remarks>
     public IReadOnlyCollection<PropositionEntry> Propositions =>
         Scope.Locked(() =>
@@ -123,31 +132,34 @@ public sealed class PropositionSet
             foreach (var compiled in Scope.Registry.Entries)
                 entries[compiled.Name] = ToEntry(compiled);
 
-            foreach (var authored in Scope.Current.Authored.Values)
+            foreach (var authored in Scope.Active.Authored.Values)
                 entries[authored.Name] = ToEntry(authored);
 
             return (IReadOnlyCollection<PropositionEntry>)[.. entries.Values];
         });
 
     /// <summary>One proposition's listing, or null when the name is unknown.</summary>
+    /// <remarks>Read-only, so <see cref="BindingScope.Active"/> — see <see cref="Propositions"/>.</remarks>
     public PropositionEntry? Find(string name) =>
         Scope.Locked<PropositionEntry?>(() =>
         {
-            if (Scope.Current.Authored.TryGetValue(name, out var authored))
+            if (Scope.Active.Authored.TryGetValue(name, out var authored))
                 return ToEntry(authored);
 
             return Scope.Registry.Find(name) is { } compiled ? ToEntry(compiled) : null;
         });
 
     /// <summary>The authored document behind a name, or null when the name has no authored document.</summary>
+    /// <remarks>Read-only, so <see cref="BindingScope.Active"/> — see <see cref="Propositions"/>.</remarks>
     public string? DocumentJsonOf(string name) =>
         Scope.Locked(() =>
-            Scope.Current.Authored.TryGetValue(name, out var authored) ? authored.DocumentJson : null);
+            Scope.Active.Authored.TryGetValue(name, out var authored) ? authored.DocumentJson : null);
 
     /// <summary>The nodes that reference the given proposition, transitively, in rebind order.</summary>
+    /// <remarks>Read-only, so <see cref="BindingScope.Active"/> — see <see cref="Propositions"/>.</remarks>
     public IReadOnlyList<PropositionDependent> Dependents(string name) =>
         Scope.Locked(() => (IReadOnlyList<PropositionDependent>)
-            [.. Scope.Current.Graph.DependentClosure(name)
+            [.. Scope.Active.Graph.DependentClosure(name)
                 .Select(node => new PropositionDependent(node.Name, node.KindLabel))]);
 
     /// <summary>
@@ -664,6 +676,20 @@ public sealed class PropositionSet
     /// Binds one stored proposition into <paramref name="builder"/>, publishing it or quarantining it.
     /// Writes nothing live: the caller swaps the whole load in as one generation.
     /// </summary>
+    /// <remarks>
+    /// <strong>Both quarantine arms must call <see cref="ScopeGenerationBuilder.SetAuthored"/>, and it
+    /// is easy to think they need not.</strong> A quarantined row is the one kind of authored
+    /// proposition that never goes through <see cref="CommitPublish"/> — it has no binding, so it gets
+    /// no overlay entry, no graph edge and no enrolment, and every instinct says a world it cannot be
+    /// resolved through should not carry it. But the generation's authored map is also what the
+    /// catalog lists, and a quarantined document is precisely the one an operator needs to *see* in
+    /// order to repair it. Drop these two writes and a broken stored row vanishes from
+    /// <see cref="Find"/>, <see cref="Propositions"/>, <see cref="DocumentJsonOf"/> and
+    /// <see cref="AuthoredStateCore"/> — silently, with every test still green, because nothing else
+    /// in the load path notices. This was a live trap while the authored map was a field of this set:
+    /// the arms below wrote to that field only, so moving the read path into the generation without
+    /// moving them would have caused exactly that disappearance.
+    /// </remarks>
     private void LoadOne(LoadCandidate candidate, ScopeGenerationBuilder builder)
     {
         var stored = candidate.Stored;

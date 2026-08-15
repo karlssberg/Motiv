@@ -92,15 +92,39 @@ internal sealed class BindingScope
     /// this async flow, otherwise the live one.
     /// </summary>
     /// <remarks>
-    /// <strong>Evaluation is pinned; administration is live.</strong> Only evaluation reads this, so
-    /// that one decision sees one world rather than one world per rule. Everything else — binding a
-    /// proposed document, listing the catalog, preparing or committing a publish — reads
-    /// <see cref="Current"/> instead, because an administrative caller must see the truth, not the
-    /// older world the request it happens to be serving was pinned to. A publish that prepared against
-    /// a pinned world while committing into a successor forked from the live one would reintroduce
-    /// exactly the staleness the write gate exists to prevent, and the pin is taken before the gate,
-    /// so the gate could not catch it. Note that a bound spec holds direct references to whatever it
-    /// resolved at bind time, so evaluation never reaches back through <see cref="Source"/>.
+    /// <para>
+    /// <strong>Writing is live; reading is pinned.</strong> That is the whole split, and it is drawn
+    /// by what a caller <em>does</em> with the world, not by whether the caller is an administrator:
+    /// </para>
+    /// <list type="bullet">
+    /// <item>
+    /// <description>
+    /// <strong>Binds or publishes → <see cref="Current"/>.</strong> Preparing or committing a publish,
+    /// and binding a proposed document through <see cref="Source"/>. A publish that prepared against a
+    /// pinned world while committing into a successor forked from the live one would reintroduce
+    /// exactly the staleness the write gate exists to prevent — and the pin is taken before the gate,
+    /// so the gate could not catch it. This is the hazard the split was originally written to settle.
+    /// </description>
+    /// </item>
+    /// <item>
+    /// <description>
+    /// <strong>Evaluates, or reads for display → <see cref="Active"/>.</strong> Evaluation, so one
+    /// decision sees one world rather than one world per rule; and the read-only catalog listings
+    /// (<c>PropositionSet.Propositions</c>, <c>Find</c>, <c>DocumentJsonOf</c>, <c>Dependents</c>),
+    /// which bind nothing and publish nothing. A pinned request stamps the generation it pinned onto
+    /// its response as a fencing token, and that token is only worth trusting if the body came from
+    /// the world the token names — so a listing read from <see cref="Current"/> under a pin would
+    /// describe a world its own header disclaims.
+    /// </description>
+    /// </item>
+    /// </list>
+    /// <para>
+    /// An earlier wording of this — "evaluation is pinned; administration is live", with catalog
+    /// listing named on the live side — has now sent two implementers the wrong way. The listings are
+    /// administration by *who calls them* and evaluation by *what they do*, and it is the second that
+    /// decides. Note also that a bound spec holds direct references to whatever it resolved at bind
+    /// time, so evaluation never reaches back through <see cref="Source"/>.
+    /// </para>
     /// </remarks>
     public ScopeGeneration Active => _pinned.Value ?? Current;
 
@@ -376,9 +400,9 @@ internal sealed class BindingScope
     /// </summary>
     /// <remarks>
     /// <see cref="Current"/>, deliberately, not <see cref="Active"/>. This is the <em>binding</em>
-    /// source — every caller of it is preparing or validating a document, which is administration —
-    /// and administration is live. See <see cref="Active"/>'s remarks for what binding against a
-    /// pinned world would cost.
+    /// source, and binding is the live side of the split — every caller of it is preparing or
+    /// validating a document that may go on to be published. See <see cref="Active"/>'s remarks for
+    /// what binding against a pinned world would cost.
     /// </remarks>
     private sealed class ScopeSource(BindingScope scope) : ISpecSource
     {
