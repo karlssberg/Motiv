@@ -367,7 +367,7 @@ public sealed class PropositionSet
     {
         var authored = prepared.Authored!;
         CommitPublish(authored);
-        Scope.Mutate(builder => BindingScope.CommitClosure(prepared.Commits!, builder));
+        Scope.Mutate(builder => builder.Apply(prepared.Commits!));
         return authored.Version;
     }
 
@@ -380,11 +380,16 @@ public sealed class PropositionSet
     internal void CommitWithdrawCore(WritePrepare prepared)
     {
         var current = prepared.Authored!;
+
+        // Dropped before the closure commits rather than after, which the order below otherwise
+        // implies matters: it does not. A rebind commit reaches its Authored object directly, never
+        // through this dictionary, and every reader of the dictionary takes the same monitor this
+        // method already holds — so no one can observe either order.
         _authored.Remove(current.Name);
 
         Scope.Mutate(builder =>
         {
-            BindingScope.CommitClosure(prepared.Commits!, builder);
+            builder.Apply(prepared.Commits!);
 
             builder.RemoveAuthored(current.Name);
             builder.RemoveOverlayEntry(current.Name);

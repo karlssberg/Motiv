@@ -34,7 +34,7 @@ internal interface IRebindCommit
     /// <summary>
     /// The remainder of the publish that <see cref="ApplyTo"/> cannot yet express, because it lands
     /// on a field the node still owns rather than in the generation. Called only by
-    /// <see cref="BindingScope.CommitClosure"/> — never during a prepare, which may be discarded.
+    /// <see cref="ScopeGenerationBuilder.Apply"/> — never during a prepare, which may be discarded.
     /// Goes away once the authored proposition and the rule slot own that state instead.
     /// </summary>
     void Commit();

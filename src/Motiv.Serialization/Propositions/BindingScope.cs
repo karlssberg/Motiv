@@ -88,16 +88,28 @@ internal sealed class BindingScope
     public ScopeGeneration Current => Volatile.Read(ref _current);
 
     /// <summary>
-    /// The world this call resolves against: the pinned one when a <c>DecisionSnapshot</c> is
-    /// open on this async flow, otherwise the live one. Every evaluation goes through here, which is
-    /// what makes a pinned decision see one world rather than one world per rule.
+    /// The world this call resolves against: the pinned one when a <c>DecisionSnapshot</c> is open on
+    /// this async flow, otherwise the live one.
     /// </summary>
+    /// <remarks>
+    /// <strong>Evaluation is pinned; administration is live.</strong> Only evaluation reads this, so
+    /// that one decision sees one world rather than one world per rule. Everything else — binding a
+    /// proposed document, listing the catalog, preparing or committing a publish — reads
+    /// <see cref="Current"/> instead, because an administrative caller must see the truth, not the
+    /// older world the request it happens to be serving was pinned to. A publish that prepared against
+    /// a pinned world while committing into a successor forked from the live one would reintroduce
+    /// exactly the staleness the write gate exists to prevent, and the pin is taken before the gate,
+    /// so the gate could not catch it. Note that a bound spec holds direct references to whatever it
+    /// resolved at bind time, so evaluation never reaches back through <see cref="Source"/>.
+    /// </remarks>
     public ScopeGeneration Active => _pinned.Value ?? Current;
 
     /// <summary>
-    /// How many times the world has been replaced. A refresh records this before building and refuses
-    /// to swap if it has moved — the world's own compare-and-set, and the reason a slow store need not
-    /// hold the write gate.
+    /// How many times the world has been replaced. A refresh reads this <em>before</em> reading
+    /// <see cref="Current"/>, rebuilds off to the side, and offers the result back to
+    /// <see cref="TrySwap"/>, which refuses it if the stamp has moved — the world's own
+    /// compare-and-set, and the reason a slow store need not hold the write gate. See
+    /// <see cref="Publish"/> for why the read order is the reverse of the write order.
     /// </summary>
     public long WriteStamp => Volatile.Read(ref _writes);
 
@@ -136,12 +148,29 @@ internal sealed class BindingScope
         return new OuterPin(this);
     }
 
+    /// <summary>
+    /// The one place the live world moves. World first, stamp second — and a refresh must read them
+    /// the other way round, stamp first.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The dangerous reader is the one that sees the <em>old</em> world alongside the <em>new</em>
+    /// stamp, because that pair makes a stale rebuild look current: it would build its successor from
+    /// the world it read, present the stamp it read, and <see cref="TrySwap"/> would accept it —
+    /// silently discarding the publish that moved the stamp. Writing the world first and reading the
+    /// stamp first makes that pair unobservable. Every ordering that remains pairs a new stamp with a
+    /// world at least as new, or an old stamp with anything at all, and an old stamp is refused.
+    /// </para>
+    /// <para>
+    /// <see cref="Interlocked.Increment(ref long)"/> rather than a read-add-write through
+    /// <see cref="Volatile"/>: every publisher is supposed to hold the inner monitor, but nothing
+    /// enforces that, and the atomic costs the same as the non-atomic it replaces.
+    /// </para>
+    /// </remarks>
     private void Publish(ScopeGeneration successor)
     {
-        // The stamp moves first: a reader that sees the new world must never also see a stamp that
-        // would let a stale rebuild overwrite it.
-        Volatile.Write(ref _writes, _writes + 1);
         Volatile.Write(ref _current, successor);
+        Interlocked.Increment(ref _writes);
     }
 
     /// <summary>Registers a node as rebindable. Replaces any participant already under that id.</summary>
@@ -283,26 +312,6 @@ internal sealed class BindingScope
         return broken;
     }
 
-    /// <summary>
-    /// Applies commits prepared earlier by <see cref="PrepareClosure"/> into the successor being
-    /// built, so the whole closure goes live in the one swap that publishes it.
-    /// </summary>
-    /// <remarks>
-    /// <see cref="IRebindCommit.Commit"/> is called here and nowhere else. Until a rebound node's
-    /// state lives wholly in the generation, part of it is still a field the node owns, and that part
-    /// must move only once the caller has confirmed nothing broke — <see cref="PrepareClosure"/>
-    /// applies the same commits into a world that may yet be discarded, so a commit that moved live
-    /// state from <see cref="IRebindCommit.ApplyTo"/> would publish a rejected binding.
-    /// </remarks>
-    public static void CommitClosure(IReadOnlyList<IRebindCommit> commits, ScopeGenerationBuilder builder)
-    {
-        foreach (var commit in commits)
-        {
-            commit.ApplyTo(builder);
-            commit.Commit();
-        }
-    }
-
     private sealed class OuterPin(BindingScope scope) : IDisposable
     {
         public void Dispose() => scope._pinned.Value = null;
@@ -320,11 +329,17 @@ internal sealed class BindingScope
 
     /// <summary>
     /// A stable façade over an unstable world: <see cref="RuleSerializer"/> is built once and must
-    /// keep resolving through whatever generation is current — or pinned — at the moment of the call.
+    /// keep resolving through whatever generation is live at the moment of the call.
     /// </summary>
+    /// <remarks>
+    /// <see cref="Current"/>, deliberately, not <see cref="Active"/>. This is the <em>binding</em>
+    /// source — every caller of it is preparing or validating a document, which is administration —
+    /// and administration is live. See <see cref="Active"/>'s remarks for what binding against a
+    /// pinned world would cost.
+    /// </remarks>
     private sealed class ScopeSource(BindingScope scope) : ISpecSource
     {
-        public SpecRegistryEntry? Find(string name) => scope.Active.Source.Find(name);
+        public SpecRegistryEntry? Find(string name) => scope.Current.Source.Find(name);
 
         public CollectionBinding<TParent>? FindCollection<TParent>(string path) =>
             scope.Registry.FindCollection<TParent>(path);

@@ -62,6 +62,26 @@ public class BindingScopeTests
         scope.Source.Find("authored").ShouldNotBeNull();
     }
 
+    /// <summary>
+    /// Evaluation is pinned; administration is live. <c>Source</c> is the source documents *bind*
+    /// against, and binding is administration — a governed publish arriving on a pinned request must
+    /// prepare against the world it will commit into, not the older one the request was pinned to.
+    /// </summary>
+    [Fact]
+    public void Should_bind_through_the_live_world_even_while_a_pin_is_open()
+    {
+        // Arrange
+        var scope = new BindingScope(new SpecRegistry());
+        using var pin = scope.Pin();
+
+        // Act — a publish lands while this flow is pinned
+        scope.Mutate(builder => builder.SetOverlayEntry(Entry("authored")));
+
+        // Assert — the pinned world is frozen, but the binding source has moved on
+        scope.Active.Source.Find("authored").ShouldBeNull();
+        scope.Source.Find("authored").ShouldNotBeNull();
+    }
+
     [Fact]
     public void Should_prepare_nothing_when_the_closure_is_empty()
     {

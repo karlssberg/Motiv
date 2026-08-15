@@ -52,6 +52,32 @@ public class ScopeGenerationTests
     }
 
     [Fact]
+    public void Should_refuse_to_build_a_generation_twice()
+    {
+        // Arrange — Build hands the generation the builder's own collections, so a second Build would
+        // hand a second world the same ones
+        var scope = new BindingScope(new SpecRegistry());
+        var builder = new ScopeGenerationBuilder(scope.Registry, scope.Current);
+        builder.Build();
+
+        // Act & Assert
+        Should.Throw<InvalidOperationException>(() => builder.Build());
+    }
+
+    [Fact]
+    public void Should_refuse_a_write_after_the_generation_was_built()
+    {
+        // Arrange
+        var scope = new BindingScope(new SpecRegistry());
+        var builder = new ScopeGenerationBuilder(scope.Registry, scope.Current);
+        scope.TrySwap(builder.Build(), scope.WriteStamp);
+
+        // Act & Assert — this write would edit a world other threads are already reading
+        Should.Throw<InvalidOperationException>(() => builder.SetSequence(new StoreGeneration(1, 1)));
+        Should.Throw<InvalidOperationException>(() => builder.Graph);
+    }
+
+    [Fact]
     public void Should_accept_a_swap_whose_write_stamp_still_holds()
     {
         // Arrange
