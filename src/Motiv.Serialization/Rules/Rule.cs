@@ -55,6 +55,9 @@ public class Rule<TModel, TMetadata> : RuleBase
     /// <inheritdoc />
     public override string? DocumentJson => Snapshot().DocumentJson;
 
+    /// <inheritdoc />
+    internal sealed override string? DocumentJsonIn(ScopeGenerationBuilder builder) => DocumentJson;
+
     /// <summary>Evaluates the current rule implementation against the model.</summary>
     /// <param name="model">The model to evaluate.</param>
     /// <returns>The rich boolean result of the current implementation.</returns>
@@ -166,7 +169,7 @@ public class Rule<TModel, TMetadata> : RuleBase
 
         public string? DocumentJson => replacement.DocumentJson;
 
-        public void Commit() => Volatile.Write(ref rule._state, replacement);
+        public void ApplyTo(ScopeGenerationBuilder builder) => Volatile.Write(ref rule._state, replacement);
     }
 
     private State BindDefault(RuleSerializer serializer)

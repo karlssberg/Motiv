@@ -46,7 +46,7 @@ public class RulePreparationTests
         var prepared = set.PrepareUpdateCore("sample", Document, expectedVersion: 1);
 
         // Act
-        prepared.Publication!.Commit();
+        prepared.Publication!.ApplyTo(new ScopeGenerationBuilder(set.Scope.Registry, set.Scope.Current));
 
         // Assert
         rule.Version.ShouldBe(2);
@@ -103,7 +103,8 @@ public class RulePreparationTests
     {
         // Arrange
         var (set, rule) = Bound();
-        set.PrepareUpdateCore("sample", Document, expectedVersion: 1).Publication!.Commit();
+        set.PrepareUpdateCore("sample", Document, expectedVersion: 1).Publication!
+            .ApplyTo(new ScopeGenerationBuilder(set.Scope.Registry, set.Scope.Current));
 
         // Act
         var prepared = set.PrepareRevertCore("sample", expectedVersion: 2);

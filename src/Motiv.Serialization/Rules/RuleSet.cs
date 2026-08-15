@@ -172,23 +172,36 @@ public sealed class RuleSet
             var quarantined = new List<QuarantinedRule>();
             var orphaned = new List<string>();
 
-            foreach (var head in heads)
+            // An empty store publishes nothing at all. A successor identical to its predecessor would
+            // still move the write stamp — see BindingScope.WriteStamp — so a swap with nothing in it
+            // is not free.
+            if (heads.Count == 0)
+                return new RuleLoadReport(quarantined, orphaned);
+
+            // One builder for the whole store, not one world per row — mirrors PropositionSet.Load.
+            // Rules never reference each other (only propositions, already live by the time this
+            // runs), so there is no ordering to work out first: every row binds against the same
+            // pre-load world regardless of the order this loop visits them in.
+            Scope.Mutate(builder =>
             {
-                // A quarantine is recorded on the rule it names, so a row with no usable name has
-                // nowhere to be recorded and skipping it is the only non-fatal option.
-                if (head?.Name is null)
-                    continue;
-
-                if (Find(head.Name) is not { } rule)
+                foreach (var head in heads)
                 {
-                    // History outlives the code that produced it. Not a fault, and not a quarantine.
-                    orphaned.Add(head.Name);
-                    continue;
-                }
+                    // A quarantine is recorded on the rule it names, so a row with no usable name has
+                    // nowhere to be recorded and skipping it is the only non-fatal option.
+                    if (head?.Name is null)
+                        continue;
 
-                if (Apply(rule, head) is { } errors)
-                    quarantined.Add(new QuarantinedRule(head.Name, head.Version, errors));
-            }
+                    if (Find(head.Name) is not { } rule)
+                    {
+                        // History outlives the code that produced it. Not a fault, and not a quarantine.
+                        orphaned.Add(head.Name);
+                        continue;
+                    }
+
+                    if (Apply(rule, head, builder) is { } errors)
+                        quarantined.Add(new QuarantinedRule(head.Name, head.Version, errors));
+                }
+            });
 
             return new RuleLoadReport(quarantined, orphaned);
         });
@@ -196,9 +209,11 @@ public sealed class RuleSet
     /// <summary>
     /// Applies one stored head over a rule's compiled default, returning the errors that quarantined
     /// it or null when it bound. A null document is a recorded revert, not an absent row: the rule
-    /// stays on its default and only the version moves.
+    /// stays on its default and only the version moves. Folds its commit into <paramref name="builder"/>
+    /// rather than opening one of its own, so <see cref="Load"/> can publish the whole store as a
+    /// single generation.
     /// </summary>
-    private IReadOnlyList<RuleError>? Apply(RuleBase rule, StoredRule head)
+    private IReadOnlyList<RuleError>? Apply(RuleBase rule, StoredRule head, ScopeGenerationBuilder builder)
     {
         // The expected version is read from the rule itself. This is a load, not a concurrent write —
         // there is no caller holding a stale number — so the only outcome worth distinguishing is
@@ -212,7 +227,7 @@ public sealed class RuleSet
             // Committed directly, not through the persisting write path: this document came *from*
             // the store, so appending it again would mint a duplicate version row and conflict on its
             // own primary key.
-            CommitCore(head.Name, publication);
+            CommitCore(head.Name, publication, builder);
         }
         else
         {
@@ -480,7 +495,7 @@ public sealed class RuleSet
             ?? throw new InvalidOperationException(
                 $"Rule '{name}' is no longer registered, so its prepared publication cannot be committed.");
 
-        publication.Commit();
+        publication.ApplyTo(builder);
 
         // A quarantine says "running a compiled default in place of a stored document that would not
         // bind". A successful publish is exactly what stops that being true, so it must not outlive
@@ -488,7 +503,7 @@ public sealed class RuleSet
         // process restarts.
         rule.Quarantine = [];
 
-        // Track reads the rule's *current* document, so it must run after the commit, not before.
+        // Track reads the rule's *published* document, so it must run after ApplyTo, not before.
         Track(rule, builder);
 
         return RuleUpdateResult.Updated(publication.Version);
@@ -564,7 +579,7 @@ public sealed class RuleSet
     private void Track(RuleBase rule, ScopeGenerationBuilder builder)
     {
         var node = NodeId.Rule(rule.Name);
-        var references = ReferencesOf(rule.DocumentJson);
+        var references = ReferencesOf(rule.DocumentJsonIn(builder));
 
         if (references.Count == 0)
         {

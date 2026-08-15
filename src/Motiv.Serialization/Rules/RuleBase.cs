@@ -42,6 +42,16 @@ public abstract class RuleBase
     /// <summary>The current document JSON, or null while the rule is on a compiled default.</summary>
     public abstract string? DocumentJson { get; }
 
+    /// <summary>
+    /// The document a rule tracker should read while a commit is still assembling
+    /// <paramref name="builder"/> — the one the builder is about to publish, not necessarily the one
+    /// <see cref="DocumentJson"/> currently reports. Today the two always agree: a rule's state is a
+    /// field on the rule itself, so <see cref="IRulePublication.ApplyTo"/> has already swapped it by
+    /// the time <c>Track</c> calls this. The distinction exists so a future move of that state into
+    /// <paramref name="builder"/> only changes the implementation here, not every caller.
+    /// </summary>
+    internal abstract string? DocumentJsonIn(ScopeGenerationBuilder builder);
+
     internal RuleDefault Default { get; }
 
     // Volatile, not a plain auto-property: RuleSet.Rules/FindEntry/ToEntry read this without

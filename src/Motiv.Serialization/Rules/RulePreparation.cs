@@ -14,8 +14,15 @@ internal interface IRulePublication
     /// <summary>The document it will carry, or null for a return to the compiled default.</summary>
     string? DocumentJson { get; }
 
-    /// <summary>Makes the change live. Cannot fail, and must be called under the scope lock.</summary>
-    void Commit();
+    /// <summary>
+    /// Makes the change live. Cannot fail, and must be called under the scope lock, inside the same
+    /// <see cref="BindingScope.Mutate(Action{ScopeGenerationBuilder})"/> that re-tracks the rule's
+    /// graph edges — so the binding and the edges that describe it publish in one swap rather than
+    /// two. <paramref name="builder"/> is threaded through for that reason, not because a rule's
+    /// state lives in it yet — it still lives in a field on the rule itself, swapped by a plain
+    /// <see cref="Volatile.Write{T}"/>.
+    /// </summary>
+    void ApplyTo(ScopeGenerationBuilder builder);
 }
 
 /// <summary>
