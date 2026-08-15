@@ -34,6 +34,16 @@ using Motiv.Serialization;
 /// count changed.
 /// </para>
 /// <para>
+/// Deriving the generation from mtime instead of a held counter has a consequence
+/// <see cref="InMemoryPropositionStore"/> does not share: <c>File.WriteAllText</c> bumps a file's
+/// mtime whether or not the bytes it wrote differ from what was already there, so any rewrite would
+/// move the generation — including one for an empty batch that changed nothing. <see cref="WriteAsync"/>
+/// therefore returns before touching the file at all when the batch is empty, the same invariant
+/// <see cref="InMemoryPropositionStore.WriteAsync"/> enforces with its counter: an empty batch is not
+/// a write, and a generation that moved for one would make every replica rebuild its whole world for
+/// nothing, on a timer.
+/// </para>
+/// <para>
 /// This is a sample-grade answer, not a production one: it inherits whatever timestamp resolution
 /// the filesystem gives <c>File.GetLastWriteTimeUtc</c>, and it is not immune to the system clock
 /// moving backwards, which would let the generation move backwards too — something
@@ -70,6 +80,13 @@ public sealed class JsonFilePropositionStore(string path) : IPropositionStore
     /// <inheritdoc />
     public Task WriteAsync(PropositionBatch batch, CancellationToken cancellationToken)
     {
+        // An empty batch is not a write. Now that the generation is the file's mtime rather than a
+        // held counter, rewriting the file here would bump it even though nothing changed —
+        // File.WriteAllText touches mtime regardless of whether the bytes it wrote differ from what
+        // was already there. A poller would then rebuild its whole world for nothing, on a timer.
+        if (batch.Saves.Count == 0 && batch.Deletes.Count == 0)
+            return Task.CompletedTask;
+
         lock (_gate)
         {
             // Every name the batch speaks for, whether to replace it or drop it. One set rather than

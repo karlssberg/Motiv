@@ -146,6 +146,23 @@ public class JsonFilePropositionStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task Should_leave_the_generation_still_when_a_batch_changes_nothing()
+    {
+        // Arrange
+        var store = new JsonFilePropositionStore(_path);
+        await store.WriteAsync(PropositionBatch.Save(Stored("customer.a")), default);
+        var generation = await store.GetGenerationAsync(default);
+
+        // Act — an empty batch is not a write. The delay gives mtime room to move if
+        // WriteAsync wrongly rewrites the file anyway, so this test would actually catch it.
+        await Task.Delay(50);
+        await store.WriteAsync(new PropositionBatch([], []), default);
+
+        // Assert — a poller that rebuilt on this would rebuild forever
+        (await store.GetGenerationAsync(default)).ShouldBe(generation);
+    }
+
+    [Fact]
     public void Should_treat_a_file_it_cannot_read_as_empty_rather_than_throwing()
     {
         // Arrange — a permission-denied state file must not stop the host booting. Unix-only:

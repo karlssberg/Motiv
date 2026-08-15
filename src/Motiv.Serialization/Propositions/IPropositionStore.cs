@@ -29,6 +29,16 @@ public sealed record PropositionBatch(
 /// <remarks>
 /// A store is a dumb sink — it validates nothing and enforces no invariant. Legality is decided by
 /// <see cref="PropositionSet"/> before anything reaches here.
+/// <para>
+/// <strong><see cref="LoadAsync"/> and <see cref="GetGenerationAsync"/> are forward surface,</strong>
+/// the proposition-side twin of the pair <see cref="IRuleStore"/> already carries for the same reason.
+/// Today only <see cref="Load"/> and <see cref="WriteAsync"/> have a production caller — a replica
+/// reads the store once, at its own startup, and every write goes through <see cref="WriteAsync"/>.
+/// These two exist for the background poller this plan's later tasks wire up (refreshing one replica
+/// from another's write, on the generation this pair was built to support); an implementation still
+/// has to honour their contracts, but for now they are contract-only — nothing in this codebase calls
+/// them yet.
+/// </para>
 /// </remarks>
 public interface IPropositionStore
 {
@@ -38,7 +48,8 @@ public interface IPropositionStore
     /// <summary>
     /// Every persisted proposition, read on a refresh. Separate from <see cref="Load"/> rather than
     /// replacing it because the two run at different times under different constraints: startup
-    /// cannot await, a refresh can.
+    /// cannot await, a refresh can. No production caller yet — see the interface remarks on forward
+    /// surface; it exists for the background poller this plan's later tasks wire up.
     /// </summary>
     Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken cancellationToken);
 
@@ -50,6 +61,8 @@ public interface IPropositionStore
     /// <strong>Must be a scalar read.</strong> An implementation that answers this by loading the
     /// store defeats the point — every replica polls it on a timer. It must never move backwards
     /// while replicas are live: it is half of the fencing token behind monotonic-read consistency.
+    /// No production caller yet — see the interface remarks on forward surface; it exists for the
+    /// background poller this plan's later tasks wire up.
     /// </remarks>
     Task<long> GetGenerationAsync(CancellationToken cancellationToken);
 
