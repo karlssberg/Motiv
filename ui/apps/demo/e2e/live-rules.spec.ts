@@ -82,3 +82,8 @@ test('editing and saving a rule changes the next checkout, and stale saves confl
   await expect(banner).toBeHidden();
   await expect(versionBadge(page, winningVersion)).toBeVisible();
 });
+
+test('every rules response carries the generation it was served from', async ({ request }) => {
+  const response = await request.get('/api/rules/rules');
+  expect(response.headers()['motiv-generation']).toMatch(/^r\d+\.p\d+$/);
+});
