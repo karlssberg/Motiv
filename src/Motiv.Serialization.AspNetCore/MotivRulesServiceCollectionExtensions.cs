@@ -174,6 +174,11 @@ public sealed class MotivRulesBuilder
         Services.AddSingleton(options);
         Services.AddSingleton<MotivRefreshService>();
         Services.AddHostedService(provider => provider.GetRequiredService<MotivRefreshService>());
+
+        // AddCheck<MotivRefreshHealthCheck>, not an instance factory: the DI-resolved constructor
+        // pulls the MotivRefreshService singleton above, so the check reads the exact instance the
+        // poll loop writes to, the same way the hosted service registration does.
+        Services.AddHealthChecks().AddCheck<MotivRefreshHealthCheck>("motiv-refresh");
         return this;
     }
 }
