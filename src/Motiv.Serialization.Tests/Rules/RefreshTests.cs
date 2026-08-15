@@ -289,6 +289,57 @@ public class RefreshTests
         rule.Evaluate(1).Satisfied.ShouldBeFalse();
     }
 
+    /// <summary>
+    /// The one state in which a rule ends the rebuild with <em>no binding at all</em>: its default is
+    /// a document, and the proposition that document references was quarantined by this same refresh.
+    /// Both halves of the handling are exercised here, and neither is reachable any other way.
+    /// </summary>
+    /// <remarks>
+    /// The rule is reported as a regression rather than carried, because a slot with no state has
+    /// nothing for a quarantine to hang off and nothing to evaluate — a rule must always be able to
+    /// evaluate. And the head loop has to skip it: reaching <c>SetRuleQuarantine</c> on an empty slot
+    /// throws, which would turn a refusal to converge into a crashing poller.
+    /// </remarks>
+    [Fact]
+    public async Task Should_refuse_when_a_rules_document_default_loses_the_proposition_it_needs()
+    {
+        // Arrange — A's build knows a spec B's does not, and publishes through it on both sides
+        var propositionStore = new InMemoryPropositionStore();
+        var ruleStore = new InMemoryRuleStore();
+
+        var propsA = new PropositionSet(RegistryWith("only-in-the-new-build"), propositionStore)
+            .AddModel<int>("number");
+        propsA.Load();
+        await propsA.CreateAsync("gate", "number", IsPositive, null);
+
+        var rulesA = new RuleSet(propsA, ruleStore);
+        rulesA.Add(new GatedRule());
+        rulesA.Load();
+        await rulesA.UpdateAsync("gated", OnlyInTheNewBuild, 1, By("alice"));
+
+        // B binds the proposition, then quarantines the rule head it cannot resolve — so it is
+        // running its document default, over a proposition it still resolves
+        var propsB = new PropositionSet(RegistryWith(), propositionStore).AddModel<int>("number");
+        propsB.Load();
+        var rulesB = new RuleSet(propsB, ruleStore);
+        var ruleB = new GatedRule();
+        rulesB.Add(ruleB);
+        rulesB.Load();
+        rulesB.FindEntry("gated")!.Quarantine.ShouldNotBeEmpty();
+
+        // Act — the proposition the default leans on becomes unbindable for B too
+        await propsA.UpdateAsync("gate", OnlyInTheNewBuild, 1);
+        var report = await rulesB.RefreshAsync(default);
+
+        // Assert — both halves refused, and B is untouched
+        report.Outcome.ShouldBe(RefreshOutcome.Aborted);
+        report.Regressions.Count.ShouldBe(2);
+        report.Regressions.ShouldContain(failure => failure.Name == "gate" && failure.Kind == "proposition");
+        report.Regressions.ShouldContain(failure => failure.Name == "gated" && failure.Kind == "rule");
+        ruleB.Evaluate(1).Satisfied.ShouldBeTrue();
+        propsB.Find("gate")!.Quarantine.ShouldBeEmpty();
+    }
+
     /// <summary>A replica whose rules and authored propositions share one scope, as a real host's do.</summary>
     private static (PropositionSet Propositions, RuleSet Rules, NumberRule Rule) PairedReplica(
         IPropositionStore propositionStore, IRuleStore ruleStore, params string[] extraSpecs)
