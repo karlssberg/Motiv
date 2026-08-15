@@ -83,7 +83,14 @@ internal sealed class AuthoredProposition(
         return entry is null ? null : WithBinding(entry);
     }
 
-    public IRebindCommit? PrepareRebind(ISpecSource prospective, List<RuleError> errors) =>
+    /// <inheritdoc />
+    /// <remarks>
+    /// The world is ignored, and correctly so: an authored proposition is immutable and carries the
+    /// document, version and references being rebound on itself, so there is no second read for it to
+    /// disagree with. The rule half genuinely needs it — see <see cref="IRebindable.PrepareRebind"/>.
+    /// </remarks>
+    public IRebindCommit? PrepareRebind(
+        ISpecSource prospective, ScopeGeneration world, List<RuleError> errors) =>
         Rebind(prospective, errors) is { } rebound ? new RebindCommit(rebound) : null;
 
     private sealed class RebindCommit(AuthoredProposition rebound) : IRebindCommit

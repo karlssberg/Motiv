@@ -24,7 +24,7 @@ public class BindingScopeTests
         /// <summary>What <see cref="Resolves"/> resolved to on the last prepare, if anything.</summary>
         public SpecRegistryEntry? Resolved { get; private set; }
 
-        public IRebindCommit? PrepareRebind(ISpecSource prospective, List<RuleError> errors)
+        public IRebindCommit? PrepareRebind(ISpecSource prospective, ScopeGeneration world, List<RuleError> errors)
         {
             PrepareCount++;
             OrderLog?.Add(Node.Name);
@@ -60,9 +60,11 @@ public class BindingScopeTests
     }
 
     /// <summary>
-    /// Evaluation is pinned; administration is live. <c>Source</c> is the source documents *bind*
-    /// against, and binding is administration — a governed publish arriving on a pinned request must
-    /// prepare against the world it will commit into, not the older one the request was pinned to.
+    /// Writing is live; reading is pinned — the split is drawn by what a caller does with the world,
+    /// not by who calls it (see <c>BindingScope.Active</c>). <c>Source</c> is what documents *bind*
+    /// against, and binding is on the writing side: a governed publish arriving on a pinned request
+    /// must prepare against the world it will commit into, not the older one the request was pinned
+    /// to.
     /// </summary>
     [Fact]
     public void Should_bind_through_the_live_world_even_while_a_pin_is_open()

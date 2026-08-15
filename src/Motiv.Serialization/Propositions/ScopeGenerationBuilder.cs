@@ -212,11 +212,21 @@ internal sealed class ScopeGenerationBuilder
     /// Records where the <em>rule</em> store stands, leaving the proposition component as it was.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Per-component rather than a whole <see cref="StoreGeneration"/>, because every writer but a
     /// refresh touches exactly one store — the two are never written in the same transaction. A caller
     /// that had to assemble the pair itself would have to read the other component back out of the
     /// world it is forking and re-state it, and the day someone forgets, the untouched half silently
     /// resets to zero and the fencing token starts under-reporting a store nobody wrote to.
+    /// </para>
+    /// <para>
+    /// <strong>For a load, not a publish.</strong> This states a position outright, which is only
+    /// honest when the whole world being built was read from that store position — true of
+    /// <see cref="RuleSet.Load"/> and <c>PropositionSet.Load</c>, its only two callers, and of nothing
+    /// else. A publish has read one row, so it must go through <see cref="AdvanceRuleSequence"/> or
+    /// <see cref="AdvancePropositionSequence"/> instead, whose remarks say what stating a position
+    /// outright would cost it.
+    /// </para>
     /// </remarks>
     public void SetRuleSequence(long generation)
     {
@@ -232,6 +242,64 @@ internal sealed class ScopeGenerationBuilder
     {
         ThrowIfBuilt();
         _sequence = _sequence with { Propositions = generation };
+    }
+
+    /// <summary>
+    /// Records where the rule store now stands after a publish of this world's own — but only if this
+    /// world already stood where that store did before the publish wrote.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <strong>A world may only claim a store position it actually holds.</strong> The number a
+    /// publish reads back is the store's <em>head</em>, and a head speaks for every row in the store,
+    /// not just the one row this publish wrote. Any write another replica landed since this world was
+    /// last built is therefore underneath that head — content this world does not have. Stamping it
+    /// anyway is a lie in both directions the token is used: <see cref="StoreGeneration.MovedFrom"/>
+    /// then reports nothing has moved on every subsequent poll, so the replica never rebuilds and
+    /// serves the row it last read until some unrelated write happens to move the store again; and the
+    /// response header tells a client it is looking at a world newer than the one it is actually being
+    /// served, which is precisely the misrouting the header exists to expose.
+    /// </para>
+    /// <para>
+    /// So the advance is conditional on <paramref name="before"/> — the head read before the publish
+    /// wrote — matching where this world already stood. When it does, nothing foreign is underneath
+    /// the new head and <paramref name="after"/> is honest. When it does not, the position is left
+    /// alone: the store is genuinely ahead of this world, the next poll sees that and rebuilds, and
+    /// the local publish this world just committed is read back from the store in the same pass. The
+    /// cost of being wrong that way is one rebuild; the cost of being wrong the other way is a replica
+    /// serving stale rows with a health check reading green.
+    /// </para>
+    /// <para>
+    /// One gap survives deliberately: a foreign write landing between <paramref name="before"/> being
+    /// read and this publish's own write is still underneath <paramref name="after"/> and still
+    /// invisible. Closing it needs the store to report the position its own write produced, which
+    /// <see cref="IRuleStore"/> and <see cref="IPropositionStore"/> do not offer. The window is one
+    /// store round trip rather than a whole poll interval, and — unlike the case this guard closes —
+    /// it does not depend on the replica being idle, which is the common state.
+    /// </para>
+    /// </remarks>
+    /// <param name="before">Where the rule store stood before the publish wrote.</param>
+    /// <param name="after">Where it stands now.</param>
+    public void AdvanceRuleSequence(long before, long after)
+    {
+        ThrowIfBuilt();
+
+        if (_sequence.Rules == before)
+            _sequence = _sequence with { Rules = after };
+    }
+
+    /// <summary>
+    /// The proposition-store counterpart of <see cref="AdvanceRuleSequence"/>, whose remarks carry the
+    /// reasoning for both.
+    /// </summary>
+    /// <param name="before">Where the proposition store stood before the publish wrote.</param>
+    /// <param name="after">Where it stands now.</param>
+    public void AdvancePropositionSequence(long before, long after)
+    {
+        ThrowIfBuilt();
+
+        if (_sequence.Propositions == before)
+            _sequence = _sequence with { Propositions = after };
     }
 
     /// <summary>

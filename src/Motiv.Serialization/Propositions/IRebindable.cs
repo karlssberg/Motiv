@@ -18,7 +18,15 @@ internal interface IRebindable
     /// Binds against the prospective source **without publishing**. Returns null and fills
     /// <paramref name="errors"/> when the node would no longer bind.
     /// </summary>
-    IRebindCommit? PrepareRebind(ISpecSource prospective, List<RuleError> errors);
+    /// <param name="prospective">The source the node's document is re-resolved through.</param>
+    /// <param name="world">
+    /// The world the walk that found this node read — the definition being rebound must come from it
+    /// and not from a second read of the live one. An authored proposition carries its own document on
+    /// itself and ignores this; a rule keeps its state in the world, so for a rule it is the whole
+    /// point. See <see cref="BindingScope.PrepareClosure"/> for why one read is the discipline.
+    /// </param>
+    /// <param name="errors">Filled with why the node would no longer bind.</param>
+    IRebindCommit? PrepareRebind(ISpecSource prospective, ScopeGeneration world, List<RuleError> errors);
 }
 
 /// <summary>A prepared rebind, ready to be published.</summary>

@@ -54,7 +54,7 @@ public class PropositionSetCreateTests
     {
         public NodeId Node { get; } = node;
 
-        public IRebindCommit? PrepareRebind(ISpecSource prospective, List<RuleError> errors)
+        public IRebindCommit? PrepareRebind(ISpecSource prospective, ScopeGeneration world, List<RuleError> errors)
         {
             errors.Add(new RuleError("$", RuleErrorCode.AsyncSpecInSyncLoad, "would not bind"));
             return null;

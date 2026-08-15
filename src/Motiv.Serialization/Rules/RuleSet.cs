@@ -82,7 +82,17 @@ public sealed class RuleSet
     /// <summary>The number of registered rules.</summary>
     public int Count => _rules.Count;
 
-    /// <summary>Read-only listings of every registered rule, reflecting live versions.</summary>
+    /// <summary>Read-only listings of every registered rule, as the pinned world holds them.</summary>
+    /// <remarks>
+    /// <see cref="BindingScope.Active"/>, not <see cref="BindingScope.Current"/> — the split is drawn
+    /// by what a caller does with the world, not by who calls it. A listing binds nothing and
+    /// publishes nothing, so it reads the pinned world, exactly as <c>PropositionSet.Propositions</c>
+    /// does and for the same reason: under a request pin the response carries the pinned generation as
+    /// a fencing token, and a listing read from the live world would describe a world its own header
+    /// disclaims. Only what a writer reads back as the next <c>expectedVersion</c> —
+    /// <see cref="RuleBase.Version"/> and <see cref="RuleBase.DocumentJson"/> — is live. See
+    /// <see cref="BindingScope.Active"/>'s remarks, which name this property on the pinned side.
+    /// </remarks>
     public IReadOnlyCollection<RuleSetEntry> Rules =>
         _rules.Values.Select(ToEntry).ToArray();
 
@@ -593,13 +603,20 @@ public sealed class RuleSet
     /// — nor <see cref="Add"/> or <see cref="Load"/>, all of which take only the inner
     /// <see cref="BindingScope.Locked{T}"/> monitor and always will: a synchronous reader cannot await
     /// the semaphore without either blocking a thread or becoming async itself, and both defeat the
-    /// point of a lock-free-shaped read surface. A semaphore and a monitor do not exclude each other,
-    /// so a write that took only the semaphore could run <see cref="CommitCore"/> → <see cref="Track"/>
-    /// → <c>Scope.Graph.Set</c>/<c>Remove</c> concurrently with any of those monitor-only readers
-    /// walking the same, deliberately-unsynchronized <c>DependencyGraph</c> or <c>PropositionOverlay</c>
-    /// mid-mutation. Prepare needs the monitor too, not only commit: binding a document reads through
-    /// <c>Scope.Source</c> (the layered proposition overlay), which a concurrent monitor-held
-    /// proposition edit could be mutating mid-read.
+    /// point of a lock-free-shaped read surface.
+    /// </para>
+    /// <para>
+    /// <strong>The monitor is not about readers seeing a half-mutated graph — nothing is mutated in
+    /// place any more.</strong> Every reader walks an immutable <see cref="ScopeGeneration"/> reached
+    /// through one volatile read, and <see cref="Track"/> writes a builder nobody else can see. What
+    /// the monitor still protects is the swap itself: <see cref="BindingScope.Mutate(Action{ScopeGenerationBuilder})"/>
+    /// is a read-fork-publish, not an atomic one, so two writers running it concurrently would both
+    /// fork the same world and the second to publish would silently discard the first. A semaphore and
+    /// a monitor do not exclude each other, so the gate alone cannot give that — <see cref="Add"/> and
+    /// <see cref="Load"/> take the monitor without ever taking the gate. Prepare needs it too, not only
+    /// commit: binding a document resolves through <c>Scope.Source</c>, and preparing against one world
+    /// while committing into a successor forked from another is the straddle the whole prepare-commit
+    /// split exists to rule out.
     /// </para>
     /// <para>
     /// The store round trip is the one span that must sit outside the monitor — holding a
@@ -619,6 +636,16 @@ public sealed class RuleSet
         if (prepared.Publication is not { } publication)
             return prepared.ToFailureResult();
 
+        // Where the store stood before this publish wrote, so the commit can tell whether the position
+        // it reads back afterwards is one this replica's world may honestly claim — see
+        // ScopeGenerationBuilder.AdvanceRuleSequence. As late as it can be: everything between this
+        // read and the write below is a window in which another replica's write is subsumed, and a
+        // refusal above it never reaches the store at all. The world cannot move underneath the pair —
+        // the outer gate excludes every other publish, and a refresh cannot swap while one is
+        // registered in flight (see BindingScope.TrySwap) — so the comparison is well-defined wherever
+        // in this span it is read.
+        var before = await _store.GetGenerationAsync(cancellationToken).ConfigureAwait(false);
+
         var appended = await _store
             .AppendAsync([RowFor(name, publication, provenance)], cancellationToken)
             .ConfigureAwait(false);
@@ -629,7 +656,7 @@ public sealed class RuleSet
         // Read back rather than counted locally, and that is the whole point of the token. A local
         // increment would have two replicas that published independently arrive at the same number,
         // and detecting exactly that skew is what the fencing token exists for — it has to be
-        // store-derived or it is fiction. One scalar read per publish, and publishes are rare.
+        // store-derived or it is fiction. Two scalar reads per publish, and publishes are rare.
         var generation = await _store.GetGenerationAsync(cancellationToken).ConfigureAwait(false);
 
         // Nothing below can fail. CommitCore also clears any quarantine on the rule — a successful
@@ -637,7 +664,7 @@ public sealed class RuleSet
         return Scope.Locked(() => Scope.Mutate(builder =>
         {
             var result = CommitCore(name, publication, builder);
-            builder.SetRuleSequence(generation);
+            builder.AdvanceRuleSequence(before, generation);
             return result;
         }));
     }
@@ -846,7 +873,8 @@ public sealed class RuleSet
     {
         public NodeId Node { get; } = NodeId.Rule(rule.Name);
 
-        public IRebindCommit? PrepareRebind(ISpecSource prospective, List<RuleError> errors) =>
-            rule.PrepareRebind(new RuleSerializer(prospective, options), errors);
+        public IRebindCommit? PrepareRebind(
+            ISpecSource prospective, ScopeGeneration world, List<RuleError> errors) =>
+            rule.PrepareRebind(new RuleSerializer(prospective, options), world, errors);
     }
 }

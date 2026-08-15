@@ -417,9 +417,11 @@ public class RefreshTests
         a.FindEntry("number")!.Version.ShouldBe(2);
         ruleA.Evaluate(1).Satisfied.ShouldBeFalse();
 
-        // And the retry finds nothing left to do: the local publish already carried this replica to
-        // the store's head.
-        report.Outcome.ShouldBe(RefreshOutcome.Unchanged);
+        // And the retry converges rather than declaring itself done. The publish carried this replica
+        // past its own row and no further: the foreign row it has never read is still outstanding, and
+        // the position the publish read back from the store is not one this world may claim — see
+        // ScopeGenerationBuilder.AdvanceRuleSequence.
+        report.Outcome.ShouldBe(RefreshOutcome.Applied);
     }
 
     /// <summary>
@@ -557,6 +559,14 @@ public class RefreshTests
     /// <c>TrySwap</c>, so a mismatch invented here escapes the stamp check that exists to adjudicate
     /// exactly this race, and the replica refuses to converge on the strength of it.
     /// </summary>
+    /// <remarks>
+    /// The load count is what separates the invented refusal from the honest one, because the two end
+    /// in the same outcome. An abort returns immediately, so a first attempt that invented a
+    /// regression would have read the store exactly once. Reading it twice means the first attempt
+    /// carried the unbindable head — the correct judgement against the world it snapshotted, in which
+    /// this rule had no document — lost the swap to the publish, and only <em>then</em> refused, on
+    /// the strength of the approved document that publish had by that point genuinely committed.
+    /// </remarks>
     [Fact]
     public async Task Should_judge_a_regression_against_one_world_rather_than_two()
     {
@@ -574,9 +584,14 @@ public class RefreshTests
         store.OnLoaded = () => a.UpdateAsync("number", NotPositive, 1, By("alice"));
         var report = await a.RefreshAsync(default);
 
-        // Assert — no regression was invented from the mismatch, and the publish stands
-        report.Regressions.ShouldBeEmpty();
-        report.Outcome.ShouldNotBe(RefreshOutcome.Aborted);
+        // Assert — the first attempt judged against its own snapshot and carried on; the refusal that
+        // did arrive belongs to the second, and to a document the publish had really committed
+        store.Loads.ShouldBe(2);
+        report.Outcome.ShouldBe(RefreshOutcome.Aborted);
+        report.Regressions.ShouldHaveSingleItem();
+        report.Regressions[0].Name.ShouldBe("number");
+
+        // And the publish stands either way
         a.FindEntry("number")!.Version.ShouldBe(2);
         ruleA.Evaluate(1).Satisfied.ShouldBeFalse();
     }
@@ -619,6 +634,185 @@ public class RefreshTests
 
         public Task<IReadOnlyList<StoredRuleVersion>> HistoryAsync(string name, CancellationToken ct) =>
             inner.HistoryAsync(name, ct);
+    }
+
+    private const string ViaA = """{"rule":{"spec":"a"}}""";
+    private const string NotViaA = """{"rule":{"not":{"spec":"a"}}}""";
+
+    /// <summary>A replica whose authored propositions are all it has — the simplest shape a scope has.</summary>
+    private static PropositionSet PropositionReplica(IPropositionStore store)
+    {
+        var propositions = new PropositionSet(RegistryWith(), store).AddModel<int>("number");
+        propositions.Load();
+        return propositions;
+    }
+
+    /// <summary>
+    /// A publish reads where the store stands <em>after</em> its own write, and that number speaks for
+    /// every row in the store rather than only the one it wrote. Another replica's write landing
+    /// between this replica's last poll and this publish is therefore swallowed: the world does not
+    /// hold that row, but the sequence claims the position that includes it, so <c>MovedFrom</c> is
+    /// false on every subsequent tick and the poller never rebuilds. The replica serves the row it
+    /// last read until some unrelated write happens to move the store again — silent, unbounded
+    /// divergence on a replica whose health check reads green throughout.
+    /// </summary>
+    [Fact]
+    public async Task Should_not_claim_a_proposition_store_position_whose_rows_it_has_not_read()
+    {
+        // Arrange — two replicas over one store, both holding a and b at version 1
+        var store = new InMemoryPropositionStore();
+        var a = PropositionReplica(store);
+        await a.CreateAsync("a", "number", IsPositive, null);
+        await a.CreateAsync("b", "number", ViaA, null);
+
+        var b = PropositionReplica(store);
+        b.Find("b")!.Version.ShouldBe(1);
+
+        // Act — A publishes while B is between polls, then B publishes something of its own
+        await a.UpdateAsync("b", NotViaA, 1);
+        (await b.UpdateAsync("a", NotPositive, 1)).Outcome.ShouldBe(PropositionUpdateOutcome.Updated);
+
+        // Assert — B's own publish must not have claimed A's, which B has never read
+        (await b.RefreshAsync()).Outcome.ShouldBe(RefreshOutcome.Applied);
+        b.Find("b")!.Version.ShouldBe(2);
+        b.DocumentJsonOf("b")!.ShouldBe(NotViaA);
+    }
+
+    /// <summary>The rule half of <see cref="Should_not_claim_a_proposition_store_position_whose_rows_it_has_not_read"/>.</summary>
+    [Fact]
+    public async Task Should_not_claim_a_rule_store_position_whose_rows_it_has_not_read()
+    {
+        // Arrange — two replicas over one store, each carrying both rules
+        var store = new InMemoryRuleStore();
+        var a = TwoRuleReplica(store);
+        var b = TwoRuleReplica(store);
+
+        // Act — A publishes a rule B is not publishing, then B publishes one of its own
+        await a.UpdateAsync("other", NotPositive, 1, By("alice"));
+        (await b.UpdateAsync("number", NotPositive, 1, By("bob"))).Outcome
+            .ShouldBe(RuleUpdateOutcome.Updated);
+
+        // Assert — B's own publish must not have claimed A's, which B has never read
+        (await b.RefreshAsync(default)).Outcome.ShouldBe(RefreshOutcome.Applied);
+        b.FindEntry("other")!.Version.ShouldBe(2);
+    }
+
+    private static RuleSet TwoRuleReplica(IRuleStore store)
+    {
+        var rules = new RuleSet(RegistryWith(), store);
+        rules.Add(new NumberRule());
+        rules.Add(new OtherRule());
+        rules.Load();
+        return rules;
+    }
+
+    /// <summary>
+    /// The other side of <see cref="Should_refuse_a_swap_for_a_publish_that_landed_while_it_was_rebuilding"/>:
+    /// a refresh landing inside a publish's store round trip. The publish holds the outer gate but no
+    /// monitor while it awaits the store, and it captured nothing that would tell it the world had
+    /// moved — so it resumes and forks the <em>refreshed</em> world, writing its prepared bindings and
+    /// its cascaded rebinds over it. Those rebinds carry the pre-refresh document and version of every
+    /// dependent, because a rebind deliberately carries the version across unchanged. The result is a
+    /// world no store state ever held: a dependent reverted, an unrelated row left refreshed, and a
+    /// sequence claiming both.
+    /// </summary>
+    /// <remarks>
+    /// The refresh is injected from inside <see cref="IPropositionStore.WriteAsync"/>, so "mid-flight"
+    /// is true by construction — the publish has prepared and released the monitor, and has not yet
+    /// read back the generation it will stamp. No threads, no latch, no timing.
+    /// </remarks>
+    [Fact]
+    public async Task Should_refuse_a_refresh_that_a_publish_would_commit_over()
+    {
+        // Arrange — b references a and would be rebound by a's publish; c is unrelated to all of it
+        var inner = new InMemoryPropositionStore();
+        var remote = PropositionReplica(inner);
+        await remote.CreateAsync("a", "number", IsPositive, null);
+        await remote.CreateAsync("b", "number", ViaA, null);
+        await remote.CreateAsync("c", "number", IsPositive, null);
+
+        var store = new RefreshingPropositionStore(inner);
+        var local = PropositionReplica(store);
+
+        // The other replica moves both rows while this one sits between polls
+        await remote.UpdateAsync("b", NotViaA, 1);
+        await remote.UpdateAsync("c", NotPositive, 1);
+
+        // Act — one refresh, landing after this publish's row is durable and before it commits
+        RefreshReport? midFlight = null;
+        store.OnWritten = async () => midFlight = await local.RefreshAsync();
+        (await local.UpdateAsync("a", NotPositive, 1)).Outcome.ShouldBe(PropositionUpdateOutcome.Updated);
+
+        // Assert — the refresh lost rather than being half-committed over. The world this replica now
+        // serves is exactly the one it was serving plus its own publish: b and c both untouched.
+        midFlight!.Outcome.ShouldBe(RefreshOutcome.Contended);
+        local.Find("a")!.Version.ShouldBe(2);
+        local.Find("b")!.Version.ShouldBe(1);
+        local.Find("c")!.Version.ShouldBe(1);
+
+        // And the replica still converges: losing a swap is a retry, not a wedge
+        (await local.RefreshAsync()).Outcome.ShouldBe(RefreshOutcome.Applied);
+        local.Find("a")!.Version.ShouldBe(2);
+        local.Find("b")!.Version.ShouldBe(2);
+        local.Find("c")!.Version.ShouldBe(2);
+        local.DocumentJsonOf("b")!.ShouldBe(NotViaA);
+    }
+
+    /// <summary>
+    /// A publish that throws must not leave itself registered as in flight. The failure mode is
+    /// asymmetric and worth a test of its own: a leaked registration is never cleared by anything, so
+    /// one store outage would stop this replica converging for the life of the process — a strictly
+    /// worse outcome than the interleave the registration exists to refuse, and one no health check
+    /// would attribute to the write that caused it.
+    /// </summary>
+    [Fact]
+    public async Task Should_not_leave_a_failed_publish_registered_as_in_flight()
+    {
+        // Arrange
+        var inner = new InMemoryPropositionStore();
+        var remote = PropositionReplica(inner);
+        await remote.CreateAsync("a", "number", IsPositive, null);
+
+        var store = new RefreshingPropositionStore(inner);
+        var local = PropositionReplica(store);
+        await remote.UpdateAsync("a", NotPositive, 1);
+
+        // Act — the store throws from inside the publish, after the registration was taken
+        store.OnWritten = () => throw new InvalidOperationException("the store is unreachable");
+        await Should.ThrowAsync<InvalidOperationException>(
+            local.CreateAsync("b", "number", IsPositive, null));
+
+        // Assert — the replica still converges
+        (await local.RefreshAsync()).Outcome.ShouldBe(RefreshOutcome.Applied);
+        local.DocumentJsonOf("a")!.ShouldBe(NotPositive);
+    }
+
+    /// <summary>
+    /// A store that lets a test refresh from inside a publish's own write. The callback runs
+    /// <em>after</em> the row is durable, which is exactly where the publish sits when it holds the
+    /// outer gate and no monitor. Fires once: a refresh reads this same store, and re-entering would
+    /// prove nothing the first pass has not.
+    /// </summary>
+    private sealed class RefreshingPropositionStore(IPropositionStore inner) : IPropositionStore
+    {
+        public Func<Task>? OnWritten { get; set; }
+
+        public IReadOnlyList<StoredProposition> Load() => inner.Load();
+
+        public Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken ct) => inner.LoadAsync(ct);
+
+        public Task<long> GetGenerationAsync(CancellationToken ct) => inner.GetGenerationAsync(ct);
+
+        public async Task WriteAsync(PropositionBatch batch, CancellationToken ct)
+        {
+            await inner.WriteAsync(batch, ct);
+
+            if (OnWritten is not { } refresh)
+                return;
+
+            OnWritten = null;
+            await refresh();
+        }
     }
 
     [Fact]

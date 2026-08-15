@@ -51,6 +51,7 @@ internal sealed class BindingScope
     private readonly AsyncLocal<ScopeGeneration?> _pinned = new();
     private ScopeGeneration _current;
     private long _writes;
+    private long _publishing;
     private PropositionSet? _propositions;
     private RuleSet? _rules;
 
@@ -176,17 +177,28 @@ internal sealed class BindingScope
 
     /// <summary>Records the proposition set that rebuilds this scope's authored half on a refresh.</summary>
     /// <remarks>
+    /// <para>
     /// A scope is the unit a refresh rebuilds, not a set: an authored proposition and a rule that
     /// references it must reach a reader in the same swap, so whichever set a caller happens to hold
     /// has to be able to rebuild both halves. Recording the sets here is how the scope finds the other
     /// half. Called by the set's own constructor, so a scope is never half-joined once construction
     /// returns.
+    /// </para>
+    /// <para>
+    /// Written and read through <see cref="Volatile"/>, like <see cref="Current"/> and
+    /// <c>MotivRefreshService.LastReport</c>, and for the reason those are: the writer is whichever
+    /// thread constructed the set, the reader is the poller, and no lock sits between them. The worst
+    /// a stale read could produce is a rebuild that sees one half of a scope and aborts — not
+    /// corruption, and unreachable through <c>AddMotivRules</c>, which resolves the proposition set
+    /// first. It is done anyway because "a field crossing threads is volatile" is the convention here,
+    /// and an unexplained exception to it reads as a deliberate one.
+    /// </para>
     /// </remarks>
-    public void Join(PropositionSet propositions) => _propositions = propositions;
+    public void Join(PropositionSet propositions) => Volatile.Write(ref _propositions, propositions);
 
     /// <summary>Records the rule set that rebuilds this scope's rule half on a refresh.</summary>
     /// <remarks>See <see cref="Join(PropositionSet)"/>.</remarks>
-    public void Join(RuleSet rules) => _rules = rules;
+    public void Join(RuleSet rules) => Volatile.Write(ref _rules, rules);
 
     /// <summary>
     /// Rebuilds the whole world from both stores and swaps it in, if either store has moved.
@@ -201,20 +213,27 @@ internal sealed class BindingScope
     /// </para>
     /// <para>
     /// Two concurrent refreshes are safe and uninteresting: both build, one swaps, the other is told
-    /// it was contended and retries.
+    /// it was contended and retries. A concurrent <em>publish</em> is the interesting case, and it
+    /// wins outright — see <see cref="TrySwap"/> for why a stamp comparison alone cannot see one, and
+    /// why losing to it is the right outcome rather than a missed convergence.
     /// </para>
     /// </remarks>
     /// <param name="cancellationToken">Cancels the store reads.</param>
     /// <returns>What the refresh did, and anything that would not bind.</returns>
     public async Task<RefreshReport> RefreshAsync(CancellationToken cancellationToken)
     {
+        // One read of each half per refresh, not one per use: a set joined halfway through would
+        // otherwise have this poll the store for a half it then rebuilds without, or the reverse.
+        var rules = Volatile.Read(ref _rules);
+        var propositions = Volatile.Read(ref _propositions);
+
         // Three attempts, then leave it to the next tick. A refresh that loses the swap has been
         // overtaken by a publish, which is a world at least as new as the one it was building.
         for (var attempt = 0; attempt < 3; attempt++)
         {
             var sequence = new StoreGeneration(
-                _rules is null ? 0 : await _rules.StoreGenerationAsync(cancellationToken).ConfigureAwait(false),
-                _propositions is null ? 0 : await _propositions.StoreGenerationAsync(cancellationToken).ConfigureAwait(false));
+                rules is null ? 0 : await rules.StoreGenerationAsync(cancellationToken).ConfigureAwait(false),
+                propositions is null ? 0 : await propositions.StoreGenerationAsync(cancellationToken).ConfigureAwait(false));
 
             // Snapshot() reads the stamp and the world in the only safe order — see its own doc.
             // Reading them separately here, in the wrong order, would hand this rebuild a stale
@@ -229,12 +248,12 @@ internal sealed class BindingScope
 
             // Propositions first: a rule document may reference an authored proposition, so the
             // authored layer has to be in the builder before any rule binds against it.
-            if (_propositions is not null)
-                await _propositions.RebuildIntoAsync(builder, current, regressions, quarantined, cancellationToken)
+            if (propositions is not null)
+                await propositions.RebuildIntoAsync(builder, current, regressions, quarantined, cancellationToken)
                     .ConfigureAwait(false);
 
-            if (_rules is not null)
-                await _rules.RebuildIntoAsync(builder, current, regressions, quarantined, cancellationToken)
+            if (rules is not null)
+                await rules.RebuildIntoAsync(builder, current, regressions, quarantined, cancellationToken)
                     .ConfigureAwait(false);
 
             if (regressions.Count > 0)
@@ -276,11 +295,44 @@ internal sealed class BindingScope
 
     /// <summary>
     /// Swaps in a successor built elsewhere, unless the world moved since
-    /// <paramref name="expectedWriteStamp"/> was taken. Assumes the inner monitor is held.
+    /// <paramref name="expectedWriteStamp"/> was taken — or is about to. Assumes the inner monitor is
+    /// held.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <strong>Two refusals, because the write stamp alone cannot see a publish that has not landed
+    /// yet.</strong> A publish is <c>Locked{prepare}</c> → <c>await store</c> → <c>Locked{Mutate}</c>,
+    /// and it holds <em>no monitor</em> across that await. The stamp only moves at the commit, so
+    /// throughout the store round trip a publish is entirely invisible to a stamp comparison — and
+    /// the successor it will commit was <em>prepared against the world as it stood before this
+    /// swap</em>. Let the swap through and the publish resumes, forks the world this refresh just
+    /// installed, and writes over it: its own publication, and — worse — every cascaded rebind in its
+    /// closure, each carrying the pre-refresh document and version of a dependent, because a rebind
+    /// deliberately carries the version across unchanged. The result is a world no store state ever
+    /// held. It does not self-heal either: the publish then stamps the store position it read after
+    /// its own write, so the next poll finds nothing has moved.
+    /// </para>
+    /// <para>
+    /// So a publish in flight wins over a rebuild in flight, and it wins <em>before</em> it has done
+    /// anything a stamp could record. The direction is the one the retry loop already handles: the
+    /// refresh is told it was contended, and the world a publish leaves behind is always at least as
+    /// new as the one this rebuild was assembling.
+    /// </para>
+    /// <para>
+    /// Reading the counter under the monitor is what makes it sufficient rather than merely helpful.
+    /// A publish increments it before taking the monitor to prepare, so any publish whose prepare has
+    /// already run — the only kind that could commit a stale successor after this swap — released the
+    /// monitor after incrementing, and this read acquires it afterwards. A publish that increments
+    /// later than that has not prepared yet, so it will fork whatever world this swap installs, which
+    /// is exactly what it should do.
+    /// </para>
+    /// </remarks>
     /// <returns>Whether the successor went live.</returns>
     public bool TrySwap(ScopeGeneration successor, long expectedWriteStamp)
     {
+        if (Interlocked.Read(ref _publishing) != 0)
+            return false;
+
         if (Volatile.Read(ref _writes) != expectedWriteStamp)
             return false;
 
@@ -350,23 +402,43 @@ internal sealed class BindingScope
 
     /// <summary>
     /// Runs an operation holding the outer write gate, so a whole publish — including its store
-    /// round trip — serialises against every other publish.
+    /// round trip — serialises against every other publish, and declares it in flight so a refresh
+    /// cannot swap a world out from under it.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// The reason this exists is <em>cancellation</em>, not throughput: the critical section is
     /// mostly CPU, so awaiting frees a few milliseconds at most. What it buys is
     /// <see cref="SemaphoreSlim.WaitAsync(CancellationToken)"/> — an answer to a store that has
     /// stopped responding, which a monitor cannot give.
+    /// </para>
+    /// <para>
+    /// <strong>This is also where a publish declares itself in flight.</strong> The gate is the one
+    /// span every write path shares — the lone rule update and revert, the lone proposition create,
+    /// update and withdraw, and the governed envelope all reach the store from inside it, and a
+    /// <c>…Core</c> method that skips the gate does so only because a caller already holds it. So
+    /// registering here is registering everywhere, by construction rather than by a list somebody has
+    /// to keep up to date. <see cref="TrySwap"/>'s remarks say what the registration is for.
+    /// </para>
+    /// <para>
+    /// Registered after the gate is acquired, not before: a publish still queued behind another has
+    /// prepared nothing and could not commit a stale world, so counting it would only starve the
+    /// refresh for longer. Deregistered in the <c>finally</c>, so a store that throws or a token that
+    /// cancels leaves the count where it found it — a leaked registration would wedge refresh for the
+    /// life of the process, which is a worse failure than the one this prevents.
+    /// </para>
     /// </remarks>
     public async Task<T> LockedAsync<T>(Func<Task<T>> operation, CancellationToken cancellationToken)
     {
         await _outer.WaitAsync(cancellationToken).ConfigureAwait(false);
+        Interlocked.Increment(ref _publishing);
         try
         {
             return await operation().ConfigureAwait(false);
         }
         finally
         {
+            Interlocked.Decrement(ref _publishing);
             _outer.Release();
         }
     }
@@ -375,12 +447,14 @@ internal sealed class BindingScope
     public async Task LockedAsync(Func<Task> operation, CancellationToken cancellationToken)
     {
         await _outer.WaitAsync(cancellationToken).ConfigureAwait(false);
+        Interlocked.Increment(ref _publishing);
         try
         {
             await operation().ConfigureAwait(false);
         }
         finally
         {
+            Interlocked.Decrement(ref _publishing);
             _outer.Release();
         }
     }
@@ -431,10 +505,13 @@ internal sealed class BindingScope
     {
         var broken = new List<BrokenDependent>();
 
-        // One read, not one per use: the graph being walked and the participants being rebound have
-        // to come from the same world, or a publish landing mid-walk would have this rebind nodes one
-        // world names against definitions from another. The inner monitor makes that unreachable
-        // today; reading twice would leave it a lock away from being reachable.
+        // One read, not one per use: the graph being walked, the participants being rebound and the
+        // definitions they are rebound *from* all have to come from the same world, or a publish
+        // landing mid-walk would have this rebind nodes one world names against definitions from
+        // another. The inner monitor makes that unreachable today; reading twice would leave it a lock
+        // away from being reachable. This is why the world is handed to PrepareRebind rather than
+        // left for each participant to read for itself — a rule keeps its document and version in the
+        // world, so a participant reading Scope.Current would be exactly that second read.
         var world = Current;
 
         foreach (var node in world.Graph.DependentClosure(propositionName))
@@ -451,7 +528,7 @@ internal sealed class BindingScope
                 continue;
 
             var errors = new List<RuleError>();
-            var commit = participant.PrepareRebind(prospective.Source, errors);
+            var commit = participant.PrepareRebind(prospective.Source, world, errors);
 
             if (commit is null)
             {

@@ -200,7 +200,15 @@ public abstract class RuleBase
     /// proposition edit can discover that this rule would stop binding while nothing has moved yet.
     /// Returns a no-op commit for a rule on its compiled default, which references nothing.
     /// </summary>
-    internal abstract IRebindCommit? PrepareRebind(RuleSerializer serializer, List<RuleError> errors);
+    /// <param name="serializer">Binds the document against the prospective source.</param>
+    /// <param name="world">
+    /// The world holding the document and version being rebound. Passed in rather than read from
+    /// <c>Scope.Current</c> here, so this rebind and the graph walk that reached it come from one
+    /// world — see <see cref="IRebindable.PrepareRebind"/>.
+    /// </param>
+    /// <param name="errors">Filled with why the rule would no longer bind.</param>
+    internal abstract IRebindCommit? PrepareRebind(
+        RuleSerializer serializer, ScopeGeneration world, List<RuleError> errors);
 
     /// <summary>
     /// Binds a *proposed* document against the serializer's source, publishing nothing and leaving

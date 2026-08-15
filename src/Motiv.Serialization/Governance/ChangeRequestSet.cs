@@ -765,13 +765,16 @@ public sealed class ChangeRequestSet
         /// <remarks>
         /// Holds both exclusion tiers, same shape as <see cref="RuleSet.PersistAndCommitCoreAsync"/>:
         /// the outer semaphore (<see cref="BindingScope.LockedAsync{T}"/>) serialises the whole publish
-        /// await-safely, but <see cref="Validate"/> reads live scope state — <c>Scope.Graph</c> via
-        /// <see cref="BindingScope.PrepareClosure"/> and <c>Referrers</c>, and <c>Scope.Source</c> via
-        /// every <c>ValidateCore</c>/<c>PrepareCore</c> call — which is exactly the state a
-        /// monitor-held rule commit (<see cref="RuleSet.PersistAndCommitCoreAsync"/>) or a
-        /// monitor-held proposition write can be mutating concurrently. <see cref="Validate"/> is
+        /// await-safely, but it does not exclude a monitor-only writer — <see cref="RuleSet.Add"/> and
+        /// <see cref="RuleSet.Load"/> never take the gate — and a monitor-only writer replaces the live
+        /// world. <see cref="Validate"/> reads that world repeatedly and from several angles:
+        /// <c>Current.Graph</c> via <see cref="BindingScope.PrepareClosure"/> and <c>Referrers</c>, and
+        /// <c>Current.Source</c> via every <c>ValidateCore</c>/<c>PrepareCore</c> call. Each read is
+        /// individually safe — a generation is immutable — but a swap landing between two of them
+        /// would have this envelope validated against two different worlds, and the whole
+        /// validate-then-apply atomicity claim rests on it having seen one. <see cref="Validate"/> is
         /// wholly synchronous, so wrapping it in <see cref="BindingScope.Locked{T}"/> costs nothing and
-        /// gives it one consistent snapshot for its whole walk.
+        /// gives it exactly that.
         /// <para>
         /// <see cref="ApplyValidatedAsync"/> is deliberately <em>not</em> wrapped here: it takes the
         /// monitor itself, twice — once to prepare the whole envelope, once to commit it — with the
@@ -1084,6 +1087,20 @@ public sealed class ChangeRequestSet
             if (prepared.Failure is { } prepareFailure)
                 return prepareFailure;
 
+            // Where both stores stood before this envelope wrote anything — see
+            // ScopeGenerationBuilder.AdvanceRuleSequence for what the comparison decides, and
+            // RuleSet.PersistAndCommitCoreAsync for why the read sits as late as it can. Read only for
+            // the halves this envelope will actually write, which is Prepare's answer and is therefore
+            // knowable only now; the other half never reaches an Advance call, and a read for it would
+            // be a round trip spent on a number nothing consults.
+            var rulesBefore = prepared.Rules.Count > 0
+                ? await rules.StoreGenerationAsync(cancellationToken).ConfigureAwait(false)
+                : 0;
+
+            var propositionsBefore = prepared.PropositionWrites is not null
+                ? await propositions!.StoreGenerationAsync(cancellationToken).ConfigureAwait(false)
+                : 0;
+
             // --- Phase 2: persist the whole envelope as two independent all-or-nothing batches,
             // rules then propositions — see the remarks above for what a crash between them leaves.
             if (prepared.Rules.Count > 0)
@@ -1189,10 +1206,10 @@ public sealed class ChangeRequestSet
                         versions[name] = rules.CommitCore(name, publication, builder).Version;
 
                     if (ruleGeneration is { } ruleSequence)
-                        builder.SetRuleSequence(ruleSequence);
+                        builder.AdvanceRuleSequence(rulesBefore, ruleSequence);
 
                     if (propositionGeneration is { } propositionSequence)
-                        builder.SetPropositionSequence(propositionSequence);
+                        builder.AdvancePropositionSequence(propositionsBefore, propositionSequence);
                 });
 
                 return new ChangeRequestResult(ChangeRequestOutcome.Ok, change, null, [], null, null, versions);

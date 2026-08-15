@@ -175,9 +175,12 @@ public class Rule<TModel, TMetadata> : RuleBase
         return (listed.Version, listed.DocumentJson);
     }
 
-    internal sealed override IRebindCommit? PrepareRebind(RuleSerializer serializer, List<RuleError> errors)
+    internal sealed override IRebindCommit? PrepareRebind(
+        RuleSerializer serializer, ScopeGeneration world, List<RuleError> errors)
     {
-        var current = Live();
+        // The walk's world, not Live(): a second read of Scope.Current would let a publish landing
+        // mid-walk have this rebind a node one world names against a definition from another.
+        var current = StateIn(world);
 
         // A compiled default resolves no names, so there is nothing to rebind.
         if (current.DocumentJson is null)

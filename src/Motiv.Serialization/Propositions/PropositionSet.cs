@@ -344,6 +344,11 @@ public sealed class PropositionSet
         if (prepared.Failure is { } failure)
             return failure;
 
+        // Where the store stood before this publish wrote — see RuleSet.PersistAndCommitCoreAsync for
+        // why it is read here rather than earlier, and ScopeGenerationBuilder.AdvancePropositionSequence
+        // for what the pair is compared for.
+        var before = await _store.GetGenerationAsync(cancellationToken).ConfigureAwait(false);
+
         await _store.WriteAsync(SaveBatchFor(prepared.Authored!), cancellationToken).ConfigureAwait(false);
 
         // Store-derived, never counted locally — see RuleSet.PersistAndCommitCoreAsync for why the
@@ -353,7 +358,7 @@ public sealed class PropositionSet
         return Scope.Locked(() => success(Scope.Mutate(builder =>
         {
             var version = CommitPublishCore(prepared, builder);
-            builder.SetPropositionSequence(generation);
+            builder.AdvancePropositionSequence(before, generation);
             return version;
         })));
     }
@@ -462,6 +467,10 @@ public sealed class PropositionSet
         if (prepared.Failure is { } failure)
             return failure;
 
+        // See PersistAndCommitCoreAsync: a withdrawal claims a store position on the same terms a
+        // save does, so it has to be able to tell whether the position is one this world may claim.
+        var before = await _store.GetGenerationAsync(cancellationToken).ConfigureAwait(false);
+
         await _store.WriteAsync(PropositionBatch.Delete(name), cancellationToken).ConfigureAwait(false);
 
         // A withdrawal moves the store as surely as a save does, and leaves a state — rows gone,
@@ -473,7 +482,7 @@ public sealed class PropositionSet
             Scope.Mutate(builder =>
             {
                 CommitWithdrawCore(prepared, builder);
-                builder.SetPropositionSequence(generation);
+                builder.AdvancePropositionSequence(before, generation);
             });
             return PropositionUpdateResult.Removed();
         });
@@ -1037,9 +1046,17 @@ public sealed class PropositionSet
     /// The infallible half of a publish, for a caller that has already persisted the document — the
     /// counterpart of <see cref="RuleSet.CommitCore"/>. Folds the authored proposition into the
     /// successor's authored table, overlay, graph and participant table — all into one builder, so all
-    /// four facts go live in the single swap that publishes it. Assumes <see cref="BindingScope"/>'s
-    /// inner monitor is held: the caller's fork-and-swap relies on no second writer being in flight.
+    /// four facts go live in the single swap that publishes it.
     /// </summary>
+    /// <remarks>
+    /// <strong>Assumes the caller owns <paramref name="builder"/> alone</strong> — which is weaker
+    /// than "holds the monitor", and deliberately so, because the two callers get it different ways.
+    /// A publish holds <see cref="BindingScope"/>'s inner monitor, because its builder was forked from
+    /// the live world and its fork-and-swap is not atomic. A refresh holds nothing: its builder was
+    /// never forked from anything and no other thread can reach it, so there is nothing to exclude
+    /// until it offers the result to <see cref="BindingScope.TrySwap"/>, which does take the monitor.
+    /// Writing here is safe under either.
+    /// </remarks>
     internal static void CommitPublish(AuthoredProposition authored, ScopeGenerationBuilder builder)
     {
         builder.SetAuthored(authored);
