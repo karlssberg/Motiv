@@ -130,6 +130,22 @@ public class JsonFilePropositionStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task Should_move_the_generation_when_an_existing_proposition_is_edited()
+    {
+        // Arrange — editing an existing name is a replace, not an append: unlike the rule log, the
+        // row count does not grow, so row count alone cannot be this store's generation.
+        var store = new JsonFilePropositionStore(_path);
+        await store.WriteAsync(PropositionBatch.Save(Stored("customer.a", version: 1)), default);
+        var generation = await store.GetGenerationAsync(default);
+
+        // Act — same name, changed document, no new row
+        await store.WriteAsync(PropositionBatch.Save(Stored("customer.a", version: 2)), default);
+
+        // Assert — a replica polling this store must be able to see the edit
+        (await store.GetGenerationAsync(default)).ShouldBeGreaterThan(generation);
+    }
+
+    [Fact]
     public void Should_treat_a_file_it_cannot_read_as_empty_rather_than_throwing()
     {
         // Arrange — a permission-denied state file must not stop the host booting. Unix-only:

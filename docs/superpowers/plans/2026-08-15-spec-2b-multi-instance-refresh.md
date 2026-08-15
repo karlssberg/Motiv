@@ -217,10 +217,21 @@ and inside `WriteAsync`, after the two loops and still inside `lock (_gate)`:
 
 - [ ] **Step 5: Implement them on `JsonFilePropositionStore`**
 
-Mirror `JsonFileRuleStore` (read it first — it is the reference for how this sample store derives a
-generation from the file). `LoadAsync` returns `Task.FromResult(Load())`; `GetGenerationAsync`
-returns the file's last-write ticks, or `0` when the file does not exist, matching
-`JsonFileRuleStore.GetGenerationAsync` exactly.
+`LoadAsync` returns `Task.FromResult(Load())`, as `JsonFileRuleStore` does.
+
+`GetGenerationAsync` **must not** copy its rule-store twin. `JsonFileRuleStore` answers with
+`ReadAll().Count`, which is correct there because that store is an append-only version log: the count
+is monotonic and moves on every write. This store replaces rows in place — `WriteAsync` drops every
+superseded name and re-appends the saves — so editing an existing proposition's document leaves the
+count identical, and a polling replica would never observe the single most common authoring
+operation.
+
+Derive it from the file's last-write time instead: `File.GetLastWriteTimeUtc(path).Ticks`, or `0`
+when the file does not exist, read under the same `_gate` as the other members. Record the asymmetry
+in the class remarks — the next person to "make the two stores consistent" needs to find the reason
+here — along with the honest caveat that mtime is sample-grade: it inherits the filesystem's
+timestamp resolution and is not immune to a clock moving backwards. Plan 2C's EF Core store is the
+real answer; this one exists so two processes behave like two replicas.
 
 - [ ] **Step 6: Add the sample-store test**
 

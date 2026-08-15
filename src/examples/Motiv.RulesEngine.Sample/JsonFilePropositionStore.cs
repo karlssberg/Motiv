@@ -20,14 +20,27 @@ using Motiv.Serialization;
 /// happens: a real store would log it, refuse to write over an unread file, or both.
 /// </para>
 /// <para>
-/// The generation mirrors <c>JsonFileRuleStore</c>'s: the file's own row count, read fresh rather
-/// than cached, so it survives a restart and moves for every process the way the rule store's does.
-/// It is a coarser signal here than on the rule log, though — that log is append-only, so its count
-/// grows on every accepted write; this store overwrites a row of the same name in place, so a batch
-/// that only replaces existing rows leaves the count, and therefore the generation, unchanged. A
-/// poller would then not know a replace happened until some other write also changed the row count.
-/// Acceptable for a sample twin of the rule store; a production store would derive this from
-/// something that moves on every write, such as a row version or the file's last-write time.
+/// The generation deliberately does <em>not</em> mirror <c>JsonFileRuleStore</c>'s, even though the
+/// two stores otherwise share a shape. <c>JsonFileRuleStore</c> is an append-only version log —
+/// <c>AppendAsync</c> only ever adds rows, so the file's row count is monotonic and moves on every
+/// accepted write, which is what makes it a valid generation there. This store instead replaces rows
+/// in place: <see cref="WriteAsync"/> drops every superseded name and re-appends the saves, so saving
+/// a changed document under an <em>existing</em> name — editing a proposition, the common case —
+/// leaves the row count identical. Row count is therefore not transferable between an append-only
+/// store and a replace store; using it here would mean a poller could observe creates and deletes but
+/// never an edit to an existing proposition, which is exactly the case Spec 2B's refresh exists to
+/// converge on. So the generation here is instead the file's last-write time in UTC ticks, or
+/// <c>0</c> when the file does not exist — it moves on every write regardless of whether the row
+/// count changed.
+/// </para>
+/// <para>
+/// This is a sample-grade answer, not a production one: it inherits whatever timestamp resolution
+/// the filesystem gives <c>File.GetLastWriteTimeUtc</c>, and it is not immune to the system clock
+/// moving backwards, which would let the generation move backwards too — something
+/// <see cref="IPropositionStore.GetGenerationAsync"/> promises it never does while replicas are live.
+/// Plan 2C's EF Core store is the real one, where the primary key and a proper row version close both
+/// gaps; this file exists so two processes over one path behave like two replicas, not to be that
+/// store itself.
 /// </para>
 /// </remarks>
 public sealed class JsonFilePropositionStore(string path) : IPropositionStore
@@ -51,7 +64,7 @@ public sealed class JsonFilePropositionStore(string path) : IPropositionStore
     public Task<long> GetGenerationAsync(CancellationToken cancellationToken)
     {
         lock (_gate)
-            return Task.FromResult((long)ReadAll().Count);
+            return Task.FromResult(File.Exists(path) ? File.GetLastWriteTimeUtc(path).Ticks : 0L);
     }
 
     /// <inheritdoc />
