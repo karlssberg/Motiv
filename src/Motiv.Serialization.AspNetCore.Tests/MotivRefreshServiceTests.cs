@@ -22,9 +22,17 @@ public class MotivRefreshServiceTests
     /// asserting on state read *after* this returns must know the wait itself succeeded, or a slow
     /// machine turns a timeout into a confusing failure somewhere else entirely.
     /// </summary>
+    /// <remarks>
+    /// 30 seconds, not 5: this loop polls every 10ms, so on a healthy, idle machine it exits within a
+    /// tick or two regardless of the deadline — a generous budget costs nothing there. It is only
+    /// spent in full when something is genuinely broken, or when CI runs this alongside other test
+    /// projects and a real poller tick gets starved of CPU for a few seconds. A tight deadline turns
+    /// that ordinary contention into a false red; a generous one still fails, just slower, when the
+    /// condition truly never holds.
+    /// </remarks>
     private static async Task<bool> WaitUntil(Func<bool> condition)
     {
-        var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(30);
         while (!condition() && DateTimeOffset.UtcNow < deadline)
             await Task.Delay(10);
         return condition();
