@@ -346,8 +346,16 @@ public sealed class PropositionSet
 
         await _store.WriteAsync(SaveBatchFor(prepared.Authored!), cancellationToken).ConfigureAwait(false);
 
-        return Scope.Locked(() =>
-            success(Scope.Mutate(builder => CommitPublishCore(prepared, builder))));
+        // Store-derived, never counted locally — see RuleSet.PersistAndCommitCoreAsync for why the
+        // token would be fiction otherwise.
+        var generation = await _store.GetGenerationAsync(cancellationToken).ConfigureAwait(false);
+
+        return Scope.Locked(() => success(Scope.Mutate(builder =>
+        {
+            var version = CommitPublishCore(prepared, builder);
+            builder.SetPropositionSequence(generation);
+            return version;
+        })));
     }
 
     /// <summary>
@@ -456,9 +464,17 @@ public sealed class PropositionSet
 
         await _store.WriteAsync(PropositionBatch.Delete(name), cancellationToken).ConfigureAwait(false);
 
+        // A withdrawal moves the store as surely as a save does, and leaves a state — rows gone,
+        // generation advanced — that nothing else would ever record.
+        var generation = await _store.GetGenerationAsync(cancellationToken).ConfigureAwait(false);
+
         return Scope.Locked(() =>
         {
-            Scope.Mutate(builder => CommitWithdrawCore(prepared, builder));
+            Scope.Mutate(builder =>
+            {
+                CommitWithdrawCore(prepared, builder);
+                builder.SetPropositionSequence(generation);
+            });
             return PropositionUpdateResult.Removed();
         });
     }
@@ -615,6 +631,11 @@ public sealed class PropositionSet
                     "Load has already been called on this PropositionSet. It reads the store once, " +
                     "at startup, before rules are added; it is not a refresh.");
 
+            // The generation before the rows — see RuleSet.Load, whose reasoning this mirrors exactly,
+            // for why that order matters and why blocking on it here is the settled design rather than
+            // an oversight.
+            var generation = _store.GetGenerationAsync(default).ConfigureAwait(false).GetAwaiter().GetResult();
+
             // Set only once the store has actually been read. Reading is the one step here that can
             // throw rather than quarantine, and it mutates nothing — so a store that was briefly
             // unreachable leaves the set in its pre-load state and genuinely may be loaded again.
@@ -623,10 +644,12 @@ public sealed class PropositionSet
 
             var ordered = OrderAndRecordCycles(candidates);
 
-            // An empty store publishes nothing at all. A successor identical to its predecessor would
-            // still move the write stamp, and that stamp is a refresh's compare-and-set signal — see
-            // BindingScope.WriteStamp — so a swap with nothing in it is not free.
-            if (ordered.Count == 0)
+            // An untouched store publishes nothing at all. A successor identical to its predecessor
+            // would still move the write stamp, and that stamp is a refresh's compare-and-set signal —
+            // see BindingScope.WriteStamp — so a swap with nothing in it is not free. A store that has
+            // moved but holds no rows is *not* that case: a withdrawal leaves exactly that state, and
+            // the position still has to be recorded.
+            if (ordered.Count == 0 && generation == 0)
                 return;
 
             // One builder for the whole store, not one world per row. Each row binds against the
@@ -635,6 +658,11 @@ public sealed class PropositionSet
             // publishes a single generation instead of forking one per row.
             Scope.Mutate(builder =>
             {
+                // Where this replica now stands, in the same swap that publishes what it stands on —
+                // see RuleSet.Load for why a replica that never records this is worse off than one
+                // with no token at all.
+                builder.SetPropositionSequence(generation);
+
                 foreach (var name in ordered)
                     LoadOne(candidates[name], builder);
             });

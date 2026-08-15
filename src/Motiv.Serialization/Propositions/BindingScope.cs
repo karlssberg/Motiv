@@ -238,7 +238,7 @@ internal sealed class BindingScope
                     .ConfigureAwait(false);
 
             if (regressions.Count > 0)
-                return RefreshReport.Aborted(current.Sequence, regressions);
+                return RefreshReport.Aborted(current.Sequence, regressions, quarantined);
 
             builder.SetSequence(sequence);
 

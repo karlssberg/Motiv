@@ -96,6 +96,17 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
         builder.FindRuleState(Slot) is State state ? state.DocumentJson : null;
 
     /// <inheritdoc />
+    internal sealed override string? DocumentJsonIn(ScopeGeneration generation)
+    {
+        // See the synchronous twin in Rule<TModel, TMetadata> for why this is bounds-checked and
+        // null-tolerant rather than routed through StateIn.
+        var slots = generation.RuleSlots;
+        return Slot >= 0 && Slot < slots.Length && slots[Slot]?.State is State state
+            ? state.DocumentJson
+            : null;
+    }
+
+    /// <inheritdoc />
     internal sealed override object? BindStoredState(
         RuleSerializer serializer, string? documentJson, int version, List<RuleError> errors)
     {

@@ -91,6 +91,17 @@ public class Rule<TModel, TMetadata> : RuleBase
         builder.FindRuleState(Slot) is State state ? state.DocumentJson : null;
 
     /// <inheritdoc />
+    internal sealed override string? DocumentJsonIn(ScopeGeneration generation)
+    {
+        // Bounds-checked and null-tolerant rather than routed through StateIn, which throws: a world
+        // snapshotted before this rule was registered simply has no slot for it, and that is an answer.
+        var slots = generation.RuleSlots;
+        return Slot >= 0 && Slot < slots.Length && slots[Slot]?.State is State state
+            ? state.DocumentJson
+            : null;
+    }
+
+    /// <inheritdoc />
     internal sealed override object? BindStoredState(
         RuleSerializer serializer, string? documentJson, int version, List<RuleError> errors)
     {

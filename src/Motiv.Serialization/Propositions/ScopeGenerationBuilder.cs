@@ -200,10 +200,37 @@ internal sealed class ScopeGenerationBuilder
                 $"Rule slot {slot} has no state, so there is nothing to quarantine.");
     }
 
+    /// <summary>Records where both stores stood. A refresh's write, which rebuilds from both at once.</summary>
     public void SetSequence(StoreGeneration sequence)
     {
         ThrowIfBuilt();
         _sequence = sequence;
+    }
+
+    /// <summary>
+    /// Records where the <em>rule</em> store stands, leaving the proposition component as it was.
+    /// </summary>
+    /// <remarks>
+    /// Per-component rather than a whole <see cref="StoreGeneration"/>, because every writer but a
+    /// refresh touches exactly one store — the two are never written in the same transaction. A caller
+    /// that had to assemble the pair itself would have to read the other component back out of the
+    /// world it is forking and re-state it, and the day someone forgets, the untouched half silently
+    /// resets to zero and the fencing token starts under-reporting a store nobody wrote to.
+    /// </remarks>
+    public void SetRuleSequence(long generation)
+    {
+        ThrowIfBuilt();
+        _sequence = _sequence with { Rules = generation };
+    }
+
+    /// <summary>
+    /// Records where the <em>proposition</em> store stands, leaving the rule component as it was. See
+    /// <see cref="SetRuleSequence"/>.
+    /// </summary>
+    public void SetPropositionSequence(long generation)
+    {
+        ThrowIfBuilt();
+        _sequence = _sequence with { Propositions = generation };
     }
 
     /// <summary>

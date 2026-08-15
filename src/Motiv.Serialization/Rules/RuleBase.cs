@@ -56,6 +56,21 @@ public abstract class RuleBase
     /// </summary>
     internal abstract string? DocumentJsonIn(ScopeGenerationBuilder builder);
 
+    /// <summary>
+    /// The document this rule carried in <paramref name="generation"/>, or null when it was on a
+    /// compiled default or had no state there at all.
+    /// </summary>
+    /// <remarks>
+    /// The named-world counterpart of <see cref="DocumentJson"/>, which reads whatever is live at the
+    /// moment it is called. A caller that has already snapshotted a world and is deciding something
+    /// about it must ask that world, not the current one: mixing the two means judging a rule's state
+    /// against a document from a different world, and a decision taken on that mismatch has escaped
+    /// whatever compare-and-set the snapshot was taken for. Unlike <see cref="Version"/> and
+    /// <see cref="DocumentJson"/> this never throws for an unbound slot — a caller reconstructing a
+    /// world needs "there was nothing there" as an answer, not an exception.
+    /// </remarks>
+    internal abstract string? DocumentJsonIn(ScopeGeneration generation);
+
     internal RuleDefault Default { get; }
 
     private BindingScope? _scope;

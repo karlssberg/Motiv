@@ -1128,6 +1128,18 @@ public sealed class ChangeRequestSet
                 }
             }
 
+            // Where each store now stands, read back rather than counted — see
+            // RuleSet.PersistAndCommitCoreAsync. Only the halves this envelope actually wrote are
+            // read: an envelope touching one store must leave the other's component exactly as it
+            // found it, which is why the successor is stamped per component rather than as a pair.
+            var ruleGeneration = prepared.Rules.Count > 0
+                ? await rules.StoreGenerationAsync(cancellationToken).ConfigureAwait(false)
+                : (long?)null;
+
+            var propositionGeneration = prepared.PropositionWrites is not null
+                ? await propositions!.StoreGenerationAsync(cancellationToken).ConfigureAwait(false)
+                : (long?)null;
+
             // --- Phase 3: apply every prepared change. Nothing below can fail.
             //
             // Propositions commit before rules here, but — unlike an earlier version of this method —
@@ -1175,6 +1187,12 @@ public sealed class ChangeRequestSet
 
                     foreach (var (name, publication) in prepared.Rules)
                         versions[name] = rules.CommitCore(name, publication, builder).Version;
+
+                    if (ruleGeneration is { } ruleSequence)
+                        builder.SetRuleSequence(ruleSequence);
+
+                    if (propositionGeneration is { } propositionSequence)
+                        builder.SetPropositionSequence(propositionSequence);
                 });
 
                 return new ChangeRequestResult(ChangeRequestOutcome.Ok, change, null, [], null, null, versions);

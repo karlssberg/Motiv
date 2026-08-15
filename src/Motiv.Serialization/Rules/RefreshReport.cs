@@ -72,7 +72,10 @@ public sealed class RefreshReport
     /// <summary>What would have regressed, and therefore why an <see cref="RefreshOutcome.Aborted"/> refresh aborted.</summary>
     public IReadOnlyList<RefreshFailure> Regressions { get; }
 
-    /// <summary>What was carried forward still quarantined. Never blocks a refresh.</summary>
+    /// <summary>
+    /// What was found still quarantined. Never blocks a refresh, and populated on an
+    /// <see cref="RefreshOutcome.Aborted"/> refresh too — see the class remarks.
+    /// </summary>
     public IReadOnlyList<RefreshFailure> Quarantined { get; }
 
     /// <summary>Whether this replica converged, or is knowingly serving an older world.</summary>
@@ -91,9 +94,17 @@ public sealed class RefreshReport
     public static RefreshReport Applied(StoreGeneration generation, IReadOnlyList<RefreshFailure> quarantined) =>
         new(RefreshOutcome.Applied, generation, [], quarantined);
 
-    /// <summary>The rebuild was discarded because <paramref name="regressions"/> would have lost a live binding.</summary>
-    public static RefreshReport Aborted(StoreGeneration generation, IReadOnlyList<RefreshFailure> regressions) =>
-        new(RefreshOutcome.Aborted, generation, regressions, []);
+    /// <summary>
+    /// The rebuild was discarded because <paramref name="regressions"/> would have lost a live
+    /// binding. <paramref name="quarantined"/> is reported alongside rather than dropped: the same
+    /// pass found both, and an operator diagnosing a stalled replica needs to know what was already
+    /// broken as well as what blocked it — a row in that list may well be why the other one regressed.
+    /// </summary>
+    public static RefreshReport Aborted(
+        StoreGeneration generation,
+        IReadOnlyList<RefreshFailure> regressions,
+        IReadOnlyList<RefreshFailure> quarantined) =>
+        new(RefreshOutcome.Aborted, generation, regressions, quarantined);
 
     /// <summary>A publish beat the rebuild to the swap.</summary>
     public static RefreshReport Contended(StoreGeneration generation) =>

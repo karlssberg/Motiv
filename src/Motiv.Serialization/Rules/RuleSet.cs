@@ -199,6 +199,23 @@ public sealed class RuleSet
                     "Load has already been called on this RuleSet. It reads the store once, at " +
                     "startup; it is not a refresh.");
 
+            // The generation before the rows, deliberately. This number is stamped on the world and
+            // travels to clients as a fencing token, so it must never name a state newer than the one
+            // it was read beside. Read the rows first and a write landing in between leaves the
+            // replica claiming a position it has not actually reached, and a client trusting the token
+            // would skip the retry it needed. Reading the generation first can only *understate*,
+            // which costs a redundant refresh and nothing else — the same conservative direction as
+            // BindingScope.Snapshot's.
+            //
+            // Blocking on an async read, and that is the settled design rather than an oversight.
+            // Load is synchronous because startup is — the DI factory wall cannot await, which is the
+            // whole reason IRuleStore carries a synchronous Load at all — and this blocks one thread,
+            // once, before the replica has served any traffic. Do not "fix" it into an async path:
+            // that reopens the problem the synchronous Load exists to avoid. ConfigureAwait(false)
+            // rather than a bare GetResult, so a caller with a synchronization context cannot
+            // deadlock on the continuation.
+            var generation = _store.GetGenerationAsync(default).ConfigureAwait(false).GetAwaiter().GetResult();
+
             // Set only once the store has been read: reading is the one step that can throw rather
             // than quarantine, and it mutates nothing, so an unreachable store leaves the set loadable.
             var heads = _store.Load() ?? [];
@@ -207,10 +224,11 @@ public sealed class RuleSet
             var quarantined = new List<QuarantinedRule>();
             var orphaned = new List<string>();
 
-            // An empty store publishes nothing at all. A successor identical to its predecessor would
-            // still move the write stamp — see BindingScope.WriteStamp — so a swap with nothing in it
-            // is not free.
-            if (heads.Count == 0)
+            // An untouched store publishes nothing at all. A successor identical to its predecessor
+            // would still move the write stamp — see BindingScope.WriteStamp — so a swap with nothing
+            // in it is not free. Generation zero is part of "nothing": stamping it would be writing a
+            // world to say what the world already says.
+            if (heads.Count == 0 && generation == 0)
                 return new RuleLoadReport(quarantined, orphaned);
 
             // One builder for the whole store, not one world per row — mirrors PropositionSet.Load.
@@ -219,6 +237,12 @@ public sealed class RuleSet
             // pre-load world regardless of the order this loop visits them in.
             Scope.Mutate(builder =>
             {
+                // Where this replica now stands, in the same swap that publishes what it stands on.
+                // Without it a replica that has loaded but never refreshed reports StoreGeneration.Zero
+                // to every client, and two replicas holding different worlds would stamp the same
+                // token — which is worse than no token, because it looks authoritative.
+                builder.SetRuleSequence(generation);
+
                 foreach (var head in heads)
                 {
                     // A quarantine is recorded on the rule it names, so a row with no usable name has
@@ -350,8 +374,15 @@ public sealed class RuleSet
             // live, approved rule back to compiled behaviour nobody approved. Refuse the whole thing.
             // The length check is not paranoia: a rule added since `current` was snapshotted has a
             // slot that world never had.
+            //
+            // All three facts come from `current`, never from the live world. `rule.DocumentJson`
+            // would read whatever is live at this instant, and this rebuild has held no lock since it
+            // snapshotted — so a publish landing mid-rebuild could pair `current`'s slot with a
+            // successor's document and manufacture a regression from a state no world ever held. That
+            // matters more than a spurious report: an abort returns before TrySwap, so a mismatch
+            // invented here bypasses the stamp check that exists to adjudicate exactly this race.
             var live = rule.Slot < current.RuleSlots.Length ? current.RuleSlots[rule.Slot] : null;
-            if (live is not null && live.Quarantine.Count == 0 && rule.DocumentJson is not null)
+            if (live is not null && live.Quarantine.Count == 0 && rule.DocumentJsonIn(current) is not null)
             {
                 regressions.Add(failure);
                 continue;
@@ -572,9 +603,20 @@ public sealed class RuleSet
         if (appended.IsConflict)
             return RuleUpdateResult.VersionConflict(appended.CurrentVersion);
 
+        // Read back rather than counted locally, and that is the whole point of the token. A local
+        // increment would have two replicas that published independently arrive at the same number,
+        // and detecting exactly that skew is what the fencing token exists for — it has to be
+        // store-derived or it is fiction. One scalar read per publish, and publishes are rare.
+        var generation = await _store.GetGenerationAsync(cancellationToken).ConfigureAwait(false);
+
         // Nothing below can fail. CommitCore also clears any quarantine on the rule — a successful
         // publish is exactly the repair that resolves one.
-        return Scope.Locked(() => CommitCore(name, publication));
+        return Scope.Locked(() => Scope.Mutate(builder =>
+        {
+            var result = CommitCore(name, publication, builder);
+            builder.SetRuleSequence(generation);
+            return result;
+        }));
     }
 
     /// <summary>

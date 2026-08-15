@@ -270,23 +270,33 @@ public class RefreshTests
     [Fact]
     public async Task Should_keep_a_document_defaults_edges_across_a_rebuild()
     {
-        // Arrange — the proposition has to exist before the rule's default can bind against it
-        var propositions = new PropositionSet(RegistryWith(), new InMemoryPropositionStore()).AddModel<int>("number");
-        propositions.Load();
-        await propositions.CreateAsync("gate", "number", IsPositive, null);
+        // Arrange — the proposition has to exist before either replica's rule default can bind
+        var propositionStore = new InMemoryPropositionStore();
+        var ruleStore = new InMemoryRuleStore();
 
-        var rules = new RuleSet(propositions, new InMemoryRuleStore());
-        var rule = new GatedRule();
-        rules.Add(rule);
-        rules.Load();
-        rule.Evaluate(1).Satisfied.ShouldBeTrue();
+        var propsA = new PropositionSet(RegistryWith(), propositionStore).AddModel<int>("number");
+        propsA.Load();
+        await propsA.CreateAsync("gate", "number", IsPositive, null);
+        var rulesA = new RuleSet(propsA, ruleStore);
+        rulesA.Add(new GatedRule());
+        rulesA.Load();
 
-        // Act — a rebuild, and only then the proposition beneath the rule moves
-        (await rules.RefreshAsync(default)).Outcome.ShouldBe(RefreshOutcome.Applied);
-        await propositions.UpdateAsync("gate", NotPositive, 1);
+        var propsB = new PropositionSet(RegistryWith(), propositionStore).AddModel<int>("number");
+        propsB.Load();
+        var rulesB = new RuleSet(propsB, ruleStore);
+        var ruleB = new GatedRule();
+        rulesB.Add(ruleB);
+        rulesB.Load();
+        ruleB.Evaluate(1).Satisfied.ShouldBeTrue();
+
+        // Act — A moves the store, so B genuinely rebuilds; only then does the proposition beneath
+        // B's own rule change, locally
+        await propsA.CreateAsync("spare", "number", IsPositive, null);
+        (await rulesB.RefreshAsync(default)).Outcome.ShouldBe(RefreshOutcome.Applied);
+        await propsB.UpdateAsync("gate", NotPositive, 1);
 
         // Assert — the cascade still reaches a rule the refresh re-bound
-        rule.Evaluate(1).Satisfied.ShouldBeFalse();
+        ruleB.Evaluate(1).Satisfied.ShouldBeFalse();
     }
 
     /// <summary>
@@ -375,13 +385,253 @@ public class RefreshTests
         a.FindEntry("number")!.Version.ShouldBe(3);
     }
 
+    /// <summary>
+    /// The refresh's own compare-and-set, driven end to end rather than by calling
+    /// <c>TrySwap</c> directly. A publish that lands <em>while a rebuild is in flight</em> must
+    /// survive it: the rebuild read its heads before that publish existed, so swapping its world in
+    /// would silently revert a durable write — the lost update the write stamp exists to refuse.
+    /// </summary>
+    /// <remarks>
+    /// The publish is injected from inside <see cref="IRuleStore.LoadAsync"/>, after the heads have
+    /// been handed back. By then the refresh has taken its snapshot and read its rows, so "mid-flight"
+    /// is true by construction — no threads, no latch, no timing, and no seam in the production code.
+    /// </remarks>
+    [Fact]
+    public async Task Should_refuse_a_swap_for_a_publish_that_landed_while_it_was_rebuilding()
+    {
+        // Arrange
+        var inner = new InMemoryRuleStore();
+        var store = new PublishingRuleStore(inner);
+        var (a, ruleA) = Replica(store);
+
+        // Another replica's row, so this one has something to refresh towards without its own world
+        // having moved
+        (await inner.AppendAsync([Ghost(1)], default)).IsConflict.ShouldBeFalse();
+
+        // Act — one local publish, landing after the rebuild has read the store
+        store.OnLoaded = () => a.UpdateAsync("number", NotPositive, 1, By("alice"));
+        var report = await a.RefreshAsync(default);
+
+        // Assert — the publish is intact. A rebuild that swapped in would have put the rule back on
+        // its compiled default at version 1, because the heads it built from predate the publish.
+        a.FindEntry("number")!.Version.ShouldBe(2);
+        ruleA.Evaluate(1).Satisfied.ShouldBeFalse();
+
+        // And the retry finds nothing left to do: the local publish already carried this replica to
+        // the store's head.
+        report.Outcome.ShouldBe(RefreshOutcome.Unchanged);
+    }
+
+    /// <summary>
+    /// Losing the swap three times running is reported rather than retried forever. A refresh that
+    /// keeps being overtaken is being overtaken by publishes, and each one is a world at least as new
+    /// as the one it was building — so the honest answer is to say so and let the next tick try.
+    /// </summary>
+    [Fact]
+    public async Task Should_report_contention_when_a_publish_beats_every_attempt()
+    {
+        // Arrange
+        var inner = new InMemoryRuleStore();
+        var store = new PublishingRuleStore(inner);
+        var (a, _) = Replica(store);
+        (await inner.AppendAsync([Ghost(1)], default)).IsConflict.ShouldBeFalse();
+
+        // Act — every attempt is overtaken. The local publish moves this replica's write stamp and so
+        // refuses the swap in flight; the foreign row after it keeps the store ahead of what that
+        // publish recorded, so the next attempt still has something to converge towards.
+        var ghost = 1;
+        store.OnLoaded = async () =>
+        {
+            await a.UpdateAsync("number", NotPositive, a.FindEntry("number")!.Version, By("alice"));
+            (await inner.AppendAsync([Ghost(++ghost)], default)).IsConflict.ShouldBeFalse();
+        };
+
+        var report = await a.RefreshAsync(default);
+
+        // Assert
+        report.Outcome.ShouldBe(RefreshOutcome.Contended);
+        report.IsConverged.ShouldBeFalse();
+        store.Loads.ShouldBe(3);
+
+        // All three publishes survived; not one was overwritten by the rebuild racing it
+        a.FindEntry("number")!.Version.ShouldBe(4);
+    }
+
+    private sealed class OtherRule() : Rule<int, string>("other", Positive);
+
+    /// <summary>
+    /// An abort reports both halves. The pass that found the blocker also found everything already
+    /// broken, and an operator diagnosing a replica that has stopped converging needs both — one of
+    /// the carried rows may well be *why* the other regressed. Discarding the carried list because
+    /// "nothing was applied" throws away evidence gathered at no extra cost.
+    /// </summary>
+    [Fact]
+    public async Task Should_report_what_was_already_broken_even_when_it_aborts()
+    {
+        // Arrange — two rules over one store, and two builds that disagree about one spec
+        var store = new InMemoryRuleStore();
+
+        var rulesA = new RuleSet(RegistryWith("only-in-the-new-build"), store);
+        rulesA.Add(new NumberRule());
+        rulesA.Add(new OtherRule());
+        rulesA.Load();
+
+        // 'other' is unbindable for B from the moment B first sees it; 'number' is not
+        await rulesA.UpdateAsync("other", OnlyInTheNewBuild, 1, By("alice"));
+        await rulesA.UpdateAsync("number", NotPositive, 1, By("alice"));
+
+        var rulesB = new RuleSet(RegistryWith(), store);
+        rulesB.Add(new NumberRule());
+        rulesB.Add(new OtherRule());
+        rulesB.Load();
+        rulesB.FindEntry("other")!.Quarantine.ShouldNotBeEmpty();
+        rulesB.FindEntry("number")!.Quarantine.ShouldBeEmpty();
+
+        // Act — 'number' now regresses too, while 'other' stays exactly as broken as it was
+        await rulesA.UpdateAsync("number", OnlyInTheNewBuild, 2, By("alice"));
+        await rulesA.UpdateAsync("other", OnlyInTheNewBuild, 2, By("alice"));
+        var report = await rulesB.RefreshAsync(default);
+
+        // Assert — the blocker and the pre-existing damage, side by side
+        report.Outcome.ShouldBe(RefreshOutcome.Aborted);
+        report.Regressions.ShouldHaveSingleItem();
+        report.Regressions[0].Name.ShouldBe("number");
+        report.Quarantined.ShouldHaveSingleItem();
+        report.Quarantined[0].Name.ShouldBe("other");
+    }
+
+    /// <summary>
+    /// The fencing token has to be right on a replica that has only ever loaded. It is stamped on
+    /// every response so a client can tell it was routed to a replica serving an older world, and a
+    /// replica reporting <see cref="StoreGeneration.Zero"/> forever does not merely fail to help — two
+    /// replicas holding different worlds would stamp the same token, which is worse than none, because
+    /// it looks authoritative.
+    /// </summary>
+    [Fact]
+    public async Task Should_stamp_where_the_stores_stood_at_load()
+    {
+        // Arrange — a store that already holds someone else's writes, as a restarting pod's does
+        var propositionStore = new InMemoryPropositionStore();
+        var ruleStore = new InMemoryRuleStore();
+        var (propsA, rulesA, _) = PairedReplica(propositionStore, ruleStore);
+        await propsA.CreateAsync("negative", "number", NotPositive, null);
+        await rulesA.UpdateAsync("number", NotPositive, 1, By("alice"));
+
+        // Act — a fresh replica that loads and never refreshes
+        var (_, rulesB, _) = PairedReplica(propositionStore, ruleStore);
+
+        // Assert — both halves recorded, and agreeing with the replica that wrote them
+        using var snapshot = rulesB.PinSnapshot();
+        snapshot.Generation.ShouldNotBe(StoreGeneration.Zero);
+        snapshot.Generation.ShouldBe(rulesA.Scope.Current.Sequence);
+    }
+
+    /// <summary>
+    /// And on a replica that publishes. Between a local write and the next poll tick the token would
+    /// otherwise describe the world this replica served a moment ago — stale in the one direction that
+    /// matters, since a client reading its own write back would be told it was behind.
+    /// </summary>
+    [Fact]
+    public async Task Should_move_the_stamp_on_a_local_publish_without_a_refresh()
+    {
+        // Arrange
+        var store = new InMemoryRuleStore();
+        var (a, _) = Replica(store);
+        var before = a.Scope.Current.Sequence;
+
+        // Act — no refresh anywhere in this test
+        await a.UpdateAsync("number", NotPositive, 1, By("alice"));
+
+        // Assert — read back from the store, not counted locally: a replica that incremented its own
+        // counter would agree with one that had published something else entirely
+        var after = a.Scope.Current.Sequence;
+        after.ShouldNotBe(before);
+        after.Rules.ShouldBe(await store.GetGenerationAsync(default));
+    }
+
+    /// <summary>
+    /// The regression check reads one world, never two. <c>rule.DocumentJson</c> reads whatever is
+    /// live at the instant it is called, and a rebuild has held no lock since it snapshotted — so
+    /// pairing the snapshot's slot with the live document manufactures a regression out of a state no
+    /// world ever held. That is not merely a bad report: an abort returns <em>before</em>
+    /// <c>TrySwap</c>, so a mismatch invented here escapes the stamp check that exists to adjudicate
+    /// exactly this race, and the replica refuses to converge on the strength of it.
+    /// </summary>
+    [Fact]
+    public async Task Should_judge_a_regression_against_one_world_rather_than_two()
+    {
+        // Arrange — this replica is on its compiled default: bound, unquarantined, no document
+        var inner = new InMemoryRuleStore();
+        var store = new PublishingRuleStore(inner);
+        var (a, ruleA) = Replica(store);
+        a.FindEntry("number")!.DocumentJson.ShouldBeNull();
+
+        // A newer build's row, which this one cannot bind
+        (await inner.AppendAsync([Row("number", 3, OnlyInTheNewBuild)], default)).IsConflict.ShouldBeFalse();
+
+        // Act — a local publish lands mid-rebuild and gives the rule a document, so the live world and
+        // the snapshotted one now disagree about precisely the fact the check reads
+        store.OnLoaded = () => a.UpdateAsync("number", NotPositive, 1, By("alice"));
+        var report = await a.RefreshAsync(default);
+
+        // Assert — no regression was invented from the mismatch, and the publish stands
+        report.Regressions.ShouldBeEmpty();
+        report.Outcome.ShouldNotBe(RefreshOutcome.Aborted);
+        a.FindEntry("number")!.Version.ShouldBe(2);
+        ruleA.Evaluate(1).Satisfied.ShouldBeFalse();
+    }
+
+    /// <summary>Another replica's row under a name this build has no rule for: it moves the store's generation and nothing else.</summary>
+    private static StoredRuleVersion Ghost(int version) => Row("ghost", version, null);
+
+    /// <summary>A row as another replica, or a hand-edited store, would have left it.</summary>
+    private static StoredRuleVersion Row(string name, int version, string? documentJson) =>
+        new(name, version, documentJson, "another-replica", DateTimeOffset.UtcNow, null, null, "test");
+
+    /// <summary>
+    /// A store that lets a test publish from inside the refresh's own read. The callback runs
+    /// <em>after</em> the heads have been handed back, which is what makes the rebuild's world stale
+    /// by construction rather than by luck.
+    /// </summary>
+    private sealed class PublishingRuleStore(IRuleStore inner) : IRuleStore
+    {
+        public Func<Task>? OnLoaded { get; set; }
+
+        public int Loads { get; private set; }
+
+        public IReadOnlyList<StoredRule> Load() => inner.Load();
+
+        public async Task<IReadOnlyList<StoredRule>> LoadAsync(CancellationToken ct)
+        {
+            Loads++;
+            var heads = await inner.LoadAsync(ct);
+
+            if (OnLoaded is { } publish)
+                await publish();
+
+            return heads;
+        }
+
+        public Task<long> GetGenerationAsync(CancellationToken ct) => inner.GetGenerationAsync(ct);
+
+        public Task<RuleAppendResult> AppendAsync(IReadOnlyList<StoredRuleVersion> versions, CancellationToken ct) =>
+            inner.AppendAsync(versions, ct);
+
+        public Task<IReadOnlyList<StoredRuleVersion>> HistoryAsync(string name, CancellationToken ct) =>
+            inner.HistoryAsync(name, ct);
+    }
+
     [Fact]
     public async Task Should_read_only_the_generation_when_nothing_has_moved()
     {
         // Arrange
         var store = new CountingRuleStore(new InMemoryRuleStore());
         var (a, _) = Replica(store);
+
+        // Load reads both — the rows, and the generation it stamps on the world it builds. Zeroed so
+        // what follows counts only the refresh's own reads.
         store.Loads = 0;
+        store.GenerationReads = 0;
 
         // Act
         await a.RefreshAsync(default);
@@ -395,7 +645,7 @@ public class RefreshTests
     private sealed class CountingRuleStore(IRuleStore inner) : IRuleStore
     {
         public int Loads { get; set; }
-        public int GenerationReads { get; private set; }
+        public int GenerationReads { get; set; }
 
         public IReadOnlyList<StoredRule> Load() => inner.Load();
 
