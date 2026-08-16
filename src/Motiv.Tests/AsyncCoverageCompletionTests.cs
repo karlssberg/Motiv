@@ -333,6 +333,39 @@ public class AsyncCoverageCompletionTests
 
     #endregion
 
+    #region AsyncAndAlsoPolicy.cs — Description family predicate, traversal surface, MatchesAsync
+
+    [Fact]
+    public async Task Should_expose_the_full_surface_of_AsyncAndAlsoPolicy()
+    {
+        // Arrange
+        AsyncPolicyBase<int, string> first = Spec.BuildAsync((int _) => new ValueTask<bool>(true))
+            .WhenTrue("yes").WhenFalse("no").Create("first");
+        AsyncPolicyBase<int, string> second = Spec.BuildAsync((int _) => new ValueTask<bool>(true))
+            .WhenTrue("yes").WhenFalse("no").Create("second");
+
+        // Act
+        var policy = (AsyncAndAlsoPolicy<int, string>)first.AndAlso(second);
+        var typed = (IAsyncBinaryOperationSpec<int, string>)policy;
+        var untyped = (IAsyncBinaryOperationSpec)policy;
+        var statement = policy.Description.Statement; // forces the isSameFamily lambda (Summarize)
+        var matches = await policy.MatchesAsync(1);
+
+        // Assert
+        policy.Underlying.ShouldBe([first, second]);
+        typed.Operation.ShouldBe(Operator.AndAlso);
+        typed.IsCollapsable.ShouldBeTrue();
+        typed.Left.ShouldBeSameAs(first);
+        typed.Right.ShouldBeSameAs(second);
+        untyped.Left.ShouldBeSameAs(first);
+        untyped.Right.ShouldBeSameAs(second);
+        statement.ShouldContain("first");
+        statement.ShouldContain("second");
+        matches.ShouldBeTrue();
+    }
+
+    #endregion
+
     #region AsyncNotSpec.cs / AsyncNotPolicy.cs — traversal surface + direct MatchesAsync
 
     [Fact]

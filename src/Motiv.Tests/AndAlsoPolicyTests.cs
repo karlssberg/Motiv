@@ -1,3 +1,7 @@
+using System.Linq.Expressions;
+using Motiv.ExpressionTreeProposition;
+using Motiv.Traversal;
+
 namespace Motiv.Tests;
 
 public class AndAlsoPolicyTests
@@ -307,6 +311,75 @@ public class AndAlsoPolicyTests
         combined.Value.ShouldBe("b-false");
         combined.Values.ShouldBe(["b-false"]);
     }
+
+    [Fact]
+    public void Should_expose_the_result_level_binary_traversal_surface()
+    {
+        // Arrange
+        var result = Gate(true, "a").AndAlso(Gate(false, "b")).Evaluate("model");
+
+        // Act
+        var untyped = result.ShouldBeAssignableTo<IBinaryBooleanOperationResult>()!;
+
+        // Assert
+        untyped.Operation.ShouldBe(Operator.AndAlso);
+        untyped.IsCollapsable.ShouldBeTrue();
+        untyped.Left.ShouldNotBeNull();
+        untyped.Right.ShouldNotBeNull();
+
+        // Only the failing operand is causal — the satisfied left gate did not stop anything.
+        result.Causes.Count().ShouldBe(1);
+    }
+
+    [Fact]
+    public void Should_short_circuit_the_right_operand_on_the_expression_tree_surface()
+    {
+        // Arrange — the expression-tree surface has its own EvaluatePolicy, so its short-circuit
+        // is a separate code path from the sync one and needs its own proof.
+        var rightEvaluations = 0;
+        var left = ExpressionPolicy(n => n % 2 == 0, "is even", "is odd");
+        var right = ExpressionPolicy(
+            n =>
+            {
+                rightEvaluations++;
+                return n > 0;
+            },
+            "is positive",
+            "is not positive");
+
+        // Act — left is unsatisfied, so the right operand must never run.
+        var result = left.AndAlso(right).Evaluate(-3);
+
+        // Assert
+        result.Satisfied.ShouldBeFalse();
+        rightEvaluations.ShouldBe(0);
+        result.Underlying.Count().ShouldBe(1);
+        result.Value.ShouldBe("is odd");
+    }
+
+    [Fact]
+    public void Should_compose_an_andalso_node_when_projected_back_to_an_expression()
+    {
+        // Arrange
+        var left = ExpressionPolicy(n => n % 2 == 0, "is even", "is odd");
+        var right = ExpressionPolicy(n => n > 0, "is positive", "is not positive");
+
+        // Act
+        var expression = ((ExpressionPolicyBase<int, string>)left.AndAlso(right)).ToExpression();
+
+        // Assert — the projection must be a conditional AND node, not an eager one.
+        expression.Body.NodeType.ShouldBe(ExpressionType.AndAlso);
+        expression.Compile()(4).ShouldBeTrue();
+        expression.Compile()(-3).ShouldBeFalse();
+    }
+
+    private static ExpressionPolicyBase<int, string> ExpressionPolicy(
+        Func<int, bool> predicate,
+        string whenTrue,
+        string whenFalse) =>
+        new ExpressionPolicyDecorator<int, string>(
+            Spec.Build(predicate).WhenTrue(whenTrue).WhenFalse(whenFalse).Create(),
+            n => predicate(n));
 
     [Fact]
     public void Should_not_parenthesize_a_nested_andalso_policy_result_inside_an_eager_and()
