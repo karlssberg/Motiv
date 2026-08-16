@@ -70,6 +70,10 @@ public sealed class RuleSet
         _store = store ?? new InMemoryRuleStore();
         _options = options ?? new RuleSerializerOptions();
         _serializer = new RuleSerializer(scope.Source, _options);
+
+        // Last, and only once everything a rebuild reads is assigned: Join publishes this set to the
+        // scope, and a refresh arriving immediately afterwards would call straight into it.
+        Scope.Join(this);
     }
 
     /// <summary>The coordinator this set publishes under.</summary>
@@ -78,9 +82,26 @@ public sealed class RuleSet
     /// <summary>The number of registered rules.</summary>
     public int Count => _rules.Count;
 
-    /// <summary>Read-only listings of every registered rule, reflecting live versions.</summary>
+    /// <summary>Read-only listings of every registered rule, as the pinned world holds them.</summary>
+    /// <remarks>
+    /// <see cref="BindingScope.Active"/>, not <see cref="BindingScope.Current"/> — the split is drawn
+    /// by what a caller does with the world, not by who calls it. A listing binds nothing and
+    /// publishes nothing, so it reads the pinned world, exactly as <c>PropositionSet.Propositions</c>
+    /// does and for the same reason: under a request pin the response carries the pinned generation as
+    /// a fencing token, and a listing read from the live world would describe a world its own header
+    /// disclaims. Only what a writer reads back as the next <c>expectedVersion</c> —
+    /// <see cref="RuleBase.Version"/> and <see cref="RuleBase.DocumentJson"/> — is live. See
+    /// <see cref="BindingScope.Active"/>'s remarks, which name this property on the pinned side.
+    /// </remarks>
     public IReadOnlyCollection<RuleSetEntry> Rules =>
         _rules.Values.Select(ToEntry).ToArray();
+
+    /// <summary>
+    /// Pins the current world for the duration of a decision, so several evaluations resolve against
+    /// one published set. Dispose to release. Hosts using <c>MapMotivRules</c> get one per request
+    /// automatically and need not call this.
+    /// </summary>
+    public DecisionSnapshot PinSnapshot() => new(Scope);
 
     /// <summary>
     /// Registers a rule and binds its default immediately — an invalid default document throws
@@ -98,9 +119,18 @@ public sealed class RuleSet
             if (_rules.ContainsKey(rule.Name))
                 throw new ArgumentException($"A rule is already registered under the name '{rule.Name}'.", nameof(rule));
 
+            // Asked before the bind, because "you already added this rule" is the more useful answer
+            // than whatever this registry makes of a document another scope already bound.
+            rule.EnsureUnbound();
+
+            // Bound before the slot is claimed, so a default that does not bind leaves the rule
+            // exactly as it was found: unregistered, unslotted, and re-addable once repaired. Claiming
+            // first would strand the instance on a slot number the next successful Add would reuse,
+            // and a stranded rule of the same closed type would then evaluate its successor's state.
+            object state;
             try
             {
-                rule.Attach(_serializer);
+                state = rule.BindDefaultState(_serializer);
             }
             catch (RuleSerializationException ex)
             {
@@ -108,8 +138,23 @@ public sealed class RuleSet
                 throw new RuleSerializationException($"Rule '{rule.Name}': {ex.Message}", ex.Errors);
             }
 
+            var slot = _rules.Count;
+            rule.Occupy(Scope, slot);
+
+            // One swap for the binding and the edges that describe it. Track reads the document out
+            // of the builder, so the state must be written into it first.
+            Scope.Mutate(builder =>
+            {
+                builder.SetRuleState(slot, state);
+                Track(rule, builder);
+            });
+
+            // Registered last, and deliberately after the swap. Rules/FindEntry read _rules without
+            // the lock, and a rule they can reach must already have state to report — publishing the
+            // slot second would leave a window in which a listing found the rule and then threw
+            // reading its version. Nothing inside the swap above consults _rules.
             _rules[rule.Name] = rule;
-            Track(rule);
+
             return this;
         });
     }
@@ -164,6 +209,23 @@ public sealed class RuleSet
                     "Load has already been called on this RuleSet. It reads the store once, at " +
                     "startup; it is not a refresh.");
 
+            // The generation before the rows, deliberately. This number is stamped on the world and
+            // travels to clients as a fencing token, so it must never name a state newer than the one
+            // it was read beside. Read the rows first and a write landing in between leaves the
+            // replica claiming a position it has not actually reached, and a client trusting the token
+            // would skip the retry it needed. Reading the generation first can only *understate*,
+            // which costs a redundant refresh and nothing else — the same conservative direction as
+            // BindingScope.Snapshot's.
+            //
+            // Blocking on an async read, and that is the settled design rather than an oversight.
+            // Load is synchronous because startup is — the DI factory wall cannot await, which is the
+            // whole reason IRuleStore carries a synchronous Load at all — and this blocks one thread,
+            // once, before the replica has served any traffic. Do not "fix" it into an async path:
+            // that reopens the problem the synchronous Load exists to avoid. ConfigureAwait(false)
+            // rather than a bare GetResult, so a caller with a synchronization context cannot
+            // deadlock on the continuation.
+            var generation = _store.GetGenerationAsync(default).ConfigureAwait(false).GetAwaiter().GetResult();
+
             // Set only once the store has been read: reading is the one step that can throw rather
             // than quarantine, and it mutates nothing, so an unreachable store leaves the set loadable.
             var heads = _store.Load() ?? [];
@@ -172,33 +234,208 @@ public sealed class RuleSet
             var quarantined = new List<QuarantinedRule>();
             var orphaned = new List<string>();
 
-            foreach (var head in heads)
+            // An untouched store publishes nothing at all. A successor identical to its predecessor
+            // would still move the write stamp — see BindingScope.WriteStamp — so a swap with nothing
+            // in it is not free. Generation zero is part of "nothing": stamping it would be writing a
+            // world to say what the world already says.
+            if (heads.Count == 0 && generation == 0)
+                return new RuleLoadReport(quarantined, orphaned);
+
+            // One builder for the whole store, not one world per row — mirrors PropositionSet.Load.
+            // Rules never reference each other (only propositions, already live by the time this
+            // runs), so there is no ordering to work out first: every row binds against the same
+            // pre-load world regardless of the order this loop visits them in.
+            Scope.Mutate(builder =>
             {
-                // A quarantine is recorded on the rule it names, so a row with no usable name has
-                // nowhere to be recorded and skipping it is the only non-fatal option.
-                if (head?.Name is null)
-                    continue;
+                // Where this replica now stands, in the same swap that publishes what it stands on.
+                // Without it a replica that has loaded but never refreshed reports StoreGeneration.Zero
+                // to every client, and two replicas holding different worlds would stamp the same
+                // token — which is worse than no token, because it looks authoritative.
+                builder.SetRuleSequence(generation);
 
-                if (Find(head.Name) is not { } rule)
+                foreach (var head in heads)
                 {
-                    // History outlives the code that produced it. Not a fault, and not a quarantine.
-                    orphaned.Add(head.Name);
-                    continue;
-                }
+                    // A quarantine is recorded on the rule it names, so a row with no usable name has
+                    // nowhere to be recorded and skipping it is the only non-fatal option.
+                    if (head?.Name is null)
+                        continue;
 
-                if (Apply(rule, head) is { } errors)
-                    quarantined.Add(new QuarantinedRule(head.Name, head.Version, errors));
-            }
+                    if (Find(head.Name) is not { } rule)
+                    {
+                        // History outlives the code that produced it. Not a fault, and not a quarantine.
+                        orphaned.Add(head.Name);
+                        continue;
+                    }
+
+                    if (Apply(rule, head, builder) is { } errors)
+                        quarantined.Add(new QuarantinedRule(head.Name, head.Version, errors));
+                }
+            });
 
             return new RuleLoadReport(quarantined, orphaned);
         });
 
     /// <summary>
+    /// Rebuilds this replica's world from the stores, if either has moved since it was last built.
+    /// </summary>
+    /// <remarks>
+    /// The whole world is rebuilt, not a part of it: a row that binds on one pass and quarantines on
+    /// the next has already written its overlay entry and graph edges, and the quarantine path clears
+    /// neither — which is why <see cref="Load"/> refuses to run twice and this exists instead. A scope
+    /// shared with a <see cref="PropositionSet"/> rebuilds both halves whichever set you call.
+    /// </remarks>
+    /// <param name="cancellationToken">Cancels the store reads.</param>
+    /// <returns>What the refresh did, and anything that would not bind.</returns>
+    public Task<RefreshReport> RefreshAsync(CancellationToken cancellationToken = default) =>
+        Scope.RefreshAsync(cancellationToken);
+
+    /// <summary>Where the rule store stands. One scalar; polled on a timer.</summary>
+    internal Task<long> StoreGenerationAsync(CancellationToken cancellationToken) =>
+        _store.GetGenerationAsync(cancellationToken);
+
+    /// <summary>
+    /// Rebuilds every rule into <paramref name="builder"/>: compiled default first, then the stored
+    /// head over it, which is the order <see cref="Add"/> and <see cref="Load"/> already establish
+    /// between them. A head that will not bind is a <em>regression</em> when the rule is bound and
+    /// unquarantined in the world being served, and merely carried when it is not.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <strong>The default pass is not an optimisation, it is the whole reason this compiles into a
+    /// world that can evaluate.</strong> A refresh forks nothing: its builder is the
+    /// <c>(registry, ruleCount)</c> one, whose slots all start null, and a rule on a compiled default
+    /// is withdrawn from the participant table and has no graph edges, so nothing else in a refresh
+    /// would ever refill it. Bind the heads alone and every rule without a stored row — which at
+    /// startup is every rule there is — would swap in unbound, and the next evaluation would throw
+    /// "has not been bound; add it to a RuleSet". The pass also gives a rule that <em>does</em> have a
+    /// head something to be applied over, exactly as <see cref="Add"/> does before <see cref="Load"/>.
+    /// </para>
+    /// <para>
+    /// Runs unlocked, over a builder nobody else can see. It reads <c>_rules</c>, which
+    /// <see cref="Add"/> writes under the monitor — the same startup-then-concurrent-use contract the
+    /// class remarks already state, and the same one <see cref="Rules"/> and <see cref="FindEntry"/>
+    /// rely on.
+    /// </para>
+    /// </remarks>
+    /// <param name="builder">The successor being built.</param>
+    /// <param name="current">The world being served, which decides which failures are regressions.</param>
+    /// <param name="regressions">Filled with every failure that must abort the refresh.</param>
+    /// <param name="quarantined">Filled with every failure carried forward instead.</param>
+    /// <param name="cancellationToken">Cancels the store read.</param>
+    internal async Task RebuildIntoAsync(
+        ScopeGenerationBuilder builder, ScopeGeneration current,
+        List<RefreshFailure> regressions, List<RefreshFailure> quarantined,
+        CancellationToken cancellationToken)
+    {
+        var heads = await _store.LoadAsync(cancellationToken).ConfigureAwait(false);
+
+        // A serializer over the *prospective* world: rule documents resolve authored propositions,
+        // and the builder already holds the authored layer this refresh is rebuilding.
+        var serializer = new RuleSerializer(builder.Source, _options);
+
+        RebuildDefaultsInto(builder, serializer, regressions);
+        RebuildHeadsInto(heads, builder, serializer, current, regressions, quarantined);
+    }
+
+    /// <summary>
+    /// Binds every registered rule's compiled default into <paramref name="builder"/>, at version 1
+    /// exactly as <see cref="Add"/> does — so a rule with no stored head is complete, and a rule with
+    /// one has something for <see cref="RebuildHeadsInto"/> to apply over. Version 1 is not the last
+    /// word for a rule that has a head: <see cref="RebuildHeadsInto"/> restores the store's number
+    /// over it. See <see cref="RebuildIntoAsync"/>'s remarks for why this pass is load-bearing rather
+    /// than an optimisation.
+    /// </summary>
+    private void RebuildDefaultsInto(
+        ScopeGenerationBuilder builder, RuleSerializer serializer, List<RefreshFailure> regressions)
+    {
+        foreach (var rule in _rules.Values)
+        {
+            var errors = new List<RuleError>();
+            if (rule.BindStoredState(serializer, documentJson: null, version: 1, errors) is { } state)
+            {
+                builder.SetRuleState(rule.Slot, state);
+                // After the state write, never before: Track reads the document back out of the
+                // builder to recompute the rule's edges.
+                Track(rule, builder);
+                continue;
+            }
+
+            // Only a RuleDocumentSource default can reach here, and only because a proposition it
+            // references was quarantined by this same refresh. The rule would have no binding at all
+            // in the new world — nothing to evaluate, and nothing for a quarantine to hang off — and
+            // every registered rule is bound in the world being served, so this is always a regression.
+            // The empty slot it leaves behind is what RebuildHeadsInto reads to know it happened.
+            regressions.Add(new RefreshFailure(rule.Name, NodeId.Rule(rule.Name).KindLabel, errors));
+        }
+    }
+
+    /// <summary>
+    /// Applies each stored head over the default <see cref="RebuildDefaultsInto"/> left in its slot,
+    /// sorting a head that will not bind into <paramref name="regressions"/> or
+    /// <paramref name="quarantined"/> by whether <paramref name="current"/> has that rule bound and
+    /// healthy. See <see cref="RebuildIntoAsync"/>'s remarks.
+    /// </summary>
+    private void RebuildHeadsInto(
+        IReadOnlyList<StoredRule>? heads, ScopeGenerationBuilder builder, RuleSerializer serializer,
+        ScopeGeneration current, List<RefreshFailure> regressions, List<RefreshFailure> quarantined)
+    {
+        foreach (var head in heads ?? [])
+        {
+            // A row with no usable name has nowhere to be recorded, and history outlives the code
+            // that produced it — an orphan is not a fault. Both are skipped, as Load skips them.
+            if (head?.Name is null || Find(head.Name) is not { } rule)
+                continue;
+
+            // An empty slot means the defaults pass could not bind this rule's default, so there is
+            // no state for a head to be applied over and the refresh is already aborting. Read off the
+            // builder rather than tracked in a set beside it: the builder is what owns the answer, and
+            // a second copy of it could only ever disagree.
+            if (builder.FindRuleState(rule.Slot) is null)
+                continue;
+
+            var errors = new List<RuleError>();
+            if (rule.BindStoredState(serializer, head.DocumentJson, head.Version, errors) is { } state)
+            {
+                builder.SetRuleState(rule.Slot, state);
+                Track(rule, builder);
+                continue;
+            }
+
+            var failure = new RefreshFailure(head.Name, NodeId.Rule(head.Name).KindLabel, errors);
+
+            // Bound and healthy in the world being served? Then applying this rebuild would drop a
+            // live, approved rule back to compiled behaviour nobody approved. Refuse the whole thing.
+            // The length check is not paranoia: a rule added since `current` was snapshotted has a
+            // slot that world never had.
+            //
+            // All three facts come from `current`, never from the live world. `rule.DocumentJson`
+            // would read whatever is live at this instant, and this rebuild has held no lock since it
+            // snapshotted — so a publish landing mid-rebuild could pair `current`'s slot with a
+            // successor's document and manufacture a regression from a state no world ever held. That
+            // matters more than a spurious report: an abort returns before TrySwap, so a mismatch
+            // invented here bypasses the stamp check that exists to adjudicate exactly this race.
+            var live = rule.Slot < current.RuleSlots.Length ? current.RuleSlots[rule.Slot] : null;
+            if (live is not null && live.Quarantine.Count == 0 && rule.DocumentJsonIn(current) is not null)
+            {
+                regressions.Add(failure);
+                continue;
+            }
+
+            // Carried, on whatever the default pass left in the slot, at the store's number.
+            RestoreStoredVersion(rule, head.Version, builder);
+            builder.SetRuleQuarantine(rule.Slot, errors);
+            quarantined.Add(failure);
+        }
+    }
+
+    /// <summary>
     /// Applies one stored head over a rule's compiled default, returning the errors that quarantined
     /// it or null when it bound. A null document is a recorded revert, not an absent row: the rule
-    /// stays on its default and only the version moves.
+    /// stays on its default and only the version moves. Folds its commit into <paramref name="builder"/>
+    /// rather than opening one of its own, so <see cref="Load"/> can publish the whole store as a
+    /// single generation.
     /// </summary>
-    private IReadOnlyList<RuleError>? Apply(RuleBase rule, StoredRule head)
+    private IReadOnlyList<RuleError>? Apply(RuleBase rule, StoredRule head, ScopeGenerationBuilder builder)
     {
         // The expected version is read from the rule itself. This is a load, not a concurrent write —
         // there is no caller holding a stale number — so the only outcome worth distinguishing is
@@ -212,21 +449,48 @@ public sealed class RuleSet
             // Committed directly, not through the persisting write path: this document came *from*
             // the store, so appending it again would mint a duplicate version row and conflict on its
             // own primary key.
-            CommitCore(head.Name, publication);
+            CommitCore(head.Name, publication, builder);
         }
-        else
+
+        // Either way the store's number is what the slot must report — the publish above minted one of
+        // its own, and Add bound version 1 before that.
+        RestoreStoredVersion(rule, head.Version, builder);
+
+        if (prepared.Publication is null)
         {
             // The rule stays on its compiled default — a rule must be able to evaluate, and there is
             // nothing else to bind — but says so rather than reverting silently.
-            rule.Quarantine = prepared.Errors;
+            builder.SetRuleQuarantine(rule.Slot, prepared.Errors);
+            return prepared.Errors;
         }
 
-        // Either way the store's version is authoritative: a restart must not renumber history, and a
-        // repair must be addressed against the version the store actually holds, not the one this
-        // publish just minted or the one Add bound, or the very first repair attempt would conflict.
-        rule.RestoreVersion(head.Version);
+        return null;
+    }
 
-        return prepared.Publication is null ? prepared.Errors : null;
+    /// <summary>
+    /// Renumbers whatever binding <paramref name="builder"/> holds for <paramref name="rule"/> to the
+    /// version the store holds, leaving the binding itself alone. Does nothing when the slot is empty.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The store's version is authoritative even when its document is not. A restart must not renumber
+    /// history, and a repair must be addressed against the version the store actually holds — not the
+    /// one a <see cref="Load"/> publish just minted, and not the version 1 <see cref="Add"/> bound —
+    /// or the very first repair attempt would conflict. This is why both the startup path
+    /// (<see cref="Apply"/>) and the refresh path (<see cref="RebuildIntoAsync"/>) end a row the same
+    /// way, whether its document bound or not.
+    /// </para>
+    /// <para>
+    /// <strong>Call this before <see cref="ScopeGenerationBuilder.SetRuleQuarantine"/>, never after.</strong>
+    /// It is a state write, and a state write clears the slot's quarantine — see
+    /// <see cref="RuleSlot.WithState"/>. Reversing the two would renumber the rule and silently drop
+    /// the reasons it was quarantined for.
+    /// </para>
+    /// </remarks>
+    private static void RestoreStoredVersion(RuleBase rule, int version, ScopeGenerationBuilder builder)
+    {
+        if (builder.FindRuleState(rule.Slot) is { } state)
+            builder.SetRuleState(rule.Slot, rule.WithVersion(state, version));
     }
 
     /// <summary>
@@ -339,13 +603,20 @@ public sealed class RuleSet
     /// — nor <see cref="Add"/> or <see cref="Load"/>, all of which take only the inner
     /// <see cref="BindingScope.Locked{T}"/> monitor and always will: a synchronous reader cannot await
     /// the semaphore without either blocking a thread or becoming async itself, and both defeat the
-    /// point of a lock-free-shaped read surface. A semaphore and a monitor do not exclude each other,
-    /// so a write that took only the semaphore could run <see cref="CommitCore"/> → <see cref="Track"/>
-    /// → <c>Scope.Graph.Set</c>/<c>Remove</c> concurrently with any of those monitor-only readers
-    /// walking the same, deliberately-unsynchronized <c>DependencyGraph</c> or <c>PropositionOverlay</c>
-    /// mid-mutation. Prepare needs the monitor too, not only commit: binding a document reads through
-    /// <c>Scope.Source</c> (the layered proposition overlay), which a concurrent monitor-held
-    /// proposition edit could be mutating mid-read.
+    /// point of a lock-free-shaped read surface.
+    /// </para>
+    /// <para>
+    /// <strong>The monitor is not about readers seeing a half-mutated graph — nothing is mutated in
+    /// place any more.</strong> Every reader walks an immutable <see cref="ScopeGeneration"/> reached
+    /// through one volatile read, and <see cref="Track"/> writes a builder nobody else can see. What
+    /// the monitor still protects is the swap itself: <see cref="BindingScope.Mutate(Action{ScopeGenerationBuilder})"/>
+    /// is a read-fork-publish, not an atomic one, so two writers running it concurrently would both
+    /// fork the same world and the second to publish would silently discard the first. A semaphore and
+    /// a monitor do not exclude each other, so the gate alone cannot give that — <see cref="Add"/> and
+    /// <see cref="Load"/> take the monitor without ever taking the gate. Prepare needs it too, not only
+    /// commit: binding a document resolves through <c>Scope.Source</c>, and preparing against one world
+    /// while committing into a successor forked from another is the straddle the whole prepare-commit
+    /// split exists to rule out.
     /// </para>
     /// <para>
     /// The store round trip is the one span that must sit outside the monitor — holding a
@@ -365,6 +636,16 @@ public sealed class RuleSet
         if (prepared.Publication is not { } publication)
             return prepared.ToFailureResult();
 
+        // Where the store stood before this publish wrote, so the commit can tell whether the position
+        // it reads back afterwards is one this replica's world may honestly claim — see
+        // ScopeGenerationBuilder.AdvanceRuleSequence. As late as it can be: everything between this
+        // read and the write below is a window in which another replica's write is subsumed, and a
+        // refusal above it never reaches the store at all. The world cannot move underneath the pair —
+        // the outer gate excludes every other publish, and a refresh cannot swap while one is
+        // registered in flight (see BindingScope.TrySwap) — so the comparison is well-defined wherever
+        // in this span it is read.
+        var before = await _store.GetGenerationAsync(cancellationToken).ConfigureAwait(false);
+
         var appended = await _store
             .AppendAsync([RowFor(name, publication, provenance)], cancellationToken)
             .ConfigureAwait(false);
@@ -372,9 +653,20 @@ public sealed class RuleSet
         if (appended.IsConflict)
             return RuleUpdateResult.VersionConflict(appended.CurrentVersion);
 
+        // Read back rather than counted locally, and that is the whole point of the token. A local
+        // increment would have two replicas that published independently arrive at the same number,
+        // and detecting exactly that skew is what the fencing token exists for — it has to be
+        // store-derived or it is fiction. Two scalar reads per publish, and publishes are rare.
+        var generation = await _store.GetGenerationAsync(cancellationToken).ConfigureAwait(false);
+
         // Nothing below can fail. CommitCore also clears any quarantine on the rule — a successful
         // publish is exactly the repair that resolves one.
-        return Scope.Locked(() => CommitCore(name, publication));
+        return Scope.Locked(() => Scope.Mutate(builder =>
+        {
+            var result = CommitCore(name, publication, builder);
+            builder.AdvanceRuleSequence(before, generation);
+            return result;
+        }));
     }
 
     /// <summary>
@@ -451,11 +743,19 @@ public sealed class RuleSet
             : RulePrepareResult.NotFound();
 
     /// <summary>
-    /// Commits a prepared publication and re-tracks the rule's graph edges. Has no failure outcome —
-    /// everything a caller can get wrong was already decided by the prepare. Assumes
-    /// <see cref="BindingScope"/>'s inner monitor is held.
+    /// Commits a prepared publication into a successor the caller owns and re-tracks the rule's graph
+    /// edges, so a governed envelope can commit every one of its members into one builder and publish
+    /// them in a single swap. Has no failure outcome — everything a caller can get wrong was already
+    /// decided by the prepare. Assumes <see cref="BindingScope"/>'s inner monitor is held.
     /// </summary>
-    internal RuleUpdateResult CommitCore(string name, IRulePublication publication)
+    /// <remarks>
+    /// The builder has to be threaded rather than opened here. A commit re-tracks the rule's graph
+    /// edges, and a nested <see cref="BindingScope.Mutate(Action{ScopeGenerationBuilder})"/> would fork
+    /// from the live world while an outer builder — forked before it — was still open, so the outer
+    /// swap would discard the inner one's writes entirely.
+    /// </remarks>
+    internal RuleUpdateResult CommitCore(
+        string name, IRulePublication publication, ScopeGenerationBuilder builder)
     {
         // Resolved before the commit so that the unreachable arm fails with nothing yet moved.
         // A publication only exists because a Prepare found the rule, the monitor has been held
@@ -465,16 +765,14 @@ public sealed class RuleSet
             ?? throw new InvalidOperationException(
                 $"Rule '{name}' is no longer registered, so its prepared publication cannot be committed.");
 
-        publication.Commit();
+        // Also clears any quarantine on the slot: a quarantine says "running a compiled default in
+        // place of a stored document that would not bind", and a successful publish is exactly what
+        // stops that being true — see RuleSlot.WithState.
+        publication.ApplyTo(builder);
 
-        // A quarantine says "running a compiled default in place of a stored document that would not
-        // bind". A successful publish is exactly what stops that being true, so it must not outlive
-        // one — an operator who repairs a rule would otherwise be told it is still broken until the
-        // process restarts.
-        rule.Quarantine = [];
-
-        // Track reads the rule's *current* document, so it must run after the commit, not before.
-        Track(rule);
+        // Track reads the rule's *prospective* document out of the builder, so it must run after
+        // ApplyTo, not before.
+        Track(rule, builder);
 
         return RuleUpdateResult.Updated(publication.Version);
     }
@@ -536,25 +834,27 @@ public sealed class RuleSet
             : [];
 
     /// <summary>
-    /// Records the rule's current outgoing references and its participation in rebinds. A rule on a
-    /// compiled default resolves no names, so it leaves the graph entirely.
+    /// Records the rule's current outgoing references and its participation in rebinds, into a
+    /// successor the caller owns — the edges and the participant they name reach a reader together or
+    /// not at all, and a caller committing several rules at once gets one swap rather than one per
+    /// rule. A rule on a compiled default resolves no names, so it leaves the graph entirely.
     /// </summary>
-    private void Track(RuleBase rule)
+    private void Track(RuleBase rule, ScopeGenerationBuilder builder)
     {
         var node = NodeId.Rule(rule.Name);
-        var references = ReferencesOf(rule.DocumentJson);
+        var references = ReferencesOf(rule.DocumentJsonIn(builder));
 
         if (references.Count == 0)
         {
-            Scope.Graph.Remove(node);
+            builder.Graph.Remove(node);
             // Defensive rather than load-bearing: a rule is only ever enrolled by the branch below,
             // which is also what put the graph edges there, so the two always come and go together.
-            Scope.Withdraw(node);
+            builder.Withdraw(node);
             return;
         }
 
-        Scope.Graph.Set(node, references);
-        Scope.Enrol(new RuleParticipant(rule, _options));
+        builder.Graph.Set(node, references);
+        builder.Enrol(new RuleParticipant(rule, _options));
     }
 
     private IReadOnlyList<string> ReferencesOf(string? documentJson)
@@ -573,7 +873,8 @@ public sealed class RuleSet
     {
         public NodeId Node { get; } = NodeId.Rule(rule.Name);
 
-        public IRebindCommit? PrepareRebind(ISpecSource prospective, List<RuleError> errors) =>
-            rule.PrepareRebind(new RuleSerializer(prospective, options), errors);
+        public IRebindCommit? PrepareRebind(
+            ISpecSource prospective, ScopeGeneration world, List<RuleError> errors) =>
+            rule.PrepareRebind(new RuleSerializer(prospective, options), world, errors);
     }
 }

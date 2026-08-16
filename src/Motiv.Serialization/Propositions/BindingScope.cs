@@ -48,13 +48,18 @@ internal sealed class BindingScope
     /// </remarks>
     private readonly SemaphoreSlim _outer = new(1, 1);
 
-    private readonly Dictionary<NodeId, IRebindable> _participants = [];
+    private readonly AsyncLocal<ScopeGeneration?> _pinned = new();
+    private ScopeGeneration _current;
+    private long _writes;
+    private long _publishing;
+    private PropositionSet? _propositions;
+    private RuleSet? _rules;
 
     public BindingScope(SpecRegistry registry)
     {
         Registry = registry ?? throw new ArgumentNullException(nameof(registry));
-        Overlay = new PropositionOverlay();
-        Source = new LayeredSpecSource(Overlay, registry);
+        _current = new ScopeGenerationBuilder(Registry, ruleCount: 0).Build();
+        Source = new ScopeSource(this);
     }
 
     /// <summary>
@@ -79,28 +84,304 @@ internal sealed class BindingScope
     /// <summary>The immutable compiled catalog.</summary>
     public SpecRegistry Registry { get; }
 
-    /// <summary>Who references whom.</summary>
-    public DependencyGraph Graph { get; } = new();
-
-    /// <summary>The live authored layer.</summary>
-    public PropositionOverlay Overlay { get; }
-
     /// <summary>The live resolution order: authored first, then compiled.</summary>
     public ISpecSource Source { get; }
 
-    /// <summary>Registers a node as rebindable. Replaces any participant already under that id.</summary>
-    public void Enrol(IRebindable participant)
+    /// <summary>The live world. One volatile read; never edited in place.</summary>
+    public ScopeGeneration Current => Volatile.Read(ref _current);
+
+    /// <summary>
+    /// The world this call resolves against: the pinned one when a <c>DecisionSnapshot</c> is open on
+    /// this async flow, otherwise the live one.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <strong>Writing is live; reading is pinned.</strong> That is the whole split, and it is drawn
+    /// by what a caller <em>does</em> with the world, not by whether the caller is an administrator:
+    /// </para>
+    /// <list type="bullet">
+    /// <item>
+    /// <description>
+    /// <strong>Binds or publishes → <see cref="Current"/>.</strong> Preparing or committing a publish,
+    /// and binding a proposed document through <see cref="Source"/>. A publish that prepared against a
+    /// pinned world while committing into a successor forked from the live one would reintroduce
+    /// exactly the staleness the write gate exists to prevent — and the pin is taken before the gate,
+    /// so the gate could not catch it. This is the hazard the split was originally written to settle.
+    /// </description>
+    /// </item>
+    /// <item>
+    /// <description>
+    /// <strong>Evaluates, or reads for display → <see cref="Active"/>.</strong> Evaluation
+    /// (<c>Rule.Evaluate</c>, <c>AsyncRule.EvaluateAsync</c> and their policy-flavoured shadows), so
+    /// one decision sees one world rather than one world per rule; and the read-only catalog
+    /// listings — <c>PropositionSet.Propositions</c>, <c>Find</c>, <c>DocumentJsonOf</c>,
+    /// <c>Dependents</c>, <em>and</em> <see cref="RuleSet.Rules"/>/<see cref="RuleSet.FindEntry"/>
+    /// via <see cref="RuleBase.VersionedDocument"/> and <see cref="RuleBase.Quarantine"/> — which bind
+    /// nothing and publish nothing. A pinned request stamps the generation it pinned onto its response
+    /// as a fencing token, and that token is only worth trusting if the body came from the world the
+    /// token names — so a listing read from <see cref="Current"/> under a pin would describe a world
+    /// its own header disclaims, and <c>GET /rules</c> would disagree with <c>GET /propositions</c>
+    /// served under the very same pin.
+    /// </description>
+    /// </item>
+    /// </list>
+    /// <para>
+    /// An earlier wording of this — "evaluation is pinned; administration is live", with catalog
+    /// listing named on the live side — has now sent two implementers the wrong way. The listings are
+    /// administration by *who calls them* and evaluation by *what they do*, and it is the second that
+    /// decides. Note also that a bound spec holds direct references to whatever it resolved at bind
+    /// time, so evaluation never reaches back through <see cref="Source"/>.
+    /// </para>
+    /// <para>
+    /// <strong>The public <see cref="RuleBase.Version"/> and <see cref="RuleBase.DocumentJson"/> stay
+    /// on <see cref="Current"/>, and that is not an exception to the rule.</strong> They are what a
+    /// writer reads back as the next <c>expectedVersion</c>, so they belong to the binds-or-publishes
+    /// side; the number an endpoint <em>renders</em> comes from
+    /// <see cref="RuleBase.VersionedDocument"/> instead, which is pinned. Two members, two acts, two
+    /// worlds — the split is drawn per member, never per type.
+    /// </para>
+    /// </remarks>
+    public ScopeGeneration Active => _pinned.Value ?? Current;
+
+    /// <summary>
+    /// How many times the world has been replaced. A refresh reads this <em>before</em> reading
+    /// <see cref="Current"/>, rebuilds off to the side, and offers the result back to
+    /// <see cref="TrySwap"/>, which refuses it if the stamp has moved — the world's own
+    /// compare-and-set, and the reason a slow store need not hold the write gate. See
+    /// <see cref="Publish"/> for why the read order is the reverse of the write order.
+    /// </summary>
+    public long WriteStamp => Volatile.Read(ref _writes);
+
+    /// <summary>The live world and the stamp that guards it, read in the only safe order.</summary>
+    /// <remarks>
+    /// <para>
+    /// A rebuild that means to offer its result back to <see cref="TrySwap"/> must read both, and the
+    /// order is not a matter of taste. Take the stamp first and the worst case is that a publish lands
+    /// immediately afterwards, so the world read is newer than the stamp implies: the swap is refused
+    /// and the rebuild retries. That is conservative — a wasted rebuild, never a wrong one. Take the
+    /// world first and the publish lands in between, so the stamp is newer than the world: the swap is
+    /// <em>accepted</em>, and it overwrites the publish with a world built before it. A needless retry
+    /// is cheap; a silently discarded publish is the failure the stamp exists to prevent.
+    /// </para>
+    /// <para>
+    /// This method exists so that ordering is a property of the code rather than of whoever read the
+    /// documentation. <see cref="Current"/> and <see cref="WriteStamp"/> remain for callers that
+    /// genuinely need only one of the two and are not going to swap.
+    /// </para>
+    /// </remarks>
+    public (long Stamp, ScopeGeneration World) Snapshot()
     {
-        lock (_gate)
-            _participants[participant.Node] = participant;
+        var stamp = WriteStamp;
+        return (stamp, Current);
     }
 
-    /// <summary>Unregisters a node, so it is no longer rebound.</summary>
-    public void Withdraw(NodeId node)
+    /// <summary>Records the proposition set that rebuilds this scope's authored half on a refresh.</summary>
+    /// <remarks>
+    /// <para>
+    /// A scope is the unit a refresh rebuilds, not a set: an authored proposition and a rule that
+    /// references it must reach a reader in the same swap, so whichever set a caller happens to hold
+    /// has to be able to rebuild both halves. Recording the sets here is how the scope finds the other
+    /// half. Called by the set's own constructor, so a scope is never half-joined once construction
+    /// returns.
+    /// </para>
+    /// <para>
+    /// Written and read through <see cref="Volatile"/>, like <see cref="Current"/> and
+    /// <c>MotivRefreshService.LastReport</c>, and for the reason those are: the writer is whichever
+    /// thread constructed the set, the reader is the poller, and no lock sits between them. The worst
+    /// a stale read could produce is a rebuild that sees one half of a scope and aborts — not
+    /// corruption, and unreachable through <c>AddMotivRules</c>, which resolves the proposition set
+    /// first. It is done anyway because "a field crossing threads is volatile" is the convention here,
+    /// and an unexplained exception to it reads as a deliberate one.
+    /// </para>
+    /// </remarks>
+    public void Join(PropositionSet propositions) => Volatile.Write(ref _propositions, propositions);
+
+    /// <summary>Records the rule set that rebuilds this scope's rule half on a refresh.</summary>
+    /// <remarks>See <see cref="Join(PropositionSet)"/>.</remarks>
+    public void Join(RuleSet rules) => Volatile.Write(ref _rules, rules);
+
+    /// <summary>
+    /// Rebuilds the whole world from both stores and swaps it in, if either store has moved.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Deliberately does <em>not</em> take the outer gate. Holding it across the store read would let
+    /// a slow store block every publish, which is the hazard the async write contract exists to avoid.
+    /// Instead the rebuild runs unlocked against a builder nobody else can see, and the swap validates
+    /// under the monitor that <see cref="WriteStamp"/> has not moved — a compare-and-set on the world,
+    /// mirroring how the store's <c>(Name, Version)</c> primary key guards a row.
+    /// </para>
+    /// <para>
+    /// Two concurrent refreshes are safe and uninteresting: both build, one swaps, the other is told
+    /// it was contended and retries. A concurrent <em>publish</em> is the interesting case, and it
+    /// wins outright — see <see cref="TrySwap"/> for why a stamp comparison alone cannot see one, and
+    /// why losing to it is the right outcome rather than a missed convergence.
+    /// </para>
+    /// </remarks>
+    /// <param name="cancellationToken">Cancels the store reads.</param>
+    /// <returns>What the refresh did, and anything that would not bind.</returns>
+    public async Task<RefreshReport> RefreshAsync(CancellationToken cancellationToken)
     {
-        lock (_gate)
-            _participants.Remove(node);
+        // One read of each half per refresh, not one per use: a set joined halfway through would
+        // otherwise have this poll the store for a half it then rebuilds without, or the reverse.
+        var rules = Volatile.Read(ref _rules);
+        var propositions = Volatile.Read(ref _propositions);
+
+        // Three attempts, then leave it to the next tick. A refresh that loses the swap has been
+        // overtaken by a publish, which is a world at least as new as the one it was building.
+        for (var attempt = 0; attempt < 3; attempt++)
+        {
+            var sequence = new StoreGeneration(
+                rules is null ? 0 : await rules.StoreGenerationAsync(cancellationToken).ConfigureAwait(false),
+                propositions is null ? 0 : await propositions.StoreGenerationAsync(cancellationToken).ConfigureAwait(false));
+
+            // Snapshot() reads the stamp and the world in the only safe order — see its own doc.
+            // Reading them separately here, in the wrong order, would hand this rebuild a stale
+            // world with a fresh stamp, so its swap would succeed and silently overwrite a publish.
+            var (stamp, current) = Snapshot();
+            if (!sequence.MovedFrom(current.Sequence))
+                return RefreshReport.Unchanged(current.Sequence);
+
+            var builder = new ScopeGenerationBuilder(Registry, current.RuleSlots.Length);
+            var regressions = new List<RefreshFailure>();
+            var quarantined = new List<RefreshFailure>();
+
+            // Propositions first: a rule document may reference an authored proposition, so the
+            // authored layer has to be in the builder before any rule binds against it.
+            if (propositions is not null)
+                await propositions.RebuildIntoAsync(builder, current, regressions, quarantined, cancellationToken)
+                    .ConfigureAwait(false);
+
+            if (rules is not null)
+                await rules.RebuildIntoAsync(builder, current, regressions, quarantined, cancellationToken)
+                    .ConfigureAwait(false);
+
+            if (regressions.Count > 0)
+                return RefreshReport.Aborted(current.Sequence, regressions, quarantined);
+
+            builder.SetSequence(sequence);
+
+            if (Locked(() => TrySwap(builder.Build(), stamp)))
+                return RefreshReport.Applied(sequence, quarantined);
+        }
+
+        return RefreshReport.Contended(Current.Sequence);
     }
+
+    /// <summary>
+    /// Builds a successor from the live world and swaps it in as one write. Assumes the inner monitor
+    /// is held.
+    /// </summary>
+    public void Mutate(Action<ScopeGenerationBuilder> mutate)
+    {
+        var builder = new ScopeGenerationBuilder(Registry, Current);
+        mutate(builder);
+        Publish(builder.Build());
+    }
+
+    /// <summary>
+    /// <see cref="Mutate(Action{ScopeGenerationBuilder})"/> for a write that also yields a value — the
+    /// version a publish minted, say. The companion to <see cref="Locked{T}"/>, and for the same
+    /// reason: without it every such caller has to smuggle its result out through a captured local the
+    /// compiler cannot prove was assigned, and then suppress it. Assumes the inner monitor is held.
+    /// </summary>
+    public T Mutate<T>(Func<ScopeGenerationBuilder, T> mutate)
+    {
+        var builder = new ScopeGenerationBuilder(Registry, Current);
+        var result = mutate(builder);
+        Publish(builder.Build());
+        return result;
+    }
+
+    /// <summary>
+    /// Swaps in a successor built elsewhere, unless the world moved since
+    /// <paramref name="expectedWriteStamp"/> was taken — or is about to. Assumes the inner monitor is
+    /// held.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <strong>Two refusals, because the write stamp alone cannot see a publish that has not landed
+    /// yet.</strong> A publish is <c>Locked{prepare}</c> → <c>await store</c> → <c>Locked{Mutate}</c>,
+    /// and it holds <em>no monitor</em> across that await. The stamp only moves at the commit, so
+    /// throughout the store round trip a publish is entirely invisible to a stamp comparison — and
+    /// the successor it will commit was <em>prepared against the world as it stood before this
+    /// swap</em>. Let the swap through and the publish resumes, forks the world this refresh just
+    /// installed, and writes over it: its own publication, and — worse — every cascaded rebind in its
+    /// closure, each carrying the pre-refresh document and version of a dependent, because a rebind
+    /// deliberately carries the version across unchanged. The result is a world no store state ever
+    /// held. It does not self-heal either: the publish then stamps the store position it read after
+    /// its own write, so the next poll finds nothing has moved.
+    /// </para>
+    /// <para>
+    /// So a publish in flight wins over a rebuild in flight, and it wins <em>before</em> it has done
+    /// anything a stamp could record. The direction is the one the retry loop already handles: the
+    /// refresh is told it was contended, and the world a publish leaves behind is always at least as
+    /// new as the one this rebuild was assembling.
+    /// </para>
+    /// <para>
+    /// Reading the counter under the monitor is what makes it sufficient rather than merely helpful.
+    /// A publish increments it before taking the monitor to prepare, so any publish whose prepare has
+    /// already run — the only kind that could commit a stale successor after this swap — released the
+    /// monitor after incrementing, and this read acquires it afterwards. A publish that increments
+    /// later than that has not prepared yet, so it will fork whatever world this swap installs, which
+    /// is exactly what it should do.
+    /// </para>
+    /// </remarks>
+    /// <returns>Whether the successor went live.</returns>
+    public bool TrySwap(ScopeGeneration successor, long expectedWriteStamp)
+    {
+        if (Interlocked.Read(ref _publishing) != 0)
+            return false;
+
+        if (Volatile.Read(ref _writes) != expectedWriteStamp)
+            return false;
+
+        Publish(successor);
+        return true;
+    }
+
+    /// <summary>Pins the live world for the current async flow. A nested pin reuses the outer one.</summary>
+    public IDisposable Pin()
+    {
+        if (_pinned.Value is not null)
+            return NestedPin.Instance;
+
+        _pinned.Value = Current;
+        return new OuterPin(this);
+    }
+
+    /// <summary>
+    /// The one place the live world moves. World first, stamp second — and a refresh must read them
+    /// the other way round, stamp first.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The dangerous reader is the one that sees the <em>old</em> world alongside the <em>new</em>
+    /// stamp, because that pair makes a stale rebuild look current: it would build its successor from
+    /// the world it read, present the stamp it read, and <see cref="TrySwap"/> would accept it —
+    /// silently discarding the publish that moved the stamp. Writing the world first and reading the
+    /// stamp first makes that pair unobservable. Every ordering that remains pairs a new stamp with a
+    /// world at least as new, or an old stamp with anything at all, and an old stamp is refused.
+    /// </para>
+    /// <para>
+    /// <see cref="Interlocked.Increment(ref long)"/> rather than a read-add-write through
+    /// <see cref="Volatile"/>: every publisher is supposed to hold the inner monitor, but nothing
+    /// enforces that, and the atomic costs the same as the non-atomic it replaces.
+    /// </para>
+    /// </remarks>
+    private void Publish(ScopeGeneration successor)
+    {
+        Volatile.Write(ref _current, successor);
+        Interlocked.Increment(ref _writes);
+    }
+
+    /// <summary>Registers a node as rebindable. Replaces any participant already under that id.</summary>
+    public void Enrol(IRebindable participant) =>
+        Locked(() => Mutate(builder => builder.Enrol(participant)));
+
+    /// <summary>Unregisters a node, so it is no longer rebound.</summary>
+    public void Withdraw(NodeId node) =>
+        Locked(() => Mutate(builder => builder.Withdraw(node)));
 
     /// <summary>Runs an action holding the write lock, so a publish sees a still graph.</summary>
     public T Locked<T>(Func<T> action)
@@ -121,23 +402,43 @@ internal sealed class BindingScope
 
     /// <summary>
     /// Runs an operation holding the outer write gate, so a whole publish — including its store
-    /// round trip — serialises against every other publish.
+    /// round trip — serialises against every other publish, and declares it in flight so a refresh
+    /// cannot swap a world out from under it.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// The reason this exists is <em>cancellation</em>, not throughput: the critical section is
     /// mostly CPU, so awaiting frees a few milliseconds at most. What it buys is
     /// <see cref="SemaphoreSlim.WaitAsync(CancellationToken)"/> — an answer to a store that has
     /// stopped responding, which a monitor cannot give.
+    /// </para>
+    /// <para>
+    /// <strong>This is also where a publish declares itself in flight.</strong> The gate is the one
+    /// span every write path shares — the lone rule update and revert, the lone proposition create,
+    /// update and withdraw, and the governed envelope all reach the store from inside it, and a
+    /// <c>…Core</c> method that skips the gate does so only because a caller already holds it. So
+    /// registering here is registering everywhere, by construction rather than by a list somebody has
+    /// to keep up to date. <see cref="TrySwap"/>'s remarks say what the registration is for.
+    /// </para>
+    /// <para>
+    /// Registered after the gate is acquired, not before: a publish still queued behind another has
+    /// prepared nothing and could not commit a stale world, so counting it would only starve the
+    /// refresh for longer. Deregistered in the <c>finally</c>, so a store that throws or a token that
+    /// cancels leaves the count where it found it — a leaked registration would wedge refresh for the
+    /// life of the process, which is a worse failure than the one this prevents.
+    /// </para>
     /// </remarks>
     public async Task<T> LockedAsync<T>(Func<Task<T>> operation, CancellationToken cancellationToken)
     {
         await _outer.WaitAsync(cancellationToken).ConfigureAwait(false);
+        Interlocked.Increment(ref _publishing);
         try
         {
             return await operation().ConfigureAwait(false);
         }
         finally
         {
+            Interlocked.Decrement(ref _publishing);
             _outer.Release();
         }
     }
@@ -146,12 +447,14 @@ internal sealed class BindingScope
     public async Task LockedAsync(Func<Task> operation, CancellationToken cancellationToken)
     {
         await _outer.WaitAsync(cancellationToken).ConfigureAwait(false);
+        Interlocked.Increment(ref _publishing);
         try
         {
             await operation().ConfigureAwait(false);
         }
         finally
         {
+            Interlocked.Decrement(ref _publishing);
             _outer.Release();
         }
     }
@@ -162,7 +465,7 @@ internal sealed class BindingScope
     /// members resolve the new definitions. Commits nothing.
     /// </summary>
     /// <param name="propositionName">The name whose dependents are being prepared.</param>
-    /// <param name="prospective">The overlay to bind against and fold prepared entries into.</param>
+    /// <param name="prospective">The successor being built: bound against, and folded prepared entries into.</param>
     /// <param name="commits">Filled with every prepared rebind, in the order it should be committed.</param>
     /// <param name="excluding">
     /// Nodes that must not be rebound here even if the live graph names them as a dependent —
@@ -172,9 +475,9 @@ internal sealed class BindingScope
     /// <remarks>
     /// <para>
     /// A node's own prepared change is always authoritative over a rebind found here. This walk
-    /// resolves <paramref name="propositionName"/>'s dependents from <see cref="Graph"/> — the
+    /// resolves <paramref name="propositionName"/>'s dependents from <c>Current.Graph</c> — the
     /// <em>live</em> edges, since nothing commits until the whole envelope's prepare phase has run —
-    /// and rebinds each one from whatever <see cref="_participants"/> currently holds, which is the
+    /// and rebinds each one from whatever <c>Current.Participants</c> currently holds, which is the
     /// pre-envelope definition (<see cref="Enrol"/> is only called by a commit). If a governed
     /// envelope is <em>also</em> explicitly publishing or withdrawing that same node elsewhere, that
     /// explicit edit already has its own prepared, correct result — a rebind built here from the
@@ -197,13 +500,21 @@ internal sealed class BindingScope
     /// discard both rather than act on either.
     /// </returns>
     public IReadOnlyList<BrokenDependent> PrepareClosure(
-        string propositionName, PropositionOverlay prospective, List<IRebindCommit> commits,
+        string propositionName, ScopeGenerationBuilder prospective, List<IRebindCommit> commits,
         HashSet<NodeId> excluding)
     {
-        var prospectiveSource = new LayeredSpecSource(prospective, Registry);
         var broken = new List<BrokenDependent>();
 
-        foreach (var node in Graph.DependentClosure(propositionName))
+        // One read, not one per use: the graph being walked, the participants being rebound and the
+        // definitions they are rebound *from* all have to come from the same world, or a publish
+        // landing mid-walk would have this rebind nodes one world names against definitions from
+        // another. The inner monitor makes that unreachable today; reading twice would leave it a lock
+        // away from being reachable. This is why the world is handed to PrepareRebind rather than
+        // left for each participant to read for itself — a rule keeps its document and version in the
+        // world, so a participant reading Scope.Current would be exactly that second read.
+        var world = Current;
+
+        foreach (var node in world.Graph.DependentClosure(propositionName))
         {
             // This node's own prepared change — elsewhere in the same envelope — is authoritative;
             // a rebind built from its pre-envelope definition would only shadow it. Its own
@@ -213,11 +524,11 @@ internal sealed class BindingScope
                 continue;
 
             // A graph edge can outlive its participant while a node is being torn down.
-            if (!_participants.TryGetValue(node, out var participant))
+            if (!world.Participants.TryGetValue(node, out var participant))
                 continue;
 
             var errors = new List<RuleError>();
-            var commit = participant.PrepareRebind(prospectiveSource, errors);
+            var commit = participant.PrepareRebind(prospective.Source, world, errors);
 
             if (commit is null)
             {
@@ -227,31 +538,44 @@ internal sealed class BindingScope
                 continue;
             }
 
-            if (commit.OverlayEntry is { } entry)
-                prospective.Set(entry);
-
+            commit.ApplyTo(prospective);
             commits.Add(commit);
         }
 
         return broken;
     }
 
-    /// <summary>
-    /// Publishes commits prepared earlier by <see cref="PrepareClosure"/>, folding each one's entry
-    /// into the live overlay so the closure resolves to what it was rebound against. Deliberately
-    /// separate from <see cref="PrepareClosure"/> — preparing every member before committing any of
-    /// them is what makes a publish all-or-nothing — and called only once the caller has confirmed
-    /// nothing broke. Commits cannot fail, so this cannot be interrupted part-way.
-    /// </summary>
-    /// <remarks>Runs under the write lock, like every other publish step, via the caller's <see cref="Locked{T}"/>.</remarks>
-    public void CommitClosure(IReadOnlyList<IRebindCommit> commits)
+    private sealed class OuterPin(BindingScope scope) : IDisposable
     {
-        foreach (var commit in commits)
+        public void Dispose() => scope._pinned.Value = null;
+    }
+
+    private sealed class NestedPin : IDisposable
+    {
+        public static NestedPin Instance { get; } = new();
+
+        // The outer pin owns the lifetime; releasing here would end the decision early.
+        public void Dispose()
         {
-            commit.Commit();
-            if (commit.OverlayEntry is { } entry)
-                Overlay.Set(entry);
         }
+    }
+
+    /// <summary>
+    /// A stable façade over an unstable world: <see cref="RuleSerializer"/> is built once and must
+    /// keep resolving through whatever generation is live at the moment of the call.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="Current"/>, deliberately, not <see cref="Active"/>. This is the <em>binding</em>
+    /// source, and binding is the live side of the split — every caller of it is preparing or
+    /// validating a document that may go on to be published. See <see cref="Active"/>'s remarks for
+    /// what binding against a pinned world would cost.
+    /// </remarks>
+    private sealed class ScopeSource(BindingScope scope) : ISpecSource
+    {
+        public SpecRegistryEntry? Find(string name) => scope.Current.Source.Find(name);
+
+        public CollectionBinding<TParent>? FindCollection<TParent>(string path) =>
+            scope.Registry.FindCollection<TParent>(path);
     }
 }
 

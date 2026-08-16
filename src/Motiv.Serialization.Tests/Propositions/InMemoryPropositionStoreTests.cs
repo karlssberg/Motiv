@@ -85,4 +85,47 @@ public class InMemoryPropositionStoreTests
         // Assert
         store.Load().Select(proposition => proposition.Name).ShouldBe(["b"]);
     }
+
+    [Fact]
+    public async Task Should_read_the_same_rows_asynchronously_as_synchronously()
+    {
+        // Arrange
+        var store = new InMemoryPropositionStore();
+        await store.WriteAsync(PropositionBatch.Save(Stored("a")), default);
+
+        // Act
+        var asynchronous = await store.LoadAsync(default);
+
+        // Assert
+        asynchronous.Select(row => row.Name).ShouldBe(store.Load().Select(row => row.Name));
+    }
+
+    [Fact]
+    public async Task Should_move_the_generation_when_a_write_lands()
+    {
+        // Arrange
+        var store = new InMemoryPropositionStore();
+        var before = await store.GetGenerationAsync(default);
+
+        // Act
+        await store.WriteAsync(PropositionBatch.Save(Stored("a")), default);
+
+        // Assert
+        (await store.GetGenerationAsync(default)).ShouldBeGreaterThan(before);
+    }
+
+    [Fact]
+    public async Task Should_leave_the_generation_still_when_a_batch_changes_nothing()
+    {
+        // Arrange
+        var store = new InMemoryPropositionStore();
+        await store.WriteAsync(PropositionBatch.Save(Stored("a")), default);
+        var before = await store.GetGenerationAsync(default);
+
+        // Act — an empty batch is not a write
+        await store.WriteAsync(new PropositionBatch([], []), default);
+
+        // Assert — a poller that rebuilt on this would rebuild forever
+        (await store.GetGenerationAsync(default)).ShouldBe(before);
+    }
 }

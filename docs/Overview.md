@@ -137,3 +137,19 @@ default, and the lockout pre-check and break-glass recovery layers.
 | [Change Requests](./governance/change-requests.md)                        | `ChangeRequest`, `ProposedChange`, and the `ChangeRequestSet` create/approve/reject/withdraw/publish workflow. |
 | [The Approval Gate](./governance/approval-gate.md)                        | `ApprovalGate`, the built-in `change.*` gate specs, maker-checker, and the lockout pre-check.     |
 | [Break-Glass](./governance/break-glass.md)                                | The deploy-time flag that disables the gate, and its audit trail.                                  |
+
+## Multi-Instance Refresh
+
+Multi-instance refresh (in the `Motiv.Serialization` and `Motiv.Serialization.AspNetCore` packages)
+lets a running replica converge on another replica's publish without a restart: `RefreshAsync` rebuilds
+a replica's whole world from both durable stores and swaps it in as one reference write, and the opt-in
+`AddRefresh()` poller calls it whenever a cheap, store-derived generation moves. A `DecisionSnapshot`
+pins one world for the duration of a decision — `MapMotivRules` opens one per request automatically —
+so a call evaluating several rules can never straddle a concurrent refresh, and the `Motiv-Generation`
+response header lets a client detect it was routed to a replica serving an older world. See
+[Multi-Instance Refresh](./multi-instance/index.md) for the generation pair, the whole-rebuild rationale,
+choosing a poll interval, and the abort policy that keeps a replica from silently regressing a live rule.
+
+| Type / Method                                                            | Description                                                                                       |
+|---------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| [Refreshing a Replica](./multi-instance/refresh.md)                       | `RefreshAsync()`, `AddRefresh()`, `DecisionSnapshot`/`PinSnapshot()`, the `Motiv-Generation` header, and the abort policy. |

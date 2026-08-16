@@ -13,6 +13,25 @@ internal sealed class DependencyGraph
     private readonly Dictionary<NodeId, IReadOnlyList<string>> _outgoing = [];
     private readonly Dictionary<string, HashSet<NodeId>> _incoming = new(StringComparer.Ordinal);
 
+    public DependencyGraph()
+    {
+    }
+
+    /// <summary>
+    /// Forks a graph so a prospective world can rewrite edges while the live one keeps serving.
+    /// Both indexes are copied, and the reverse index's sets are copied rather than aliased — a
+    /// shared <see cref="HashSet{T}"/> would let an edit to the fork appear in the live graph, which
+    /// is precisely the half-applied state a generation exists to make unrepresentable.
+    /// </summary>
+    public DependencyGraph(DependencyGraph copyFrom)
+    {
+        foreach (var entry in copyFrom._outgoing)
+            _outgoing[entry.Key] = entry.Value;
+
+        foreach (var entry in copyFrom._incoming)
+            _incoming[entry.Key] = [.. entry.Value];
+    }
+
     /// <summary>Replaces a node's outgoing references, keeping the reverse index consistent.</summary>
     public void Set(NodeId node, IReadOnlyList<string> references)
     {

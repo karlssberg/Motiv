@@ -17,8 +17,6 @@ public class Rule<TModel, TMetadata> : RuleBase
         public SpecBase<TModel, TMetadata> Spec { get; } = spec;
     }
 
-    private State? _state;
-
     /// <summary>Creates a rule whose default implementation is a compiled spec.</summary>
     /// <param name="name">The stable name the rule is addressed by.</param>
     /// <param name="defaultSpec">The compiled default implementation.</param>
@@ -50,33 +48,89 @@ public class Rule<TModel, TMetadata> : RuleBase
     public override bool IsPolicy => false;
 
     /// <inheritdoc />
-    public override int Version => Snapshot().Version;
+    public override int Version => Live().Version;
 
     /// <inheritdoc />
-    public override string? DocumentJson => Snapshot().DocumentJson;
+    public override string? DocumentJson => Live().DocumentJson;
 
     /// <summary>Evaluates the current rule implementation against the model.</summary>
     /// <param name="model">The model to evaluate.</param>
     /// <returns>The rich boolean result of the current implementation.</returns>
-    public BooleanResultBase<TMetadata> Evaluate(TModel model) => Snapshot().Spec.Evaluate(model);
+    /// <remarks>
+    /// Reads the <em>pinned</em> world when a <c>DecisionSnapshot</c> is open, so several rules
+    /// evaluated inside one decision resolve against one published set rather than one each.
+    /// </remarks>
+    public BooleanResultBase<TMetadata> Evaluate(TModel model) => StateIn(Scope.Active).Spec.Evaluate(model);
 
-    private protected State Snapshot() =>
-        Volatile.Read(ref _state)
+    /// <summary>The live state — what an administrative read or a publish must see, pinned or not.</summary>
+    private protected State Live() => StateIn(Scope.Current);
+
+    /// <summary>This rule's state in <paramref name="generation"/>, or null when it has none there.</summary>
+    /// <remarks>
+    /// The bounds check is not redundant: Add claims the slot before it publishes the state into it,
+    /// so a concurrent read in that window must still get an answer rather than an
+    /// IndexOutOfRangeException.
+    /// </remarks>
+    private protected State? FindStateIn(ScopeGeneration generation)
+    {
+        var slots = generation.RuleSlots;
+        return Slot >= 0 && Slot < slots.Length ? slots[Slot]?.State as State : null;
+    }
+
+    private protected State StateIn(ScopeGeneration generation) =>
+        FindStateIn(generation)
         ?? throw new InvalidOperationException(
             $"Rule '{Name}' has not been bound; add it to a RuleSet before evaluating.");
 
-    internal sealed override void Attach(RuleSerializer serializer)
-    {
-        if (Volatile.Read(ref _state) is not null)
-            throw new InvalidOperationException($"Rule '{Name}' has already been added to a RuleSet.");
+    internal sealed override object BindDefaultState(RuleSerializer serializer) => BindDefault(serializer);
 
-        Volatile.Write(ref _state, BindDefault(serializer));
+    internal sealed override object WithVersion(object state, int version)
+    {
+        var current = (State)state;
+        return new State(current.DocumentJson, version, current.Spec);
+    }
+
+    /// <inheritdoc />
+    internal sealed override string? DocumentJsonIn(ScopeGenerationBuilder builder) =>
+        builder.FindRuleState(Slot) is State state ? state.DocumentJson : null;
+
+    /// <inheritdoc />
+    internal sealed override string? DocumentJsonIn(ScopeGeneration generation) =>
+        // Null-tolerant rather than routed through StateIn, which throws: a world snapshotted before
+        // this rule was registered simply has no slot for it, and that is an answer.
+        FindStateIn(generation)?.DocumentJson;
+
+    /// <inheritdoc />
+    internal sealed override object? BindStoredState(
+        RuleSerializer serializer, string? documentJson, int version, List<RuleError> errors)
+    {
+        if (documentJson is not null)
+        {
+            return TryBind(serializer, documentJson, errors) is { } spec
+                ? new State(documentJson, version, spec)
+                : null;
+        }
+
+        // A recorded revert: the rule is on its default at the store's version. A compiled default
+        // cannot fail, but a RuleDocumentSource one can — an authored proposition it references may
+        // have been quarantined by the very refresh calling this — and a poller must be told rather
+        // than thrown at.
+        try
+        {
+            var @default = BindDefault(serializer);
+            return new State(@default.DocumentJson, version, @default.Spec);
+        }
+        catch (RuleSerializationException exception)
+        {
+            errors.AddRange(exception.Errors);
+            return null;
+        }
     }
 
     internal sealed override RulePrepareResult PrepareUpdate(
         RuleSerializer serializer, string documentJson, int expectedVersion)
     {
-        var current = Snapshot();
+        var current = Live();
         if (current.Version != expectedVersion)
             return RulePrepareResult.VersionConflict(current.Version);
 
@@ -90,7 +144,7 @@ public class Rule<TModel, TMetadata> : RuleBase
 
     internal sealed override RulePrepareResult PrepareRevert(RuleSerializer serializer, int expectedVersion)
     {
-        var current = Snapshot();
+        var current = Live();
         if (current.Version != expectedVersion)
             return RulePrepareResult.VersionConflict(current.Version);
 
@@ -115,19 +169,18 @@ public class Rule<TModel, TMetadata> : RuleBase
 
     internal sealed override (int Version, string? DocumentJson) VersionedDocument()
     {
-        var snapshot = Snapshot();
-        return (snapshot.Version, snapshot.DocumentJson);
+        // Active, not Current — this serves the catalog listing, which is a read for display and
+        // therefore the pinned side of the split. See RuleBase.VersionedDocument.
+        var listed = StateIn(Scope.Active);
+        return (listed.Version, listed.DocumentJson);
     }
 
-    internal sealed override void RestoreVersion(int version)
+    internal sealed override IRebindCommit? PrepareRebind(
+        RuleSerializer serializer, ScopeGeneration world, List<RuleError> errors)
     {
-        var current = Snapshot();
-        Volatile.Write(ref _state, new State(current.DocumentJson, version, current.Spec));
-    }
-
-    internal sealed override IRebindCommit? PrepareRebind(RuleSerializer serializer, List<RuleError> errors)
-    {
-        var current = Snapshot();
+        // The walk's world, not Live(): a second read of Scope.Current would let a publish landing
+        // mid-walk have this rebind a node one world names against a definition from another.
+        var current = StateIn(world);
 
         // A compiled default resolves no names, so there is nothing to rebind.
         if (current.DocumentJson is null)
@@ -141,21 +194,21 @@ public class Rule<TModel, TMetadata> : RuleBase
         return new RebindCommit(this, new State(current.DocumentJson, current.Version, spec));
     }
 
-    /// <summary>A prepared rebind of this rule, published by swapping its state snapshot.</summary>
+    /// <summary>
+    /// A prepared rebind of this rule, published by writing its binding into the successor. A binding
+    /// write, not a state write: a rebind must not clear a quarantine — see
+    /// <see cref="RuleSlot.WithBinding"/>.
+    /// </summary>
     private sealed class RebindCommit(Rule<TModel, TMetadata> rule, State replacement) : IRebindCommit
     {
-        // A rule is not referenceable from a document, so it contributes nothing to the overlay.
-        public SpecRegistryEntry? OverlayEntry => null;
-
-        public void Commit() => Volatile.Write(ref rule._state, replacement);
+        public void ApplyTo(ScopeGenerationBuilder builder) => builder.SetRuleBinding(rule.Slot, replacement);
     }
 
     /// <summary>
-    /// A prepared rule change, published by swapping the state snapshot. A plain
-    /// <see cref="Volatile.Write{T}"/>, not a compare-and-swap: the outer gate on
-    /// <see cref="BindingScope"/> serialises whole operations, so no second writer can be in flight,
-    /// and a CAS was never able to see a <em>different process</em> anyway. Enforcement lives in the
-    /// store's <c>(Name, Version)</c> primary key, which can.
+    /// A prepared rule change, published by writing its state into the successor generation. No
+    /// compare-and-swap: the outer gate serialises whole operations, so no second writer is in flight,
+    /// and a CAS could never see a different process anyway. Enforcement lives in the store's
+    /// <c>(Name, Version)</c> primary key, which can.
     /// </summary>
     private sealed class Publication(Rule<TModel, TMetadata> rule, State replacement) : IRulePublication
     {
@@ -163,7 +216,7 @@ public class Rule<TModel, TMetadata> : RuleBase
 
         public string? DocumentJson => replacement.DocumentJson;
 
-        public void Commit() => Volatile.Write(ref rule._state, replacement);
+        public void ApplyTo(ScopeGenerationBuilder builder) => builder.SetRuleState(rule.Slot, replacement);
     }
 
     private State BindDefault(RuleSerializer serializer)

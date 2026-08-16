@@ -18,20 +18,26 @@ internal interface IRebindable
     /// Binds against the prospective source **without publishing**. Returns null and fills
     /// <paramref name="errors"/> when the node would no longer bind.
     /// </summary>
-    IRebindCommit? PrepareRebind(ISpecSource prospective, List<RuleError> errors);
+    /// <param name="prospective">The source the node's document is re-resolved through.</param>
+    /// <param name="world">
+    /// The world the walk that found this node read — the definition being rebound must come from it
+    /// and not from a second read of the live one. An authored proposition carries its own document on
+    /// itself and ignores this; a rule keeps its state in the world, so for a rule it is the whole
+    /// point. See <see cref="BindingScope.PrepareClosure"/> for why one read is the discipline.
+    /// </param>
+    /// <param name="errors">Filled with why the node would no longer bind.</param>
+    IRebindCommit? PrepareRebind(ISpecSource prospective, ScopeGeneration world, List<RuleError> errors);
 }
 
 /// <summary>A prepared rebind, ready to be published.</summary>
 internal interface IRebindCommit
 {
     /// <summary>
-    /// The entry this node contributes to the overlay so later members of the closure resolve it,
-    /// or null for a node that is not itself referenceable (a rule).
+    /// Publishes the prepared binding into the world being built. Must not fail, and is the whole of a
+    /// rebind: there is no second, live-state half any more. That is what lets
+    /// <see cref="BindingScope.PrepareClosure"/> apply a commit into a world it may still discard.
     /// </summary>
-    SpecRegistryEntry? OverlayEntry { get; }
-
-    /// <summary>Publishes the prepared binding. Must not fail.</summary>
-    void Commit();
+    void ApplyTo(ScopeGenerationBuilder builder);
 }
 
 /// <summary>
@@ -43,9 +49,7 @@ internal sealed class NoRebindCommit : IRebindCommit
 {
     public static NoRebindCommit Instance { get; } = new();
 
-    public SpecRegistryEntry? OverlayEntry => null;
-
-    public void Commit()
+    public void ApplyTo(ScopeGenerationBuilder builder)
     {
     }
 }

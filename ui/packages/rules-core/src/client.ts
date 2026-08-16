@@ -12,6 +12,25 @@ export interface RulesApiClientOptions {
   baseUrl: string;
   /** Injectable fetch implementation; defaults to the global fetch. */
   fetch?: typeof fetch;
+  /**
+   * Called when a response reports a generation behind the one this client last accepted (see
+   * {@link RulesApiClient.generation}) — the client was routed to a replica that has not caught up
+   * yet. Detection, not policy: the caller decides whether to retry, warn, or ignore.
+   */
+  onStaleGeneration?: (observed: StoreGeneration, accepted: StoreGeneration) => void;
+}
+
+/** Where both stores stood in the world a response was served from. */
+export interface StoreGeneration {
+  rules: number;
+  propositions: number;
+}
+
+/** Reads the `Motiv-Generation` header. Anything the server did not write is refused. */
+export function parseGeneration(token: string | null | undefined): StoreGeneration | undefined {
+  if (!token) return undefined;
+  const match = /^r(\d+)\.p(\d+)$/.exec(token);
+  return match ? { rules: Number(match[1]), propositions: Number(match[2]) } : undefined;
 }
 
 /** The union of shapes a failed proposition write's body can take (see `#readPropositionResult`). */
@@ -41,10 +60,28 @@ export class RulesApiError extends Error {
 export class RulesApiClient {
   readonly #baseUrl: string;
   readonly #fetch: typeof fetch;
+  readonly #onStaleGeneration: ((observed: StoreGeneration, accepted: StoreGeneration) => void) | undefined;
+  #generation: StoreGeneration | undefined;
 
   constructor(options: RulesApiClientOptions) {
     this.#baseUrl = options.baseUrl.replace(/\/$/, '');
     this.#fetch = options.fetch ?? globalThis.fetch.bind(globalThis);
+    this.#onStaleGeneration = options.onStaleGeneration;
+  }
+
+  /**
+   * The most recent `Motiv-Generation` that was not behind the one before it — the newest world this
+   * client accepts as having really been served to it. Undefined until a response carries one.
+   *
+   * Not a component-wise maximum, deliberately. A response is kept whole or discarded whole, so a
+   * mixed-direction observation (`r5.p9` after `r7.p3`) alarms and is dropped entire, and its `p9` is
+   * never recorded. Combining the two halves would synthesise a world no replica ever served, and
+   * every subsequent honest response would then look like a regression against it. The cost is
+   * under-detection: after a discarded observation, a later response carrying that same `p9` raises
+   * no alarm on the proposition half, because this client never claimed to have seen it.
+   */
+  get generation(): StoreGeneration | undefined {
+    return this.#generation;
   }
 
   /** GET {baseUrl}/catalog */
@@ -172,7 +209,39 @@ export class RulesApiClient {
     });
   }
 
+  /**
+   * Records the world a response came from, and reports a backwards move.
+   *
+   * Replicas converge eventually, so a client can be routed to one that has not caught up yet.
+   * That is explicable staleness rather than incoherence — but only if the client can see it, so a
+   * backwards move is surfaced rather than swallowed, and the generation kept is the last one that
+   * was not behind.
+   *
+   * The two components come from stores that are never written in the same transaction, so
+   * there is no total order between generations — a response is a backwards move if *either*
+   * component is behind, even when the other has advanced. Such a response is then discarded whole
+   * rather than merged component-wise; see `generation` for what that costs and why it is right.
+   */
+  #trackGeneration(response: Response): void {
+    const observed = parseGeneration(response.headers.get('motiv-generation'));
+    if (!observed) return;
+
+    const accepted = this.#generation;
+    if (!accepted) {
+      this.#generation = observed;
+      return;
+    }
+
+    if (observed.rules < accepted.rules || observed.propositions < accepted.propositions) {
+      this.#onStaleGeneration?.(observed, accepted);
+      return;
+    }
+
+    this.#generation = observed;
+  }
+
   async #readSaveResult(response: Response): Promise<RuleSaveResult> {
+    this.#trackGeneration(response);
     if (response.ok) {
       const body = (await response.json()) as { version: number };
       return { outcome: 'updated', version: body.version };
@@ -195,7 +264,7 @@ export class RulesApiClient {
         : `Request failed (${response.status}).`;
       throw new RulesApiError(response.status, message);
     }
-    return this.#read<never>(response); // 404 etc. → RulesApiError as elsewhere
+    return this.#throwFromErrorResponse(response); // 404 etc. → RulesApiError as elsewhere
   }
 
   /**
@@ -210,6 +279,7 @@ export class RulesApiClient {
     response: Response,
     options: { unmatchedConflictIsNameTaken?: boolean } = {},
   ): Promise<PropositionSaveResult> {
+    this.#trackGeneration(response);
     if (response.ok) {
       const body = (await response.json()) as { version: number };
       return { outcome: 'saved', version: body.version };
@@ -239,7 +309,20 @@ export class RulesApiClient {
   }
 
   async #read<T>(response: Response): Promise<T> {
+    this.#trackGeneration(response);
     if (response.ok) return (await response.json()) as T;
+    return this.#throwFromErrorResponse(response);
+  }
+
+  /**
+   * Shared error-body parsing for a non-2xx response, without tracking the generation header.
+   *
+   * `#readSaveResult`'s 404-etc. fallback delegates here rather than to `#read`: it has already
+   * called `#trackGeneration` once for this response, and `#read` also tracks — calling it a
+   * second time on the same response would report a single backwards move to `onStaleGeneration`
+   * twice.
+   */
+  async #throwFromErrorResponse(response: Response): Promise<never> {
     const body = (await response.json().catch(() => undefined)) as
       | ValidationResponse | ErrorResponse | undefined;
     if (body && 'errors' in body) {

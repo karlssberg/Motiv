@@ -280,4 +280,21 @@ public class DependencyGraphTests
         graph.Referrers("a").ShouldBeEmpty();
         graph.Referrers("c").ShouldBe([NodeId.Proposition("b")]);
     }
+
+    [Fact]
+    public void Should_fork_without_aliasing_the_original()
+    {
+        // Arrange
+        var original = new DependencyGraph();
+        original.Set(NodeId.Proposition("child"), ["parent"]);
+
+        // Act — a copy is edited; the original must not see it
+        var copy = new DependencyGraph(original);
+        copy.Set(NodeId.Proposition("other"), ["parent"]);
+        copy.Remove(NodeId.Proposition("child"));
+
+        // Assert — both indexes fork, not just the outgoing one
+        original.Referrers("parent").Select(node => node.Name).ShouldBe(["child"]);
+        copy.Referrers("parent").Select(node => node.Name).ShouldBe(["other"]);
+    }
 }

@@ -293,6 +293,30 @@ compiled default rather than failing to evaluate — and, by default, stops
 startup so nobody boots quietly into unapproved behaviour. Available via the
 `Motiv.Serialization` and `Motiv.Serialization.AspNetCore` packages.
 
+### Multi-Instance Refresh
+
+A durable store survives a restart, but a running replica never rereads it on
+its own — two replicas can otherwise diverge for as long as they're both up.
+`AddRefresh()` polls a cheap generation and rebuilds this replica whenever
+another one has published:
+
+```csharp
+builder.Services.AddMotivRules(registry, options)
+    .AddRuleStore(new JsonFileRuleStore("rules.json"))
+    .AddRule<CanCheckoutRule>()
+    .AddRefresh(); // opt-in — a single-replica host doesn't need it
+```
+
+Each rebuild is a whole-world swap, not an in-place patch, and aborts rather
+than silently regressing a live rule to its compiled default if a stored
+document would no longer bind — the replica keeps serving what it has and
+reports `Degraded` via the `motiv-refresh` health check until it's repaired.
+`MapMotivRules` pins one world per request automatically, so a handler
+evaluating several rules can't straddle a concurrent refresh, and every
+response carries a `Motiv-Generation` header so a client can tell it was
+routed to a replica serving an older world. Available via the
+`Motiv.Serialization` and `Motiv.Serialization.AspNetCore` packages.
+
 ### Governance and Access Control
 
 Live rules are secure by default: `MapMotivRules()` requires authentication on

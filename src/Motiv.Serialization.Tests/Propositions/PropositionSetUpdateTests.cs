@@ -10,11 +10,16 @@ public class PropositionSetUpdateTests
     private static SpecBase<Customer, string> IsAdult { get; } =
         Spec.Build((Customer c) => c.Age >= 18).WhenTrue("adult").WhenFalse("minor").Create();
 
+    private static AsyncSpecBase<Customer, string> PassesCheck { get; } =
+        Spec.BuildAsync(async (Customer c) => { await Task.Yield(); return c.IsActive; })
+            .WhenTrue("passes").WhenFalse("fails").Create();
+
     private static (PropositionSet Set, BindingScope Scope, InMemoryPropositionStore Store) NewSet()
     {
         var registry = new SpecRegistry()
             .Register("customer.is-active", IsActive)
-            .Register("customer.is-adult", IsAdult);
+            .Register("customer.is-adult", IsAdult)
+            .Register("customer.passes-check", PassesCheck);
         var scope = new BindingScope(registry);
         var store = new InMemoryPropositionStore();
         var set = new PropositionSet(scope, store).AddModel<Customer>("customer");
@@ -33,7 +38,7 @@ public class PropositionSetUpdateTests
     {
         public NodeId Node { get; } = node;
 
-        public IRebindCommit? PrepareRebind(ISpecSource prospective, List<RuleError> errors)
+        public IRebindCommit? PrepareRebind(ISpecSource prospective, ScopeGeneration world, List<RuleError> errors)
         {
             errors.Add(new RuleError("$", RuleErrorCode.AsyncSpecInSyncLoad, "would not bind"));
             return null;
@@ -51,16 +56,15 @@ public class PropositionSetUpdateTests
         private readonly ManualResetEventSlim _release = new(initialState: false);
 
         public NodeId Node { get; } = node;
-        public SpecRegistryEntry? OverlayEntry => null;
 
-        public IRebindCommit? PrepareRebind(ISpecSource prospective, List<RuleError> errors)
+        public IRebindCommit? PrepareRebind(ISpecSource prospective, ScopeGeneration world, List<RuleError> errors)
         {
             _entered.Set();
             _release.Wait();
             return this;
         }
 
-        public void Commit()
+        public void ApplyTo(ScopeGenerationBuilder builder)
         {
         }
 
@@ -116,6 +120,31 @@ public class PropositionSetUpdateTests
 
         // Assert
         set.Find("customer.b")!.Version.ShouldBe(1);
+    }
+
+    /// <summary>
+    /// A regression guard for a rebind that reaches <see cref="PropositionSet"/> only through a
+    /// cascaded closure — never published directly, only carried along because it depends on a. The
+    /// overlay (<see cref="Evaluate"/>'s path, and every other test in this class) is always fresh:
+    /// <c>ApplyTo</c> writes it. The public listing — <see cref="PropositionSet.Find"/> — reads a
+    /// second, separate dictionary that only a live <c>Commit()</c> write reaches; before that write
+    /// was restored, this assertion failed while every overlay-based assertion in this file kept
+    /// passing, which is why the regression needs its own test rather than reuse of an existing one.
+    /// </summary>
+    [Fact]
+    public async Task Should_update_a_cascaded_dependents_listed_asyncness()
+    {
+        // Arrange — b is bound synchronously, against a's original synchronous document
+        var (set, scope, _) = NewSet();
+        await set.CreateAsync("customer.a", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+        await set.CreateAsync("customer.b", "customer", """{ "rule": { "not": { "spec": "customer.a" } } }""", null);
+
+        // Act — a now resolves to an async spec, so b's cascaded rebind must make b async too
+        await set.UpdateAsync("customer.a", """{ "rule": { "spec": "customer.passes-check" } }""", 1);
+
+        // Assert
+        scope.Source.Find("customer.b")!.IsAsync.ShouldBeTrue();
+        set.Find("customer.b")!.IsAsync.ShouldBeTrue();
     }
 
     [Fact]
@@ -213,7 +242,7 @@ public class PropositionSetUpdateTests
         scope.Locked(() =>
         {
             scope.Enrol(new AlwaysBreaks(NodeId.Rule("can-checkout")));
-            scope.Graph.Set(NodeId.Rule("can-checkout"), ["customer.a"]);
+            scope.Mutate(builder => builder.Graph.Set(NodeId.Rule("can-checkout"), ["customer.a"]));
             return 0;
         });
 
@@ -236,7 +265,7 @@ public class PropositionSetUpdateTests
         scope.Locked(() =>
         {
             scope.Enrol(new AlwaysBreaks(NodeId.Rule("can-checkout")));
-            scope.Graph.Set(NodeId.Rule("can-checkout"), ["customer.a"]);
+            scope.Mutate(builder => builder.Graph.Set(NodeId.Rule("can-checkout"), ["customer.a"]));
             return 0;
         });
         var inactiveAdult = new Customer(IsActive: false, Age: 30);
@@ -271,7 +300,7 @@ public class PropositionSetUpdateTests
         scope.Locked(() =>
         {
             scope.Enrol(blocker);
-            scope.Graph.Set(NodeId.Rule("blocker"), ["customer.a"]);
+            scope.Mutate(builder => builder.Graph.Set(NodeId.Rule("blocker"), ["customer.a"]));
             return 0;
         });
 
@@ -345,7 +374,7 @@ public class PropositionSetUpdateTests
         scope.Locked(() =>
         {
             scope.Enrol(new AlwaysBreaks(NodeId.Rule("can-checkout")));
-            scope.Graph.Set(NodeId.Rule("can-checkout"), ["customer.is-active"]);
+            scope.Mutate(builder => builder.Graph.Set(NodeId.Rule("can-checkout"), ["customer.is-active"]));
             return 0;
         });
 

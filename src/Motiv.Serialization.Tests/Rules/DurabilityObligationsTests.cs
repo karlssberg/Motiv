@@ -55,6 +55,8 @@ public class DurabilityObligationsTests
         private readonly InMemoryPropositionStore _inner = new();
 
         public IReadOnlyList<StoredProposition> Load() => _inner.Load();
+        public Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken ct) => _inner.LoadAsync(ct);
+        public Task<long> GetGenerationAsync(CancellationToken ct) => _inner.GetGenerationAsync(ct);
 
         public Task WriteAsync(PropositionBatch batch, CancellationToken ct)
         {

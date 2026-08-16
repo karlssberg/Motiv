@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { RulesApiClient, RulesApiError } from '../src/client.js';
+import { RulesApiClient, RulesApiError, parseGeneration } from '../src/client.js';
 import type { EvaluationResult, ValidationResponse } from '../src/contracts.js';
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -343,5 +343,138 @@ describe('RulesApiClient', () => {
     const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock });
 
     expect(await client.getDependents('customer.a')).toEqual([]);
+  });
+});
+
+describe('generation tracking', () => {
+  const respond = (body: unknown, generation: string) =>
+    new Response(JSON.stringify(body), {
+      status: 200,
+      headers: { 'content-type': 'application/json', 'motiv-generation': generation },
+    });
+
+  it('parses the token the server stamps', () => {
+    expect(parseGeneration('r7.p3')).toEqual({ rules: 7, propositions: 3 });
+    expect(parseGeneration('nonsense')).toBeUndefined();
+    expect(parseGeneration(null)).toBeUndefined();
+  });
+
+  it('remembers the highest generation it has seen', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(respond([], 'r7.p3'))
+      .mockResolvedValueOnce(respond([], 'r8.p3'));
+    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock as never });
+
+    await client.listRules();
+    await client.listRules();
+
+    expect(client.generation).toEqual({ rules: 8, propositions: 3 });
+  });
+
+  it('reports being routed backwards without throwing', async () => {
+    const onStaleGeneration = vi.fn();
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(respond([], 'r7.p3'))
+      .mockResolvedValueOnce(respond([], 'r5.p3'));
+    const client = new RulesApiClient({
+      baseUrl: '/api/rules', fetch: fetchMock as never, onStaleGeneration,
+    });
+
+    await client.listRules();
+    const second = await client.listRules();
+
+    // Detection, not policy: the caller decides whether to retry, warn, or ignore.
+    expect(second).toEqual([]);
+    expect(onStaleGeneration).toHaveBeenCalledWith({ rules: 5, propositions: 3 }, { rules: 7, propositions: 3 });
+    // The high-water mark must not regress on a backwards move, or the very next correct
+    // response would itself look like a false backwards move.
+    expect(client.generation).toEqual({ rules: 7, propositions: 3 });
+  });
+
+  it('does not treat a component-wise-independent move as forward-only', async () => {
+    // The two components come from stores that are never written in the same transaction, so
+    // there is no shared sequence: a response can advance one component while regressing the
+    // other. Either component being behind makes the whole response a backwards move.
+    const onStaleGeneration = vi.fn();
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(respond([], 'r7.p3'))
+      .mockResolvedValueOnce(respond([], 'r9.p1'));
+    const client = new RulesApiClient({
+      baseUrl: '/api/rules', fetch: fetchMock as never, onStaleGeneration,
+    });
+
+    await client.listRules();
+    await client.listRules();
+
+    expect(onStaleGeneration).toHaveBeenCalledWith({ rules: 9, propositions: 1 }, { rules: 7, propositions: 3 });
+    expect(client.generation).toEqual({ rules: 7, propositions: 3 });
+  });
+
+  it('does not treat an equal generation as a backwards move', async () => {
+    // A successful PUT's response carries the pre-write generation by design (the server pins
+    // the world at request start), so a repeat of the same generation must not alarm — it is
+    // not lower than anything previously seen, merely not yet advanced.
+    const onStaleGeneration = vi.fn();
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(respond([], 'r7.p3'))
+      .mockResolvedValueOnce(respond([], 'r7.p3'));
+    const client = new RulesApiClient({
+      baseUrl: '/api/rules', fetch: fetchMock as never, onStaleGeneration,
+    });
+
+    await client.listRules();
+    await client.listRules();
+
+    expect(onStaleGeneration).not.toHaveBeenCalled();
+    expect(client.generation).toEqual({ rules: 7, propositions: 3 });
+  });
+
+  it('tracks the generation on error responses without double-reporting through delegated readers', async () => {
+    // `#readSaveResult`'s 404-etc. fallback and `#readPropositionResult`'s unmatched-conflict
+    // fallback both funnel into shared error handling; a response must be tracked exactly once
+    // regardless of which reader receives it.
+    const onStaleGeneration = vi.fn();
+    const errorResponse = (generation: string) =>
+      new Response(JSON.stringify({ error: 'not found' }), {
+        status: 404,
+        headers: { 'content-type': 'application/json', 'motiv-generation': generation },
+      });
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(respond({ version: 1 }, 'r7.p3'))
+      .mockResolvedValueOnce(errorResponse('r5.p3'));
+    const client = new RulesApiClient({
+      baseUrl: '/api/rules', fetch: fetchMock as never, onStaleGeneration,
+    });
+
+    await client.putRule('r', { rule: { spec: 'x' } }, 0);
+    await expect(client.putRule('r', { rule: { spec: 'x' } }, 0)).rejects.toThrow(RulesApiError);
+
+    expect(onStaleGeneration).toHaveBeenCalledTimes(1);
+    expect(onStaleGeneration).toHaveBeenCalledWith({ rules: 5, propositions: 3 }, { rules: 7, propositions: 3 });
+  });
+
+  it('tracks generation on a raw-Response path that handles its own error body (proposition writes)', async () => {
+    const onStaleGeneration = vi.fn();
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(respond({ version: 1 }, 'r7.p3'))
+      .mockResolvedValueOnce(respond({ version: 2 }, 'r7.p4'));
+    const client = new RulesApiClient({
+      baseUrl: '/api/rules', fetch: fetchMock as never, onStaleGeneration,
+    });
+
+    await client.putProposition('customer.a', { rule: { spec: 'x' } }, 0);
+    await client.putProposition('customer.a', { rule: { spec: 'x' } }, 1);
+
+    expect(client.generation).toEqual({ rules: 7, propositions: 4 });
+    expect(onStaleGeneration).not.toHaveBeenCalled();
+  });
+
+  it('leaves generation undefined when a response carries no header', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse([]));
+    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock });
+
+    await client.listRules();
+
+    expect(client.generation).toBeUndefined();
   });
 });

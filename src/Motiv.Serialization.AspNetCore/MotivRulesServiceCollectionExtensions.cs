@@ -147,6 +147,40 @@ public sealed class MotivRulesBuilder
         Services.AddSingleton(new RuleStoreOptions(failFastOnQuarantine));
         return this;
     }
+
+    /// <summary>
+    /// Polls the stores and rebuilds this replica when another one publishes. Opt-in, because a
+    /// single-replica host does not need it.
+    /// </summary>
+    /// <param name="interval">How often to poll, or null for the five-second default.</param>
+    /// <returns>This builder, to allow chained registration.</returns>
+    /// <exception cref="InvalidOperationException">Refresh is already enabled. DI is last-wins, so a
+    /// second call would silently discard the first interval and, worse, register a second
+    /// <see cref="IHostedService"/> slot resolving the same <see cref="MotivRefreshService"/>
+    /// singleton — two concurrent poll loops against one store and one <c>LastReport</c> — rather
+    /// than layering onto the first call.</exception>
+    public MotivRulesBuilder AddRefresh(TimeSpan? interval = null)
+    {
+        if (Services.Any(descriptor => descriptor.ServiceType == typeof(MotivRefreshOptions)))
+            throw new InvalidOperationException(
+                $"{nameof(AddRefresh)} has already been called. Call it once — a second call " +
+                "would start a second poll loop against the same MotivRefreshService singleton, " +
+                "as DI registration is last-wins.");
+
+        var options = new MotivRefreshOptions();
+        if (interval is { } value)
+            options.Interval = value;
+
+        Services.AddSingleton(options);
+        Services.AddSingleton<MotivRefreshService>();
+        Services.AddHostedService(provider => provider.GetRequiredService<MotivRefreshService>());
+
+        // AddCheck<MotivRefreshHealthCheck>, not an instance factory: the DI-resolved constructor
+        // pulls the MotivRefreshService singleton above, so the check reads the exact instance the
+        // poll loop writes to, the same way the hosted service registration does.
+        Services.AddHealthChecks().AddCheck<MotivRefreshHealthCheck>("motiv-refresh");
+        return this;
+    }
 }
 
 /// <summary>

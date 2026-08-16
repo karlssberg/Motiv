@@ -187,8 +187,12 @@ public sealed record ChangeRequestResult(
 /// <see cref="All"/>/<see cref="Find"/> can observe a request mid-transition. Narrower than the
 /// memory-visibility gap this class had before two locks existed (everything shared one lock, so
 /// every read was synchronised with every write), but accepted for the same reason
-/// <see cref="RuleBase.Quarantine"/> was: an availability guarantee — the read surface must not go
-/// unresponsive behind a stalled store — outweighs strict linearizability here.
+/// <see cref="RuleSet.Rules"/>/<see cref="RuleSet.FindEntry"/> read without the scope lock: an
+/// availability guarantee — the read surface must not go unresponsive behind a stalled store —
+/// outweighs strict linearizability here. Those two have since stopped paying for it at all, because
+/// a rule's version, document and quarantine now come from one immutable
+/// <see cref="ScopeGeneration"/> reached by a single volatile read; this class still pays, because a
+/// <see cref="ChangeRequest"/> remains a bag of independently-written fields.
 /// <see cref="ChangeRequest.Status"/> is the one field exempted: it is
 /// <see cref="System.Threading.Volatile"/>-backed, and its writers publish it last so that a reader
 /// seeing the new status also sees the detail fields that status implies — see the comment on
@@ -761,13 +765,16 @@ public sealed class ChangeRequestSet
         /// <remarks>
         /// Holds both exclusion tiers, same shape as <see cref="RuleSet.PersistAndCommitCoreAsync"/>:
         /// the outer semaphore (<see cref="BindingScope.LockedAsync{T}"/>) serialises the whole publish
-        /// await-safely, but <see cref="Validate"/> reads live scope state — <c>Scope.Graph</c> via
-        /// <see cref="BindingScope.PrepareClosure"/> and <c>Referrers</c>, and <c>Scope.Source</c> via
-        /// every <c>ValidateCore</c>/<c>PrepareCore</c> call — which is exactly the state a
-        /// monitor-held rule commit (<see cref="RuleSet.PersistAndCommitCoreAsync"/>) or a
-        /// monitor-held proposition write can be mutating concurrently. <see cref="Validate"/> is
+        /// await-safely, but it does not exclude a monitor-only writer — <see cref="RuleSet.Add"/> and
+        /// <see cref="RuleSet.Load"/> never take the gate — and a monitor-only writer replaces the live
+        /// world. <see cref="Validate"/> reads that world repeatedly and from several angles:
+        /// <c>Current.Graph</c> via <see cref="BindingScope.PrepareClosure"/> and <c>Referrers</c>, and
+        /// <c>Current.Source</c> via every <c>ValidateCore</c>/<c>PrepareCore</c> call. Each read is
+        /// individually safe — a generation is immutable — but a swap landing between two of them
+        /// would have this envelope validated against two different worlds, and the whole
+        /// validate-then-apply atomicity claim rests on it having seen one. <see cref="Validate"/> is
         /// wholly synchronous, so wrapping it in <see cref="BindingScope.Locked{T}"/> costs nothing and
-        /// gives it one consistent snapshot for its whole walk.
+        /// gives it exactly that.
         /// <para>
         /// <see cref="ApplyValidatedAsync"/> is deliberately <em>not</em> wrapped here: it takes the
         /// monitor itself, twice — once to prepare the whole envelope, once to commit it — with the
@@ -826,8 +833,8 @@ public sealed class ChangeRequestSet
         private static ChangeRequestResult? Validate(
             RuleSet rules, PropositionSet? propositions, ChangeRequest change)
         {
-            var prospective = new PropositionOverlay(rules.Scope.Overlay);
-            var prospectiveSource = new LayeredSpecSource(prospective, rules.Scope.Registry);
+            var prospective = new ScopeGenerationBuilder(rules.Scope.Registry, rules.Scope.Current);
+            var prospectiveSource = prospective.Source;
 
             // Every node this envelope explicitly touches — computed once, up front, from the whole
             // change rather than incrementally: PrepareClosure needs to exclude a phase-C withdrawal
@@ -869,7 +876,7 @@ public sealed class ChangeRequestSet
                 if (prepared.Entry is not { } entry)
                     return Failed(ChangeRequestOutcome.Invalid, proposed.Target, prepared.Errors);
 
-                prospective.Set(entry);
+                prospective.SetOverlayEntry(entry);
 
                 // The document binding on its own says nothing about what already resolves *through*
                 // this name. A cascading publish rebinds the whole dependent closure
@@ -943,11 +950,11 @@ public sealed class ChangeRequestSet
                         return Invalid(proposed.Target,
                             $"'{name}' is still referenced by {string.Join(", ", referrers)}");
 
-                    prospective.Remove(name);
+                    prospective.RemoveOverlayEntry(name);
                 }
                 else
                 {
-                    prospective.Remove(name);
+                    prospective.RemoveOverlayEntry(name);
                     if (rules.Scope.PrepareClosure(name, prospective, [], envelopeNodes) is { Count: > 0 } broken)
                         return BrokenDependents(proposed.Target, broken);
                 }
@@ -993,7 +1000,7 @@ public sealed class ChangeRequestSet
         {
             var referrers = new List<string>();
 
-            foreach (var node in rules.Scope.Graph.Referrers(name))
+            foreach (var node in rules.Scope.Current.Graph.Referrers(name))
             {
                 if (!rebound.ContainsKey(node) && !withdrawn.Contains(node))
                     referrers.Add($"{node.KindLabel} '{node.Name}'");
@@ -1080,6 +1087,20 @@ public sealed class ChangeRequestSet
             if (prepared.Failure is { } prepareFailure)
                 return prepareFailure;
 
+            // Where both stores stood before this envelope wrote anything — see
+            // ScopeGenerationBuilder.AdvanceRuleSequence for what the comparison decides, and
+            // RuleSet.PersistAndCommitCoreAsync for why the read sits as late as it can. Read only for
+            // the halves this envelope will actually write, which is Prepare's answer and is therefore
+            // knowable only now; the other half never reaches an Advance call, and a read for it would
+            // be a round trip spent on a number nothing consults.
+            var rulesBefore = prepared.Rules.Count > 0
+                ? await rules.StoreGenerationAsync(cancellationToken).ConfigureAwait(false)
+                : 0;
+
+            var propositionsBefore = prepared.PropositionWrites is not null
+                ? await propositions!.StoreGenerationAsync(cancellationToken).ConfigureAwait(false)
+                : 0;
+
             // --- Phase 2: persist the whole envelope as two independent all-or-nothing batches,
             // rules then propositions — see the remarks above for what a crash between them leaves.
             if (prepared.Rules.Count > 0)
@@ -1124,6 +1145,18 @@ public sealed class ChangeRequestSet
                 }
             }
 
+            // Where each store now stands, read back rather than counted — see
+            // RuleSet.PersistAndCommitCoreAsync. Only the halves this envelope actually wrote are
+            // read: an envelope touching one store must leave the other's component exactly as it
+            // found it, which is why the successor is stamped per component rather than as a pair.
+            long? ruleGeneration = prepared.Rules.Count > 0
+                ? await rules.StoreGenerationAsync(cancellationToken).ConfigureAwait(false)
+                : null;
+
+            long? propositionGeneration = prepared.PropositionWrites is not null
+                ? await propositions!.StoreGenerationAsync(cancellationToken).ConfigureAwait(false)
+                : null;
+
             // --- Phase 3: apply every prepared change. Nothing below can fail.
             //
             // Propositions commit before rules here, but — unlike an earlier version of this method —
@@ -1151,19 +1184,33 @@ public sealed class ChangeRequestSet
             {
                 var versions = new Dictionary<string, int>(StringComparer.Ordinal);
 
-                foreach (var (name, edit) in prepared.PropositionPublishes)
-                    versions[name] = propositions!.CommitPublishCore(edit);
-
-                foreach (var (name, edit) in prepared.PropositionWithdrawals)
+                // One builder for the whole envelope, and therefore one swap. "These edits publish
+                // together" has to be true for a reader as well as for the store: a swap per member
+                // would let one land between two of them and observe a combination this envelope
+                // never published. The ordering below is unchanged and still load-bearing for what
+                // ends up in that single successor — see the remarks above.
+                rules.Scope.Mutate(builder =>
                 {
-                    propositions!.CommitWithdrawCore(edit);
+                    foreach (var (name, edit) in prepared.PropositionPublishes)
+                        versions[name] = PropositionSet.CommitPublishCore(edit, builder);
 
-                    // No authored document remains, so there is no version left to report.
-                    versions[name] = 0;
-                }
+                    foreach (var (name, edit) in prepared.PropositionWithdrawals)
+                    {
+                        PropositionSet.CommitWithdrawCore(edit, builder);
 
-                foreach (var (name, publication) in prepared.Rules)
-                    versions[name] = rules.CommitCore(name, publication).Version;
+                        // No authored document remains, so there is no version left to report.
+                        versions[name] = 0;
+                    }
+
+                    foreach (var (name, publication) in prepared.Rules)
+                        versions[name] = rules.CommitCore(name, publication, builder).Version;
+
+                    if (ruleGeneration is { } ruleSequence)
+                        builder.AdvanceRuleSequence(rulesBefore, ruleSequence);
+
+                    if (propositionGeneration is { } propositionSequence)
+                        builder.AdvancePropositionSequence(propositionsBefore, propositionSequence);
+                });
 
                 return new ChangeRequestResult(ChangeRequestOutcome.Ok, change, null, [], null, null, versions);
             });
@@ -1194,8 +1241,8 @@ public sealed class ChangeRequestSet
         /// </remarks>
         private static EnvelopePrepare Prepare(RuleSet rules, PropositionSet? propositions, ChangeRequest change)
         {
-            var prospective = new PropositionOverlay(rules.Scope.Overlay);
-            var prospectiveSource = new LayeredSpecSource(prospective, rules.Scope.Registry);
+            var prospective = new ScopeGenerationBuilder(rules.Scope.Registry, rules.Scope.Current);
+            var prospectiveSource = prospective.Source;
 
             // See Validate's own remarks on this — the same complete-up-front set, so a closure walk
             // in any phase excludes every node this envelope also explicitly publishes or withdraws,

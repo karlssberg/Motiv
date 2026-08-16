@@ -22,15 +22,11 @@ namespace Motiv.Serialization;
 /// itself readable evidence that a rollback happened, not merely a document that happens to match one.
 /// </para>
 /// <para>
-/// <strong><see cref="LoadAsync"/>, <see cref="GetGenerationAsync"/> and <see cref="HistoryAsync"/> are
-/// forward surface.</strong> Today only <see cref="Load"/> and <see cref="AppendAsync"/> have a
-/// production caller — a replica reads the store once, at its own startup, and every write goes
-/// through <see cref="AppendAsync"/>. The other three exist for a background poller (refreshing one
-/// replica from another's write, on the generation this async trio was built to support) that this
-/// release does not ship; an implementation still has to honour their contracts — <see cref="HistoryAsync"/>
-/// really is exercised today, by <see cref="RuleSet.RestoreAsync"/> — but <see cref="LoadAsync"/> and
-/// <see cref="GetGenerationAsync"/> specifically are, for now, contract-only: nothing in this codebase
-/// calls them.
+/// <see cref="LoadAsync"/> and <see cref="GetGenerationAsync"/> back <see cref="RuleSet.RefreshAsync"/>:
+/// a replica polls <see cref="GetGenerationAsync"/> on a timer (see
+/// <c>Motiv.Serialization.AspNetCore.MotivRefreshService</c>, an opt-in background poller) and only
+/// calls <see cref="LoadAsync"/> — the expensive rebuild path — once that scalar has actually moved.
+/// <see cref="HistoryAsync"/> is exercised by <see cref="RuleSet.RestoreAsync"/>.
 /// </para>
 /// </remarks>
 public interface IRuleStore
@@ -43,9 +39,9 @@ public interface IRuleStore
 
     /// <summary>
     /// Every rule's head, read on a refresh. Separate from <see cref="Load"/> rather than replacing it
-    /// because the two run at different times under different constraints. No production caller yet —
-    /// see the interface remarks on forward surface; it exists for the background poller a later plan
-    /// ships.
+    /// because the two run at different times under different constraints. Called by
+    /// <see cref="RuleSet.RefreshAsync"/>, and only once <see cref="GetGenerationAsync"/> has shown the
+    /// store moved — see the interface remarks.
     /// </summary>
     Task<IReadOnlyList<StoredRule>> LoadAsync(CancellationToken cancellationToken);
 
@@ -55,10 +51,10 @@ public interface IRuleStore
     /// </summary>
     /// <remarks>
     /// <strong>Must be a scalar read.</strong> An implementation that answers this by loading the
-    /// store defeats the entire point — it is polled on a timer by every replica. It must also never
-    /// move backwards while replicas are live, including across a restore: it is the fencing token
-    /// behind monotonic-read consistency. No production caller yet — see the interface remarks on
-    /// forward surface; it exists for the background poller a later plan ships.
+    /// store defeats the entire point — it is polled on a timer by every replica, via
+    /// <see cref="RuleSet.RefreshAsync"/> and, opt-in, <c>Motiv.Serialization.AspNetCore.MotivRefreshService</c>.
+    /// It must also never move backwards while replicas are live, including across a restore: it is
+    /// the fencing token behind monotonic-read consistency.
     /// </remarks>
     Task<long> GetGenerationAsync(CancellationToken cancellationToken);
 

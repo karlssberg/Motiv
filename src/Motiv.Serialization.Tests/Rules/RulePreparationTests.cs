@@ -15,6 +15,15 @@ public class RulePreparationTests
 
     private const string Document = """{ "rule": { "spec": "customer.is-active" } }""";
 
+    /// <summary>
+    /// Publishes a prepared publication the way <see cref="RuleSet"/> does: into a successor
+    /// generation, which is then swapped in. A rule's state lives in the generation, so applying into
+    /// a builder that is never built publishes nothing at all — see
+    /// <see cref="Should_not_move_the_live_rule_when_only_prepared"/>, which relies on exactly that.
+    /// </summary>
+    private static void Publish(RuleSet set, IRulePublication publication) =>
+        set.Scope.Locked(() => set.Scope.Mutate(builder => publication.ApplyTo(builder)));
+
     private static (RuleSet Set, SampleRule Rule) Bound()
     {
         var registry = new SpecRegistry().Register("customer.is-active", IsActive);
@@ -46,7 +55,7 @@ public class RulePreparationTests
         var prepared = set.PrepareUpdateCore("sample", Document, expectedVersion: 1);
 
         // Act
-        prepared.Publication!.Commit();
+        Publish(set, prepared.Publication!);
 
         // Assert
         rule.Version.ShouldBe(2);
@@ -103,7 +112,7 @@ public class RulePreparationTests
     {
         // Arrange
         var (set, rule) = Bound();
-        set.PrepareUpdateCore("sample", Document, expectedVersion: 1).Publication!.Commit();
+        Publish(set, set.PrepareUpdateCore("sample", Document, expectedVersion: 1).Publication!);
 
         // Act
         var prepared = set.PrepareRevertCore("sample", expectedVersion: 2);

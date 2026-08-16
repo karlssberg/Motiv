@@ -344,6 +344,58 @@ public class RuleCascadeTests
         (await propositions.WithdrawAsync("customer.eligible", 1)).Outcome.ShouldBe(PropositionUpdateOutcome.Removed);
     }
 
+    // Built by hand rather than via DateTimeOffset.UnixEpoch — that static field is unavailable on
+    // net472/netstandard2.0, two of this project's target frameworks.
+    private static readonly DateTimeOffset Epoch = new(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
+    /// <summary>
+    /// A cascade must not clear a quarantine. A quarantine means "the stored document would not bind,
+    /// so I am running the compiled default". A cascade rebinds whatever document the rule currently
+    /// carries — for a quarantined rule that is the default, never the stored document — so the rebind
+    /// succeeding says nothing about whether the stored document would now bind. Clearing it would
+    /// report a broken rule as healthy while it quietly kept running the default, and an operator
+    /// would never learn a repair was still owed.
+    /// </summary>
+    [Fact]
+    public async Task Should_keep_a_quarantine_when_a_cascade_rebinds_the_default_beneath_it()
+    {
+        // Arrange — a document-default rule referencing an authored proposition, over a stored
+        // document that no longer binds. Load quarantines it and, having published nothing, never
+        // re-tracks it, so the rule stays enrolled as a cascade participant on its default's edges.
+        var registry = new SpecRegistry()
+            .Register("customer.is-active", IsActive)
+            .Register("customer.is-adult", IsAdult);
+        var scope = new BindingScope(registry);
+        var propositions = new PropositionSet(scope, new InMemoryPropositionStore()).AddModel<Customer>("customer");
+        await propositions.CreateAsync(
+            "customer.eligible", "customer", """{ "rule": { "spec": "customer.is-active" } }""", null);
+
+        var store = new InMemoryRuleStore();
+        (await store.AppendAsync(
+            [
+                new StoredRuleVersion(
+                    "can-checkout-authored", 4, """{ "rule": { "spec": "customer.was-renamed-away" } }""",
+                    "alice", Epoch, null, null, "test")
+            ],
+            default)).IsConflict.ShouldBeFalse();
+
+        var rules = new RuleSet(scope, store).Add(new AuthoredDefaultRule());
+        rules.Load().Quarantined.ShouldHaveSingleItem();
+        rules.FindEntry("can-checkout-authored")!.Quarantine.ShouldNotBeEmpty();
+
+        // Act — the proposition beneath the *default* is republished, cascading a rebind into the rule
+        (await propositions.UpdateAsync(
+                "customer.eligible", """{ "rule": { "spec": "customer.is-adult" } }""", 1))
+            .Outcome.ShouldBe(PropositionUpdateOutcome.Updated);
+
+        // Assert — the rebind rebound the default; the stored document is as broken as it ever was
+        var entry = rules.FindEntry("can-checkout-authored")!;
+        entry.Quarantine.ShouldNotBeEmpty();
+
+        // And the version the repair must be addressed against is still the one the store holds.
+        entry.Version.ShouldBe(4);
+    }
+
     [Fact]
     public async Task Should_keep_working_when_constructed_without_a_proposition_set()
     {

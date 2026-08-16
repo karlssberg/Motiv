@@ -12,6 +12,54 @@ namespace Motiv.Serialization.AspNetCore;
 public static class MotivRulesEndpoints
 {
     /// <summary>
+    /// The response header carrying the world a response was served from — the wire form of a
+    /// <see cref="StoreGeneration"/>, as produced by <see cref="StoreGeneration.ToToken"/>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A client polling several replicas behind a load balancer has no other way to tell it was
+    /// routed to one that has not caught up: the response itself looks perfectly well-formed, and
+    /// nothing about HTTP distinguishes a fresh answer from a stale one. Comparing the last generation
+    /// it saw against this header is how it finds out — the difference between eventual consistency,
+    /// which a client can reason about, and silent divergence, which it cannot. A public constant so
+    /// the header name is spelled once and shared, not duplicated, between this project's tests and
+    /// any client (including the TypeScript client) that needs to parse it with
+    /// <see cref="StoreGeneration.TryParseToken"/>.
+    /// </para>
+    /// <para>
+    /// <strong>Present on every response the Motiv endpoints themselves produce — not on a refusal
+    /// issued above them.</strong> <c>MotivGenerationFilter</c> stamps it, and a filter only runs once
+    /// routing has selected a Motiv endpoint and cleared whatever ASP.NET middleware sits in front of
+    /// it. An unauthenticated request refused by <c>RequireAuthorization()</c> short-circuits before
+    /// the filter ever runs, so its 401 carries no header — which is the right outcome, not a gap: a
+    /// caller refused for lacking credentials has no generation to compare against anyway. A document
+    /// this endpoint itself rejects (a 404 unknown rule, a 400 invalid document) is different — that
+    /// refusal is produced *inside* the pipeline the filter wraps, so it is stamped like any other
+    /// response.
+    /// </para>
+    /// <para>
+    /// <strong>Names the world the request was pinned to, which is the world the catalog and the rule
+    /// and proposition listings are read from — and, for a write, the world <em>before</em> the
+    /// write.</strong> The pin is taken at request start, before a <c>PUT</c>'s publish commits, so a
+    /// successful write's header reports the pre-write generation while its body reports the
+    /// post-write version — two true facts about two different moments, not a bug.
+    /// <c>POST /validate</c> and <c>POST /evaluate</c> are a second, milder exception in the same
+    /// direction: they bind an ad-hoc document, and binding reads the <em>live</em> world by the
+    /// settled rule that anything which binds or publishes does — so their bodies may reflect a world
+    /// at or ahead of the one the header names, never behind it. That direction is the safe one: this
+    /// token exists so a client can detect being routed *backwards*, and a client tracks the
+    /// generation it last accepted as served to it. Understating what a response
+    /// carries can only make a client miss a genuine improvement it just received — a false negative
+    /// on skew detection. Overstating would have it record a generation it was never actually served,
+    /// so the very next correct response would look like a regression and raise a false alarm. The one
+    /// real consequence worth naming: a writer cannot use its own write's response header to tell
+    /// whether a later read from the same connection is stale — that comparison needs the header from
+    /// the later read, not this one.
+    /// </para>
+    /// </remarks>
+    public const string GenerationHeader = "Motiv-Generation";
+
+    /// <summary>
     /// Maps <c>GET {basePath}/catalog</c>, <c>POST {basePath}/validate</c>, and
     /// <c>POST {basePath}/evaluate</c>, backed by the given registry and options. When a
     /// <see cref="RuleSet"/> is supplied, also maps <c>GET {basePath}/rules</c>,
@@ -64,6 +112,17 @@ public static class MotivRulesEndpoints
             group.AllowAnonymous();
         else
             group.RequireAuthorization();
+
+        // Either set pins the same scope when they share one; a registry-only mount has no scope to
+        // pin and no generation to report, so it is left alone.
+        Func<DecisionSnapshot>? pin = null;
+        if (rules is not null)
+            pin = rules.PinSnapshot;
+        else if (propositions is not null)
+            pin = propositions.PinSnapshot;
+
+        if (pin is not null)
+            group.AddEndpointFilter(new MotivGenerationFilter(pin));
 
         MapCatalogEndpoint(group, registry, options, rules, propositions, json);
 

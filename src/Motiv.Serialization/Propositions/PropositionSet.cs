@@ -11,7 +11,6 @@ public sealed class PropositionSet
     private readonly IPropositionStore _store;
     private readonly RuleSerializerOptions _options;
     private readonly Dictionary<string, PropositionModelBinding> _models = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, Authored> _authored = new(StringComparer.Ordinal);
     private bool _loaded;
 
     /// <summary>
@@ -64,10 +63,27 @@ public sealed class PropositionSet
         Scope = scope ?? throw new ArgumentNullException(nameof(scope));
         _store = store ?? throw new ArgumentNullException(nameof(store));
         _options = options ?? new RuleSerializerOptions();
+
+        // Last, and only once everything a rebuild reads is assigned: Join publishes this set to the
+        // scope, and a refresh arriving immediately afterwards would call straight into it.
+        Scope.Join(this);
     }
 
     /// <summary>The coordinator this set publishes under, and what a paired <see cref="RuleSet"/> joins.</summary>
     internal BindingScope Scope { get; }
+
+    /// <summary>
+    /// Pins the current world for the duration of a decision, so several evaluations resolve against
+    /// one published set. Dispose to release. Hosts using <c>MapMotivRules</c> get one per request
+    /// automatically and need not call this.
+    /// </summary>
+    public DecisionSnapshot PinSnapshot() => new(Scope);
+
+    /// <summary>
+    /// Options forwarded to the document parser and binder. Reachable by <see cref="AuthoredProposition"/>,
+    /// which parses its own document again when preparing a rebind.
+    /// </summary>
+    internal RuleSerializerOptions Options => _options;
 
     /// <summary>
     /// Registers a model type authored propositions may be written against, capturing
@@ -105,6 +121,20 @@ public sealed class PropositionSet
     /// <summary>
     /// Every proposition in scope — compiled, overridden and authored — as one effective listing.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Reads the authored half out of a generation rather than a dictionary of this set's own, which
+    /// is what makes a listing consistent with what the evaluator resolves: a cascaded rebind lands in
+    /// the generation and nowhere else, so a second copy could only ever go stale.
+    /// </para>
+    /// <para>
+    /// <see cref="BindingScope.Active"/>, not <see cref="BindingScope.Current"/> — the read-only side
+    /// of the split described in <see cref="BindingScope.Active"/>'s own remarks. This listing binds
+    /// nothing and publishes nothing, so a pin cannot make it stale in any way that matters; what a
+    /// pin does buy is that a request describing a world in its headers returns a body from that same
+    /// world.
+    /// </para>
+    /// </remarks>
     public IReadOnlyCollection<PropositionEntry> Propositions =>
         Scope.Locked(() =>
         {
@@ -113,30 +143,34 @@ public sealed class PropositionSet
             foreach (var compiled in Scope.Registry.Entries)
                 entries[compiled.Name] = ToEntry(compiled);
 
-            foreach (var authored in _authored.Values)
+            foreach (var authored in Scope.Active.Authored.Values)
                 entries[authored.Name] = ToEntry(authored);
 
             return (IReadOnlyCollection<PropositionEntry>)[.. entries.Values];
         });
 
     /// <summary>One proposition's listing, or null when the name is unknown.</summary>
+    /// <remarks>Read-only, so <see cref="BindingScope.Active"/> — see <see cref="Propositions"/>.</remarks>
     public PropositionEntry? Find(string name) =>
         Scope.Locked<PropositionEntry?>(() =>
         {
-            if (_authored.TryGetValue(name, out var authored))
+            if (Scope.Active.Authored.TryGetValue(name, out var authored))
                 return ToEntry(authored);
 
             return Scope.Registry.Find(name) is { } compiled ? ToEntry(compiled) : null;
         });
 
     /// <summary>The authored document behind a name, or null when the name has no authored document.</summary>
+    /// <remarks>Read-only, so <see cref="BindingScope.Active"/> — see <see cref="Propositions"/>.</remarks>
     public string? DocumentJsonOf(string name) =>
-        Scope.Locked(() => _authored.TryGetValue(name, out var authored) ? authored.DocumentJson : null);
+        Scope.Locked(() =>
+            Scope.Active.Authored.TryGetValue(name, out var authored) ? authored.DocumentJson : null);
 
     /// <summary>The nodes that reference the given proposition, transitively, in rebind order.</summary>
+    /// <remarks>Read-only, so <see cref="BindingScope.Active"/> — see <see cref="Propositions"/>.</remarks>
     public IReadOnlyList<PropositionDependent> Dependents(string name) =>
         Scope.Locked(() => (IReadOnlyList<PropositionDependent>)
-            [.. Scope.Graph.DependentClosure(name)
+            [.. Scope.Active.Graph.DependentClosure(name)
                 .Select(node => new PropositionDependent(node.Name, node.KindLabel))]);
 
     /// <summary>
@@ -177,17 +211,19 @@ public sealed class PropositionSet
 
     /// <summary>
     /// The prepare half of <see cref="CreateCoreAsync"/>: a lone create, binding against a fresh
-    /// single-use copy of the live overlay. Assumes <see cref="BindingScope"/>'s inner monitor is held.
+    /// single-use fork of the live world. Assumes <see cref="BindingScope"/>'s inner monitor is held.
     /// </summary>
     private WritePrepare PrepareCreateCascade(
         string name, string modelTypeId, string documentJson, string? description) =>
         // A lone write has no other envelope members to protect from a stale rebind, so the
         // exclusion set is empty.
-        PrepareCreateCore(name, modelTypeId, documentJson, description, new PropositionOverlay(Scope.Overlay), []);
+        PrepareCreateCore(
+            name, modelTypeId, documentJson, description,
+            new ScopeGenerationBuilder(Scope.Registry, Scope.Current), []);
 
     /// <summary>
     /// The governed-envelope counterpart of <see cref="PrepareCreateCascade"/>: binds against
-    /// <paramref name="prospective"/> rather than a fresh copy of the live overlay, so a proposition
+    /// <paramref name="prospective"/> rather than a fresh fork of the live world, so a proposition
     /// prepared earlier in the same envelope — not yet committed, since nothing commits until the
     /// whole envelope has persisted — is visible to this one. The caller owns <paramref name="prospective"/>
     /// across the whole envelope and folds every member into it in turn. Assumes
@@ -200,15 +236,18 @@ public sealed class PropositionSet
     /// </param>
     internal WritePrepare PrepareCreateCore(
         string name, string modelTypeId, string documentJson, string? description,
-        PropositionOverlay prospective, HashSet<NodeId> excluding)
+        ScopeGenerationBuilder prospective, HashSet<NodeId> excluding)
     {
-        if (_authored.ContainsKey(name))
+        // The *live* world, deliberately, not prospective.Source's: a governed envelope that creates
+        // two propositions must judge each one against what is actually published, exactly as it did
+        // when this read came from a dictionary of the set's own.
+        if (Scope.Current.Authored.ContainsKey(name))
             return WritePrepare.Rejected(PropositionUpdateResult.NameTaken());
 
         if (ValidateName(name) is { } nameError)
             return WritePrepare.Rejected(PropositionUpdateResult.Invalid([nameError]));
 
-        var prepared = Prepare(name, modelTypeId, documentJson, description, new LayeredSpecSource(prospective, Scope.Registry));
+        var prepared = Prepare(name, modelTypeId, documentJson, description, prospective.Source);
         if (prepared.Entry is not { } entry)
             return WritePrepare.Rejected(PropositionUpdateResult.Invalid(prepared.Errors));
 
@@ -216,11 +255,9 @@ public sealed class PropositionSet
         // no-op. An *override* is the exception, and the reason a create cascades at all: it
         // lands on a name existing documents already reference, so publishing it changes what
         // they resolve exactly as an update would, on the same all-or-nothing terms.
-        var authored = new Authored(this, name, modelTypeId, documentJson, version: 1, description)
-        {
-            Bound = entry,
-            References = prepared.References
-        };
+        var authored = new AuthoredProposition(
+            this, name, modelTypeId, documentJson, version: 1, description,
+            bound: entry, quarantine: [], references: prepared.References);
 
         return PrepareCascadeInto(authored, prospective, excluding);
     }
@@ -250,11 +287,13 @@ public sealed class PropositionSet
 
     /// <summary>
     /// The prepare half of <see cref="UpdateCoreAsync"/>: a lone update, binding against a fresh
-    /// single-use copy of the live overlay. Assumes <see cref="BindingScope"/>'s inner monitor is held.
+    /// single-use fork of the live world. Assumes <see cref="BindingScope"/>'s inner monitor is held.
     /// </summary>
     private WritePrepare PrepareUpdateCascade(string name, string documentJson, int expectedVersion) =>
         // See PrepareCreateCascade: a lone write's exclusion set is always empty.
-        PrepareUpdateCore(name, documentJson, expectedVersion, new PropositionOverlay(Scope.Overlay), []);
+        PrepareUpdateCore(
+            name, documentJson, expectedVersion,
+            new ScopeGenerationBuilder(Scope.Registry, Scope.Current), []);
 
     /// <summary>
     /// The governed-envelope counterpart of <see cref="PrepareUpdateCascade"/>. See
@@ -262,26 +301,22 @@ public sealed class PropositionSet
     /// </summary>
     internal WritePrepare PrepareUpdateCore(
         string name, string documentJson, int expectedVersion,
-        PropositionOverlay prospective, HashSet<NodeId> excluding)
+        ScopeGenerationBuilder prospective, HashSet<NodeId> excluding)
     {
-        if (!_authored.TryGetValue(name, out var current))
+        if (!Scope.Current.Authored.TryGetValue(name, out var current))
             return WritePrepare.Rejected(PropositionUpdateResult.NotFound());
 
         if (current.Version != expectedVersion)
             return WritePrepare.Rejected(PropositionUpdateResult.VersionConflict(current.Version));
 
         var prepared = Prepare(
-            name, current.ModelTypeId, documentJson, current.Description,
-            new LayeredSpecSource(prospective, Scope.Registry));
+            name, current.ModelTypeId, documentJson, current.Description, prospective.Source);
         if (prepared.Entry is not { } entry)
             return WritePrepare.Rejected(PropositionUpdateResult.Invalid(prepared.Errors));
 
-        var replacement = new Authored(
-            this, name, current.ModelTypeId, documentJson, current.Version + 1, current.Description)
-        {
-            Bound = entry,
-            References = prepared.References
-        };
+        var replacement = new AuthoredProposition(
+            this, name, current.ModelTypeId, documentJson, current.Version + 1, current.Description,
+            bound: entry, quarantine: [], references: prepared.References);
 
         return PrepareCascadeInto(replacement, prospective, excluding);
     }
@@ -309,24 +344,38 @@ public sealed class PropositionSet
         if (prepared.Failure is { } failure)
             return failure;
 
+        // Where the store stood before this publish wrote — see RuleSet.PersistAndCommitCoreAsync for
+        // why it is read here rather than earlier, and ScopeGenerationBuilder.AdvancePropositionSequence
+        // for what the pair is compared for.
+        var before = await _store.GetGenerationAsync(cancellationToken).ConfigureAwait(false);
+
         await _store.WriteAsync(SaveBatchFor(prepared.Authored!), cancellationToken).ConfigureAwait(false);
 
-        return Scope.Locked(() => success(CommitPublishCore(prepared)));
+        // Store-derived, never counted locally — see RuleSet.PersistAndCommitCoreAsync for why the
+        // token would be fiction otherwise.
+        var generation = await _store.GetGenerationAsync(cancellationToken).ConfigureAwait(false);
+
+        return Scope.Locked(() => success(Scope.Mutate(builder =>
+        {
+            var version = CommitPublishCore(prepared, builder);
+            builder.AdvancePropositionSequence(before, generation);
+            return version;
+        })));
     }
 
     /// <summary>
-    /// Prepares a cascading publish: binds the closure over a prospective overlay carrying
+    /// Prepares a cascading publish: binds the closure over a prospective world carrying
     /// <paramref name="authored"/>'s new definition, so a dependent is checked against what it
     /// *would* resolve rather than what it resolves today. Shared by <see cref="PrepareCreateCore"/>
     /// and <see cref="PrepareUpdateCore"/>, which differ only in how <paramref name="authored"/>
-    /// itself was built. <paramref name="prospective"/> is a fresh single-use copy of the live overlay
-    /// for a lone write, and the envelope's own cumulative overlay for a governed publish. Assumes the
-    /// scope lock is held.
+    /// itself was built. <paramref name="prospective"/> is a fresh single-use fork of the live world
+    /// for a lone write, and the envelope's own cumulative successor for a governed publish. Assumes
+    /// the scope lock is held.
     /// </summary>
     private WritePrepare PrepareCascadeInto(
-        Authored authored, PropositionOverlay prospective, HashSet<NodeId> excluding)
+        AuthoredProposition authored, ScopeGenerationBuilder prospective, HashSet<NodeId> excluding)
     {
-        prospective.Set(authored.Bound!);
+        prospective.SetOverlayEntry(authored.Bound!);
 
         var commits = new List<IRebindCommit>();
         var broken = Scope.PrepareClosure(authored.Name, prospective, commits, excluding);
@@ -337,10 +386,10 @@ public sealed class PropositionSet
     }
 
     /// <summary>The batch a publish of <paramref name="authored"/> writes: one save, nothing removed.</summary>
-    private static PropositionBatch SaveBatchFor(Authored authored) => PropositionBatch.Save(RowFor(authored));
+    private static PropositionBatch SaveBatchFor(AuthoredProposition authored) => PropositionBatch.Save(RowFor(authored));
 
     /// <summary>The stored row a publish of <paramref name="authored"/> writes — the save half of a governed envelope's batch.</summary>
-    internal static StoredProposition RowFor(Authored authored) =>
+    internal static StoredProposition RowFor(AuthoredProposition authored) =>
         new(authored.Name, authored.ModelTypeId, authored.DocumentJson, authored.Version, authored.Description);
 
     /// <summary>
@@ -359,12 +408,16 @@ public sealed class PropositionSet
     /// by the time this runs. Assumes <see cref="BindingScope"/>'s inner monitor is held.
     /// </summary>
     /// <param name="prepared">The prepared write, from the same overlay its closure was bound against.</param>
+    /// <param name="builder">
+    /// The successor being built. Taken rather than opened here so a governed envelope can pass one
+    /// builder through every member it commits and publish the lot in a single swap.
+    /// </param>
     /// <returns>The newly published version.</returns>
-    internal int CommitPublishCore(WritePrepare prepared)
+    internal static int CommitPublishCore(WritePrepare prepared, ScopeGenerationBuilder builder)
     {
         var authored = prepared.Authored!;
-        CommitPublish(authored);
-        Scope.CommitClosure(prepared.Commits!);
+        CommitPublish(authored, builder);
+        builder.Apply(prepared.Commits!);
         return authored.Version;
     }
 
@@ -374,17 +427,21 @@ public sealed class PropositionSet
     /// and infallible for the same reasons. Leaves no authored document behind, so there is no version
     /// to report. Assumes <see cref="BindingScope"/>'s inner monitor is held.
     /// </summary>
-    internal void CommitWithdrawCore(WritePrepare prepared)
+    internal static void CommitWithdrawCore(WritePrepare prepared, ScopeGenerationBuilder builder)
     {
-        Scope.CommitClosure(prepared.Commits!);
+        builder.Apply(prepared.Commits!);
 
+        // After the closure rather than before, which the order otherwise implies matters: it does
+        // not. A cascaded rebind writes only a dependent's own name, never current.Name, so the two
+        // can never touch the same key — and neither is visible to anyone until this builder is
+        // swapped in.
         var current = prepared.Authored!;
-        _authored.Remove(current.Name);
-        Scope.Overlay.Remove(current.Name);
-        Scope.Graph.Remove(current.Node);
+        builder.RemoveAuthored(current.Name);
+        builder.RemoveOverlayEntry(current.Name);
+        builder.Graph.Remove(current.Node);
         // Defensive rather than load-bearing: a proposition is only ever enrolled by CommitPublish,
         // which is also what put the graph edges above, so the two always come and go together.
-        Scope.Withdraw(current.Node);
+        builder.Withdraw(current.Node);
     }
 
     /// <summary>
@@ -410,11 +467,23 @@ public sealed class PropositionSet
         if (prepared.Failure is { } failure)
             return failure;
 
+        // See PersistAndCommitCoreAsync: a withdrawal claims a store position on the same terms a
+        // save does, so it has to be able to tell whether the position is one this world may claim.
+        var before = await _store.GetGenerationAsync(cancellationToken).ConfigureAwait(false);
+
         await _store.WriteAsync(PropositionBatch.Delete(name), cancellationToken).ConfigureAwait(false);
+
+        // A withdrawal moves the store as surely as a save does, and leaves a state — rows gone,
+        // generation advanced — that nothing else would ever record.
+        var generation = await _store.GetGenerationAsync(cancellationToken).ConfigureAwait(false);
 
         return Scope.Locked(() =>
         {
-            CommitWithdrawCore(prepared);
+            Scope.Mutate(builder =>
+            {
+                CommitWithdrawCore(prepared, builder);
+                builder.AdvancePropositionSequence(before, generation);
+            });
             return PropositionUpdateResult.Removed();
         });
     }
@@ -428,7 +497,7 @@ public sealed class PropositionSet
     /// </summary>
     private WritePrepare PrepareWithdraw(string name, int expectedVersion)
     {
-        if (!_authored.TryGetValue(name, out var current))
+        if (!Scope.Current.Authored.TryGetValue(name, out var current))
             return WritePrepare.Rejected(PropositionUpdateResult.NotFound());
 
         if (current.Version != expectedVersion)
@@ -440,7 +509,7 @@ public sealed class PropositionSet
         if (compiled is null)
         {
             // Removal would leave referrers pointing at nothing, so direct referrers block it.
-            var referrers = Scope.Graph.Referrers(name);
+            var referrers = Scope.Current.Graph.Referrers(name);
             if (referrers.Count > 0)
                 return WritePrepare.Rejected(
                     PropositionUpdateResult.Referenced([.. referrers.Select(node => node.Name)]));
@@ -449,8 +518,8 @@ public sealed class PropositionSet
         {
             // Reverting changes what referrers resolve, so it takes the same transactional check
             // as any other edit — the compiled spec may not satisfy every dependent.
-            var prospective = new PropositionOverlay(Scope.Overlay);
-            prospective.Remove(name);
+            var prospective = new ScopeGenerationBuilder(Scope.Registry, Scope.Current);
+            prospective.RemoveOverlayEntry(name);
 
             var broken = Scope.PrepareClosure(name, prospective, commits, []);
             if (broken.Count > 0)
@@ -477,9 +546,9 @@ public sealed class PropositionSet
     /// wrongly refuse a withdrawal whose only referrer is redirected earlier in the same envelope.
     /// </remarks>
     internal WritePrepare PrepareWithdrawCore(
-        string name, int expectedVersion, PropositionOverlay prospective, HashSet<NodeId> excluding)
+        string name, int expectedVersion, ScopeGenerationBuilder prospective, HashSet<NodeId> excluding)
     {
-        if (!_authored.TryGetValue(name, out var current))
+        if (!Scope.Current.Authored.TryGetValue(name, out var current))
             return WritePrepare.Rejected(PropositionUpdateResult.NotFound());
 
         if (current.Version != expectedVersion)
@@ -492,7 +561,7 @@ public sealed class PropositionSet
             // both passes must see the same sequence of worlds, and a later envelope member (a
             // proposition created after this withdrawal, say) must not resolve a name this envelope
             // is also removing.
-            prospective.Remove(name);
+            prospective.RemoveOverlayEntry(name);
             return WritePrepare.Ready(current, []);
         }
 
@@ -501,7 +570,7 @@ public sealed class PropositionSet
         // cumulative prospective overlay. excluding matters here exactly as it does for a publish's
         // own cascade: a dependent this envelope is *also* explicitly publishing or withdrawing must
         // not be rebound from its stale, pre-envelope definition — see PrepareClosure's remarks.
-        prospective.Remove(name);
+        prospective.RemoveOverlayEntry(name);
         var commits = new List<IRebindCommit>();
         var broken = Scope.PrepareClosure(name, prospective, commits, excluding);
 
@@ -516,7 +585,7 @@ public sealed class PropositionSet
     /// compiled spec resolves beneath it — authoring over a compiled spec is a creation.
     /// </summary>
     internal (bool Exists, int Version, string? ModelTypeId, string? Description) AuthoredStateCore(string name) =>
-        _authored.TryGetValue(name, out var authored)
+        Scope.Current.Authored.TryGetValue(name, out var authored)
             ? (true, authored.Version, authored.ModelTypeId, authored.Description)
             : (false, 0, null, null);
 
@@ -571,42 +640,169 @@ public sealed class PropositionSet
                     "Load has already been called on this PropositionSet. It reads the store once, " +
                     "at startup, before rules are added; it is not a refresh.");
 
+            // The generation before the rows — see RuleSet.Load, whose reasoning this mirrors exactly,
+            // for why that order matters and why blocking on it here is the settled design rather than
+            // an oversight.
+            var generation = _store.GetGenerationAsync(default).ConfigureAwait(false).GetAwaiter().GetResult();
+
             // Set only once the store has actually been read. Reading is the one step here that can
             // throw rather than quarantine, and it mutates nothing — so a store that was briefly
             // unreachable leaves the set in its pre-load state and genuinely may be loaded again.
-            var candidates = ReadCandidates();
+            var candidates = CandidatesFrom(_store.Load());
             _loaded = true;
 
-            // A hand-edited store can contain a reference cycle that Create/Update would have
-            // rejected outright — nothing here goes through DependencyGraph.FindCycle. Every member
-            // of a detected cycle is quarantined with the real reason instead of being bound.
-            var cycles = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
-            var ordered = OrderByDependency(candidates, cycles);
+            var ordered = OrderAndRecordCycles(candidates);
 
-            foreach (var (name, cycle) in cycles)
+            // An untouched store publishes nothing at all. A successor identical to its predecessor
+            // would still move the write stamp, and that stamp is a refresh's compare-and-set signal —
+            // see BindingScope.WriteStamp — so a swap with nothing in it is not free. A store that has
+            // moved but holds no rows is *not* that case: a withdrawal leaves exactly that state, and
+            // the position still has to be recorded.
+            if (ordered.Count == 0 && generation == 0)
+                return;
+
+            // One builder for the whole store, not one world per row. Each row binds against the
+            // builder's own prospective source, so a proposition still resolves the ones it references
+            // — they were folded in earlier in this same dependency-ordered pass — while startup
+            // publishes a single generation instead of forking one per row.
+            Scope.Mutate(builder =>
             {
-                candidates[name].Errors.Add(new RuleError("$", RuleErrorCode.CycleDetected,
-                    $"the stored proposition '{name}' cannot be bound: {string.Join(" → ", cycle)} " +
-                    "forms a reference cycle"));
-            }
+                // Where this replica now stands, in the same swap that publishes what it stands on —
+                // see RuleSet.Load for why a replica that never records this is worse off than one
+                // with no token at all.
+                builder.SetPropositionSequence(generation);
 
-            foreach (var name in ordered)
-                LoadOne(candidates[name]);
+                foreach (var name in ordered)
+                    LoadOne(candidates[name], builder);
+            });
         });
 
     /// <summary>
-    /// Reads every stored row into a candidate keyed by name, parsing each document up front purely
-    /// to order the binding. Name and parse failures are carried forward on the candidate rather
-    /// than thrown, so the document is still listed, quarantined, rather than silently dropped.
+    /// Rebuilds this replica's world from the stores, if either has moved since it was last built.
     /// </summary>
-    private Dictionary<string, LoadCandidate> ReadCandidates()
+    /// <remarks>
+    /// The whole world is rebuilt, not a part of it: a row that binds on one pass and quarantines on
+    /// the next has already written its overlay entry and graph edges, and the quarantine path clears
+    /// neither — which is why <see cref="Load"/> refuses to run twice and this exists instead. A scope
+    /// shared with a <see cref="RuleSet"/> rebuilds both halves whichever set you call.
+    /// </remarks>
+    /// <param name="cancellationToken">Cancels the store reads.</param>
+    /// <returns>What the refresh did, and anything that would not bind.</returns>
+    public Task<RefreshReport> RefreshAsync(CancellationToken cancellationToken = default) =>
+        Scope.RefreshAsync(cancellationToken);
+
+    /// <summary>Where the proposition store stands. One scalar; polled on a timer.</summary>
+    internal Task<long> StoreGenerationAsync(CancellationToken cancellationToken) =>
+        _store.GetGenerationAsync(cancellationToken);
+
+    /// <summary>
+    /// Rebuilds the authored layer into <paramref name="builder"/> from the store. Mirrors
+    /// <see cref="Load"/> step for step — read rows, order by dependency, quarantine cycles, bind —
+    /// with one difference: a row that will not bind is a <em>regression</em> when the world being
+    /// served has it bound, and merely carried when it does not.
+    /// </summary>
+    /// <param name="builder">The successor being built. Nobody else can see it, so nothing is locked.</param>
+    /// <param name="current">The world being served, which decides which failures are regressions.</param>
+    /// <param name="regressions">Filled with every failure that must abort the refresh.</param>
+    /// <param name="quarantined">Filled with every failure carried forward instead.</param>
+    /// <param name="cancellationToken">Cancels the store read.</param>
+    internal async Task RebuildIntoAsync(
+        ScopeGenerationBuilder builder, ScopeGeneration current,
+        List<RefreshFailure> regressions, List<RefreshFailure> quarantined,
+        CancellationToken cancellationToken)
+    {
+        var rows = await _store.LoadAsync(cancellationToken).ConfigureAwait(false);
+
+        // Everything below is CPU over a builder nobody else can see, so no lock is held or needed.
+        var candidates = CandidatesFrom(rows);
+
+        foreach (var name in OrderAndRecordCycles(candidates))
+            RebuildOne(candidates[name], builder, current, regressions, quarantined);
+    }
+
+    /// <summary>
+    /// <see cref="LoadOne"/> for a refresh: binds one stored proposition into <paramref name="builder"/>,
+    /// and where <see cref="LoadOne"/> would simply quarantine a row that will not bind, decides first
+    /// whether losing it would take a live binding away.
+    /// </summary>
+    private void RebuildOne(
+        LoadCandidate candidate, ScopeGenerationBuilder builder, ScopeGeneration current,
+        List<RefreshFailure> regressions, List<RefreshFailure> quarantined)
+    {
+        var stored = candidate.Stored;
+        var authored = Unbound(candidate);
+
+        // Carried forward rather than started fresh, and only attempted when empty — exactly as
+        // LoadOne does, and for the same reason: a name failure, a parse failure or a cycle already
+        // rules out binding, and an attempt on top of one could only succeed by resolving through a
+        // name that is itself unresolvable.
+        var errors = new List<RuleError>(candidate.Errors);
+
+        if (errors.Count == 0 && authored.Rebind(builder.Source, errors) is { } rebound)
+        {
+            CommitPublish(rebound, builder);
+            return;
+        }
+
+        var failure = new RefreshFailure(stored.Name, authored.Node.KindLabel, errors);
+
+        // Bound in the world being served? Then applying the rebuild would take a working, approved
+        // proposition away, and every dependent that resolves through it with it. Refuse.
+        if (current.Authored.TryGetValue(stored.Name, out var live) && live.Bound is not null)
+        {
+            regressions.Add(failure);
+            return;
+        }
+
+        // Carried, with the same SetAuthored both of LoadOne's quarantine arms make — see there for
+        // why a world that cannot resolve a proposition must still list it.
+        builder.SetAuthored(authored.WithQuarantine(errors));
+        quarantined.Add(failure);
+    }
+
+    /// <summary>
+    /// Orders candidates so each follows what it references, and records a cycle on every member of
+    /// one. A hand-edited store can contain a reference cycle that Create/Update would have rejected
+    /// outright — nothing on this path goes through <see cref="DependencyGraph.FindCycle"/> — so every
+    /// member is quarantined with the real reason instead of being bound.
+    /// </summary>
+    private static IReadOnlyList<string> OrderAndRecordCycles(Dictionary<string, LoadCandidate> candidates)
+    {
+        var cycles = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+        var ordered = OrderByDependency(candidates, cycles);
+
+        foreach (var pair in cycles)
+        {
+            candidates[pair.Key].Errors.Add(new RuleError("$", RuleErrorCode.CycleDetected,
+                $"the stored proposition '{pair.Key}' cannot be bound: {string.Join(" → ", pair.Value)} " +
+                "forms a reference cycle"));
+        }
+
+        return ordered;
+    }
+
+    /// <summary>
+    /// Turns stored rows into candidates keyed by name, parsing each document up front purely to
+    /// order the binding. Name and parse failures are carried forward on the candidate rather than
+    /// thrown, so the document is still listed, quarantined, rather than silently dropped.
+    /// </summary>
+    /// <remarks>
+    /// Takes the rows rather than reading them, so <see cref="Load"/> (synchronous, at startup) and
+    /// <see cref="RebuildIntoAsync"/> (asynchronous, on a refresh) share this one copy. The two differ
+    /// only in how they got the rows and in what they do with a row that will not bind; everything
+    /// between those two ends must not be able to drift.
+    /// </remarks>
+    /// <param name="rows">
+    /// The store's rows. Nullable throughout — a store is a dumb sink, so a hand-edited or
+    /// null-serialized one can hand back a null list as readily as a null row;
+    /// <c>Deserialize&lt;List&lt;StoredProposition&gt;&gt;("[null]")</c> yields exactly that. Neither
+    /// may be fatal: quarantine exists so a bad row costs its own row.
+    /// </param>
+    private Dictionary<string, LoadCandidate> CandidatesFrom(IReadOnlyList<StoredProposition>? rows)
     {
         var candidates = new Dictionary<string, LoadCandidate>(StringComparer.Ordinal);
 
-        // A store is a dumb sink, so a hand-edited or null-serialized one can hand back a null list
-        // as readily as a null row — `Deserialize<List<StoredProposition>>("[null]")` yields exactly
-        // that. Neither may be fatal: quarantine exists so a bad row costs its own row.
-        foreach (var proposition in _store.Load() ?? [])
+        foreach (var proposition in rows ?? [])
         {
             // A quarantine entry is keyed by name, so a row with no usable name has nowhere to be
             // recorded and skipping it is the only non-fatal option. Every other malformed shape
@@ -626,42 +822,73 @@ public sealed class PropositionSet
         return candidates;
     }
 
-    /// <summary>Binds one stored proposition, publishing it or quarantining it.</summary>
-    private void LoadOne(LoadCandidate candidate)
+    /// <summary>
+    /// The stored row as an authored proposition that has not bound yet — what both
+    /// <see cref="LoadOne"/> and <see cref="RebuildOne"/> start from, and what each either rebinds or
+    /// quarantines.
+    /// </summary>
+    /// <remarks>
+    /// Shared rather than written out twice for the same reason <see cref="CandidatesFrom"/> is: the
+    /// two paths must differ only in what they do with a row that will not bind, and a nine-argument
+    /// constructor copied into both is exactly where that promise would quietly stop holding.
+    /// </remarks>
+    private AuthoredProposition Unbound(LoadCandidate candidate)
     {
         var stored = candidate.Stored;
-        var authored = new Authored(
-            this, stored.Name, stored.ModelType, stored.DocumentJson, stored.Version, stored.Description)
-        {
-            References = candidate.References
-        };
+        return new AuthoredProposition(
+            this, stored.Name, stored.ModelType, stored.DocumentJson, stored.Version, stored.Description,
+            bound: null, quarantine: [], references: candidate.References);
+    }
 
-        _authored[stored.Name] = authored;
+    /// <summary>
+    /// Binds one stored proposition into <paramref name="builder"/>, publishing it or quarantining it.
+    /// Writes nothing live: the caller swaps the whole load in as one generation.
+    /// </summary>
+    /// <remarks>
+    /// <strong>Both quarantine arms must call <see cref="ScopeGenerationBuilder.SetAuthored"/>, and it
+    /// is easy to think they need not.</strong> A quarantined row is the one kind of authored
+    /// proposition that never goes through <see cref="CommitPublish"/> — it has no binding, so it gets
+    /// no overlay entry, no graph edge and no enrolment, and every instinct says a world it cannot be
+    /// resolved through should not carry it. But the generation's authored map is also what the
+    /// catalog lists, and a quarantined document is precisely the one an operator needs to *see* in
+    /// order to repair it. Drop these two writes and a broken stored row vanishes from
+    /// <see cref="Find"/>, <see cref="Propositions"/>, <see cref="DocumentJsonOf"/> and
+    /// <see cref="AuthoredStateCore"/> — silently, with every test still green, because nothing else
+    /// in the load path notices. This was a live trap while the authored map was a field of this set:
+    /// the arms below wrote to that field only, so moving the read path into the generation without
+    /// moving them would have caused exactly that disappearance.
+    /// </remarks>
+    private void LoadOne(LoadCandidate candidate, ScopeGenerationBuilder builder)
+    {
+        var authored = Unbound(candidate);
 
         if (candidate.Errors.Count > 0)
         {
             // A name failure, a parse failure or a cycle already rules out binding — attempting it
             // anyway could only succeed by resolving through a name that is itself unresolvable or
             // by binding on top of an unresolved cyclic reference, neither of which is a real bind.
-            authored.Quarantine = candidate.Errors;
+            builder.SetAuthored(authored.WithQuarantine(candidate.Errors));
             return;
         }
 
         var errors = new List<RuleError>();
-        var commit = authored.PrepareRebind(Scope.Source, errors);
+        var rebound = authored.Rebind(builder.Source, errors);
 
-        if (commit is null)
+        if (rebound is null)
         {
             // Quarantined: no overlay entry and no graph edges, so nothing resolves *to* it and
             // nothing is rebound *because* of it. Any compiled spec under the name still resolves.
-            authored.Quarantine = errors;
+            // It is still recorded as authored, so the catalog can list it and an operator can repair
+            // the document it came from.
+            builder.SetAuthored(authored.WithQuarantine(errors));
             return;
         }
 
-        // The same steps CommitPublish takes to go live, minus the store write — this row came
-        // *from* the store, so saving it back would be a no-op at best.
-        commit.Commit();
-        CommitPublish(authored);
+        // The publish path itself rather than a copy of its steps, and missing only the store write
+        // — which CommitPublish does not do either: this row came *from* the store, so saving it
+        // back would be a no-op at best. Rebind is what makes that reuse possible; PrepareRebind
+        // would seal the replacement inside a commit only a ScopeGenerationBuilder can open.
+        CommitPublish(rebound, builder);
     }
 
     /// <summary>Parses without letting malformed JSON escape — a hand-edited store must not stop startup.</summary>
@@ -760,7 +987,7 @@ public sealed class PropositionSet
     /// is non-nullable, but a hand-edited or null-serialized store is not bound by that — and an
     /// unusable model type is a quarantine reason, never a reason to throw and fail startup.
     /// </summary>
-    private PropositionModelBinding? ResolveModel(string? modelTypeId, List<RuleError> errors)
+    internal PropositionModelBinding? ResolveModel(string? modelTypeId, List<RuleError> errors)
     {
         if (modelTypeId is not null && _models.TryGetValue(modelTypeId, out var model))
             return model;
@@ -779,7 +1006,7 @@ public sealed class PropositionSet
     /// an entry's own IsAsync already accounts for anything it references, so consulting the direct
     /// references is enough to know how the document must bind.
     /// </summary>
-    private static bool BindsAsync(ISpecSource source, IReadOnlyList<string> references) =>
+    internal static bool BindsAsync(ISpecSource source, IReadOnlyList<string> references) =>
         references.Any(reference => source.Find(reference) is { IsAsync: true });
 
     /// <summary>Parses, cycle-checks, and binds a document without publishing anything.</summary>
@@ -803,7 +1030,7 @@ public sealed class PropositionSet
 
         var references = DocumentReferences.From(document);
 
-        if (Scope.Graph.FindCycle(name, references) is { } cycle)
+        if (Scope.Current.Graph.FindCycle(name, references) is { } cycle)
         {
             errors.Add(new RuleError("$", RuleErrorCode.CycleDetected,
                 $"publishing '{name}' would create a reference cycle: {string.Join(" → ", cycle)}"));
@@ -817,20 +1044,28 @@ public sealed class PropositionSet
 
     /// <summary>
     /// The infallible half of a publish, for a caller that has already persisted the document — the
-    /// counterpart of <see cref="RuleSet.CommitCore"/>. Folds the authored proposition into the live
-    /// overlay, graph and participant table. Assumes <see cref="BindingScope"/>'s inner monitor is
-    /// held: this mutates <see cref="DependencyGraph"/> and <see cref="PropositionOverlay"/> directly,
-    /// both of which are deliberately unsynchronized and rely on the caller holding that monitor.
+    /// counterpart of <see cref="RuleSet.CommitCore"/>. Folds the authored proposition into the
+    /// successor's authored table, overlay, graph and participant table — all into one builder, so all
+    /// four facts go live in the single swap that publishes it.
     /// </summary>
-    internal void CommitPublish(Authored authored)
+    /// <remarks>
+    /// <strong>Assumes the caller owns <paramref name="builder"/> alone</strong> — which is weaker
+    /// than "holds the monitor", and deliberately so, because the two callers get it different ways.
+    /// A publish holds <see cref="BindingScope"/>'s inner monitor, because its builder was forked from
+    /// the live world and its fork-and-swap is not atomic. A refresh holds nothing: its builder was
+    /// never forked from anything and no other thread can reach it, so there is nothing to exclude
+    /// until it offers the result to <see cref="BindingScope.TrySwap"/>, which does take the monitor.
+    /// Writing here is safe under either.
+    /// </remarks>
+    internal static void CommitPublish(AuthoredProposition authored, ScopeGenerationBuilder builder)
     {
-        _authored[authored.Name] = authored;
-        Scope.Overlay.Set(authored.Bound!);
-        Scope.Graph.Set(authored.Node, authored.References);
-        Scope.Enrol(authored);
+        builder.SetAuthored(authored);
+        builder.SetOverlayEntry(authored.Bound!);
+        builder.Graph.Set(authored.Node, authored.References);
+        builder.Enrol(authored);
     }
 
-    private PropositionEntry ToEntry(Authored authored)
+    private PropositionEntry ToEntry(AuthoredProposition authored)
     {
         var compiled = Scope.Registry.Find(authored.Name);
         var origin = compiled is null ? PropositionOrigin.Authored : PropositionOrigin.Overridden;
@@ -889,64 +1124,13 @@ public sealed class PropositionSet
     /// phase to <see cref="CommitPublishCore"/>/<see cref="CommitWithdrawCore"/>.
     /// </remarks>
     internal readonly record struct WritePrepare(
-        Authored? Authored, List<IRebindCommit>? Commits, PropositionUpdateResult? Failure)
+        AuthoredProposition? Authored, List<IRebindCommit>? Commits, PropositionUpdateResult? Failure)
     {
         /// <summary>A write that may proceed to the store.</summary>
-        public static WritePrepare Ready(Authored authored, List<IRebindCommit> commits) =>
+        public static WritePrepare Ready(AuthoredProposition authored, List<IRebindCommit> commits) =>
             new(authored, commits, null);
 
         /// <summary>A write refused before anything was persisted.</summary>
         public static WritePrepare Rejected(PropositionUpdateResult failure) => new(null, null, failure);
-    }
-
-    /// <summary>
-    /// One authored proposition's live state, and its participation in the rebind transaction.
-    /// </summary>
-    internal sealed class Authored(
-        PropositionSet owner, string name, string modelTypeId, string documentJson, int version, string? description)
-        : IRebindable
-    {
-        public NodeId Node { get; } = NodeId.Proposition(name);
-        public string Name { get; } = name;
-        public string ModelTypeId { get; } = modelTypeId;
-        public string DocumentJson { get; } = documentJson;
-        public int Version { get; } = version;
-        public string? Description { get; } = description;
-
-        /// <summary>The current binding, or null while quarantined.</summary>
-        public SpecRegistryEntry? Bound { get; set; }
-
-        /// <summary>Why this proposition is excluded from the effective set, or empty.</summary>
-        public IReadOnlyList<RuleError> Quarantine { get; set; } = [];
-
-        public IReadOnlyList<string> References { get; set; } = [];
-
-        public IRebindCommit? PrepareRebind(ISpecSource prospective, List<RuleError> errors)
-        {
-            var model = owner.ResolveModel(ModelTypeId, errors);
-            if (model is null)
-                return null;
-
-            var document = new RuleDocumentParser(owner._options).Parse(DocumentJson, errors);
-            if (document is null || errors.Count > 0)
-                return null;
-
-            var isAsync = BindsAsync(prospective, References);
-            var entry = model.Bind(prospective, Name, Description, document, isAsync, errors);
-            return entry is null ? null : new RebindCommit(this, entry);
-        }
-
-        private sealed class RebindCommit(Authored authored, SpecRegistryEntry entry) : IRebindCommit
-        {
-            public SpecRegistryEntry? OverlayEntry => entry;
-
-            public void Commit()
-            {
-                authored.Bound = entry;
-                authored.Quarantine = [];
-                // The version is deliberately untouched: this proposition's document did not change,
-                // so bumping it would spuriously conflict with an editor's open draft.
-            }
-        }
     }
 }

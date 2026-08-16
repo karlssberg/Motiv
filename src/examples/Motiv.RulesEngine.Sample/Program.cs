@@ -188,7 +188,12 @@ builder.Services.AddMotivRules(registry, options)
     .AddRuleStore(new JsonFileRuleStore(rulesPath))
     .AddRule<CanCheckoutRule>()
     .AddRule<FraudScreeningRule>()
-    .AddRule<LoyaltyDiscountRule>();
+    .AddRule<LoyaltyDiscountRule>()
+    // Seam: multi-instance convergence. The stores above reread their JSON files per operation so
+    // two processes behave like two replicas; AddRefresh polls for another replica's publish and
+    // rebuilds this one, so docker compose up actually converges instead of demonstrating a feature
+    // that does nothing.
+    .AddRefresh();
 
 // Seam: break-glass. AddGovernance already registered BreakGlass.Off; a host that wants the 3am
 // escape overrides it here with AddSingleton, which — DI being last-registration-wins — beats the

@@ -54,7 +54,7 @@ public class PropositionSetCreateTests
     {
         public NodeId Node { get; } = node;
 
-        public IRebindCommit? PrepareRebind(ISpecSource prospective, List<RuleError> errors)
+        public IRebindCommit? PrepareRebind(ISpecSource prospective, ScopeGeneration world, List<RuleError> errors)
         {
             errors.Add(new RuleError("$", RuleErrorCode.AsyncSpecInSyncLoad, "would not bind"));
             return null;
@@ -235,7 +235,7 @@ public class PropositionSetCreateTests
         scope.Locked(() =>
         {
             scope.Enrol(new AlwaysBreaks(NodeId.Rule("can-checkout")));
-            scope.Graph.Set(NodeId.Rule("can-checkout"), ["customer.is-active"]);
+            scope.Mutate(builder => builder.Graph.Set(NodeId.Rule("can-checkout"), ["customer.is-active"]));
         });
 
         // Act
@@ -258,7 +258,7 @@ public class PropositionSetCreateTests
         scope.Locked(() =>
         {
             scope.Enrol(new AlwaysBreaks(NodeId.Rule("can-checkout")));
-            scope.Graph.Set(NodeId.Rule("can-checkout"), ["customer.is-active"]);
+            scope.Mutate(builder => builder.Graph.Set(NodeId.Rule("can-checkout"), ["customer.is-active"]));
         });
         var active = new Customer(IsActive: true);
 
@@ -378,7 +378,7 @@ public class PropositionSetCreateTests
         // Assert
         set.Find("customer.derived").ShouldBeNull();
         scope.Source.Find("customer.derived").ShouldBeNull();
-        scope.Graph.Referrers("customer.is-active").ShouldBeEmpty();
+        scope.Current.Graph.Referrers("customer.is-active").ShouldBeEmpty();
     }
 
     private sealed record Customer(bool IsActive);
@@ -387,6 +387,10 @@ public class PropositionSetCreateTests
     private sealed class ThrowingStore : IPropositionStore
     {
         public IReadOnlyList<StoredProposition> Load() => [];
+        public Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<StoredProposition>>([]);
+        public Task<long> GetGenerationAsync(CancellationToken ct) => Task.FromResult(0L);
+
         public Task WriteAsync(PropositionBatch batch, CancellationToken cancellationToken) =>
             throw new IOException("store unavailable");
     }

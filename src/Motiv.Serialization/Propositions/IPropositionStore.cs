@@ -29,11 +29,41 @@ public sealed record PropositionBatch(
 /// <remarks>
 /// A store is a dumb sink — it validates nothing and enforces no invariant. Legality is decided by
 /// <see cref="PropositionSet"/> before anything reaches here.
+/// <para>
+/// <see cref="LoadAsync"/> and <see cref="GetGenerationAsync"/> — the proposition-side twin of the
+/// pair <see cref="IRuleStore"/> carries, for the same reason — back
+/// <see cref="PropositionSet.RefreshAsync"/>: a replica polls <see cref="GetGenerationAsync"/> on a
+/// timer (see <c>Motiv.Serialization.AspNetCore.MotivRefreshService</c>, an opt-in background poller)
+/// and only calls <see cref="LoadAsync"/> — the expensive rebuild path — once that scalar has actually
+/// moved. <see cref="GetGenerationAsync"/> is also read straight after every write, so the successor
+/// generation records where the store stood in the same swap that publishes what it stands on.
+/// </para>
 /// </remarks>
 public interface IPropositionStore
 {
     /// <summary>Every persisted proposition, read once at startup. Synchronous because startup is.</summary>
     IReadOnlyList<StoredProposition> Load();
+
+    /// <summary>
+    /// Every persisted proposition, read on a refresh. Separate from <see cref="Load"/> rather than
+    /// replacing it because the two run at different times under different constraints: startup
+    /// cannot await, a refresh can. Called by <see cref="PropositionSet.RefreshAsync"/>, and only once
+    /// <see cref="GetGenerationAsync"/> has shown the store moved — see the interface remarks.
+    /// </summary>
+    Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// A monotonically increasing number that moves whenever a write lands, so a replica can tell
+    /// whether it is behind without re-reading anything.
+    /// </summary>
+    /// <remarks>
+    /// <strong>Must be a scalar read.</strong> An implementation that answers this by loading the
+    /// store defeats the point — every replica polls it on a timer, via
+    /// <see cref="PropositionSet.RefreshAsync"/> and, opt-in,
+    /// <c>Motiv.Serialization.AspNetCore.MotivRefreshService</c>. It must never move backwards while
+    /// replicas are live: it is half of the fencing token behind monotonic-read consistency.
+    /// </remarks>
+    Task<long> GetGenerationAsync(CancellationToken cancellationToken);
 
     /// <summary>
     /// Applies a batch — all of it, or none. Called under the publish gate with a cancellation token,
@@ -47,12 +77,24 @@ public sealed class InMemoryPropositionStore : IPropositionStore
 {
     private readonly object _gate = new();
     private readonly Dictionary<string, StoredProposition> _propositions = new(StringComparer.Ordinal);
+    private long _generation;
 
     /// <inheritdoc />
     public IReadOnlyList<StoredProposition> Load()
     {
         lock (_gate)
             return [.. _propositions.Values];
+    }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken cancellationToken) =>
+        Task.FromResult(Load());
+
+    /// <inheritdoc />
+    public Task<long> GetGenerationAsync(CancellationToken cancellationToken)
+    {
+        lock (_gate)
+            return Task.FromResult(_generation);
     }
 
     /// <inheritdoc />
@@ -65,6 +107,11 @@ public sealed class InMemoryPropositionStore : IPropositionStore
 
             foreach (var name in batch.Deletes)
                 _propositions.Remove(name);
+
+            // An empty batch is not a write. A generation that moved anyway would make every
+            // replica rebuild its whole world for nothing, on a timer.
+            if (batch.Saves.Count > 0 || batch.Deletes.Count > 0)
+                _generation++;
         }
 
         return Task.CompletedTask;
