@@ -4,10 +4,10 @@ using Motiv.Traversal;
 
 namespace Motiv.AndAlso;
 
-internal sealed class AndAlsoSpec<TModel, TMetadata>(
-    SpecBase<TModel, TMetadata> left,
-    SpecBase<TModel, TMetadata> right)
-    : SpecBase<TModel, TMetadata>,
+internal sealed class AndAlsoPolicy<TModel, TMetadata>(
+    PolicyBase<TModel, TMetadata> left,
+    PolicyBase<TModel, TMetadata> right)
+    : PolicyBase<TModel, TMetadata>,
         IBinaryOperationSpec<TModel, TMetadata>,
         IBinaryOperationSpec<TModel>,
         IBinaryOperationSpec
@@ -28,21 +28,23 @@ internal sealed class AndAlsoSpec<TModel, TMetadata>(
 
     public override bool Matches(TModel model) => left.Matches(model) && right.Matches(model);
 
-    protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
+    protected override PolicyResultBase<TMetadata> EvaluatePolicy(TModel model)
     {
-        var leftResult = left.EvaluateInternal(model);
+        var leftResult = left.EvaluatePolicyInternal(model);
         return leftResult.Satisfied switch
         {
-            true =>  new AndAlsoBooleanResult<TMetadata>(
-                leftResult,
-                right.EvaluateInternal(model)),
-            false => new AndAlsoBooleanResult<TMetadata>(leftResult)
+            true => new AndAlsoPolicyResult<TMetadata>(leftResult, right.EvaluatePolicyInternal(model)),
+            false => new AndAlsoPolicyResult<TMetadata>(leftResult)
         };
     }
 
-    public SpecBase<TModel, TMetadata> Left => left;
+    public PolicyBase<TModel, TMetadata> Left => left;
 
-    public SpecBase<TModel, TMetadata> Right => right;
+    public PolicyBase<TModel, TMetadata> Right => right;
+
+    SpecBase<TModel, TMetadata> IBinaryOperationSpec<TModel, TMetadata>.Left => left;
+
+    SpecBase<TModel, TMetadata> IBinaryOperationSpec<TModel, TMetadata>.Right => right;
 
     SpecBase<TModel> IBinaryOperationSpec<TModel>.Right => Right;
 

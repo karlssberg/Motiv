@@ -255,9 +255,10 @@ public class AsyncCoverageCompletionTests
     [Fact]
     public void Should_expose_the_binary_traversal_surface_on_AsyncAndAlsoSpec()
     {
-        // Arrange
-        var left = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).Create("left");
-        var right = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).Create("right");
+        // Arrange — explicitly typed as AsyncSpecBase (not AsyncPolicyBase) so AndAlso resolves to the
+        // Spec-producing overload rather than the policy-preserving one
+        AsyncSpecBase<int, string> left = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).Create("left");
+        AsyncSpecBase<int, string> right = Spec.BuildAsync((int _) => new ValueTask<bool>(true)).Create("right");
 
         // Act
         var spec = (AsyncAndAlsoSpec<int, string>)left.AndAlso(right);
@@ -327,6 +328,39 @@ public class AsyncCoverageCompletionTests
         untyped.Right.ShouldBeSameAs(fallback);
         statement.ShouldContain("primary");
         statement.ShouldContain("fallback");
+        matches.ShouldBeTrue();
+    }
+
+    #endregion
+
+    #region AsyncAndAlsoPolicy.cs — Description family predicate, traversal surface, MatchesAsync
+
+    [Fact]
+    public async Task Should_expose_the_full_surface_of_AsyncAndAlsoPolicy()
+    {
+        // Arrange
+        AsyncPolicyBase<int, string> first = Spec.BuildAsync((int _) => new ValueTask<bool>(true))
+            .WhenTrue("yes").WhenFalse("no").Create("first");
+        AsyncPolicyBase<int, string> second = Spec.BuildAsync((int _) => new ValueTask<bool>(true))
+            .WhenTrue("yes").WhenFalse("no").Create("second");
+
+        // Act
+        var policy = (AsyncAndAlsoPolicy<int, string>)first.AndAlso(second);
+        var typed = (IAsyncBinaryOperationSpec<int, string>)policy;
+        var untyped = (IAsyncBinaryOperationSpec)policy;
+        var statement = policy.Description.Statement; // forces the isSameFamily lambda (Summarize)
+        var matches = await policy.MatchesAsync(1);
+
+        // Assert
+        policy.Underlying.ShouldBe([first, second]);
+        typed.Operation.ShouldBe(Operator.AndAlso);
+        typed.IsCollapsable.ShouldBeTrue();
+        typed.Left.ShouldBeSameAs(first);
+        typed.Right.ShouldBeSameAs(second);
+        untyped.Left.ShouldBeSameAs(first);
+        untyped.Right.ShouldBeSameAs(second);
+        statement.ShouldContain("first");
+        statement.ShouldContain("second");
         matches.ShouldBeTrue();
     }
 

@@ -68,6 +68,50 @@ var isActiveSubscription =
         .Create();
 ```
 
+### [Policies](xref:Motiv.PolicyBase`2)
+
+`AndAlso()` preserves a policy: `policy.AndAlso(policy)` returns a <xref:Motiv.PolicyBase`2>, so an
+`AndAlso` chain behaves like `Result`-chaining — it yields a single `Value` that answers "which gate
+stopped me?"
+
+When a gate fails, evaluation stops there and `Value` is that gate's false metadata — the first
+failure wins:
+
+```csharp
+var a = Spec.Build<string>(_ => true).WhenTrue("a-true").WhenFalse("a-false").Create("a");
+var b = Spec.Build<string>(_ => false).WhenTrue("b-true").WhenFalse("b-false").Create("b");
+var c = Spec.Build<string>(_ => false).WhenTrue("c-true").WhenFalse("c-false").Create("c");
+
+var result = new[] { a, b, c }.AndAlsoTogether().Evaluate("model");
+
+result.Satisfied; // false
+result.Value;     // "b-false"      <- the selection: first failure
+result.Values;    // ["b-false"]    <- only the failing gate is causal; "c" is never evaluated
+```
+
+When every gate passes, no single operand decided the outcome, so `Value` is the **last-evaluated**
+operand's — the final success:
+
+```csharp
+var a = Spec.Build<string>(_ => true).WhenTrue("a-true").WhenFalse("a-false").Create("a");
+var b = Spec.Build<string>(_ => true).WhenTrue("b-true").WhenFalse("b-false").Create("b");
+var c = Spec.Build<string>(_ => true).WhenTrue("c-true").WhenFalse("c-false").Create("c");
+
+var result = new[] { a, b, c }.AndAlsoTogether().Evaluate("model");
+
+result.Satisfied; // true
+result.Value;     // "c-true"                          <- the selection: last evaluated
+result.Values;    // ["a-true", "b-true", "c-true"]    <- every contributing cause
+```
+
+`Value` is therefore a *selection*, not a guarantee that only one cause exists. Use `Values` to reach
+everything it was selected from. `Values` flattens a nested chain — three policies combined with
+`AndAlsoTogether()` yield three values, not the root node's two — reports only causal values, and
+works for any metadata type.
+
+Note that `Causes` and `Underlying` describe the **binary composition shape** rather than the
+flattened causal set, so a three-policy chain reports two operands at its root.
+
 ### [Boolean Results](xref:Motiv.BooleanResultBase`1)
 
 You can perform a conditional AND operation on two <xref:Motiv.BooleanResultBase`1> in two ways:

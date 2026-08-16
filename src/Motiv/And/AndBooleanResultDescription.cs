@@ -12,5 +12,6 @@ internal sealed class AndBooleanResultDescription<TMetadata>(
     protected override string Separator => " & ";
 
     protected override bool IsSameFamily(BooleanResultBase<TMetadata> result) =>
-        result is AndBooleanResult<TMetadata> or AndAlsoBooleanResult<TMetadata>;
+        result is AndBooleanResult<TMetadata> or AndAlsoPolicyResult<TMetadata>
+            or AndAlsoBooleanResult<TMetadata>;
 }

@@ -126,6 +126,60 @@ public class ExpressionOperationInterfaceTests
     }
 
     [Fact]
+    public void Should_expose_the_policy_specific_left_and_right_on_and_also_policy()
+    {
+        // Arrange
+        PolicyBase<int, string> left = Spec.Build((int n) => n % 2 == 0).WhenTrue("is even").WhenFalse("is odd").Create();
+        PolicyBase<int, string> right = Spec.Build((int n) => n > 0).WhenTrue("is positive").WhenFalse("is not positive").Create();
+
+        // Act
+        var sut = left.AndAlso(right);
+        var typed = sut.ShouldBeAssignableTo<IBinaryOperationSpec<int, string>>()!;
+        var modelTyped = sut.ShouldBeAssignableTo<IBinaryOperationSpec<int>>()!;
+        var untyped = sut.ShouldBeAssignableTo<IBinaryOperationSpec>()!;
+
+        // Assert
+        typed.Operation.ShouldBe(Operator.AndAlso);
+        typed.IsCollapsable.ShouldBeTrue();
+        ((object)typed.Left).ShouldBeSameAs(left);
+        ((object)typed.Right).ShouldBeSameAs(right);
+        ((object)modelTyped.Left).ShouldBeSameAs(left);
+        ((object)modelTyped.Right).ShouldBeSameAs(right);
+        ((object)untyped.Left).ShouldBeSameAs(left);
+        ((object)untyped.Right).ShouldBeSameAs(right);
+        sut.Underlying.ShouldBe([left, right]);
+        sut.Description.ShouldNotBeNull();
+        sut.Matches(4).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Should_expose_the_policy_specific_left_and_right_on_expression_and_also_policy()
+    {
+        // Arrange
+        var left = IsEvenPolicy();
+        var right = IsPositivePolicy();
+
+        // Act
+        var sut = left.AndAlso(right);
+        var typed = sut.ShouldBeAssignableTo<IBinaryOperationSpec<int, string>>()!;
+        var modelTyped = sut.ShouldBeAssignableTo<IBinaryOperationSpec<int>>()!;
+        var untyped = sut.ShouldBeAssignableTo<IBinaryOperationSpec>()!;
+
+        // Assert
+        typed.Operation.ShouldBe(Operator.AndAlso);
+        typed.IsCollapsable.ShouldBeTrue();
+        ((object)typed.Left).ShouldBeSameAs(left);
+        ((object)typed.Right).ShouldBeSameAs(right);
+        ((object)modelTyped.Left).ShouldBeSameAs(left);
+        ((object)modelTyped.Right).ShouldBeSameAs(right);
+        ((object)untyped.Left).ShouldBeSameAs(left);
+        ((object)untyped.Right).ShouldBeSameAs(right);
+        sut.Underlying.ShouldBe([left, right]);
+        sut.Description.ShouldNotBeNull();
+        sut.Matches(4).ShouldBeTrue();
+    }
+
+    [Fact]
     public void Should_expose_the_operand_through_every_unary_operation_interface_level_for_expression_not_spec()
     {
         // Arrange

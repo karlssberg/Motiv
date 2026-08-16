@@ -89,7 +89,9 @@ public class ExpressionPolicyCompositionTests
     {
         var sut = IsPositivePolicy().AndAlso(IsSmallPolicy());
 
-        sut.ShouldBeAssignableTo<ExpressionSpecBase<int, string>>();
+        // AndAlso is now policy-preserving: combining two same-metadata expression policies yields
+        // an expression-backed policy, not a degraded spec.
+        sut.ShouldBeAssignableTo<ExpressionPolicyBase<int, string>>();
         sut.Matches(model).ShouldBe(expected);
     }
 
@@ -278,6 +280,27 @@ public class ExpressionPolicyCompositionTests
 
         sut.ShouldBeAssignableTo<ExpressionSpecBase<int, string>>();
         sut.Matches(model).ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Should_collapse_an_expression_and_also_policy_operand_within_an_expression_and_spec()
+    {
+        // Arrange — the left operand is an ExpressionAndAlsoPolicy nested inside an ExpressionAndSpec.
+        var sut = IsPositivePolicy().AndAlso(IsSmallPolicy()).And(IsPositivePolicy());
+
+        // Assert — same-family operands collapse, so no parentheses are introduced. This mirrors the
+        // OrElse side below; the two families must render identically.
+        sut.Description.Statement.ShouldBe("n > 0 && n < 100 & n > 0");
+    }
+
+    [Fact]
+    public void Should_collapse_an_expression_or_else_policy_operand_within_an_expression_or_spec()
+    {
+        // Arrange — the OrElse counterpart of the AndAlso case above.
+        var sut = IsPositivePolicy().OrElse(IsSmallPolicy()).Or(IsPositivePolicy());
+
+        // Assert
+        sut.Description.Statement.ShouldBe("n > 0 || n < 100 | n > 0");
     }
 
     [Theory]
