@@ -9,9 +9,24 @@ public class RefreshTests
 
     private sealed class NumberRule() : Rule<int, string>("number", Positive);
 
+    /// <summary>
+    /// The async twin of <see cref="Positive"/> and <see cref="NumberRule"/>, registered under its
+    /// own name so a document can address either flavour without the two colliding. Exists so this
+    /// file's refresh scenarios can be replayed against <see cref="AsyncRule{TModel,TMetadata}"/> —
+    /// otherwise every rule this file ever refreshes is synchronous, and a refresh calls
+    /// <c>AsyncRule.BindStoredState</c>, <c>WithVersion</c> and <c>DocumentJsonIn</c> on nothing.
+    /// </summary>
+    private static AsyncSpecBase<int, string> PositiveAsync { get; } =
+        Spec.BuildAsync(async (int n) => { await Task.Yield(); return n > 0; }).Create("positive-async");
+
+    private sealed class NumberAsyncRule() : AsyncRule<int, string>("number-async", PositiveAsync);
+
     private const string NotPositive = """{"rule":{"not":{"spec":"positive"}}}""";
     private const string IsPositive = """{"rule":{"spec":"positive"}}""";
     private const string OnlyInTheNewBuild = """{"rule":{"spec":"only-in-the-new-build"}}""";
+
+    private const string NotPositiveAsync = """{"rule":{"not":{"spec":"positive-async"}}}""";
+    private const string IsPositiveAsync = """{"rule":{"spec":"positive-async"}}""";
 
     private static RuleChangeProvenance By(string author) => new(author);
 
@@ -22,7 +37,9 @@ public class RefreshTests
     /// </param>
     private static SpecRegistry RegistryWith(params string[] extraSpecs)
     {
-        var registry = new SpecRegistry().Register("positive", Positive);
+        var registry = new SpecRegistry()
+            .Register("positive", Positive)
+            .Register("positive-async", PositiveAsync);
         foreach (var name in extraSpecs)
             registry.Register(name, Positive);
 
@@ -36,6 +53,16 @@ public class RefreshTests
     {
         var rules = new RuleSet(RegistryWith(extraSpecs), store);
         var rule = new NumberRule();
+        rules.Add(rule);
+        rules.Load();
+        return (rules, rule);
+    }
+
+    /// <summary>The async twin of <see cref="Replica"/>, for scenarios that need an async rule on the wire.</summary>
+    private static (RuleSet Rules, NumberAsyncRule Rule) AsyncReplica(IRuleStore store, params string[] extraSpecs)
+    {
+        var rules = new RuleSet(RegistryWith(extraSpecs), store);
+        var rule = new NumberAsyncRule();
         rules.Add(rule);
         rules.Load();
         return (rules, rule);
@@ -88,6 +115,63 @@ public class RefreshTests
         report.Outcome.ShouldBe(RefreshOutcome.Applied);
         b.FindEntry("number")!.Version.ShouldBe(3);
         ruleB.Evaluate(1).Satisfied.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// The async counterpart of <see cref="Should_converge_a_second_replica_on_the_first_replicas_publish"/>.
+    /// Every rule this file otherwise refreshes is a synchronous <c>Rule&lt;int,string&gt;</c>, so a
+    /// rebuild's calls into <c>AsyncRule.BindStoredState</c> and <c>DocumentJsonIn</c> — the members it
+    /// exercises on every registered rule, sync or async — were reached by nothing. This is a real gap:
+    /// the sample host's <c>FraudScreeningRule</c> is declared as an <c>AsyncRule</c>, so any replica
+    /// running it takes exactly this path on every refresh.
+    /// </summary>
+    [Fact]
+    public async Task Should_converge_a_second_replica_on_the_first_replicas_publish_of_an_async_rule()
+    {
+        // Arrange — one store, two replicas, one of them running an async rule
+        var store = new InMemoryRuleStore();
+        var (a, _) = AsyncReplica(store);
+        var (b, ruleB) = AsyncReplica(store);
+
+        // Act
+        await a.UpdateAsync("number-async", NotPositiveAsync, 1, By("alice"));
+        var report = await b.RefreshAsync(default);
+
+        // Assert — B was serving yesterday's policy and now is not
+        report.Outcome.ShouldBe(RefreshOutcome.Applied);
+        b.FindEntry("number-async")!.Version.ShouldBe(2);
+        (await ruleB.EvaluateAsync(1)).Satisfied.ShouldBeFalse();
+
+        // And the replica now knows where it stands, so the next tick is the cheap path rather than
+        // a rebuild of a world it already has
+        (await b.RefreshAsync(default)).Outcome.ShouldBe(RefreshOutcome.Unchanged);
+    }
+
+    /// <summary>
+    /// <c>AsyncRule.WithVersion</c> is not reached by a refresh at all — <c>RebuildHeadsInto</c> binds
+    /// a rebuild's state straight from the store's own version. It is reached by <see cref="RuleSet.Load"/>,
+    /// which renumbers a freshly-bound document to the version the store actually holds rather than the
+    /// version <see cref="RuleSet.Add"/> guessed. A replica that loads after two publishes have already
+    /// happened is the case that tells the two apart: had <c>WithVersion</c> not run (or renumbered to
+    /// the wrong thing), this replica would report version 2 — the number its own bind produced — and
+    /// every future publish against it would spuriously version-conflict with the store's real head.
+    /// </summary>
+    [Fact]
+    public async Task Should_restore_the_stores_version_for_an_async_rule_loaded_after_two_publishes()
+    {
+        // Arrange — A publishes twice before B is ever created, so B's Load — not a refresh — is what
+        // binds the stored head
+        var store = new InMemoryRuleStore();
+        var (a, _) = AsyncReplica(store);
+        await a.UpdateAsync("number-async", NotPositiveAsync, 1, By("alice"));
+        await a.UpdateAsync("number-async", IsPositiveAsync, 2, By("alice"));
+
+        // Act
+        var (b, ruleB) = AsyncReplica(store);
+
+        // Assert — the store's version (3), not the version a from-scratch bind would have minted (2)
+        b.FindEntry("number-async")!.Version.ShouldBe(3);
+        (await ruleB.EvaluateAsync(1)).Satisfied.ShouldBeTrue();
     }
 
     [Fact]
