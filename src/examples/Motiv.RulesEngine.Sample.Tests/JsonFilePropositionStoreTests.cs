@@ -146,6 +146,25 @@ public class JsonFilePropositionStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task Should_move_the_generation_forward_even_when_the_filesystem_write_time_does_not_advance()
+    {
+        // Arrange — pinning the recorded write time ahead of whatever the next real write will
+        // naturally get reproduces "the write did not move the mtime forward" on every platform.
+        // Waiting on the coarse write-time resolution that exhibits it on Windows CI would leave
+        // this passing for the wrong reason on APFS.
+        var store = new JsonFilePropositionStore(_path);
+        await store.WriteAsync(PropositionBatch.Save(Stored("customer.a")), default);
+        File.SetLastWriteTimeUtc(_path, DateTime.UtcNow.AddDays(1));
+        var generation = await store.GetGenerationAsync(default);
+
+        // Act — a real write, whose natural OS write-time is now behind the recorded generation
+        await store.WriteAsync(PropositionBatch.Save(Stored("customer.b")), default);
+
+        // Assert — the store must move the generation itself, not trust the raw timestamp to advance
+        (await store.GetGenerationAsync(default)).ShouldBeGreaterThan(generation);
+    }
+
+    [Fact]
     public async Task Should_leave_the_generation_still_when_a_batch_changes_nothing()
     {
         // Arrange

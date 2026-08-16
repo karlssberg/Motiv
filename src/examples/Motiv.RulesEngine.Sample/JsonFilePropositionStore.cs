@@ -44,13 +44,18 @@ using Motiv.Serialization;
 /// nothing, on a timer.
 /// </para>
 /// <para>
-/// This is a sample-grade answer, not a production one: it inherits whatever timestamp resolution
-/// the filesystem gives <c>File.GetLastWriteTimeUtc</c>, and it is not immune to the system clock
-/// moving backwards, which would let the generation move backwards too — something
-/// <see cref="IPropositionStore.GetGenerationAsync"/> promises it never does while replicas are live.
-/// Plan 2C's EF Core store is the real one, where the primary key and a proper row version close both
-/// gaps; this file exists so two processes over one path behave like two replicas, not to be that
-/// store itself.
+/// Raw <c>File.GetLastWriteTimeUtc</c> resolution is not trustworthy on its own: it is platform-
+/// dependent, and two writes landing close enough together can read back an identical mtime — this
+/// is exactly what let two writes through without the generation moving on Windows CI, invisibly on
+/// macOS/APFS's finer resolution. <see cref="WriteAsync"/> therefore reads the mtime before it
+/// writes and, if the write did not push it strictly past that reading, sets it forward explicitly —
+/// see <c>EnsureGenerationMovedPast</c> for the rejected alternatives. This is still a sample-grade
+/// answer, not a production one: the guarantee only applies across writes made through this store,
+/// so a system clock moving backwards with no write in between can still move the generation
+/// backwards, something <see cref="IPropositionStore.GetGenerationAsync"/> promises it never does
+/// while replicas are live. Plan 2C's EF Core store is the real one, where the primary key and a
+/// proper row version close that gap too; this file exists so two processes over one path behave
+/// like two replicas, not to be that store itself.
 /// </para>
 /// </remarks>
 public sealed class JsonFilePropositionStore(string path) : IPropositionStore
@@ -74,7 +79,7 @@ public sealed class JsonFilePropositionStore(string path) : IPropositionStore
     public Task<long> GetGenerationAsync(CancellationToken cancellationToken)
     {
         lock (_gate)
-            return Task.FromResult(File.Exists(path) ? File.GetLastWriteTimeUtc(path).Ticks : 0L);
+            return Task.FromResult(CurrentGeneration());
     }
 
     /// <inheritdoc />
@@ -96,10 +101,39 @@ public sealed class JsonFilePropositionStore(string path) : IPropositionStore
             foreach (var proposition in batch.Saves)
                 superseded.Add(proposition.Name);
 
+            var previousGeneration = CurrentGeneration();
+
             Write([.. ReadAll().Where(existing => !superseded.Contains(existing.Name)), .. batch.Saves]);
+
+            EnsureGenerationMovedPast(previousGeneration);
         }
 
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// The generation this store hands out: the file's last-write time in UTC ticks, or <c>0</c> when
+    /// the file does not exist. Read in one place so the value <see cref="WriteAsync"/> compares
+    /// against is the same one <see cref="GetGenerationAsync"/> publishes.
+    /// </summary>
+    private long CurrentGeneration() => File.Exists(path) ? File.GetLastWriteTimeUtc(path).Ticks : 0L;
+
+    /// <summary>
+    /// Makes this store the authority on its own monotonicity rather than a hostage to the
+    /// filesystem's timestamp resolution — see the class remarks for why the raw mtime cannot be
+    /// trusted to have moved on its own.
+    /// </summary>
+    private void EnsureGenerationMovedPast(long previousGeneration)
+    {
+        // Alternatives considered and rejected:
+        //  - A content hash moves on any change but is not monotonic — a generation that can go
+        //    *down* would trip the TypeScript client's backwards-move detector on a perfectly
+        //    correct response, a false alarm that trains users to ignore the signal.
+        //  - A counter persisted inside the file would work and is arguably cleaner, but it changes
+        //    the on-disk format, and the demo ships a seed file that must still load without one.
+        //    Not worth it for a sample store.
+        if (CurrentGeneration() <= previousGeneration)
+            File.SetLastWriteTimeUtc(path, new DateTime(previousGeneration + 1, DateTimeKind.Utc));
     }
 
     private List<StoredProposition> ReadAll()
