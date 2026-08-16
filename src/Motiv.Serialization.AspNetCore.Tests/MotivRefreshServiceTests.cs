@@ -60,20 +60,24 @@ public class MotivRefreshServiceTests
 
         await a.UpdateAsync("number", """{"rule":{"not":{"spec":"positive"}}}""", 1, new RuleChangeProvenance("alice"));
 
-        // Act — wait on the outcome itself, not on the version and then a separate read of
-        // LastReport: the version moving and LastReport being set are two different writes from the
-        // same tick, and a poller that keeps ticking can overwrite LastReport with a later
-        // "Unchanged" tick's report between this test observing the version change and it reading
-        // LastReport, making that read flaky by construction rather than by environment. Waiting on
-        // the outcome directly removes the check-then-act gap. And waiting via the service's own
-        // per-tick signal, rather than a wall-clock deadline, means this cannot time out just because
-        // the machine was briefly too busy to schedule the poller's next tick promptly — it only
-        // times out if the poller genuinely stops ticking.
+        // Act — wait on b's own version, not on service.LastReport.Outcome. LastReport is momentary
+        // by design: it holds only the most recently completed tick's report, and the poller keeps
+        // ticking every 20ms, so RefreshOutcome.Applied is true for exactly the one tick that applied
+        // it and is overwritten by the very next "Unchanged" tick. WaitForTickWhereAsync only rechecks
+        // its condition between ticks, so a waiter that isn't scheduled during that single ~20ms
+        // window misses the transient Applied value entirely and then observes nothing but Unchanged
+        // until the backstop fires — no amount of tightening the wait helper closes that gap, because
+        // the thing being waited on is inherently a single-tick pulse, not a state. This is not a
+        // check-then-act race (an earlier version of this comment claimed the outcome-based wait
+        // "removed" one); it is a durability problem — the awaited value simply stops being true.
+        // b's Version, by contrast, is monotonic and permanent: once the replica has rebuilt onto
+        // generation 2, it stays there forever, so there is no window in which a poll of it can revert
+        // to false. Waiting on it is waiting on a durable fact, not a transient report of one.
         await service.StartAsync(default);
         bool converged;
         try
         {
-            converged = await WaitForTickWhereAsync(service, () => service.LastReport?.Outcome == RefreshOutcome.Applied);
+            converged = await WaitForTickWhereAsync(service, () => b.FindEntry("number")!.Version == 2);
         }
         finally
         {
