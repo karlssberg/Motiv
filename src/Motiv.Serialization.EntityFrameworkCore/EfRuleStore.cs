@@ -130,8 +130,8 @@ public sealed class EfRuleStore(IDbContextFactory<MotivStoreDbContext> contextFa
         if (existing.Count == 0)
             return null;
 
-        var taken = new HashSet<string>(
-            existing.Select(row => Key(row.Name, row.Version)), StringComparer.Ordinal);
+        var taken = new HashSet<(string Name, int Version)>(
+            existing.Select(row => (row.Name, row.Version)));
 
         var highest = existing
             .GroupBy(row => row.Name, StringComparer.Ordinal)
@@ -139,16 +139,12 @@ public sealed class EfRuleStore(IDbContextFactory<MotivStoreDbContext> contextFa
 
         foreach (var version in versions)
         {
-            if (taken.Contains(Key(version.Name, version.Version)))
+            if (taken.Contains((version.Name, version.Version)))
                 return RuleAppendResult.Conflict(version.Name, highest[version.Name]);
         }
 
         return null;
     }
-
-    // A composite key as one string, because a HashSet of value tuples would box on the target
-    // frameworks and the readability is worth more here than the allocation.
-    private static string Key(string name, int version) => $"{name} {version}";
 
     /// <summary>The head projection: the highest version per name, reduced to what a load needs.</summary>
     private static IReadOnlyList<StoredRule> ProjectHeads(List<RuleVersionRow> rows) =>
