@@ -30,4 +30,8 @@
         <ProjectReference Include="..\Motiv.RulesEngine.Sample\Motiv.RulesEngine.Sample.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <Compile Include="..\..\testing\StoreConformance\*.cs" LinkBase="StoreConformance" />
+    </ItemGroup>
+
 </Project>
