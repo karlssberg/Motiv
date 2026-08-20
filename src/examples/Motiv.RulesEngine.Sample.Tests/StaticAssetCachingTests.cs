@@ -30,10 +30,10 @@ public sealed class StaticAssetCachingTests : IDisposable
                 .UseWebRoot(_webRoot.FullName)
                 // Points the store at a fresh temp database rather than the sample's real
                 // motiv-store.db, which every WebApplicationFactory<Program> in this assembly (and
-                // `dotnet run` itself) shares on disk — xunit runs test classes in parallel, and two
-                // hosts racing EnsureCreatedAsync's schema creation against the same still-empty
-                // file crash with "table already exists" rather than the benign no-op
-                // EnsureCreated intends for an existing schema.
+                // `dotnet run` itself) shares on disk. StoreSchema now survives two hosts creating
+                // the schema at once, so this is no longer about that crash: xunit runs test
+                // classes in parallel, and a shared store would let one class's published rules
+                // and grants show up in another's assertions.
                 .UseSetting(
                     "Motiv:Store:ConnectionString",
                     $"Data Source={Path.Combine(Path.GetTempPath(), $"motiv-{Guid.NewGuid():N}.db")}"));

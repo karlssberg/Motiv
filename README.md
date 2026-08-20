@@ -314,8 +314,9 @@ builder.Services.AddMotivRules(registry, options)
 The `(Name, Version)` primary key is enforced by the database, so two replicas
 racing a publish really do produce one `200` and one `409` rather than both
 reading a stale file. Development calls `EnsureCreatedAsync()`; production
-derives `MotivStoreDbContext` and owns its migrations, the same split
-`Microsoft.AspNetCore.Identity.EntityFrameworkCore` draws. A `StoreImport`
+derives `MotivStoreDbContext`, registers it with
+`AddMotivEntityFrameworkStore<AppStoreDbContext>(...)` and owns its migrations,
+the same split `Microsoft.AspNetCore.Identity.EntityFrameworkCore` draws. A `StoreImport`
 helper carries history in, once, from a pre-existing `JsonFileRuleStore` /
 `JsonFilePropositionStore` pair. Available via the
 `Motiv.Serialization.EntityFrameworkCore` package.

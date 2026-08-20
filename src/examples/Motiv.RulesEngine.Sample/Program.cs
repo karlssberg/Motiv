@@ -226,11 +226,13 @@ var app = builder.Build();
 // The schema, created in place for the zero-config path: `docker compose up` needs no migration
 // step and no database server. A production host applies adopter-owned migrations instead —
 // EnsureCreated deliberately does not write a migrations-history table, which is the same split
-// ASP.NET Core Identity draws.
+// ASP.NET Core Identity draws. Two instances starting together race the creation, so it goes
+// through StoreSchema, which verifies all three tables and only continues past a failure that
+// left the schema complete — see StoreSchema for what it refuses to swallow.
 await using (var bootstrap = app.Services.GetRequiredService<IDbContextFactory<MotivStoreDbContext>>()
                  .CreateDbContext())
 {
-    await bootstrap.Database.EnsureCreatedAsync();
+    await StoreSchema.EnsureCreatedAsync(bootstrap, app.Logger);
 }
 
 // One-way migration off the JSON stores. Opt-in, and a no-op once the database holds anything, so

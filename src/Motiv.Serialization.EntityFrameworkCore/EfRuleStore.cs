@@ -29,15 +29,14 @@ public sealed class EfRuleStore(IDbContextFactory<MotivStoreDbContext> contextFa
     public IReadOnlyList<StoredRule> Load()
     {
         using var context = contextFactory.CreateDbContext();
-        return ProjectHeads(context.RuleVersions.AsNoTracking().ToList());
+        return HeadQuery(context).ToList();
     }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<StoredRule>> LoadAsync(CancellationToken cancellationToken)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-        return ProjectHeads(
-            await context.RuleVersions.AsNoTracking().ToListAsync(cancellationToken));
+        return await HeadQuery(context).ToListAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -106,9 +105,34 @@ public sealed class EfRuleStore(IDbContextFactory<MotivStoreDbContext> contextFa
     }
 
     /// <summary>
+    /// The head projection, expressed as SQL: every log row that no higher version of the same name
+    /// supersedes.
+    /// </summary>
+    /// <remarks>
+    /// Still a projection and never a stored duplicate — the change is only <em>where</em> it is
+    /// computed. Materialising the whole log to take a per-name maximum client-side made the central
+    /// read path cost O(the entire append-only log), on every replica, on every generation bump, for
+    /// a log that is never pruned. The <c>NOT EXISTS</c> this compiles to is checked against all
+    /// three providers by <c>ProviderSchemaTests</c>; <c>(Name, Version)</c> being the primary key
+    /// is what guarantees it selects exactly one row per name.
+    /// </remarks>
+    internal static IQueryable<StoredRule> HeadQuery(MotivStoreDbContext context) =>
+        context.RuleVersions.AsNoTracking()
+            .Where(row => !context.RuleVersions
+                .Any(other => other.Name == row.Name && other.Version > row.Version))
+            .Select(row => new StoredRule(row.Name, row.Version, row.DocumentJson));
+
+    /// <summary>
     /// The first batch row whose version is already taken, or null when the batch is clear. Reads
     /// every name at once: the batch is all-or-nothing, so one round trip decides the whole thing.
     /// </summary>
+    /// <remarks>
+    /// Rows already accepted from <em>this</em> batch join the taken set as it walks, so a batch
+    /// that repeats a <c>(Name, Version)</c> within itself is refused as the conflict it is. Without
+    /// that, the duplicate would reach the change tracker and surface as an
+    /// <see cref="InvalidOperationException"/> from an <c>Add</c> that sits outside the try — a
+    /// third answer to a question the other stores answer two other ways.
+    /// </remarks>
     private static async Task<RuleAppendResult?> FindConflictAsync(
         MotivStoreDbContext context,
         IReadOnlyList<StoredRuleVersion> versions,
@@ -121,9 +145,6 @@ public sealed class EfRuleStore(IDbContextFactory<MotivStoreDbContext> contextFa
             .Select(row => new { row.Name, row.Version })
             .ToListAsync(cancellationToken);
 
-        if (existing.Count == 0)
-            return null;
-
         var taken = new HashSet<(string Name, int Version)>(
             existing.Select(row => (row.Name, row.Version)));
 
@@ -133,19 +154,14 @@ public sealed class EfRuleStore(IDbContextFactory<MotivStoreDbContext> contextFa
 
         foreach (var version in versions)
         {
-            if (taken.Contains((version.Name, version.Version)))
-                return RuleAppendResult.Conflict(version.Name, highest[version.Name]);
+            if (!taken.Add((version.Name, version.Version)))
+            {
+                // Zero when the name is new: the store is at no version at all for it.
+                highest.TryGetValue(version.Name, out var current);
+                return RuleAppendResult.Conflict(version.Name, current);
+            }
         }
 
         return null;
     }
-
-    /// <summary>The head projection: the highest version per name, reduced to what a load needs.</summary>
-    private static IReadOnlyList<StoredRule> ProjectHeads(IEnumerable<RuleVersionRow> rows) =>
-    [
-        .. rows
-            .GroupBy(row => row.Name, StringComparer.Ordinal)
-            .Select(group => group.MaxBy(row => row.Version)!)
-            .Select(head => new StoredRule(head.Name, head.Version, head.DocumentJson))
-    ];
 }

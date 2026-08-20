@@ -152,10 +152,10 @@ public class AdminEndpointTests : IClassFixture<WebApplicationFactory<Program>>
             [new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "dev")], "test"));
 
     // Points the store at a fresh temp database rather than the sample's real motiv-store.db, which
-    // every WebApplicationFactory<Program> in this assembly (and `dotnet run` itself) shares on disk
-    // — xunit runs test classes in parallel, and two hosts racing EnsureCreatedAsync's schema
-    // creation against the same still-empty file crash with "table already exists" rather than the
-    // benign no-op EnsureCreated intends for an existing schema.
+    // every WebApplicationFactory<Program> in this assembly (and `dotnet run` itself) shares on
+    // disk. StoreSchema now survives two hosts creating the schema at once, so this is no longer
+    // about that crash: xunit runs test classes in parallel, and a shared store would let one
+    // class's published rules and grants show up in another's assertions.
     private static WebApplicationFactory<Program> IsolatedStore(WebApplicationFactory<Program> factory) =>
         factory.WithWebHostBuilder(builder => builder.UseSetting(
             "Motiv:Store:ConnectionString",

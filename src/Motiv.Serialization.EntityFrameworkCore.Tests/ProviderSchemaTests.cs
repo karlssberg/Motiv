@@ -36,4 +36,23 @@ public class ProviderSchemaTests
         script.ShouldContain("MotivProposition", customMessage: provider);
         script.ShouldContain("MotivStoreGeneration", customMessage: provider);
     }
+
+    [Theory]
+    [MemberData(nameof(Providers))]
+    public void Should_translate_the_head_projection_for_every_provider(
+        string provider, Action<DbContextOptionsBuilder> configure)
+    {
+        // Arrange — the head projection is the store's central read path, and it must be computed
+        // by the database rather than by materialising the whole append-only log
+        var builder = new DbContextOptionsBuilder<MotivStoreDbContext>();
+        configure(builder);
+        using var context = new MotivStoreDbContext(builder.Options);
+
+        // Act — translation happens here, without a connection; an untranslatable query throws
+        var sql = EfRuleStore.HeadQuery(context).ToQueryString();
+
+        // Assert — the superseded rows are excluded in SQL, not client-side
+        sql.ShouldContain("NOT EXISTS", customMessage: provider);
+        sql.ShouldContain("MotivRuleVersion", customMessage: provider);
+    }
 }

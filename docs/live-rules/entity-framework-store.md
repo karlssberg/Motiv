@@ -17,9 +17,16 @@ dotnet add package Motiv.Serialization.EntityFrameworkCore
 ```csharp
 public static IServiceCollection AddMotivEntityFrameworkStore(
     this IServiceCollection services, Action<DbContextOptionsBuilder> configure);
+
+public static IServiceCollection AddMotivEntityFrameworkStore<TContext>(
+    this IServiceCollection services, Action<DbContextOptionsBuilder> configure)
+    where TContext : MotivStoreDbContext;
 ```
 
-`configure` selects the provider — pick one:
+The non-generic overload registers `MotivStoreDbContext` itself &mdash; the zero-config path, where
+the SDK's schema is the whole schema. The generic one registers a context
+[the adopter derived](#migrations), which is what production wants. `configure` selects the provider
+in both &mdash; pick one:
 
 ```csharp
 // SQLite
@@ -76,8 +83,9 @@ Three tables, one `MotivStoreDbContext`:
   carried straight through from `RuleChangeProvenance`.
 
 **`MotivProposition`** holds one row per authored proposition, replaced in place on every save
-&mdash; there is no version log on this side; see [`IPropositionStore`](../propositions/IPropositionStore.md)
-for why that asymmetry exists and is deliberate.
+&mdash; there is no version log on this side, and no conflict outcome; see
+[the rule-side asymmetry](../propositions/IPropositionStore.md#the-asymmetry-with-irulestore) for why
+that is deliberate and what closing it would cost.
 
 **`MotivStoreGeneration`** holds two rows, keyed by scope (`"rules"` and `"propositions"`), because
 the two stores share no sequence &mdash; a rule publish never bumps the propositions generation, and
@@ -113,10 +121,31 @@ public class AppStoreDbContext(DbContextOptions<AppStoreDbContext> options)
   await context.Database.EnsureCreatedAsync();
   ```
 
-- **Production** derives its own context (as above), points `AddMotivEntityFrameworkStore` at it
-  instead, and owns migrations for it with the usual `dotnet ef migrations add` /
-  `Database.Migrate()` workflow. Because migrations are scoped to the adopter's derived context, an
-  SDK schema change can never conflict with a column the adopter added.
+  **Two instances starting together race that call.** The first creates the database and begins
+  issuing `CREATE TABLE`; the second sees a database that exists with no tables in it yet and issues
+  the same statements, and one of them fails with "table already exists". A host that can start more
+  than one instance against one store should verify the schema rather than trust the call &mdash;
+  create it, then check that all three tables read, and only continue past a failure that left the
+  schema complete. `StoreSchema` in `src/examples/Motiv.RulesEngine.Sample/StoreSchema.cs` is that
+  guard, and is what the sample calls on startup; a bad connection string, an unwritable path and a
+  permission error all still take the process down with their original exception.
+
+- **Production** derives its own context (as above), registers it through the generic overload, and
+  owns migrations for it with the usual `dotnet ef migrations add` / `Database.Migrate()` workflow:
+
+  ```csharp
+  builder.Services.AddMotivEntityFrameworkStore<AppStoreDbContext>(options =>
+      options.UseNpgsql(connectionString));
+  ```
+
+  The generic parameter is load-bearing, not decoration. `EfRuleStore` and `EfPropositionStore` take
+  `IDbContextFactory<MotivStoreDbContext>`, and that interface is *invariant* &mdash; an
+  `IDbContextFactory<AppStoreDbContext>` is not assignable to it. This overload registers the
+  adopter's factory *and* an adapter over it, so the two stores resolve exactly what they always did
+  while every context they open is `AppStoreDbContext`. Both factories are registered, so
+  `dotnet ef` and `Database.Migrate()` see the derived context they need. Because migrations are
+  scoped to the adopter's derived context, an SDK schema change can never conflict with a column the
+  adopter added.
 
 **`EnsureCreated` and migrations deliberately do not mix.** `EnsureCreated` skips the migrations
 history table entirely; calling it against a context that also has migrations leaves the database in
@@ -197,8 +226,20 @@ if (builder.Configuration.GetValue("Motiv:Store:ImportFromJson", false))
 - **The whole version log, not just the head.** The importer replays every `StoredRuleVersion` for
   each rule name, not only its current version, so the imported store's audit trail matches the
   source's &mdash; a head-only copy would restamp every rule as authored at import time.
-- **All rules or none.** Each rule's history is appended in a single `AppendAsync` call, so a name
-  either arrives complete or the import throws; it never leaves a name half-imported.
+- **All of a rule's history or none of it &mdash; per name, not per import.** Each rule's history is
+  appended in a single `AppendAsync` call, so a name either arrives complete or not at all. The
+  import as a whole is *not* atomic and cannot be: the two stores are
+  [never written in the same transaction](durability.md#remarks), and the rule side is one call per
+  name.
+- **A failure part-way through throws, and says so.** Propositions are copied first, then the rules
+  one name at a time, so the rule store &mdash; the side the refuse-check reads first &mdash; is the
+  last thing to become non-empty. If anything fails after the first write, `CopyAsync` throws an
+  `InvalidOperationException` naming how much landed and saying the target is now *partially
+  imported*. That is not a state a retry repairs: the target is no longer empty, so the next run is
+  refused and reports `Imported: false`, which is indistinguishable from the benign already-done
+  case. Empty the target &mdash; drop and recreate its tables &mdash; and import again. Everything
+  fallible that can be done before the first write is done first, so a source that cannot be read
+  fails while the target is still untouched.
 
 ## Remarks
 

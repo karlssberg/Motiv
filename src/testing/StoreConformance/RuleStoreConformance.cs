@@ -89,6 +89,26 @@ public abstract class RuleStoreConformance : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Should_reject_a_batch_that_repeats_a_name_and_version_within_itself()
+    {
+        // Arrange — a hand-edited log, or an importer replaying one, can offer the same
+        // (Name, Version) twice in one call. That is the same compare-and-set violation as a
+        // duplicate of a row already stored, and every store must answer it the same way.
+
+        // Act
+        var result = await Store.AppendAsync(
+            [Row("a", 1, """{"first":true}"""), Row("a", 1, """{"second":true}""")], default);
+
+        // Assert — refused as a conflict, at the version the store actually holds for the name:
+        // none, because nothing landed
+        result.IsConflict.ShouldBeTrue();
+        result.Name!.ShouldBe("a");
+        result.CurrentVersion.ShouldBe(0);
+        Store.Load().ShouldBeEmpty();
+        (await Store.HistoryAsync("a", default)).ShouldBeEmpty();
+    }
+
+    [Fact]
     public async Task Should_append_a_whole_batch_or_none_of_it()
     {
         // Arrange — an envelope's rows must not land half-way; the second row conflicts
