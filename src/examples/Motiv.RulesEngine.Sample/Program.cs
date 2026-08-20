@@ -160,9 +160,10 @@ else
 }
 builder.Services.AddAuthorization();
 
-// Seam: authored propositions. AddPropositions enables the propositions endpoints and points them
-// at a store. Propositions load before rule defaults bind, so a rule's default document may
-// reference one. The path is configurable so a container can mount it on a volume.
+// Seam: the importer's proposition source. The live propositions store is the EF-backed one wired
+// below; this path is read only by StoreImport.CopyAsync (Motiv:Store:ImportFromJson) as the JSON
+// file to carry history in from. Configurable so a container can point it at a mounted
+// propositions.json left over from a pre-EF deployment.
 var propositionsPath = builder.Configuration["Propositions:Path"]
     ?? Path.Combine(builder.Environment.ContentRootPath, "propositions.json");
 
@@ -176,11 +177,9 @@ var propositionsPath = builder.Configuration["Propositions:Path"]
 var gatePath = builder.Configuration["Motiv:Gate:Path"]
     ?? Path.Combine(builder.Environment.ContentRootPath, "gate.json");
 
-// Seam: rule persistence. AddRuleStore points the live rules at a store so a hot-swapped rule
-// survives a restart instead of reverting to its compiled default; without it rules live only for
-// the process lifetime, as they always have. failFastOnQuarantine keeps its default (true): under
-// an approval gate, booting quietly into a quarantined rule's compiled default — behaviour nobody
-// approved — is worse than a demo that refuses to boot until a stale row is repaired.
+// Seam: the importer's rule source. The live rule store is the EF-backed one wired below; this
+// path is read only by StoreImport.CopyAsync (Motiv:Store:ImportFromJson) as the JSON file to
+// carry rule history in from — the same rules.json a pre-EF deployment hot-swapped rules into.
 var rulesPath = builder.Configuration["Rules:Path"]
     ?? Path.Combine(builder.Environment.ContentRootPath, "rules.json");
 
@@ -231,21 +230,7 @@ var app = builder.Build();
 await using (var bootstrap = app.Services.GetRequiredService<IDbContextFactory<MotivStoreDbContext>>()
                  .CreateDbContext())
 {
-    try
-    {
-        await bootstrap.Database.EnsureCreatedAsync();
-    }
-    catch (Microsoft.Data.Sqlite.SqliteException)
-    {
-        // EnsureCreatedAsync has no locking against a second EnsureCreatedAsync targeting the same
-        // still-empty database, so two hosts cold-starting concurrently against one file — two real
-        // replicas racing first boot, or (in this test suite) several WebApplicationFactory<Program>
-        // hosts starting in parallel — can both see "no schema yet" and both issue CREATE TABLE; the
-        // loser sees "table already exists" rather than a genuine failure. Confirm the schema is
-        // actually there before treating this as benign: if it genuinely isn't, this query throws
-        // its own exception and startup still fails, just not with the swallowed one.
-        await bootstrap.RuleVersions.AnyAsync();
-    }
+    await bootstrap.Database.EnsureCreatedAsync();
 }
 
 // One-way migration off the JSON stores. Opt-in, and a no-op once the database holds anything, so

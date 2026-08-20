@@ -26,7 +26,17 @@ public sealed class StaticAssetCachingTests : IDisposable
         File.WriteAllText(Path.Combine(_webRoot.FullName, "assets", "index-abc123.js"), "// hashed bundle");
 
         _factory = new WebApplicationFactory<Program>()
-            .WithWebHostBuilder(builder => builder.UseWebRoot(_webRoot.FullName));
+            .WithWebHostBuilder(builder => builder
+                .UseWebRoot(_webRoot.FullName)
+                // Points the store at a fresh temp database rather than the sample's real
+                // motiv-store.db, which every WebApplicationFactory<Program> in this assembly (and
+                // `dotnet run` itself) shares on disk — xunit runs test classes in parallel, and two
+                // hosts racing EnsureCreatedAsync's schema creation against the same still-empty
+                // file crash with "table already exists" rather than the benign no-op
+                // EnsureCreated intends for an existing schema.
+                .UseSetting(
+                    "Motiv:Store:ConnectionString",
+                    $"Data Source={Path.Combine(Path.GetTempPath(), $"motiv-{Guid.NewGuid():N}.db")}"));
     }
 
     public void Dispose()

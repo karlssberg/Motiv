@@ -13,14 +13,17 @@ namespace Motiv.RulesEngine.Sample.Tests;
 /// Pins the host's configuration branching in Program.cs: which identity, grant source, and
 /// break-glass wiring each configuration shape produces, and which shapes refuse to start.
 /// </summary>
-public class ConfigurationBranchTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+public class ConfigurationBranchTests : IClassFixture<WebApplicationFactory<Program>>
 {
+    private readonly WebApplicationFactory<Program> _factory;
+
+    public ConfigurationBranchTests(WebApplicationFactory<Program> factory) => _factory = IsolatedStore(factory);
+
     [Fact]
     public async Task Should_start_the_dev_identity_in_production_when_explicitly_acknowledged()
     {
         // Arrange — the demo container's shape: release image, both flags loud and explicit
-        var acknowledged = factory.WithWebHostBuilder(builder => builder
+        var acknowledged = _factory.WithWebHostBuilder(builder => builder
             .UseEnvironment("Production")
             .UseSetting("Motiv:DevIdentity:Enabled", "true")
             .UseSetting("Motiv:DevIdentity:AllowInProduction", "true"));
@@ -37,7 +40,7 @@ public class ConfigurationBranchTests(WebApplicationFactory<Program> factory)
     {
         // Arrange — dev identity off, an authority configured: the JwtBearer branch. A no-token
         // challenge never fetches OIDC metadata, so the unreachable authority is never contacted.
-        var oidc = factory.WithWebHostBuilder(builder => builder
+        var oidc = _factory.WithWebHostBuilder(builder => builder
             .UseSetting("Motiv:DevIdentity:Enabled", "false")
             .UseSetting("Motiv:Oidc:Authority", "http://localhost:9/realms/motiv")
             .UseSetting("Motiv:Grants:Path", TempPath("grants")));
@@ -54,7 +57,7 @@ public class ConfigurationBranchTests(WebApplicationFactory<Program> factory)
     public void Should_register_the_claims_grant_source_when_configured()
     {
         // Arrange
-        var claims = factory.WithWebHostBuilder(builder => builder
+        var claims = _factory.WithWebHostBuilder(builder => builder
             .UseSetting("Motiv:DevIdentity:Enabled", "false")
             .UseSetting("Motiv:Oidc:Authority", "http://localhost:9/realms/motiv")
             .UseSetting("Motiv:Grants:Source", "claims"));
@@ -67,7 +70,7 @@ public class ConfigurationBranchTests(WebApplicationFactory<Program> factory)
     public void Should_register_the_app_store_without_bootstrap_by_default()
     {
         // Arrange — no Motiv:Grants:Source means the app-owned store, undecorated
-        var app = factory.WithWebHostBuilder(builder => builder
+        var app = _factory.WithWebHostBuilder(builder => builder
             .UseSetting("Motiv:DevIdentity:Enabled", "false")
             .UseSetting("Motiv:Oidc:Authority", "http://localhost:9/realms/motiv")
             .UseSetting("Motiv:Grants:Path", TempPath("grants")));
@@ -80,7 +83,7 @@ public class ConfigurationBranchTests(WebApplicationFactory<Program> factory)
     public void Should_wrap_the_app_store_with_bootstrap_when_a_subject_is_configured()
     {
         // Arrange
-        var bootstrapped = factory.WithWebHostBuilder(builder => builder
+        var bootstrapped = _factory.WithWebHostBuilder(builder => builder
             .UseSetting("Motiv:DevIdentity:Enabled", "false")
             .UseSetting("Motiv:Oidc:Authority", "http://localhost:9/realms/motiv")
             .UseSetting("Motiv:Grants:Path", TempPath("grants"))
@@ -94,7 +97,7 @@ public class ConfigurationBranchTests(WebApplicationFactory<Program> factory)
     public void Should_refuse_an_unknown_grant_source()
     {
         // Arrange — fail loud at startup, not silently at first request
-        var unknown = factory.WithWebHostBuilder(builder => builder
+        var unknown = _factory.WithWebHostBuilder(builder => builder
             .UseSetting("Motiv:DevIdentity:Enabled", "false")
             .UseSetting("Motiv:Oidc:Authority", "http://localhost:9/realms/motiv")
             .UseSetting("Motiv:Grants:Source", "banana"));
@@ -110,7 +113,7 @@ public class ConfigurationBranchTests(WebApplicationFactory<Program> factory)
     public void Should_engage_break_glass_from_configuration()
     {
         // Arrange — deploy-time config overrides AddGovernance's BreakGlass.Off default
-        var breakGlass = factory.WithWebHostBuilder(builder => builder
+        var breakGlass = _factory.WithWebHostBuilder(builder => builder
             .UseSetting("Motiv:BreakGlass:Enabled", "true")
             .UseSetting("Motiv:BreakGlass:ExpiresUtc", "2030-01-01T00:00:00Z"));
 
@@ -126,7 +129,7 @@ public class ConfigurationBranchTests(WebApplicationFactory<Program> factory)
     public void Should_refuse_a_malformed_break_glass_expiry()
     {
         // Arrange — a typo'd expiry must not silently run break-glass without its time-box
-        var malformed = factory.WithWebHostBuilder(builder => builder
+        var malformed = _factory.WithWebHostBuilder(builder => builder
             .UseSetting("Motiv:BreakGlass:Enabled", "true")
             .UseSetting("Motiv:BreakGlass:ExpiresUtc", "not-a-date"));
 
@@ -139,4 +142,14 @@ public class ConfigurationBranchTests(WebApplicationFactory<Program> factory)
 
     private static string TempPath(string prefix) =>
         Path.Combine(Path.GetTempPath(), $"{prefix}-{Guid.NewGuid():N}.json");
+
+    // Points the store at a fresh temp database rather than the sample's real motiv-store.db, which
+    // every WebApplicationFactory<Program> in this assembly (and `dotnet run` itself) shares on disk
+    // — xunit runs test classes in parallel, and two hosts racing EnsureCreatedAsync's schema
+    // creation against the same still-empty file crash with "table already exists" rather than the
+    // benign no-op EnsureCreated intends for an existing schema.
+    private static WebApplicationFactory<Program> IsolatedStore(WebApplicationFactory<Program> factory) =>
+        factory.WithWebHostBuilder(builder => builder.UseSetting(
+            "Motiv:Store:ConnectionString",
+            $"Data Source={Path.Combine(Path.GetTempPath(), $"motiv-{Guid.NewGuid():N}.db")}"));
 }

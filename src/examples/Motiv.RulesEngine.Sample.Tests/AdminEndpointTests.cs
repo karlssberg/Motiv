@@ -9,14 +9,17 @@ using Xunit;
 
 namespace Motiv.RulesEngine.Sample.Tests;
 
-public class AdminEndpointTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+public class AdminEndpointTests : IClassFixture<WebApplicationFactory<Program>>
 {
+    private readonly WebApplicationFactory<Program> _factory;
+
+    public AdminEndpointTests(WebApplicationFactory<Program> factory) => _factory = IsolatedStore(factory);
+
     [Fact]
     public async Task Should_report_capabilities_for_the_dev_identity()
     {
         // Arrange — default factory: Development env, dev identity + dev grant source
-        var client = factory.CreateClient();
+        var client = _factory.CreateClient();
 
         // Act
         var response = await client.GetAsync("/api/admin/capabilities");
@@ -33,7 +36,7 @@ public class AdminEndpointTests(WebApplicationFactory<Program> factory)
     public async Task Should_not_expose_a_grants_surface_for_the_immutable_dev_source()
     {
         // Arrange — the dev grant source cannot be administered
-        var client = factory.CreateClient();
+        var client = _factory.CreateClient();
 
         // Act
         var response = await client.GetAsync("/api/admin/grants");
@@ -51,7 +54,7 @@ public class AdminEndpointTests(WebApplicationFactory<Program> factory)
         var store = new JsonFileGrantSource(path);
         store.Add(new GrantRecord("dev", "", "administer"));
 
-        await using var appStoreFactory = factory.WithWebHostBuilder(builder =>
+        await using var appStoreFactory = _factory.WithWebHostBuilder(builder =>
             builder.ConfigureServices(services => services.AddSingleton<IGrantSource>(store)));
         var client = appStoreFactory.CreateClient();
 
@@ -80,7 +83,7 @@ public class AdminEndpointTests(WebApplicationFactory<Program> factory)
         var store = new JsonFileGrantSource(path);
         store.Add(new GrantRecord("dev", "", "administer"));
 
-        await using var appStoreFactory = factory.WithWebHostBuilder(builder =>
+        await using var appStoreFactory = _factory.WithWebHostBuilder(builder =>
             builder.ConfigureServices(services => services.AddSingleton<IGrantSource>(store)));
         var client = appStoreFactory.CreateClient();
 
@@ -105,7 +108,7 @@ public class AdminEndpointTests(WebApplicationFactory<Program> factory)
         var admin = new GrantRecord("dev", "", "administer");
         store.Add(admin);
 
-        await using var appStoreFactory = factory.WithWebHostBuilder(builder =>
+        await using var appStoreFactory = _factory.WithWebHostBuilder(builder =>
             builder.ConfigureServices(services => services.AddSingleton<IGrantSource>(store)));
         var client = appStoreFactory.CreateClient();
 
@@ -130,7 +133,7 @@ public class AdminEndpointTests(WebApplicationFactory<Program> factory)
         var path = TempPath();
         var store = new JsonFileGrantSource(path);
 
-        await using var appStoreFactory = factory.WithWebHostBuilder(builder =>
+        await using var appStoreFactory = _factory.WithWebHostBuilder(builder =>
             builder.ConfigureServices(services => services.AddSingleton<IGrantSource>(store)));
         var client = appStoreFactory.CreateClient();
 
@@ -147,4 +150,14 @@ public class AdminEndpointTests(WebApplicationFactory<Program> factory)
     private static System.Security.Claims.ClaimsPrincipal DevPrincipal() =>
         new(new System.Security.Claims.ClaimsIdentity(
             [new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "dev")], "test"));
+
+    // Points the store at a fresh temp database rather than the sample's real motiv-store.db, which
+    // every WebApplicationFactory<Program> in this assembly (and `dotnet run` itself) shares on disk
+    // — xunit runs test classes in parallel, and two hosts racing EnsureCreatedAsync's schema
+    // creation against the same still-empty file crash with "table already exists" rather than the
+    // benign no-op EnsureCreated intends for an existing schema.
+    private static WebApplicationFactory<Program> IsolatedStore(WebApplicationFactory<Program> factory) =>
+        factory.WithWebHostBuilder(builder => builder.UseSetting(
+            "Motiv:Store:ConnectionString",
+            $"Data Source={Path.Combine(Path.GetTempPath(), $"motiv-{Guid.NewGuid():N}.db")}"));
 }

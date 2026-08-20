@@ -79,10 +79,13 @@ public class BootstrapGrantSourceTests
     /// comes from a minimal test scheme so the principal's subject is controlled directly, mirroring
     /// how <see cref="AdminEndpointTests"/> builds a non-default host via WithWebHostBuilder.
     /// </summary>
-    public class IntegrationTests(WebApplicationFactory<Program> factory)
-        : IClassFixture<WebApplicationFactory<Program>>
+    public class IntegrationTests : IClassFixture<WebApplicationFactory<Program>>
     {
         private const string TestScheme = "Test";
+
+        private readonly WebApplicationFactory<Program> _factory;
+
+        public IntegrationTests(WebApplicationFactory<Program> factory) => _factory = IsolatedStore(factory);
 
         [Fact]
         public async Task Should_let_the_bootstrap_principal_administer_grants_through_the_decorator()
@@ -126,7 +129,7 @@ public class BootstrapGrantSourceTests
         }
 
         private WebApplicationFactory<Program> BuildFactory(string grantsPath, string authenticatedSubject) =>
-            factory.WithWebHostBuilder(builder => builder
+            _factory.WithWebHostBuilder(builder => builder
                 .UseSetting("Motiv:DevIdentity:Enabled", "false")
                 .UseSetting("Motiv:Oidc:Authority", "https://issuer.invalid/")
                 .UseSetting("Motiv:Oidc:Audience", "motiv-tests")
@@ -136,6 +139,17 @@ public class BootstrapGrantSourceTests
                 .ConfigureServices(services => services
                     .AddAuthentication(TestScheme)
                     .AddScheme<TestSchemeOptions, TestAuthHandler>(TestScheme, o => o.Subject = authenticatedSubject)));
+
+        // Points the store at a fresh temp database rather than the sample's real motiv-store.db,
+        // which every WebApplicationFactory<Program> in this assembly (and `dotnet run` itself)
+        // shares on disk — xunit runs test classes in parallel, and two hosts racing
+        // EnsureCreatedAsync's schema creation against the same still-empty file crash with
+        // "table already exists" rather than the benign no-op EnsureCreated intends for an
+        // existing schema.
+        private static WebApplicationFactory<Program> IsolatedStore(WebApplicationFactory<Program> factory) =>
+            factory.WithWebHostBuilder(builder => builder.UseSetting(
+                "Motiv:Store:ConnectionString",
+                $"Data Source={Path.Combine(Path.GetTempPath(), $"motiv-{Guid.NewGuid():N}.db")}"));
 
         private sealed class TestSchemeOptions : AuthenticationSchemeOptions
         {
