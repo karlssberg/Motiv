@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Motiv;
 using Motiv.RulesEngine.Sample;
 using Motiv.Serialization;
 using Motiv.Serialization.AspNetCore;
+using Motiv.Serialization.EntityFrameworkCore;
 
 // Seam: the spec catalog. Register each spec under a stable name — rule documents
 // reference specs by these names. Descriptions surface in the /catalog response.
@@ -182,17 +184,30 @@ var gatePath = builder.Configuration["Motiv:Gate:Path"]
 var rulesPath = builder.Configuration["Rules:Path"]
     ?? Path.Combine(builder.Environment.ContentRootPath, "rules.json");
 
+// Seam: rule and proposition persistence. Both stores are now one SQLite database rather than two
+// JSON files: the (Name, Version) primary key is enforced by the database, so two replicas racing a
+// publish really do produce one 200 and one 409 rather than both reading a stale file and both
+// believing they won. failFastOnQuarantine keeps its default (true): under an approval gate, booting
+// quietly into a quarantined rule's compiled default — behaviour nobody approved — is worse than a
+// demo that refuses to boot until a stale row is repaired.
+var storeConnectionString = builder.Configuration["Motiv:Store:ConnectionString"]
+    ?? $"Data Source={Path.Combine(builder.Environment.ContentRootPath, "motiv-store.db")}";
+
+builder.Services.AddMotivEntityFrameworkStore(store => store.UseSqlite(storeConnectionString));
+
 builder.Services.AddMotivRules(registry, options)
-    .AddPropositions(new JsonFilePropositionStore(propositionsPath))
+    .AddPropositions(provider => new EfPropositionStore(
+        provider.GetRequiredService<IDbContextFactory<MotivStoreDbContext>>()))
     .AddGovernance(new JsonFileGateStore(gatePath))
-    .AddRuleStore(new JsonFileRuleStore(rulesPath))
+    .AddRuleStore(provider => new EfRuleStore(
+        provider.GetRequiredService<IDbContextFactory<MotivStoreDbContext>>()))
     .AddRule<CanCheckoutRule>()
     .AddRule<FraudScreeningRule>()
     .AddRule<LoyaltyDiscountRule>()
-    // Seam: multi-instance convergence. The stores above reread their JSON files per operation so
-    // two processes behave like two replicas; AddRefresh polls for another replica's publish and
-    // rebuilds this one, so docker compose up actually converges instead of demonstrating a feature
-    // that does nothing.
+    // Seam: multi-instance convergence. Each store operation opens its own context, so two
+    // processes over one database behave like two replicas; AddRefresh polls for another replica's
+    // publish and rebuilds this one, so docker compose up actually converges instead of
+    // demonstrating a feature that does nothing.
     .AddRefresh();
 
 // Seam: break-glass. AddGovernance already registered BreakGlass.Off; a host that wants the 3am
@@ -208,6 +223,46 @@ if (breakGlassEnabled)
 }
 
 var app = builder.Build();
+
+// The schema, created in place for the zero-config path: `docker compose up` needs no migration
+// step and no database server. A production host applies adopter-owned migrations instead —
+// EnsureCreated deliberately does not write a migrations-history table, which is the same split
+// ASP.NET Core Identity draws.
+await using (var bootstrap = app.Services.GetRequiredService<IDbContextFactory<MotivStoreDbContext>>()
+                 .CreateDbContext())
+{
+    try
+    {
+        await bootstrap.Database.EnsureCreatedAsync();
+    }
+    catch (Microsoft.Data.Sqlite.SqliteException)
+    {
+        // EnsureCreatedAsync has no locking against a second EnsureCreatedAsync targeting the same
+        // still-empty database, so two hosts cold-starting concurrently against one file — two real
+        // replicas racing first boot, or (in this test suite) several WebApplicationFactory<Program>
+        // hosts starting in parallel — can both see "no schema yet" and both issue CREATE TABLE; the
+        // loser sees "table already exists" rather than a genuine failure. Confirm the schema is
+        // actually there before treating this as benign: if it genuinely isn't, this query throws
+        // its own exception and startup still fails, just not with the swallowed one.
+        await bootstrap.RuleVersions.AnyAsync();
+    }
+}
+
+// One-way migration off the JSON stores. Opt-in, and a no-op once the database holds anything, so
+// leaving the flag on is harmless.
+if (builder.Configuration.GetValue("Motiv:Store:ImportFromJson", false))
+{
+    var imported = await StoreImport.CopyAsync(
+        new JsonFileRuleStore(rulesPath),
+        app.Services.GetRequiredService<IRuleStore>(),
+        new JsonFilePropositionStore(propositionsPath),
+        app.Services.GetRequiredService<IPropositionStore>(),
+        CancellationToken.None);
+
+    app.Logger.LogInformation(
+        "Store import: imported={Imported} ruleVersions={RuleVersions} propositions={Propositions}",
+        imported.Imported, imported.RuleVersions, imported.Propositions);
+}
 
 // index.html references content-hashed bundles, so a stale cached shell points at assets that no
 // longer exist after a redeploy — force revalidation on the shell while the hashed assets stay
