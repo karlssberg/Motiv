@@ -20,7 +20,8 @@ public sealed class EfPropositionStore(IDbContextFactory<MotivStoreDbContext> co
     public IReadOnlyList<StoredProposition> Load()
     {
         using var context = contextFactory.CreateDbContext();
-        return [.. context.Propositions.AsNoTracking().ToList().Select(row => row.ToRecord())];
+        var rows = context.Propositions.AsNoTracking().ToList();
+        return [.. rows.Select(row => row.ToRecord())];
     }
 
     /// <inheritdoc />
@@ -35,11 +36,8 @@ public sealed class EfPropositionStore(IDbContextFactory<MotivStoreDbContext> co
     public async Task<long> GetGenerationAsync(CancellationToken cancellationToken)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-        var row = await context.StoreGenerations.AsNoTracking()
-            .SingleOrDefaultAsync(
-                generation => generation.Scope == GenerationScopes.Propositions, cancellationToken);
-
-        return row?.Generation ?? 0;
+        return await GenerationTracking.ReadAsync(
+            context, GenerationTracking.PropositionsScope, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -79,8 +77,8 @@ public sealed class EfPropositionStore(IDbContextFactory<MotivStoreDbContext> co
                 context.Propositions.Remove(existing);
         }
 
-        await EfRuleStore.BumpGenerationAsync(
-            context, GenerationScopes.Propositions, cancellationToken);
+        await GenerationTracking.BumpAsync(
+            context, GenerationTracking.PropositionsScope, cancellationToken);
 
         await context.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);

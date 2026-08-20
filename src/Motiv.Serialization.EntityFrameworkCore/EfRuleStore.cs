@@ -3,13 +3,6 @@ using Motiv.Serialization;
 
 namespace Motiv.Serialization.EntityFrameworkCore;
 
-/// <summary>The scope keys of the two <see cref="StoreGenerationRow"/> rows.</summary>
-internal static class GenerationScopes
-{
-    public const string Rules = "rules";
-    public const string Propositions = "propositions";
-}
-
 /// <summary>
 /// The rule store over a relational database, where the <c>(Name, Version)</c> primary key is
 /// enforced by the database rather than by a re-read of a file.
@@ -51,7 +44,8 @@ public sealed class EfRuleStore(IDbContextFactory<MotivStoreDbContext> contextFa
     public async Task<long> GetGenerationAsync(CancellationToken cancellationToken)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-        return await ReadGenerationAsync(context, GenerationScopes.Rules, cancellationToken);
+        return await GenerationTracking.ReadAsync(
+            context, GenerationTracking.RulesScope, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -73,7 +67,7 @@ public sealed class EfRuleStore(IDbContextFactory<MotivStoreDbContext> contextFa
         foreach (var version in versions)
             context.RuleVersions.Add(version.ToRow());
 
-        await BumpGenerationAsync(context, GenerationScopes.Rules, cancellationToken);
+        await GenerationTracking.BumpAsync(context, GenerationTracking.RulesScope, cancellationToken);
 
         try
         {
@@ -147,36 +141,11 @@ public sealed class EfRuleStore(IDbContextFactory<MotivStoreDbContext> contextFa
     }
 
     /// <summary>The head projection: the highest version per name, reduced to what a load needs.</summary>
-    private static IReadOnlyList<StoredRule> ProjectHeads(List<RuleVersionRow> rows) =>
+    private static IReadOnlyList<StoredRule> ProjectHeads(IEnumerable<RuleVersionRow> rows) =>
     [
         .. rows
             .GroupBy(row => row.Name, StringComparer.Ordinal)
-            .Select(group => group.Aggregate((head, row) => row.Version > head.Version ? row : head))
+            .Select(group => group.MaxBy(row => row.Version)!)
             .Select(head => new StoredRule(head.Name, head.Version, head.DocumentJson))
     ];
-
-    private static async Task<long> ReadGenerationAsync(
-        MotivStoreDbContext context, string scope, CancellationToken cancellationToken)
-    {
-        var row = await context.StoreGenerations.AsNoTracking()
-            .SingleOrDefaultAsync(generation => generation.Scope == scope, cancellationToken);
-
-        return row?.Generation ?? 0;
-    }
-
-    /// <summary>
-    /// Moves this store's generation, tracked so the increment is written by the caller's
-    /// <c>SaveChangesAsync</c> — the bump and the write it describes land in one transaction.
-    /// </summary>
-    internal static async Task BumpGenerationAsync(
-        MotivStoreDbContext context, string scope, CancellationToken cancellationToken)
-    {
-        var row = await context.StoreGenerations
-            .SingleOrDefaultAsync(generation => generation.Scope == scope, cancellationToken);
-
-        if (row is null)
-            context.StoreGenerations.Add(new StoreGenerationRow { Scope = scope, Generation = 1 });
-        else
-            row.Generation++;
-    }
 }

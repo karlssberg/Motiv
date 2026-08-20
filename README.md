@@ -293,6 +293,33 @@ compiled default rather than failing to evaluate — and, by default, stops
 startup so nobody boots quietly into unapproved behaviour. Available via the
 `Motiv.Serialization` and `Motiv.Serialization.AspNetCore` packages.
 
+### Entity Framework Core Store
+
+`Motiv.Serialization.EntityFrameworkCore` backs `IRuleStore` and
+`IPropositionStore` with a real database instead of a JSON file &mdash; SQLite,
+PostgreSQL or SQL Server:
+
+```csharp
+builder.Services.AddMotivEntityFrameworkStore(options =>
+    options.UseSqlite("Data Source=motiv-store.db"));
+
+builder.Services.AddMotivRules(registry, options)
+    .AddPropositions(provider => new EfPropositionStore(
+        provider.GetRequiredService<IDbContextFactory<MotivStoreDbContext>>()))
+    .AddRuleStore(provider => new EfRuleStore(
+        provider.GetRequiredService<IDbContextFactory<MotivStoreDbContext>>()))
+    .AddRule<CanCheckoutRule>();
+```
+
+The `(Name, Version)` primary key is enforced by the database, so two replicas
+racing a publish really do produce one `200` and one `409` rather than both
+reading a stale file. Development calls `EnsureCreatedAsync()`; production
+derives `MotivStoreDbContext` and owns its migrations, the same split
+`Microsoft.AspNetCore.Identity.EntityFrameworkCore` draws. A `StoreImport`
+helper carries history in, once, from a pre-existing `JsonFileRuleStore` /
+`JsonFilePropositionStore` pair. Available via the
+`Motiv.Serialization.EntityFrameworkCore` package.
+
 ### Multi-Instance Refresh
 
 A durable store survives a restart, but a running replica never rereads it on
