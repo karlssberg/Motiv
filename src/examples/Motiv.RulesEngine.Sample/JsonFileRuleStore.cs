@@ -75,14 +75,22 @@ public sealed class JsonFileRuleStore(string path) : IRuleStore
             var byName = log.ToLookup(row => row.Name, StringComparer.Ordinal);
 
             // Every row is checked before any is written: the batch is all-or-nothing and there is
-            // no rollback here, so refusing before the write is what makes that true.
+            // no rollback here, so refusing before the write is what makes that true. Rows already
+            // accepted from this batch join the taken set as it walks, so a batch repeating a
+            // (Name, Version) within itself — which a hand-edited rules.json can produce — is the
+            // same conflict as one repeating a version the log already holds.
+            var taken = new HashSet<(string Name, int Version)>();
             foreach (var version in versions)
             {
                 var existing = byName[version.Name];
-                if (existing.Any(row => row.Version == version.Version))
+                var alreadyTaken = !taken.Add((version.Name, version.Version))
+                    || existing.Any(row => row.Version == version.Version);
+
+                if (alreadyTaken)
                 {
-                    return Task.FromResult(
-                        RuleAppendResult.Conflict(version.Name, existing.Max(row => row.Version)));
+                    // Zero when the name is new: the log is at no version at all for it.
+                    var current = existing.Select(row => row.Version).DefaultIfEmpty(0).Max();
+                    return Task.FromResult(RuleAppendResult.Conflict(version.Name, current));
                 }
             }
 

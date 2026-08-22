@@ -53,8 +53,8 @@ public class CheckoutEndpointTests : IClassFixture<WebApplicationFactory<Program
     public async Task Should_reflect_a_rule_swap_on_the_next_checkout()
     {
         // Arrange — swap can-checkout to require orders, then re-run the same customer
-        // isolated host + isolated rules file: mutates rule state, and the sample's default
-        // Rules:Path is a real file shared on disk by every WebApplicationFactory<Program> in this
+        // isolated host + isolated store: mutates rule state, and the sample's default store
+        // database is a real file shared on disk by every WebApplicationFactory<Program> in this
         // assembly, so a bare new instance alone would still publish into the shared fixtures' log
         await using var factory = IsolatedRules(new WebApplicationFactory<Program>());
         var client = factory.CreateClient();
@@ -112,11 +112,12 @@ public class CheckoutEndpointTests : IClassFixture<WebApplicationFactory<Program
         return await response.Content.ReadFromJsonAsync<JsonElement>();
     }
 
-    // Points Rules:Path at a fresh temp file rather than the sample's real rules.json, which every
-    // WebApplicationFactory<Program> in this assembly (and `dotnet run` itself) shares on disk —
-    // this class reads a rule's version and expects it to still be 1, an assumption a shared file
-    // cannot make once anything else in the suite (or a prior run) has published to it.
+    // Points the store at a fresh temp database rather than the sample's real motiv-store.db, which
+    // every WebApplicationFactory<Program> in this assembly (and `dotnet run` itself) shares on disk
+    // — this class reads a rule's version and expects it to still be 1, an assumption a shared
+    // database cannot make once anything else in the suite (or a prior run) has published to it.
     private static WebApplicationFactory<Program> IsolatedRules(WebApplicationFactory<Program> factory) =>
         factory.WithWebHostBuilder(builder => builder.UseSetting(
-            "Rules:Path", Path.Combine(Path.GetTempPath(), $"rules-{Guid.NewGuid():N}.json")));
+            "Motiv:Store:ConnectionString",
+            $"Data Source={Path.Combine(Path.GetTempPath(), $"motiv-{Guid.NewGuid():N}.db")}"));
 }

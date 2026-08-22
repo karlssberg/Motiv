@@ -85,6 +85,30 @@ that went unmentioned would be overwritten at the next write rather than kept fo
 - **Never written in the same transaction as [`IRuleStore`](../live-rules/durability.md).** The two
   stores are symmetrical and coordinate independently; no operation spans both.
 
+## The Asymmetry with `IRuleStore`
+
+The two stores are twins, but they are not mirror images, and the difference is deliberate rather
+than an oversight:
+
+| | `IRuleStore` | `IPropositionStore` |
+|---|---|---|
+| History | An append-only version log, kept forever | One row per name, replaced in place |
+| A second writer | `RuleAppendResult.Conflict`, carrying the version the store is actually at | No conflict outcome &mdash; **last writer wins** |
+| Compare-and-set | `(Name, Version)`, enforced by the store | None |
+
+So two authors editing one proposition from stale copies do not race the way two rule publishers do:
+the second write simply overwrites the first, and nothing tells either of them it happened. A
+proposition's `Version` is carried on the row, but it is the authored version, not a compare-and-set
+token the store checks.
+
+That is a real gap, and closing it is deferred to its own spec rather than smuggled in, because it is
+a **breaking change** — it would change `IPropositionStore` (a write would have to be able to report
+a conflict), `PropositionSet` (which would have to decide what to do about one), and every store
+implementation: the in-memory default, the sample's `JsonFilePropositionStore`, and
+[`EfPropositionStore`](../live-rules/entity-framework-store.md#the-schema). Until then, treat
+proposition authoring as single-writer, or gate it behind the
+[approval workflow](../governance/index.md), which serialises edits before they reach a store.
+
 ## Next Steps
 
 - See [`PropositionSet`](PropositionSet.md) for the write path that calls `WriteAsync`, and the
