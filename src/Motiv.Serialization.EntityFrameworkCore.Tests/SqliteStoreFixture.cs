@@ -1,5 +1,6 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Motiv.Serialization.EntityFrameworkCore;
 
 namespace Motiv.Serialization.EntityFrameworkCore.Tests;
@@ -20,6 +21,21 @@ public sealed class SqliteStoreFixture : IAsyncDisposable
 
     /// <summary>Opens a fresh context per call, as the stores do.</summary>
     public IDbContextFactory<MotivStoreDbContext> Factory { get; }
+
+    /// <summary>
+    /// A second factory over the same database file, wired with the given interceptors. Lets a
+    /// test inject a fault (e.g. a <see cref="SaveChangesInterceptor"/> that throws once) into one
+    /// context while <see cref="Factory"/> keeps handing out plain ones, without duplicating the
+    /// connection-string plumbing above.
+    /// </summary>
+    public IDbContextFactory<MotivStoreDbContext> FactoryWith(params IInterceptor[] interceptors)
+    {
+        var options = new DbContextOptionsBuilder<MotivStoreDbContext>()
+            .UseSqlite($"Data Source={_path}")
+            .AddInterceptors(interceptors)
+            .Options;
+        return new TestContextFactory(options);
+    }
 
     /// <summary>Creates the file and the schema.</summary>
     public static async Task<SqliteStoreFixture> CreateAsync()

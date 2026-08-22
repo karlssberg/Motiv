@@ -147,9 +147,45 @@ public class StoreImportTests
         var act = async () => await StoreImport.CopyAsync(
             sourceRules, targetRules, sourcePropositions, targetPropositions, default);
 
-        // Assert — the propositions had already landed when the rule side blew up
-        await act.ShouldThrowAsync<InvalidOperationException>();
+        // Assert — the propositions had already landed when the rule side blew up. This is the
+        // propositionsWritten > 0 side of the catch's guard, distinct from the ruleVersions > 0
+        // side that "Should_throw_naming_the_partial_state_when_a_write_fails_mid_import" below
+        // exercises — the guard is an OR, and both operands need a true case to be fully covered.
+        var thrown = await act.ShouldThrowAsync<InvalidOperationException>();
+        thrown.Message.ShouldContain("PARTIALLY imported");
+        thrown.Message.ShouldContain("1 proposition(s)");
+        thrown.Message.ShouldContain("0 rule version row(s)");
+        thrown.InnerException.ShouldBeOfType<ImportFailure>();
         targetPropositions.Load().ShouldHaveSingleItem().Name.ShouldBe("p");
+    }
+
+    [Fact]
+    public async Task Should_wrap_a_mid_import_conflict_naming_the_conflicting_rule()
+    {
+        // Arrange — 'a' imports cleanly, then 'b' is reported as an outright conflict, as if some
+        // other writer already holds that (Name, Version) even though the target was supposedly
+        // empty when the import began. That throw (a few lines above the catch this file's other
+        // tests exercise) is itself caught by the same catch and re-wrapped, so the outer message
+        // must still say PARTIALLY imported while the inner one keeps naming the actual rule.
+        var sourceRules = new InMemoryRuleStore();
+        await sourceRules.AppendAsync([Row("a", 1)], default);
+        await sourceRules.AppendAsync([Row("b", 1)], default);
+
+        await using var fixture = await SqliteStoreFixture.CreateAsync();
+        var targetRules = new ConflictingRuleStore(new EfRuleStore(fixture.Factory), conflictOnAppend: 2);
+
+        // Act
+        var act = async () => await StoreImport.CopyAsync(
+            sourceRules, targetRules,
+            new InMemoryPropositionStore(), new EfPropositionStore(fixture.Factory), default);
+
+        // Assert — the outer exception is the usual partial-import wrapper, and its inner
+        // exception is the conflict throw, naming the rule and version it conflicted at
+        var thrown = await act.ShouldThrowAsync<InvalidOperationException>();
+        thrown.Message.ShouldContain("PARTIALLY imported");
+        thrown.Message.ShouldContain("1 rule version row(s)");
+        thrown.InnerException.ShouldNotBeNull();
+        thrown.InnerException!.Message.ShouldContain("Import of rule 'b' conflicted at version 5");
     }
 
     [Fact]
@@ -238,4 +274,32 @@ public sealed class FailingRuleStore(IRuleStore inner, int failOnAppend) : IRule
     public Task<IReadOnlyList<StoredRuleVersion>> HistoryAsync(
         string name, CancellationToken cancellationToken) =>
         FailOnHistory ? throw new ImportFailure() : Inner.HistoryAsync(name, cancellationToken);
+}
+
+/// <summary>
+/// A store whose nth <see cref="AppendAsync"/> reports a version conflict instead of writing, as
+/// if a second writer had reached the target at the same time — a value returned, not a thrown
+/// exception, which is a different way for <see cref="StoreImport.CopyAsync"/> to fail mid-import.
+/// </summary>
+public sealed class ConflictingRuleStore(IRuleStore inner, int conflictOnAppend) : IRuleStore
+{
+    private int _appends;
+
+    public IReadOnlyList<StoredRule> Load() => inner.Load();
+
+    public Task<IReadOnlyList<StoredRule>> LoadAsync(CancellationToken cancellationToken) =>
+        inner.LoadAsync(cancellationToken);
+
+    public Task<long> GetGenerationAsync(CancellationToken cancellationToken) =>
+        inner.GetGenerationAsync(cancellationToken);
+
+    public Task<RuleAppendResult> AppendAsync(
+        IReadOnlyList<StoredRuleVersion> versions, CancellationToken cancellationToken) =>
+        ++_appends == conflictOnAppend
+            ? Task.FromResult(RuleAppendResult.Conflict("b", 5))
+            : inner.AppendAsync(versions, cancellationToken);
+
+    public Task<IReadOnlyList<StoredRuleVersion>> HistoryAsync(
+        string name, CancellationToken cancellationToken) =>
+        inner.HistoryAsync(name, cancellationToken);
 }
