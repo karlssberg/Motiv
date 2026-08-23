@@ -105,6 +105,7 @@ Live rules (in the `Motiv.Serialization` and `Motiv.Serialization.AspNetCore` pa
 | [Rule Classes](./live-rules/Rules.md)                                     | `Rule`, `PolicyRule`, `AsyncRule`, `AsyncPolicyRule` &mdash; declaring and evaluating live rules. |
 | [RuleSet](./live-rules/RuleSet.md)                                        | Registers rules, binds defaults at startup, and applies `UpdateAsync()`/`RevertAsync()` with optimistic concurrency. |
 | [Rule Durability](./live-rules/durability.md)                             | `AddRuleStore()`, the append-only version log, quarantine, `HistoryAsync()`, and rolling back with `RestoreAsync()`. |
+| [Entity Framework Core Store](./live-rules/entity-framework-store.md)     | `AddMotivEntityFrameworkStore()` &mdash; the EF Core-backed `IRuleStore`/`IPropositionStore` over SQLite, PostgreSQL and SQL Server, migrations, backup, and the JSON-store importer. |
 | [RuleDocuments](./live-rules/RuleDocuments.md)                            | `FromJson()` and `Embedded()` &mdash; rule-document sources for rule defaults.                    |
 | [ASP.NET Core Integration](./live-rules/AspNetCore.md)                    | `AddMotivRules()`, `AddRule()`, `MapMotivRules()`, and the `GET`/`PUT`/`DELETE` rule endpoints.   |
 | [DeserializeAsyncSpec()](./live-rules/DeserializeAsyncSpec.md)            | Loads rule documents into the async hierarchy, lifting sync references and enforcing the sync/async boundary. |

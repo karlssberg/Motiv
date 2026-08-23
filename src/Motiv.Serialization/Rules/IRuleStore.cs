@@ -59,8 +59,9 @@ public interface IRuleStore
     Task<long> GetGenerationAsync(CancellationToken cancellationToken);
 
     /// <summary>
-    /// Appends version rows — all of them, or none. A row whose <c>(Name, Version)</c> already exists
-    /// is refused, and the whole batch with it.
+    /// Appends version rows — all of them, or none. A row whose <c>(Name, Version)</c> is already
+    /// taken is refused, and the whole batch with it — whether it was taken by the stored log or by
+    /// an earlier row of this same batch.
     /// </summary>
     /// <remarks>
     /// The batch is not a convenience. A governed publish validates a whole envelope, then persists it,
@@ -140,14 +141,22 @@ public sealed class InMemoryRuleStore : IRuleStore
         lock (_gate)
         {
             // Check every row before writing any of them: the batch is all-or-nothing, and there is
-            // no rollback here — refusing up front is what makes that true.
+            // no rollback here — refusing up front is what makes that true. Rows already accepted
+            // from this batch join the taken set as it walks, so a batch repeating a
+            // (Name, Version) within itself is the same conflict as one repeating a version the log
+            // already holds.
+            var taken = new HashSet<(string Name, int Version)>();
             foreach (var version in versions)
             {
-                if (_log.TryGetValue(version.Name, out var existing)
-                    && existing.Any(row => row.Version == version.Version))
+                var existing = _log.TryGetValue(version.Name, out var rows) ? rows : null;
+                var alreadyTaken = !taken.Add((version.Name, version.Version))
+                    || existing?.Any(row => row.Version == version.Version) == true;
+
+                if (alreadyTaken)
                 {
-                    return Task.FromResult(
-                        RuleAppendResult.Conflict(version.Name, existing.Max(row => row.Version)));
+                    // Zero when the name is new: the store is at no version at all for it.
+                    var current = existing is null ? 0 : existing.Max(row => row.Version);
+                    return Task.FromResult(RuleAppendResult.Conflict(version.Name, current));
                 }
             }
 

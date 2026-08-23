@@ -6,6 +6,8 @@ items:
     href: RuleSet.md
   - name: Rule Durability
     href: durability.md
+  - name: Entity Framework Core Store
+    href: entity-framework-store.md
   - name: RuleDocuments
     href: RuleDocuments.md
   - name: ASP.NET Core Integration

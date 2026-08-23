@@ -54,14 +54,31 @@ public sealed class MotivRulesBuilder
     /// <exception cref="InvalidOperationException">Propositions are already enabled. DI is
     /// last-wins, so a second call would silently discard the first store rather than layering
     /// onto it — an argument quietly ignored is worse than a refusal.</exception>
-    public MotivRulesBuilder AddPropositions(IPropositionStore? store = null)
+    public MotivRulesBuilder AddPropositions(IPropositionStore? store = null) =>
+        AddPropositionsCore(_ => store ?? new InMemoryPropositionStore());
+
+    /// <summary>
+    /// Enables runtime-authored propositions, backed by a store built from the container. For a
+    /// store with dependencies of its own — a database context factory, for instance — which
+    /// therefore cannot be constructed before the container exists.
+    /// </summary>
+    /// <param name="storeFactory">Builds the store once the container is available.</param>
+    /// <returns>This builder, to allow chained registration.</returns>
+    /// <exception cref="InvalidOperationException">Propositions are already enabled.</exception>
+    public MotivRulesBuilder AddPropositions(Func<IServiceProvider, IPropositionStore> storeFactory)
+    {
+        ArgumentNullException.ThrowIfNull(storeFactory);
+        return AddPropositionsCore(storeFactory);
+    }
+
+    private MotivRulesBuilder AddPropositionsCore(Func<IServiceProvider, IPropositionStore> storeFactory)
     {
         if (Services.Any(descriptor => descriptor.ServiceType == typeof(PropositionSet)))
             throw new InvalidOperationException(
                 $"{nameof(AddPropositions)} has already been called. Call it once — a second call " +
                 "would silently replace the first store, as DI registration is last-wins.");
 
-        Services.AddSingleton<IPropositionStore>(store ?? new InMemoryPropositionStore());
+        Services.AddSingleton<IPropositionStore>(storeFactory);
         Services.AddSingleton(provider =>
         {
             var options = provider.GetRequiredService<MotivRulesOptions>();
@@ -133,7 +150,30 @@ public sealed class MotivRulesBuilder
     /// <exception cref="InvalidOperationException">A rule store is already registered. DI is
     /// last-wins, so a second call would silently discard the first store rather than layering onto
     /// it — an argument quietly ignored is worse than a refusal.</exception>
-    public MotivRulesBuilder AddRuleStore(IRuleStore? store = null, bool failFastOnQuarantine = true)
+    public MotivRulesBuilder AddRuleStore(IRuleStore? store = null, bool failFastOnQuarantine = true) =>
+        AddRuleStoreCore(_ => store ?? new InMemoryRuleStore(), failFastOnQuarantine);
+
+    /// <summary>
+    /// Points the live rules at a store built from the container. For a store with dependencies of
+    /// its own, which therefore cannot be constructed before the container exists.
+    /// </summary>
+    /// <param name="storeFactory">Builds the store once the container is available.</param>
+    /// <param name="failFastOnQuarantine">As the instance overload.</param>
+    /// <returns>This builder, to allow chained registration.</returns>
+    /// <exception cref="InvalidOperationException">A rule store is already registered.</exception>
+    public MotivRulesBuilder AddRuleStore(
+        Func<IServiceProvider, IRuleStore> storeFactory, bool failFastOnQuarantine = true)
+    {
+        ArgumentNullException.ThrowIfNull(storeFactory);
+        return AddRuleStoreCore(storeFactory, failFastOnQuarantine);
+    }
+
+    /// <summary>
+    /// Points the live rules at a store so a hot-swapped rule survives a restart instead of
+    /// reverting to its compiled default.
+    /// </summary>
+    private MotivRulesBuilder AddRuleStoreCore(
+        Func<IServiceProvider, IRuleStore> storeFactory, bool failFastOnQuarantine)
     {
         if (Services.Any(descriptor => descriptor.ServiceType == typeof(RuleStoreOptions)))
             throw new InvalidOperationException(
@@ -143,7 +183,7 @@ public sealed class MotivRulesBuilder
         // Registered under the interface explicitly, as AddPropositions does for its own store: the
         // RuleSet factory resolves IRuleStore, and leaving the service type to type inference makes
         // that dependence on the parameter's declared type invisible.
-        Services.AddSingleton<IRuleStore>(store ?? new InMemoryRuleStore());
+        Services.AddSingleton<IRuleStore>(storeFactory);
         Services.AddSingleton(new RuleStoreOptions(failFastOnQuarantine));
         return this;
     }

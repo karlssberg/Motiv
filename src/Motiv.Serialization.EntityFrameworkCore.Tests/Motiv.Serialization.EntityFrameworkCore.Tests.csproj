@@ -4,11 +4,10 @@
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
         <OutputType>Library</OutputType>
-        <TargetFrameworks>net8.0;net9.0;net472;net10.0</TargetFrameworks>
+        <TargetFramework>net10.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="JsonSchema.Net" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <PackageReference Include="Shouldly" />
         <PackageReference Include="xunit" />
@@ -23,27 +22,15 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Motiv.Serialization\Motiv.Serialization.csproj" />
+        <ProjectReference Include="..\Motiv.Serialization.EntityFrameworkCore\Motiv.Serialization.EntityFrameworkCore.csproj" />
     </ItemGroup>
 
-    <!--
-        The store contract, shared as source rather than as a project: this project targets net472
-        while the EF Core test project is net10.0-only, and a linked file compiles under whatever
-        frameworks its host has, where a shared project would have to reconcile them.
-    -->
     <ItemGroup>
         <Compile Include="..\testing\StoreConformance\*.cs" LinkBase="StoreConformance" />
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="..\..\schemas\rule.v1.json" Link="schemas\rule.v1.json" CopyToOutputDirectory="PreserveNewest" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <EmbeddedResource Include="Rules\test-rule.json" />
-        <EmbeddedResource Include="Rules\extra-test-rule.json" />
-        <EmbeddedResource Include="Rules\dup\shared-rule.json" />
-        <EmbeddedResource Include="Rules\other\shared-rule.json" />
+        <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-2m69-gcr7-jv3q" />
     </ItemGroup>
 
 </Project>
