@@ -77,7 +77,13 @@ public sealed class PropositionSet
     /// one published set. Dispose to release. Hosts using <c>MapMotivRules</c> get one per request
     /// automatically and need not call this.
     /// </summary>
-    public DecisionSnapshot PinSnapshot() => new(Scope);
+    /// <param name="correlationId">
+    /// The identity every decision record from this decision carries — a trace id, a request id — or
+    /// null to mint one.
+    /// </param>
+    /// <param name="caller">Who the decision is being taken for, or null when nothing names them.</param>
+    public DecisionSnapshot PinSnapshot(string? correlationId = null, string? caller = null) =>
+        new(Scope, correlationId, caller);
 
     /// <summary>
     /// Options forwarded to the document parser and binder. Reachable by <see cref="AuthoredProposition"/>,
