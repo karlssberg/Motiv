@@ -45,7 +45,8 @@ public class DecisionCaptureTests
     public void Should_capture_only_the_projection_under_redact()
     {
         // Arrange
-        var registry = new DecisionCaptureRegistry().Redact<Customer>(c => c.Id[..4]);
+        // Substring, not a range: this project also targets net472, which has no System.Range.
+        var registry = new DecisionCaptureRegistry().Redact<Customer>(c => c.Id.Substring(0, 4));
 
         // Act
         var input = registry.Capture(Alice).ShouldNotBeNull();

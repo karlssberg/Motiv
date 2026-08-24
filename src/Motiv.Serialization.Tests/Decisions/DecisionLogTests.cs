@@ -175,7 +175,8 @@ public class DecisionLogTests
         gaps.Sum(gap => gap.DroppedCount).ShouldBe(dropped);
 
         // ...and the hole is marked ahead of what followed it, not behind
-        var lastGapIndex = Array.LastIndexOf(written, (object)gaps[^1]);
+        // Not gaps[^1]: this project also targets net472, which has no System.Index.
+        var lastGapIndex = Array.LastIndexOf(written, (object)gaps[gaps.Length - 1]);
         var afterIndex = Array.FindIndex(written,
             item => item is DecisionRecord { RuleName: "after-the-gap" });
         lastGapIndex.ShouldBeLessThan(afterIndex);
