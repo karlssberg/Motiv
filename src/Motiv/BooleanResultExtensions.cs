@@ -181,24 +181,38 @@ public static class BooleanResultExtensions
     }
 
     /// <summary>
-    /// Builds the justification lines for a binary composition, flattening causal results that belong to the
-    /// same collapsible operation into a single group beneath one conjunction heading.
+    /// Flattens the causal results that belong to the same collapsible operation, so that a run of
+    /// nested same-operation compositions renders beneath one conjunction heading.
     /// </summary>
-    /// <param name="causalResults">The causal results to render. Assumed to be non-empty, as every binary composition has two operands.</param>
-    /// <param name="conjunction">The name of the operation being rendered (e.g. <see cref="Operator.And" />).</param>
-    /// <param name="withoutCausalCount">Whether to omit the causal count from each rendered result.</param>
-    internal static IEnumerable<string> GetBinaryJustificationAsLines(
-        this IEnumerable<BooleanResultBase> causalResults,
-        string conjunction,
-        bool withoutCausalCount = false) =>
-        conjunction
-            .ToEnumerable()
-            .Concat(causalResults
-                .FlattenCollapsible(conjunction)
-                .SelectMany(result => withoutCausalCount
-                    ? result.Description.GetJustificationAsLinesWithoutCausalCount()
-                    : result.Description.GetJustificationAsLines())
-                .Select(line => line.Indent()));
+    /// <remarks>Iterative: the run it flattens is unbounded in length (Spec 3A / ticket 19).</remarks>
+    internal static IReadOnlyList<BooleanResultBase> FlattenCollapsible(
+        this IEnumerable<BooleanResultBase> results,
+        string operation)
+    {
+        var flattened = new List<BooleanResultBase>();
+        var pending = new Stack<IEnumerator<BooleanResultBase>>();
+        pending.Push(results.GetEnumerator());
+
+        while (pending.Count > 0)
+        {
+            var current = pending.Peek();
+
+            if (!current.MoveNext())
+            {
+                pending.Pop().Dispose();
+                continue;
+            }
+
+            if (current.Current is IBinaryBooleanOperationResult binary
+                && binary.Operation == operation
+                && binary.IsCollapsable)
+                pending.Push(binary.Causes.GetEnumerator());
+            else
+                flattened.Add(current.Current);
+        }
+
+        return flattened;
+    }
 
     private static IEnumerable<BooleanResultBase> AggregateUnderlyingCauses(
         this BooleanResultBase result,
@@ -213,18 +227,5 @@ public static class BooleanResultExtensions
     private static IEnumerable<BooleanResultBase> AggregateUnderlyingCauses(
         this IEnumerable<BooleanResultBase> underlyingResult,
         int atDepth = 0) =>
-        underlyingResult.SelectMany(result => AggregateUnderlyingCauses(result,atDepth));
-
-    private static IEnumerable<BooleanResultBase> FlattenCollapsible(
-        this IEnumerable<BooleanResultBase> results,
-        string operation) =>
-        results.SelectMany(result =>
-            result switch
-            {
-                IBinaryBooleanOperationResult binaryOperationResult
-                    when binaryOperationResult.Operation == operation
-                         && binaryOperationResult.IsCollapsable =>
-                    binaryOperationResult.Causes.FlattenCollapsible(operation),
-                _ => result.ToEnumerable()
-            });
+        underlyingResult.SelectMany(result => AggregateUnderlyingCauses(result, atDepth));
 }

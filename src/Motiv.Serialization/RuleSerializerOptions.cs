@@ -35,11 +35,18 @@ public sealed class RuleSerializerOptions
     /// The maximum depth of the <em>composed</em> spec a document may bind to. Defaults to 256.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Distinct from <see cref="MaxDocumentDepth" />, which counts JSON nesting. An n-ary operator
     /// folds left-deep into n-1 binary compositions, so a single shallow node may compose far deeper
-    /// than the document nests, and nesting multiplies rather than adds. Result-tree walks recurse
-    /// over that composed shape, so this is the limit that actually bounds stack use — roughly a
-    /// kilobyte per level.
+    /// than the document nests, and nesting multiplies rather than adds.
+    /// </para>
+    /// <para>
+    /// This cap was originally derived against stack use — result-tree walks recursed over the
+    /// composed shape at roughly a kilobyte per level. Those walks are iterative as of Spec 3A, so
+    /// the cap now bounds the <em>size</em> of the result tree and the work of building it, not the
+    /// stack. The default is unchanged pending the re-derivation, because evaluating the composition
+    /// is itself still recursive and is now what the cap has to stay beneath.
+    /// </para>
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException">The value is less than 1.</exception>
     public int MaxCompositionDepth

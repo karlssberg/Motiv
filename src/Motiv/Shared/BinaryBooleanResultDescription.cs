@@ -1,3 +1,5 @@
+using Motiv.Traversal;
+
 namespace Motiv.Shared;
 
 internal abstract class BinaryBooleanResultDescription<TMetadata>(
@@ -8,35 +10,56 @@ internal abstract class BinaryBooleanResultDescription<TMetadata>(
 
     internal override int CausalOperandCount => _causalResults.Length;
 
-    public override string Reason =>
-        field ??= CausalOperandCount switch
+    public override string Reason => FoldedReason;
+
+    private protected override IReadOnlyList<ResultDescriptionBase> ReasonOperands =>
+        field ??= Array.ConvertAll(_causalResults, result => result.Description);
+
+    private protected override string ComposeReason(IReadOnlyList<string> operandReasons) =>
+        CausalOperandCount switch
         {
             0 => "",
-            1 => _causalResults[0].Description.Reason,
-            _ => string.Join(Separator, _causalResults.Select(ExplainReasons))
+            1 => operandReasons[0],
+            _ => string.Join(Separator, Explained(operandReasons))
         };
 
-    public override IEnumerable<string> GetJustificationAsLines() =>
-        _causalResults.GetBinaryJustificationAsLines(Statement);
+    public override IEnumerable<string> GetJustificationAsLines() => FoldedJustification(withoutCausalCount: false);
 
     internal override IEnumerable<string> GetJustificationAsLinesWithoutCausalCount() =>
-        _causalResults.GetBinaryJustificationAsLines(Statement, withoutCausalCount: true);
+        FoldedJustification(withoutCausalCount: true);
+
+    private protected override IReadOnlyList<Rendering> JustificationOperands(bool withoutCausalCount) =>
+        Collapsed.Select(result => new Rendering(result.Description, withoutCausalCount)).ToArray();
+
+    private protected override string[] ComposeJustification(
+        IReadOnlyList<string[]> operandLines,
+        bool withoutCausalCount) =>
+        BinaryJustification(Statement, operandLines);
+
+    /// <summary>
+    /// The causal results as they are rendered: a run of nested same-operation compositions collapses
+    /// into one group beneath a single conjunction heading.
+    /// </summary>
+    private IReadOnlyList<BooleanResultBase> Collapsed => field ??= _causalResults.FlattenCollapsible(Statement);
 
     protected abstract string Separator { get; }
 
     protected abstract bool IsSameFamily(BooleanResultBase<TMetadata> result);
 
-    private string ExplainReasons(BooleanResultBase<TMetadata> result)
+    private IEnumerable<string> Explained(IReadOnlyList<string> operandReasons)
+    {
+        for (var i = 0; i < _causalResults.Length; i++)
+            yield return ExplainReason(_causalResults[i], operandReasons[i]);
+    }
+
+    private string ExplainReason(BooleanResultBase<TMetadata> result, string reason)
     {
         return result switch
         {
-            _ when IsSameFamily(result) =>
-                result.Description.Reason,
-            _ when result.Causes.HasAtLeast(2) =>
-                $"({result.Description.Reason})",
-            _ when result.Description.Reason.EndsWithEqualityAssertion() =>
-                $"({result.Description.Reason})",
-            _ => result.Description.Reason
+            _ when IsSameFamily(result) => reason,
+            _ when result.Causes.HasAtLeast(2) => $"({reason})",
+            _ when reason.EndsWithEqualityAssertion() => $"({reason})",
+            _ => reason
         };
     }
 }

@@ -1,0 +1,128 @@
+namespace Motiv.Tests.Traversal;
+
+/// <summary>
+/// Produces random result trees over the full node vocabulary, for the oracle differential suite.
+/// Seeded, so a failing case is reproducible from its seed alone.
+/// </summary>
+internal static class ResultTreeGenerator
+{
+    internal static IEnumerable<object[]> Seeds(int count) =>
+        Enumerable.Range(1, count).Select(seed => new object[] { seed });
+
+    internal static IEnumerable<BooleanResultBase<string>> Corpus(int seed)
+    {
+        var rng = new Random(seed);
+        var spec = seed % 5 == 0
+            ? Spine(rng, 20)
+            : BuildSpec(rng, rng.Next(2, 8));
+
+        foreach (var model in new[] { 1, 2, 3, 4, 6, 12 })
+            yield return spec.Evaluate(model);
+    }
+
+    /// <summary>Walks every node of a result tree, so the oracle is applied at every position.</summary>
+    internal static IEnumerable<BooleanResultBase<string>> Nodes(BooleanResultBase<string> root)
+    {
+        var pending = new Stack<BooleanResultBase<string>>();
+        var seen = new HashSet<BooleanResultBase<string>>(ReferenceComparer<BooleanResultBase<string>>.Instance);
+        pending.Push(root);
+
+        while (pending.Count > 0)
+        {
+            var node = pending.Pop();
+            if (!seen.Add(node))
+                continue;
+
+            yield return node;
+
+            foreach (var child in node.UnderlyingWithValues)
+                pending.Push(child);
+        }
+    }
+
+    private static SpecBase<int, string> BuildSpec(Random rng, int depth)
+    {
+        if (depth <= 0)
+            return Leaf(rng);
+
+        var left = BuildSpec(rng, rng.Next(depth));
+        var right = BuildSpec(rng, rng.Next(depth));
+
+        return rng.Next(7) switch
+        {
+            0 => left.And(right),
+            1 => left.Or(right),
+            2 => left.XOr(right),
+            3 => left.AndAlso(right),
+            4 => left.OrElse(right),
+            5 => left.Not(),
+            _ => HigherOrder(rng, left)
+        };
+    }
+
+    /// <summary>
+    /// A left-deep chain — the shape that folds into a spine of binary results and is what actually
+    /// overflows in the wild (<c>specs.Aggregate((a, b) => a.And(b))</c>).
+    /// </summary>
+    private static SpecBase<int, string> Spine(Random rng, int length)
+    {
+        var spine = Leaf(rng);
+
+        for (var i = 1; i < length; i++)
+        {
+            var next = Leaf(rng);
+            spine = rng.Next(5) switch
+            {
+                0 => spine.And(next),
+                1 => spine.Or(next),
+                2 => spine.XOr(next),
+                3 => spine.AndAlso(next),
+                _ => spine.OrElse(next)
+            };
+        }
+
+        return spine;
+    }
+
+    private static SpecBase<int, string> Leaf(Random rng)
+    {
+        var k = rng.Next(1, 6);
+
+        return rng.Next(4) switch
+        {
+            0 => Spec.Build((int n) => n % k == 0).Create($"divisible by {k}"),
+            1 => Spec
+                .Build((int n) => n > k)
+                .WhenTrue($"greater than {k}")
+                .WhenFalse($"not greater than {k}")
+                .Create(),
+            2 => Spec
+                .Build((int n) => n < k)
+                .WhenTrue($"less than {k}")
+                .WhenFalse($"not less than {k}")
+                .Create($"under {k}"),
+            _ => Spec.From((int n) => n != k).Create($"not {k}")
+        };
+    }
+
+    private static SpecBase<int, string> HigherOrder(Random rng, SpecBase<int, string> underlying)
+    {
+        var higherOrder = rng.Next(3) switch
+        {
+            0 => Spec.Build(underlying).AsAllSatisfied().Create("all neighbours"),
+            1 => Spec.Build(underlying).AsAnySatisfied().Create("any neighbour"),
+            _ => Spec.Build(underlying).AsAtLeastNSatisfied(2).Create("two neighbours")
+        };
+
+        return higherOrder.ChangeModelTo<int>(n => [n, n + 1, n + 2]);
+    }
+}
+
+internal sealed class ReferenceComparer<T> : IEqualityComparer<T> where T : class
+{
+    internal static readonly ReferenceComparer<T> Instance = new();
+
+    public bool Equals(T? x, T? y) => ReferenceEquals(x, y);
+
+    public int GetHashCode(T obj) => System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj);
+}

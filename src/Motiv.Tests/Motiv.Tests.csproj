@@ -29,6 +29,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <EmbeddedResource Include="Traversal\DescriptionBaseline.txt" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\Motiv\Motiv.csproj" />
     </ItemGroup>
 

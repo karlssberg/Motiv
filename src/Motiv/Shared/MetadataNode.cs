@@ -6,8 +6,7 @@ namespace Motiv.Shared;
 /// <typeparam name="TMetadata">The type of the metadata.</typeparam>
 public class MetadataNode<TMetadata>
 {
-    private static readonly IEnumerable<MetadataNode<TMetadata>> EmptyUnderlying =
-        Array.Empty<MetadataNode<TMetadata>>();
+    private static readonly MetadataNode<TMetadata>[] EmptyUnderlying = [];
 
     private readonly IEnumerable<TMetadata>? _metadataSource;
     private readonly IEnumerable<BooleanResultBase<TMetadata>>? _causes;
@@ -36,12 +35,34 @@ public class MetadataNode<TMetadata>
     /// <param name="metadata">The metadata to associate with this node.</param>
     internal MetadataNode(TMetadata metadata)
     {
-        Underlying = EmptyUnderlying;
+        _underlying = EmptyUnderlying;
         _metadataSet = new HashSet<TMetadata> { metadata };
     }
 
     /// <summary>Gets the underlying metadata nodes.</summary>
-    public IEnumerable<MetadataNode<TMetadata>> Underlying => field ??= ResolveUnderlying(_metadataSource ?? [], _causes!);
+    public IEnumerable<MetadataNode<TMetadata>> Underlying =>
+        _underlying ??= PostOrderFold.Fold(this, Descend, Combine, Read, Write);
+
+    private MetadataNode<TMetadata>[]? _underlying;
+
+    private Resolution<MetadataNode<TMetadata>> Resolved => field ??= Resolve(_metadataSource ?? [], _causes!);
+
+    private static readonly Func<MetadataNode<TMetadata>, IReadOnlyList<MetadataNode<TMetadata>>> Descend =
+        node => node.Resolved.Collapse ? node.Resolved.Children : [];
+
+    private static readonly Func<
+            MetadataNode<TMetadata>,
+            IReadOnlyList<MetadataNode<TMetadata>[]>,
+            MetadataNode<TMetadata>[]>
+        Combine = (node, folded) => node.Resolved.Collapse
+            ? folded.Flatten()
+            : node.Resolved.Children;
+
+    private static readonly Func<MetadataNode<TMetadata>, MetadataNode<TMetadata>[]?> Read =
+        node => node._underlying;
+
+    private static readonly Action<MetadataNode<TMetadata>, MetadataNode<TMetadata>[]> Write =
+        (node, underlying) => node._underlying = underlying;
 
     /// <summary>Gets the metadata associated with this node.</summary>
     public IEnumerable<TMetadata> Metadata => _metadataSet ??= _metadataSource switch
@@ -54,13 +75,13 @@ public class MetadataNode<TMetadata>
     /// <returns>A string that represents the current object.</returns>
     public override string ToString() => GetDebugDisplay();
 
-    private static IEnumerable<MetadataNode<TMetadata>> ResolveUnderlying(
+    private static Resolution<MetadataNode<TMetadata>> Resolve(
         IEnumerable<TMetadata> metadata,
         IEnumerable<BooleanResultBase<TMetadata>> causes)
     {
         var causesArray = causes as BooleanResultBase<TMetadata>[] ?? causes.ToArray();
 
-        var underlying = causesArray
+        var children = causesArray
             .SelectMany(cause =>
                 cause switch
                 {
@@ -70,16 +91,12 @@ public class MetadataNode<TMetadata>
             .Select(cause => cause.MetadataTier)
             .ToArray();
 
-        var underlyingMetadata = underlying
+        var childMetadata = children
             .SelectMany(metadataNode => metadataNode.Metadata)
             .DistinctWithOrderPreserved()
             .ToArray();
 
-        var doesParentEqualChildAssertion = underlyingMetadata.SequenceEqual(metadata);
-
-        return doesParentEqualChildAssertion
-            ? underlying.SelectMany(result => result.Underlying).ToArray()
-            : underlying;
+        return new Resolution<MetadataNode<TMetadata>>(children, childMetadata.SequenceEqual(metadata));
     }
 
     private string GetDebugDisplay()

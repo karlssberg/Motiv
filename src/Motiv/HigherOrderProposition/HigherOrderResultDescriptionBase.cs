@@ -22,18 +22,21 @@ internal abstract class HigherOrderResultDescriptionBase<TUnderlyingMetadata>(
             .DistinctWithOrderPreserved(result => result.Justification)
             .ToArray();
 
-    protected IEnumerable<string> GetUnderlyingJustificationsAsLines() =>
-        DistinctCauses.SelectMany(cause => cause.Description.GetJustificationAsLines());
+    /// <remarks>
+    /// A cause's lines are always taken with the causal count, in both of this description's modes.
+    /// </remarks>
+    private protected override IReadOnlyList<Rendering> JustificationOperands(bool withoutCausalCount) =>
+        Array.ConvertAll(DistinctCauses, cause => new Rendering(cause.Description, false));
 
-    protected IEnumerable<string> GetUnderlyingJustificationsWithCountsAsLines()
-    {
-        if (DistinctCauses.Length > 1)
-            return DistinctCauses
-                .SelectMany(cause => cause.Description.GetJustificationAsLines());
+    private protected static IEnumerable<string> UnderlyingJustifications(IReadOnlyList<string[]> causeLines) =>
+        causeLines.Flatten();
 
-        return DistinctCauses
-            .SelectMany(cause => cause.Description
-                .GetJustificationAsLines()
-                .ReplaceFirstLine(line => $"{line} ({_causes.Length})"));
-    }
+    /// <summary>
+    /// As <see cref="UnderlyingJustifications" />, except that a lone distinct cause carries the
+    /// number of causes it stands for.
+    /// </summary>
+    private protected IEnumerable<string> UnderlyingJustificationsWithCounts(IReadOnlyList<string[]> causeLines) =>
+        causeLines.Count > 1
+            ? causeLines.Flatten()
+            : causeLines.Flatten().ReplaceFirstLine(line => $"{line} ({_causes.Length})");
 }
