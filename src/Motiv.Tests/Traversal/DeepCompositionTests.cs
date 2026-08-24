@@ -91,7 +91,7 @@ public class DeepCompositionTests
             result.Explanation.AllUnderlying.Count().ShouldBe(0, "as for AllSubAssertions");
         });
 
-    [Fact(Skip = StillRecursive)]
+    [Fact]
     public void Should_read_Reason_of_a_deep_composition() =>
         OnASmallStack(() => DeepAnd().Reason.Length.ShouldBeGreaterThan(0));
 

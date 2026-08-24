@@ -14,13 +14,28 @@ internal sealed class XOrBooleanResultDescription<TMetadata>(
 
     internal override string Statement => Operator.XOr;
 
-    public override string Reason => field ??= string.Join(" ^ ", _results.Select(result =>
-        ContainsBinaryOperation(result) switch
+    public override string Reason => FoldedReason;
+
+    private protected override IReadOnlyList<ResultDescriptionBase> ReasonOperands =>
+        field ??= Array.ConvertAll(_results, result => result.Description);
+
+    private protected override string ComposeReason(IReadOnlyList<string> operandReasons) =>
+        string.Join(" ^ ", Explained(operandReasons));
+
+    private IEnumerable<string> Explained(IReadOnlyList<string> operandReasons)
+    {
+        for (var i = 0; i < _results.Length; i++)
         {
-            true => $"({result.Description.Reason})",
-            false when result.Description.Reason.EndsWithEqualityAssertion() => $"({result.Description.Reason})",
-            false => result.Description.Reason
-        }));
+            var reason = operandReasons[i];
+
+            yield return ContainsBinaryOperation(_results[i]) switch
+            {
+                true => $"({reason})",
+                false when reason.EndsWithEqualityAssertion() => $"({reason})",
+                false => reason
+            };
+        }
+    }
 
     public override IEnumerable<string> GetJustificationAsLines() =>
         _results.GetBinaryJustificationAsLines(Statement);
@@ -28,11 +43,27 @@ internal sealed class XOrBooleanResultDescription<TMetadata>(
     internal override IEnumerable<string> GetJustificationAsLinesWithoutCausalCount() =>
         _results.GetBinaryJustificationAsLines(Statement, withoutCausalCount: true);
 
-    private static bool ContainsBinaryOperation(BooleanResultBase result) =>
-        result switch
+    /// <remarks>Iterative: the result tree it searches is unbounded in depth (Spec 3A / ticket 19).</remarks>
+    private static bool ContainsBinaryOperation(BooleanResultBase result)
+    {
+        var pending = new Stack<BooleanResultBase>();
+        pending.Push(result);
+
+        while (pending.Count > 0)
         {
-            IBinaryBooleanOperationResult => true,
-            NotBooleanOperationResult<TMetadata> => false,
-            _ => result.Underlying.Any(ContainsBinaryOperation)
-        };
+            switch (pending.Pop())
+            {
+                case IBinaryBooleanOperationResult:
+                    return true;
+                case NotBooleanOperationResult<TMetadata>:
+                    continue;
+                case var other:
+                    foreach (var underlying in other.Underlying)
+                        pending.Push(underlying);
+                    continue;
+            }
+        }
+
+        return false;
+    }
 }

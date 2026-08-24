@@ -8,7 +8,12 @@ internal sealed class NotBooleanResultDescription<TMetadata>(BooleanResultBase o
 
     internal override string Statement => Operator.Not;
 
-    public override string Reason => field ??= FormatReason(operand);
+    public override string Reason => FoldedReason;
+
+    private protected override IReadOnlyList<ResultDescriptionBase> ReasonOperands => field ??= [operand.Description];
+
+    private protected override string ComposeReason(IReadOnlyList<string> operandReasons) =>
+        FormatReason(operand, operandReasons[0]);
 
     public override IEnumerable<string> GetJustificationAsLines() =>
         NegateFirstLine(operand.Description.GetJustificationAsLines());
@@ -22,15 +27,15 @@ internal sealed class NotBooleanResultDescription<TMetadata>(BooleanResultBase o
                 ? negated
                 : firstLine);
 
-    private static string FormatReason(BooleanResultBase result)
+    private static string FormatReason(BooleanResultBase result, string reason)
     {
         return result switch
         {
             NotPolicyResult<TMetadata> notResult => NegateNotOperator(notResult),
             NotBooleanOperationResult<TMetadata> notResult => NegateNotOperator(notResult),
-            IBooleanOperationResult =>  $"!({result.Reason})",
-            _ when result.Reason.EndsWithEqualityAssertion() => $"!({result.Reason})",
-            _ =>$"!{result.Reason}"
+            IBooleanOperationResult =>  $"!({reason})",
+            _ when reason.EndsWithEqualityAssertion() => $"!({reason})",
+            _ =>$"!{reason}"
         };
     }
 
