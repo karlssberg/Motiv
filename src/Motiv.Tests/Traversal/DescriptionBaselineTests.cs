@@ -26,13 +26,14 @@ public class DescriptionBaselineTests
 
         baseline.Count.ShouldBe(SeedCount, "the baseline must cover the whole corpus");
 
-        foreach (var (seed, expected) in baseline)
+        // Indexed rather than deconstructed: net472 has no Deconstruct for KeyValuePair.
+        foreach (var entry in baseline)
         {
-            var rendering = Render(seed);
+            var rendering = Render(entry.Key);
 
             Hash(rendering).ShouldBe(
-                expected,
-                $"the description tree renders differently from the recursive formatters at seed {seed}:{Environment.NewLine}{rendering}");
+                entry.Value,
+                $"the description tree renders differently from the recursive formatters at seed {entry.Key}:{Environment.NewLine}{rendering}");
         }
     }
 
