@@ -28,6 +28,7 @@ public sealed class DecisionLog : IAsyncDisposable
     private readonly CancellationTokenSource _shutdown = new();
     private readonly Task _writer;
     private readonly object _dropLock = new();
+    private readonly IDisposable _telemetry;
 
     private DateTimeOffset _firstDroppedUtc;
     private DateTimeOffset _lastDroppedUtc;
@@ -55,6 +56,12 @@ public sealed class DecisionLog : IAsyncDisposable
             });
 
         _writer = Task.Run(DrainAsync);
+
+        // The three decision-log instruments are readings off this object, not events pushed from a
+        // call site — motiv.rules.decisions.dropped reads DroppedCount itself, so the counter and the
+        // gap markers cannot disagree about how many records were shed. Registering here is what
+        // makes them findable; unregistering on disposal keeps a finished log out of the readings.
+        _telemetry = MotivRulesTelemetry.DecisionLogs.Add(this);
     }
 
     /// <summary>How much of an evaluated model each rule's records may keep.</summary>
@@ -69,6 +76,19 @@ public sealed class DecisionLog : IAsyncDisposable
 
     /// <summary>How many batches the sink refused. A rising count is a sink that needs attention.</summary>
     public long FailedBatchCount => Interlocked.Read(ref _failedBatchCount);
+
+    /// <summary>
+    /// How many records are waiting for the sink right now — how much of the crash-loss window is
+    /// currently occupied.
+    /// </summary>
+    /// <remarks>
+    /// A reading rather than a total, and the one number here that can fall. Depth approaching
+    /// <see cref="DecisionLogOptions.QueueCapacity"/> is the warning that
+    /// <see cref="DecisionBackpressure"/> is about to start applying — under
+    /// <see cref="DecisionBackpressure.FailClosed"/> that means audited evaluations are about to
+    /// start throwing, which an operator would much rather see coming than diagnose afterwards.
+    /// </remarks>
+    public int QueueDepth => _queue.Reader.CanCount ? _queue.Reader.Count : 0;
 
     /// <summary>
     /// Hands a record to the queue, applying the configured posture when it is full.
@@ -124,6 +144,10 @@ public sealed class DecisionLog : IAsyncDisposable
         {
             _shutdown.Cancel();
             _shutdown.Dispose();
+
+            // A drained log has nothing left to report, and a reading of zero from a log nobody is
+            // writing to any more would look like health rather than absence.
+            _telemetry.Dispose();
         }
     }
 
