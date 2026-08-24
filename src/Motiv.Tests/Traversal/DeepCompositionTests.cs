@@ -20,11 +20,11 @@ public class DeepCompositionTests
 
     private static readonly Lazy<BooleanResultBase<string>> DeepResult = new(Compose);
 
-    [Fact(Skip = StillRecursive)]
+    [Fact]
     public void Should_read_UnderlyingAssertionSources_of_a_deep_composition() =>
         OnASmallStack(() => Deep().UnderlyingAssertionSources.Count().ShouldBeGreaterThan(0));
 
-    [Fact(Skip = StillRecursive)]
+    [Fact]
     public void Should_read_UnderlyingAllAssertionSources_of_a_deep_composition() =>
         OnASmallStack(() => Deep().UnderlyingAllAssertionSources.Count().ShouldBeGreaterThan(0));
 

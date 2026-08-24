@@ -102,23 +102,90 @@ public abstract class BooleanResultBase
 
     /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that are the sources of the <see cref="Assertions" />.</summary>
     public IEnumerable<BooleanResultBase> UnderlyingAssertionSources =>
-        field ??= Causes
-            .SelectMany(booleanResult =>
-                booleanResult is IBooleanOperationResult
-                    ? booleanResult.UnderlyingAssertionSources
-                    : booleanResult.ToEnumerable())
-            .ElseIfEmpty(this.ToEnumerable())
-            .ToArray();
+        _underlyingAssertionSources ??= PostOrderFold.Fold(
+            this,
+            CausalOperations,
+            CombineCausalAssertionSources,
+            ReadUnderlyingAssertionSources,
+            WriteUnderlyingAssertionSources);
 
     /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that are the sources of the <see cref="Assertions" />.</summary>
     public IEnumerable<BooleanResultBase> UnderlyingAllAssertionSources =>
-        field ??= Underlying
-            .SelectMany(booleanResult =>
-                booleanResult is IBooleanOperationResult
-                    ? booleanResult.UnderlyingAllAssertionSources
-                    : booleanResult.ToEnumerable())
-            .ElseIfEmpty(this.ToEnumerable())
-            .ToArray();
+        _underlyingAllAssertionSources ??= PostOrderFold.Fold(
+            this,
+            UnderlyingOperations,
+            CombineAllAssertionSources,
+            ReadUnderlyingAllAssertionSources,
+            WriteUnderlyingAllAssertionSources);
+
+    private BooleanResultBase[]? _underlyingAssertionSources;
+
+    private BooleanResultBase[]? _underlyingAllAssertionSources;
+
+    private static readonly Func<BooleanResultBase, IReadOnlyList<BooleanResultBase>> CausalOperations =
+        result => Operations(result.Causes);
+
+    private static readonly Func<BooleanResultBase, IReadOnlyList<BooleanResultBase>> UnderlyingOperations =
+        result => Operations(result.Underlying);
+
+    private static readonly Func<BooleanResultBase, IReadOnlyList<BooleanResultBase[]>, BooleanResultBase[]>
+        CombineCausalAssertionSources = (result, foldedOperations) =>
+            AssertionSourcesOf(result, result.Causes, foldedOperations);
+
+    private static readonly Func<BooleanResultBase, IReadOnlyList<BooleanResultBase[]>, BooleanResultBase[]>
+        CombineAllAssertionSources = (result, foldedOperations) =>
+            AssertionSourcesOf(result, result.Underlying, foldedOperations);
+
+    private static readonly Func<BooleanResultBase, BooleanResultBase[]?> ReadUnderlyingAssertionSources =
+        result => result._underlyingAssertionSources;
+
+    private static readonly Action<BooleanResultBase, BooleanResultBase[]> WriteUnderlyingAssertionSources =
+        (result, sources) => result._underlyingAssertionSources = sources;
+
+    private static readonly Func<BooleanResultBase, BooleanResultBase[]?> ReadUnderlyingAllAssertionSources =
+        result => result._underlyingAllAssertionSources;
+
+    private static readonly Action<BooleanResultBase, BooleanResultBase[]> WriteUnderlyingAllAssertionSources =
+        (result, sources) => result._underlyingAllAssertionSources = sources;
+
+    /// <summary>
+    /// The children an assertion-source walk descends into. The walk deliberately stops at a child
+    /// that is not itself an operation — that child <i>is</i> the source — so folding every child
+    /// would turn a walk of the visited nodes into a walk of the whole tree.
+    /// </summary>
+    private static IReadOnlyList<BooleanResultBase> Operations(IEnumerable<BooleanResultBase> children)
+    {
+        List<BooleanResultBase>? operations = null;
+
+        foreach (var child in children)
+            if (child is IBooleanOperationResult)
+                (operations ??= []).Add(child);
+
+        return operations ?? (IReadOnlyList<BooleanResultBase>)[];
+    }
+
+    /// <summary>
+    /// Interleaves each descended child's sources with each child the walk stopped at, in child order,
+    /// falling back to the result itself when nothing was contributed.
+    /// </summary>
+    private static BooleanResultBase[] AssertionSourcesOf(
+        BooleanResultBase result,
+        IEnumerable<BooleanResultBase> children,
+        IReadOnlyList<BooleanResultBase[]> foldedOperations)
+    {
+        var sources = new List<BooleanResultBase>();
+        var nextOperation = 0;
+
+        foreach (var child in children)
+            if (child is IBooleanOperationResult)
+                sources.AddRange(foldedOperations[nextOperation++]);
+            else
+                sources.Add(child);
+
+        return sources.Count == 0
+            ? [result]
+            : sources.ToArray();
+    }
 
     /// <summary>Gets the underlying <see cref="BooleanResultBase" /> that contribute to this result.</summary>
     public abstract IEnumerable<BooleanResultBase> Underlying { get; }
