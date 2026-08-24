@@ -73,6 +73,16 @@ public abstract class RuleBase
 
     internal RuleDefault Default { get; }
 
+    /// <summary>
+    /// The decision log this rule's set was built with, or null when the host configured none.
+    /// Assigned by <see cref="RuleSet.Add"/> <em>before</em> the default binds, because binding is
+    /// where an audited document is refused for want of a capture posture.
+    /// </summary>
+    internal DecisionLog? DecisionLog { get; private set; }
+
+    /// <summary>Attaches the owning set's decision log. Called by <see cref="RuleSet.Add"/>.</summary>
+    internal void AttachDecisionLog(DecisionLog? decisionLog) => DecisionLog = decisionLog;
+
     private BindingScope? _scope;
 
     /// <summary>Where this rule's state lives in every generation. Assigned once, by <see cref="RuleSet.Add"/>.</summary>

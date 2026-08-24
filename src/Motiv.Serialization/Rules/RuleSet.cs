@@ -17,6 +17,7 @@ public sealed class RuleSet
     private readonly RuleSerializer _serializer;
     private readonly RuleSerializerOptions _options;
     private readonly IRuleStore _store;
+    private readonly DecisionLog? _decisionLog;
     private bool _loaded;
 
     /// <summary>Creates a rule set whose documents bind against the given registry.</summary>
@@ -29,13 +30,21 @@ public sealed class RuleSet
     /// <param name="registry">The registry rule documents resolve spec references against.</param>
     /// <param name="store">Where published rules persist between restarts, or null to keep them in memory only.</param>
     /// <param name="options">Options forwarded to the underlying serializer, or null for defaults.</param>
+    /// <param name="decisionLog">
+    /// Where evaluations of rules marked <c>audited</c> are recorded, or null when the host records
+    /// none — in which case an audited document will not bind.
+    /// </param>
     /// <exception cref="ArgumentNullException"><paramref name="registry"/> is null.</exception>
     /// <exception cref="InvalidOperationException">
     /// A <see cref="PropositionSet"/> was already built from <paramref name="registry"/>, so this set
     /// could only ever be invisible to it.
     /// </exception>
-    public RuleSet(SpecRegistry registry, IRuleStore? store = null, RuleSerializerOptions? options = null)
-        : this(BindingScope.For(registry, ScopeClaim.Rules), store, options)
+    public RuleSet(
+        SpecRegistry registry,
+        IRuleStore? store = null,
+        RuleSerializerOptions? options = null,
+        DecisionLog? decisionLog = null)
+        : this(BindingScope.For(registry, ScopeClaim.Rules), store, options, decisionLog)
     {
     }
 
@@ -53,9 +62,17 @@ public sealed class RuleSet
     /// <param name="propositions">The proposition set these rules resolve authored propositions from.</param>
     /// <param name="store">Where published rules persist between restarts, or null to keep them in memory only.</param>
     /// <param name="options">Options forwarded to the underlying serializer, or null for defaults.</param>
+    /// <param name="decisionLog">
+    /// Where evaluations of rules marked <c>audited</c> are recorded, or null when the host records
+    /// none — in which case an audited document will not bind.
+    /// </param>
     /// <exception cref="ArgumentNullException"><paramref name="propositions"/> is null.</exception>
-    public RuleSet(PropositionSet propositions, IRuleStore? store = null, RuleSerializerOptions? options = null)
-        : this((propositions ?? throw new ArgumentNullException(nameof(propositions))).Scope, store, options)
+    public RuleSet(
+        PropositionSet propositions,
+        IRuleStore? store = null,
+        RuleSerializerOptions? options = null,
+        DecisionLog? decisionLog = null)
+        : this((propositions ?? throw new ArgumentNullException(nameof(propositions))).Scope, store, options, decisionLog)
     {
     }
 
@@ -64,11 +81,16 @@ public sealed class RuleSet
     /// a proposition edit and a rule update cannot interleave and a rule can be rebound by a
     /// proposition's republication.
     /// </summary>
-    internal RuleSet(BindingScope scope, IRuleStore? store = null, RuleSerializerOptions? options = null)
+    internal RuleSet(
+        BindingScope scope,
+        IRuleStore? store = null,
+        RuleSerializerOptions? options = null,
+        DecisionLog? decisionLog = null)
     {
         Scope = scope ?? throw new ArgumentNullException(nameof(scope));
         _store = store ?? new InMemoryRuleStore();
         _options = options ?? new RuleSerializerOptions();
+        _decisionLog = decisionLog;
         _serializer = new RuleSerializer(scope.Source, _options);
 
         // Last, and only once everything a rebuild reads is assigned: Join publishes this set to the
@@ -122,6 +144,12 @@ public sealed class RuleSet
             // Asked before the bind, because "you already added this rule" is the more useful answer
             // than whatever this registry makes of a document another scope already bound.
             rule.EnsureUnbound();
+
+            // Attached before the bind, not after it: binding is where an audited document is refused
+            // for want of a capture posture, so the rule has to be able to see the log by then. A rule
+            // whose default then fails to bind keeps a handle it cannot use, which costs nothing --
+            // it is unregistered, re-addable, and re-attached by whichever set takes it next.
+            rule.AttachDecisionLog(_decisionLog);
 
             // Bound before the slot is claimed, so a default that does not bind leaves the rule
             // exactly as it was found: unregistered, unslotted, and re-addable once repaired. Claiming
