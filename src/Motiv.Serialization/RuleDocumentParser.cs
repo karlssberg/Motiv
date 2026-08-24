@@ -42,6 +42,7 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         string? name = null;
         RuleNode? rule = null;
         var hasRule = false;
+        var audited = false;
         var parameters = new List<RuleParameterDeclaration>();
 
         foreach (var property in root.EnumerateObject())
@@ -59,6 +60,9 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
                 case "parameters":
                     parameters = ParseParameterDeclarations(property.Value, errors);
                     break;
+                case "audited":
+                    audited = ReadBoolean(property.Value, "$.audited", errors);
+                    break;
                 case "rule":
                     hasRule = true;
                     rule = ParseNode(property.Value, "$.rule", depth: 1, errors);
@@ -74,7 +78,7 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         if (!hasRule)
             errors.Add(new RuleError("$", RuleErrorCode.InvalidNode, "missing required property 'rule'"));
 
-        return new RuleDocument(name, rule, parameters);
+        return new RuleDocument(name, rule, parameters, audited);
     }
 
     private RuleNode? ParseNode(JsonElement element, string path, int depth, List<RuleError> errors)
@@ -624,6 +628,20 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         }
 
         return true;
+    }
+
+    private static bool ReadBoolean(JsonElement element, string path, List<RuleError> errors)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.True:
+                return true;
+            case JsonValueKind.False:
+                return false;
+            default:
+                errors.Add(new RuleError(path, RuleErrorCode.InvalidNode, "value must be a boolean"));
+                return false;
+        }
     }
 
     private static string? ReadNonEmptyString(JsonElement element, string path, List<RuleError> errors)
