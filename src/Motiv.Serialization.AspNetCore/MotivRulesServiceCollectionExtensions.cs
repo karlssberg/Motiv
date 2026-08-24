@@ -27,6 +27,52 @@ public sealed class MotivRulesBuilder
     }
 
     /// <summary>
+    /// Registers the decision log every rule marked <c>audited</c> records to, writing through
+    /// <paramref name="sink"/>. Without this, an audited rule document will not bind — which is the
+    /// intended fail-closed behaviour, not an oversight.
+    /// </summary>
+    /// <remarks>
+    /// <paramref name="configure"/> <strong>must</strong> register a capture posture for every model
+    /// type an audited rule evaluates (<see cref="DecisionLogOptions.Capture"/>). There is no default:
+    /// what a decision record may keep of a model is the adopter's call, and a whole-model default
+    /// that applied by omission would store whatever personal data the model happens to hold.
+    /// </remarks>
+    /// <param name="sink">Where records are written.</param>
+    /// <param name="configure">Queue size, backpressure posture, and — required — the capture postures.</param>
+    /// <returns>This builder, to allow chained registration.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="sink"/> is null.</exception>
+    public MotivRulesBuilder AddDecisionLog(IDecisionSink sink, Action<DecisionLogOptions>? configure = null)
+    {
+        if (sink is null) throw new ArgumentNullException(nameof(sink));
+        return AddDecisionLog(_ => sink, configure);
+    }
+
+    /// <summary>
+    /// Registers the decision log with a sink resolved from the service provider — for a durable sink
+    /// that needs a connection, a context factory, or a client of its own.
+    /// </summary>
+    /// <param name="sinkFactory">Builds the sink.</param>
+    /// <param name="configure">Queue size, backpressure posture, and — required — the capture postures.</param>
+    /// <returns>This builder, to allow chained registration.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="sinkFactory"/> is null.</exception>
+    public MotivRulesBuilder AddDecisionLog(
+        Func<IServiceProvider, IDecisionSink> sinkFactory, Action<DecisionLogOptions>? configure = null)
+    {
+        if (sinkFactory is null) throw new ArgumentNullException(nameof(sinkFactory));
+
+        // A singleton, so the container disposes it at shutdown -- which is what drains the queue.
+        // A decision log that were scoped would take its unwritten records down with each request.
+        Services.AddSingleton(provider =>
+        {
+            var logOptions = new DecisionLogOptions();
+            configure?.Invoke(logOptions);
+            return new DecisionLog(sinkFactory(provider), logOptions);
+        });
+
+        return this;
+    }
+
+    /// <summary>
     /// Registers an existing rule instance and enrolls it in the <see cref="RuleSet"/>. The
     /// instance is only bound once the <see cref="RuleSet"/> is resolved (e.g. by
     /// <c>MapMotivRules(basePath)</c>) — evaluating it before then throws.
@@ -279,7 +325,11 @@ public static class MotivRulesServiceCollectionExtensions
             var rules = new RuleSet(
                 provider.GetRequiredService<BindingScope>(),
                 store,
-                options: resolvedOptions.SerializerOptions);
+                options: resolvedOptions.SerializerOptions,
+                // Optional: with no log registered, an audited document simply does not bind, and
+                // says so. Resolved here rather than closed over so AddDecisionLog can be called
+                // either side of AddMotivRules.
+                decisionLog: provider.GetService<DecisionLog>());
             foreach (var rule in provider.GetServices<RuleBase>())
                 rules.Add(rule);
 

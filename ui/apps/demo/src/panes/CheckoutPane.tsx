@@ -13,14 +13,23 @@ interface CheckoutResponse {
   approved: boolean;
   eligibility: EvaluationResult;
   screening: EvaluationResult;
+  // Optional: a server older than the audited loyalty rule sends two verdicts, and the pane must
+  // render what it was given rather than crashing on what it was not.
+  loyalty?: EvaluationResult;
 }
 
-const SAMPLE_CUSTOMER = '{\n  "age": 30,\n  "isActive": true,\n  "orderCount": 3,\n  "orders": [{ "total": 120 }]\n}';
+const SAMPLE_CUSTOMER =
+  '{\n  "customerId": "cust-42",\n  "age": 30,\n  "isActive": true,\n  "orderCount": 3,\n  "orders": [{ "total": 120 }]\n}';
 
 /**
- * Seam: the rule being *used*. POST /api/checkout executes the live CanCheckoutRule (sync)
- * and FraudScreeningRule (async) on the server — save a rule change and the very next
- * checkout reflects it, no restart.
+ * Seam: the rule being *used*. POST /api/checkout executes the live CanCheckoutRule (sync),
+ * FraudScreeningRule (async) and LoyaltyDiscountRule on the server — save a rule change and
+ * the very next checkout reflects it, no restart.
+ *
+ * All three run inside one pinned decision, so they resolve against one published world and
+ * share one correlation id. LoyaltyDiscountRule is marked `audited` in its document, so every
+ * checkout leaves a decision record readable at GET /api/decisions — `customerId` is the only
+ * part of the customer that record keeps.
  *
  * The pane deliberately talks raw HTTP (no RulesApiClient) to show the consuming side.
  * The optional client exists only to fetch the catalog's `customer` model schema so
@@ -104,6 +113,7 @@ export function CheckoutPane(props: { client?: RulesApiClient }) {
             <strong className="outcome">{outcome.approved ? 'Approved' : 'Rejected'}</strong>
             <Verdict title="Eligibility (sync rule)" result={outcome.eligibility} />
             <Verdict title="Screening (async rule)" result={outcome.screening} />
+            {outcome.loyalty && <Verdict title="Loyalty (audited rule)" result={outcome.loyalty} />}
           </div>
         )}
       </div>
