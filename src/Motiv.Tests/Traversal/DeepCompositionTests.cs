@@ -32,19 +32,22 @@ public class DeepCompositionTests
     public void Should_read_UnderlyingMetadataSources_of_a_deep_composition() =>
         OnASmallStack(() => Deep().UnderlyingMetadataSources.Count().ShouldBeGreaterThan(0));
 
-    [Fact(Skip = StillRecursive)]
+    [Fact]
     public void Should_read_UnderlyingExpressionResults_of_a_deep_composition() =>
-        OnASmallStack(() => Deep().UnderlyingExpressionResults.Count().ShouldBeGreaterThan(0));
+        OnASmallStack(() => Deep().UnderlyingExpressionResults.Count().ShouldBe(
+            0,
+            "a chain of nothing but binary operations has no expression boundary to report — the point " +
+            "of the case is that reading it returns rather than aborting"));
 
-    [Fact(Skip = StillRecursive)]
+    [Fact]
     public void Should_read_UnderlyingReasons_of_a_deep_composition() =>
-        OnASmallStack(() => Deep().UnderlyingReasons.Count().ShouldBeGreaterThan(0));
+        OnASmallStack(() => Deep().UnderlyingReasons.Count().ShouldBe(0, "one reason per expression result"));
 
-    [Fact(Skip = StillRecursive)]
+    [Fact]
     public void Should_read_AllAssertions_of_a_deep_composition() =>
         OnASmallStack(() => Deep().AllAssertions.Count().ShouldBeGreaterThan(0));
 
-    [Fact(Skip = StillRecursive)]
+    [Fact]
     public void Should_read_Assertions_of_a_deep_composition() =>
         OnASmallStack(() => Deep().Assertions.Count().ShouldBeGreaterThan(0));
 

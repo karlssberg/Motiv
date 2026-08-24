@@ -50,15 +50,42 @@ public abstract class BooleanResultBase
 
     /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that represent the expression results.</summary>
     public IEnumerable<BooleanResultBase> UnderlyingExpressionResults =>
-        field ??= Causes
-            .SelectMany(booleanResult =>
-                (this, booleanResult) switch
-                {
-                    (not IBooleanOperationResult, IBooleanOperationResult) =>
-                        booleanResult.ToEnumerable().Concat(booleanResult.UnderlyingExpressionResults),
-                    _ => booleanResult.UnderlyingExpressionResults,
-                })
-            .ToArray();
+        _underlyingExpressionResults ??= PostOrderFold.Fold(
+            this,
+            AllCauses,
+            CombineExpressionResults,
+            ReadUnderlyingExpressionResults,
+            WriteUnderlyingExpressionResults);
+
+    private BooleanResultBase[]? _underlyingExpressionResults;
+
+    private static readonly Func<BooleanResultBase, IReadOnlyList<BooleanResultBase>> AllCauses =
+        result => AsList(result.Causes);
+
+    private static readonly Func<BooleanResultBase, IReadOnlyList<BooleanResultBase[]>, BooleanResultBase[]>
+        CombineExpressionResults = (result, foldedCauses) =>
+        {
+            var expressionResults = new List<BooleanResultBase>();
+            var nextCause = 0;
+
+            foreach (var cause in result.Causes)
+            {
+                // An operation reached from a non-operation is where one expression ends and the next
+                // begins, so that boundary result is itself an expression result.
+                if (result is not IBooleanOperationResult && cause is IBooleanOperationResult)
+                    expressionResults.Add(cause);
+
+                expressionResults.AddRange(foldedCauses[nextCause++]);
+            }
+
+            return expressionResults.ToArray();
+        };
+
+    private static readonly Func<BooleanResultBase, BooleanResultBase[]?> ReadUnderlyingExpressionResults =
+        result => result._underlyingExpressionResults;
+
+    private static readonly Action<BooleanResultBase, BooleanResultBase[]> WriteUnderlyingExpressionResults =
+        (result, results) => result._underlyingExpressionResults = results;
 
     /// <summary>Gets a full hierarchical breakdown of the reasons for the result.</summary>
     public string Justification => Description.Justification;
@@ -69,11 +96,37 @@ public abstract class BooleanResultBase
     /// <summary>Gets all the assertions yielded by the current result, including those that are non-determinative.</summary>
     /// <remarks>This will yield assertions from both satisfied and unsatisfied operands. </remarks>
     public IEnumerable<string> AllAssertions =>
-        field ??= this switch
+        _allAssertions ??= PostOrderFold.Fold(
+            this,
+            BinaryOperands,
+            CombineAllAssertions,
+            ReadAllAssertions,
+            WriteAllAssertions);
+
+    private string[]? _allAssertions;
+
+    private static readonly Func<BooleanResultBase, IReadOnlyList<BooleanResultBase>> BinaryOperands =
+        result => result is IBinaryBooleanOperationResult
+            ? AsList(result.Underlying)
+            : [];
+
+    private static readonly Func<BooleanResultBase, IReadOnlyList<string[]>, string[]> CombineAllAssertions =
+        (result, foldedOperands) =>
         {
-            IBinaryBooleanOperationResult result => result.Underlying.SelectMany(r => r.AllAssertions).ToArray(),
-            _ => Assertions
+            if (result is not IBinaryBooleanOperationResult)
+                return result.Assertions as string[] ?? result.Assertions.ToArray();
+
+            var assertions = new List<string>();
+            for (var i = 0; i < foldedOperands.Count; i++)
+                assertions.AddRange(foldedOperands[i]);
+
+            return assertions.ToArray();
         };
+
+    private static readonly Func<BooleanResultBase, string[]?> ReadAllAssertions = result => result._allAssertions;
+
+    private static readonly Action<BooleanResultBase, string[]> WriteAllAssertions =
+        (result, assertions) => result._allAssertions = assertions;
 
     /// <summary>Gets all the determinative assertions from the underlying results.</summary>
     public IEnumerable<string> SubAssertions => field ??= Explanation.Underlying.GetAssertions().ToArray();
@@ -153,6 +206,9 @@ public abstract class BooleanResultBase
     /// that is not itself an operation — that child <i>is</i> the source — so folding every child
     /// would turn a walk of the visited nodes into a walk of the whole tree.
     /// </summary>
+    private static IReadOnlyList<TResult> AsList<TResult>(IEnumerable<TResult> children) =>
+        children as IReadOnlyList<TResult> ?? children.ToArray();
+
     private protected static IReadOnlyList<TResult> Operations<TResult>(IEnumerable<TResult> children)
         where TResult : BooleanResultBase
     {
