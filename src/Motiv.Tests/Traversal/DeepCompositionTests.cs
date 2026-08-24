@@ -28,7 +28,7 @@ public class DeepCompositionTests
     public void Should_read_UnderlyingAllAssertionSources_of_a_deep_composition() =>
         OnASmallStack(() => Deep().UnderlyingAllAssertionSources.Count().ShouldBeGreaterThan(0));
 
-    [Fact(Skip = StillRecursive)]
+    [Fact]
     public void Should_read_UnderlyingMetadataSources_of_a_deep_composition() =>
         OnASmallStack(() => Deep().UnderlyingMetadataSources.Count().ShouldBeGreaterThan(0));
 

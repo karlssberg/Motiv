@@ -153,15 +153,16 @@ public abstract class BooleanResultBase
     /// that is not itself an operation — that child <i>is</i> the source — so folding every child
     /// would turn a walk of the visited nodes into a walk of the whole tree.
     /// </summary>
-    private static IReadOnlyList<BooleanResultBase> Operations(IEnumerable<BooleanResultBase> children)
+    private protected static IReadOnlyList<TResult> Operations<TResult>(IEnumerable<TResult> children)
+        where TResult : BooleanResultBase
     {
-        List<BooleanResultBase>? operations = null;
+        List<TResult>? operations = null;
 
         foreach (var child in children)
             if (child is IBooleanOperationResult)
                 (operations ??= []).Add(child);
 
-        return operations ?? (IReadOnlyList<BooleanResultBase>)[];
+        return operations ?? (IReadOnlyList<TResult>)[];
     }
 
     /// <summary>
@@ -384,11 +385,49 @@ public abstract class BooleanResultBase<TMetadata>
     public abstract IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues { get; }
 
     /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that are the sources of the <see cref="Values" />.</summary>
+    /// <remarks>
+    /// This walk differs from its two assertion-source siblings in two ways that look like defects and
+    /// are preserved deliberately: where they yield the <i>child</i> the walk stopped at, this yields
+    /// the result itself, once per such child; and it has no fallback for a result with no causes, so
+    /// it returns nothing rather than itself. Both are the published behaviour of this property. See
+    /// the follow-up on ticket 19.
+    /// </remarks>
     public IEnumerable<BooleanResultBase<TMetadata>> UnderlyingMetadataSources =>
-        CausesWithValues.SelectMany(booleanResult =>
-            booleanResult is IBooleanOperationResult
-                ? booleanResult.UnderlyingMetadataSources
-                : this.ToEnumerable());
+        _underlyingMetadataSources ??= PostOrderFold.Fold(
+            this,
+            CausalValueOperations,
+            CombineMetadataSources,
+            ReadUnderlyingMetadataSources,
+            WriteUnderlyingMetadataSources);
+
+    private BooleanResultBase<TMetadata>[]? _underlyingMetadataSources;
+
+    private static readonly Func<BooleanResultBase<TMetadata>, IReadOnlyList<BooleanResultBase<TMetadata>>>
+        CausalValueOperations = result => Operations(result.CausesWithValues);
+
+    private static readonly Func<
+            BooleanResultBase<TMetadata>,
+            IReadOnlyList<BooleanResultBase<TMetadata>[]>,
+            BooleanResultBase<TMetadata>[]>
+        CombineMetadataSources = (result, foldedOperations) =>
+        {
+            var sources = new List<BooleanResultBase<TMetadata>>();
+            var nextOperation = 0;
+
+            foreach (var child in result.CausesWithValues)
+                if (child is IBooleanOperationResult)
+                    sources.AddRange(foldedOperations[nextOperation++]);
+                else
+                    sources.Add(result);
+
+            return sources.ToArray();
+        };
+
+    private static readonly Func<BooleanResultBase<TMetadata>, BooleanResultBase<TMetadata>[]?>
+        ReadUnderlyingMetadataSources = result => result._underlyingMetadataSources;
+
+    private static readonly Action<BooleanResultBase<TMetadata>, BooleanResultBase<TMetadata>[]>
+        WriteUnderlyingMetadataSources = (result, sources) => result._underlyingMetadataSources = sources;
 
     /// <summary>Gets the underlying boolean results with metadata that contribute to this result.</summary>
     public abstract IEnumerable<BooleanResultBase<TMetadata>> UnderlyingWithValues { get; }
