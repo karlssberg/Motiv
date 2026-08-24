@@ -37,6 +37,11 @@ public class DescriptionBaselineTests
         }
     }
 
+    /// <remarks>
+    /// Line endings are normalised to <c>\n</c>. <c>Justification</c> joins its lines with
+    /// <see cref="Environment.NewLine" />, so an un-normalised rendering hashes differently on Windows
+    /// than on Linux and the baseline would pin the platform rather than the formatters.
+    /// </remarks>
     internal static string Render(int seed)
     {
         var rendering = new StringBuilder();
@@ -44,12 +49,21 @@ public class DescriptionBaselineTests
         foreach (var root in ResultTreeGenerator.Corpus(seed))
         foreach (var node in ResultTreeGenerator.Nodes(root))
         {
-            rendering.AppendLine(node.Reason);
-            rendering.AppendLine(node.Justification);
-            rendering.AppendLine("--");
+            rendering.Append(node.Reason).Append('\n');
+            rendering.Append(node.Justification.Replace("\r\n", "\n")).Append('\n');
+            rendering.Append("--").Append('\n');
         }
 
         return rendering.ToString();
+    }
+
+    [Fact]
+    public void Should_render_the_corpus_independently_of_the_platforms_line_ending()
+    {
+        Render(1).ShouldNotContain(
+            "\r",
+            customMessage: "the baseline pins the formatters, not the platform — a carriage return in " +
+                           "the rendering means the same corpus hashes differently on Windows and Linux");
     }
 
     internal static string Hash(string rendering)
