@@ -98,12 +98,73 @@ public sealed class Explanation
     /// <summary>
     /// Gets the underlying explanations of the causes.
     /// </summary>
-    public IEnumerable<Explanation> Underlying => field ??= ResolveUnderlying(Assertions, Causes);
+    public IEnumerable<Explanation> Underlying =>
+        _underlying ??= PostOrderFold.Fold(this, DescendCausal, CombineCausal, ReadUnderlying, WriteUnderlying);
 
     /// <summary>
     /// Gets the all underlying explanations, regardless of whether they determined the outcome.
     /// </summary>
-    public IEnumerable<Explanation> AllUnderlying => field ??= ResolveAllUnderlying(Assertions, Results);
+    public IEnumerable<Explanation> AllUnderlying =>
+        _allUnderlying ??= PostOrderFold.Fold(this, DescendAll, CombineAll, ReadAllUnderlying, WriteAllUnderlying);
+
+    private Explanation[]? _underlying;
+
+    private Explanation[]? _allUnderlying;
+
+    /// <summary>
+    /// An explanation's direct children, and whether they say exactly what this explanation says — in
+    /// which case this level is collapsed and the children's own children take its place. Resolving
+    /// this is what the fold descends on, so it is computed once rather than by both the descend
+    /// function and the combine step.
+    /// </summary>
+    private sealed class Resolution(Explanation[] children, bool collapse)
+    {
+        public Explanation[] Children { get; } = children;
+
+        public bool Collapse { get; } = collapse;
+    }
+
+    private Resolution CausalResolution =>
+        field ??= Resolve(
+            Assertions,
+            Causes,
+            cause => cause.UnderlyingAssertionSources,
+            explanation => explanation.Assertions);
+
+    private Resolution AllResolution =>
+        field ??= Resolve(
+            Assertions,
+            Results,
+            result => result.UnderlyingAllAssertionSources,
+            explanation => explanation.AllAssertions);
+
+    private static readonly Func<Explanation, IReadOnlyList<Explanation>> DescendCausal =
+        explanation => explanation.CausalResolution.Collapse ? explanation.CausalResolution.Children : [];
+
+    private static readonly Func<Explanation, IReadOnlyList<Explanation>> DescendAll =
+        explanation => explanation.AllResolution.Collapse ? explanation.AllResolution.Children : [];
+
+    private static readonly Func<Explanation, IReadOnlyList<Explanation[]>, Explanation[]> CombineCausal =
+        (explanation, folded) => explanation.CausalResolution.Collapse
+            ? Flatten(folded)
+            : explanation.CausalResolution.Children;
+
+    private static readonly Func<Explanation, IReadOnlyList<Explanation[]>, Explanation[]> CombineAll =
+        (explanation, folded) => explanation.AllResolution.Collapse
+            ? Flatten(folded)
+            : explanation.AllResolution.Children;
+
+    private static readonly Func<Explanation, Explanation[]?> ReadUnderlying =
+        explanation => explanation._underlying;
+
+    private static readonly Action<Explanation, Explanation[]> WriteUnderlying =
+        (explanation, underlying) => explanation._underlying = underlying;
+
+    private static readonly Func<Explanation, Explanation[]?> ReadAllUnderlying =
+        explanation => explanation._allUnderlying;
+
+    private static readonly Action<Explanation, Explanation[]> WriteAllUnderlying =
+        (explanation, underlying) => explanation._allUnderlying = underlying;
 
     private string? _toString;
 
@@ -113,56 +174,38 @@ public sealed class Explanation
     /// <returns>A string that represents the current object.</returns>
     public override string ToString() => _toString ??= Assertions.Serialize();
 
-    private static IEnumerable<Explanation> ResolveUnderlying(
+    private static Resolution Resolve(
         IEnumerable<string> assertions,
-        IEnumerable<BooleanResultBase> causes)
+        IEnumerable<BooleanResultBase> from,
+        Func<BooleanResultBase, IEnumerable<BooleanResultBase>> sourcesOf,
+        Func<Explanation, IEnumerable<string>> assertionsOf)
     {
-        var underlying = causes
-            .SelectMany(cause =>
-                cause switch
-                {
-                    IBooleanOperationResult => cause.UnderlyingAssertionSources,
-                    _ => cause.ToEnumerable()
-                })
-            .Select(cause => cause.Explanation)
-            .ToArray();
-
-        var underlyingAssertions = underlying
-            .SelectMany(explanation => explanation.Assertions)
-            .DistinctWithOrderPreserved()
-            .ToArray();
-
-        var doesParentEqualChildAssertion = underlyingAssertions.SequenceEqual(assertions);
-
-        return doesParentEqualChildAssertion
-            ? underlying.SelectMany(result => result.Underlying).ToArray()
-            : underlying;
-    }
-
-    private static IEnumerable<Explanation> ResolveAllUnderlying(
-        IEnumerable<string> assertions,
-        IEnumerable<BooleanResultBase> results)
-    {
-        var allUnderlying = results
+        var children = from
             .SelectMany(result =>
                 result switch
                 {
-                    IBooleanOperationResult => result.UnderlyingAllAssertionSources,
+                    IBooleanOperationResult => sourcesOf(result),
                     _ => result.ToEnumerable()
                 })
-            .Select(cause => cause.Explanation)
+            .Select(result => result.Explanation)
             .ToArray();
 
-        var allUnderlyingAssertions = allUnderlying
-            .SelectMany(explanation => explanation.AllAssertions)
+        var childAssertions = children
+            .SelectMany(assertionsOf)
             .DistinctWithOrderPreserved()
             .ToArray();
 
-        var doesParentEqualChildAssertion = allUnderlyingAssertions.SequenceEqual(assertions);
+        return new Resolution(children, childAssertions.SequenceEqual(assertions));
+    }
 
-        return doesParentEqualChildAssertion
-            ? allUnderlying.SelectMany(result => result.AllUnderlying).ToArray()
-            : allUnderlying;
+    private static Explanation[] Flatten(IReadOnlyList<Explanation[]> blocks)
+    {
+        var flattened = new List<Explanation>();
+
+        for (var i = 0; i < blocks.Count; i++)
+            flattened.AddRange(blocks[i]);
+
+        return flattened.ToArray();
     }
 
     /// <summary>

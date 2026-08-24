@@ -206,7 +206,7 @@ public abstract class BooleanResultBase
     /// that is not itself an operation — that child <i>is</i> the source — so folding every child
     /// would turn a walk of the visited nodes into a walk of the whole tree.
     /// </summary>
-    private static IReadOnlyList<TResult> AsList<TResult>(IEnumerable<TResult> children) =>
+    private protected static IReadOnlyList<TResult> AsList<TResult>(IEnumerable<TResult> children) =>
         children as IReadOnlyList<TResult> ?? children.ToArray();
 
     private protected static IReadOnlyList<TResult> Operations<TResult>(IEnumerable<TResult> children)
@@ -429,10 +429,59 @@ public abstract class BooleanResultBase<TMetadata>
     }
 
     /// <summary>Gets the metadata/assertions yielded by results that caused the outcome.</summary>
-    public IEnumerable<TMetadata> Values => MetadataTier.Metadata;
+    public IEnumerable<TMetadata> Values
+    {
+        get
+        {
+            MaterialiseMetadataTiers();
+            return MetadataTier.Metadata;
+        }
+    }
 
     /// <summary>Gets the metadata yielded by all results that evaulated.</summary>
-    public IEnumerable<TMetadata> RootValues => this.GetRootValues().ElseIfEmpty(Values);
+    public IEnumerable<TMetadata> RootValues
+    {
+        get
+        {
+            MaterialiseMetadataTiers();
+            return this.GetRootValues().ElseIfEmpty(Values);
+        }
+    }
+
+    /// <summary>
+    /// Materialises this result's metadata tier and every tier beneath it, deepest first.
+    /// </summary>
+    /// <remarks>
+    /// A composition's tier takes its metadata from a lazy union over its causes' tiers, so touching
+    /// the root's first would recurse the full depth of the tree — the same crash class as the
+    /// assertion walks, reached through <see cref="Values" /> rather than through a traversal
+    /// property. Materialising bottom-up leaves every union with its children already computed.
+    /// </remarks>
+    private void MaterialiseMetadataTiers() =>
+        PostOrderFold.Fold(this, CausesWithMetadata, MaterialiseTier, ReadMaterialisedTier, WriteMaterialisedTier);
+
+    private MetadataNode<TMetadata>? _materialisedTier;
+
+    private static readonly Func<BooleanResultBase<TMetadata>, IReadOnlyList<BooleanResultBase<TMetadata>>>
+        CausesWithMetadata = result => AsList(result.CausesWithValues);
+
+    private static readonly Func<
+            BooleanResultBase<TMetadata>,
+            IReadOnlyList<MetadataNode<TMetadata>>,
+            MetadataNode<TMetadata>>
+        MaterialiseTier = (result, _) => Materialised(result.MetadataTier);
+
+    private static MetadataNode<TMetadata> Materialised(MetadataNode<TMetadata> tier)
+    {
+        _ = tier.Metadata;
+        return tier;
+    }
+
+    private static readonly Func<BooleanResultBase<TMetadata>, MetadataNode<TMetadata>?> ReadMaterialisedTier =
+        result => result._materialisedTier;
+
+    private static readonly Action<BooleanResultBase<TMetadata>, MetadataNode<TMetadata>> WriteMaterialisedTier =
+        (result, tier) => result._materialisedTier = tier;
 
     /// <summary>Gets the metadata tree associated with this result.</summary>
     public abstract MetadataNode<TMetadata> MetadataTier { get; }

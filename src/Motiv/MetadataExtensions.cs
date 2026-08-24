@@ -1,4 +1,5 @@
 using Motiv.Shared;
+using Motiv.Traversal;
 
 namespace Motiv;
 
@@ -53,16 +54,38 @@ public static class MetadataExtensions
 
     internal static IEnumerable<TMetadata> GetRootValues<TMetadata>(
         this BooleanResultBase<TMetadata> result) =>
-        result.MetadataTier
-            .Underlying
-            .GetRootValues()
+        RootValuesOf(result.MetadataTier.Underlying)
             .ElseIfEmpty(result.MetadataTier.Metadata)
             .DistinctWithOrderPreserved();
 
-    private static IEnumerable<TMetadata> GetRootValues<TMetadata>(
-        this IEnumerable<MetadataNode<TMetadata>> metadataTiers) =>
-        metadataTiers.SelectMany(metadataTier => metadataTier
-            .Underlying
-            .GetRootValues()
-            .ElseIfEmpty(metadataTier.Metadata));
+    /// <remarks>
+    /// The metadata tier is a tree in its own right, so this walk folds rather than recurses for the
+    /// same reason the assertion walks do (Spec 3A / ticket 19).
+    /// </remarks>
+    private static IEnumerable<TMetadata> RootValuesOf<TMetadata>(IEnumerable<MetadataNode<TMetadata>> tiers)
+    {
+        var memo = new Dictionary<MetadataNode<TMetadata>, TMetadata[]>(
+            ReferenceEqualityComparer<MetadataNode<TMetadata>>.Instance);
+
+        var values = new List<TMetadata>();
+
+        foreach (var tier in tiers)
+            values.AddRange(PostOrderFold.Fold(
+                tier,
+                node => node.Underlying as IReadOnlyList<MetadataNode<TMetadata>> ?? node.Underlying.ToArray(),
+                (node, folded) =>
+                {
+                    var rootValues = new List<TMetadata>();
+                    for (var i = 0; i < folded.Count; i++)
+                        rootValues.AddRange(folded[i]);
+
+                    return rootValues.Count == 0
+                        ? node.Metadata.ToArray()
+                        : rootValues.ToArray();
+                },
+                node => memo.TryGetValue(node, out var folded) ? folded : null,
+                (node, folded) => memo[node] = folded));
+
+        return values;
+    }
 }

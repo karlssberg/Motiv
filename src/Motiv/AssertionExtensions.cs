@@ -20,8 +20,13 @@ public static class AssertionExtensions
     /// <param name="results">The collection of <see cref="BooleanResultBase{TMetadata}"/> to get assertions from.</param>
     /// <returns>A collection of assertions from the boolean results.</returns>
     public static IEnumerable<string> GetAssertions(
-        this IEnumerable<BooleanResultBase> results) =>
-        FoldEach(results, CausalOperands, CombineAssertions);
+        this IEnumerable<BooleanResultBase> results)
+    {
+        // Deferred: Explanation's constructor calls this speculatively for every node it builds, so
+        // folding at call time would make evaluating a composition quadratic in its size.
+        foreach (var assertion in FoldEach(results, CausalOperands, CombineAssertions))
+            yield return assertion;
+    }
 
     /// <summary>
     /// Gets the assertions from a collection of boolean results.
@@ -29,8 +34,11 @@ public static class AssertionExtensions
     /// <param name="results">The collection of <see cref="BooleanResultBase{TMetadata}"/> to get all assertions from.</param>
     /// <returns>A collection of all assertions yielded during the creation of the boolean results.</returns>
     public static IEnumerable<string> GetAllAssertions(
-        this IEnumerable<BooleanResultBase> results) =>
-        FoldEach(results, UnderlyingOperands, CombineAllAssertions);
+        this IEnumerable<BooleanResultBase> results)
+    {
+        foreach (var assertion in FoldEach(results, UnderlyingOperands, CombineAllAssertions))
+            yield return assertion;
+    }
 
     /// <summary>
     /// Get the assertions from a collection of boolean results that are true.
@@ -61,10 +69,15 @@ public static class AssertionExtensions
     /// <param name="result">The boolean result to get the root assertions from.</param>
     /// <returns>A collection of assertions from the root causes of the boolean result.</returns>
     public static IEnumerable<string> GetRootAssertions(
-        this BooleanResultBase result) =>
-        FoldEach(result.Explanation.Underlying, ExplanationUnderlying, CombineRootAssertions)
+        this BooleanResultBase result)
+    {
+        var rootAssertions = FoldEach(result.Explanation.Underlying, ExplanationUnderlying, CombineRootAssertions)
             .DistinctWithOrderPreserved()
             .ElseIfEmpty(result.Assertions);
+
+        foreach (var assertion in rootAssertions)
+            yield return assertion;
+    }
 
     /// <summary>
     /// Get the assertions from the root causes of a boolean result, instead of causes from possible intermediate
@@ -73,8 +86,11 @@ public static class AssertionExtensions
     /// <param name="result">The boolean result to get the root assertions from.</param>
     /// <returns>A collection of assertions from the root causes of the boolean result.</returns>
     public static IEnumerable<string> GetAllRootAssertions(
-        this BooleanResultBase result) =>
-        FoldEach(result.ToEnumerable(), AllOperands, CombineAllRootAssertions);
+        this BooleanResultBase result)
+    {
+        foreach (var assertion in FoldEach(result.ToEnumerable(), AllOperands, CombineAllRootAssertions))
+            yield return assertion;
+    }
 
     private static readonly Func<BooleanResultBase, IReadOnlyList<BooleanResultBase>> CausalOperands =
         result => result is IBooleanOperationResult operation ? AsList(operation.Causes) : [];
