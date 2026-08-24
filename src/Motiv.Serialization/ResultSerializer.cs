@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Motiv.Shared;
 
 namespace Motiv.Serialization;
 
@@ -32,13 +31,7 @@ public sealed class ResultSerializer
     {
         if (result is null) throw new ArgumentNullException(nameof(result));
 
-        return new RuleEvaluationResult<TMetadata>(
-            result.Satisfied,
-            result.Reason,
-            result.Assertions.ToArray(),
-            result.Values.ToArray(),
-            result.Justification,
-            MapExplanation(result.Explanation));
+        return ResultProjection.Project(result);
     }
 
     /// <summary>Projects an evaluation result and renders it to a JSON string.</summary>
@@ -47,9 +40,4 @@ public sealed class ResultSerializer
     /// <returns>The JSON representation of the projected result.</returns>
     public string Serialize<TMetadata>(BooleanResultBase<TMetadata> result) =>
         JsonSerializer.Serialize(ToEvaluationResult(result), _jsonOptions);
-
-    private static ExplanationNode MapExplanation(Explanation explanation) =>
-        new(
-            explanation.Assertions.ToArray(),
-            explanation.Underlying.Select(MapExplanation).ToArray());
 }
