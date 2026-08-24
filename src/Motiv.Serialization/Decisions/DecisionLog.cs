@@ -85,20 +85,25 @@ public sealed class DecisionLog : IAsyncDisposable
         if (_queue.Writer.TryWrite(record))
             return;
 
-        // A closed log is never "wait for capacity" — capacity is not coming. Both remaining postures
-        // therefore collapse to the full-queue behaviour, which for Block would otherwise hang.
+        // A closed log fails under every posture, not only FailClosed. Capacity is never coming back,
+        // so Block would hang forever -- and a disposed log can no longer write the gap marker that
+        // makes a drop provable, so dropping here would be exactly the silent loss Drop exists to
+        // avoid. Disposal is a lifecycle event, not backpressure.
+        if (_closed)
+            throw DecisionNotLoggedException.LogClosed(record.RuleName);
+
         switch (_options.Backpressure)
         {
-            case DecisionBackpressure.Block when !_closed:
+            case DecisionBackpressure.Block:
                 // Deliberately synchronous: the caller chose to protect the evidence at the cost of
                 // its own latency, and quietly degrading to Drop would be worse than the wait.
                 _queue.Writer.WriteAsync(record).AsTask().GetAwaiter().GetResult();
                 return;
-            case DecisionBackpressure.Drop when !_closed:
+            case DecisionBackpressure.Drop:
                 RecordDrop();
                 return;
             default:
-                throw new DecisionNotLoggedException(record.RuleName);
+                throw DecisionNotLoggedException.QueueFull(record.RuleName);
         }
     }
 

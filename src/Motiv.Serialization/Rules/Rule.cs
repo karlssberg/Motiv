@@ -23,6 +23,39 @@ public class Rule<TModel, TMetadata> : RuleBase
         /// has no document to carry the flag.
         /// </summary>
         public bool Audited { get; } = audited;
+
+        private IReadOnlyList<PropositionVersion>? _propositionPin;
+
+        /// <summary>
+        /// Every authored proposition this binding resolves through, transitively, at the version it
+        /// had when the binding was made — a decision record's third anchor.
+        /// </summary>
+        /// <remarks>
+        /// Computed once per state rather than once per evaluation, and that is sound rather than a
+        /// shortcut: republishing anything in the closure rebinds every referrer and produces a
+        /// <em>new</em> state, so this list cannot go stale while the state it belongs to is live.
+        /// Deferred to the first audited evaluation so an unaudited rule never pays for it.
+        /// </remarks>
+        public IReadOnlyList<PropositionVersion> PropositionPin(ScopeGeneration generation, string ruleName) =>
+            _propositionPin ??= ResolvePin(generation, ruleName);
+
+        private static IReadOnlyList<PropositionVersion> ResolvePin(ScopeGeneration generation, string ruleName)
+        {
+            var references = generation.Graph.ReferenceClosure(NodeId.Rule(ruleName));
+            if (references.Count == 0)
+                return [];
+
+            var pinned = new List<PropositionVersion>(references.Count);
+            foreach (var reference in references)
+            {
+                // A name resolving to a compiled spec rather than an authored proposition has no
+                // version of its own; BuildId is what pins those, which is why it is a separate anchor.
+                if (generation.Authored.TryGetValue(reference, out var authored))
+                    pinned.Add(new PropositionVersion(authored.Name, authored.Version));
+            }
+
+            return pinned;
+        }
     }
 
     /// <summary>Creates a rule whose default implementation is a compiled spec.</summary>
@@ -68,7 +101,47 @@ public class Rule<TModel, TMetadata> : RuleBase
     /// Reads the <em>pinned</em> world when a <c>DecisionSnapshot</c> is open, so several rules
     /// evaluated inside one decision resolve against one published set rather than one each.
     /// </remarks>
-    public BooleanResultBase<TMetadata> Evaluate(TModel model) => StateIn(Scope.Active).Spec.Evaluate(model);
+    public BooleanResultBase<TMetadata> Evaluate(TModel model)
+    {
+        var generation = Scope.Active;
+        var state = StateIn(generation);
+        var result = state.Spec.Evaluate(model);
+        Record(state, generation, model, result);
+        return result;
+    }
+
+    /// <summary>
+    /// Writes this evaluation to the decision log, when the binding asked to be recorded. Shared by
+    /// every entry point on this rule flavour, including the policy shadow — a rule that says it is
+    /// audited and records only through one of its two methods is worse than one that records
+    /// nothing, because the gap is invisible.
+    /// </summary>
+    /// <remarks>
+    /// The outcome is projected here, on the calling thread, rather than on the writer. Deferring it
+    /// would move real cost off the request path, but the result tree memoises as it is read and none
+    /// of that memoisation is documented thread-safe: handing a half-read result to a background
+    /// writer races the caller still reading it, in the one subsystem whose output is the product.
+    /// What crosses the queue is immutable.
+    /// </remarks>
+    private protected void Record(
+        State state, ScopeGeneration generation, TModel model, BooleanResultBase<TMetadata> result)
+    {
+        if (!state.Audited || DecisionLog is not { } log)
+            return;
+
+        var decision = DecisionSnapshot.Current;
+        log.Enqueue(new DecisionRecord(
+            Id: Guid.NewGuid(),
+            CorrelationId: decision?.CorrelationId ?? Guid.NewGuid().ToString("N"),
+            TimestampUtc: DateTimeOffset.UtcNow,
+            Caller: decision?.Caller,
+            RuleName: Name,
+            RuleVersion: state.Version,
+            BuildId: BuildIdentity.Current,
+            ReferencedPropositionVersions: state.PropositionPin(generation, Name),
+            Input: log.Capture.Capture(model),
+            Outcome: ResultProjection.ProjectUntyped(result)));
+    }
 
     /// <summary>The live state — what an administrative read or a publish must see, pinned or not.</summary>
     private protected State Live() => StateIn(Scope.Current);

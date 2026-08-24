@@ -115,6 +115,7 @@ public class DecisionLogTests
             {
                 // Assert
                 exception.RuleName.ShouldBe("rule");
+                exception.Message.ShouldContain("queue is full");
                 sink.Open();
                 return;
             }

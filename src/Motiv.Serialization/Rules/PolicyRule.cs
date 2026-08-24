@@ -41,8 +41,14 @@ public class PolicyRule<TModel, TMetadata> : Rule<TModel, TMetadata>
     /// </remarks>
     /// <param name="model">The model to evaluate.</param>
     /// <returns>The single-value policy result of the current implementation.</returns>
-    public new PolicyResultBase<TMetadata> Evaluate(TModel model) =>
-        ((PolicyBase<TModel, TMetadata>)StateIn(Scope.Active).Spec).Evaluate(model);
+    public new PolicyResultBase<TMetadata> Evaluate(TModel model)
+    {
+        var generation = Scope.Active;
+        var state = StateIn(generation);
+        var result = ((PolicyBase<TModel, TMetadata>)state.Spec).Evaluate(model);
+        Record(state, generation, model, result);
+        return result;
+    }
 
     private protected override RuleError? RequirePolicy(SpecBase<TModel, TMetadata> spec) =>
         spec is PolicyBase<TModel, TMetadata>

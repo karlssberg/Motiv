@@ -1,9 +1,11 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 
 namespace Motiv.Serialization.AspNetCore;
 
 /// <summary>
-/// Pins one world for the duration of a request and stamps which one it was on the response.
+/// Pins one world — and one decision — for the duration of a request, and stamps which world it was
+/// on the response.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -18,6 +20,13 @@ namespace Motiv.Serialization.AspNetCore;
 /// divergence.
 /// </para>
 /// <para>
+/// The pin also names the decision. The request's trace identifier becomes the correlation id every
+/// decision record from this request carries, and the authenticated subject becomes its caller — so an
+/// operator holding a trace can find every rule that ran under it, and a record always says who it was
+/// taken for. Both come from the request rather than from a parameter no handler would remember to
+/// pass.
+/// </para>
+/// <para>
 /// Only covers responses this filter actually wraps. A refusal issued by ASP.NET middleware ahead of
 /// routing — <c>RequireAuthorization()</c>'s 401 for an unauthenticated caller, most notably — never
 /// reaches this filter, so it carries no header; a caller with no credentials has no generation worth
@@ -25,12 +34,13 @@ namespace Motiv.Serialization.AspNetCore;
 /// the contract, including why a write's header intentionally understates.
 /// </para>
 /// </remarks>
-internal sealed class MotivGenerationFilter(Func<DecisionSnapshot> pin) : IEndpointFilter
+internal sealed class MotivGenerationFilter(Func<string?, string?, DecisionSnapshot> pin) : IEndpointFilter
 {
     public async ValueTask<object?> InvokeAsync(
         EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
-        using var snapshot = pin();
+        var http = context.HttpContext;
+        using var snapshot = pin(http.TraceIdentifier, CallerOf(http.User));
 
         // Stamped through OnStarting so it lands on every response this filter wraps — including the
         // error paths this endpoint itself produces (an unknown rule, an invalid document), where
@@ -48,4 +58,12 @@ internal sealed class MotivGenerationFilter(Func<DecisionSnapshot> pin) : IEndpo
 
         return await next(context).ConfigureAwait(false);
     }
+
+    /// <summary>
+    /// The authenticated subject, or null. Null rather than <c>"unknown"</c>: an unauthenticated
+    /// caller is genuinely unnamed, and a record claiming otherwise would be worse than one admitting
+    /// it. <c>PrincipalIdentity.Subject</c>'s fallback is for writes, which must always attribute.
+    /// </summary>
+    private static string? CallerOf(ClaimsPrincipal? principal) =>
+        principal?.Identity?.IsAuthenticated == true ? PrincipalIdentity.Subject(principal) : null;
 }
