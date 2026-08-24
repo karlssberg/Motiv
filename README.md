@@ -345,6 +345,34 @@ response carries a `Motiv-Generation` header so a client can tell it was
 routed to a replica serving an older world. Available via the
 `Motiv.Serialization` and `Motiv.Serialization.AspNetCore` packages.
 
+### The Decision Log
+
+Motiv builds a full explanation on every evaluation and then discards it. Mark
+a rule `audited` in its document and every evaluation is recorded instead — so
+you can answer *why this customer was declined, on the 3rd, at 14:07*:
+
+```csharp
+builder.Services.AddMotivRules(registry, options)
+    .AddDecisionLog(new InMemoryDecisionSink(), log =>
+        // No default: a rule marked audited over a model type with no posture
+        // registered here will not bind. ReferenceOnly keeps a key and nothing
+        // else, so erasure and audit can coexist.
+        log.Capture.ReferenceOnly<Customer>(customer => customer.CustomerId))
+    .AddRule<CanCheckoutRule>();
+```
+
+The flag lives on the *document*, so it's versioned, toggling it is a governed
+change, and a rule on a compiled default can't claim to be audited — it has
+nowhere to put the flag. Each `DecisionRecord` pins behaviour with three
+anchors (the rule's version, the build, and the versions of every authored
+proposition it resolved through), carries the full justification, and keeps
+only what your chosen capture posture allows of the model. Records leave the
+evaluation path through a bounded queue drained into an `IDecisionSink` — your
+seam for a durable table, a SIEM, or an outbox — and a full queue fails the
+decision by default, because an audited decision that wasn't logged didn't
+happen. Available via the `Motiv.Serialization` and
+`Motiv.Serialization.AspNetCore` packages.
+
 ### Governance and Access Control
 
 Live rules are secure by default: `MapMotivRules()` requires authentication on

@@ -198,11 +198,11 @@ editing and transcribe it if it is compiled.
 
 ## Verification obligations (from bundle spec 3, §7)
 
-- [ ] An audited rule records a full `DecisionRecord` — verdict, justification, three anchors, input.
-- [ ] A `Drop` under load emits a gap marker whose count matches what was shed. *(The telemetry counter
+- [x] An audited rule records a full `DecisionRecord` — verdict, justification, three anchors, input.
+- [x] A `Drop` under load emits a gap marker whose count matches what was shed. *(The telemetry counter
       that must accompany it is build step 3's; the log-side half is this slice's.)*
-- [ ] `ReferenceOnly` capture leaves a decision record carrying no model data beyond the key, so subject
+- [x] `ReferenceOnly` capture leaves a decision record carrying no model data beyond the key, so subject
       erasure in the adopter's system of record makes replay correctly impossible.
-- [ ] `audited` is versioned and governed: toggling it is a document change, classified as a logic
+- [x] `audited` is versioned and governed: toggling it is a document change, classified as a logic
       change rather than metadata-only.
-- [ ] Nothing about an unaudited rule's evaluation changes — same result, same cost.
+- [x] Nothing about an unaudited rule's evaluation changes — same result, same cost.

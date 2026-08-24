@@ -296,4 +296,51 @@ slice (below).
 
 ## Outcome (recorded after the build)
 
-_To be filled in._
+Built as designed. Five things the build changed or settled:
+
+**1. The cost is the projection, and the projection is not new.** Decision 3 predicted the eager
+materialisation would be the dominant cost and promised to measure it. It is, and it is almost exactly
+`ResultSerializer.ToEvaluationResult`'s existing cost — the log's own overhead is under a microsecond.
+Rough in-process timings, Release, one warm process (not BenchmarkDotNet — the variance between runs is
+tens of percent, so read the columns against each other rather than as absolutes):
+
+| Rule | `Evaluate` | `Evaluate` + `ToEvaluationResult` | audited `Evaluate` |
+|---|---|---|---|
+| 1 spec | ~0.6 µs | ~5 µs | ~6 µs |
+| 10-operand `And` | ~2 µs | ~69 µs | ~35–100 µs |
+| 50-operand `And` | ~3 µs | ~172 µs | ~165–200 µs |
+
+The audited column tracks the projection column, not the evaluate column. So auditing costs what
+serialising a result has always cost, because that is what it stores — the sample's `/api/checkout` has
+been paying it twice per request all along. The superlinearity in the middle column is pre-existing and
+is very likely [#137](https://github.com/karlssberg/Motiv/issues/137)'s metadata tier, which
+`RuleEvaluationResult.Values` reads; a follow-up says so rather than a new ticket claiming it as this
+slice's.
+
+**2. `Drop` fails once the log is disposed.** The design said a disposed log fails `Block` (capacity is
+never coming back) but did not settle `Drop`, whose contract is that the evaluation proceeds. It fails
+too: a disposed log cannot write the gap marker, so dropping there would be exactly the silent loss
+`Drop` exists to avoid. Disposal is a lifecycle event, not backpressure, and the exception now says
+which of the two happened.
+
+**3. `DroppedCount` had to become monotonic.** The first version reset it when a gap was taken, which
+made the property mean "drops not yet reported" while reading like a total. Now the sum of every gap
+written equals it — which is also what a telemetry counter in build step 3 will want.
+
+**4. `EvaluateAsync` could not become an `async` method.** Making it one moved the unbound-rule
+exception from a synchronous throw to a faulted task, which an existing test caught. It validates
+eagerly and wraps only when there is something to record — so an unaudited async rule also keeps
+forwarding the underlying `ValueTask` directly, which `AsyncPolicyRule`'s own documentation promises.
+
+**5. The sample had to audit `loyalty-discount`, not `can-checkout`.** The plan assumed `can-checkout`
+and said to transcribe its default if it turned out to be compiled. It is compiled, and the more honest
+demonstration was to leave it that way and audit the rule that already has a document — so the sample
+shows the constraint rather than working around it.
+
+Two duplications were removed after the fact: `Record` and the proposition-closure walk were identical
+to the character across `Rule` and `AsyncRule`, and moved to an internal `DecisionRecording`. That is
+not the deliberate builder-path duplication CLAUDE.md protects — those bodies really do differ; these
+did not.
+
+The mandatory `code-simplifier` pass has no such agent available in this environment, so the review was
+done by hand and its findings are the two extractions above.
