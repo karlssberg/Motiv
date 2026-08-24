@@ -1,3 +1,4 @@
+using Motiv.Shared;
 using Motiv.Traversal;
 
 namespace Motiv;
@@ -65,4 +66,86 @@ public abstract class ResultDescriptionBase
 
     private static readonly Action<ResultDescriptionBase, string> WriteReason =
         (description, reason) => description._foldedReason = reason;
+
+    /// <summary>One description rendered in one of the two justification modes.</summary>
+    private protected readonly struct Rendering(ResultDescriptionBase description, bool withoutCausalCount)
+    {
+        public ResultDescriptionBase Description { get; } = description;
+
+        public bool WithoutCausalCount { get; } = withoutCausalCount;
+    }
+
+    /// <summary>
+    /// Renders this description and everything beneath it, deepest first, so that a formatter builds
+    /// its lines from its operands' already-rendered blocks rather than by calling into them.
+    /// </summary>
+    /// <remarks>
+    /// The memo is walk-local rather than a field on the node, because a description renders
+    /// differently in the two modes and both may be wanted — the same reason there are two methods.
+    /// </remarks>
+    private protected string[] FoldedJustification(bool withoutCausalCount)
+    {
+        var memo = new Dictionary<Rendering, string[]>(RenderingComparer.Instance);
+
+        return PostOrderFold.Fold(
+            new Rendering(this, withoutCausalCount),
+            RenderingOperands,
+            ComposeRendering,
+            rendering => memo.TryGetValue(rendering, out var lines) ? lines : null,
+            (rendering, lines) => memo[rendering] = lines);
+    }
+
+    /// <summary>The renderings this description's own lines are built from, in order.</summary>
+    private protected virtual IReadOnlyList<Rendering> JustificationOperands(bool withoutCausalCount) => [];
+
+    /// <summary>
+    /// Builds this description's lines from its operands', supplied in
+    /// <see cref="JustificationOperands" /> order. The default is for a formatter that recurses into
+    /// nothing.
+    /// </summary>
+    private protected virtual string[] ComposeJustification(
+        IReadOnlyList<string[]> operandLines,
+        bool withoutCausalCount) =>
+        (withoutCausalCount ? GetJustificationAsLinesWithoutCausalCount() : GetJustificationAsLines()).ToArray();
+
+    /// <summary>Prefixes a conjunction heading to its operands' lines, indented beneath it.</summary>
+    private protected static string[] BinaryJustification(string conjunction, IReadOnlyList<string[]> operandLines)
+    {
+        var lines = new List<string> { conjunction };
+
+        for (var i = 0; i < operandLines.Count; i++)
+            foreach (var line in operandLines[i])
+                lines.Add(line.Indent());
+
+        return lines.ToArray();
+    }
+
+    private protected static string[] Concatenated(IReadOnlyList<string[]> operandLines)
+    {
+        var lines = new List<string>();
+
+        for (var i = 0; i < operandLines.Count; i++)
+            lines.AddRange(operandLines[i]);
+
+        return lines.ToArray();
+    }
+
+    private static readonly Func<Rendering, IReadOnlyList<Rendering>> RenderingOperands =
+        rendering => rendering.Description.JustificationOperands(rendering.WithoutCausalCount);
+
+    private static readonly Func<Rendering, IReadOnlyList<string[]>, string[]> ComposeRendering =
+        (rendering, operandLines) =>
+            rendering.Description.ComposeJustification(operandLines, rendering.WithoutCausalCount);
+
+    private sealed class RenderingComparer : IEqualityComparer<Rendering>
+    {
+        public static readonly RenderingComparer Instance = new();
+
+        public bool Equals(Rendering x, Rendering y) =>
+            ReferenceEquals(x.Description, y.Description) && x.WithoutCausalCount == y.WithoutCausalCount;
+
+        public int GetHashCode(Rendering rendering) =>
+            System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(rendering.Description) * 2
+            + (rendering.WithoutCausalCount ? 1 : 0);
+    }
 }

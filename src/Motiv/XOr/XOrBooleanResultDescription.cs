@@ -37,11 +37,20 @@ internal sealed class XOrBooleanResultDescription<TMetadata>(
         }
     }
 
-    public override IEnumerable<string> GetJustificationAsLines() =>
-        _results.GetBinaryJustificationAsLines(Statement);
+    public override IEnumerable<string> GetJustificationAsLines() => FoldedJustification(withoutCausalCount: false);
 
     internal override IEnumerable<string> GetJustificationAsLinesWithoutCausalCount() =>
-        _results.GetBinaryJustificationAsLines(Statement, withoutCausalCount: true);
+        FoldedJustification(withoutCausalCount: true);
+
+    private protected override IReadOnlyList<Rendering> JustificationOperands(bool withoutCausalCount) =>
+        Collapsed.Select(result => new Rendering(result.Description, withoutCausalCount)).ToArray();
+
+    private protected override string[] ComposeJustification(
+        IReadOnlyList<string[]> operandLines,
+        bool withoutCausalCount) =>
+        BinaryJustification(Statement, operandLines);
+
+    private IReadOnlyList<BooleanResultBase> Collapsed => field ??= _results.FlattenCollapsible(Statement);
 
     /// <remarks>Iterative: the result tree it searches is unbounded in depth (Spec 3A / ticket 19).</remarks>
     private static bool ContainsBinaryOperation(BooleanResultBase result)

@@ -7,16 +7,13 @@ namespace Motiv.Tests.Traversal;
 /// 8 MB main stack most of these would pass without the fix and prove nothing.
 /// </summary>
 /// <remarks>
-/// These abort the whole test process rather than failing, so a case stays skipped until the member
-/// it covers has been made stack-safe.
+/// Before Spec 3A each of these aborted the whole test process rather than failing, so they were
+/// written skipped and unskipped one at a time as their member was folded.
 /// </remarks>
 public class DeepCompositionTests
 {
     private const int Operands = 3_000;
     private const int StackBytes = 1024 * 1024;
-
-    /// <summary>Unskipped member by member as Spec 3A makes each one stack-safe.</summary>
-    private const string StillRecursive = "Aborts the test process until this member is stack-safe (ticket 19).";
 
     [Fact]
     public void Should_read_UnderlyingAssertionSources_of_a_deep_composition() =>
@@ -95,7 +92,7 @@ public class DeepCompositionTests
     public void Should_read_Reason_of_a_deep_composition() =>
         OnASmallStack(() => DeepAnd().Reason.Length.ShouldBeGreaterThan(0));
 
-    [Fact(Skip = StillRecursive)]
+    [Fact]
     public void Should_read_Justification_of_a_deep_composition() =>
         OnASmallStack(() => DeepAnd().Justification.Length.ShouldBeGreaterThan(0));
 
@@ -103,7 +100,7 @@ public class DeepCompositionTests
     /// The uniformity invariant: no public member of a result has a lower depth ceiling than any
     /// other. A single result, read through every member, on one small stack.
     /// </summary>
-    [Fact(Skip = StillRecursive)]
+    [Fact]
     public void Should_read_every_member_of_one_deep_result() =>
         OnASmallStack(() =>
         {

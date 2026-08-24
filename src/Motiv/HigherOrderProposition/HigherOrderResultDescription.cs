@@ -8,21 +8,24 @@ internal sealed class HigherOrderResultDescription<TUnderlyingMetadata>(
     string propositionStatement)
     : HigherOrderResultDescriptionBase<TUnderlyingMetadata>(reason, causes, propositionStatement)
 {
-    public override IEnumerable<string> GetJustificationAsLines()
+    public override IEnumerable<string> GetJustificationAsLines() => FoldedJustification(withoutCausalCount: false);
+
+    internal override IEnumerable<string> GetJustificationAsLinesWithoutCausalCount() =>
+        FoldedJustification(withoutCausalCount: true);
+
+    private protected override string[] ComposeJustification(
+        IReadOnlyList<string[]> operandLines,
+        bool withoutCausalCount) =>
+        Render(withoutCausalCount
+            ? UnderlyingJustifications(operandLines)
+            : UnderlyingJustificationsWithCounts(operandLines))
+            .ToArray();
+
+    private IEnumerable<string> Render(IEnumerable<string> underlyingLines)
     {
         yield return Reason;
 
-        foreach (var line in GetUnderlyingJustificationsWithCountsAsLines())
-        {
-            yield return line.Indent();
-        }
-    }
-
-    internal override IEnumerable<string> GetJustificationAsLinesWithoutCausalCount()
-    {
-        yield return Reason;
-
-        foreach (var line in GetUnderlyingJustificationsAsLines())
+        foreach (var line in underlyingLines)
         {
             yield return line.Indent();
         }

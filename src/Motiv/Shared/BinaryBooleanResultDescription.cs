@@ -1,3 +1,5 @@
+using Motiv.Traversal;
+
 namespace Motiv.Shared;
 
 internal abstract class BinaryBooleanResultDescription<TMetadata>(
@@ -21,11 +23,24 @@ internal abstract class BinaryBooleanResultDescription<TMetadata>(
             _ => string.Join(Separator, Explained(operandReasons))
         };
 
-    public override IEnumerable<string> GetJustificationAsLines() =>
-        _causalResults.GetBinaryJustificationAsLines(Statement);
+    public override IEnumerable<string> GetJustificationAsLines() => FoldedJustification(withoutCausalCount: false);
 
     internal override IEnumerable<string> GetJustificationAsLinesWithoutCausalCount() =>
-        _causalResults.GetBinaryJustificationAsLines(Statement, withoutCausalCount: true);
+        FoldedJustification(withoutCausalCount: true);
+
+    private protected override IReadOnlyList<Rendering> JustificationOperands(bool withoutCausalCount) =>
+        Collapsed.Select(result => new Rendering(result.Description, withoutCausalCount)).ToArray();
+
+    private protected override string[] ComposeJustification(
+        IReadOnlyList<string[]> operandLines,
+        bool withoutCausalCount) =>
+        BinaryJustification(Statement, operandLines);
+
+    /// <summary>
+    /// The causal results as they are rendered: a run of nested same-operation compositions collapses
+    /// into one group beneath a single conjunction heading.
+    /// </summary>
+    private IReadOnlyList<BooleanResultBase> Collapsed => field ??= _causalResults.FlattenCollapsible(Statement);
 
     protected abstract string Separator { get; }
 

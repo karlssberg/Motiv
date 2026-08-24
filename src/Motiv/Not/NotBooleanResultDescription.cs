@@ -15,11 +15,18 @@ internal sealed class NotBooleanResultDescription<TMetadata>(BooleanResultBase o
     private protected override string ComposeReason(IReadOnlyList<string> operandReasons) =>
         FormatReason(operand, operandReasons[0]);
 
-    public override IEnumerable<string> GetJustificationAsLines() =>
-        NegateFirstLine(operand.Description.GetJustificationAsLines());
+    public override IEnumerable<string> GetJustificationAsLines() => FoldedJustification(withoutCausalCount: false);
 
     internal override IEnumerable<string> GetJustificationAsLinesWithoutCausalCount() =>
-        NegateFirstLine(operand.Description.GetJustificationAsLinesWithoutCausalCount());
+        FoldedJustification(withoutCausalCount: true);
+
+    private protected override IReadOnlyList<Rendering> JustificationOperands(bool withoutCausalCount) =>
+        [new Rendering(operand.Description, withoutCausalCount)];
+
+    private protected override string[] ComposeJustification(
+        IReadOnlyList<string[]> operandLines,
+        bool withoutCausalCount) =>
+        NegateFirstLine(operandLines[0]).ToArray();
 
     private static IEnumerable<string> NegateFirstLine(IEnumerable<string> lines) =>
         lines.ReplaceFirstLine(firstLine =>

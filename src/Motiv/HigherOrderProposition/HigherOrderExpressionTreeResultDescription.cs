@@ -14,25 +14,25 @@ internal sealed class HigherOrderExpressionTreeResultDescription<TUnderlyingMeta
 {
     private string Assertion => field ??= expression.ToAssertion(satisfied);
 
-    public override IEnumerable<string> GetJustificationAsLines()
+    public override IEnumerable<string> GetJustificationAsLines() => FoldedJustification(withoutCausalCount: false);
+
+    internal override IEnumerable<string> GetJustificationAsLinesWithoutCausalCount() =>
+        FoldedJustification(withoutCausalCount: true);
+
+    private protected override string[] ComposeJustification(
+        IReadOnlyList<string[]> operandLines,
+        bool withoutCausalCount) =>
+        Render(operandLines, withoutCausalCount).ToArray();
+
+    private IEnumerable<string> Render(IReadOnlyList<string[]> causeLines, bool withoutCausalCount)
     {
         yield return Reason;
 
-        yield return $"{Assertion} ({CausalOperandCount})".Indent();
+        yield return withoutCausalCount
+            ? Assertion.Indent()
+            : $"{Assertion} ({CausalOperandCount})".Indent();
 
-        foreach (var line in GetUnderlyingJustificationsAsLines())
-        {
-            yield return line.Indent(2);
-        }
-    }
-
-    internal override IEnumerable<string> GetJustificationAsLinesWithoutCausalCount()
-    {
-        yield return Reason;
-
-        yield return Assertion.Indent();
-
-        foreach (var line in GetUnderlyingJustificationsAsLines())
+        foreach (var line in UnderlyingJustifications(causeLines))
         {
             yield return line.Indent(2);
         }

@@ -6,11 +6,18 @@ internal sealed class BooleanResultDescriptionWithUnderlying(
     string propositionalStatement)
     : ResultDescriptionWithUnderlying(booleanResult, reason, propositionalStatement)
 {
-    public override IEnumerable<string> GetJustificationAsLines() =>
-        GetJustificationAsLinesCore(BooleanResult.Description.GetJustificationAsLines());
+    public override IEnumerable<string> GetJustificationAsLines() => FoldedJustification(withoutCausalCount: false);
 
     internal override IEnumerable<string> GetJustificationAsLinesWithoutCausalCount() =>
-        GetJustificationAsLinesCore(BooleanResult.Description.GetJustificationAsLinesWithoutCausalCount());
+        FoldedJustification(withoutCausalCount: true);
+
+    private protected override IReadOnlyList<Rendering> JustificationOperands(bool withoutCausalCount) =>
+        [new Rendering(BooleanResult.Description, withoutCausalCount)];
+
+    private protected override string[] ComposeJustification(
+        IReadOnlyList<string[]> operandLines,
+        bool withoutCausalCount) =>
+        GetJustificationAsLinesCore(operandLines[0]).ToArray();
 
     private IEnumerable<string> GetJustificationAsLinesCore(IEnumerable<string> underlyingLines)
     {

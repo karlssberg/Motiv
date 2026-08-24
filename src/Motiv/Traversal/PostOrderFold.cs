@@ -42,7 +42,6 @@ internal static class PostOrderFold
         Func<TNode, IReadOnlyList<TValue>, TValue> combine,
         Func<TNode, TValue?> read,
         Action<TNode, TValue> write)
-        where TNode : class
         where TValue : class
     {
         if (read(root) is { } alreadyFolded)
