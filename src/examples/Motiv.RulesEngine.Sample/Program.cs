@@ -194,7 +194,24 @@ var storeConnectionString = builder.Configuration["Motiv:Store:ConnectionString"
 
 builder.Services.AddMotivEntityFrameworkStore(store => store.UseSqlite(storeConnectionString));
 
+// Seam: the decision log. The sink is the in-memory reference implementation -- enough to demonstrate
+// the trail, and explicitly not enough for production, where the log must outlive the process and be
+// bounded by a retention window. An adopter swaps in their own IDecisionSink here: a durable table, a
+// SIEM, an outbox. It is registered as a singleton so the container drains the queue at shutdown.
+//
+// The capture posture is required, not optional: without one, a rule document marked "audited" does
+// not bind at all. ReferenceOnly is the recommended production choice because it lets erasure and
+// audit coexist -- erase cust-42 in the system of record and the decision survives without personal
+// data, while replay correctly becomes impossible.
+var decisionSink = new InMemoryDecisionSink();
+builder.Services.AddSingleton(decisionSink);
+
 builder.Services.AddMotivRules(registry, options)
+    .AddDecisionLog(decisionSink, log =>
+    {
+        log.Backpressure = DecisionBackpressure.Block;
+        log.Capture.ReferenceOnly<Customer>(customer => customer.CustomerId ?? "anonymous");
+    })
     .AddPropositions(provider => new EfPropositionStore(
         provider.GetRequiredService<IDbContextFactory<MotivStoreDbContext>>()))
     .AddGovernance(new JsonFileGateStore(gatePath))
@@ -279,17 +296,40 @@ var resultSerializer = new ResultSerializer();
 app.MapPost("/api/checkout", async (
     CanCheckoutRule canCheckout,
     FraudScreeningRule fraudScreening,
+    LoyaltyDiscountRule loyaltyDiscount,
+    RuleSet rules,
+    HttpContext http,
     Customer customer,
     CancellationToken cancellationToken) =>
 {
+    // One pin for the whole checkout. Two things follow: the three rules resolve against one
+    // published world rather than three independent reads, and every decision record they leave
+    // carries one correlation id -- because a checkout is one decision, not three.
+    using var _ = rules.PinSnapshot(http.TraceIdentifier, http.User.Identity?.Name);
+
     var eligibility = canCheckout.Evaluate(customer);
     var screening = await fraudScreening.EvaluateAsync(customer, cancellationToken);
+    var loyalty = loyaltyDiscount.Evaluate(customer);
+
     return Results.Json(new CheckoutResponse(
         eligibility.Satisfied && screening.Satisfied,
         resultSerializer.ToEvaluationResult(eligibility),
-        resultSerializer.ToEvaluationResult(screening)),
+        resultSerializer.ToEvaluationResult(screening),
+        resultSerializer.ToEvaluationResult(loyalty)),
         options.JsonSerializerOptions);
 })
+.RequireAuthorization();
+
+// Seam: reading the trail. The answer to "why was this customer declined, on the 3rd, at 14:07?" --
+// the question the whole feature exists for. A durable sink would page and filter here; the in-memory
+// reference implementation just hands back what it holds.
+app.MapGet("/api/decisions", (InMemoryDecisionSink sink) => Results.Json(new
+{
+    records = sink.Records,
+    // A gap is evidence about the log rather than a decision, so it is reported beside the records
+    // and never counted among them. Empty is the only healthy value.
+    gaps = sink.Gaps
+}, options.JsonSerializerOptions))
 .RequireAuthorization();
 
 // Seam: administration surface. Capabilities tells the client what it's allowed to render (an
@@ -357,7 +397,14 @@ app.MapFallbackToFile("index.html", staticFiles);
 app.Run();
 
 /// <summary>The demo model that rules are evaluated against.</summary>
-public sealed record Customer(int Age, bool IsActive, int OrderCount, IReadOnlyList<Order>? Orders = null);
+/// <remarks>
+/// <paramref name="CustomerId"/> is what the decision log keeps of a customer under the
+/// <c>ReferenceOnly</c> capture posture — a key into the system of record, and nothing else. Optional,
+/// so a caller that supplies none records as "anonymous" rather than failing: the log's job is to say
+/// what it knows, including when that is nothing.
+/// </remarks>
+public sealed record Customer(
+    int Age, bool IsActive, int OrderCount, IReadOnlyList<Order>? Orders = null, string? CustomerId = null);
 
 /// <summary>An individual order placed by a <see cref="Customer"/>, used for higher-order collection rules.</summary>
 public sealed record Order(decimal Total);
@@ -366,7 +413,8 @@ public sealed record Order(decimal Total);
 public sealed record CheckoutResponse(
     bool Approved,
     RuleEvaluationResult<string> Eligibility,
-    RuleEvaluationResult<string> Screening);
+    RuleEvaluationResult<string> Screening,
+    RuleEvaluationResult<string> Loyalty);
 
 /// <summary>Exposes the entry point to WebApplicationFactory-based integration tests.</summary>
 public partial class Program;

@@ -7,6 +7,7 @@
   "properties": {
     "$schema": { "type": "string" },
     "name": { "$ref": "#/$defs/nonEmptyString" },
+    "audited": { "type": "boolean" },
     "parameters": {
       "type": "object",
       "additionalProperties": { "$ref": "#/$defs/parameterDeclaration" }

@@ -319,6 +319,17 @@ public sealed class RuleSerializer
         return errors;
     }
 
+    /// <summary>
+    /// Reads the document-level audit flag without binding. Called only after a document has already
+    /// bound, so a parse failure is impossible — the same re-parse <c>RuleSet.ReferencesOf</c> does,
+    /// for the same reason: these are facts about the envelope, and the binder returns only the tree.
+    /// </summary>
+    internal bool IsAudited(string json)
+    {
+        var errors = new List<RuleError>();
+        return new RuleDocumentParser(_options).Parse(json, errors)?.Audited ?? false;
+    }
+
     private RuleDocument? Prepare(
         string json,
         IReadOnlyDictionary<string, object?>? parameters,

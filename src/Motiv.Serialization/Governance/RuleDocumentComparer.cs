@@ -7,8 +7,14 @@ namespace Motiv.Serialization;
 /// </summary>
 internal static class RuleDocumentComparer
 {
+    // Audited is compared alongside the tree, not with the display text it sits beside. It decides
+    // whether every evaluation of this rule leaves evidence, so a change to it is a change to what the
+    // rule does -- and letting it travel under the metadata-only ceremony would mean the audit trail
+    // could be switched off with the gate reserved for typo fixes.
     public static bool StructurallyEqual(RuleDocument left, RuleDocument right) =>
-        NodesEqual(left.Root, right.Root) && ParametersEqual(left.Parameters, right.Parameters);
+        left.Audited == right.Audited
+        && NodesEqual(left.Root, right.Root)
+        && ParametersEqual(left.Parameters, right.Parameters);
 
     // Recursion depth mirrors the parser's own guarded nesting depth, so parser-accepted
     // documents cannot overflow here.

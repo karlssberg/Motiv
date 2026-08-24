@@ -61,6 +61,13 @@ public enum RuleErrorCode
     CycleDetected,
 
     /// <summary>
+    /// The document is marked <c>audited</c>, but the host has decided nothing about how much of the
+    /// rule's model its decision records may keep. Capture has no default by design — a whole-model
+    /// default that is on by omission would store whatever personal data the model happens to hold.
+    /// </summary>
+    AuditCaptureNotConfigured,
+
+    /// <summary>
     /// A gate document referenced a spec registered as asynchronous. The approval gate evaluates
     /// change requests synchronously, so it can never bind to an async registry entry.
     /// </summary>

@@ -154,3 +154,21 @@ choosing a poll interval, and the abort policy that keeps a replica from silentl
 | Type / Method                                                            | Description                                                                                       |
 |---------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
 | [Refreshing a Replica](./multi-instance/refresh.md)                       | `RefreshAsync()`, `AddRefresh()`, `DecisionSnapshot`/`PinSnapshot()`, the `Motiv-Generation` header, and the abort policy. |
+
+## The Decision Log
+
+The decision log (in the `Motiv.Serialization` and `Motiv.Serialization.AspNetCore` packages) stores the
+answer Motiv already builds on every evaluation, so an operator can say *why this customer was declined,
+on the 3rd, at 14:07*. A rule opts in with an `audited` flag on its document &mdash; versioned, therefore
+governed, and impossible to set on a rule running on a compiled default, which has no document to carry
+it. Every evaluation of an audited rule produces a `DecisionRecord` pinning behaviour with three anchors
+(the rule's version, the build, and the versions of every authored proposition it resolved through),
+captures its input through an adopter-chosen posture, and leaves the evaluation path through a bounded
+queue drained into an `IDecisionSink`. See [The Decision Log](./decision-log/index.md) for the flag, the
+anchors, the capture postures and the backpressure choices.
+
+| Type / Method                                                            | Description                                                                                       |
+|---------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| [The Record](./decision-log/record.md)                                    | `DecisionRecord`, `PropositionVersion`, `DecisionInput`, and `DecisionGap`.                        |
+| [Capture Postures](./decision-log/capture.md)                             | `StoreWhole`, `Redact`, `ReferenceOnly`, and the bind-time refusal that makes choosing one mandatory. |
+| [The Sink and the Queue](./decision-log/sink.md)                          | `IDecisionSink`, `DecisionLog`, `DecisionBackpressure`, and `AddDecisionLog()`.                    |

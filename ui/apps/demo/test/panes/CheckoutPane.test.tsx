@@ -22,7 +22,16 @@ const screening: EvaluationResult = {
   explanation: { assertions: ['passes credit check'], underlying: [] },
 };
 
-const approval = { approved: true, eligibility, screening };
+const loyalty: EvaluationResult = {
+  satisfied: true,
+  reason: 'qualifies for loyalty discount',
+  assertions: ['qualifies for loyalty discount'],
+  values: ['qualifies for loyalty discount'],
+  justification: 'qualifies for loyalty discount',
+  explanation: { assertions: ['qualifies for loyalty discount'], underlying: [] },
+};
+
+const approval = { approved: true, eligibility, screening, loyalty };
 
 const catalog: Catalog = {
   specs: [],
@@ -49,7 +58,7 @@ const settleCatalog = () => act(async () => {});
 describe('CheckoutPane', () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it('posts the sample customer to /api/checkout and renders both verdicts', async () => {
+  it('posts the sample customer to /api/checkout and renders every verdict', async () => {
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
       .mockResolvedValue(new Response(JSON.stringify(approval), { status: 200 }));
@@ -61,6 +70,21 @@ describe('CheckoutPane', () => {
     expect(await screen.findByText('Approved')).toBeDefined();
     expect(screen.getByText('customer is active')).toBeDefined();
     expect(screen.getByText('passes credit check')).toBeDefined();
+    expect(screen.getByText('qualifies for loyalty discount')).toBeDefined();
+  });
+
+  it('renders what the server sent when a verdict is missing', async () => {
+    // A server older than the audited loyalty rule sends two verdicts, not three.
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ approved: true, eligibility, screening }), { status: 200 }),
+    );
+    render(<CheckoutPane />);
+
+    await userEvent.click(screen.getByRole('button', { name: /try checkout/i }));
+
+    expect(await screen.findByText('Approved')).toBeDefined();
+    expect(screen.getByText('passes credit check')).toBeDefined();
+    expect(screen.queryByText(/loyalty/i)).toBeNull();
   });
 
   it('lets the user edit the sample customer JSON before trying', async () => {

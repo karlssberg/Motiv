@@ -43,8 +43,32 @@ public class AsyncPolicyRule<TModel, TMetadata> : AsyncRule<TModel, TMetadata>
     /// <param name="model">The model to evaluate.</param>
     /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
     /// <returns>The single-value policy result of the current implementation.</returns>
-    public new ValueTask<PolicyResultBase<TMetadata>> EvaluateAsync(TModel model, CancellationToken cancellationToken = default) =>
-        ((AsyncPolicyBase<TModel, TMetadata>)StateIn(Scope.Active).Spec).EvaluateAsync(model, cancellationToken);
+    public new ValueTask<PolicyResultBase<TMetadata>> EvaluateAsync(
+        TModel model, CancellationToken cancellationToken = default)
+    {
+        // Not an async method, for the two reasons the base method gives: an unbound rule throws
+        // synchronously, and an unaudited evaluation forwards the policy's ValueTask directly.
+        var generation = Scope.Active;
+        var state = StateIn(generation);
+        var evaluation = ((AsyncPolicyBase<TModel, TMetadata>)state.Spec)
+            .EvaluateAsync(model, cancellationToken);
+
+        return RecorderFor(state) is { } log
+            ? RecordAsync(log, state, generation, model, evaluation)
+            : evaluation;
+    }
+
+    private async ValueTask<PolicyResultBase<TMetadata>> RecordAsync(
+        DecisionLog log,
+        State state,
+        ScopeGeneration generation,
+        TModel model,
+        ValueTask<PolicyResultBase<TMetadata>> evaluation)
+    {
+        var result = await evaluation.ConfigureAwait(false);
+        Record(log, state, generation, model, result);
+        return result;
+    }
 
     private protected override RuleError? RequirePolicy(AsyncSpecBase<TModel, TMetadata> spec) =>
         spec is AsyncPolicyBase<TModel, TMetadata>

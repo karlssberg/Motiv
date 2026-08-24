@@ -1,4 +1,5 @@
 {
+  "audited": true,
   "rule": {
     "and": [ { "spec": "customer.is-active" }, { "spec": "customer.has-orders" } ],
     "name": "qualifies for loyalty discount"

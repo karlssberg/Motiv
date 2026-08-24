@@ -62,6 +62,45 @@ internal sealed class DependencyGraph
         _incoming.TryGetValue(propositionName, out var referrers) ? [.. referrers] : [];
 
     /// <summary>
+    /// Every proposition a node's meaning depends on, transitively. The forward mirror of
+    /// <see cref="DependentClosure"/>, and what pins a decision record's proposition anchor.
+    /// </summary>
+    /// <remarks>
+    /// Direct references are not enough. A rule reaching <c>customer.is-active</c> only through
+    /// <c>pricing.eligible</c> changes behaviour when either is republished, so a record pinning only
+    /// the first hop would claim to identify behaviour and would not. Unordered — a replay pin is a
+    /// set, not a sequence — and cycle-tolerant, because terminating must not depend on a check this
+    /// walk does not itself perform.
+    /// </remarks>
+    public IReadOnlyList<string> ReferenceClosure(NodeId node)
+    {
+        if (!_outgoing.TryGetValue(node, out var direct) || direct.Count == 0)
+            return [];
+
+        var reached = new List<string>();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        var pending = new Stack<string>();
+
+        foreach (var reference in direct)
+            pending.Push(reference);
+
+        while (pending.Count > 0)
+        {
+            var name = pending.Pop();
+            if (!seen.Add(name))
+                continue;
+
+            reached.Add(name);
+
+            if (_outgoing.TryGetValue(NodeId.Proposition(name), out var next))
+                foreach (var reference in next)
+                    pending.Push(reference);
+        }
+
+        return reached;
+    }
+
+    /// <summary>
     /// Every node transitively affected by republishing the named proposition, ordered so a node
     /// always follows the nodes it depends on. Excludes the named proposition itself.
     /// </summary>

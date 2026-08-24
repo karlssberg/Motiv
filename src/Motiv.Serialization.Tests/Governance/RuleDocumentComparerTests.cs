@@ -252,4 +252,51 @@ public class RuleDocumentComparerTests
         // Assert
         equal.ShouldBeTrue();
     }
+
+    [Fact]
+    public void Should_treat_an_audited_toggle_as_a_structural_change()
+    {
+        // Arrange — the same logic tree; only the audit flag moves
+        var left = AParsedDocument("""{ "rule": { "spec": "is-active" } }""");
+        var right = AParsedDocument("""{ "audited": true, "rule": { "spec": "is-active" } }""");
+
+        // Act
+        var equal = RuleDocumentComparer.StructurallyEqual(left, right);
+
+        // Assert — turning the audit trail on is not a typo fix, so it must not travel under the
+        // metadata-only ceremony
+        equal.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Should_not_classify_an_audited_toggle_as_metadata_only()
+    {
+        // Act
+        var classification = ChangeClassifier.Classify(
+            proposedDocumentJson: """{ "audited": true, "rule": { "spec": "is-active" } }""",
+            baseDocumentJson: """{ "rule": { "spec": "is-active" } }""",
+            targetExists: true,
+            specIsAsync: _ => false,
+            rollbackOfVersion: null);
+
+        // Assert
+        classification.IsMetadataOnly.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Should_still_classify_a_display_text_change_as_metadata_only_when_both_are_audited()
+    {
+        // Act — the flag is equal on both sides, so it must not by itself defeat the lighter gate
+        var classification = ChangeClassifier.Classify(
+            proposedDocumentJson:
+                """{ "audited": true, "rule": { "spec": "a", "whenTrue": "yes", "whenFalse": "no" } }""",
+            baseDocumentJson:
+                """{ "audited": true, "rule": { "spec": "a", "whenTrue": "aye", "whenFalse": "nay" } }""",
+            targetExists: true,
+            specIsAsync: _ => false,
+            rollbackOfVersion: null);
+
+        // Assert
+        classification.IsMetadataOnly.ShouldBeTrue();
+    }
 }

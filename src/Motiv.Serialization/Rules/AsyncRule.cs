@@ -13,11 +13,34 @@ namespace Motiv.Serialization;
 /// <typeparam name="TMetadata">The metadata type the rule yields.</typeparam>
 public class AsyncRule<TModel, TMetadata> : RuleBase
 {
-    private protected sealed class State(string? documentJson, int version, AsyncSpecBase<TModel, TMetadata> spec)
+    private protected sealed class State(
+        string? documentJson, int version, AsyncSpecBase<TModel, TMetadata> spec, bool audited = false)
     {
         public string? DocumentJson { get; } = documentJson;
         public int Version { get; } = version;
         public AsyncSpecBase<TModel, TMetadata> Spec { get; } = spec;
+
+        /// <summary>
+        /// Whether every evaluation against this binding is recorded. Read off the document once, at
+        /// bind time, rather than re-parsed per evaluation. Always false for a compiled default, which
+        /// has no document to carry the flag.
+        /// </summary>
+        public bool Audited { get; } = audited;
+
+        private IReadOnlyList<PropositionVersion>? _propositionPin;
+
+        /// <summary>
+        /// Every authored proposition this binding resolves through, transitively, at the version it
+        /// had when the binding was made — a decision record's third anchor.
+        /// </summary>
+        /// <remarks>
+        /// Computed once per state rather than once per evaluation, and that is sound rather than a
+        /// shortcut: republishing anything in the closure rebinds every referrer and produces a
+        /// <em>new</em> state, so this list cannot go stale while the state it belongs to is live.
+        /// Deferred to the first audited evaluation so an unaudited rule never pays for it.
+        /// </remarks>
+        public IReadOnlyList<PropositionVersion> PropositionPin(ScopeGeneration generation, string ruleName) =>
+            _propositionPin ??= DecisionRecording.ResolvePropositionPin(generation, ruleName);
     }
 
     /// <summary>Creates an async rule whose default implementation is a compiled async spec.</summary>
@@ -64,8 +87,54 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
     /// Reads the <em>pinned</em> world when a <c>DecisionSnapshot</c> is open, so several rules
     /// evaluated inside one decision resolve against one published set rather than one each.
     /// </remarks>
-    public ValueTask<BooleanResultBase<TMetadata>> EvaluateAsync(TModel model, CancellationToken cancellationToken = default) =>
-        StateIn(Scope.Active).Spec.EvaluateAsync(model, cancellationToken);
+    public ValueTask<BooleanResultBase<TMetadata>> EvaluateAsync(
+        TModel model, CancellationToken cancellationToken = default)
+    {
+        // Not an async method. Two things depend on that: an unbound rule must throw synchronously,
+        // as it always has, rather than handing back a faulted task nobody awaits; and an unaudited
+        // rule must keep forwarding the underlying ValueTask untouched, with no state machine between
+        // it and its caller. Only an audited evaluation pays for the wrapper.
+        var generation = Scope.Active;
+        var state = StateIn(generation);
+        var evaluation = state.Spec.EvaluateAsync(model, cancellationToken);
+
+        return RecorderFor(state) is { } log
+            ? RecordAsync(log, state, generation, model, evaluation)
+            : evaluation;
+    }
+
+    /// <summary>
+    /// The log this binding records to, or null when it records nothing. One decision point, asked
+    /// before the wrapper is allocated — so an unaudited rule pays for neither, and the recording path
+    /// carries no second check that no caller could ever fail.
+    /// </summary>
+    private protected DecisionLog? RecorderFor(State state) => state.Audited ? DecisionLog : null;
+
+    private async ValueTask<BooleanResultBase<TMetadata>> RecordAsync(
+        DecisionLog log,
+        State state,
+        ScopeGeneration generation,
+        TModel model,
+        ValueTask<BooleanResultBase<TMetadata>> evaluation)
+    {
+        var result = await evaluation.ConfigureAwait(false);
+        Record(log, state, generation, model, result);
+        return result;
+    }
+
+    /// <summary>
+    /// Writes this evaluation to the decision log. Shared by every entry point on this rule flavour,
+    /// including the policy shadow — a rule that says it is audited and records through only one of
+    /// its two methods is worse than one that records nothing, because the gap is invisible.
+    /// </summary>
+    private protected void Record(
+        DecisionLog log,
+        State state,
+        ScopeGeneration generation,
+        TModel model,
+        BooleanResultBase<TMetadata> result) =>
+        DecisionRecording.Write(
+            log, Name, state.Version, state.PropositionPin(generation, Name), model, result);
 
     /// <summary>The live state — what an administrative read or a publish must see, pinned or not.</summary>
     private protected State Live() => StateIn(Scope.Current);
@@ -92,7 +161,7 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
     internal sealed override object WithVersion(object state, int version)
     {
         var current = (State)state;
-        return new State(current.DocumentJson, version, current.Spec);
+        return new State(current.DocumentJson, version, current.Spec, current.Audited);
     }
 
     /// <inheritdoc />
@@ -111,9 +180,7 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
     {
         if (documentJson is not null)
         {
-            return TryBind(serializer, documentJson, errors) is { } spec
-                ? new State(documentJson, version, spec)
-                : null;
+            return TryBindState(serializer, documentJson, version, errors);
         }
 
         // A recorded revert: the rule is on its default at the store's version. See the synchronous
@@ -121,7 +188,7 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
         try
         {
             var @default = BindDefault(serializer);
-            return new State(@default.DocumentJson, version, @default.Spec);
+            return new State(@default.DocumentJson, version, @default.Spec, @default.Audited);
         }
         catch (RuleSerializationException exception)
         {
@@ -138,11 +205,10 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
             return RulePrepareResult.VersionConflict(current.Version);
 
         var errors = new List<RuleError>();
-        if (TryBind(serializer, documentJson, errors) is not { } spec)
+        if (TryBindState(serializer, documentJson, current.Version + 1, errors) is not { } prepared)
             return RulePrepareResult.Invalid(errors);
 
-        return RulePrepareResult.Prepared(
-            new Publication(this, new State(documentJson, current.Version + 1, spec)));
+        return RulePrepareResult.Prepared(new Publication(this, prepared));
     }
 
     internal sealed override RulePrepareResult PrepareRevert(RuleSerializer serializer, int expectedVersion)
@@ -161,14 +227,15 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
             return RulePrepareResult.Invalid(ex.Errors);
         }
 
-        return RulePrepareResult.Prepared(
-            new Publication(this, new State(@default.DocumentJson, current.Version + 1, @default.Spec)));
+        return RulePrepareResult.Prepared(new Publication(
+            this, new State(@default.DocumentJson, current.Version + 1, @default.Spec, @default.Audited)));
     }
 
     internal sealed override void ValidateDocument(
         RuleSerializer serializer, string documentJson, List<RuleError> errors) =>
-        // The bound spec is discarded — this is the dry run, and the errors list is the whole answer.
-        TryBind(serializer, documentJson, errors);
+        // The bound state is discarded — this is the dry run, and the errors list is the whole answer.
+        // The version is arbitrary for the same reason: nothing here is published.
+        TryBindState(serializer, documentJson, version: 0, errors);
 
     internal sealed override (int Version, string? DocumentJson) VersionedDocument()
     {
@@ -189,12 +256,12 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
         if (current.DocumentJson is null)
             return NoRebindCommit.Instance;
 
-        if (TryBind(serializer, current.DocumentJson, errors) is not { } spec)
+        if (TryBindState(serializer, current.DocumentJson, current.Version, errors) is not { } rebound)
             return null;
 
         // The version is carried across unchanged: the document did not change, only what it resolves
         // to, so bumping it would spuriously conflict with an editor's open draft.
-        return new RebindCommit(this, new State(current.DocumentJson, current.Version, spec));
+        return new RebindCommit(this, rebound);
     }
 
     /// <summary>
@@ -230,17 +297,23 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
         var spec = Bind(serializer, Default.DocumentJson!);
         if (RequirePolicy(spec) is { } policyError)
             throw new RuleSerializationException([policyError]);
-        return new State(Default.DocumentJson, 1, spec);
+
+        var audited = serializer.IsAudited(Default.DocumentJson!);
+        if (RequireAuditCapture(audited) is { } auditError)
+            throw new RuleSerializationException([auditError]);
+
+        return new State(Default.DocumentJson, 1, spec, audited);
     }
 
     /// <summary>
-    /// Binds a document and applies the flavour check, collecting every reason it would not bind into
-    /// <paramref name="errors"/>. The one failure shape behind the three callers that report a bad
-    /// document rather than throwing on one — each then says so in its own terms.
+    /// Binds a document, applies the flavour and audit checks, and assembles the state they produce —
+    /// collecting every reason it would not bind into <paramref name="errors"/>. The one failure shape
+    /// behind the four callers that report a bad document rather than throwing on one; each then says
+    /// so in its own terms.
     /// </summary>
-    /// <returns>The bound spec, or null when it did not bind, in which case <paramref name="errors"/> says why.</returns>
-    private AsyncSpecBase<TModel, TMetadata>? TryBind(
-        RuleSerializer serializer, string documentJson, List<RuleError> errors)
+    /// <returns>The bound state, or null when it did not bind, in which case <paramref name="errors"/> says why.</returns>
+    private State? TryBindState(
+        RuleSerializer serializer, string documentJson, int version, List<RuleError> errors)
     {
         AsyncSpecBase<TModel, TMetadata> spec;
         try
@@ -253,10 +326,45 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
             return null;
         }
 
-        if (RequirePolicy(spec) is not { } policyError)
-            return spec;
+        if (RequirePolicy(spec) is { } policyError)
+        {
+            errors.Add(policyError);
+            return null;
+        }
 
-        errors.Add(policyError);
+        var audited = serializer.IsAudited(documentJson);
+        if (RequireAuditCapture(audited) is { } auditError)
+        {
+            errors.Add(auditError);
+            return null;
+        }
+
+        return new State(documentJson, version, spec, audited);
+    }
+
+    /// <summary>
+    /// Refuses an audited document the host has decided nothing about. Capture has no default by
+    /// design, so the refusal is where the absence of a decision becomes visible — and putting it at
+    /// bind time puts it in three places for the price of one: a governed publish is rejected with a
+    /// readable reason, a startup load reports it, and a replica deployed without the posture
+    /// quarantines the rule and says why rather than silently logging whatever the model holds.
+    /// </summary>
+    private RuleError? RequireAuditCapture(bool audited)
+    {
+        if (!audited)
+            return null;
+
+        if (DecisionLog is null)
+            return new RuleError("$.audited", RuleErrorCode.AuditCaptureNotConfigured,
+                $"rule '{Name}' is marked audited, but its RuleSet was built without a DecisionLog; " +
+                "pass one to the RuleSet constructor");
+
+        if (!DecisionLog.Capture.Covers(typeof(TModel)))
+            return new RuleError("$.audited", RuleErrorCode.AuditCaptureNotConfigured,
+                $"rule '{Name}' is marked audited, but no capture posture is registered for " +
+                $"'{typeof(TModel).Name}'; choose one with DecisionLogOptions.Capture — " +
+                "ReferenceOnly is recommended for production");
+
         return null;
     }
 

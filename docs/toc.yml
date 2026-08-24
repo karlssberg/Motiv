@@ -26,4 +26,5 @@ items:
     href: governance/toc.yml
   - name: Multi-Instance Refresh
     href: multi-instance/toc.yml
-
+  - name: The Decision Log
+    href: decision-log/toc.yml
