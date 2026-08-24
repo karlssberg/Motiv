@@ -51,19 +51,22 @@ public class DeepCompositionTests
     public void Should_read_Assertions_of_a_deep_composition() =>
         OnASmallStack(() => Deep().Assertions.Count().ShouldBeGreaterThan(0));
 
-    [Fact(Skip = StillRecursive)]
+    [Fact]
     public void Should_read_SubAssertions_of_a_deep_composition() =>
-        OnASmallStack(() => Deep().SubAssertions.Count().ShouldBeGreaterThan(0));
+        OnASmallStack(() => Deep().SubAssertions.Count().ShouldBe(
+            0,
+            "a composition of atomic propositions has no layer beneath its own assertions — the point " +
+            "of the case is that reading it returns rather than aborting"));
 
-    [Fact(Skip = StillRecursive)]
+    [Fact]
     public void Should_read_AllSubAssertions_of_a_deep_composition() =>
-        OnASmallStack(() => Deep().AllSubAssertions.Count().ShouldBeGreaterThan(0));
+        OnASmallStack(() => Deep().AllSubAssertions.Count().ShouldBe(0, "as for SubAssertions"));
 
-    [Fact(Skip = StillRecursive)]
+    [Fact]
     public void Should_read_RootAssertions_of_a_deep_composition() =>
         OnASmallStack(() => Deep().RootAssertions.Count().ShouldBeGreaterThan(0));
 
-    [Fact(Skip = StillRecursive)]
+    [Fact]
     public void Should_read_AllRootAssertions_of_a_deep_composition() =>
         OnASmallStack(() => Deep().AllRootAssertions.Count().ShouldBeGreaterThan(0));
 

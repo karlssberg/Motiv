@@ -6,6 +6,12 @@ namespace Motiv;
 /// <summary>
 /// Provides extension methods for assertions.
 /// </summary>
+/// <remarks>
+/// These four walks take an arbitrary sequence rather than a single result, so they have no node
+/// field to memoise into and use a walk-local memo instead. They were the last members standing
+/// before Spec 3A, at a ceiling of roughly a thousand operands, and — being lazy and un-memoised —
+/// they re-allocated their whole iterator chain on every enumeration.
+/// </remarks>
 public static class AssertionExtensions
 {
     /// <summary>
@@ -15,14 +21,7 @@ public static class AssertionExtensions
     /// <returns>A collection of assertions from the boolean results.</returns>
     public static IEnumerable<string> GetAssertions(
         this IEnumerable<BooleanResultBase> results) =>
-        results
-            .SelectMany(result =>
-                result switch
-                {
-                    IBooleanOperationResult operationResult => operationResult.Causes.GetAssertions(),
-                    _ => result.Explanation.Assertions
-                });
-
+        FoldEach(results, CausalOperands, CombineAssertions);
 
     /// <summary>
     /// Gets the assertions from a collection of boolean results.
@@ -31,13 +30,7 @@ public static class AssertionExtensions
     /// <returns>A collection of all assertions yielded during the creation of the boolean results.</returns>
     public static IEnumerable<string> GetAllAssertions(
         this IEnumerable<BooleanResultBase> results) =>
-        results
-            .SelectMany(result =>
-                result switch
-                {
-                    IBooleanOperationResult operationResult => operationResult.Underlying.GetAllAssertions(),
-                    _ => result.Explanation.AllAssertions
-                });
+        FoldEach(results, UnderlyingOperands, CombineAllAssertions);
 
     /// <summary>
     /// Get the assertions from a collection of boolean results that are true.
@@ -69,9 +62,7 @@ public static class AssertionExtensions
     /// <returns>A collection of assertions from the root causes of the boolean result.</returns>
     public static IEnumerable<string> GetRootAssertions(
         this BooleanResultBase result) =>
-        result.Explanation
-            .Underlying
-            .GetRootAssertions()
+        FoldEach(result.Explanation.Underlying, ExplanationUnderlying, CombineRootAssertions)
             .DistinctWithOrderPreserved()
             .ElseIfEmpty(result.Assertions);
 
@@ -83,21 +74,105 @@ public static class AssertionExtensions
     /// <returns>A collection of assertions from the root causes of the boolean result.</returns>
     public static IEnumerable<string> GetAllRootAssertions(
         this BooleanResultBase result) =>
-        result.Underlying
-            .GetAllRootAssertions()
-            .DistinctWithOrderPreserved()
-            .ElseIfEmpty(result.Assertions);
+        FoldEach(result.ToEnumerable(), AllOperands, CombineAllRootAssertions);
 
-    private static IEnumerable<string> GetRootAssertions(
-        this IEnumerable<Explanation> explanations) =>
-        explanations.SelectMany(explanation => explanation
-            .Underlying
-            .GetRootAssertions()
-            .ElseIfEmpty(explanation.Assertions));
+    private static readonly Func<BooleanResultBase, IReadOnlyList<BooleanResultBase>> CausalOperands =
+        result => result is IBooleanOperationResult operation ? AsList(operation.Causes) : [];
 
-    private static IEnumerable<string> GetAllRootAssertions(
-        this IEnumerable<BooleanResultBase> results) =>
-        results.SelectMany(result => result
-            .GetAllRootAssertions()
-            .ElseIfEmpty(result.Assertions));
+    private static readonly Func<BooleanResultBase, IReadOnlyList<BooleanResultBase>> UnderlyingOperands =
+        result => result is IBooleanOperationResult operation ? AsList(operation.Underlying) : [];
+
+    private static readonly Func<BooleanResultBase, IReadOnlyList<BooleanResultBase>> AllOperands =
+        result => AsList(result.Underlying);
+
+    private static readonly Func<Explanation, IReadOnlyList<Explanation>> ExplanationUnderlying =
+        explanation => AsList(explanation.Underlying);
+
+    private static readonly Func<BooleanResultBase, IReadOnlyList<string[]>, string[]> CombineAssertions =
+        (result, foldedCauses) => result is IBooleanOperationResult
+            ? Flatten(foldedCauses)
+            : AsArray(result.Explanation.Assertions);
+
+    private static readonly Func<BooleanResultBase, IReadOnlyList<string[]>, string[]> CombineAllAssertions =
+        (result, foldedUnderlying) => result is IBooleanOperationResult
+            ? Flatten(foldedUnderlying)
+            : AsArray(result.Explanation.AllAssertions);
+
+    private static readonly Func<Explanation, IReadOnlyList<string[]>, string[]> CombineRootAssertions =
+        (explanation, foldedUnderlying) =>
+        {
+            var rootAssertions = Flatten(foldedUnderlying);
+
+            return rootAssertions.Length == 0
+                ? AsArray(explanation.Assertions)
+                : rootAssertions;
+        };
+
+    /// <remarks>
+    /// The public <c>GetAllRootAssertions</c> de-duplicates and falls back at <i>every</i> level, not
+    /// only at the root, because its private helper recurses back through the public method.
+    /// </remarks>
+    private static readonly Func<BooleanResultBase, IReadOnlyList<string[]>, string[]> CombineAllRootAssertions =
+        (result, foldedUnderlying) =>
+        {
+            var rootAssertions = new List<string>();
+            var next = 0;
+
+            foreach (var underlying in result.Underlying)
+            {
+                var fromUnderlying = foldedUnderlying[next++];
+                rootAssertions.AddRange(fromUnderlying.Length == 0 ? AsArray(underlying.Assertions) : fromUnderlying);
+            }
+
+            return rootAssertions.Count == 0
+                ? AsArray(result.Assertions)
+                : rootAssertions.DistinctWithOrderPreserved().ToArray();
+        };
+
+    private static IEnumerable<string> FoldEach<TNode>(
+        IEnumerable<TNode> roots,
+        Func<TNode, IReadOnlyList<TNode>> descend,
+        Func<TNode, IReadOnlyList<string[]>, string[]> combine)
+        where TNode : class
+    {
+        var memo = new Dictionary<TNode, string[]>(ReferenceEqualityComparer<TNode>.Instance);
+        var assertions = new List<string>();
+
+        foreach (var root in roots)
+            assertions.AddRange(PostOrderFold.Fold(
+                root,
+                descend,
+                combine,
+                node => memo.TryGetValue(node, out var folded) ? folded : null,
+                (node, folded) => memo[node] = folded));
+
+        return assertions;
+    }
+
+    private static string[] Flatten(IReadOnlyList<string[]> blocks)
+    {
+        var total = 0;
+        for (var i = 0; i < blocks.Count; i++)
+            total += blocks[i].Length;
+
+        if (total == 0)
+            return [];
+
+        var flattened = new string[total];
+        var next = 0;
+        for (var i = 0; i < blocks.Count; i++)
+        {
+            var block = blocks[i];
+            Array.Copy(block, 0, flattened, next, block.Length);
+            next += block.Length;
+        }
+
+        return flattened;
+    }
+
+    private static string[] AsArray(IEnumerable<string> assertions) =>
+        assertions as string[] ?? assertions.ToArray();
+
+    private static IReadOnlyList<T> AsList<T>(IEnumerable<T> items) =>
+        items as IReadOnlyList<T> ?? items.ToArray();
 }
