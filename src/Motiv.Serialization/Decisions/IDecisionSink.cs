@@ -2,7 +2,7 @@ namespace Motiv.Serialization;
 
 /// <summary>
 /// Where decision records go. The SDK owns the queue, the batching and the backpressure posture
-/// (<c>DecisionLog</c>); an implementation of this owns nothing but the writing, and is called
+/// (<see cref="DecisionLog"/>); an implementation of this owns nothing but the writing, and is called
 /// on a background writer rather than on the evaluation that produced the records.
 /// </summary>
 /// <remarks>

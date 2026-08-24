@@ -34,6 +34,8 @@
 
     <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
         <PackageReference Include="System.Text.Json" />
+        <!-- In-box from .NET Core 3.0 onward; needed only here, for the decision log's queue. -->
+        <PackageReference Include="System.Threading.Channels" />
     </ItemGroup>
 
 </Project>
