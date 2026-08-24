@@ -70,6 +70,34 @@ public static class EnumerableExtensions
             yield return alternativeEnumerator.Current;
     }
 
+    /// <summary>
+    /// The sequence as a list, without copying one that already is. Used by the traversal folds,
+    /// which index their children rather than enumerating them twice.
+    /// </summary>
+    internal static IReadOnlyList<T> AsList<T>(this IEnumerable<T> source) =>
+        source as IReadOnlyList<T> ?? source.ToArray();
+
+    /// <summary>Concatenates a fold's per-operand blocks into one array.</summary>
+    internal static T[] Flatten<T>(this IReadOnlyList<T[]> blocks)
+    {
+        var total = 0;
+        for (var i = 0; i < blocks.Count; i++)
+            total += blocks[i].Length;
+
+        if (total == 0)
+            return [];
+
+        var flattened = new T[total];
+        var next = 0;
+        for (var i = 0; i < blocks.Count; i++)
+        {
+            Array.Copy(blocks[i], 0, flattened, next, blocks[i].Length);
+            next += blocks[i].Length;
+        }
+
+        return flattened;
+    }
+
     internal static bool HasAtLeast<T>(this IEnumerable<T> source, int n)
     {
         if (source is null)

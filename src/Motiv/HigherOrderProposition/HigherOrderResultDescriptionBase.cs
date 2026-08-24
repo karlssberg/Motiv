@@ -29,7 +29,7 @@ internal abstract class HigherOrderResultDescriptionBase<TUnderlyingMetadata>(
         Array.ConvertAll(DistinctCauses, cause => new Rendering(cause.Description, false));
 
     private protected static IEnumerable<string> UnderlyingJustifications(IReadOnlyList<string[]> causeLines) =>
-        Concatenated(causeLines);
+        causeLines.Flatten();
 
     /// <summary>
     /// As <see cref="UnderlyingJustifications" />, except that a lone distinct cause carries the
@@ -37,6 +37,6 @@ internal abstract class HigherOrderResultDescriptionBase<TUnderlyingMetadata>(
     /// </summary>
     private protected IEnumerable<string> UnderlyingJustificationsWithCounts(IReadOnlyList<string[]> causeLines) =>
         causeLines.Count > 1
-            ? Concatenated(causeLines)
-            : Concatenated(causeLines).ReplaceFirstLine(line => $"{line} ({_causes.Length})");
+            ? causeLines.Flatten()
+            : causeLines.Flatten().ReplaceFirstLine(line => $"{line} ({_causes.Length})");
 }

@@ -60,7 +60,7 @@ public abstract class BooleanResultBase
     private BooleanResultBase[]? _underlyingExpressionResults;
 
     private static readonly Func<BooleanResultBase, IReadOnlyList<BooleanResultBase>> AllCauses =
-        result => AsList(result.Causes);
+        result => result.Causes.AsList();
 
     private static readonly Func<BooleanResultBase, IReadOnlyList<BooleanResultBase[]>, BooleanResultBase[]>
         CombineExpressionResults = (result, foldedCauses) =>
@@ -107,7 +107,7 @@ public abstract class BooleanResultBase
 
     private static readonly Func<BooleanResultBase, IReadOnlyList<BooleanResultBase>> BinaryOperands =
         result => result is IBinaryBooleanOperationResult
-            ? AsList(result.Underlying)
+            ? result.Underlying.AsList()
             : [];
 
     private static readonly Func<BooleanResultBase, IReadOnlyList<string[]>, string[]> CombineAllAssertions =
@@ -206,9 +206,6 @@ public abstract class BooleanResultBase
     /// that is not itself an operation — that child <i>is</i> the source — so folding every child
     /// would turn a walk of the visited nodes into a walk of the whole tree.
     /// </summary>
-    private protected static IReadOnlyList<TResult> AsList<TResult>(IEnumerable<TResult> children) =>
-        children as IReadOnlyList<TResult> ?? children.ToArray();
-
     private protected static IReadOnlyList<TResult> Operations<TResult>(IEnumerable<TResult> children)
         where TResult : BooleanResultBase
     {
@@ -463,7 +460,7 @@ public abstract class BooleanResultBase<TMetadata>
     private MetadataNode<TMetadata>? _materialisedTier;
 
     private static readonly Func<BooleanResultBase<TMetadata>, IReadOnlyList<BooleanResultBase<TMetadata>>>
-        CausesWithMetadata = result => AsList(result.CausesWithValues);
+        CausesWithMetadata = result => result.CausesWithValues.AsList();
 
     private static readonly Func<
             BooleanResultBase<TMetadata>,

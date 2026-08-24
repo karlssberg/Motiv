@@ -93,31 +93,31 @@ public static class AssertionExtensions
     }
 
     private static readonly Func<BooleanResultBase, IReadOnlyList<BooleanResultBase>> CausalOperands =
-        result => result is IBooleanOperationResult operation ? AsList(operation.Causes) : [];
+        result => result is IBooleanOperationResult operation ? operation.Causes.AsList() : [];
 
     private static readonly Func<BooleanResultBase, IReadOnlyList<BooleanResultBase>> UnderlyingOperands =
-        result => result is IBooleanOperationResult operation ? AsList(operation.Underlying) : [];
+        result => result is IBooleanOperationResult operation ? operation.Underlying.AsList() : [];
 
     private static readonly Func<BooleanResultBase, IReadOnlyList<BooleanResultBase>> AllOperands =
-        result => AsList(result.Underlying);
+        result => result.Underlying.AsList();
 
     private static readonly Func<Explanation, IReadOnlyList<Explanation>> ExplanationUnderlying =
-        explanation => AsList(explanation.Underlying);
+        explanation => explanation.Underlying.AsList();
 
     private static readonly Func<BooleanResultBase, IReadOnlyList<string[]>, string[]> CombineAssertions =
         (result, foldedCauses) => result is IBooleanOperationResult
-            ? Flatten(foldedCauses)
+            ? foldedCauses.Flatten()
             : AsArray(result.Explanation.Assertions);
 
     private static readonly Func<BooleanResultBase, IReadOnlyList<string[]>, string[]> CombineAllAssertions =
         (result, foldedUnderlying) => result is IBooleanOperationResult
-            ? Flatten(foldedUnderlying)
+            ? foldedUnderlying.Flatten()
             : AsArray(result.Explanation.AllAssertions);
 
     private static readonly Func<Explanation, IReadOnlyList<string[]>, string[]> CombineRootAssertions =
         (explanation, foldedUnderlying) =>
         {
-            var rootAssertions = Flatten(foldedUnderlying);
+            var rootAssertions = foldedUnderlying.Flatten();
 
             return rootAssertions.Length == 0
                 ? AsArray(explanation.Assertions)
@@ -165,30 +165,6 @@ public static class AssertionExtensions
         return assertions;
     }
 
-    private static string[] Flatten(IReadOnlyList<string[]> blocks)
-    {
-        var total = 0;
-        for (var i = 0; i < blocks.Count; i++)
-            total += blocks[i].Length;
-
-        if (total == 0)
-            return [];
-
-        var flattened = new string[total];
-        var next = 0;
-        for (var i = 0; i < blocks.Count; i++)
-        {
-            var block = blocks[i];
-            Array.Copy(block, 0, flattened, next, block.Length);
-            next += block.Length;
-        }
-
-        return flattened;
-    }
-
     private static string[] AsArray(IEnumerable<string> assertions) =>
         assertions as string[] ?? assertions.ToArray();
-
-    private static IReadOnlyList<T> AsList<T>(IEnumerable<T> items) =>
-        items as IReadOnlyList<T> ?? items.ToArray();
 }

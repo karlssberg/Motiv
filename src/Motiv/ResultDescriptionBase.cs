@@ -120,16 +120,6 @@ public abstract class ResultDescriptionBase
         return lines.ToArray();
     }
 
-    private protected static string[] Concatenated(IReadOnlyList<string[]> operandLines)
-    {
-        var lines = new List<string>();
-
-        for (var i = 0; i < operandLines.Count; i++)
-            lines.AddRange(operandLines[i]);
-
-        return lines.ToArray();
-    }
-
     private static readonly Func<Rendering, IReadOnlyList<Rendering>> RenderingOperands =
         rendering => rendering.Description.JustificationOperands(rendering.WithoutCausalCount);
 

@@ -45,18 +45,7 @@ public class MetadataNode<TMetadata>
 
     private MetadataNode<TMetadata>[]? _underlying;
 
-    /// <summary>
-    /// This node's direct children, and whether they carry exactly this node's metadata — in which
-    /// case this level is collapsed and the children's own children take its place.
-    /// </summary>
-    private sealed class Resolution(MetadataNode<TMetadata>[] children, bool collapse)
-    {
-        public MetadataNode<TMetadata>[] Children { get; } = children;
-
-        public bool Collapse { get; } = collapse;
-    }
-
-    private Resolution Resolved => field ??= Resolve(_metadataSource ?? [], _causes!);
+    private Resolution<MetadataNode<TMetadata>> Resolved => field ??= Resolve(_metadataSource ?? [], _causes!);
 
     private static readonly Func<MetadataNode<TMetadata>, IReadOnlyList<MetadataNode<TMetadata>>> Descend =
         node => node.Resolved.Collapse ? node.Resolved.Children : [];
@@ -65,17 +54,9 @@ public class MetadataNode<TMetadata>
             MetadataNode<TMetadata>,
             IReadOnlyList<MetadataNode<TMetadata>[]>,
             MetadataNode<TMetadata>[]>
-        Combine = (node, folded) =>
-        {
-            if (!node.Resolved.Collapse)
-                return node.Resolved.Children;
-
-            var flattened = new List<MetadataNode<TMetadata>>();
-            for (var i = 0; i < folded.Count; i++)
-                flattened.AddRange(folded[i]);
-
-            return flattened.ToArray();
-        };
+        Combine = (node, folded) => node.Resolved.Collapse
+            ? folded.Flatten()
+            : node.Resolved.Children;
 
     private static readonly Func<MetadataNode<TMetadata>, MetadataNode<TMetadata>[]?> Read =
         node => node._underlying;
@@ -94,7 +75,7 @@ public class MetadataNode<TMetadata>
     /// <returns>A string that represents the current object.</returns>
     public override string ToString() => GetDebugDisplay();
 
-    private static Resolution Resolve(
+    private static Resolution<MetadataNode<TMetadata>> Resolve(
         IEnumerable<TMetadata> metadata,
         IEnumerable<BooleanResultBase<TMetadata>> causes)
     {
@@ -115,7 +96,7 @@ public class MetadataNode<TMetadata>
             .DistinctWithOrderPreserved()
             .ToArray();
 
-        return new Resolution(children, childMetadata.SequenceEqual(metadata));
+        return new Resolution<MetadataNode<TMetadata>>(children, childMetadata.SequenceEqual(metadata));
     }
 
     private string GetDebugDisplay()

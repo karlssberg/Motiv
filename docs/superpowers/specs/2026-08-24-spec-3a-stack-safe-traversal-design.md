@@ -265,6 +265,48 @@ subtree on every access.
 - The rest of bundle 3 — the decision log (15) is Spec 3B, the telemetry surface and PII control (04)
   is Spec 3C.
 
+## Outcome (recorded after the build)
+
+Measured the same way as the table above — 1 MB thread, Release, left-deep `And` chain.
+
+**Uniformity reached.** Every member in the table returns at 12,000 operands and at 12,700, where
+before the lowest failed at 1,038. The residual ceiling is 12,779, and it is evaluation's: no property
+now fails before `Satisfied` does. The 1,039-to-2,930 band in which a consumer could read `Reason` but
+not `RootAssertions` is gone.
+
+**Allocation fell, as ticket 19 predicted.** Twenty rounds of evaluate-then-read (`Assertions`,
+`RootAssertions`, `AllRootAssertions`, `UnderlyingMetadataSources`, `Justification`, `Reason`),
+recursive versus folded:
+
+| Operands | Recursive | Folded |
+|---|---|---|
+| 100 | 209 ms, 36 MB | **92 ms, 28 MB** |
+| 400 | 4,542 ms, 482 MB | **808 ms, 354 MB** |
+
+The time is the larger win because the un-memoised root walks re-allocated their whole iterator chain
+on every enumeration; the fold's walk-local memo makes each one linear.
+
+**Three things the ticket's audit did not have**, each found by measuring rather than by reading:
+
+1. `Values` overflows too, and not through a traversal property. A composition's metadata tier takes
+   its metadata from a lazy union over its causes' tiers, so touching the root's recurses the full
+   depth. Fixed here — the same fold, with the value discarded — but it is a site the audit missed
+   because it is not a walk, it is a lazy constructor argument.
+2. Folding the assertion walks eagerly made *evaluation* quadratic, because `Explanation`'s
+   constructor calls `GetAssertions` speculatively for every node it builds. They are deferred again.
+   "Eager is only a timing change" was too glib: it is a timing change until something calls you
+   speculatively.
+3. `RootValues` over a fully-causal chain is quadratic-plus in the metadata tier, and a chain of
+   *identically-named* propositions runs out of memory at 300 operands. Both predate this slice — the
+   recursive code is ~35% slower on the first and hangs on the second too — and both are follow-ups.
+
+**Two decisions revised against the plan.** The plan expected the `AssertionExtensions` helpers to
+memoise on the node; they cannot, because they take an arbitrary sequence, so they use a walk-local
+memo. And `Reason` / `GetJustificationAsLines` stay `abstract` on `ResultDescriptionBase` with the
+fold reached through a `private protected` helper, rather than becoming concrete base implementations:
+the type is public in a published package, so making them non-virtual would be a compile-time break
+for anyone deriving from it.
+
 ## Risks
 
 | Risk | Mitigation |

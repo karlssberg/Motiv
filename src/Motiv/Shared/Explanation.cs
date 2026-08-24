@@ -111,27 +111,14 @@ public sealed class Explanation
 
     private Explanation[]? _allUnderlying;
 
-    /// <summary>
-    /// An explanation's direct children, and whether they say exactly what this explanation says — in
-    /// which case this level is collapsed and the children's own children take its place. Resolving
-    /// this is what the fold descends on, so it is computed once rather than by both the descend
-    /// function and the combine step.
-    /// </summary>
-    private sealed class Resolution(Explanation[] children, bool collapse)
-    {
-        public Explanation[] Children { get; } = children;
-
-        public bool Collapse { get; } = collapse;
-    }
-
-    private Resolution CausalResolution =>
+    private Resolution<Explanation> CausalResolution =>
         field ??= Resolve(
             Assertions,
             Causes,
             cause => cause.UnderlyingAssertionSources,
             explanation => explanation.Assertions);
 
-    private Resolution AllResolution =>
+    private Resolution<Explanation> AllResolution =>
         field ??= Resolve(
             Assertions,
             Results,
@@ -146,12 +133,12 @@ public sealed class Explanation
 
     private static readonly Func<Explanation, IReadOnlyList<Explanation[]>, Explanation[]> CombineCausal =
         (explanation, folded) => explanation.CausalResolution.Collapse
-            ? Flatten(folded)
+            ? folded.Flatten()
             : explanation.CausalResolution.Children;
 
     private static readonly Func<Explanation, IReadOnlyList<Explanation[]>, Explanation[]> CombineAll =
         (explanation, folded) => explanation.AllResolution.Collapse
-            ? Flatten(folded)
+            ? folded.Flatten()
             : explanation.AllResolution.Children;
 
     private static readonly Func<Explanation, Explanation[]?> ReadUnderlying =
@@ -174,7 +161,7 @@ public sealed class Explanation
     /// <returns>A string that represents the current object.</returns>
     public override string ToString() => _toString ??= Assertions.Serialize();
 
-    private static Resolution Resolve(
+    private static Resolution<Explanation> Resolve(
         IEnumerable<string> assertions,
         IEnumerable<BooleanResultBase> from,
         Func<BooleanResultBase, IEnumerable<BooleanResultBase>> sourcesOf,
@@ -195,17 +182,7 @@ public sealed class Explanation
             .DistinctWithOrderPreserved()
             .ToArray();
 
-        return new Resolution(children, childAssertions.SequenceEqual(assertions));
-    }
-
-    private static Explanation[] Flatten(IReadOnlyList<Explanation[]> blocks)
-    {
-        var flattened = new List<Explanation>();
-
-        for (var i = 0; i < blocks.Count; i++)
-            flattened.AddRange(blocks[i]);
-
-        return flattened.ToArray();
+        return new Resolution<Explanation>(children, childAssertions.SequenceEqual(assertions));
     }
 
     /// <summary>
