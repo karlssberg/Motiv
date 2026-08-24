@@ -17,13 +17,29 @@ public class DecisionCaptureTests
 
     private sealed class CanCheckoutRule() : Rule<Customer, string>("can-checkout", IsActive);
 
+    private static AsyncSpecBase<Customer, string> IsActiveAsync { get; } =
+        Spec.BuildAsync((Customer c) => new ValueTask<bool>(c.IsActive))
+            .WhenTrue("active").WhenFalse("inactive").Create();
+
+    private sealed class AsyncCheckoutRule() : AsyncRule<Customer, string>("async-checkout", IsActiveAsync);
+
+    /// <summary>An async rule whose *default* is an audited document — so the refusal must fire at Add.</summary>
+    private sealed class AuditedDefaultAsyncRule() : AsyncRule<Customer, string>(
+        "audited-default-async", RuleDocuments.FromJson(AuditedDocument));
+
+    /// <summary>The synchronous twin of <see cref="AuditedDefaultAsyncRule"/>.</summary>
+    private sealed class AuditedDefaultRule() : Rule<Customer, string>(
+        "audited-default", RuleDocuments.FromJson(AuditedDocument));
+
     private const string AuditedDocument =
         """{ "audited": true, "rule": { "spec": "customer.is-active" } }""";
 
     private static readonly Customer Alice = new("cust-42", isActive: true);
 
     private static SpecRegistry ARegistry() =>
-        new SpecRegistry().Register("customer.is-active", IsActive);
+        new SpecRegistry()
+            .Register("customer.is-active", IsActive)
+            .Register("customer.is-active-async", IsActiveAsync);
 
     // --- the three postures ------------------------------------------------------------------
 
@@ -181,5 +197,97 @@ public class DecisionCaptureTests
         var quarantined = report.Quarantined.ShouldHaveSingleItem();
         quarantined.Name.ShouldBe("can-checkout");
         quarantined.Errors.ShouldContain(error => error.Code == RuleErrorCode.AuditCaptureNotConfigured);
+    }
+
+    // --- the refusal, on the asynchronous flavour ---------------------------------------------
+    //
+    // Not redundant with the synchronous cases above. Rule and AsyncRule carry parallel, separately
+    // written copies of the bind path, so "the sync one refuses" is evidence about exactly one of
+    // them — and a fail-closed guard that holds on one flavour and not the other is worse than no
+    // guard, because the gap is invisible.
+
+    private const string AuditedAsyncDocument =
+        """{ "audited": true, "rule": { "spec": "customer.is-active-async" } }""";
+
+    [Fact]
+    public async Task Should_refuse_to_bind_an_audited_async_rule_when_no_capture_posture_covers_its_model()
+    {
+        // Arrange
+        await using var log = new DecisionLog(new InMemoryDecisionSink());
+        var rules = new RuleSet(ARegistry(), decisionLog: log).Add(new AsyncCheckoutRule());
+
+        // Act
+        var result = await rules.UpdateAsync(
+            "async-checkout", AuditedAsyncDocument, expectedVersion: 1, new RuleChangeProvenance("alice"));
+
+        // Assert
+        result.Outcome.ShouldBe(RuleUpdateOutcome.Invalid);
+        var error = result.Errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.AuditCaptureNotConfigured);
+        error.Path.ShouldBe("$.audited");
+        error.Message.ShouldContain("Customer");
+    }
+
+    [Fact]
+    public async Task Should_refuse_to_bind_an_audited_async_rule_when_no_decision_log_is_configured()
+    {
+        // Arrange
+        var rules = new RuleSet(ARegistry()).Add(new AsyncCheckoutRule());
+
+        // Act
+        var result = await rules.UpdateAsync(
+            "async-checkout", AuditedAsyncDocument, expectedVersion: 1, new RuleChangeProvenance("alice"));
+
+        // Assert
+        result.Outcome.ShouldBe(RuleUpdateOutcome.Invalid);
+        result.Errors.ShouldHaveSingleItem().Message.ShouldContain("without a DecisionLog");
+    }
+
+    [Fact]
+    public async Task Should_bind_an_audited_async_rule_when_a_posture_covers_its_model()
+    {
+        // Arrange
+        await using var log = new DecisionLog(new InMemoryDecisionSink());
+        log.Capture.ReferenceOnly<Customer>(c => c.Id);
+        var rules = new RuleSet(ARegistry(), decisionLog: log).Add(new AsyncCheckoutRule());
+
+        // Act
+        var result = await rules.UpdateAsync(
+            "async-checkout", AuditedAsyncDocument, expectedVersion: 1, new RuleChangeProvenance("alice"));
+
+        // Assert
+        result.Outcome.ShouldBe(RuleUpdateOutcome.Updated);
+    }
+
+    // --- an audited *default* document is refused at registration -----------------------------
+
+    [Fact]
+    public void Should_refuse_at_registration_when_an_audited_default_document_has_no_capture()
+    {
+        // Arrange — the refusal has to reach the default-binding path too, not only an update. This
+        // is startup: the loudest possible place to find out, and the right one.
+        var rules = new RuleSet(ARegistry());
+
+        // Act
+        var act = () => rules.Add(new AuditedDefaultRule());
+
+        // Assert
+        var exception = act.ShouldThrow<RuleSerializationException>();
+        exception.Errors.ShouldHaveSingleItem().Code.ShouldBe(RuleErrorCode.AuditCaptureNotConfigured);
+    }
+
+    [Fact]
+    public async Task Should_refuse_at_registration_when_an_audited_async_default_document_has_no_capture()
+    {
+        // Arrange
+        await using var log = new DecisionLog(new InMemoryDecisionSink());
+        var rules = new RuleSet(ARegistry(), decisionLog: log);
+
+        // Act
+        var act = () => rules.Add(new AuditedDefaultAsyncRule());
+
+        // Assert
+        var exception = act.ShouldThrow<RuleSerializationException>();
+        exception.Errors.ShouldHaveSingleItem().Code.ShouldBe(RuleErrorCode.AuditCaptureNotConfigured);
     }
 }

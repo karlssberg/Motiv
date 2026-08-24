@@ -98,37 +98,43 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
         var state = StateIn(generation);
         var evaluation = state.Spec.EvaluateAsync(model, cancellationToken);
 
-        return state.Audited && DecisionLog is not null
-            ? RecordAsync(state, generation, model, evaluation)
+        return RecorderFor(state) is { } log
+            ? RecordAsync(log, state, generation, model, evaluation)
             : evaluation;
     }
 
+    /// <summary>
+    /// The log this binding records to, or null when it records nothing. One decision point, asked
+    /// before the wrapper is allocated — so an unaudited rule pays for neither, and the recording path
+    /// carries no second check that no caller could ever fail.
+    /// </summary>
+    private protected DecisionLog? RecorderFor(State state) => state.Audited ? DecisionLog : null;
+
     private async ValueTask<BooleanResultBase<TMetadata>> RecordAsync(
+        DecisionLog log,
         State state,
         ScopeGeneration generation,
         TModel model,
         ValueTask<BooleanResultBase<TMetadata>> evaluation)
     {
         var result = await evaluation.ConfigureAwait(false);
-        Record(state, generation, model, result);
+        Record(log, state, generation, model, result);
         return result;
     }
 
     /// <summary>
-    /// Writes this evaluation to the decision log, when the binding asked to be recorded. Shared by
-    /// every entry point on this rule flavour, including the policy shadow — a rule that says it is
-    /// audited and records through only one of its two methods is worse than one that records
-    /// nothing, because the gap is invisible.
+    /// Writes this evaluation to the decision log. Shared by every entry point on this rule flavour,
+    /// including the policy shadow — a rule that says it is audited and records through only one of
+    /// its two methods is worse than one that records nothing, because the gap is invisible.
     /// </summary>
     private protected void Record(
-        State state, ScopeGeneration generation, TModel model, BooleanResultBase<TMetadata> result)
-    {
-        if (!state.Audited || DecisionLog is not { } log)
-            return;
-
+        DecisionLog log,
+        State state,
+        ScopeGeneration generation,
+        TModel model,
+        BooleanResultBase<TMetadata> result) =>
         DecisionRecording.Write(
             log, Name, state.Version, state.PropositionPin(generation, Name), model, result);
-    }
 
     /// <summary>The live state — what an administrative read or a publish must see, pinned or not.</summary>
     private protected State Live() => StateIn(Scope.Current);

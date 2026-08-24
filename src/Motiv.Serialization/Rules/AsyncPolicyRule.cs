@@ -53,19 +53,20 @@ public class AsyncPolicyRule<TModel, TMetadata> : AsyncRule<TModel, TMetadata>
         var evaluation = ((AsyncPolicyBase<TModel, TMetadata>)state.Spec)
             .EvaluateAsync(model, cancellationToken);
 
-        return state.Audited && DecisionLog is not null
-            ? RecordAsync(state, generation, model, evaluation)
+        return RecorderFor(state) is { } log
+            ? RecordAsync(log, state, generation, model, evaluation)
             : evaluation;
     }
 
     private async ValueTask<PolicyResultBase<TMetadata>> RecordAsync(
+        DecisionLog log,
         State state,
         ScopeGeneration generation,
         TModel model,
         ValueTask<PolicyResultBase<TMetadata>> evaluation)
     {
         var result = await evaluation.ConfigureAwait(false);
-        Record(state, generation, model, result);
+        Record(log, state, generation, model, result);
         return result;
     }
 

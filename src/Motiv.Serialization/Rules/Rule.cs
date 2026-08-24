@@ -88,25 +88,30 @@ public class Rule<TModel, TMetadata> : RuleBase
         var generation = Scope.Active;
         var state = StateIn(generation);
         var result = state.Spec.Evaluate(model);
-        Record(state, generation, model, result);
+        if (RecorderFor(state) is { } log)
+            Record(log, state, generation, model, result);
         return result;
     }
 
     /// <summary>
-    /// Writes this evaluation to the decision log, when the binding asked to be recorded. Shared by
-    /// every entry point on this rule flavour, including the policy shadow — a rule that says it is
-    /// audited and records through only one of its two methods is worse than one that records
-    /// nothing, because the gap is invisible.
+    /// The log this binding records to, or null when it records nothing. One decision point, so the
+    /// recording path carries no second check and an unaudited rule does no work at all.
+    /// </summary>
+    private protected DecisionLog? RecorderFor(State state) => state.Audited ? DecisionLog : null;
+
+    /// <summary>
+    /// Writes this evaluation to the decision log. Shared by every entry point on this rule flavour,
+    /// including the policy shadow — a rule that says it is audited and records through only one of
+    /// its two methods is worse than one that records nothing, because the gap is invisible.
     /// </summary>
     private protected void Record(
-        State state, ScopeGeneration generation, TModel model, BooleanResultBase<TMetadata> result)
-    {
-        if (!state.Audited || DecisionLog is not { } log)
-            return;
-
+        DecisionLog log,
+        State state,
+        ScopeGeneration generation,
+        TModel model,
+        BooleanResultBase<TMetadata> result) =>
         DecisionRecording.Write(
             log, Name, state.Version, state.PropositionPin(generation, Name), model, result);
-    }
 
     /// <summary>The live state — what an administrative read or a publish must see, pinned or not.</summary>
     private protected State Live() => StateIn(Scope.Current);

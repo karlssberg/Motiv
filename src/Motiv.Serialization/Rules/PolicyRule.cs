@@ -46,7 +46,8 @@ public class PolicyRule<TModel, TMetadata> : Rule<TModel, TMetadata>
         var generation = Scope.Active;
         var state = StateIn(generation);
         var result = ((PolicyBase<TModel, TMetadata>)state.Spec).Evaluate(model);
-        Record(state, generation, model, result);
+        if (RecorderFor(state) is { } log)
+            Record(log, state, generation, model, result);
         return result;
     }
 
