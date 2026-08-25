@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Motiv.Serialization.AspNetCore;
 
@@ -351,6 +352,23 @@ public static class MotivRulesServiceCollectionExtensions
 
             return rules;
         });
+
+        // Readiness, tagged so a host can map it on its own endpoint —
+        // MapHealthChecks("/health/ready", new() { Predicate = check => check.Tags.Contains("ready") }).
+        // Registered here rather than behind an opt-in because a probe nobody remembered to enable is
+        // a replica that stays in rotation with an unreachable database, and the cost when nothing is
+        // wrong is one scalar read per probe.
+        //
+        // A registration factory rather than AddCheck<T>: the PropositionSet is optional, and
+        // ActivatorUtilities would refuse to construct the check in a host that mounts no
+        // propositions rather than passing null.
+        services.AddHealthChecks().Add(new HealthCheckRegistration(
+            "motiv-store",
+            provider => new MotivStoreHealthCheck(
+                provider.GetRequiredService<RuleSet>(), provider.GetService<PropositionSet>()),
+            failureStatus: null,
+            tags: ["ready"]));
+
         return new MotivRulesBuilder(services);
     }
 }
