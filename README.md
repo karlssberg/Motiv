@@ -195,6 +195,11 @@ builder.Services.AddOpenTelemetry()
     .WithMetrics(metrics => metrics.AddMeter(MotivTelemetry.MeterName));
 ```
 
+The rules stack reports on itself on a second source and meter (`MotivRulesTelemetry.SourceName`/`MeterName`):
+bind failures, publish conflicts, store latency, replica lag, decision-queue depth and break-glass, plus a span
+carrying which rule ran at which version. Stating a decision-log capture posture also sets the PII posture for
+traces, so it is stated once.
+
 ### Collection Logic
 
 Make assertions about collections of items (also known as higher-order logic):

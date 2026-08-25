@@ -2,3 +2,5 @@
 items:
   - name: Observability
     href: index.md
+  - name: Rules-Stack Telemetry
+    href: rules-stack.md

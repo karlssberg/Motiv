@@ -8,6 +8,12 @@ decided and why. Nothing is emitted unless something subscribes to them &mdash; 
 API to turn this on or off. Enabling it is entirely a matter of registering those names with your own
 OpenTelemetry setup.
 
+> [!NOTE]
+> This page covers core `Motiv`: what an *evaluation* decided. If you use `Motiv.Serialization`, the rules stack
+> reports on itself separately &mdash; documents that will not bind, refused publishes, replica lag, decision-queue
+> depth, break-glass &mdash; on its own source and meter. See
+> [Rules-Stack Telemetry](rules-stack.md).
+
 ## Enabling
 
 Register the source with tracing and the meter with metrics wherever you configure OpenTelemetry. Use the
@@ -210,6 +216,8 @@ listener is added &mdash; unless you set `MotivTelemetry.ExplanationDetail` to `
 
 ## Next Steps
 
+- [Rules-Stack Telemetry](rules-stack.md) &mdash; the `motiv.rules.*` signals, the span that carries a rule's name
+  and version, and how the PII posture above is set once for both surfaces.
 - Read about [building propositions](../builder/index.md) and [`EvaluateAsync()`](../async/EvaluateAsync.md), the
   calls this telemetry wraps.
 - See [`Where()`](../collections/generic/Where.md) for the collection-filtering path that emits one span per model.
