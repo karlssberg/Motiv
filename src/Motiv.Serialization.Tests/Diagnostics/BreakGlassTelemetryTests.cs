@@ -43,6 +43,8 @@ public class BreakGlassTelemetryTests
         return (new ChangeRequestSet(gate, rules, propositions), rules);
     }
 
+    private static readonly DateTimeOffset Expiry = new(2026, 8, 25, 3, 0, 0, TimeSpan.Zero);
+
     private static NewProposedChange ARuleEdit() =>
         new(ChangeTargetKind.Rule, "can-checkout", NotActive, BaseVersion: 1, RollbackOfVersion: null);
 
@@ -76,6 +78,58 @@ public class BreakGlassTelemetryTests
         // window still reachable anywhere in the process reports, this one included.
         expired.Active(DateTimeOffset.UtcNow).ShouldBeFalse();
         harness.For("motiv.rules.break_glass.active").ShouldContain(m => m.Value == 0);
+    }
+
+    /// <summary>
+    /// <see cref="BreakGlass"/> is written out longhand rather than as a positional record, purely so
+    /// its constructor can register with the gauge. These pin the behaviour that rewrite had to
+    /// preserve — which was asserted in prose and, until now, nowhere else.
+    /// </summary>
+    [Fact]
+    public void Should_deconstruct_into_the_pair_it_was_declared_from()
+    {
+        // Act
+        var (enabled, expiresUtc) = new BreakGlass(true, Expiry);
+
+        // Assert
+        enabled.ShouldBeTrue();
+        expiresUtc.ShouldBe(Expiry);
+    }
+
+    [Fact]
+    public void Should_keep_value_equality()
+    {
+        new BreakGlass(true, Expiry).ShouldBe(new BreakGlass(true, Expiry));
+        new BreakGlass(true, Expiry).ShouldNotBe(new BreakGlass(false, Expiry));
+        new BreakGlass(true, Expiry).ShouldNotBe(new BreakGlass(true, null));
+    }
+
+    [Fact]
+    public void Should_copy_through_with_and_change_only_what_was_named()
+    {
+        // Act
+        var closed = new BreakGlass(true, Expiry) with { Enabled = false };
+
+        // Assert
+        closed.Enabled.ShouldBeFalse();
+        closed.ExpiresUtc.ShouldBe(Expiry);
+    }
+
+    [Fact]
+    public void Should_report_a_window_derived_with_a_with_expression()
+    {
+        // Arrange — the copy constructor is written out by hand for exactly this. The generated one
+        // copies fields without running the body, so a clone would be invisible to the gauge while
+        // the original it replaced went on being counted.
+        using var harness = new RulesTelemetryHarness();
+        var opened = BreakGlass.Off with { Enabled = true, ExpiresUtc = DateTimeOffset.UtcNow.AddHours(1) };
+
+        // Act
+        harness.Collect();
+
+        // Assert
+        opened.Active(DateTimeOffset.UtcNow).ShouldBeTrue();
+        harness.For("motiv.rules.break_glass.active").ShouldContain(m => m.Value == 1);
     }
 
     [Fact]
