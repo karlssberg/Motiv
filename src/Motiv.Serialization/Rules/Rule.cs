@@ -87,9 +87,17 @@ public class Rule<TModel, TMetadata> : RuleBase
     {
         var generation = Scope.Active;
         var state = StateIn(generation);
+
+        // Opened before the evaluation so core's own motiv.evaluate span lands inside it, which is
+        // what carries this rule's name and version onto the evaluation — see StartRuleEvaluation.
+        // Null, and free, when nothing is listening to the rules source.
+        using var activity = MotivRulesTelemetry.StartRuleEvaluation(Name, state.Version);
+
         var result = state.Spec.Evaluate(model);
         if (RecorderFor(state) is { } log)
             Record(log, state, generation, model, result);
+
+        MotivRulesTelemetry.AddNodeSpans(activity, state.Audited, result);
         return result;
     }
 

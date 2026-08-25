@@ -164,6 +164,13 @@ public class DecisionLogTests
         dropped.ShouldBeGreaterThan(0, "a capacity-1 queue behind a closed sink must shed");
         sink.Open();
         await WaitUntil(() => sink.Written.OfType<DecisionGap>().Any());
+
+        // ...and until the queue can actually take the next record. A gap having been written says
+        // the writer got past the gate, not that it has yet freed the one slot this queue has —
+        // enqueue into a still-full queue and the Drop posture sheds *this* record too, leaving the
+        // marker with nothing after it and one more drop than `dropped` accounts for. That is a race
+        // in the test, not in the log: the log did exactly what Drop promises.
+        await WaitUntil(() => log.QueueDepth == 0);
         log.Enqueue(ARecord("after-the-gap"));
         await log.DisposeAsync();
 

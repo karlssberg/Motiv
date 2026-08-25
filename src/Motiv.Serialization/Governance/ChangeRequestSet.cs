@@ -546,6 +546,7 @@ public sealed class ChangeRequestSet
                 return applied with { Change = change };
 
             change.MarkPublished(breakGlassActive);
+            CountBreakGlassPublish(change, breakGlassActive);
             return applied with { Change = change };
         }
         finally
@@ -664,12 +665,49 @@ public sealed class ChangeRequestSet
         // direct write the audit log is the *only* record, so a false positive here would be a log
         // entry for a publish that never happened. Only a genuine success sets it.
         DirectWriteResult OfRule(RuleUpdateResult result) =>
-            new(null, result, null, breakGlassActive && result.Outcome == RuleUpdateOutcome.Updated);
+            Counted(
+                new(null, result, null, breakGlassActive && result.Outcome == RuleUpdateOutcome.Updated),
+                MotivRulesTelemetry.RuleKind);
 
         DirectWriteResult OfProposition(PropositionUpdateResult result) =>
-            new(null, null, result, breakGlassActive && result.Outcome is
-                PropositionUpdateOutcome.Created or PropositionUpdateOutcome.Updated or PropositionUpdateOutcome.Removed);
+            Counted(
+                new(null, null, result, breakGlassActive && result.Outcome is
+                    PropositionUpdateOutcome.Created or PropositionUpdateOutcome.Updated or PropositionUpdateOutcome.Removed),
+                MotivRulesTelemetry.PropositionKind);
+
+        // Reads the flag the two constructors above just computed rather than recomputing it, so the
+        // counter and the audit-logged result can never disagree about whether a bypass landed.
+        static DirectWriteResult Counted(DirectWriteResult result, string kind)
+        {
+            if (result.PublishedUnderBreakGlass)
+                MotivRulesTelemetry.RecordPublishUnderBreakGlass(kind);
+
+            return result;
+        }
     }
+
+    /// <summary>
+    /// Counts what an envelope published while break-glass was bypassing the gate — one per artefact
+    /// it touched, not one per envelope.
+    /// </summary>
+    /// <remarks>
+    /// Per artefact because that is what actually went live without review. An envelope is a
+    /// governance unit, not a blast radius: a single request carrying a proposition and the rule that
+    /// references it changed two things, and a counter that reported "1 publish" would understate the
+    /// one number an operator reviewing a break-glass window is trying to establish.
+    /// </remarks>
+    private static void CountBreakGlassPublish(ChangeRequest change, bool breakGlassActive)
+    {
+        if (!breakGlassActive)
+            return;
+
+        foreach (var proposed in change.ProposedChanges)
+            MotivRulesTelemetry.RecordPublishUnderBreakGlass(KindLabelOf(proposed.Target.Kind));
+    }
+
+    /// <summary>The <c>motiv.rules.kind</c> tag's value for a change target.</summary>
+    private static string KindLabelOf(ChangeTargetKind kind) =>
+        kind == ChangeTargetKind.Rule ? MotivRulesTelemetry.RuleKind : MotivRulesTelemetry.PropositionKind;
 
     private static ChangeTargetKind KindOf(DirectWriteOperation operation) =>
         operation is DirectWriteOperation.RuleUpdate or DirectWriteOperation.RuleRevert

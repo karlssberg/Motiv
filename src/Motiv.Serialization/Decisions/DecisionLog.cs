@@ -1,4 +1,5 @@
 using System.Threading.Channels;
+using Motiv.Diagnostics;
 
 namespace Motiv.Serialization;
 
@@ -56,6 +57,16 @@ public sealed class DecisionLog : IAsyncDisposable
             });
 
         _writer = Task.Run(DrainAsync);
+
+        // PII posture is stated once — on the capture registry — and applies to both the durable
+        // record and the ephemeral traces. Done here rather than left to the host because a host that
+        // forgets is a host quietly exporting into a trace exactly the model data it configured this
+        // log not to store, and the forgetting is invisible. Only ever tightens (see
+        // ExplanationCeiling), so the order a host configures things in cannot change the outcome,
+        // and an adopter who has already chosen something stricter keeps it.
+        var ceiling = _options.Capture.ExplanationCeiling;
+        if (ceiling > MotivTelemetry.ExplanationDetail)
+            MotivTelemetry.ExplanationDetail = ceiling;
 
         // The three decision-log instruments are readings off this object, not events pushed from a
         // call site — motiv.rules.decisions.dropped reads DroppedCount itself, so the counter and the

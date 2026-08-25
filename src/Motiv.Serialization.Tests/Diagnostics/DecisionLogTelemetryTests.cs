@@ -68,18 +68,20 @@ public class DecisionLogTelemetryTests
             log.Enqueue(ARecord($"rule-{i}"));
 
         harness.Collect();
+        var reported = harness.For("motiv.rules.decisions.dropped");
+        var dropped = log.DroppedCount;
 
-        // Assert — the instrument is the log's own DroppedCount, not a second tally kept beside it,
-        // so the counter and the gap markers cannot drift apart.
-        var dropped = harness.Single("motiv.rules.decisions.dropped");
-        dropped.Value.ShouldBe(log.DroppedCount);
-        dropped.Value.ShouldBeGreaterThan(0);
-
+        // Everything is drained before a single assertion runs. An assertion that failed while this
+        // sink was still closed would leave the writer parked on the gate forever, and DisposeAsync
+        // awaits that writer — turning a one-line test failure into a hung run with no message.
         sink.Open();
         await log.DisposeAsync();
 
-        var gapped = sink.Written.OfType<DecisionGap>().Sum(gap => gap.DroppedCount);
-        gapped.ShouldBe((long)dropped.Value);
+        // Assert — the instrument reads the log's own DroppedCount rather than keeping a second tally
+        // beside it, so the counter and the gap markers cannot drift apart.
+        dropped.ShouldBeGreaterThan(0, "a capacity-1 queue behind a closed sink must shed");
+        reported.ShouldContain(measurement => measurement.Value == dropped);
+        sink.Written.OfType<DecisionGap>().Sum(gap => gap.DroppedCount).ShouldBe(dropped);
     }
 
     [Fact]
@@ -96,12 +98,17 @@ public class DecisionLogTelemetryTests
         log.Enqueue(ARecord("third"));
         harness.Collect();
 
-        // Assert — a reading, not a total: it is what is at risk right now.
-        harness.Single("motiv.rules.decision_queue.depth").Value.ShouldBe(log.QueueDepth);
-        log.QueueDepth.ShouldBeGreaterThan(0);
+        var reported = harness.For("motiv.rules.decision_queue.depth");
+        var depth = log.QueueDepth;
 
+        // Drained before asserting — see the drop test above for why a closed sink and an assertion
+        // must never overlap.
         sink.Open();
         await log.DisposeAsync();
+
+        // Assert — a reading, not a total: it is what is at risk right now.
+        depth.ShouldBeGreaterThan(0);
+        reported.ShouldContain(measurement => measurement.Value == depth);
     }
 
     [Fact]
@@ -119,7 +126,7 @@ public class DecisionLogTelemetryTests
         harness.Collect();
 
         // Assert
-        harness.Single("motiv.rules.decision_queue.depth").Value.ShouldBe(0);
+        harness.For("motiv.rules.decision_queue.depth").ShouldContain(measurement => measurement.Value == 0);
     }
 
     [Fact]
@@ -137,7 +144,7 @@ public class DecisionLogTelemetryTests
         harness.Collect();
 
         // Assert
-        harness.Single("motiv.rules.decision_batches.failed").Value.ShouldBe(1);
+        harness.For("motiv.rules.decision_batches.failed").ShouldContain(measurement => measurement.Value == 1);
     }
 
     [Fact]
@@ -149,12 +156,20 @@ public class DecisionLogTelemetryTests
         sink.Open();
         var log = new DecisionLog(sink, Options(DecisionBackpressure.Block, capacity: 64));
 
+        harness.Collect();
+        var whileAlive = harness.For("motiv.rules.decision_queue.depth").Count;
+        whileAlive.ShouldBeGreaterThan(0, "the log must report while it is still running");
+
         // Act
         await log.DisposeAsync();
         harness.Collect();
 
         // Assert — a drained log reporting a depth of zero would read as health rather than absence.
-        harness.For("motiv.rules.decision_queue.depth").ShouldBeEmpty();
-        harness.For("motiv.rules.decisions.dropped").ShouldBeEmpty();
+        // Expressed as a count because the readings carry no log identity: a host has one decision
+        // log, so tagging every measurement to tell several apart would be cardinality for nobody.
+        // Fewer rather than exactly one fewer — another test's log elsewhere in this process may have
+        // been collected between the two polls, which is the same disappearance for the same reason.
+        var whileDisposed = harness.For("motiv.rules.decision_queue.depth").Count - whileAlive;
+        whileDisposed.ShouldBeLessThan(whileAlive);
     }
 }

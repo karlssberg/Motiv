@@ -91,12 +91,18 @@ internal sealed class RulesTelemetryHarness : IDisposable
     {
         _activityListener.Dispose();
 
+        // Snapshot first, then call the meter — never both at once. DisableMeasurementEvents takes
+        // the metrics library's own lock, and InstrumentPublished runs *under* that lock and takes
+        // this one; holding this lock across the call inverts the two orders and deadlocks the run
+        // whenever another test class happens to be creating an instrument at that moment.
+        Instrument[] enabled;
+        lock (_enabled) enabled = [.. _enabled];
+
         // Mirrors Motiv.Tests' TelemetryHarness: .NET 8's Meter does not reliably flip
         // Instrument.Enabled back to false when a still-subscribed listener is disposed, so this
         // disables each one explicitly and the flag reads false again on every target framework.
-        lock (_enabled)
-            foreach (var instrument in _enabled)
-                _meterListener.DisableMeasurementEvents(instrument);
+        foreach (var instrument in enabled)
+            _meterListener.DisableMeasurementEvents(instrument);
 
         _meterListener.Dispose();
     }
