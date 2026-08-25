@@ -7,6 +7,9 @@ namespace Motiv.Serialization.Tests.Decisions;
 /// overrides, which is exactly the shape that gets missed, and a missed one is a rule that says it is
 /// audited and is not.
 /// </summary>
+// Constructing a DecisionLog can tighten process-wide explanation detail — see
+// RulesTelemetryTestCollection for why that makes this class un-parallelizable.
+[Collection(Diagnostics.RulesTelemetryTestCollection.Name)]
 public class DecisionRecordingTests
 {
     private sealed class Customer(string id, bool isActive)

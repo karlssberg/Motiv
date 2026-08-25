@@ -186,6 +186,15 @@ builder.Services.AddMotivRules(registry, options)
 // MotivTelemetry.ExplanationDetail is now None. Nothing else to configure.
 ```
 
+> [!IMPORTANT]
+> Constructing a `DecisionLog` applies the ceiling **process-wide, and does not restore it** — there is
+> nothing to restore it to that would be safe. A host builds one log at startup, so this is simply
+> "configured at startup". It is worth knowing about in a test suite or any process that builds several
+> logs: the strictest posture any of them names wins for the whole process, for the rest of its life.
+
+The `ExplanationCeiling` property itself is pure — read it to find out what a registry implies without
+applying anything.
+
 Two properties of the coupling are worth relying on:
 
 - **It only ever tightens.** An adopter who has already chosen something stricter keeps it, and the order you

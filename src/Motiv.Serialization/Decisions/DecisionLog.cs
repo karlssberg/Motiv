@@ -64,6 +64,12 @@ public sealed class DecisionLog : IAsyncDisposable
         // log not to store, and the forgetting is invisible. Only ever tightens (see
         // ExplanationCeiling), so the order a host configures things in cannot change the outcome,
         // and an adopter who has already chosen something stricter keeps it.
+        //
+        // Process-wide, and never restored — there is nothing safe to restore it to. A host builds one
+        // log at startup, so this is just "configured at startup"; a process that builds several gives
+        // the whole process the strictest posture any of them named. That is the right direction to
+        // err, but it does mean constructing a log is not a side-effect-free act, which is why this
+        // project's tests that construct one are serialized — see RulesTelemetryTestCollection.
         var ceiling = _options.Capture.ExplanationCeiling;
         if (ceiling > MotivTelemetry.ExplanationDetail)
             MotivTelemetry.ExplanationDetail = ceiling;

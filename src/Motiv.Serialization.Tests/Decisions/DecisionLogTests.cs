@@ -6,6 +6,9 @@ namespace Motiv.Serialization.Tests.Decisions;
 /// The queue in front of the sink: ordering, batching, the three backpressure postures, and the
 /// promise that a drop is never silent.
 /// </summary>
+// Constructing a DecisionLog can tighten process-wide explanation detail — see
+// RulesTelemetryTestCollection for why that makes this class un-parallelizable.
+[Collection(Diagnostics.RulesTelemetryTestCollection.Name)]
 public class DecisionLogTests
 {
     /// <summary>
