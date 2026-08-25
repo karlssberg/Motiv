@@ -4,6 +4,9 @@ namespace Motiv.Serialization.Tests.Decisions;
 /// The input-capture seam, and the refusal that makes it a seam rather than a suggestion: a rule
 /// cannot be audited unless someone has decided what its records may keep of the model.
 /// </summary>
+// Constructing a DecisionLog can tighten process-wide explanation detail — see
+// RulesTelemetryTestCollection for why that makes this class un-parallelizable.
+[Collection(Diagnostics.RulesTelemetryTestCollection.Name)]
 public class DecisionCaptureTests
 {
     private sealed class Customer(string id, bool isActive)

@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace Motiv.Serialization;
 
 /// <summary>
@@ -54,12 +56,23 @@ internal sealed class BindingScope
     private long _publishing;
     private PropositionSet? _propositions;
     private RuleSet? _rules;
+    // The two halves of the last store sequence read, kept as separate longs rather than as a
+    // StoreGeneration: the struct is two longs wide, so it has no atomic read, and Volatile cannot
+    // take it. A reader can therefore catch the pair mid-update — a new rules number beside an old
+    // propositions one — which for a lag gauge is a one-tick discrepancy that the next poll corrects,
+    // and is why this is not used for anything a decision is made on.
+    private long _lastStoreRules;
+    private long _lastStorePropositions;
 
     public BindingScope(SpecRegistry registry)
     {
         Registry = registry ?? throw new ArgumentNullException(nameof(registry));
         _current = new ScopeGenerationBuilder(Registry, ruleCount: 0).Build();
         Source = new ScopeSource(this);
+
+        // Held weakly, so a scope that goes out of scope stops being reported rather than leaking —
+        // see TelemetrySubjects. Nothing is emitted unless a meter listener polls.
+        MotivRulesTelemetry.Scopes.Add(this);
     }
 
     /// <summary>
@@ -175,6 +188,56 @@ internal sealed class BindingScope
         return (stamp, Current);
     }
 
+    /// <summary>How many rules are bound in the world being served — the rule half of the catalog.</summary>
+    /// <remarks>
+    /// Counted off the world rather than off the <see cref="RuleSet"/>, so it is the same world every
+    /// other reading here is taken from. A slot is claimed by <c>RuleSet.Add</c> before the state is
+    /// published into it, so a count taken mid-registration understates by the one rule still landing
+    /// — the conservative direction for a gauge, and it corrects itself on the next poll.
+    /// </remarks>
+    public int RuleCount
+    {
+        get
+        {
+            var count = 0;
+            foreach (var slot in Current.RuleSlots)
+                if (slot is not null)
+                    count++;
+            return count;
+        }
+    }
+
+    /// <summary>How many authored propositions the world being served holds — the other half of the catalog.</summary>
+    public int PropositionCount => Current.Authored.Count;
+
+    /// <summary>
+    /// How far behind each store this replica was at its last refresh. Zero on both is converged.
+    /// </summary>
+    /// <remarks>
+    /// Measured against the sequence the last <see cref="RefreshAsync"/> actually read, not against a
+    /// fresh store read: a gauge callback fires on the exporter's schedule and must not issue a
+    /// database round-trip per collection. So this is "how far behind was I when I last looked",
+    /// which is the honest reading a poller can support — and a replica whose poller has stopped
+    /// reports its last known lag rather than a comforting zero.
+    /// </remarks>
+    public (long Rules, long Propositions) Lag
+    {
+        get
+        {
+            var served = Current.Sequence;
+            return (
+                Behind(Volatile.Read(ref _lastStoreRules), served.Rules),
+                Behind(Volatile.Read(ref _lastStorePropositions), served.Propositions));
+        }
+    }
+
+    /// <summary>
+    /// The gap, floored at zero. A served generation <em>ahead</em> of the last one read is ordinary —
+    /// a publish on this replica moves the world without going through a refresh — and reporting it as
+    /// negative lag would read as a replica ahead of its own store, which is not a thing.
+    /// </summary>
+    private static long Behind(long store, long served) => store > served ? store - served : 0;
+
     /// <summary>Records the proposition set that rebuilds this scope's authored half on a refresh.</summary>
     /// <remarks>
     /// <para>
@@ -227,6 +290,10 @@ internal sealed class BindingScope
         var rules = Volatile.Read(ref _rules);
         var propositions = Volatile.Read(ref _propositions);
 
+        // The last attempt's rebuild, so a run that exhausts its attempts still reports how long the
+        // work it threw away took — a contended refresh is the expensive outcome, not the free one.
+        var lastRebuildStart = 0L;
+
         // Three attempts, then leave it to the next tick. A refresh that loses the swap has been
         // overtaken by a publish, which is a world at least as new as the one it was building.
         for (var attempt = 0; attempt < 3; attempt++)
@@ -235,13 +302,20 @@ internal sealed class BindingScope
                 rules is null ? 0 : await rules.StoreGenerationAsync(cancellationToken).ConfigureAwait(false),
                 propositions is null ? 0 : await propositions.StoreGenerationAsync(cancellationToken).ConfigureAwait(false));
 
+            // Where the store stood when this replica last looked, which is what motiv.rules.replica_lag
+            // is measured against. Written on every attempt, including the one that finds nothing moved:
+            // that tick is exactly the evidence that the replica is level.
+            Volatile.Write(ref _lastStoreRules, sequence.Rules);
+            Volatile.Write(ref _lastStorePropositions, sequence.Propositions);
+
             // Snapshot() reads the stamp and the world in the only safe order — see its own doc.
             // Reading them separately here, in the wrong order, would hand this rebuild a stale
             // world with a fresh stamp, so its swap would succeed and silently overwrite a publish.
             var (stamp, current) = Snapshot();
             if (!sequence.MovedFrom(current.Sequence))
-                return RefreshReport.Unchanged(current.Sequence);
+                return Report(RefreshReport.Unchanged(current.Sequence), rebuildStart: 0);
 
+            var rebuildStart = Stopwatch.GetTimestamp();
             var builder = new ScopeGenerationBuilder(Registry, current.RuleSlots.Length);
             var regressions = new List<RefreshFailure>();
             var quarantined = new List<RefreshFailure>();
@@ -257,15 +331,67 @@ internal sealed class BindingScope
                     .ConfigureAwait(false);
 
             if (regressions.Count > 0)
-                return RefreshReport.Aborted(current.Sequence, regressions, quarantined);
+                return Report(RefreshReport.Aborted(current.Sequence, regressions, quarantined), rebuildStart);
 
             builder.SetSequence(sequence);
 
             if (Locked(() => TrySwap(builder.Build(), stamp)))
-                return RefreshReport.Applied(sequence, quarantined);
+                return Report(RefreshReport.Applied(sequence, quarantined), rebuildStart);
+
+            lastRebuildStart = rebuildStart;
         }
 
-        return RefreshReport.Contended(Current.Sequence);
+        return Report(RefreshReport.Contended(Current.Sequence), lastRebuildStart);
+    }
+
+    /// <summary>
+    /// Counts the refresh, times the rebuild it ran, and hands the report back unchanged.
+    /// </summary>
+    /// <remarks>
+    /// Wrapping every return rather than counting once at the top is what makes the outcome tag
+    /// trustworthy: a refresh is only classified once it is over, and an early return that skipped
+    /// this would leave the counter naming three outcomes for a method with four.
+    /// </remarks>
+    private static RefreshReport Report(RefreshReport report, long rebuildStart)
+    {
+        MotivRulesTelemetry.RecordRefresh(report.Outcome, rebuildStart);
+        CountBindFailures(report.Regressions);
+        CountBindFailures(report.Quarantined);
+        return report;
+    }
+
+    /// <summary>
+    /// Counts each failure under its own kind, since one refresh rebuilds both halves of the world
+    /// into the same two lists.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Regressions and carried quarantines are counted alike. They differ in what the refresh
+    /// <em>did</em> — one aborted it, the other rode along — and <see cref="RefreshReport"/> keeps
+    /// them apart for exactly that reason. But this instrument answers a narrower question: how many
+    /// stored documents will not bind in this build? Both are that, and an operator who has to add
+    /// two series together to learn it is being made to reassemble something that was never usefully
+    /// split.
+    /// </para>
+    /// <para>
+    /// A document still broken on the next tick is counted again, deliberately: a rate that stays
+    /// above zero is what tells an operator the replica is still stuck, where a count taken once
+    /// would leave a wedged replica looking healthy as soon as it scrolled off the dashboard.
+    /// </para>
+    /// </remarks>
+    private static void CountBindFailures(IReadOnlyList<RefreshFailure> failures)
+    {
+        if (failures.Count == 0)
+            return;
+
+        var rules = 0;
+        foreach (var failure in failures)
+            if (failure.Kind == MotivRulesTelemetry.RuleKind)
+                rules++;
+
+        MotivRulesTelemetry.RecordBindFailures(MotivRulesTelemetry.RuleKind, BindPhase.Refresh, rules);
+        MotivRulesTelemetry.RecordBindFailures(
+            MotivRulesTelemetry.PropositionKind, BindPhase.Refresh, failures.Count - rules);
     }
 
     /// <summary>

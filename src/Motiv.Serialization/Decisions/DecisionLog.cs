@@ -1,4 +1,5 @@
 using System.Threading.Channels;
+using Motiv.Diagnostics;
 
 namespace Motiv.Serialization;
 
@@ -28,6 +29,7 @@ public sealed class DecisionLog : IAsyncDisposable
     private readonly CancellationTokenSource _shutdown = new();
     private readonly Task _writer;
     private readonly object _dropLock = new();
+    private readonly IDisposable _telemetry;
 
     private DateTimeOffset _firstDroppedUtc;
     private DateTimeOffset _lastDroppedUtc;
@@ -55,6 +57,28 @@ public sealed class DecisionLog : IAsyncDisposable
             });
 
         _writer = Task.Run(DrainAsync);
+
+        // PII posture is stated once — on the capture registry — and applies to both the durable
+        // record and the ephemeral traces. Done here rather than left to the host because a host that
+        // forgets is a host quietly exporting into a trace exactly the model data it configured this
+        // log not to store, and the forgetting is invisible. Only ever tightens (see
+        // ExplanationCeiling), so the order a host configures things in cannot change the outcome,
+        // and an adopter who has already chosen something stricter keeps it.
+        //
+        // Process-wide, and never restored — there is nothing safe to restore it to. A host builds one
+        // log at startup, so this is just "configured at startup"; a process that builds several gives
+        // the whole process the strictest posture any of them named. That is the right direction to
+        // err, but it does mean constructing a log is not a side-effect-free act, which is why this
+        // project's tests that construct one are serialized — see RulesTelemetryTestCollection.
+        var ceiling = _options.Capture.ExplanationCeiling;
+        if (ceiling > MotivTelemetry.ExplanationDetail)
+            MotivTelemetry.ExplanationDetail = ceiling;
+
+        // The three decision-log instruments are readings off this object, not events pushed from a
+        // call site — motiv.rules.decisions.dropped reads DroppedCount itself, so the counter and the
+        // gap markers cannot disagree about how many records were shed. Registering here is what
+        // makes them findable; unregistering on disposal keeps a finished log out of the readings.
+        _telemetry = MotivRulesTelemetry.DecisionLogs.Add(this);
     }
 
     /// <summary>How much of an evaluated model each rule's records may keep.</summary>
@@ -69,6 +93,19 @@ public sealed class DecisionLog : IAsyncDisposable
 
     /// <summary>How many batches the sink refused. A rising count is a sink that needs attention.</summary>
     public long FailedBatchCount => Interlocked.Read(ref _failedBatchCount);
+
+    /// <summary>
+    /// How many records are waiting for the sink right now — how much of the crash-loss window is
+    /// currently occupied.
+    /// </summary>
+    /// <remarks>
+    /// A reading rather than a total, and the one number here that can fall. Depth approaching
+    /// <see cref="DecisionLogOptions.QueueCapacity"/> is the warning that
+    /// <see cref="DecisionBackpressure"/> is about to start applying — under
+    /// <see cref="DecisionBackpressure.FailClosed"/> that means audited evaluations are about to
+    /// start throwing, which an operator would much rather see coming than diagnose afterwards.
+    /// </remarks>
+    public int QueueDepth => _queue.Reader.CanCount ? _queue.Reader.Count : 0;
 
     /// <summary>
     /// Hands a record to the queue, applying the configured posture when it is full.
@@ -124,6 +161,10 @@ public sealed class DecisionLog : IAsyncDisposable
         {
             _shutdown.Cancel();
             _shutdown.Dispose();
+
+            // A drained log has nothing left to report, and a reading of zero from a log nobody is
+            // writing to any more would look like health rather than absence.
+            _telemetry.Dispose();
         }
     }
 

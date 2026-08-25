@@ -348,18 +348,18 @@ public sealed class PropositionSet
     {
         var prepared = Scope.Locked(prepare);
         if (prepared.Failure is { } failure)
-            return failure;
+            return Refused(failure);
 
         // Where the store stood before this publish wrote — see RuleSet.PersistAndCommitCoreAsync for
         // why it is read here rather than earlier, and ScopeGenerationBuilder.AdvancePropositionSequence
         // for what the pair is compared for.
-        var before = await _store.GetGenerationAsync(cancellationToken).ConfigureAwait(false);
+        var before = await TimedGenerationAsync(cancellationToken).ConfigureAwait(false);
 
-        await _store.WriteAsync(SaveBatchFor(prepared.Authored!), cancellationToken).ConfigureAwait(false);
+        await TimedWriteAsync(SaveBatchFor(prepared.Authored!), cancellationToken).ConfigureAwait(false);
 
         // Store-derived, never counted locally — see RuleSet.PersistAndCommitCoreAsync for why the
         // token would be fiction otherwise.
-        var generation = await _store.GetGenerationAsync(cancellationToken).ConfigureAwait(false);
+        var generation = await TimedGenerationAsync(cancellationToken).ConfigureAwait(false);
 
         return Scope.Locked(() => success(Scope.Mutate(builder =>
         {
@@ -404,7 +404,55 @@ public sealed class PropositionSet
     /// outer gate is held; commits nothing.
     /// </summary>
     internal Task WriteBatchCoreAsync(PropositionBatch batch, CancellationToken cancellationToken) =>
-        _store.WriteAsync(batch, cancellationToken);
+        TimedWriteAsync(batch, cancellationToken);
+
+    /// <summary>"proposition", as <c>NodeId.KindLabel</c> spells it — the <c>motiv.rules.kind</c> tag's value here.</summary>
+    private const string NodeKindLabel = MotivRulesTelemetry.PropositionKind;
+
+    /// <summary>
+    /// Reports a write that was refused, and hands the result back unchanged. Mirrors
+    /// <c>RuleSet.Refused</c>, and counts the same two outcomes for the same reason.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="PropositionUpdateOutcome.Invalid"/> covers both a document that would not bind and
+    /// one whose publication would break a dependent. Both are counted: a cascade refusal is a
+    /// document that cannot go live, which is what the instrument names — and an operator watching a
+    /// republish fail wants to see it whichever half of the closure refused.
+    /// </remarks>
+    private static PropositionUpdateResult Refused(PropositionUpdateResult result)
+    {
+        switch (result.Outcome)
+        {
+            case PropositionUpdateOutcome.Invalid:
+                MotivRulesTelemetry.RecordBindFailures(NodeKindLabel, BindPhase.Publish, 1);
+                break;
+            case PropositionUpdateOutcome.VersionConflict:
+                MotivRulesTelemetry.RecordPublishConflict(NodeKindLabel);
+                break;
+        }
+
+        return result;
+    }
+
+    /// <summary>The store's generation, timed.</summary>
+    private Task<long> TimedGenerationAsync(CancellationToken cancellationToken) =>
+        MotivRulesTelemetry.TimeStoreCallAsync(
+            NodeKindLabel, StoreOperation.Generation, () => _store.GetGenerationAsync(cancellationToken));
+
+    /// <summary>
+    /// A store write, timed. Reported as <see cref="StoreOperation.Append"/> rather than as a "write"
+    /// of its own: it is the same act the rule store's append is — the one round trip a publish spends
+    /// on making the change durable — and an operator comparing the two halves' write latency should
+    /// not have to know that one store spells it differently.
+    /// </summary>
+    private Task TimedWriteAsync(PropositionBatch batch, CancellationToken cancellationToken) =>
+        MotivRulesTelemetry.TimeStoreCallAsync(
+            NodeKindLabel, StoreOperation.Append,
+            async () =>
+            {
+                await _store.WriteAsync(batch, cancellationToken).ConfigureAwait(false);
+                return true;   // the timer needs a result; a write has none worth naming
+            });
 
     /// <summary>
     /// Applies a create or update prepared earlier by <see cref="PrepareCreateCore"/> or
@@ -471,17 +519,17 @@ public sealed class PropositionSet
     {
         var prepared = Scope.Locked(() => PrepareWithdraw(name, expectedVersion));
         if (prepared.Failure is { } failure)
-            return failure;
+            return Refused(failure);
 
         // See PersistAndCommitCoreAsync: a withdrawal claims a store position on the same terms a
         // save does, so it has to be able to tell whether the position is one this world may claim.
-        var before = await _store.GetGenerationAsync(cancellationToken).ConfigureAwait(false);
+        var before = await TimedGenerationAsync(cancellationToken).ConfigureAwait(false);
 
-        await _store.WriteAsync(PropositionBatch.Delete(name), cancellationToken).ConfigureAwait(false);
+        await TimedWriteAsync(PropositionBatch.Delete(name), cancellationToken).ConfigureAwait(false);
 
         // A withdrawal moves the store as surely as a save does, and leaves a state — rows gone,
         // generation advanced — that nothing else would ever record.
-        var generation = await _store.GetGenerationAsync(cancellationToken).ConfigureAwait(false);
+        var generation = await TimedGenerationAsync(cancellationToken).ConfigureAwait(false);
 
         return Scope.Locked(() =>
         {
@@ -649,12 +697,15 @@ public sealed class PropositionSet
             // The generation before the rows — see RuleSet.Load, whose reasoning this mirrors exactly,
             // for why that order matters and why blocking on it here is the settled design rather than
             // an oversight.
-            var generation = _store.GetGenerationAsync(default).ConfigureAwait(false).GetAwaiter().GetResult();
+            var generation = MotivRulesTelemetry.TimeStoreCall(
+                NodeKindLabel, StoreOperation.Generation,
+                () => _store.GetGenerationAsync(default).ConfigureAwait(false).GetAwaiter().GetResult());
 
             // Set only once the store has actually been read. Reading is the one step here that can
             // throw rather than quarantine, and it mutates nothing — so a store that was briefly
             // unreachable leaves the set in its pre-load state and genuinely may be loaded again.
-            var candidates = CandidatesFrom(_store.Load());
+            var candidates = CandidatesFrom(MotivRulesTelemetry.TimeStoreCall(
+                NodeKindLabel, StoreOperation.Load, () => _store.Load()));
             _loaded = true;
 
             var ordered = OrderAndRecordCycles(candidates);
@@ -671,16 +722,22 @@ public sealed class PropositionSet
             // builder's own prospective source, so a proposition still resolves the ones it references
             // — they were folded in earlier in this same dependency-ordered pass — while startup
             // publishes a single generation instead of forking one per row.
-            Scope.Mutate(builder =>
+            var quarantined = Scope.Mutate(builder =>
             {
                 // Where this replica now stands, in the same swap that publishes what it stands on —
                 // see RuleSet.Load for why a replica that never records this is worse off than one
                 // with no token at all.
                 builder.SetPropositionSequence(generation);
 
+                var count = 0;
                 foreach (var name in ordered)
-                    LoadOne(candidates[name], builder);
+                    if (LoadOne(candidates[name], builder))
+                        count++;
+
+                return count;
             });
+
+            MotivRulesTelemetry.RecordBindFailures(NodeKindLabel, BindPhase.Load, quarantined);
         });
 
     /// <summary>
@@ -717,7 +774,8 @@ public sealed class PropositionSet
         List<RefreshFailure> regressions, List<RefreshFailure> quarantined,
         CancellationToken cancellationToken)
     {
-        var rows = await _store.LoadAsync(cancellationToken).ConfigureAwait(false);
+        var rows = await MotivRulesTelemetry.TimeStoreCallAsync(
+            NodeKindLabel, StoreOperation.Load, () => _store.LoadAsync(cancellationToken)).ConfigureAwait(false);
 
         // Everything below is CPU over a builder nobody else can see, so no lock is held or needed.
         var candidates = CandidatesFrom(rows);
@@ -864,7 +922,8 @@ public sealed class PropositionSet
     /// the arms below wrote to that field only, so moving the read path into the generation without
     /// moving them would have caused exactly that disappearance.
     /// </remarks>
-    private void LoadOne(LoadCandidate candidate, ScopeGenerationBuilder builder)
+    /// <returns><see langword="true"/> when the row was quarantined rather than bound.</returns>
+    private bool LoadOne(LoadCandidate candidate, ScopeGenerationBuilder builder)
     {
         var authored = Unbound(candidate);
 
@@ -874,7 +933,7 @@ public sealed class PropositionSet
             // anyway could only succeed by resolving through a name that is itself unresolvable or
             // by binding on top of an unresolved cyclic reference, neither of which is a real bind.
             builder.SetAuthored(authored.WithQuarantine(candidate.Errors));
-            return;
+            return true;
         }
 
         var errors = new List<RuleError>();
@@ -887,7 +946,7 @@ public sealed class PropositionSet
             // It is still recorded as authored, so the catalog can list it and an operator can repair
             // the document it came from.
             builder.SetAuthored(authored.WithQuarantine(errors));
-            return;
+            return true;
         }
 
         // The publish path itself rather than a copy of its steps, and missing only the store write
@@ -895,6 +954,7 @@ public sealed class PropositionSet
         // back would be a no-op at best. Rebind is what makes that reuse possible; PrepareRebind
         // would seal the replacement inside a commit only a ScopeGenerationBuilder can open.
         CommitPublish(rebound, builder);
+        return false;
     }
 
     /// <summary>Parses without letting malformed JSON escape — a hand-edited store must not stop startup.</summary>

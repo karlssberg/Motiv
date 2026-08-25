@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace Motiv.Serialization;
 
 /// <summary>
@@ -50,24 +52,42 @@ public class AsyncPolicyRule<TModel, TMetadata> : AsyncRule<TModel, TMetadata>
         // synchronously, and an unaudited evaluation forwards the policy's ValueTask directly.
         var generation = Scope.Active;
         var state = StateIn(generation);
+
+        // Instrumented in its own right, not by the base method — see AsyncRule.EvaluateAsync, and
+        // PolicyRule.Evaluate for why a shadow cannot borrow the base's span.
+        var activity = MotivRulesTelemetry.StartRuleEvaluation(Name, state.Version);
         var evaluation = ((AsyncPolicyBase<TModel, TMetadata>)state.Spec)
             .EvaluateAsync(model, cancellationToken);
+        var log = RecorderFor(state);
 
-        return RecorderFor(state) is { } log
-            ? RecordAsync(log, state, generation, model, evaluation)
-            : evaluation;
+        return log is null && activity is null
+            ? evaluation
+            : ObserveAsync(activity, log, state, generation, model, evaluation);
     }
 
-    private async ValueTask<PolicyResultBase<TMetadata>> RecordAsync(
-        DecisionLog log,
+    /// <summary>The policy twin of <c>AsyncRule.ObserveAsync</c>; see there for why it is one wrapper.</summary>
+    private async ValueTask<PolicyResultBase<TMetadata>> ObserveAsync(
+        Activity? activity,
+        DecisionLog? log,
         State state,
         ScopeGeneration generation,
         TModel model,
         ValueTask<PolicyResultBase<TMetadata>> evaluation)
     {
-        var result = await evaluation.ConfigureAwait(false);
-        Record(log, state, generation, model, result);
-        return result;
+        try
+        {
+            var result = await evaluation.ConfigureAwait(false);
+
+            if (log is not null)
+                Record(log, state, generation, model, result);
+
+            MotivRulesTelemetry.AddNodeSpans(activity, state.Audited, result);
+            return result;
+        }
+        finally
+        {
+            activity?.Dispose();
+        }
     }
 
     private protected override RuleError? RequirePolicy(AsyncSpecBase<TModel, TMetadata> spec) =>

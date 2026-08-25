@@ -45,9 +45,17 @@ public class PolicyRule<TModel, TMetadata> : Rule<TModel, TMetadata>
     {
         var generation = Scope.Active;
         var state = StateIn(generation);
+
+        // Instrumented in its own right, not by the base method — see Rule.Evaluate. A shadow that
+        // borrowed the base's span would need to call the base, which is exactly what shadowing does
+        // not do.
+        using var activity = MotivRulesTelemetry.StartRuleEvaluation(Name, state.Version);
+
         var result = ((PolicyBase<TModel, TMetadata>)state.Spec).Evaluate(model);
         if (RecorderFor(state) is { } log)
             Record(log, state, generation, model, result);
+
+        MotivRulesTelemetry.AddNodeSpans(activity, state.Audited, result);
         return result;
     }
 

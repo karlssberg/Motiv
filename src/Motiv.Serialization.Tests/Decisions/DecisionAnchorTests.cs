@@ -5,6 +5,9 @@ namespace Motiv.Serialization.Tests.Decisions;
 /// version pins the rule's own composition and says nothing about its propositions, which is why the
 /// pin is a separate anchor — and why it has to be the transitive closure rather than the first hop.
 /// </summary>
+// Constructing a DecisionLog can tighten process-wide explanation detail — see
+// RulesTelemetryTestCollection for why that makes this class un-parallelizable.
+[Collection(Diagnostics.RulesTelemetryTestCollection.Name)]
 public class DecisionAnchorTests
 {
     private sealed class Customer(string id, bool isActive, int age)

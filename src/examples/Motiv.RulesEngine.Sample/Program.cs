@@ -7,6 +7,7 @@ using Motiv.RulesEngine.Sample;
 using Motiv.Serialization;
 using Motiv.Serialization.AspNetCore;
 using Motiv.Serialization.EntityFrameworkCore;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 // Seam: the spec catalog. Register each spec under a stable name — rule documents
 // reference specs by these names. Descriptions surface in the /catalog response.
@@ -289,6 +290,17 @@ app.UseStaticFiles(staticFiles);
 // Seam: the endpoints. Mounts GET /catalog, POST /validate, POST /evaluate — plus the rule
 // endpoints under /api/rules/rules — backed by the registry, options, and RuleSet from DI.
 app.MapMotivRules("/api/rules");
+
+// Seam: readiness. AddMotivRules registers a "ready"-tagged check that asks each store for its
+// generation — the cheapest question that still proves the connection works. Filtered to that tag on
+// purpose: a load balancer asking "may I send this replica traffic?" must not be answered by a check
+// that reports a replica *behind* the store as unhealthy. That one is /health, below, where an
+// operator reads it.
+app.MapHealthChecks("/health/ready",
+    new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") })
+    .AllowAnonymous();
+
+app.MapHealthChecks("/health").AllowAnonymous();
 
 // Seam: a rule being *used*. Handles arrive by type via DI — no name strings, and each
 // Evaluate/EvaluateAsync reads an immutable snapshot, so a concurrent PUT never tears a result.

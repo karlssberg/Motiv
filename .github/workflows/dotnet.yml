@@ -25,8 +25,13 @@ jobs:
           10.0.x
     - name: Restore dependencies
       run: dotnet restore
+    # --verbosity minimal, not normal: at normal this step emits the full csc command line for every
+    # project and target framework, which is hundreds of kilobytes before a single test has run.
+    # GitHub only serves the tail of a job log, so a failure early in the run is pushed out of the
+    # window and cannot be read at all — a log nobody can reach the failure in is not a log. Failed
+    # test names, their messages and the per-project summaries all still print at minimal.
     - name: Test
-      run: dotnet test --configuration Release --verbosity normal --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+      run: dotnet test --configuration Release --verbosity minimal --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
     - name: Pack (validation only — not published)
       run: |
         dotnet pack src/Motiv/Motiv.csproj --configuration Release --output ./nupkgs

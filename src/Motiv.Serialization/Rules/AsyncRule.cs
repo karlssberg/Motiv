@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace Motiv.Serialization;
 
 /// <summary>
@@ -96,11 +98,18 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
         // it and its caller. Only an audited evaluation pays for the wrapper.
         var generation = Scope.Active;
         var state = StateIn(generation);
-        var evaluation = state.Spec.EvaluateAsync(model, cancellationToken);
 
-        return RecorderFor(state) is { } log
-            ? RecordAsync(log, state, generation, model, evaluation)
-            : evaluation;
+        // Opened before the evaluation so core's motiv.evaluate span lands inside it — see
+        // Rule.Evaluate. Null, and free, when nothing is listening to the rules source; when it is
+        // not null the wrapper below is mandatory, since an activity nobody disposes would leave
+        // Activity.Current pointing at a span that never ends.
+        var activity = MotivRulesTelemetry.StartRuleEvaluation(Name, state.Version);
+        var evaluation = state.Spec.EvaluateAsync(model, cancellationToken);
+        var log = RecorderFor(state);
+
+        return log is null && activity is null
+            ? evaluation
+            : ObserveAsync(activity, log, state, generation, model, evaluation);
     }
 
     /// <summary>
@@ -110,16 +119,39 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
     /// </summary>
     private protected DecisionLog? RecorderFor(State state) => state.Audited ? DecisionLog : null;
 
-    private async ValueTask<BooleanResultBase<TMetadata>> RecordAsync(
-        DecisionLog log,
+    /// <summary>
+    /// Awaits the evaluation, records it if the binding is audited, and closes the span either way.
+    /// </summary>
+    /// <remarks>
+    /// One wrapper for both reasons an evaluation might need observing, rather than one each: they
+    /// both need the same single await, and two wrappers would mean an audited evaluation under a
+    /// listener allocated two state machines to await one result.
+    /// </remarks>
+    private async ValueTask<BooleanResultBase<TMetadata>> ObserveAsync(
+        Activity? activity,
+        DecisionLog? log,
         State state,
         ScopeGeneration generation,
         TModel model,
         ValueTask<BooleanResultBase<TMetadata>> evaluation)
     {
-        var result = await evaluation.ConfigureAwait(false);
-        Record(log, state, generation, model, result);
-        return result;
+        try
+        {
+            var result = await evaluation.ConfigureAwait(false);
+
+            if (log is not null)
+                Record(log, state, generation, model, result);
+
+            MotivRulesTelemetry.AddNodeSpans(activity, state.Audited, result);
+            return result;
+        }
+        finally
+        {
+            // In a finally so a cancelled or failing evaluation still closes its span. A span left
+            // open is worse than no span: it never reaches an exporter, and Activity.Current stays
+            // pointing at it for the rest of the async flow.
+            activity?.Dispose();
+        }
     }
 
     /// <summary>

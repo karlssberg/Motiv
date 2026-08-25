@@ -77,6 +77,9 @@ internal static class TestApp
     {
         public HttpClient Client { get; } = app.GetTestClient();
 
+        /// <summary>The host's service provider, for tests that assert on what was registered.</summary>
+        public IServiceProvider Services => app.Services;
+
         public ValueTask DisposeAsync() => app.DisposeAsync();
     }
 }
