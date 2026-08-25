@@ -258,15 +258,14 @@ public sealed class RuleSet
             // that reopens the problem the synchronous Load exists to avoid. ConfigureAwait(false)
             // rather than a bare GetResult, so a caller with a synchronization context cannot
             // deadlock on the continuation.
-            var generationCall = MotivRulesTelemetry.StartStoreCall();
-            var generation = _store.GetGenerationAsync(default).ConfigureAwait(false).GetAwaiter().GetResult();
-            MotivRulesTelemetry.RecordStoreCall(generationCall, NodeKindLabel, StoreOperation.Generation);
+            var generation = MotivRulesTelemetry.TimeStoreCall(
+                NodeKindLabel, StoreOperation.Generation,
+                () => _store.GetGenerationAsync(default).ConfigureAwait(false).GetAwaiter().GetResult());
 
             // Set only once the store has been read: reading is the one step that can throw rather
             // than quarantine, and it mutates nothing, so an unreachable store leaves the set loadable.
-            var loadCall = MotivRulesTelemetry.StartStoreCall();
-            var heads = _store.Load() ?? [];
-            MotivRulesTelemetry.RecordStoreCall(loadCall, NodeKindLabel, StoreOperation.Load);
+            var heads = MotivRulesTelemetry.TimeStoreCall(
+                NodeKindLabel, StoreOperation.Load, () => _store.Load()) ?? [];
             _loaded = true;
 
             var quarantined = new List<QuarantinedRule>();
@@ -367,9 +366,8 @@ public sealed class RuleSet
         List<RefreshFailure> regressions, List<RefreshFailure> quarantined,
         CancellationToken cancellationToken)
     {
-        var loadCall = MotivRulesTelemetry.StartStoreCall();
-        var heads = await _store.LoadAsync(cancellationToken).ConfigureAwait(false);
-        MotivRulesTelemetry.RecordStoreCall(loadCall, NodeKindLabel, StoreOperation.Load);
+        var heads = await MotivRulesTelemetry.TimeStoreCallAsync(
+            NodeKindLabel, StoreOperation.Load, () => _store.LoadAsync(cancellationToken)).ConfigureAwait(false);
 
         // A serializer over the *prospective* world: rule documents resolve authored propositions,
         // and the builder already holds the authored layer this refresh is rebuilding.
@@ -686,15 +684,10 @@ public sealed class RuleSet
         // the outer gate excludes every other publish, and a refresh cannot swap while one is
         // registered in flight (see BindingScope.TrySwap) — so the comparison is well-defined wherever
         // in this span it is read.
-        var beforeCall = MotivRulesTelemetry.StartStoreCall();
-        var before = await _store.GetGenerationAsync(cancellationToken).ConfigureAwait(false);
-        MotivRulesTelemetry.RecordStoreCall(beforeCall, NodeKindLabel, StoreOperation.Generation);
+        var before = await TimedGenerationAsync(cancellationToken).ConfigureAwait(false);
 
-        var appendCall = MotivRulesTelemetry.StartStoreCall();
-        var appended = await _store
-            .AppendAsync([RowFor(name, publication, provenance)], cancellationToken)
-            .ConfigureAwait(false);
-        MotivRulesTelemetry.RecordStoreCall(appendCall, NodeKindLabel, StoreOperation.Append);
+        var appended = await TimedAppendAsync(
+            [RowFor(name, publication, provenance)], cancellationToken).ConfigureAwait(false);
 
         if (appended.IsConflict)
             return Refused(RuleUpdateResult.VersionConflict(appended.CurrentVersion));
@@ -703,9 +696,7 @@ public sealed class RuleSet
         // increment would have two replicas that published independently arrive at the same number,
         // and detecting exactly that skew is what the fencing token exists for — it has to be
         // store-derived or it is fiction. Two scalar reads per publish, and publishes are rare.
-        var afterCall = MotivRulesTelemetry.StartStoreCall();
-        var generation = await _store.GetGenerationAsync(cancellationToken).ConfigureAwait(false);
-        MotivRulesTelemetry.RecordStoreCall(afterCall, NodeKindLabel, StoreOperation.Generation);
+        var generation = await TimedGenerationAsync(cancellationToken).ConfigureAwait(false);
 
         // Nothing below can fail. CommitCore also clears any quarantine on the rule — a successful
         // publish is exactly the repair that resolves one.
@@ -758,17 +749,21 @@ public sealed class RuleSet
             [.. prepared.Select(entry => RowFor(entry.Name, entry.Publication, provenance))],
             cancellationToken);
 
+    /// <summary>The store's generation, timed.</summary>
+    private Task<long> TimedGenerationAsync(CancellationToken cancellationToken) =>
+        MotivRulesTelemetry.TimeStoreCallAsync(
+            NodeKindLabel, StoreOperation.Generation, () => _store.GetGenerationAsync(cancellationToken));
+
     /// <summary>
-    /// The envelope path's append, timed and its conflict counted, so a governed publish reports the
-    /// same two facts a direct one does. Separate from the direct path's inline calls only because
-    /// this one hands its result back to a caller that decides what the envelope does next.
+    /// An append, timed and its conflict counted. Shared by the direct and the governed-envelope
+    /// paths so a publish reports the same two facts whichever way it arrived.
     /// </summary>
     private async Task<RuleAppendResult> TimedAppendAsync(
         StoredRuleVersion[] rows, CancellationToken cancellationToken)
     {
-        var appendCall = MotivRulesTelemetry.StartStoreCall();
-        var appended = await _store.AppendAsync(rows, cancellationToken).ConfigureAwait(false);
-        MotivRulesTelemetry.RecordStoreCall(appendCall, NodeKindLabel, StoreOperation.Append);
+        var appended = await MotivRulesTelemetry.TimeStoreCallAsync(
+            NodeKindLabel, StoreOperation.Append,
+            () => _store.AppendAsync(rows, cancellationToken)).ConfigureAwait(false);
 
         if (appended.IsConflict)
             MotivRulesTelemetry.RecordPublishConflict(NodeKindLabel);

@@ -262,113 +262,22 @@ public static class MotivRulesTelemetry
 
     /// <summary>
     /// Emits one structural span per causal node of an audited rule's result tree, under
-    /// <paramref name="evaluation"/>.
+    /// <paramref name="evaluation"/>. See <see cref="NodeSpanWriter"/> for what these spans do and do
+    /// not mean.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Three gates, all of which must be open: something is listening (<paramref name="evaluation"/>
-    /// is non-null), <see cref="NodeSpans"/> is on, and this binding is <paramref name="audited"/>.
-    /// The last is what "ride the audited flag" means — node spans follow the same governed,
-    /// versioned decision that turns the decision log on, rather than becoming a second switch that
-    /// could be set for a rule nobody agreed to record.
-    /// </para>
-    /// <para>
-    /// <strong>These spans carry structure, not timing.</strong> Motiv evaluates a composition in one
-    /// pass and never times a sub-proposition, so a node span's duration is the walk that emitted it
-    /// and nothing else. What is real is the shape: which sub-propositions were causal, how they
-    /// nest, and which way each one went. Read the waterfall for the tree, not for where the time
-    /// went — <c>motiv.evaluate</c>'s own duration is the only honest number in it.
-    /// </para>
-    /// <para>
-    /// The walk is iterative over an explicit stack rather than recursive. A result tree has no small
-    /// upper bound, and a recursive walk over a deep one is precisely the uncatchable crash Spec 3A
-    /// removed from the result-tree properties; reintroducing one here — inside instrumentation,
-    /// where it would only ever fire in production under a listener — would be the worst possible
-    /// place for it.
-    /// </para>
-    /// </remarks>
     /// <param name="evaluation">The rule's own span, or null when nothing is listening.</param>
     /// <param name="audited">Whether the binding being evaluated is audited.</param>
     /// <param name="result">The result whose causal tree is walked.</param>
     internal static void AddNodeSpans(Activity? evaluation, bool audited, BooleanResultBase result)
     {
+        // Three gates, all of which must be open: something is listening, node spans are on, and this
+        // binding is audited. The last is what "ride the audited flag" means — node spans follow the
+        // same governed, versioned decision that turns the decision log on, rather than becoming a
+        // second switch that could be set for a rule nobody agreed to record.
         if (evaluation is null || !NodeSpans || !audited)
             return;
 
-        var detail = MotivTelemetry.ExplanationDetail;
-        var budget = MaxNodeSpans;
-        var emitted = 0;
-
-        var pending = new Stack<(BooleanResultBase Node, ActivityContext Parent)>();
-        PushCauses(pending, result, evaluation.Context);
-
-        while (pending.Count > 0)
-        {
-            if (emitted == budget)
-            {
-                // Said out loud rather than simply stopping. A waterfall that quietly stops short
-                // reads as a complete picture of a smaller tree, which is worse than no picture.
-                evaluation.SetTag("motiv.rules.nodes.truncated", true);
-                return;
-            }
-
-            var (node, parent) = pending.Pop();
-
-            using var span = ActivitySource.StartActivity(NodeActivityName, ActivityKind.Internal, parent);
-
-            // A sampler that declined this child would decline its siblings too, and half a tree is
-            // not a smaller tree — it is a misleading one.
-            if (span is null)
-                return;
-
-            span.SetTag("motiv.satisfied", node.Satisfied);
-            TrySetNodeReason(span, node, detail);
-            emitted++;
-
-            PushCauses(pending, node, span.Context);
-        }
-    }
-
-    /// <summary>
-    /// Queues a node's causal children. <c>Causes</c>, not <c>Underlying</c>: the de-noised set is
-    /// what actually carried the outcome, and it is the same set every other explanation surface
-    /// reports — a trace that disagreed with the <c>Justification</c> beside it would be worse than
-    /// no trace.
-    /// </summary>
-    private static void PushCauses(
-        Stack<(BooleanResultBase Node, ActivityContext Parent)> pending,
-        BooleanResultBase node,
-        ActivityContext parent)
-    {
-        foreach (var cause in node.Causes)
-            pending.Push((cause, parent));
-    }
-
-    /// <summary>
-    /// Tags a node with its own reason, to the extent the explanation-tag mode allows — and never
-    /// under <see cref="ExplanationDetail.None"/>.
-    /// </summary>
-    /// <remarks>
-    /// Node spans are explanation text by another name, so they are governed by the same control and
-    /// therefore by the same capture posture. A node tree that leaked assertion text a decision
-    /// record was forbidden to store would defeat the coupling exactly where it matters most: there
-    /// is one span per node here, so this is the widest exposure of that text anywhere. Resolution
-    /// runs a user's WhenTrue/WhenFalse delegate and can throw; as in core, that must never turn an
-    /// evaluation that already succeeded into a failing one.
-    /// </remarks>
-    private static void TrySetNodeReason(Activity span, BooleanResultBase node, ExplanationDetail detail)
-    {
-        if (detail == ExplanationDetail.None)
-            return;
-
-        try
-        {
-            span.SetTag("motiv.reason", node.Reason);
-        }
-        catch
-        {
-            // See the remarks: the span keeps the outcome, and loses only the text.
-        }
+        NodeSpanWriter.Write(evaluation, result, MaxNodeSpans);
     }
 
     /// <summary>Counts a document that would not bind.</summary>
@@ -391,21 +300,68 @@ public static class MotivRulesTelemetry
         PublishConflicts.Add(1, new TagList { { KindTag, kind } });
     }
 
-    /// <summary>Times a store call. Returns 0 when nothing is listening, which the caller reads as "do not record".</summary>
-    internal static long StartStoreCall() => StoreDuration.Enabled ? Stopwatch.GetTimestamp() : 0L;
-
-    /// <summary>Records a store call timed from <paramref name="startTimestamp"/>.</summary>
-    /// <param name="startTimestamp">What <see cref="StartStoreCall"/> returned; 0 means it was not timed.</param>
+    /// <summary>Runs an asynchronous store call, timing it.</summary>
+    /// <remarks>
+    /// A wrapper rather than a start/stop pair the caller holds, because a pair is two statements
+    /// that have to bracket a third and a caller who writes only the first has instrumented nothing
+    /// — silently, and identically to a store that was never called. There are eight such call sites
+    /// across the two sets; this makes forgetting the second half impossible. The delegate costs one
+    /// allocation per store call, against a database round trip.
+    /// </remarks>
+    /// <typeparam name="T">What the store call returns.</typeparam>
     /// <param name="kind">"rule" or "proposition".</param>
     /// <param name="operation">Which store call — see <see cref="StoreOperation"/>.</param>
-    internal static void RecordStoreCall(long startTimestamp, string kind, string operation)
+    /// <param name="call">The store call to time.</param>
+    /// <returns>Whatever <paramref name="call"/> returned.</returns>
+    internal static async Task<T> TimeStoreCallAsync<T>(string kind, string operation, Func<Task<T>> call)
     {
-        if (startTimestamp == 0 || !StoreDuration.Enabled) return;
+        // Read once: an instrument that is enabled at the start and disabled by the time the call
+        // returns would otherwise record a duration measured from a timestamp that was never taken.
+        if (!StoreDuration.Enabled)
+            return await call().ConfigureAwait(false);
 
-        StoreDuration.Record(
-            ElapsedSeconds(startTimestamp, Stopwatch.GetTimestamp()),
-            new TagList { { KindTag, kind }, { OperationTag, operation } });
+        var start = Stopwatch.GetTimestamp();
+        try
+        {
+            return await call().ConfigureAwait(false);
+        }
+        finally
+        {
+            Record(start, kind, operation);
+        }
     }
+
+    /// <summary>Runs a synchronous store call, timing it. See <see cref="TimeStoreCallAsync{T}"/>.</summary>
+    /// <typeparam name="T">What the store call returns.</typeparam>
+    /// <param name="kind">"rule" or "proposition".</param>
+    /// <param name="operation">Which store call — see <see cref="StoreOperation"/>.</param>
+    /// <param name="call">The store call to time.</param>
+    /// <returns>Whatever <paramref name="call"/> returned.</returns>
+    internal static T TimeStoreCall<T>(string kind, string operation, Func<T> call)
+    {
+        if (!StoreDuration.Enabled)
+            return call();
+
+        var start = Stopwatch.GetTimestamp();
+        try
+        {
+            return call();
+        }
+        finally
+        {
+            Record(start, kind, operation);
+        }
+    }
+
+    /// <summary>
+    /// Records a store call that began at <paramref name="start"/>. In a finally, so a store that
+    /// threw still reports how long it took to fail — which is the latency an operator diagnosing a
+    /// timeout is looking for, and the one a success-only histogram hides.
+    /// </summary>
+    private static void Record(long start, string kind, string operation) =>
+        StoreDuration.Record(
+            ElapsedSeconds(start, Stopwatch.GetTimestamp()),
+            new TagList { { KindTag, kind }, { OperationTag, operation } });
 
     /// <summary>Counts a refresh attempt by what it did, and times the rebuild it ran (if any).</summary>
     /// <param name="outcome">What the refresh did.</param>
@@ -437,33 +393,28 @@ public static class MotivRulesTelemetry
     }
 
     private static IEnumerable<Measurement<long>> ObserveCatalogSize() =>
-        Scopes.Observe(scope =>
-        [
-            new Measurement<long>(scope.RuleCount, new KeyValuePair<string, object?>(KindTag, RuleKind)),
-            new Measurement<long>(scope.PropositionCount, new KeyValuePair<string, object?>(KindTag, PropositionKind))
-        ]);
+        Scopes.Observe(scope => Pair(KindTag, RuleKind, scope.RuleCount, PropositionKind, scope.PropositionCount));
 
     private static IEnumerable<Measurement<long>> ObserveGeneration() =>
-        Scopes.Observe(scope =>
-        {
-            var served = scope.Current.Sequence;
-            return
-            [
-                new Measurement<long>(served.Rules, new KeyValuePair<string, object?>(StoreTag, RulesStore)),
-                new Measurement<long>(served.Propositions, new KeyValuePair<string, object?>(StoreTag, PropositionsStore))
-            ];
-        });
+        Scopes.Observe(scope => PerStore(scope.Current.Sequence.Rules, scope.Current.Sequence.Propositions));
 
     private static IEnumerable<Measurement<long>> ObserveReplicaLag() =>
-        Scopes.Observe(scope =>
-        {
-            var (rules, propositions) = scope.Lag;
-            return
-            [
-                new Measurement<long>(rules, new KeyValuePair<string, object?>(StoreTag, RulesStore)),
-                new Measurement<long>(propositions, new KeyValuePair<string, object?>(StoreTag, PropositionsStore))
-            ];
-        });
+        Scopes.Observe(scope => PerStore(scope.Lag.Rules, scope.Lag.Propositions));
+
+    /// <summary>
+    /// One measurement per store, which is the shape every reading about a scope takes: the rule and
+    /// proposition stores are never written in the same transaction, so a single combined number
+    /// would be a sum of two things that do not move together.
+    /// </summary>
+    private static Measurement<long>[] PerStore(long rules, long propositions) =>
+        Pair(StoreTag, RulesStore, rules, PropositionsStore, propositions);
+
+    /// <summary>Two measurements distinguished by one tag.</summary>
+    private static Measurement<long>[] Pair(string tag, string first, long a, string second, long b) =>
+    [
+        new(a, new KeyValuePair<string, object?>(tag, first)),
+        new(b, new KeyValuePair<string, object?>(tag, second))
+    ];
 
     private static IEnumerable<Measurement<long>> ObserveBreakGlass()
     {

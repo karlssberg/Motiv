@@ -435,13 +435,9 @@ public sealed class PropositionSet
     }
 
     /// <summary>The store's generation, timed.</summary>
-    private async Task<long> TimedGenerationAsync(CancellationToken cancellationToken)
-    {
-        var call = MotivRulesTelemetry.StartStoreCall();
-        var generation = await _store.GetGenerationAsync(cancellationToken).ConfigureAwait(false);
-        MotivRulesTelemetry.RecordStoreCall(call, NodeKindLabel, StoreOperation.Generation);
-        return generation;
-    }
+    private Task<long> TimedGenerationAsync(CancellationToken cancellationToken) =>
+        MotivRulesTelemetry.TimeStoreCallAsync(
+            NodeKindLabel, StoreOperation.Generation, () => _store.GetGenerationAsync(cancellationToken));
 
     /// <summary>
     /// A store write, timed. Reported as <see cref="StoreOperation.Append"/> rather than as a "write"
@@ -449,12 +445,14 @@ public sealed class PropositionSet
     /// on making the change durable — and an operator comparing the two halves' write latency should
     /// not have to know that one store spells it differently.
     /// </summary>
-    private async Task TimedWriteAsync(PropositionBatch batch, CancellationToken cancellationToken)
-    {
-        var call = MotivRulesTelemetry.StartStoreCall();
-        await _store.WriteAsync(batch, cancellationToken).ConfigureAwait(false);
-        MotivRulesTelemetry.RecordStoreCall(call, NodeKindLabel, StoreOperation.Append);
-    }
+    private Task TimedWriteAsync(PropositionBatch batch, CancellationToken cancellationToken) =>
+        MotivRulesTelemetry.TimeStoreCallAsync(
+            NodeKindLabel, StoreOperation.Append,
+            async () =>
+            {
+                await _store.WriteAsync(batch, cancellationToken).ConfigureAwait(false);
+                return true;   // the timer needs a result; a write has none worth naming
+            });
 
     /// <summary>
     /// Applies a create or update prepared earlier by <see cref="PrepareCreateCore"/> or
@@ -699,17 +697,15 @@ public sealed class PropositionSet
             // The generation before the rows — see RuleSet.Load, whose reasoning this mirrors exactly,
             // for why that order matters and why blocking on it here is the settled design rather than
             // an oversight.
-            var generationCall = MotivRulesTelemetry.StartStoreCall();
-            var generation = _store.GetGenerationAsync(default).ConfigureAwait(false).GetAwaiter().GetResult();
-            MotivRulesTelemetry.RecordStoreCall(generationCall, NodeKindLabel, StoreOperation.Generation);
+            var generation = MotivRulesTelemetry.TimeStoreCall(
+                NodeKindLabel, StoreOperation.Generation,
+                () => _store.GetGenerationAsync(default).ConfigureAwait(false).GetAwaiter().GetResult());
 
             // Set only once the store has actually been read. Reading is the one step here that can
             // throw rather than quarantine, and it mutates nothing — so a store that was briefly
             // unreachable leaves the set in its pre-load state and genuinely may be loaded again.
-            var loadCall = MotivRulesTelemetry.StartStoreCall();
-            var rows = _store.Load();
-            MotivRulesTelemetry.RecordStoreCall(loadCall, NodeKindLabel, StoreOperation.Load);
-            var candidates = CandidatesFrom(rows);
+            var candidates = CandidatesFrom(MotivRulesTelemetry.TimeStoreCall(
+                NodeKindLabel, StoreOperation.Load, () => _store.Load()));
             _loaded = true;
 
             var ordered = OrderAndRecordCycles(candidates);
@@ -778,9 +774,8 @@ public sealed class PropositionSet
         List<RefreshFailure> regressions, List<RefreshFailure> quarantined,
         CancellationToken cancellationToken)
     {
-        var loadCall = MotivRulesTelemetry.StartStoreCall();
-        var rows = await _store.LoadAsync(cancellationToken).ConfigureAwait(false);
-        MotivRulesTelemetry.RecordStoreCall(loadCall, NodeKindLabel, StoreOperation.Load);
+        var rows = await MotivRulesTelemetry.TimeStoreCallAsync(
+            NodeKindLabel, StoreOperation.Load, () => _store.LoadAsync(cancellationToken)).ConfigureAwait(false);
 
         // Everything below is CPU over a builder nobody else can see, so no lock is held or needed.
         var candidates = CandidatesFrom(rows);
