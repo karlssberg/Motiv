@@ -100,10 +100,15 @@ public class RuleSpanCorrelationTests
 
         // Assert — a SpecBase has no version, and giving it one to satisfy an operator's query would
         // push a rules-stack concern into the published engine. Containment answers the same question.
+        //
+        // Asserted on Parent and Id, never on SpanId/TraceId: those are populated only under the W3C
+        // id format, and .NET Framework still defaults to the older hierarchical one, where both
+        // sides read as all-zeros and the assertion passes without having compared anything.
         var rule = harness.SingleActivity("motiv.rules.evaluate");
         var core = harness.SingleActivity("motiv.evaluate");
-        core.ParentSpanId.ShouldBe(rule.SpanId);
-        core.TraceId.ShouldBe(rule.TraceId);
+        core.Parent.ShouldBeSameAs(rule);
+        rule.Id.ShouldNotBeNullOrEmpty();
+        core.ParentId!.ShouldBe(rule.Id!);
     }
 
     [Fact]

@@ -24,6 +24,15 @@ namespace Motiv.Serialization;
 internal static class NodeSpanWriter
 {
     /// <summary>Emits the tree under <paramref name="evaluation"/>, bounded by <paramref name="budget"/>.</summary>
+    /// <remarks>
+    /// Parents each span by its parent's <see cref="Activity.Id"/> rather than by its
+    /// <see cref="Activity.Context"/>, and that is load-bearing rather than a matter of taste.
+    /// <see cref="Activity.Context"/> — and with it <c>SpanId</c> and <c>TraceId</c> — is only
+    /// populated under the W3C id format. On .NET Framework the default is the older hierarchical
+    /// format, where <c>Context</c> is <see langword="default"/>: passing it would make every node a
+    /// <em>root</em> span, silently, so the tree an operator opened the waterfall to see would arrive
+    /// flat. <see cref="Activity.Id"/> is populated under both formats.
+    /// </remarks>
     /// <param name="evaluation">The rule's own span, which every node hangs beneath.</param>
     /// <param name="result">The result whose causal tree is walked.</param>
     /// <param name="budget">The most node spans this evaluation may emit.</param>
@@ -32,8 +41,8 @@ internal static class NodeSpanWriter
         var detail = MotivTelemetry.ExplanationDetail;
         var emitted = 0;
 
-        var pending = new Stack<(BooleanResultBase Node, ActivityContext Parent)>();
-        PushCauses(pending, result, evaluation.Context);
+        var pending = new Stack<(BooleanResultBase Node, string Parent)>();
+        PushCauses(pending, result, evaluation.Id!);
 
         while (pending.Count > 0)
         {
@@ -50,6 +59,7 @@ internal static class NodeSpanWriter
             using var span = MotivRulesTelemetry.ActivitySource.StartActivity(
                 MotivRulesTelemetry.NodeActivityName, ActivityKind.Internal, parent);
 
+
             // A sampler that declined this child would decline its siblings too, and half a tree is
             // not a smaller tree — it is a misleading one.
             if (span is null)
@@ -59,7 +69,7 @@ internal static class NodeSpanWriter
             TrySetReason(span, node, detail);
             emitted++;
 
-            PushCauses(pending, node, span.Context);
+            PushCauses(pending, node, span.Id!);
         }
     }
 
@@ -70,9 +80,9 @@ internal static class NodeSpanWriter
     /// no trace.
     /// </summary>
     private static void PushCauses(
-        Stack<(BooleanResultBase Node, ActivityContext Parent)> pending,
+        Stack<(BooleanResultBase Node, string Parent)> pending,
         BooleanResultBase node,
-        ActivityContext parent)
+        string parent)
     {
         foreach (var cause in node.Causes)
             pending.Push((cause, parent));

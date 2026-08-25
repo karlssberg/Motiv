@@ -127,9 +127,16 @@ public class NodeSpanTests
 
             // Assert — the shape is the point: a node span outside the rule span would name a
             // sub-proposition without saying which evaluation it belonged to.
+            //
+            // ParentId, not ParentSpanId. SpanId is populated only under the W3C id format, and .NET
+            // Framework still defaults to the hierarchical one — so the original form of this
+            // assertion compared all-zeros to all-zeros and passed on a framework where every node
+            // span was in fact being emitted as a *root*. Id is populated under both.
             var evaluation = harness.SingleActivity("motiv.rules.evaluate");
-            harness.Activities.Where(a => a.OperationName == "motiv.rules.node")
-                .ShouldAllBe(node => node.ParentSpanId == evaluation.SpanId);
+            var nodes = harness.Activities.Where(a => a.OperationName == "motiv.rules.node").ToList();
+            nodes.ShouldNotBeEmpty();
+            evaluation.Id.ShouldNotBeNullOrEmpty();
+            nodes.ShouldAllBe(node => node.ParentId == evaluation.Id);
         });
     }
 
