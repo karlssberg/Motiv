@@ -148,7 +148,10 @@ public class BootstrapGrantSourceTests
         private static WebApplicationFactory<Program> IsolatedStore(WebApplicationFactory<Program> factory) =>
             factory.WithWebHostBuilder(builder => builder.UseSetting(
                 "Motiv:Store:ConnectionString",
-                $"Data Source={Path.Combine(Path.GetTempPath(), $"motiv-{Guid.NewGuid():N}.db")}"));
+                $"Data Source={Path.Combine(Path.GetTempPath(), $"motiv-{Guid.NewGuid():N}.db")}")
+                .UseSetting(
+                    "Motiv:Decisions:ConnectionString",
+                    $"Data Source={Path.Combine(Path.GetTempPath(), $"motiv-decisions-{Guid.NewGuid():N}.db")}"));
 
         private sealed class TestSchemeOptions : AuthenticationSchemeOptions
         {

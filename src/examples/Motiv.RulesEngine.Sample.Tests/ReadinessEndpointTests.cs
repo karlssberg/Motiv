@@ -16,7 +16,10 @@ public class ReadinessEndpointTests : IClassFixture<WebApplicationFactory<Progra
     public ReadinessEndpointTests(WebApplicationFactory<Program> factory) =>
         _factory = factory.WithWebHostBuilder(builder => builder.UseSetting(
             "Motiv:Store:ConnectionString",
-            $"Data Source={Path.Combine(Path.GetTempPath(), $"motiv-{Guid.NewGuid():N}.db")}"));
+            $"Data Source={Path.Combine(Path.GetTempPath(), $"motiv-{Guid.NewGuid():N}.db")}")
+            .UseSetting(
+                "Motiv:Decisions:ConnectionString",
+                $"Data Source={Path.Combine(Path.GetTempPath(), $"motiv-decisions-{Guid.NewGuid():N}.db")}"));
 
     [Fact]
     public async Task Should_answer_readiness_without_credentials()

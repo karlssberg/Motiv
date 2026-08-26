@@ -9,6 +9,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\Motiv.Serialization.AspNetCore\Motiv.Serialization.AspNetCore.csproj" />
         <ProjectReference Include="..\..\Motiv.Serialization.EntityFrameworkCore\Motiv.Serialization.EntityFrameworkCore.csproj" />
+        <ProjectReference Include="..\..\Motiv.Serialization.Sql\Motiv.Serialization.Sql.csproj" />
     </ItemGroup>
 
     <ItemGroup>

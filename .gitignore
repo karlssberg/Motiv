@@ -48,3 +48,6 @@ src/examples/Motiv.RulesEngine.Sample/rules.json
 # not source — supersedes rules.json/propositions.json above as the default store.
 src/examples/Motiv.RulesEngine.Sample/motiv-store.db
 src/examples/Motiv.RulesEngine.Sample/motiv-store.db-*
+# The decision log is a separate database from the authoring store, deliberately — see Spec 3D.
+src/examples/Motiv.RulesEngine.Sample/motiv-decisions.db
+src/examples/Motiv.RulesEngine.Sample/motiv-decisions.db-*

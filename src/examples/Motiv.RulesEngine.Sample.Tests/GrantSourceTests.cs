@@ -24,7 +24,10 @@ public class GrantSourceTests(WebApplicationFactory<Program> factory)
         // fixture's own state.
         var isolated = factory.WithWebHostBuilder(builder => builder.UseSetting(
             "Motiv:Store:ConnectionString",
-            $"Data Source={Path.Combine(Path.GetTempPath(), $"motiv-{Guid.NewGuid():N}.db")}"));
+            $"Data Source={Path.Combine(Path.GetTempPath(), $"motiv-{Guid.NewGuid():N}.db")}")
+            .UseSetting(
+                "Motiv:Decisions:ConnectionString",
+                $"Data Source={Path.Combine(Path.GetTempPath(), $"motiv-decisions-{Guid.NewGuid():N}.db")}"));
         var client = isolated.CreateClient();
         var current = await client.GetFromJsonAsync<JsonElement>("/api/rules/rules/loyalty-discount");
 
