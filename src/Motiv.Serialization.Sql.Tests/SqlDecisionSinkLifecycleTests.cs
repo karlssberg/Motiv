@@ -1,3 +1,4 @@
+using Microsoft.Data.Sqlite;
 using Shouldly;
 using Xunit;
 
@@ -36,6 +37,31 @@ public class SqlDecisionSinkLifecycleTests
         var purgesAtDisposal = sink.PurgedCount;
         await Task.Delay(100);
         sink.PurgedCount.ShouldBe(purgesAtDisposal);
+    }
+
+    [Fact]
+    public async Task Should_dispose_a_connection_that_would_not_open()
+    {
+        // Arrange — a database that fails at Open rather than at the factory, which is how a real
+        // one goes down. DecisionRetentionTests covers a factory that throws; that path never
+        // reaches OpenAsync, so the connection it creates and abandons on a failed open was
+        // exercised by nothing — and the purge loop retries every interval, so a connection leaked
+        // per attempt against an unreachable database is a leak that compounds.
+        var unopenable = new SqlDecisionSink(
+            () => new SqliteConnection("Data Source=/proc/no/such/directory/decisions.db"),
+            new SqlDecisionSinkOptions
+            {
+                Dialect = DecisionSqlDialect.Sqlite,
+                Retention = TimeSpan.FromDays(30)
+            });
+        await using var sink = unopenable;
+
+        // Act
+        var act = async () => await sink.WriteAsync([Decisions.Record()], CancellationToken.None);
+
+        // Assert — the failure surfaces rather than being swallowed, which is what lets
+        // DecisionLog count the refused batch and carry on
+        await Should.ThrowAsync<SqliteException>(act);
     }
 
     [Fact]
