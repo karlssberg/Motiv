@@ -25,6 +25,8 @@
   <Project Path="src/Motiv.Serialization.AspNetCore/Motiv.Serialization.AspNetCore.csproj" />
   <Project Path="src/Motiv.Serialization.EntityFrameworkCore/Motiv.Serialization.EntityFrameworkCore.csproj" />
   <Project Path="src/Motiv.Serialization.EntityFrameworkCore.Tests/Motiv.Serialization.EntityFrameworkCore.Tests.csproj" />
+  <Project Path="src/Motiv.Serialization.Sql/Motiv.Serialization.Sql.csproj" />
+  <Project Path="src/Motiv.Serialization.Sql.Tests/Motiv.Serialization.Sql.Tests.csproj" />
   <Project Path="src/Motiv.Serialization.Tests/Motiv.Serialization.Tests.csproj" />
   <Project Path="src/Motiv.Serialization/Motiv.Serialization.csproj" />
   <Project Path="src/Motiv.Tests/Motiv.Tests.csproj" />

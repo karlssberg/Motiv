@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <IsPackable>true</IsPackable>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageId>Motiv.Serialization.Sql</PackageId>
+        <Title>Motiv.Serialization.Sql</Title>
+        <Description>A durable, raw-append SQL decision sink for Motiv's decision log, over SQLite, PostgreSQL or SQL Server — with a mandatory retention window and a background purge.</Description>
+        <PackageTags>Motiv, Rules Engine, Decision Log, Audit, ADO.NET, Specification Pattern</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIcon>icon.png</PackageIcon>
+        <TargetFramework>net10.0</TargetFramework>
+        <MinVerTagPrefix>rules-</MinVerTagPrefix>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="MinVer" PrivateAssets="all" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="$(AssemblyName).Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+        <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
+    </ItemGroup>
+
+    <!--
+        Motiv.Serialization and nothing else. No database provider is referenced on purpose: the sink
+        is written against System.Data.Common and takes the connection from the adopter, which is what
+        makes "may target a different database or engine entirely" (ticket 16) a property of the
+        package rather than a claim in its documentation. A provider reference here would quietly
+        make one engine the default.
+    -->
+    <ItemGroup>
+        <ProjectReference Include="..\Motiv.Serialization\Motiv.Serialization.csproj" />
+    </ItemGroup>
+
+</Project>
