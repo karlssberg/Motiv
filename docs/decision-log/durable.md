@@ -8,16 +8,18 @@ and explicitly not enough for production, where the log must outlive the process
 window. `SqlDecisionSink`, in the **`Motiv.Serialization.Sql`** package, is the durable half.
 
 ```csharp
-var sink = new SqlDecisionSink(
+builder.Services.AddSingleton(_ => new SqlDecisionSink(
     () => new SqliteConnection(decisionsConnectionString),
     new SqlDecisionSinkOptions
     {
         Dialect = DecisionSqlDialect.Sqlite,
         Retention = TimeSpan.FromDays(90)
-    });
+    }));
 
 builder.Services.AddMotivRules(registry, options)
-    .AddDecisionLog(sink, log => log.Capture.ReferenceOnly<Customer>(c => c.CustomerId))
+    .AddDecisionLog(
+        provider => provider.GetRequiredService<SqlDecisionSink>(),
+        log => log.Capture.ReferenceOnly<Customer>(c => c.CustomerId))
     .AddRule<CanCheckoutRule>();
 ```
 
@@ -70,9 +72,12 @@ first second. Each pass issues bounded deletes until nothing is left, so a purge
 does not hold one lock for minutes. The loop never dies: a failed pass increments `FailedPurgeCount`
 and the next one runs.
 
-**Disposal stops the purge and nothing else.** The write path stays open, because a container disposes
-singletons in reverse registration order — a sink registered before the `DecisionLog` that drains into
-it is torn down first, and a sink that refused to write after disposal would swallow that drain.
+**Disposal stops the purge and nothing else.** The write path stays open — including its schema
+bootstrap — because a container disposes singletons in reverse creation order: a sink created before
+the `DecisionLog` that drains into it is torn down first, and a sink that refused to write after
+disposal would swallow that drain. Register it through a factory (`AddSingleton(_ => new
+SqlDecisionSink(...))`) so the container owns it; a pre-built instance handed to `AddSingleton` is
+never disposed, which leaves the purge loop running until the process exits.
 
 | Option | Default | Description |
 |---|---|---|
@@ -103,11 +108,13 @@ decision and counting one among decisions would corrupt every query the log exis
 `RuleVersion`, `BuildId`, `Satisfied` — and the outcome, the referenced proposition versions and the
 captured input as JSON text. Nothing queries *into* those, so a native JSON column would fork the
 schema per provider for a capability never used. `Satisfied` is lifted out of the outcome because it
-is the one field inside the payload a query filters on rather than reads.
+is the one field inside the payload a query filters on rather than reads — "show me the declines"
+should be a predicate the database applies, not a scan through serialised justification trees.
 
 Two indexes, and only two: `TimestampUtc` (the purge's own predicate, and every time-range question)
 and `CorrelationId` (the pivot from one decision to every rule that took part in it). An append-heavy
-table pays for each index on every insert.
+table pays for each index on every insert, and `Satisfied` gets none of its own: a two-valued column
+is poor index material, and every question that asks it also names a window.
 
 `MotivDecisionGap` holds `FirstDroppedUtc`, `LastDroppedUtc` and `DroppedCount`. Gaps are purged on
 the same window, keyed on the last drop — a marker for a hole among records that have themselves aged
@@ -124,6 +131,7 @@ var records = await sink.ReadAsync(new DecisionQuery
 {
     CorrelationId = "trace-abc",   // one decision, every rule that took part in it
     RuleName = "checkout.can-checkout",
+    Satisfied = false,             // show me the declines
     FromUtc = when.AddMinutes(-1),
     ToUtc = when.AddMinutes(1),
     Limit = 100                    // newest first, always capped

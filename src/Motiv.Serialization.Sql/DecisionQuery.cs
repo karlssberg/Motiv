@@ -24,6 +24,13 @@ public sealed record DecisionQuery
     /// <summary>One rule's evaluations, or null for every rule.</summary>
     public string? RuleName { get; init; }
 
+    /// <summary>
+    /// Only satisfied or only unsatisfied evaluations, or null for both. "Show me the declines" is
+    /// the question this exists for, and it is a predicate the database applies rather than a scan
+    /// through serialised justification trees.
+    /// </summary>
+    public bool? Satisfied { get; init; }
+
     /// <summary>The inclusive start of the window, or null for unbounded.</summary>
     public DateTimeOffset? FromUtc { get; init; }
 

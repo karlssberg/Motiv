@@ -17,7 +17,7 @@ public class SqlDecisionSinkTests
     {
         // Arrange — the file does not exist yet
         await using var database = SqliteDecisionFixture.Create();
-        await using var sink = Sink(database);
+        await using var sink = database.Sink();
 
         // Act — twice, because a replica restarting against a live table must not fail here
         await sink.EnsureSchemaAsync();
@@ -33,7 +33,7 @@ public class SqlDecisionSinkTests
     {
         // Arrange — nothing calls EnsureSchemaAsync, which is the zero-config path
         await using var database = SqliteDecisionFixture.Create();
-        await using var sink = Sink(database);
+        await using var sink = database.Sink();
 
         // Act
         await sink.WriteAsync([Decisions.Record()], CancellationToken.None);
@@ -47,7 +47,7 @@ public class SqlDecisionSinkTests
     {
         // Arrange
         await using var database = SqliteDecisionFixture.Create();
-        await using var sink = Sink(database);
+        await using var sink = database.Sink();
         var written = Decisions.Record(
             id: Guid.NewGuid(),
             correlationId: "trace-abc",
@@ -94,7 +94,7 @@ public class SqlDecisionSinkTests
     {
         // Arrange — the GDPR-clean posture, and the one whose value has a type worth preserving
         await using var database = SqliteDecisionFixture.Create();
-        await using var sink = Sink(database);
+        await using var sink = database.Sink();
 
         // Act
         await sink.WriteAsync([Decisions.Record(input: DecisionInput.Reference("cust-42"))], CancellationToken.None);
@@ -115,7 +115,7 @@ public class SqlDecisionSinkTests
         // JsonElement rather than the adopter's type. Documented rather than fixed: the alternative
         // is pinning the adopter's assembly identity into their compliance record.
         await using var database = SqliteDecisionFixture.Create();
-        await using var sink = Sink(database);
+        await using var sink = database.Sink();
         var model = new { CustomerId = "cust-42", Tier = "gold" };
         var input = kind is DecisionInputKind.Whole
             ? DecisionInput.Whole(model)
@@ -138,7 +138,7 @@ public class SqlDecisionSinkTests
         // Arrange — null Input is "no capture posture applied", distinct from a posture that
         // captured null, and the column has to keep the two apart
         await using var database = SqliteDecisionFixture.Create();
-        await using var sink = Sink(database);
+        await using var sink = database.Sink();
 
         // Act
         await sink.WriteAsync([Decisions.Record(input: null)], CancellationToken.None);
@@ -153,7 +153,7 @@ public class SqlDecisionSinkTests
     {
         // Arrange — nothing named the subject, which is an ordinary case rather than an error
         await using var database = SqliteDecisionFixture.Create();
-        await using var sink = Sink(database);
+        await using var sink = database.Sink();
 
         // Act
         await sink.WriteAsync([Decisions.Record(caller: null)], CancellationToken.None);
@@ -167,7 +167,7 @@ public class SqlDecisionSinkTests
     {
         // Arrange
         await using var database = SqliteDecisionFixture.Create();
-        await using var sink = Sink(database);
+        await using var sink = database.Sink();
         var batch = Enumerable.Range(0, 64)
             .Select(index => Decisions.Record(correlationId: $"corr-{index}"))
             .ToList();
@@ -185,7 +185,7 @@ public class SqlDecisionSinkTests
         // Arrange — a gap is evidence about the log, not a decision. Counting it among decisions
         // would corrupt every query the log exists to answer.
         await using var database = SqliteDecisionFixture.Create();
-        await using var sink = Sink(database);
+        await using var sink = database.Sink();
         var gap = new DecisionGap(
             new DateTimeOffset(2026, 8, 25, 14, 0, 0, TimeSpan.Zero),
             new DateTimeOffset(2026, 8, 25, 14, 0, 5, TimeSpan.Zero),
@@ -208,7 +208,7 @@ public class SqlDecisionSinkTests
     {
         // Arrange — the pivot from one decision to every rule that took part in it
         await using var database = SqliteDecisionFixture.Create();
-        await using var sink = Sink(database);
+        await using var sink = database.Sink();
         await sink.WriteAsync(
         [
             Decisions.Record(correlationId: "trace-1", ruleName: "checkout.can-checkout"),
@@ -229,7 +229,7 @@ public class SqlDecisionSinkTests
     {
         // Arrange
         await using var database = SqliteDecisionFixture.Create();
-        await using var sink = Sink(database);
+        await using var sink = database.Sink();
         await sink.WriteAsync(
         [
             Decisions.Record(ruleName: "checkout.can-checkout"),
@@ -248,7 +248,7 @@ public class SqlDecisionSinkTests
     {
         // Arrange — "why was this customer declined, on the 3rd, at 14:07?"
         await using var database = SqliteDecisionFixture.Create();
-        await using var sink = Sink(database);
+        await using var sink = database.Sink();
         var noon = new DateTimeOffset(2026, 8, 25, 12, 0, 0, TimeSpan.Zero);
         await sink.WriteAsync(
         [
@@ -274,7 +274,7 @@ public class SqlDecisionSinkTests
         // Arrange — a bounded page, newest first, because the question is always about a recent
         // decision and the table is machine-rate
         await using var database = SqliteDecisionFixture.Create();
-        await using var sink = Sink(database);
+        await using var sink = database.Sink();
         var noon = new DateTimeOffset(2026, 8, 25, 12, 0, 0, TimeSpan.Zero);
         await sink.WriteAsync(
         [
@@ -288,6 +288,26 @@ public class SqlDecisionSinkTests
 
         // Assert
         read.Select(record => record.CorrelationId).ShouldBe(["newest", "middle"]);
+    }
+
+    [Fact]
+    public async Task Should_filter_by_the_verdict()
+    {
+        // Arrange — "show me the declines", which is why Satisfied has a column of its own rather
+        // than living only inside the outcome JSON
+        await using var database = SqliteDecisionFixture.Create();
+        await using var sink = database.Sink();
+        await sink.WriteAsync(
+        [
+            Decisions.Record(correlationId: "allowed", satisfied: true),
+            Decisions.Record(correlationId: "declined", satisfied: false)
+        ], CancellationToken.None);
+
+        // Act
+        var read = await sink.ReadAsync(new DecisionQuery { Satisfied = false });
+
+        // Assert
+        read.ShouldHaveSingleItem().CorrelationId.ShouldBe("declined");
     }
 
     [Fact]
@@ -306,7 +326,7 @@ public class SqlDecisionSinkTests
         // Arrange — DecisionLog never sends one, but a hand-rolled caller might, and opening a
         // transaction to write nothing is worse than checking
         await using var database = SqliteDecisionFixture.Create();
-        await using var sink = Sink(database);
+        await using var sink = database.Sink();
 
         // Act
         await sink.WriteAsync([], CancellationToken.None);
@@ -315,10 +335,4 @@ public class SqlDecisionSinkTests
         (await sink.ReadAsync(new DecisionQuery())).ShouldBeEmpty();
     }
 
-    private static SqlDecisionSink Sink(SqliteDecisionFixture database) =>
-        new(database.ConnectionFactory, new SqlDecisionSinkOptions
-        {
-            Dialect = DecisionSqlDialect.Sqlite,
-            Retention = TimeSpan.FromDays(90)
-        });
 }

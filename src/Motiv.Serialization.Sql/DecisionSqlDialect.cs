@@ -18,11 +18,22 @@ namespace Motiv.Serialization.Sql;
 /// <para>
 /// Parameters are spelled <c>@name</c> throughout, which SQLite, Npgsql and SqlClient all accept — so
 /// the one thing that <em>looks</em> most provider-specific turns out not to be, and no dialect member
-/// exists for it.
+/// exists for it. The three parameters a dialect's own SQL must bind are named by
+/// <see cref="LimitParameter"/>, <see cref="CutoffParameter"/> and <see cref="BatchParameter"/>; a
+/// derived dialect that spells one differently silently binds nothing.
 /// </para>
 /// </remarks>
 public abstract class DecisionSqlDialect
 {
+    /// <summary>The parameter a row cap is bound to, in <see cref="LimitClause"/>.</summary>
+    public const string LimitParameter = "@limit";
+
+    /// <summary>The parameter a retention cutoff is bound to, in <see cref="PurgeStatement"/>.</summary>
+    public const string CutoffParameter = "@cutoff";
+
+    /// <summary>The parameter a purge's row bound is bound to, in <see cref="PurgeStatement"/>.</summary>
+    public const string BatchParameter = "@batch";
+
     /// <summary>SQLite — the zero-config default, and what <c>docker compose up</c> gets.</summary>
     public static DecisionSqlDialect Sqlite { get; } = new SqliteDecisionSqlDialect();
 
@@ -75,15 +86,19 @@ public abstract class DecisionSqlDialect
     protected internal abstract string CreateIndexIfAbsent(string index, string table, string column);
 
     /// <summary>
-    /// A <c>DELETE</c> of at most <c>@batch</c> rows older than <c>@cutoff</c>. Bounded because an
-    /// unbounded delete after a long outage holds one lock for minutes.
+    /// A <c>DELETE</c> of at most <see cref="BatchParameter"/> rows older than
+    /// <see cref="CutoffParameter"/>. Bounded because an unbounded delete after a long outage holds
+    /// one lock for minutes.
     /// </summary>
     /// <param name="table">The unquoted table name.</param>
     /// <param name="timestampColumn">The unquoted column the cutoff applies to.</param>
     /// <returns>The statement.</returns>
     protected internal abstract string PurgeStatement(string table, string timestampColumn);
 
-    /// <summary>The clause capping a read at <c>@limit</c> rows, appended after <c>ORDER BY</c>.</summary>
+    /// <summary>
+    /// The clause capping a read at <see cref="LimitParameter"/> rows, appended after
+    /// <c>ORDER BY</c>.
+    /// </summary>
     protected internal abstract string LimitClause { get; }
 
     /// <summary>Converts an identity for a parameter.</summary>
@@ -113,12 +128,6 @@ public abstract class DecisionSqlDialect
     /// <returns>The instant.</returns>
     protected internal virtual DateTimeOffset ReadTimestamp(DbDataReader reader, int ordinal) =>
         reader.GetFieldValue<DateTimeOffset>(ordinal);
-
-    /// <summary>Reads a flag back.</summary>
-    /// <param name="reader">The open reader.</param>
-    /// <param name="ordinal">The column.</param>
-    /// <returns>The flag.</returns>
-    protected internal virtual bool ReadBoolean(DbDataReader reader, int ordinal) => reader.GetBoolean(ordinal);
 }
 
 /// <summary>
@@ -154,9 +163,6 @@ internal sealed class SqliteDecisionSqlDialect : QuotedDecisionSqlDialect
     protected internal override DateTimeOffset ReadTimestamp(DbDataReader reader, int ordinal) =>
         DateTimeOffset.Parse(
             reader.GetString(ordinal), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
-
-    protected internal override bool ReadBoolean(DbDataReader reader, int ordinal) =>
-        reader.GetInt64(ordinal) != 0;
 }
 
 /// <summary>PostgreSQL, whose native types Npgsql already binds from the CLR ones.</summary>
@@ -190,7 +196,8 @@ internal sealed class SqlServerDecisionSqlDialect : DecisionSqlDialect
     protected internal override string LongType => "bigint";
     protected internal override string BoolType => "bit";
 
-    protected internal override string LimitClause => "OFFSET 0 ROWS FETCH NEXT @limit ROWS ONLY";
+    protected internal override string LimitClause =>
+        $"OFFSET 0 ROWS FETCH NEXT {LimitParameter} ROWS ONLY";
 
     public override string Quote(string identifier) => $"[{identifier}]";
 
@@ -203,7 +210,8 @@ internal sealed class SqlServerDecisionSqlDialect : DecisionSqlDialect
         $"CREATE INDEX {Quote(index)} ON {Quote(table)} ({Quote(column)});";
 
     protected internal override string PurgeStatement(string table, string timestampColumn) =>
-        $"DELETE TOP (@batch) FROM {Quote(table)} WHERE {Quote(timestampColumn)} < @cutoff;";
+        $"DELETE TOP ({BatchParameter}) FROM {Quote(table)} " +
+        $"WHERE {Quote(timestampColumn)} < {CutoffParameter};";
 }
 
 /// <summary>
@@ -212,7 +220,7 @@ internal sealed class SqlServerDecisionSqlDialect : DecisionSqlDialect
 /// </summary>
 internal abstract class QuotedDecisionSqlDialect : DecisionSqlDialect
 {
-    protected internal override string LimitClause => "LIMIT @limit";
+    protected internal override string LimitClause => $"LIMIT {LimitParameter}";
 
     public override string Quote(string identifier) => $"\"{identifier}\"";
 
@@ -225,5 +233,5 @@ internal abstract class QuotedDecisionSqlDialect : DecisionSqlDialect
     protected internal override string PurgeStatement(string table, string timestampColumn) =>
         $"DELETE FROM {Quote(table)} WHERE {Quote(DecisionSchema.Id)} IN (" +
         $"SELECT {Quote(DecisionSchema.Id)} FROM {Quote(table)} " +
-        $"WHERE {Quote(timestampColumn)} < @cutoff LIMIT @batch);";
+        $"WHERE {Quote(timestampColumn)} < {CutoffParameter} LIMIT {BatchParameter});";
 }

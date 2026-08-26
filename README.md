@@ -382,7 +382,7 @@ from the authoring store, over SQLite, PostgreSQL or SQL Server, with no
 provider dependency of its own:
 
 ```csharp
-var sink = new SqlDecisionSink(
+builder.Services.AddSingleton(_ => new SqlDecisionSink(
     () => new SqliteConnection(decisionsConnectionString),
     new SqlDecisionSinkOptions
     {
@@ -390,7 +390,7 @@ var sink = new SqlDecisionSink(
         // Required. Version history is kept forever; an audited rule on a hot
         // path is millions of rows, so there is no "keep everything" here.
         Retention = TimeSpan.FromDays(90)
-    });
+    }));
 ```
 
 It refuses to be constructed without a retention window and purges past it on a

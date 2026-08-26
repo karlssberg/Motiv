@@ -18,7 +18,7 @@ public class DecisionRetentionTests
     {
         // Arrange — a thirty-day window, one record on either side of it
         await using var database = SqliteDecisionFixture.Create();
-        await using var sink = Sink(database, TimeSpan.FromDays(30));
+        await using var sink = database.Sink(Retaining(TimeSpan.FromDays(30)));
         await sink.WriteAsync(
         [
             Decisions.Record(correlationId: "stale", timestampUtc: Now.AddDays(-31)),
@@ -41,7 +41,7 @@ public class DecisionRetentionTests
         // Arrange — a marker for a hole among records that have themselves aged out would leave the
         // log claiming a gap in a period it no longer covers
         await using var database = SqliteDecisionFixture.Create();
-        await using var sink = Sink(database, TimeSpan.FromDays(30));
+        await using var sink = database.Sink(Retaining(TimeSpan.FromDays(30)));
         await sink.WriteGapAsync(new DecisionGap(Now.AddDays(-32), Now.AddDays(-31), 5), CancellationToken.None);
         await sink.WriteGapAsync(new DecisionGap(Now.AddDays(-29), Now.AddDays(-28), 3), CancellationToken.None);
 
@@ -60,7 +60,11 @@ public class DecisionRetentionTests
         // Arrange — a batch size of one, so clearing three rows demands three statements. The
         // batching exists so a purge after a long outage does not hold one lock for minutes.
         await using var database = SqliteDecisionFixture.Create();
-        await using var sink = Sink(database, TimeSpan.FromDays(30), purgeBatchSize: 1);
+        await using var sink = database.Sink(options =>
+        {
+            Retaining(TimeSpan.FromDays(30))(options);
+            options.PurgeBatchSize = 1;
+        });
         await sink.WriteAsync(
         [
             Decisions.Record(timestampUtc: Now.AddDays(-40)),
@@ -81,7 +85,7 @@ public class DecisionRetentionTests
     {
         // Arrange
         await using var database = SqliteDecisionFixture.Create();
-        await using var sink = Sink(database, TimeSpan.FromDays(30));
+        await using var sink = database.Sink(Retaining(TimeSpan.FromDays(30)));
         await sink.WriteAsync([Decisions.Record(timestampUtc: Now)], CancellationToken.None);
 
         // Act
@@ -98,7 +102,7 @@ public class DecisionRetentionTests
     {
         // Arrange — the reading a host surfaces, since the purge has no instrument of its own
         await using var database = SqliteDecisionFixture.Create();
-        await using var sink = Sink(database, TimeSpan.FromDays(30));
+        await using var sink = database.Sink(Retaining(TimeSpan.FromDays(30)));
         await sink.WriteAsync([Decisions.Record(timestampUtc: Now.AddDays(-31))], CancellationToken.None);
 
         // Act
@@ -117,12 +121,15 @@ public class DecisionRetentionTests
         // Arrange — nobody calls PurgeAsync here. The loop is the point: a purge an adopter has to
         // register is a purge an adopter can omit, and an omitted purge is an unbounded table.
         await using var database = SqliteDecisionFixture.Create();
-        await using var sink = Sink(
-            database, TimeSpan.FromDays(30), purgeInterval: TimeSpan.FromMilliseconds(50));
+        await using var sink = database.Sink(options =>
+        {
+            Retaining(TimeSpan.FromDays(30))(options);
+            options.PurgeInterval = TimeSpan.FromMilliseconds(50);
+        });
         await sink.WriteAsync([Decisions.Record(timestampUtc: Now.AddDays(-31))], CancellationToken.None);
 
         // Act
-        await WaitUntil(() => sink.PurgedCount > 0);
+        await WaitUntil(() => sink.PurgedCount > 0, "the loop purged something");
 
         // Assert
         (await sink.ReadAsync(new DecisionQuery())).ShouldBeEmpty();
@@ -150,31 +157,40 @@ public class DecisionRetentionTests
             });
 
         // Act — let it fail at least once, then let it through
-        await WaitUntil(() => sink.FailedPurgeCount > 0);
+        await WaitUntil(() => sink.FailedPurgeCount > 0, "a purge pass failed");
         unreachable = false;
 
         // Assert — the loop is still running
-        await WaitUntil(() => sink.LastPurgeUtc is not null);
+        await WaitUntil(() => sink.LastPurgeUtc is not null, "a purge pass completed");
     }
 
-    private static async Task WaitUntil(Func<bool> condition)
+    /// <summary>
+    /// Waits for a background loop to get there, naming the condition if it never does — a timeout
+    /// reported as "a task was canceled" tells whoever hits the regression nothing.
+    /// </summary>
+    private static async Task WaitUntil(Func<bool> condition, string description)
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         while (!condition())
-            await Task.Delay(10, timeout.Token);
+        {
+            if (timeout.IsCancellationRequested)
+                throw new Xunit.Sdk.XunitException($"Timed out waiting until {description}.");
+
+            try
+            {
+                await Task.Delay(10, timeout.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                // Fall back round the loop, which reports the condition rather than the cancellation.
+            }
+        }
     }
 
-    private static SqlDecisionSink Sink(
-        SqliteDecisionFixture database,
-        TimeSpan retention,
-        int purgeBatchSize = 5000,
-        TimeSpan? purgeInterval = null) =>
-        new(database.ConnectionFactory, new SqlDecisionSinkOptions
-        {
-            Dialect = DecisionSqlDialect.Sqlite,
-            Retention = retention,
-            PurgeBatchSize = purgeBatchSize,
-            PurgeInterval = purgeInterval ?? TimeSpan.FromHours(1),
-            Clock = () => Now
-        });
+    /// <summary>A window and a clock fixed at <see cref="Now"/>, so no test waits for real time.</summary>
+    private static Action<SqlDecisionSinkOptions> Retaining(TimeSpan retention) => options =>
+    {
+        options.Retention = retention;
+        options.Clock = () => Now;
+    };
 }

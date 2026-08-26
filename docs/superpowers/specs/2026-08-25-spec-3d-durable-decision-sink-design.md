@@ -80,11 +80,17 @@ honour it, and honouring it is not a separate registration an adopter can omit.
 So the sink starts its loop in its constructor, exactly as `DecisionLog` starts its writer loop, and
 stops it in `DisposeAsync`. It works in a console host, a test, or no host at all.
 
-**Disposal stops the purge and nothing else.** The write path stays open, because a `DbConnection` is
-opened per operation and there is nothing to close — and because the container disposes singletons in
-reverse registration order, so a sink registered before the `DecisionLog` that drains into it would
-otherwise be torn down first and swallow the drain. A sink that keeps writing after its purge has
-stopped is the failure mode you want at shutdown; the reverse is not.
+**Disposal stops the purge and nothing else.** The write path stays open — its schema bootstrap
+included — because a `DbConnection` is opened per operation and there is nothing to close, and because
+the container disposes singletons in reverse creation order, so a sink created before the
+`DecisionLog` that drains into it would otherwise be torn down first and swallow the drain. That
+extends to the bootstrap's own lock: a `SemaphoreSlim` throws once disposed, so disposing it would
+make the invariant hold everywhere except the zero-config path, where the first write *is* the
+bootstrap. A sink that keeps writing after its purge has stopped is the failure mode you want at
+shutdown; the reverse is not.
+
+The corollary for a host: register the sink through a factory, so the container owns it. An instance
+handed to `AddSingleton` is never disposed, and the purge loop then runs until the process exits.
 
 ### 4. Two tables, and gaps are purged with the records they mark
 
@@ -115,8 +121,8 @@ that have themselves aged out would leave the log claiming a gap in a period it 
 has nothing to read back — putting a query on the interface would make every such implementation lie.
 
 `SqlDecisionSink` exposes a bounded `ReadAsync(DecisionQuery, …)` of its own, as `InMemoryDecisionSink`
-exposes `Records`. The query filters on correlation id, rule name and a time range, is capped, and
-returns newest first. That is enough for the sample's `/api/decisions` to stop being the one place the
+exposes `Records`. The query filters on correlation id, rule name, verdict and a time range, is capped,
+and returns newest first. That is enough for the sample's `/api/decisions` to stop being the one place the
 reference implementation is not the durable one, and small enough that it does not become a reporting
 API by accident.
 

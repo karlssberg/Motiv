@@ -211,28 +211,26 @@ builder.Services.AddMotivEntityFrameworkStore(store => store.UseSqlite(storeConn
 var decisionsConnectionString = builder.Configuration["Motiv:Decisions:ConnectionString"]
     ?? $"Data Source={Path.Combine(builder.Environment.ContentRootPath, "motiv-decisions.db")}";
 
-var decisionSink = new SqlDecisionSink(
+// Registered through a factory rather than as a pre-built instance, so the container owns it: it
+// disposes what it creates and not what it is handed, and an undisposed sink is a purge loop that
+// runs until the process exits. Registering it before AddDecisionLog also puts the two in the right
+// order for teardown -- reverse creation order disposes the log, and therefore drains its queue,
+// before the sink stops purging.
+builder.Services.AddSingleton(_ => new SqlDecisionSink(
     () => new SqliteConnection(decisionsConnectionString),
     new SqlDecisionSinkOptions
     {
         Dialect = DecisionSqlDialect.Sqlite,
         Retention = TimeSpan.FromDays(30),
         JsonOptions = options.JsonSerializerOptions
-    });
-
-builder.Services.AddSingleton(decisionSink);
+    }));
 
 // The capture posture is required, not optional: without one, a rule document marked "audited" does
 // not bind at all. ReferenceOnly is the recommended production choice because it lets erasure and
 // audit coexist -- erase cust-42 in the system of record and the decision survives without personal
 // data, while replay correctly becomes impossible.
-//
-// The log is registered as a singleton so the container drains the queue at shutdown. Disposing the
-// sink stops its purge loop and leaves its write path open, so that drain lands whichever order the
-// container tears the two down in.
-
 builder.Services.AddMotivRules(registry, options)
-    .AddDecisionLog(decisionSink, log =>
+    .AddDecisionLog(provider => provider.GetRequiredService<SqlDecisionSink>(), log =>
     {
         log.Backpressure = DecisionBackpressure.Block;
         log.Capture.ReferenceOnly<Customer>(customer => customer.CustomerId ?? "anonymous");
@@ -362,8 +360,10 @@ app.MapPost("/api/checkout", async (
 // worth asking of it names a decision, a rule, or a window.
 app.MapGet("/api/decisions", async (
     SqlDecisionSink sink,
+    CancellationToken cancellationToken,
     [FromQuery] string? correlationId,
     [FromQuery] string? ruleName,
+    [FromQuery] bool? satisfied,
     [FromQuery] DateTimeOffset? from,
     [FromQuery] DateTimeOffset? to,
     [FromQuery] int? limit) => Results.Json(new
@@ -372,13 +372,18 @@ app.MapGet("/api/decisions", async (
     {
         CorrelationId = correlationId,
         RuleName = ruleName,
+        Satisfied = satisfied,
         FromUtc = from,
         ToUtc = to,
-        Limit = limit ?? 100
-    }),
+        // Clamped rather than validated: DecisionQuery refuses a limit below one, and a caller's
+        // query string turning into a 500 is a worse answer than a page. The ceiling is the same
+        // argument from the other end -- this table is machine-rate, and ?limit=1000000 is not a
+        // request anyone should be able to make of it.
+        Limit = Math.Clamp(limit ?? 100, 1, 1000)
+    }, cancellationToken),
     // A gap is evidence about the log rather than a decision, so it is reported beside the records
     // and never counted among them. Empty is the only healthy value.
-    gaps = await sink.ReadGapsAsync()
+    gaps = await sink.ReadGapsAsync(cancellationToken: cancellationToken)
 }, options.JsonSerializerOptions))
 .RequireAuthorization();
 

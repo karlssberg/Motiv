@@ -15,12 +15,7 @@ namespace Motiv.RulesEngine.Sample.Tests;
 public class DecisionLogEndpointTests
 {
     private static WebApplicationFactory<Program> AnIsolatedHost() =>
-        new WebApplicationFactory<Program>().WithWebHostBuilder(builder => builder.UseSetting(
-            "Motiv:Store:ConnectionString",
-            $"Data Source={Path.Combine(Path.GetTempPath(), $"motiv-{Guid.NewGuid():N}.db")}")
-            .UseSetting(
-                "Motiv:Decisions:ConnectionString",
-                $"Data Source={Path.Combine(Path.GetTempPath(), $"motiv-decisions-{Guid.NewGuid():N}.db")}"));
+        new WebApplicationFactory<Program>().WithWebHostBuilder(builder => builder.UseIsolatedDatabases());
 
     private static object ACustomer(string? id = "cust-42") =>
         new { customerId = id, age = 30, isActive = true, orderCount = 3 };

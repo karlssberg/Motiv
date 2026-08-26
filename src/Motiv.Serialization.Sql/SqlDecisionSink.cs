@@ -1,6 +1,4 @@
-using System.Data;
 using System.Data.Common;
-using System.Text.Json;
 
 namespace Motiv.Serialization.Sql;
 
@@ -33,19 +31,29 @@ namespace Motiv.Serialization.Sql;
 public sealed class SqlDecisionSink : IDecisionSink, IAsyncDisposable
 {
     private readonly Func<DbConnection> _connectionFactory;
-    private readonly SqlDecisionSinkOptions _options;
     private readonly DecisionSqlDialect _dialect;
     private readonly DecisionStatements _statements;
+    private readonly DecisionRowMapper _mapper;
     private readonly TimeSpan _retention;
+    private readonly TimeSpan _purgeInterval;
+    private readonly int _purgeBatchSize;
+    private readonly bool _ensureSchema;
+    private readonly Func<DateTimeOffset> _clock;
     private readonly CancellationTokenSource _stopped = new();
     private readonly Task _purging;
+
+    // Guards the bootstrap, and deliberately never disposed: writes are expected to continue after
+    // DisposeAsync (see the remarks there), and a disposed SemaphoreSlim throws on WaitAsync — which
+    // would turn "the write path stays open" into a lie exactly on the zero-config path, where the
+    // first write is also the bootstrap. A semaphore whose AvailableWaitHandle is never touched holds
+    // nothing that needs releasing.
     private readonly SemaphoreSlim _schemaLock = new(1, 1);
 
     private long _purgedCount;
     private long _failedPurgeCount;
     private long _lastPurgeTicks;
-    private bool _schemaReady;
-    private bool _disposed;
+    private volatile bool _schemaReady;
+    private int _disposed;
 
     /// <summary>Creates a sink over <paramref name="connectionFactory"/>.</summary>
     /// <param name="connectionFactory">
@@ -64,7 +72,7 @@ public sealed class SqlDecisionSink : IDecisionSink, IAsyncDisposable
     public SqlDecisionSink(Func<DbConnection> connectionFactory, SqlDecisionSinkOptions options)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
+        ArgumentNullException.ThrowIfNull(options);
 
         _retention = options.Retention ?? throw new ArgumentException(
             $"A decision sink needs a {nameof(SqlDecisionSinkOptions.Retention)} window. Version " +
@@ -76,7 +84,16 @@ public sealed class SqlDecisionSink : IDecisionSink, IAsyncDisposable
             "factory says nothing about the engine behind it, so there is nothing to infer one from.",
             nameof(options));
 
+        // Every option is snapshotted, not just the two that are required. The options object is the
+        // adopter's and stays mutable; a sink that read PurgeBatchSize live would bind one value and
+        // test termination against another if it changed mid-pass.
+        _purgeInterval = options.PurgeInterval;
+        _purgeBatchSize = options.PurgeBatchSize;
+        _ensureSchema = options.EnsureSchema;
+        _clock = options.Clock;
+
         _statements = new DecisionStatements(_dialect);
+        _mapper = new DecisionRowMapper(_dialect, options.JsonOptions);
 
         // Started here, as DecisionLog starts its writer loop, and for the same reason one level up:
         // a purge an adopter has to register separately is a purge an adopter can omit, and an
@@ -141,9 +158,7 @@ public sealed class SqlDecisionSink : IDecisionSink, IAsyncDisposable
         if (records.Count == 0)
             return;
 
-        await EnsureSchemaOnceAsync(cancellationToken).ConfigureAwait(false);
-
-        await using var connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await ConnectAsync(cancellationToken).ConfigureAwait(false);
 
         // One transaction per batch, so a batch is all-or-nothing. That is what makes the failure
         // accounting honest: DecisionLog counts a refused batch and moves on, and a half-written
@@ -151,36 +166,11 @@ public sealed class SqlDecisionSink : IDecisionSink, IAsyncDisposable
         await using var transaction = await connection
             .BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
         await using var command = Command(connection, _statements.InsertDecision, transaction);
-
-        var parameters = DeclareParameters(command,
-            DecisionSchema.Id,
-            DecisionSchema.CorrelationId,
-            DecisionSchema.TimestampUtc,
-            DecisionSchema.Caller,
-            DecisionSchema.RuleName,
-            DecisionSchema.RuleVersion,
-            DecisionSchema.BuildId,
-            DecisionSchema.PropositionsJson,
-            DecisionSchema.InputKind,
-            DecisionSchema.InputJson,
-            DecisionSchema.Satisfied,
-            DecisionSchema.OutcomeJson);
+        var parameters = Declare(command, DecisionSchema.DecisionColumns);
 
         foreach (var record in records)
         {
-            parameters[0].Value = _dialect.ToParameter(record.Id);
-            parameters[1].Value = record.CorrelationId;
-            parameters[2].Value = _dialect.ToParameter(record.TimestampUtc);
-            parameters[3].Value = (object?)record.Caller ?? DBNull.Value;
-            parameters[4].Value = record.RuleName;
-            parameters[5].Value = record.RuleVersion;
-            parameters[6].Value = record.BuildId;
-            parameters[7].Value = Serialize(record.ReferencedPropositionVersions);
-            parameters[8].Value = record.Input is null ? DBNull.Value : (int)record.Input.Kind;
-            parameters[9].Value = record.Input is null ? DBNull.Value : Serialize(record.Input.Value);
-            parameters[10].Value = _dialect.ToParameter(record.Outcome.Satisfied);
-            parameters[11].Value = Serialize(record.Outcome);
-
+            _mapper.Write(parameters, record);
             await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
 
@@ -195,22 +185,10 @@ public sealed class SqlDecisionSink : IDecisionSink, IAsyncDisposable
         // Written with the same care as a batch, and for a sharper reason: a gap marker that failed
         // to persist turns a provable hole back into an invisible one, which is the exact ambiguity
         // the marker exists to remove.
-        await EnsureSchemaOnceAsync(cancellationToken).ConfigureAwait(false);
-
-        await using var connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await ConnectAsync(cancellationToken).ConfigureAwait(false);
         await using var command = Command(connection, _statements.InsertGap);
 
-        var parameters = DeclareParameters(command,
-            DecisionSchema.Id,
-            DecisionSchema.FirstDroppedUtc,
-            DecisionSchema.LastDroppedUtc,
-            DecisionSchema.DroppedCount);
-
-        parameters[0].Value = _dialect.ToParameter(Guid.NewGuid());
-        parameters[1].Value = _dialect.ToParameter(gap.FirstDroppedUtc);
-        parameters[2].Value = _dialect.ToParameter(gap.LastDroppedUtc);
-        parameters[3].Value = gap.DroppedCount;
-
+        _mapper.WriteGap(Declare(command, DecisionSchema.GapColumns), gap);
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -224,23 +202,22 @@ public sealed class SqlDecisionSink : IDecisionSink, IAsyncDisposable
     {
         ArgumentNullException.ThrowIfNull(query);
 
-        await EnsureSchemaOnceAsync(cancellationToken).ConfigureAwait(false);
-
-        await using var connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await ConnectAsync(cancellationToken).ConfigureAwait(false);
         await using var command = Command(connection, _statements.SelectDecisions(query));
 
-        if (query.CorrelationId is not null) Bind(command, "correlationId", query.CorrelationId);
-        if (query.RuleName is not null) Bind(command, "ruleName", query.RuleName);
-        if (query.FromUtc is { } from) Bind(command, "fromUtc", _dialect.ToParameter(from));
-        if (query.ToUtc is { } to) Bind(command, "toUtc", _dialect.ToParameter(to));
-        Bind(command, "limit", query.Limit);
+        if (query.CorrelationId is { } correlationId)
+            Bind(command, DecisionStatements.CorrelationIdParameter, correlationId);
+        if (query.RuleName is { } ruleName)
+            Bind(command, DecisionStatements.RuleNameParameter, ruleName);
+        if (query.Satisfied is { } satisfied)
+            Bind(command, DecisionStatements.SatisfiedParameter, _dialect.ToParameter(satisfied));
+        if (query.FromUtc is { } from)
+            Bind(command, DecisionStatements.FromParameter, _dialect.ToParameter(from));
+        if (query.ToUtc is { } to)
+            Bind(command, DecisionStatements.ToParameter, _dialect.ToParameter(to));
+        Bind(command, DecisionSqlDialect.LimitParameter, query.Limit);
 
-        var records = new List<DecisionRecord>();
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-            records.Add(ReadRecord(reader));
-
-        return records;
+        return await ReadAllAsync(command, _mapper.Read, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Reads the most recent gap markers. Empty is the only healthy value.</summary>
@@ -253,23 +230,11 @@ public sealed class SqlDecisionSink : IDecisionSink, IAsyncDisposable
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(limit, 1);
 
-        await EnsureSchemaOnceAsync(cancellationToken).ConfigureAwait(false);
-
-        await using var connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await ConnectAsync(cancellationToken).ConfigureAwait(false);
         await using var command = Command(connection, _statements.SelectGaps);
-        Bind(command, "limit", limit);
+        Bind(command, DecisionSqlDialect.LimitParameter, limit);
 
-        var gaps = new List<DecisionGap>();
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-        {
-            gaps.Add(new DecisionGap(
-                _dialect.ReadTimestamp(reader, 1),
-                _dialect.ReadTimestamp(reader, 2),
-                reader.GetInt64(3)));
-        }
-
-        return gaps;
+        return await ReadAllAsync(command, _mapper.ReadGap, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -284,12 +249,10 @@ public sealed class SqlDecisionSink : IDecisionSink, IAsyncDisposable
     /// <returns>What the pass took, and the cutoff it took it against.</returns>
     public async Task<DecisionPurgeReport> PurgeAsync(CancellationToken cancellationToken = default)
     {
-        var now = _options.Clock();
+        var now = _clock();
         var cutoff = now - _retention;
 
-        await EnsureSchemaOnceAsync(cancellationToken).ConfigureAwait(false);
-
-        await using var connection = await OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var connection = await ConnectAsync(cancellationToken).ConfigureAwait(false);
         var records = await PurgeTableAsync(connection, _statements.PurgeDecisions, cutoff, cancellationToken)
             .ConfigureAwait(false);
         var gaps = await PurgeTableAsync(connection, _statements.PurgeGaps, cutoff, cancellationToken)
@@ -304,17 +267,16 @@ public sealed class SqlDecisionSink : IDecisionSink, IAsyncDisposable
     /// <summary>Stops the purge loop.</summary>
     /// <remarks>
     /// <strong>And nothing else.</strong> The write path stays open, because a container disposes
-    /// singletons in reverse registration order — a sink registered before the <c>DecisionLog</c> that
-    /// drains into it is torn down first, and a sink that refused to write after disposal would
-    /// silently swallow the drain the log's own disposal exists to perform. A sink still writing after
-    /// its purge has stopped is the right failure at shutdown; the reverse is not.
+    /// singletons in reverse creation order — a sink created before the <c>DecisionLog</c> that drains
+    /// into it is torn down first, and a sink that refused to write after disposal would silently
+    /// swallow the drain the log's own disposal exists to perform. A sink still writing after its
+    /// purge has stopped is the right failure at shutdown; the reverse is not.
     /// </remarks>
     public async ValueTask DisposeAsync()
     {
-        if (_disposed)
+        if (Interlocked.Exchange(ref _disposed, 1) == 1)
             return;
 
-        _disposed = true;
         await _stopped.CancelAsync().ConfigureAwait(false);
 
         try
@@ -328,7 +290,6 @@ public sealed class SqlDecisionSink : IDecisionSink, IAsyncDisposable
         finally
         {
             _stopped.Dispose();
-            _schemaLock.Dispose();
         }
     }
 
@@ -337,9 +298,9 @@ public sealed class SqlDecisionSink : IDecisionSink, IAsyncDisposable
         // The first pass waits out one interval rather than running at startup: a host should learn
         // that its decision database is unreachable from its readiness probe, not from a purge
         // failure in its first second.
-        using var timer = new PeriodicTimer(_options.PurgeInterval);
+        using var timer = new PeriodicTimer(_purgeInterval);
 
-        while (await SafeWaitAsync(timer).ConfigureAwait(false))
+        while (await WaitForTickAsync(timer).ConfigureAwait(false))
         {
             try
             {
@@ -355,7 +316,7 @@ public sealed class SqlDecisionSink : IDecisionSink, IAsyncDisposable
         }
     }
 
-    private async Task<bool> SafeWaitAsync(PeriodicTimer timer)
+    private async Task<bool> WaitForTickAsync(PeriodicTimer timer)
     {
         try
         {
@@ -375,27 +336,29 @@ public sealed class SqlDecisionSink : IDecisionSink, IAsyncDisposable
         while (true)
         {
             await using var command = Command(connection, statement);
-            Bind(command, "cutoff", _dialect.ToParameter(cutoff));
-            Bind(command, "batch", _options.PurgeBatchSize);
+            Bind(command, DecisionSqlDialect.CutoffParameter, _dialect.ToParameter(cutoff));
+            Bind(command, DecisionSqlDialect.BatchParameter, _purgeBatchSize);
 
             var deleted = await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-            if (deleted <= 0)
-                return total;
-
-            total += deleted;
+            total += Math.Max(deleted, 0);
 
             // A short pass ended on its own; only a full batch suggests there is more behind it.
-            if (deleted < _options.PurgeBatchSize)
+            if (deleted < _purgeBatchSize)
                 return total;
         }
     }
 
-    private async Task EnsureSchemaOnceAsync(CancellationToken cancellationToken)
+    /// <summary>Opens a connection, bootstrapping the schema first if it has not been yet.</summary>
+    /// <remarks>
+    /// Every operation goes through here rather than opening for itself, so a sixth one cannot be
+    /// added that forgets the bootstrap.
+    /// </remarks>
+    private async Task<DbConnection> ConnectAsync(CancellationToken cancellationToken)
     {
-        if (_schemaReady || !_options.EnsureSchema)
-            return;
+        if (_ensureSchema && !_schemaReady)
+            await EnsureSchemaAsync(cancellationToken).ConfigureAwait(false);
 
-        await EnsureSchemaAsync(cancellationToken).ConfigureAwait(false);
+        return await OpenAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<DbConnection> OpenAsync(CancellationToken cancellationToken)
@@ -415,51 +378,16 @@ public sealed class SqlDecisionSink : IDecisionSink, IAsyncDisposable
         }
     }
 
-    private DecisionRecord ReadRecord(DbDataReader reader) =>
-        new(
-            _dialect.ReadGuid(reader, 0),
-            reader.GetString(1),
-            _dialect.ReadTimestamp(reader, 2),
-            reader.IsDBNull(3) ? null : reader.GetString(3),
-            reader.GetString(4),
-            reader.GetInt32(5),
-            reader.GetString(6),
-            Deserialize<IReadOnlyList<PropositionVersion>>(reader.GetString(7)) ?? [],
-            ReadInput(reader),
-            Deserialize<RuleEvaluationResult<object?>>(reader.GetString(11))!);
-
-    private DecisionInput? ReadInput(DbDataReader reader)
+    private static async Task<IReadOnlyList<T>> ReadAllAsync<T>(
+        DbCommand command, Func<DbDataReader, T> read, CancellationToken cancellationToken)
     {
-        // A null kind is "no capture posture applied", which is not the same as a posture that
-        // captured null — hence a column of its own rather than an inference from the payload.
-        if (reader.IsDBNull(8))
-            return null;
+        var rows = new List<T>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            rows.Add(read(reader));
 
-        var kind = (DecisionInputKind)reader.GetInt32(8);
-        var value = reader.IsDBNull(9) ? null : Deserialize<object>(reader.GetString(9));
-
-        return kind switch
-        {
-            DecisionInputKind.Whole => DecisionInput.Whole(value),
-            DecisionInputKind.Redacted => DecisionInput.Redacted(value),
-            _ => DecisionInput.Reference(ReadReferenceKey(value))
-        };
+        return rows;
     }
-
-    /// <summary>
-    /// A reference capture is a string by construction, so it is handed back as one rather than as
-    /// the <c>JsonElement</c> the other two postures unavoidably become.
-    /// </summary>
-    private static string ReadReferenceKey(object? value) => value switch
-    {
-        JsonElement { ValueKind: JsonValueKind.String } element => element.GetString()!,
-        string key => key,
-        _ => value?.ToString() ?? string.Empty
-    };
-
-    private string Serialize<T>(T value) => JsonSerializer.Serialize(value, _options.JsonOptions);
-
-    private T? Deserialize<T>(string json) => JsonSerializer.Deserialize<T>(json, _options.JsonOptions);
 
     private static DbCommand Command(DbConnection connection, string sql, DbTransaction? transaction = null)
     {
@@ -469,25 +397,20 @@ public sealed class SqlDecisionSink : IDecisionSink, IAsyncDisposable
         return command;
     }
 
-    private static DbParameter[] DeclareParameters(DbCommand command, params string[] names)
-    {
-        var parameters = new DbParameter[names.Length];
-        for (var index = 0; index < names.Length; index++)
-        {
-            var parameter = command.CreateParameter();
-            parameter.ParameterName = $"@{names[index]}";
-            command.Parameters.Add(parameter);
-            parameters[index] = parameter;
-        }
+    /// <summary>
+    /// Declares one parameter per column, keyed by column name so the fill order cannot drift from
+    /// the statement's.
+    /// </summary>
+    private static IReadOnlyDictionary<string, DbParameter> Declare(DbCommand command, string[] columns) =>
+        columns.ToDictionary(column => column, column => Bind(command, $"@{column}"), StringComparer.Ordinal);
 
-        return parameters;
-    }
-
-    private static void Bind(DbCommand command, string name, object value)
+    private static DbParameter Bind(DbCommand command, string name, object? value = null)
     {
         var parameter = command.CreateParameter();
-        parameter.ParameterName = $"@{name}";
-        parameter.Value = value;
+        parameter.ParameterName = name;
+        if (value is not null)
+            parameter.Value = value;
         command.Parameters.Add(parameter);
+        return parameter;
     }
 }

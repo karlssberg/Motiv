@@ -14,8 +14,20 @@ namespace Motiv.Serialization.Sql;
 /// <param name="dialect">The engine's SQL.</param>
 internal sealed class DecisionStatements(DecisionSqlDialect dialect)
 {
-    /// <summary>The dialect these were built for, so the sink converts values the same way.</summary>
-    public DecisionSqlDialect Dialect { get; } = dialect;
+    /// <summary>The parameters a filtered read binds, named once so a statement and a bind agree.</summary>
+    internal const string CorrelationIdParameter = "@correlationId";
+
+    /// <inheritdoc cref="CorrelationIdParameter"/>
+    internal const string RuleNameParameter = "@ruleName";
+
+    /// <inheritdoc cref="CorrelationIdParameter"/>
+    internal const string SatisfiedParameter = "@satisfied";
+
+    /// <inheritdoc cref="CorrelationIdParameter"/>
+    internal const string FromParameter = "@fromUtc";
+
+    /// <inheritdoc cref="CorrelationIdParameter"/>
+    internal const string ToParameter = "@toUtc";
 
     /// <summary>Creates both tables and their indexes, if absent. Idempotent by construction.</summary>
     public IReadOnlyList<string> Schema { get; } =
@@ -49,41 +61,27 @@ internal sealed class DecisionStatements(DecisionSqlDialect dialect)
     ];
 
     /// <summary>Appends one decision.</summary>
-    public string InsertDecision { get; } = Insert(dialect, DecisionSchema.DecisionTable,
-        DecisionSchema.Id,
-        DecisionSchema.CorrelationId,
-        DecisionSchema.TimestampUtc,
-        DecisionSchema.Caller,
-        DecisionSchema.RuleName,
-        DecisionSchema.RuleVersion,
-        DecisionSchema.BuildId,
-        DecisionSchema.PropositionsJson,
-        DecisionSchema.InputKind,
-        DecisionSchema.InputJson,
-        DecisionSchema.Satisfied,
-        DecisionSchema.OutcomeJson);
+    public string InsertDecision { get; } =
+        Insert(dialect, DecisionSchema.DecisionTable, DecisionSchema.DecisionColumns);
 
     /// <summary>Appends one gap marker.</summary>
-    public string InsertGap { get; } = Insert(dialect, DecisionSchema.GapTable,
-        DecisionSchema.Id,
-        DecisionSchema.FirstDroppedUtc,
-        DecisionSchema.LastDroppedUtc,
-        DecisionSchema.DroppedCount);
+    public string InsertGap { get; } =
+        Insert(dialect, DecisionSchema.GapTable, DecisionSchema.GapColumns);
 
-    /// <summary>Deletes at most <c>@batch</c> decisions older than <c>@cutoff</c>.</summary>
+    /// <summary>Deletes at most a batch of decisions older than the cutoff.</summary>
     public string PurgeDecisions { get; } =
         dialect.PurgeStatement(DecisionSchema.DecisionTable, DecisionSchema.TimestampUtc);
 
     /// <summary>
-    /// Deletes at most <c>@batch</c> gap markers whose run ended before <c>@cutoff</c> — keyed on the
-    /// last drop, so a run straddling the cutoff survives until all of it is past the window.
+    /// Deletes at most a batch of gap markers whose run ended before the cutoff — keyed on the last
+    /// drop, so a run straddling the cutoff survives until all of it is past the window.
     /// </summary>
     public string PurgeGaps { get; } =
         dialect.PurgeStatement(DecisionSchema.GapTable, DecisionSchema.LastDroppedUtc);
 
-    /// <summary>Reads gap markers, newest first, capped at <c>@limit</c>.</summary>
+    /// <summary>Reads gap markers, newest first, capped.</summary>
     public string SelectGaps { get; } =
-        $"SELECT {Columns(dialect, DecisionSchema.Id, DecisionSchema.FirstDroppedUtc, DecisionSchema.LastDroppedUtc, DecisionSchema.DroppedCount)} " +
+        $"SELECT {Columns(dialect, DecisionSchema.GapColumns)} " +
         $"FROM {dialect.Quote(DecisionSchema.GapTable)} " +
         $"ORDER BY {dialect.Quote(DecisionSchema.LastDroppedUtc)} DESC {dialect.LimitClause}";
 
@@ -93,50 +91,42 @@ internal sealed class DecisionStatements(DecisionSqlDialect dialect)
     public string SelectDecisions(DecisionQuery query)
     {
         var sql = new StringBuilder("SELECT ")
-            .Append(Columns(Dialect,
-                DecisionSchema.Id,
-                DecisionSchema.CorrelationId,
-                DecisionSchema.TimestampUtc,
-                DecisionSchema.Caller,
-                DecisionSchema.RuleName,
-                DecisionSchema.RuleVersion,
-                DecisionSchema.BuildId,
-                DecisionSchema.PropositionsJson,
-                DecisionSchema.InputKind,
-                DecisionSchema.InputJson,
-                DecisionSchema.Satisfied,
-                DecisionSchema.OutcomeJson))
+            .Append(Columns(dialect, DecisionSchema.DecisionColumns))
             .Append(" FROM ")
-            .Append(Dialect.Quote(DecisionSchema.DecisionTable));
+            .Append(dialect.Quote(DecisionSchema.DecisionTable));
 
-        var predicates = new List<string>(4);
+        var predicates = new List<string>(5);
         if (query.CorrelationId is not null)
-            predicates.Add($"{Dialect.Quote(DecisionSchema.CorrelationId)} = @correlationId");
+            predicates.Add(WhereEquals(DecisionSchema.CorrelationId, CorrelationIdParameter));
         if (query.RuleName is not null)
-            predicates.Add($"{Dialect.Quote(DecisionSchema.RuleName)} = @ruleName");
+            predicates.Add(WhereEquals(DecisionSchema.RuleName, RuleNameParameter));
+        if (query.Satisfied is not null)
+            predicates.Add(WhereEquals(DecisionSchema.Satisfied, SatisfiedParameter));
         if (query.FromUtc is not null)
-            predicates.Add($"{Dialect.Quote(DecisionSchema.TimestampUtc)} >= @fromUtc");
+            predicates.Add($"{dialect.Quote(DecisionSchema.TimestampUtc)} >= {FromParameter}");
         if (query.ToUtc is not null)
-            predicates.Add($"{Dialect.Quote(DecisionSchema.TimestampUtc)} <= @toUtc");
+            predicates.Add($"{dialect.Quote(DecisionSchema.TimestampUtc)} <= {ToParameter}");
 
         if (predicates.Count > 0)
             sql.Append(" WHERE ").AppendJoin(" AND ", predicates);
 
         return sql
             .Append(" ORDER BY ")
-            .Append(Dialect.Quote(DecisionSchema.TimestampUtc))
+            .Append(dialect.Quote(DecisionSchema.TimestampUtc))
             .Append(" DESC ")
-            .Append(Dialect.LimitClause)
+            .Append(dialect.LimitClause)
             .ToString();
     }
+
+    private string WhereEquals(string column, string parameter) => $"{dialect.Quote(column)} = {parameter}";
 
     private static string Column(DecisionSqlDialect dialect, string name, string type, string constraints) =>
         $"{dialect.Quote(name)} {type} {constraints}";
 
-    private static string Columns(DecisionSqlDialect dialect, params string[] names) =>
+    private static string Columns(DecisionSqlDialect dialect, string[] names) =>
         string.Join(", ", names.Select(dialect.Quote));
 
-    private static string Insert(DecisionSqlDialect dialect, string table, params string[] columns) =>
+    private static string Insert(DecisionSqlDialect dialect, string table, string[] columns) =>
         $"INSERT INTO {dialect.Quote(table)} ({Columns(dialect, columns)}) " +
         $"VALUES ({string.Join(", ", columns.Select(column => $"@{column}"))});";
 }

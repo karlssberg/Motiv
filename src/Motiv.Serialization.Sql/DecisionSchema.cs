@@ -1,8 +1,8 @@
 namespace Motiv.Serialization.Sql;
 
 /// <summary>
-/// The names of the two tables and their columns, in one place so a statement and a reader cannot
-/// drift apart by a typo.
+/// The two tables, their columns, and the order those columns appear in. One place, so a statement, a
+/// parameter and a reader cannot drift apart by a typo or a miscounted ordinal.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -36,8 +36,10 @@ internal static class DecisionSchema
 
     /// <summary>
     /// Lifted out of the outcome JSON and given its own column: it is the one field inside the
-    /// payload a query filters on rather than reads, and "show me the declines" should not be a table
-    /// scan through serialised justification trees.
+    /// payload a query filters on rather than reads, and "show me the declines" should be a predicate
+    /// the database can apply rather than a scan through serialised justification trees. Narrowed by
+    /// the timestamp index rather than one of its own — a two-valued column is poor index material,
+    /// and every question that asks it also names a window.
     /// </summary>
     internal const string Satisfied = "Satisfied";
 
@@ -55,4 +57,18 @@ internal static class DecisionSchema
 
     /// <summary>The purge's predicate on the gap table.</summary>
     internal const string GapTimestampIndex = "IX_MotivDecisionGap_LastDroppedUtc";
+
+    /// <summary>
+    /// Every column of <see cref="DecisionTable"/>. The insert, the select and the parameter set are
+    /// all generated from this, so adding a column is one edit rather than four synchronised ones —
+    /// and the read side resolves ordinals by name, so nothing here is coupled to a literal index.
+    /// </summary>
+    internal static readonly string[] DecisionColumns =
+    [
+        Id, CorrelationId, TimestampUtc, Caller, RuleName, RuleVersion, BuildId, PropositionsJson,
+        InputKind, InputJson, Satisfied, OutcomeJson
+    ];
+
+    /// <summary>Every column of <see cref="GapTable"/>.</summary>
+    internal static readonly string[] GapColumns = [Id, FirstDroppedUtc, LastDroppedUtc, DroppedCount];
 }

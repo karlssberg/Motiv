@@ -17,7 +17,7 @@ public class DurableDecisionLogTests
         await using var database = SqliteDecisionFixture.Create();
 
         // Act — write through the queue, then dispose everything that holds state in memory
-        await using (var sink = Sink(database))
+        await using (var sink = database.Sink())
         await using (var log = new DecisionLog(sink))
         {
             log.Enqueue(Decisions.Record(correlationId: "trace-1"));
@@ -25,7 +25,7 @@ public class DurableDecisionLogTests
         }
 
         // Assert — a second sink over the same file, standing in for a restarted process
-        await using var reader = Sink(database);
+        await using var reader = database.Sink();
         var read = await reader.ReadAsync(new DecisionQuery());
         read.Select(record => record.CorrelationId).ShouldBe(["trace-2", "trace-1"], ignoreOrder: true);
     }
@@ -36,7 +36,7 @@ public class DurableDecisionLogTests
         // Arrange — a queue of one, the Drop posture, and a sink held shut until every enqueue has
         // happened, so the run of shed records is deterministic rather than a race
         await using var database = SqliteDecisionFixture.Create();
-        await using var sink = Sink(database);
+        await using var sink = database.Sink();
         var released = new TaskCompletionSource();
         var gate = new GatedSink(sink, released.Task);
 
@@ -61,12 +61,6 @@ public class DurableDecisionLogTests
         gaps.Sum(gap => gap.DroppedCount).ShouldBe(5 - (await sink.ReadAsync(new DecisionQuery())).Count);
     }
 
-    private static SqlDecisionSink Sink(SqliteDecisionFixture database) =>
-        new(database.ConnectionFactory, new SqlDecisionSinkOptions
-        {
-            Dialect = DecisionSqlDialect.Sqlite,
-            Retention = TimeSpan.FromDays(90)
-        });
 
     /// <summary>Holds the writer loop shut until a test says otherwise, then forwards everything.</summary>
     private sealed class GatedSink(IDecisionSink inner, Task released) : IDecisionSink
