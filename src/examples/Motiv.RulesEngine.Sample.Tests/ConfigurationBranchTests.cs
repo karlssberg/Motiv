@@ -143,13 +143,6 @@ public class ConfigurationBranchTests : IClassFixture<WebApplicationFactory<Prog
     private static string TempPath(string prefix) =>
         Path.Combine(Path.GetTempPath(), $"{prefix}-{Guid.NewGuid():N}.json");
 
-    // Points the store at a fresh temp database rather than the sample's real motiv-store.db, which
-    // every WebApplicationFactory<Program> in this assembly (and `dotnet run` itself) shares on
-    // disk. StoreSchema now survives two hosts creating the schema at once, so this is no longer
-    // about that crash: xunit runs test classes in parallel, and a shared store would let one
-    // class's published rules and grants show up in another's assertions.
     private static WebApplicationFactory<Program> IsolatedStore(WebApplicationFactory<Program> factory) =>
-        factory.WithWebHostBuilder(builder => builder.UseSetting(
-            "Motiv:Store:ConnectionString",
-            $"Data Source={Path.Combine(Path.GetTempPath(), $"motiv-{Guid.NewGuid():N}.db")}"));
+        factory.WithWebHostBuilder(builder => builder.UseIsolatedDatabases());
 }

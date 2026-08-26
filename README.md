@@ -375,8 +375,28 @@ only what your chosen capture posture allows of the model. Records leave the
 evaluation path through a bounded queue drained into an `IDecisionSink` — your
 seam for a durable table, a SIEM, or an outbox — and a full queue fails the
 decision by default, because an audited decision that wasn't logged didn't
-happen. Available via the `Motiv.Serialization` and
-`Motiv.Serialization.AspNetCore` packages.
+happen.
+
+For production, `SqlDecisionSink` appends to a database of its own — separate
+from the authoring store, over SQLite, PostgreSQL or SQL Server, with no
+provider dependency of its own:
+
+```csharp
+builder.Services.AddSingleton(_ => new SqlDecisionSink(
+    () => new SqliteConnection(decisionsConnectionString),
+    new SqlDecisionSinkOptions
+    {
+        Dialect = DecisionSqlDialect.Sqlite,
+        // Required. Version history is kept forever; an audited rule on a hot
+        // path is millions of rows, so there is no "keep everything" here.
+        Retention = TimeSpan.FromDays(90)
+    }));
+```
+
+It refuses to be constructed without a retention window and purges past it on a
+loop it starts itself — a purge you can forget to register is an unbounded
+table. Available via the `Motiv.Serialization`,
+`Motiv.Serialization.AspNetCore` and `Motiv.Serialization.Sql` packages.
 
 ### Governance and Access Control
 

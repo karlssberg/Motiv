@@ -14,9 +14,7 @@ public class ReadinessEndpointTests : IClassFixture<WebApplicationFactory<Progra
     private readonly WebApplicationFactory<Program> _factory;
 
     public ReadinessEndpointTests(WebApplicationFactory<Program> factory) =>
-        _factory = factory.WithWebHostBuilder(builder => builder.UseSetting(
-            "Motiv:Store:ConnectionString",
-            $"Data Source={Path.Combine(Path.GetTempPath(), $"motiv-{Guid.NewGuid():N}.db")}"));
+        _factory = factory.WithWebHostBuilder(builder => builder.UseIsolatedDatabases());
 
     [Fact]
     public async Task Should_answer_readiness_without_credentials()

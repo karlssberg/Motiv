@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Motiv;
 using Motiv.RulesEngine.Sample;
 using Motiv.Serialization;
 using Motiv.Serialization.AspNetCore;
 using Motiv.Serialization.EntityFrameworkCore;
+using Motiv.Serialization.Sql;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 // Seam: the spec catalog. Register each spec under a stable name — rule documents
@@ -195,20 +197,40 @@ var storeConnectionString = builder.Configuration["Motiv:Store:ConnectionString"
 
 builder.Services.AddMotivEntityFrameworkStore(store => store.UseSqlite(storeConnectionString));
 
-// Seam: the decision log. The sink is the in-memory reference implementation -- enough to demonstrate
-// the trail, and explicitly not enough for production, where the log must outlive the process and be
-// bounded by a retention window. An adopter swaps in their own IDecisionSink here: a durable table, a
-// SIEM, an outbox. It is registered as a singleton so the container drains the queue at shutdown.
+// Seam: the decision log's durable half. A *separate* SQLite file from motiv-store.db above, and
+// that separateness is an invariant rather than a deployment taste: decisions are machine-rate where
+// authoring is human-rate, so co-locating them would let a decision-write storm degrade authoring
+// reads -- and version history is kept forever where a decision record lives inside a compliance
+// window. An adopter swaps the connection factory and dialect for Postgres or SQL Server, or swaps
+// the whole IDecisionSink for a SIEM, an outbox or a broker.
 //
+// Retention has no default and the sink refuses to be constructed without one: version history is
+// kept forever, but an audited rule on a hot path is millions of rows, so "keep everything" is not a
+// posture this can offer. Thirty days is a demo's answer; a real deployment's is its regulator's. A
+// record past the window cannot be replayed, which is the correct post-retention state.
+var decisionsConnectionString = builder.Configuration["Motiv:Decisions:ConnectionString"]
+    ?? $"Data Source={Path.Combine(builder.Environment.ContentRootPath, "motiv-decisions.db")}";
+
+// Registered through a factory rather than as a pre-built instance, so the container owns it: it
+// disposes what it creates and not what it is handed, and an undisposed sink is a purge loop that
+// runs until the process exits. Registering it before AddDecisionLog also puts the two in the right
+// order for teardown -- reverse creation order disposes the log, and therefore drains its queue,
+// before the sink stops purging.
+builder.Services.AddSingleton(_ => new SqlDecisionSink(
+    () => new SqliteConnection(decisionsConnectionString),
+    new SqlDecisionSinkOptions
+    {
+        Dialect = DecisionSqlDialect.Sqlite,
+        Retention = TimeSpan.FromDays(30),
+        JsonOptions = options.JsonSerializerOptions
+    }));
+
 // The capture posture is required, not optional: without one, a rule document marked "audited" does
 // not bind at all. ReferenceOnly is the recommended production choice because it lets erasure and
 // audit coexist -- erase cust-42 in the system of record and the decision survives without personal
 // data, while replay correctly becomes impossible.
-var decisionSink = new InMemoryDecisionSink();
-builder.Services.AddSingleton(decisionSink);
-
 builder.Services.AddMotivRules(registry, options)
-    .AddDecisionLog(decisionSink, log =>
+    .AddDecisionLog(provider => provider.GetRequiredService<SqlDecisionSink>(), log =>
     {
         log.Backpressure = DecisionBackpressure.Block;
         log.Capture.ReferenceOnly<Customer>(customer => customer.CustomerId ?? "anonymous");
@@ -333,14 +355,35 @@ app.MapPost("/api/checkout", async (
 .RequireAuthorization();
 
 // Seam: reading the trail. The answer to "why was this customer declined, on the 3rd, at 14:07?" --
-// the question the whole feature exists for. A durable sink would page and filter here; the in-memory
-// reference implementation just hands back what it holds.
-app.MapGet("/api/decisions", (InMemoryDecisionSink sink) => Results.Json(new
+// the question the whole feature exists for, asked of a log that outlived the process that wrote it.
+// Paged and filtered rather than handed back whole: the table is machine-rate, and every question
+// worth asking of it names a decision, a rule, or a window.
+app.MapGet("/api/decisions", async (
+    SqlDecisionSink sink,
+    CancellationToken cancellationToken,
+    [FromQuery] string? correlationId,
+    [FromQuery] string? ruleName,
+    [FromQuery] bool? satisfied,
+    [FromQuery] DateTimeOffset? from,
+    [FromQuery] DateTimeOffset? to,
+    [FromQuery] int? limit) => Results.Json(new
 {
-    records = sink.Records,
+    records = await sink.ReadAsync(new DecisionQuery
+    {
+        CorrelationId = correlationId,
+        RuleName = ruleName,
+        Satisfied = satisfied,
+        FromUtc = from,
+        ToUtc = to,
+        // Clamped rather than validated: DecisionQuery refuses a limit below one, and a caller's
+        // query string turning into a 500 is a worse answer than a page. The ceiling is the same
+        // argument from the other end -- this table is machine-rate, and ?limit=1000000 is not a
+        // request anyone should be able to make of it.
+        Limit = Math.Clamp(limit ?? 100, 1, 1000)
+    }, cancellationToken),
     // A gap is evidence about the log rather than a decision, so it is reported beside the records
     // and never counted among them. Empty is the only healthy value.
-    gaps = sink.Gaps
+    gaps = await sink.ReadGapsAsync(cancellationToken: cancellationToken)
 }, options.JsonSerializerOptions))
 .RequireAuthorization();
 

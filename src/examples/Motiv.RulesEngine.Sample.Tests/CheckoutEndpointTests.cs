@@ -112,12 +112,6 @@ public class CheckoutEndpointTests : IClassFixture<WebApplicationFactory<Program
         return await response.Content.ReadFromJsonAsync<JsonElement>();
     }
 
-    // Points the store at a fresh temp database rather than the sample's real motiv-store.db, which
-    // every WebApplicationFactory<Program> in this assembly (and `dotnet run` itself) shares on disk
-    // — this class reads a rule's version and expects it to still be 1, an assumption a shared
-    // database cannot make once anything else in the suite (or a prior run) has published to it.
     private static WebApplicationFactory<Program> IsolatedRules(WebApplicationFactory<Program> factory) =>
-        factory.WithWebHostBuilder(builder => builder.UseSetting(
-            "Motiv:Store:ConnectionString",
-            $"Data Source={Path.Combine(Path.GetTempPath(), $"motiv-{Guid.NewGuid():N}.db")}"));
+        factory.WithWebHostBuilder(builder => builder.UseIsolatedDatabases());
 }

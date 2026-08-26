@@ -15,15 +15,33 @@ namespace Motiv.RulesEngine.Sample.Tests;
 public class DecisionLogEndpointTests
 {
     private static WebApplicationFactory<Program> AnIsolatedHost() =>
-        new WebApplicationFactory<Program>().WithWebHostBuilder(builder => builder.UseSetting(
-            "Motiv:Store:ConnectionString",
-            $"Data Source={Path.Combine(Path.GetTempPath(), $"motiv-{Guid.NewGuid():N}.db")}"));
+        new WebApplicationFactory<Program>().WithWebHostBuilder(builder => builder.UseIsolatedDatabases());
 
     private static object ACustomer(string? id = "cust-42") =>
         new { customerId = id, age = 30, isActive = true, orderCount = 3 };
 
-    private static async Task<JsonElement> DecisionsAsync(HttpClient client) =>
-        await client.GetFromJsonAsync<JsonElement>("/api/decisions");
+    /// <summary>
+    /// Reads the log, waiting until <paramref name="expected"/> records have arrived.
+    /// </summary>
+    /// <remarks>
+    /// The wait is the contract, not a workaround: records leave the evaluation path through a
+    /// bounded queue drained by a background writer, precisely so an audited rule on a checkout path
+    /// does not pay a database write per evaluation. The in-memory sink hid that by completing within
+    /// the same tick; a database does not, and a test that asserted immediate visibility would be
+    /// asserting the absence of the feature.
+    /// </remarks>
+    private static async Task<JsonElement> DecisionsAsync(HttpClient client, int expected = 1)
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        while (true)
+        {
+            var decisions = await client.GetFromJsonAsync<JsonElement>("/api/decisions", timeout.Token);
+            if (decisions.GetProperty("records").GetArrayLength() >= expected)
+                return decisions;
+
+            await Task.Delay(25, timeout.Token);
+        }
+    }
 
     [Fact]
     public async Task Should_record_a_decision_for_the_audited_rule_only()
@@ -94,7 +112,7 @@ public class DecisionLogEndpointTests
         // Act — two checkouts, each of which is one decision
         (await client.PostAsJsonAsync("/api/checkout", ACustomer())).EnsureSuccessStatusCode();
         (await client.PostAsJsonAsync("/api/checkout", ACustomer("cust-7"))).EnsureSuccessStatusCode();
-        var records = (await DecisionsAsync(client)).GetProperty("records").EnumerateArray().ToArray();
+        var records = (await DecisionsAsync(client, expected: 2)).GetProperty("records").EnumerateArray().ToArray();
 
         // Assert — two decisions, two ids, and each record names the customer it was about
         records.Length.ShouldBe(2);
@@ -142,7 +160,7 @@ public class DecisionLogEndpointTests
         put.EnsureSuccessStatusCode();
 
         (await client.PostAsJsonAsync("/api/checkout", ACustomer())).EnsureSuccessStatusCode();
-        var records = (await DecisionsAsync(client)).GetProperty("records").EnumerateArray().ToArray();
+        var records = (await DecisionsAsync(client, expected: 2)).GetProperty("records").EnumerateArray().ToArray();
         records.Select(record => record.GetProperty("ruleName").GetString())
             .ShouldContain("can-checkout");
     }

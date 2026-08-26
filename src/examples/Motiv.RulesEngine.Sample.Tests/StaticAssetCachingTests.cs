@@ -28,15 +28,7 @@ public sealed class StaticAssetCachingTests : IDisposable
         _factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder => builder
                 .UseWebRoot(_webRoot.FullName)
-                // Points the store at a fresh temp database rather than the sample's real
-                // motiv-store.db, which every WebApplicationFactory<Program> in this assembly (and
-                // `dotnet run` itself) shares on disk. StoreSchema now survives two hosts creating
-                // the schema at once, so this is no longer about that crash: xunit runs test
-                // classes in parallel, and a shared store would let one class's published rules
-                // and grants show up in another's assertions.
-                .UseSetting(
-                    "Motiv:Store:ConnectionString",
-                    $"Data Source={Path.Combine(Path.GetTempPath(), $"motiv-{Guid.NewGuid():N}.db")}"));
+                .UseIsolatedDatabases());
     }
 
     public void Dispose()

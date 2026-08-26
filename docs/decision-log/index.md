@@ -160,14 +160,12 @@ decision.
 | [The Record](./record.md) | `DecisionRecord`, `PropositionVersion`, `DecisionInput`, and `DecisionGap`. |
 | [Capture Postures](./capture.md) | `DecisionCaptureRegistry`, the three postures, and the bind-time refusal. |
 | [The Sink and the Queue](./sink.md) | `IDecisionSink`, `DecisionLog`, `DecisionLogOptions`, `DecisionBackpressure`, and `AddDecisionLog()`. |
+| [The Durable Sink and Retention](./durable.md) | `SqlDecisionSink`, `SqlDecisionSinkOptions`, `DecisionSqlDialect`, `DecisionQuery`, and the retention purge. |
 
 ## What This Does Not Do Yet
 
-- **A durable sink and retention.** `InMemoryDecisionSink` is a reference implementation for
-  development and tests. A production log must outlive the process and be bounded by an adopter-set
-  retention window; that lands with the durable sink, since an in-memory sink has no window to enforce.
-- **Telemetry.** `motiv.rules.decisions.dropped` and `motiv.rules.decision_queue.depth` are not here
-  yet. `DecisionLog.DroppedCount` and `DecisionLog.FailedBatchCount` are what a counter will read, and
-  the gap marker already lands in the log itself.
+- **A zero-loss queue.** The durable sink ([here](./durable.md)) makes the log outlive the process, but
+  the queue in front of it is still a bounded crash-loss window by construction. Closing it needs a
+  durable *queue* — an outbox or a broker — which is your own `IDecisionSink` over that transport.
 - **Replay.** The three anchors and the captured input are what make replay *possible*. Motiv does not
   yet ship the replayer.
