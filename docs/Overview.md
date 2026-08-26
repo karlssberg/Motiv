@@ -166,7 +166,9 @@ governed, and impossible to set on a rule running on a compiled default, which h
 it. Every evaluation of an audited rule produces a `DecisionRecord` pinning behaviour with three anchors
 (the rule's version, the build, and the versions of every authored proposition it resolved through),
 captures its input through an adopter-chosen posture, and leaves the evaluation path through a bounded
-queue drained into an `IDecisionSink`. See [The Decision Log](./decision-log/index.md) for the flag, the
+queue drained into an `IDecisionSink`. `SqlDecisionSink` (in `Motiv.Serialization.Sql`) is the durable
+one: raw-append into its own database, over SQLite, PostgreSQL or SQL Server, under a retention window
+it refuses to be constructed without. See [The Decision Log](./decision-log/index.md) for the flag, the
 anchors, the capture postures and the backpressure choices.
 
 | Type / Method                                                            | Description                                                                                       |
@@ -174,3 +176,4 @@ anchors, the capture postures and the backpressure choices.
 | [The Record](./decision-log/record.md)                                    | `DecisionRecord`, `PropositionVersion`, `DecisionInput`, and `DecisionGap`.                        |
 | [Capture Postures](./decision-log/capture.md)                             | `StoreWhole`, `Redact`, `ReferenceOnly`, and the bind-time refusal that makes choosing one mandatory. |
 | [The Sink and the Queue](./decision-log/sink.md)                          | `IDecisionSink`, `DecisionLog`, `DecisionBackpressure`, and `AddDecisionLog()`.                    |
+| [The Durable Sink and Retention](./decision-log/durable.md)               | `SqlDecisionSink`, the three dialects, the mandatory retention window, and the purge.             |

@@ -28,7 +28,9 @@ increments `DecisionLog.FailedBatchCount`, and the loop continues — so a perma
 records. Fail fast at construction instead.
 
 `InMemoryDecisionSink` is the reference implementation, for development, tests and the sample. It keeps
-`Records` and `Gaps` separately, because a gap is evidence about the log rather than a decision.
+`Records` and `Gaps` separately, because a gap is evidence about the log rather than a decision. For
+production, `SqlDecisionSink` appends to a database of its own under a mandatory retention window — see
+[The Durable Sink and Retention](./durable.md).
 
 ## `DecisionLog`
 
@@ -111,6 +113,10 @@ builder.Services.AddMotivRules(registry, options)
 
 An overload takes `Func<IServiceProvider, IDecisionSink>`, for a durable sink that needs a connection, a
 context factory or a client of its own.
+
+Records reach the sink on a background writer, so they become readable *shortly* after the evaluation
+that produced them rather than immediately — that latency is the point of the queue. Disposing the log
+drains it.
 
 With no decision log registered at all, an audited rule document does not bind — which is the intended
 fail-closed behaviour, not a wiring bug.

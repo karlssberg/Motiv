@@ -6,3 +6,5 @@ items:
     href: capture.md
   - name: The Sink and the Queue
     href: sink.md
+  - name: The Durable Sink and Retention
+    href: durable.md
