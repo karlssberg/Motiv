@@ -47,8 +47,13 @@ public class SqlDecisionSinkLifecycleTests
         // reaches OpenAsync, so the connection it creates and abandons on a failed open was
         // exercised by nothing — and the purge loop retries every interval, so a connection leaked
         // per attempt against an unreachable database is a leak that compounds.
+        // The path is built rather than written out so it is unopenable on every platform: SQLite
+        // does not create intermediate directories, and these do not exist.
+        var missing = Path.Combine(
+            Path.GetTempPath(), $"motiv-absent-{Guid.NewGuid():N}", "nested", "decisions.db");
+
         var unopenable = new SqlDecisionSink(
-            () => new SqliteConnection("Data Source=/proc/no/such/directory/decisions.db"),
+            () => new SqliteConnection($"Data Source={missing}"),
             new SqlDecisionSinkOptions
             {
                 Dialect = DecisionSqlDialect.Sqlite,
