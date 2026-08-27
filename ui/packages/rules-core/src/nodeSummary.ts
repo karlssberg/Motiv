@@ -2,7 +2,7 @@ import {
   binaryOperator, higherOrderKey, isBinaryNode, isExpressionNode, isHigherOrderNode, isNotNode,
   isSpecNode, operandsOf,
   type BinaryOperator, type Countable, type HigherOrderKey, type RuleNode,
-} from '@motiv-rules/core';
+} from './document.js';
 
 /** What a node's badge is: the row renders it as a `.node-badge-{kind}` class, which colours it. */
 export type NodeBadgeKind = 'op' | 'quant' | 'spec';

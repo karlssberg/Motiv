@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { RuleEditorStore } from '@motiv-rules/core';
 import type { Catalog, RuleNode } from '@motiv-rules/core';
 import { DslEditor } from '../../src/dsl/DslEditor.js';
-import { useDslSync } from '../../src/dsl/useDslSync.js';
+import { useDslSync } from '@motiv-rules/react';
 import { editorText, editorView, replaceBuffer } from '../support/codemirror.js';
 
 const CATALOG: Catalog = {

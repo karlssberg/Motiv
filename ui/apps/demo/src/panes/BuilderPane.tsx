@@ -1,13 +1,12 @@
 import { useState } from 'react';
-import type { Catalog, RulesApiClient } from '@motiv-rules/core';
+import {
+  EMPTY_ACCORDION, EMPTY_HIGHLIGHT, closeAll, setHovered, setSelected,
+  toggleCollapsed, toggleOpen, togglePin,
+  type AccordionModel, type Catalog, type HighlightModel, type RulesApiClient,
+} from '@motiv-rules/core';
 import { useCatalog, useRuleEditor, useRuleEditorStore } from '@motiv-rules/react';
 import { BuilderTreeContext, RuleNodeEditor } from '../builder/RuleNodeEditor.js';
-import {
-  EMPTY_ACCORDION, closeAll, toggleCollapsed, toggleOpen, togglePin,
-  type AccordionModel,
-} from '../builder/accordion.js';
 import { RuleDslStrip } from '../builder/RuleDslStrip.js';
-import { EMPTY_HIGHLIGHT, setHovered, setSelected, type HighlightModel } from '../builder/highlight.js';
 import { MODEL_TYPE } from '../App.js';
 
 const ROOT = '$.rule';

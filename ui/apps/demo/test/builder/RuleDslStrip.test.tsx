@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { EMPTY_HIGHLIGHT, setHovered, setSelected } from '../../src/builder/highlight.js';
+import { EMPTY_HIGHLIGHT, setHovered, setSelected } from '@motiv-rules/core';
 import { RuleDslStrip } from '../../src/builder/RuleDslStrip.js';
 
 const rule = { and: [{ spec: 'a' }, { or: [{ spec: 'b' }, { spec: 'c' }] }] };

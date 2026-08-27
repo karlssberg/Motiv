@@ -18,7 +18,8 @@ import { motivEditorTheme } from './theme.js';
 import { PayloadPopover } from './PayloadPopover.js';
 import { payloadChips, setPayloadTargets, type PayloadTarget } from './payloadChips.js';
 import { useAnchoredCard } from './useAnchoredCard.js';
-import type { DslSync, SyncStatus } from './useDslSync.js';
+import type { SyncStatus } from '@motiv-rules/core';
+import type { DslSync } from '@motiv-rules/react';
 
 /** The keystroke that opens the payload card for the spec node under the caret. */
 const OPEN_PAYLOAD_KEY = 'Mod-.';

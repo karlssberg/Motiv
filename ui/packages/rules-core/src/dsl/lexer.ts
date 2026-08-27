@@ -1,8 +1,18 @@
 import type { Token, TokenKind } from './types.js';
 
-const KEYWORDS = new Set(['param', 'in', 'as']);
-const TYPES = new Set(['integer', 'number', 'string', 'boolean']);
-const QUANTIFIERS = new Set(['all', 'any', 'exactly', 'atLeast', 'atMost']);
+/**
+ * The DSL's fixed vocabulary, exported as the single definition. The lexer's own classification
+ * derives from these, and so must any consumer needing the word lists (completion, syntax
+ * highlighting) — a hand-copied list is how the demo's copy silently drifted from this lexer's,
+ * the same way the word character classes below once did.
+ */
+export const DSL_KEYWORDS = ['param', 'in', 'as'] as const;
+export const DSL_TYPES = ['integer', 'number', 'string', 'boolean'] as const;
+export const DSL_QUANTIFIERS = ['all', 'any', 'exactly', 'atLeast', 'atMost'] as const;
+
+const KEYWORDS: ReadonlySet<string> = new Set(DSL_KEYWORDS);
+const TYPES: ReadonlySet<string> = new Set(DSL_TYPES);
+const QUANTIFIERS: ReadonlySet<string> = new Set(DSL_QUANTIFIERS);
 
 /**
  * Character classes (as `[...]`-ready fragments, no brackets) for a DSL word. Exported so that

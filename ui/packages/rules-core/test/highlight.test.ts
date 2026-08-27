@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   EMPTY_HIGHLIGHT, focusedPath, setHovered, setSelected,
-} from '../../src/builder/highlight.js';
+} from '../src/highlight.js';
 
 describe('highlight model', () => {
   it('starts with nothing marked', () => {

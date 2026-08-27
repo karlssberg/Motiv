@@ -1,7 +1,7 @@
-import { binaryOperator, type BinaryNode } from '@motiv-rules/core';
+import {
+  BINARY_OPERATORS, OPERATOR_LABELS, binaryOperator, setBinaryOperator, type BinaryNode,
+} from '@motiv-rules/core';
 import { useRuleEditorStore } from '@motiv-rules/react';
-import { BINARY_OPERATORS, setBinaryOperator } from './mutations.js';
-import { OPERATOR_LABELS } from './nodeSummary.js';
 import { ListboxPicker } from './ListboxPicker.js';
 
 const OPTIONS = BINARY_OPERATORS.map((operator) => ({ value: operator, label: OPERATOR_LABELS[operator] }));
