@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getNode, setNode, listPaths } from '../src/paths.js';
+import { childPaths, getNode, setNode, listPaths } from '../src/paths.js';
 import type { RuleDocument } from '../src/document.js';
 
 const doc: RuleDocument = {
@@ -49,5 +49,23 @@ describe('setNode', () => {
   it('replaces the root node', () => {
     const next = setNode(doc, '$.rule', { spec: 'only' });
     expect(next.rule).toEqual({ spec: 'only' });
+  });
+});
+
+describe('childPaths', () => {
+  it('lists binary operands under their operator key, in order', () => {
+    expect(childPaths({ and: [{ spec: 'a' }, { spec: 'b' }] }, '$.rule'))
+      .toEqual(['$.rule.and[0]', '$.rule.and[1]']);
+  });
+
+  it('lists the single child of not and of a higher-order node', () => {
+    expect(childPaths({ not: { spec: 'a' } }, '$.rule')).toEqual(['$.rule.not']);
+    expect(childPaths({ asAllSatisfied: { spec: 'a' }, path: '$.orders' }, '$.rule.and[1]'))
+      .toEqual(['$.rule.and[1].asAllSatisfied']);
+  });
+
+  it('gives a leaf no children', () => {
+    expect(childPaths({ spec: 'a' }, '$.rule')).toEqual([]);
+    expect(childPaths({ expression: 'n > 0' }, '$.rule')).toEqual([]);
   });
 });

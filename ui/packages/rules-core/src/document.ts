@@ -57,7 +57,7 @@ export interface RuleDocument {
 export const BINARY_OPERATORS = ['and', 'or', 'xor', 'andAlso', 'orElse'] as const;
 export type BinaryOperator = (typeof BINARY_OPERATORS)[number];
 
-const HIGHER_ORDER_KEYS = [
+export const HIGHER_ORDER_KEYS = [
   'asAllSatisfied', 'asAnySatisfied', 'asNSatisfied',
   'asAtLeastNSatisfied', 'asAtMostNSatisfied',
 ] as const;

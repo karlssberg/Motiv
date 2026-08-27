@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
-import { parse, printInline, type Catalog, type RuleNode } from '@motiv-rules/core';
+import { parse, printInline, tokenSpans, type Catalog, type RuleNode } from '@motiv-rules/core';
 import { useRuleEditorStore } from '@motiv-rules/react';
-import { tokenSpans } from './dslTokens.js';
+
 import { useInlineDslEditor, type OpeningPoint } from './useInlineDslEditor.js';
 
 /**

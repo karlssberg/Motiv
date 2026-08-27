@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   EMPTY_ACCORDION, closeAll, isCollapsed, isOpen, isPinned,
   toggleCollapsed, toggleOpen, togglePin,
-} from '../../src/builder/accordion.js';
+} from '../src/accordion.js';
 
 const A = '$.rule.and[0]';
 const B = '$.rule.and[1]';

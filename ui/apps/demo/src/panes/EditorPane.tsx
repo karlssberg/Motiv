@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import type { RulesApiClient } from '@motiv-rules/core';
-import { useCatalog, useRuleEditorStore } from '@motiv-rules/react';
+import { useCatalog, useDslSync, useRuleEditorStore } from '@motiv-rules/react';
 import { DslEditor } from '../dsl/DslEditor.js';
-import { useDslSync } from '../dsl/useDslSync.js';
 import { BuilderBody, EMPTY_CATALOG } from './BuilderPane.js';
 
 /** The two ways this pane lets you author the same rule document. */

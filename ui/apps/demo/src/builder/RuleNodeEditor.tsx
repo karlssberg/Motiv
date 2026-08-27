@@ -1,20 +1,18 @@
 import { createContext, useContext, useRef, type MouseEvent } from 'react';
 import {
-  isBinaryNode, isHigherOrderNode, firstOperandTarget, insertTargetForRow, planInsert, type Catalog,
+  childPaths, firstOperandTarget, insertTargetForRow, isBinaryNode, isCollapsed, isHigherOrderNode,
+  isOpen, isPinned, planInsert, summarize,
+  type AccordionModel, type Catalog, type HighlightModel,
 } from '@motiv-rules/core';
 import { useRuleEditorStore, useRuleNode } from '@motiv-rules/react';
 import { NodeToolbar } from './NodeToolbar.js';
 import { OperatorPicker } from './OperatorPicker.js';
 import { QuantifierNode } from './QuantifierNode.js';
 import { DecorationEditor } from './DecorationEditor.js';
-import { childPaths } from './childPaths.js';
-import { summarize } from './nodeSummary.js';
 import { NodeDsl } from './NodeDsl.js';
 import { NodeMenu } from './NodeMenu.js';
 import { NodeInsertButton } from './NodeInsertButton.js';
 import { PendingSlot } from './PendingSlot.js';
-import { isCollapsed, isOpen, isPinned, type AccordionModel } from './accordion.js';
-import { type HighlightModel } from './highlight.js';
 
 /**
  * The tree-wide state shared by every {@link RuleNodeEditor} in the tree: accordion state (its

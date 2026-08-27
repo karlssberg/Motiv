@@ -1,11 +1,11 @@
-import type { Catalog, HigherOrderNode } from '@motiv-rules/core';
-import { useRuleEditorStore } from '@motiv-rules/react';
 import {
-  KINDS, N_KINDS, quantifierKindOf, setQuantifierCollection, setQuantifierKind, setQuantifierN,
-  type QuantifierKind, type QuantifierLike,
-} from './mutations.js';
+  HIGHER_ORDER_KEYS, N_QUANTIFIER_KINDS, higherOrderKey,
+  setQuantifierCollection, setQuantifierKind, setQuantifierN,
+  type Catalog, type HigherOrderKey, type HigherOrderNode,
+} from '@motiv-rules/core';
+import { useRuleEditorStore } from '@motiv-rules/react';
 
-const KIND_LABELS: Record<QuantifierKind, string> = {
+const KIND_LABELS: Record<HigherOrderKey, string> = {
   asAllSatisfied: 'all satisfied',
   asAnySatisfied: 'any satisfied',
   asNSatisfied: 'exactly N satisfied',
@@ -30,10 +30,9 @@ export function QuantifierNode(props: {
 }) {
   const { path, node, catalog, modelType } = props;
   const store = useRuleEditorStore();
-  const quantNode = node as unknown as QuantifierLike;
-  const kind = quantifierKindOf(quantNode);
-  const isNKind = N_KINDS.includes(kind);
-  const collection = catalog.collections.find((c) => c.path === quantNode.path);
+  const kind = higherOrderKey(node);
+  const isNKind = N_QUANTIFIER_KINDS.includes(kind);
+  const collection = catalog.collections.find((c) => c.path === node.path);
   const availableCollections = catalog.collections.filter((c) => c.parentModelType === modelType);
 
   return (
@@ -44,9 +43,9 @@ export function QuantifierNode(props: {
           aria-label={`quantifier kind at ${path}`}
           className="control"
           value={kind}
-          onChange={(e) => setQuantifierKind(store, path, quantNode, e.target.value as QuantifierKind)}
+          onChange={(e) => setQuantifierKind(store, path, node, e.target.value as HigherOrderKey)}
         >
-          {KINDS.map((k) => (
+          {HIGHER_ORDER_KEYS.map((k) => (
             <option key={k} value={k}>{KIND_LABELS[k]}</option>
           ))}
         </select>
@@ -56,8 +55,8 @@ export function QuantifierNode(props: {
         <select
           aria-label={`quantifier collection at ${path}`}
           className="control"
-          value={quantNode.path}
-          onChange={(e) => setQuantifierCollection(store, path, quantNode, e.target.value)}
+          value={node.path}
+          onChange={(e) => setQuantifierCollection(store, path, node, e.target.value)}
         >
           {availableCollections.map((c) => (
             <option key={c.path} value={c.path}>{c.path}</option>
@@ -72,8 +71,8 @@ export function QuantifierNode(props: {
             min={0}
             aria-label={`quantifier n at ${path}`}
             className="control"
-            value={typeof quantNode.n === 'number' ? quantNode.n : 1}
-            onChange={(e) => setQuantifierN(store, path, quantNode, Number(e.target.value))}
+            value={'n' in node && typeof node.n === 'number' ? node.n : 1}
+            onChange={(e) => setQuantifierN(store, path, node, Number(e.target.value))}
           />
         </label>
       )}

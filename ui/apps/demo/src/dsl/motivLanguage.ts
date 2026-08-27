@@ -6,14 +6,10 @@ import {
 } from '@codemirror/language';
 import type { StreamParser, StringStream } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
-import { PARAM_REST_CHARS, WORD_REST_CHARS, WORD_START_CHARS } from '@motiv-rules/core';
-
-/** The DSL's reserved words, in the order they are offered for completion. */
-export const DSL_KEYWORDS = ['param', 'in', 'as'] as const;
-/** The higher-order quantifiers, styled and completed as keywords. */
-export const DSL_QUANTIFIERS = ['all', 'any', 'exactly', 'atLeast', 'atMost'] as const;
-/** The parameter type names. */
-export const DSL_TYPES = ['integer', 'number', 'string', 'boolean'] as const;
+import {
+  DSL_KEYWORDS, DSL_QUANTIFIERS, DSL_TYPES,
+  PARAM_REST_CHARS, WORD_REST_CHARS, WORD_START_CHARS,
+} from '@motiv-rules/core';
 
 /** Quantifiers are highlighted exactly as keywords, so both share one lookup. */
 const KEYWORD_LIKE: ReadonlySet<string> = new Set([...DSL_KEYWORDS, ...DSL_QUANTIFIERS]);

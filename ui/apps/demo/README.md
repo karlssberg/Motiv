@@ -88,5 +88,9 @@ before and after each run.
 ## Extend it
 
 The builder is the accordion under `ui/apps/demo/src/builder/`; load-bearing
-seams are marked with code comments. `expression` and `parameters` appear as
-disabled extension points in the UI, pending backend support.
+seams are marked with code comments. Its *logic* — the accordion and highlight
+state machines, node mutations and summaries, insertion planning, DSL sync,
+completion and diagnostics — lives in `@motiv-rules/core`; what remains here is
+rendering and the CodeMirror integration (`src/dsl/` maps the core's neutral
+completion/diagnostic shapes onto CodeMirror's). `expression` and `parameters`
+appear as disabled extension points in the UI, pending backend support.

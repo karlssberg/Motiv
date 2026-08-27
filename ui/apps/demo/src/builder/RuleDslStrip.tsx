@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { parse, printInline, type RuleNode, type SourceRange } from '@motiv-rules/core';
-import { focusedPath, type HighlightModel } from './highlight.js';
+import {
+  focusedPath, parse, printInline,
+  type HighlightModel, type RuleNode, type SourceRange,
+} from '@motiv-rules/core';
 
 /** One run of text that carries the same set of marks throughout. */
 interface Segment {
