@@ -32,6 +32,14 @@ public class RuleSerializerOptionsTests
         act.ShouldThrow<ArgumentOutOfRangeException>();
     }
 
+    /// <summary>
+    /// The cap is a deliberate cost-per-evaluation budget rather than a round number, so a change to it
+    /// should be a change to this test and to the derivation in its XML docs — not a silent edit.
+    /// </summary>
+    [Fact]
+    public void Should_default_MaxCompositionDepth_to_the_re_derived_cap() =>
+        new RuleSerializerOptions().MaxCompositionDepth.ShouldBe(4_096);
+
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]

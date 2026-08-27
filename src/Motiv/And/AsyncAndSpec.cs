@@ -17,6 +17,7 @@ internal sealed class AsyncAndSpec<TModel, TMetadata>(
     bool concurrent = false)
     : AsyncSpecBase<TModel, TMetadata>,
         IAsyncBinaryOperationSpec<TModel, TMetadata>,
+        IAsyncOperationFold<TModel, TMetadata>,
         IAsyncBinaryOperationSpec
 {
     private readonly SpecBase[] _underlying = [left, right];
@@ -49,19 +50,19 @@ internal sealed class AsyncAndSpec<TModel, TMetadata>(
 
     SpecBase IAsyncBinaryOperationSpec.Left => Left;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// The concurrent case is a fan-out rather than a walk, so it stays as it was and the fold leaves it
+    /// to evaluate itself. The sequential case — the only one a rule document can produce — is folded.
+    /// </summary>
     public override async ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default)
     {
-        if (concurrent)
-        {
-            var leftTask = left.MatchesAsync(model, cancellationToken).AsTask();
-            var rightTask = right.MatchesAsync(model, cancellationToken).AsTask();
-            await Task.WhenAll(leftTask, rightTask).ConfigureAwait(false);
-            return await leftTask.ConfigureAwait(false) & await rightTask.ConfigureAwait(false);
-        }
+        if (!concurrent)
+            return await AsyncEvaluationFold.MatchesAsync(this, model, cancellationToken).ConfigureAwait(false);
 
-        return await left.MatchesAsync(model, cancellationToken).ConfigureAwait(false)
-               & await right.MatchesAsync(model, cancellationToken).ConfigureAwait(false);
+        var leftTask = left.MatchesAsync(model, cancellationToken).AsTask();
+        var rightTask = right.MatchesAsync(model, cancellationToken).AsTask();
+        await Task.WhenAll(leftTask, rightTask).ConfigureAwait(false);
+        return await leftTask.ConfigureAwait(false) & await rightTask.ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -69,17 +70,26 @@ internal sealed class AsyncAndSpec<TModel, TMetadata>(
         TModel model,
         CancellationToken cancellationToken)
     {
-        if (concurrent)
-        {
-            var leftTask = left.EvaluateSpecAsyncInternal(model, cancellationToken).AsTask();
-            var rightTask = right.EvaluateSpecAsyncInternal(model, cancellationToken).AsTask();
-            await Task.WhenAll(leftTask, rightTask).ConfigureAwait(false);
-            return (await leftTask.ConfigureAwait(false)).And(await rightTask.ConfigureAwait(false));
-        }
+        if (!concurrent)
+            return await AsyncEvaluationFold.EvaluateAsync(this, model, cancellationToken).ConfigureAwait(false);
 
-        var leftResult = await left.EvaluateSpecAsyncInternal(model, cancellationToken).ConfigureAwait(false);
-        var rightResult = await right.EvaluateSpecAsyncInternal(model, cancellationToken).ConfigureAwait(false);
-
-        return leftResult.And(rightResult);
+        var leftTask = left.EvaluateSpecAsyncInternal(model, cancellationToken).AsTask();
+        var rightTask = right.EvaluateSpecAsyncInternal(model, cancellationToken).AsTask();
+        await Task.WhenAll(leftTask, rightTask).ConfigureAwait(false);
+        return (await leftTask.ConfigureAwait(false)).And(await rightTask.ConfigureAwait(false));
     }
+
+    AsyncSpecBase<TModel, TMetadata> IAsyncOperationFold<TModel, TMetadata>.FirstOperand => left;
+
+    AsyncSpecBase<TModel, TMetadata>? IAsyncOperationFold<TModel, TMetadata>.NextOperand(bool firstSatisfied) =>
+        right;
+
+    BooleanResultBase<TMetadata> IAsyncOperationFold<TModel, TMetadata>.Combine(
+        BooleanResultBase<TMetadata> first,
+        BooleanResultBase<TMetadata>? second) =>
+        first.And(second!);
+
+    bool IAsyncOperationFold<TModel, TMetadata>.CombineMatches(bool first, bool? second) => first & second!.Value;
+
+    bool IAsyncOperationFold<TModel, TMetadata>.IsConcurrent => concurrent;
 }

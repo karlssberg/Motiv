@@ -6,6 +6,7 @@ internal sealed class NotPolicy<TModel, TMetadata>(
     PolicyBase<TModel, TMetadata> operand)
     : PolicyBase<TModel, TMetadata>,
         IUnaryOperationSpec<TModel, TMetadata>,
+        IOperationFold<TModel, TMetadata>,
         IUnaryOperationSpec<TModel>,
         IUnaryOperationSpec
 {
@@ -20,10 +21,21 @@ internal sealed class NotPolicy<TModel, TMetadata>(
 
     bool IBooleanOperationSpec.IsCollapsable => false;
 
-    public override bool Matches(TModel model) => !operand.Matches(model);
+    public override bool Matches(TModel model) => EvaluationFold.Matches(this, model);
 
     protected override PolicyResultBase<TMetadata> EvaluatePolicy(TModel model) =>
-        operand.EvaluatePolicyInternal(model).Not();
+        EvaluationFold.EvaluatePolicy(this, model);
+
+    SpecBase<TModel, TMetadata> IOperationFold<TModel, TMetadata>.FirstOperand => operand;
+
+    SpecBase<TModel, TMetadata>? IOperationFold<TModel, TMetadata>.NextOperand(bool firstSatisfied) => null;
+
+    BooleanResultBase<TMetadata> IOperationFold<TModel, TMetadata>.Combine(
+        BooleanResultBase<TMetadata> first,
+        BooleanResultBase<TMetadata>? second) =>
+        ((PolicyResultBase<TMetadata>)first).Not();
+
+    bool IOperationFold<TModel, TMetadata>.CombineMatches(bool first, bool? second) => !first;
 
     public PolicyBase<TModel, TMetadata> Operand => operand;
 

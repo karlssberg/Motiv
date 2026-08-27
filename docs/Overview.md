@@ -177,3 +177,20 @@ anchors, the capture postures and the backpressure choices.
 | [Capture Postures](./decision-log/capture.md)                             | `StoreWhole`, `Redact`, `ReferenceOnly`, and the bind-time refusal that makes choosing one mandatory. |
 | [The Sink and the Queue](./decision-log/sink.md)                          | `IDecisionSink`, `DecisionLog`, `DecisionBackpressure`, and `AddDecisionLog()`.                    |
 | [The Durable Sink and Retention](./decision-log/durable.md)               | `SqlDecisionSink`, the three dialects, the mandatory retention window, and the purge.             |
+
+## Structural Limits
+
+Evaluation is stack-safe, synchronously and asynchronously: `Evaluate`, `Matches`, `EvaluateAsync` and
+`MatchesAsync` fold a composition of `And`, `Or`, `XOr`, `AndAlso`, `OrElse` and `Not` onto the heap, so
+a hundred-thousand-operand chain evaluates on a 1 MB thread where it once aborted the process — at
+12,787 operands synchronously and at 634 asynchronously. What bounds a composition now is cost rather than stack, through two caps that
+refuse different things: `MotivLimits.MaxEvaluationSize` is the engine's backstop, counted in nodes and
+applying to `Evaluate` and `Matches` alike; `RuleSerializerOptions`' `MaxCompositionDepth`,
+`MaxNodeCount` and `MaxDocumentDepth` refuse an oversized *document* at the edge, before it binds, with
+an error that names the document. See [Structural Limits](./limits/index.md) for what each one counts,
+why the composed depth is not the document's nesting, and the cost measurements the defaults are derived
+from.
+
+| Type / Method                                                            | Description                                                                                       |
+|---------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| [Structural Limits](./limits/index.md)                                    | `MotivLimits.MaxEvaluationSize`, the three `RuleSerializerOptions` caps, and the shape of the stack-safety guarantee. |

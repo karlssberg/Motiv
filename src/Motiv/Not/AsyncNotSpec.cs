@@ -5,7 +5,8 @@ namespace Motiv.Not;
 internal sealed class AsyncNotSpec<TModel, TMetadata>(
     AsyncSpecBase<TModel, TMetadata> operand)
     : AsyncSpecBase<TModel, TMetadata>,
-        IAsyncUnaryOperationSpec
+        IAsyncUnaryOperationSpec,
+        IAsyncOperationFold<TModel, TMetadata>
 {
     private readonly SpecBase[] _underlying = [operand];
 
@@ -20,11 +21,26 @@ internal sealed class AsyncNotSpec<TModel, TMetadata>(
 
     public SpecBase Operand => operand;
 
-    public override async ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
-        !await operand.MatchesAsync(model, cancellationToken).ConfigureAwait(false);
+    public override ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
+        AsyncEvaluationFold.MatchesAsync(this, model, cancellationToken);
 
-    protected override async ValueTask<BooleanResultBase<TMetadata>> EvaluateSpecAsync(
+    /// <inheritdoc />
+    protected override ValueTask<BooleanResultBase<TMetadata>> EvaluateSpecAsync(
         TModel model,
         CancellationToken cancellationToken) =>
-        (await operand.EvaluateSpecAsyncInternal(model, cancellationToken).ConfigureAwait(false)).Not();
+        AsyncEvaluationFold.EvaluateAsync(this, model, cancellationToken);
+
+    AsyncSpecBase<TModel, TMetadata> IAsyncOperationFold<TModel, TMetadata>.FirstOperand => operand;
+
+    AsyncSpecBase<TModel, TMetadata>? IAsyncOperationFold<TModel, TMetadata>.NextOperand(bool firstSatisfied) =>
+        null;
+
+    BooleanResultBase<TMetadata> IAsyncOperationFold<TModel, TMetadata>.Combine(
+        BooleanResultBase<TMetadata> first,
+        BooleanResultBase<TMetadata>? second) =>
+        first.Not();
+
+    bool IAsyncOperationFold<TModel, TMetadata>.CombineMatches(bool first, bool? second) => !first;
+
+    bool IAsyncOperationFold<TModel, TMetadata>.IsConcurrent => false;
 }

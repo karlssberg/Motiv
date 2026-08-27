@@ -9,6 +9,7 @@ internal sealed class AsyncAndAlsoSpec<TModel, TMetadata>(
     AsyncSpecBase<TModel, TMetadata> right)
     : AsyncSpecBase<TModel, TMetadata>,
         IAsyncBinaryOperationSpec<TModel, TMetadata>,
+        IAsyncOperationFold<TModel, TMetadata>,
         IAsyncBinaryOperationSpec
 {
     private readonly SpecBase[] _underlying = [left, right];
@@ -35,21 +36,26 @@ internal sealed class AsyncAndAlsoSpec<TModel, TMetadata>(
 
     SpecBase IAsyncBinaryOperationSpec.Left => Left;
 
-    public override async ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
-        await left.MatchesAsync(model, cancellationToken).ConfigureAwait(false)
-        && await right.MatchesAsync(model, cancellationToken).ConfigureAwait(false);
+    public override ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
+        AsyncEvaluationFold.MatchesAsync(this, model, cancellationToken);
 
-    protected override async ValueTask<BooleanResultBase<TMetadata>> EvaluateSpecAsync(
+    /// <inheritdoc />
+    protected override ValueTask<BooleanResultBase<TMetadata>> EvaluateSpecAsync(
         TModel model,
-        CancellationToken cancellationToken)
-    {
-        var leftResult = await left.EvaluateSpecAsyncInternal(model, cancellationToken).ConfigureAwait(false);
-        return leftResult.Satisfied switch
-        {
-            true => new AndAlsoBooleanResult<TMetadata>(
-                leftResult,
-                await right.EvaluateSpecAsyncInternal(model, cancellationToken).ConfigureAwait(false)),
-            false => new AndAlsoBooleanResult<TMetadata>(leftResult)
-        };
-    }
+        CancellationToken cancellationToken) =>
+        AsyncEvaluationFold.EvaluateAsync(this, model, cancellationToken);
+
+    AsyncSpecBase<TModel, TMetadata> IAsyncOperationFold<TModel, TMetadata>.FirstOperand => left;
+
+    AsyncSpecBase<TModel, TMetadata>? IAsyncOperationFold<TModel, TMetadata>.NextOperand(bool firstSatisfied) =>
+        firstSatisfied ? right : null;
+
+    BooleanResultBase<TMetadata> IAsyncOperationFold<TModel, TMetadata>.Combine(
+        BooleanResultBase<TMetadata> first,
+        BooleanResultBase<TMetadata>? second) =>
+        new AndAlsoBooleanResult<TMetadata>(first, second);
+
+    bool IAsyncOperationFold<TModel, TMetadata>.CombineMatches(bool first, bool? second) => second ?? first;
+
+    bool IAsyncOperationFold<TModel, TMetadata>.IsConcurrent => false;
 }

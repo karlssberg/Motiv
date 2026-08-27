@@ -443,6 +443,33 @@ opt-in, so enabling either changes no response until it is configured.
 Available via the `Motiv.Serialization` and `Motiv.Serialization.AspNetCore`
 packages.
 
+### Structural Limits
+
+Evaluation is stack-safe, synchronously and asynchronously. `Evaluate`,
+`Matches`, `EvaluateAsync` and `MatchesAsync` fold a composition of `And`, `Or`,
+`XOr`, `AndAlso`, `OrElse` and `Not` onto the heap, so a chain of a hundred
+thousand propositions evaluates on a 1 MB request thread where it once aborted
+the process with an uncatchable `StackOverflowException` — at 12,787 operands
+synchronously, and at just 634 asynchronously:
+
+```csharp
+var combined = specs.Aggregate((left, right) => left.And(right)); // 100,000 of them
+var result = combined.Evaluate(model);                            // returns
+```
+
+What bounds a composition now is cost, not stack. `MotivLimits.MaxEvaluationSize`
+is the engine's backstop, counted in nodes and applying to `Evaluate` and
+`Matches` alike, so a composition one accepts is never one the other refuses:
+
+```csharp
+MotivLimits.MaxEvaluationSize = 50_000; // process-wide; set it once at startup
+```
+
+Rule documents are refused earlier and more helpfully, at the edge, by
+`RuleSerializerOptions`' `MaxCompositionDepth`, `MaxNodeCount` and
+`MaxDocumentDepth`. Available via the `Motiv` and `Motiv.Serialization`
+packages.
+
 ## Quick Start
 
 Install the Motiv NuGet package:
@@ -464,6 +491,7 @@ Install-Package Motiv
 - Metadata is evaluated lazily
 - Compatible with both .NET and .NET Framework
 - Zero-allocation fast paths for boolean-only evaluation
+- Stack-safe evaluation and result traversal at any composition depth
 - MIT licensed
 
 ## Learn More

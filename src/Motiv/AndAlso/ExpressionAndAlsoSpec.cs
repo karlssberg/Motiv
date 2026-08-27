@@ -14,6 +14,7 @@ internal sealed class ExpressionAndAlsoSpec<TModel, TMetadata>(
     IExpressionSpec<TModel> rightExpression)
     : ExpressionSpecBase<TModel, TMetadata>,
         IBinaryOperationSpec<TModel, TMetadata>,
+        IOperationFold<TModel, TMetadata>,
         IBinaryOperationSpec<TModel>,
         IBinaryOperationSpec
 {
@@ -48,17 +49,20 @@ internal sealed class ExpressionAndAlsoSpec<TModel, TMetadata>(
 
     public override Expression<Func<TModel, bool>> ToExpression() => _expression.Value;
 
-    public override bool Matches(TModel model) => left.Matches(model) && right.Matches(model);
+    public override bool Matches(TModel model) => EvaluationFold.Matches(this, model);
 
-    protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
-    {
-        var leftResult = left.EvaluateInternal(model);
-        return leftResult.Satisfied switch
-        {
-            true => new AndAlsoBooleanResult<TMetadata>(
-                leftResult,
-                right.EvaluateInternal(model)),
-            false => new AndAlsoBooleanResult<TMetadata>(leftResult)
-        };
-    }
+    protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model) =>
+        EvaluationFold.Evaluate(this, model);
+
+    SpecBase<TModel, TMetadata> IOperationFold<TModel, TMetadata>.FirstOperand => left;
+
+    SpecBase<TModel, TMetadata>? IOperationFold<TModel, TMetadata>.NextOperand(bool firstSatisfied) =>
+        firstSatisfied ? right : null;
+
+    BooleanResultBase<TMetadata> IOperationFold<TModel, TMetadata>.Combine(
+        BooleanResultBase<TMetadata> first,
+        BooleanResultBase<TMetadata>? second) =>
+        new AndAlsoBooleanResult<TMetadata>(first, second);
+
+    bool IOperationFold<TModel, TMetadata>.CombineMatches(bool first, bool? second) => second ?? first;
 }

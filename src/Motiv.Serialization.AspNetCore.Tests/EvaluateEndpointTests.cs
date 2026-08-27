@@ -42,15 +42,42 @@ public class EvaluateEndpointTests
     }
 
     [Fact]
-    public async Task Should_refuse_a_document_that_would_compose_past_the_stack()
+    public async Task Should_refuse_a_document_that_composes_past_the_composition_limit()
     {
-        // A flat operand array folds left-deep, so 2,000 siblings compose 1,999 levels — which the
-        // recursive result-tree walk used to blow the stack on. StackOverflowException cannot be
-        // caught, so this arrived as process death rather than a failed request. The composition
-        // limit has to refuse it during parsing, before anything binds or evaluates.
+        // A flat operand array folds left-deep, so 5,000 siblings compose 4,999 levels — past
+        // MaxCompositionDepth, which the parser has to refuse before anything binds or evaluates.
         //
-        // Note this can only ever assert the *fixed* behaviour: a test that reproduced the crash
-        // would take the test host down with it.
+        // This case was originally about the stack: the recursive walks died on a composition this
+        // shape, uncatchably, so the request arrived as process death. Neither the walks (Spec 3A)
+        // nor evaluation (Spec 3E) recurses any more, and the cap is now a cost budget rather than a
+        // stack one — the refusal is the same, the reason for it is not.
+
+        // Arrange
+        await using var app = await StartAsync();
+        var client = app.GetTestClient();
+        var operands = string.Join(", ", Enumerable.Repeat("""{ "spec": "is-positive" }""", 5_000));
+        var request = new
+        {
+            modelType = "number",
+            document = JsonDocument.Parse($$"""{ "rule": { "and": [ {{operands}} ] } }""").RootElement,
+            model = JsonDocument.Parse("5").RootElement
+        };
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/rules/evaluate", request);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("errors")[0].GetProperty("code").GetString()!.ShouldBe("DocumentTooLarge");
+    }
+
+    [Fact]
+    public async Task Should_evaluate_a_document_that_composes_far_past_the_old_stack_ceiling()
+    {
+        // The half the refusal above cannot show. 2,000 operands compose 1,999 levels — eight times
+        // the cap this endpoint used to enforce, and a depth that would have aborted the host before
+        // the walks and evaluation were folded. What the raised cap buys is that this now answers.
 
         // Arrange
         await using var app = await StartAsync();
@@ -67,9 +94,9 @@ public class EvaluateEndpointTests
         var response = await client.PostAsJsonAsync("/api/rules/evaluate", request);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var body = await response.Content.ReadFromJsonAsync<JsonElement>();
-        body.GetProperty("errors")[0].GetProperty("code").GetString()!.ShouldBe("DocumentTooLarge");
+        body.GetProperty("satisfied").GetBoolean().ShouldBeTrue();
     }
 
     [Fact]
