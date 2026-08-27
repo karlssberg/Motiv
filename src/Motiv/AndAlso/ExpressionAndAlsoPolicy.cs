@@ -12,6 +12,7 @@ internal sealed class ExpressionAndAlsoPolicy<TModel, TMetadata>(
     ExpressionPolicyBase<TModel, TMetadata> right)
     : ExpressionPolicyBase<TModel, TMetadata>,
         IBinaryOperationSpec<TModel, TMetadata>,
+        IOperationFold<TModel, TMetadata>,
         IBinaryOperationSpec<TModel>,
         IBinaryOperationSpec
 {
@@ -34,17 +35,22 @@ internal sealed class ExpressionAndAlsoPolicy<TModel, TMetadata>(
 
     public override Expression<Func<TModel, bool>> ToExpression() => _expression.Value;
 
-    public override bool Matches(TModel model) => left.Matches(model) && right.Matches(model);
+    public override bool Matches(TModel model) => EvaluationFold.Matches(this, model);
 
-    protected override PolicyResultBase<TMetadata> EvaluatePolicy(TModel model)
-    {
-        var leftResult = left.EvaluatePolicyInternal(model);
-        return leftResult.Satisfied switch
-        {
-            true => new AndAlsoPolicyResult<TMetadata>(leftResult, right.EvaluatePolicyInternal(model)),
-            false => new AndAlsoPolicyResult<TMetadata>(leftResult)
-        };
-    }
+    protected override PolicyResultBase<TMetadata> EvaluatePolicy(TModel model) =>
+        EvaluationFold.EvaluatePolicy(this, model);
+
+    SpecBase<TModel, TMetadata> IOperationFold<TModel, TMetadata>.FirstOperand => left;
+
+    SpecBase<TModel, TMetadata>? IOperationFold<TModel, TMetadata>.NextOperand(bool firstSatisfied) =>
+        firstSatisfied ? right : null;
+
+    BooleanResultBase<TMetadata> IOperationFold<TModel, TMetadata>.Combine(
+        BooleanResultBase<TMetadata> first,
+        BooleanResultBase<TMetadata>? second) =>
+        new AndAlsoPolicyResult<TMetadata>((PolicyResultBase<TMetadata>)first, (PolicyResultBase<TMetadata>?)second);
+
+    bool IOperationFold<TModel, TMetadata>.CombineMatches(bool first, bool? second) => second ?? first;
 
     public PolicyBase<TModel, TMetadata> Left => left;
 

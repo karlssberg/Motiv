@@ -9,6 +9,7 @@ internal sealed class AndSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> right)
     : SpecBase<TModel, TMetadata>,
         IBinaryOperationSpec<TModel, TMetadata>,
+        IOperationFold<TModel, TMetadata>,
         IBinaryOperationSpec<TModel>,
         IBinaryOperationSpec
 {
@@ -38,13 +39,19 @@ internal sealed class AndSpec<TModel, TMetadata>(
 
     SpecBase IBinaryOperationSpec.Left => Left;
 
-    public override bool Matches(TModel model) => left.Matches(model) & right.Matches(model);
+    public override bool Matches(TModel model) => EvaluationFold.Matches(this, model);
 
-    protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
-    {
-        var leftResult = left.EvaluateInternal(model);
-        var rightResult = right.EvaluateInternal(model);
+    protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model) =>
+        EvaluationFold.Evaluate(this, model);
 
-        return leftResult.And(rightResult);
-    }
+    SpecBase<TModel, TMetadata> IOperationFold<TModel, TMetadata>.FirstOperand => left;
+
+    SpecBase<TModel, TMetadata>? IOperationFold<TModel, TMetadata>.NextOperand(bool firstSatisfied) => right;
+
+    BooleanResultBase<TMetadata> IOperationFold<TModel, TMetadata>.Combine(
+        BooleanResultBase<TMetadata> first,
+        BooleanResultBase<TMetadata>? second) =>
+        first.And(second!);
+
+    bool IOperationFold<TModel, TMetadata>.CombineMatches(bool first, bool? second) => first & second!.Value;
 }

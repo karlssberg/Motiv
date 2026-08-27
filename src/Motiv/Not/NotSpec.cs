@@ -6,6 +6,7 @@ internal sealed class NotSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> operand)
     : SpecBase<TModel, TMetadata>,
         IUnaryOperationSpec<TModel, TMetadata>,
+        IOperationFold<TModel, TMetadata>,
         IUnaryOperationSpec<TModel>,
         IUnaryOperationSpec
 {
@@ -20,10 +21,21 @@ internal sealed class NotSpec<TModel, TMetadata>(
 
     public bool IsCollapsable => false;
 
-    public override bool Matches(TModel model) => !operand.Matches(model);
+    public override bool Matches(TModel model) => EvaluationFold.Matches(this, model);
 
     protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model) =>
-        operand.EvaluateInternal(model).Not();
+        EvaluationFold.Evaluate(this, model);
+
+    SpecBase<TModel, TMetadata> IOperationFold<TModel, TMetadata>.FirstOperand => operand;
+
+    SpecBase<TModel, TMetadata>? IOperationFold<TModel, TMetadata>.NextOperand(bool firstSatisfied) => null;
+
+    BooleanResultBase<TMetadata> IOperationFold<TModel, TMetadata>.Combine(
+        BooleanResultBase<TMetadata> first,
+        BooleanResultBase<TMetadata>? second) =>
+        first.Not();
+
+    bool IOperationFold<TModel, TMetadata>.CombineMatches(bool first, bool? second) => !first;
 
     public SpecBase<TModel, TMetadata> Operand => operand;
 

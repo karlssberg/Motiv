@@ -6,11 +6,16 @@ namespace Motiv.Not;
 /// <summary>Represents the result of a logical NOT operation on a boolean result.</summary>
 /// <typeparam name="TMetadata">The type of metadata associated with the result.</typeparam>
 internal sealed class NotPolicyResult<TMetadata>(PolicyResultBase<TMetadata> operandResult)
-    : PolicyResultBase<TMetadata>, IBooleanOperationResult<TMetadata>, IUnaryOperationResult<TMetadata>
+    : PolicyResultBase<TMetadata>,
+        IBooleanOperationResult<TMetadata>,
+        IUnaryOperationResult<TMetadata>,
+        ISelectedValueResult<TMetadata>
 {
     private readonly PolicyResultBase<TMetadata>[] _operandResults = [operandResult];
 
-    public override TMetadata Value => operandResult.Value;
+    public override TMetadata Value => SelectedValue.Of(this);
+
+    PolicyResultBase<TMetadata> ISelectedValueResult<TMetadata>.Selected => operandResult;
 
     public BooleanResultBase<TMetadata> Operand => operandResult;
 

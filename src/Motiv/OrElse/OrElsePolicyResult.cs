@@ -6,9 +6,11 @@ namespace Motiv.OrElse;
 internal sealed class OrElsePolicyResult<TMetadata>(
     PolicyResultBase<TMetadata> left,
     PolicyResultBase<TMetadata>? right = null)
-    : PolicyResultBase<TMetadata>, IBinaryBooleanOperationResult<TMetadata>
+    : PolicyResultBase<TMetadata>, IBinaryBooleanOperationResult<TMetadata>, ISelectedValueResult<TMetadata>
 {
-    public override TMetadata Value => (Right ?? Left).Value;
+    public override TMetadata Value => SelectedValue.Of(this);
+
+    PolicyResultBase<TMetadata> ISelectedValueResult<TMetadata>.Selected => Right ?? Left;
 
     public override bool Satisfied { get; } = left.Satisfied || (right?.Satisfied ?? false);
 
