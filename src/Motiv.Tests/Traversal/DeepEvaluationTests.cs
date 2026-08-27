@@ -81,8 +81,46 @@ public class DeepEvaluationTests
             .EvaluateAsync(2).AsTask().GetAwaiter().GetResult().Satisfied.ShouldBeTrue());
 
     [Fact]
+    public void Should_evaluate_a_deep_async_Or_chain() =>
+        OnASmallStack(() => AsyncChain((left, right) => left.Or(right))
+            .EvaluateAsync(2).AsTask().GetAwaiter().GetResult().Satisfied.ShouldBeTrue());
+
+    [Fact]
+    public void Should_evaluate_a_deep_async_XOr_chain() =>
+        OnASmallStack(() => _ = AsyncChain((left, right) => left.XOr(right))
+            .EvaluateAsync(2).AsTask().GetAwaiter().GetResult().Satisfied);
+
+    [Fact]
+    public void Should_evaluate_a_deep_async_OrElse_chain() =>
+        OnASmallStack(() => AsyncChain((left, right) => left.OrElse(right))
+            .EvaluateAsync(2).AsTask().GetAwaiter().GetResult().Satisfied.ShouldBeTrue());
+
+    [Fact]
+    public void Should_evaluate_a_deep_async_Not_nest() =>
+        OnASmallStack(() => AsyncNest()
+            .EvaluateAsync(2).AsTask().GetAwaiter().GetResult().Satisfied.ShouldBeTrue());
+
+    /// <summary>
+    /// The async policy operators, which fold <see cref="PolicyResultBase{TMetadata}" /> — and whose
+    /// short-circuit is what carries policy-ness through a chain this long. Both of them, because a
+    /// policy operator is only driven by the fold when it appears as a nested operand, so a chain built
+    /// from one says nothing about the other.
+    /// </summary>
+    [Theory]
+    [InlineData("orElse")]
+    [InlineData("andAlso")]
+    public void Should_evaluate_a_deep_async_policy_chain(string operation) =>
+        OnASmallStack(() => AsyncPolicyChain(operation)
+            .EvaluateAsync(2).AsTask().GetAwaiter().GetResult().Value.ShouldNotBeNull());
+
+    [Fact]
     public void Should_match_a_deep_async_And_chain() =>
         OnASmallStack(() => AsyncChain((left, right) => left.And(right))
+            .MatchesAsync(2).AsTask().GetAwaiter().GetResult().ShouldBeTrue());
+
+    [Fact]
+    public void Should_match_a_deep_async_OrElse_chain() =>
+        OnASmallStack(() => AsyncChain((left, right) => left.OrElse(right))
             .MatchesAsync(2).AsTask().GetAwaiter().GetResult().ShouldBeTrue());
 
     /// <summary>
@@ -114,6 +152,24 @@ public class DeepEvaluationTests
     private static AsyncSpecBase<int, string> AsyncChain(
         Func<AsyncSpecBase<int, string>, AsyncSpecBase<int, string>, AsyncSpecBase<int, string>> combine) =>
         Operand().Take(Operands).Select(spec => spec.ToAsyncSpec()).Aggregate(combine);
+
+    private static AsyncPolicyBase<int, string> AsyncPolicyChain(string operation) =>
+        Enumerable
+            .Range(0, Operands)
+            .Select(i => Spec.Build((int n) => n % 2 == 0).Create($"p{i} is even").ToAsyncSpec())
+            .Aggregate((AsyncPolicyBase<int, string> left, AsyncPolicyBase<int, string> right) =>
+                operation == "orElse" ? left.OrElse(right) : left.AndAlso(right));
+
+    /// <summary>The asynchronous twin of <see cref="Nest" />.</summary>
+    private static AsyncSpecBase<int, string> AsyncNest()
+    {
+        var spec = Operand().First().ToAsyncSpec();
+
+        for (var i = 0; i < Operands; i++)
+            spec = spec.Not();
+
+        return spec;
+    }
 
     private static PolicyBase<int, string> PolicyChain() =>
         Enumerable

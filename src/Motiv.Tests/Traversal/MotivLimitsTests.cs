@@ -36,6 +36,26 @@ public class MotivLimitsTests : IDisposable
         act.ShouldThrow<SpecException>();
     }
 
+    /// <summary>
+    /// The bound is enforced by two drivers — the synchronous fold and the asynchronous one — so proving
+    /// it on one proves nothing about the other.
+    /// </summary>
+    [Fact]
+    public async Task Should_abandon_an_async_evaluation_that_exceeds_the_size_limit()
+    {
+        MotivLimits.MaxEvaluationSize = 10;
+
+        await Should.ThrowAsync<SpecException>(async () => await AsyncChain(50).EvaluateAsync(2));
+    }
+
+    [Fact]
+    public async Task Should_abandon_an_async_match_that_exceeds_the_size_limit()
+    {
+        MotivLimits.MaxEvaluationSize = 10;
+
+        await Should.ThrowAsync<SpecException>(async () => await AsyncChain(50).MatchesAsync(2));
+    }
+
     [Fact]
     public void Should_name_the_setting_to_raise()
     {
@@ -82,6 +102,12 @@ public class MotivLimitsTests : IDisposable
     [Fact]
     public void Should_default_to_a_limit_no_composition_in_this_suite_approaches() =>
         MotivLimits.MaxEvaluationSize.ShouldBe(MotivLimits.DefaultMaxEvaluationSize);
+
+    private static AsyncSpecBase<int, string> AsyncChain(int operands) =>
+        Enumerable
+            .Range(0, operands)
+            .Select(i => Spec.Build((int n) => n % 2 == 0).Create($"p{i} is even").ToAsyncSpec())
+            .Aggregate((AsyncSpecBase<int, string> left, AsyncSpecBase<int, string> right) => left.And(right));
 
     private static SpecBase<int, string> Chain(int operands) =>
         Enumerable

@@ -134,15 +134,45 @@ public class EvaluationFoldTests
     /// The concurrent operators are the one shape the async fold does not drive, so they still have to
     /// evaluate both operands and compose the same result.
     /// </summary>
-    [Fact]
-    public async Task Should_evaluate_both_operands_of_a_concurrent_async_operator()
+    [Theory]
+    [InlineData("and", false)]
+    [InlineData("or", true)]
+    [InlineData("xor", true)]
+    public async Task Should_evaluate_both_operands_of_a_concurrent_async_operator(string operation, bool expected)
     {
         var left = Counting(_ => true);
         var right = Counting(_ => false);
 
-        var result = await left.Spec.ToAsyncSpec().AndConcurrently(right.Spec.ToAsyncSpec()).EvaluateAsync(0);
+        var asyncLeft = left.Spec.ToAsyncSpec();
+        var asyncRight = right.Spec.ToAsyncSpec();
+        var composed = operation switch
+        {
+            "and" => asyncLeft.AndConcurrently(asyncRight),
+            "or" => asyncLeft.OrConcurrently(asyncRight),
+            _ => asyncLeft.XOrConcurrently(asyncRight)
+        };
 
-        result.Satisfied.ShouldBeFalse();
+        var result = await composed.EvaluateAsync(0);
+
+        result.Satisfied.ShouldBe(expected);
+        left.Evaluations.ShouldBe(1);
+        right.Evaluations.ShouldBe(1);
+    }
+
+    /// <summary>
+    /// A concurrent operator nested <em>inside</em> a folded one: the fold has to recognise it and hand
+    /// it back its own evaluation rather than descending into it.
+    /// </summary>
+    [Fact]
+    public async Task Should_leave_a_nested_concurrent_operator_to_evaluate_itself()
+    {
+        var left = Counting(_ => true);
+        var right = Counting(_ => true);
+
+        var concurrent = left.Spec.ToAsyncSpec().AndConcurrently(right.Spec.ToAsyncSpec());
+        var result = await Always().ToAsyncSpec().And(concurrent).EvaluateAsync(0);
+
+        result.Satisfied.ShouldBeTrue();
         left.Evaluations.ShouldBe(1);
         right.Evaluations.ShouldBe(1);
     }
