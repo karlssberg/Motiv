@@ -1,15 +1,21 @@
 import { describe, it, expect } from 'vitest';
 import { completeDsl } from '../src/dsl/completion.js';
-import type { Catalog } from '../src/contracts.js';
+import type { Catalog, CatalogEntry } from '../src/contracts.js';
+
+function spec(name: string, overrides: Partial<CatalogEntry> = {}): CatalogEntry {
+  return {
+    name, modelType: 'customer', metadataType: 'String', isAsync: false,
+    origin: 'Compiled', parameters: null, ...overrides,
+  };
+}
 
 const catalog: Catalog = {
-  modelType: 'customer',
   specs: [
-    { name: 'is-active', description: 'account is active' },
-    { name: 'orders.has-recent', isAsync: true },
+    spec('is-active', { description: 'account is active' }),
+    spec('orders.has-recent', { isAsync: true }),
   ],
-  collections: [{ path: '$.orders', elementModelType: 'Order' }],
-} as unknown as Catalog;
+  collections: [{ path: '$.orders', parentModelType: 'customer', elementModelType: 'Order' }],
+};
 
 /** Completion at the end of `text`. */
 function completeAtEnd(text: string) {

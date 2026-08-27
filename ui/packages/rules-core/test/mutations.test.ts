@@ -3,7 +3,7 @@ import { RuleEditorStore } from '../src/editor.js';
 import {
   N_QUANTIFIER_KINDS, setBinaryOperator, setQuantifierCollection, setQuantifierKind, setQuantifierN,
 } from '../src/mutations.js';
-import type { BinaryNode, HigherOrderNode, RuleDocument } from '../src/document.js';
+import { HIGHER_ORDER_KEYS, type BinaryNode, type HigherOrderNode, type RuleDocument } from '../src/document.js';
 
 function storeWith(rule: RuleDocument['rule']): RuleEditorStore {
   return new RuleEditorStore({ rule });
@@ -95,7 +95,10 @@ describe('setQuantifierN', () => {
 });
 
 describe('N_QUANTIFIER_KINDS', () => {
-  it('names exactly the kinds that carry a count', () => {
-    expect(N_QUANTIFIER_KINDS).toEqual(['asNSatisfied', 'asAtLeastNSatisfied', 'asAtMostNSatisfied']);
+  it.each(HIGHER_ORDER_KEYS)('rekinding to %s attaches n exactly when the kind carries a count', (kind) => {
+    const store = storeWith({ asNSatisfied: { spec: 'a' }, n: 3, path: '$.items' });
+    setQuantifierKind(store, '$.rule', store.getState().document.rule as HigherOrderNode, kind);
+    const rebuilt = store.getState().document.rule;
+    expect('n' in rebuilt).toBe(N_QUANTIFIER_KINDS.includes(kind));
   });
 });

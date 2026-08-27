@@ -161,8 +161,15 @@ export class DslSyncController {
     this.#timer = null;
   }
 
-  /** Arms the debounced commit of `source`, replacing any commit already in flight. */
+  /**
+   * Arms the debounced commit of `source`, replacing any commit already in flight. Disconnected,
+   * this is a no-op: a controller nothing is following must not write into the shared store —
+   * a stale `setText` landing after a UI binding unmounted would otherwise still commit 300ms
+   * later. The buffer itself keeps the edit (and stays `dirty`), so reconnecting and re-arming
+   * (`keepEditing`, or a further edit) picks it back up.
+   */
   #scheduleCommit(source: string): void {
+    if (this.#detach === null) return;
     this.#cancelPendingCommit();
     this.#timer = setTimeout(() => this.#commit(source), COMMIT_DEBOUNCE_MS);
   }
@@ -180,12 +187,20 @@ export class DslSyncController {
     // That is correct here: while the DSL text drives the document, undo belongs to the text
     // editor's own history, not the tree store — a tree-level undo would silently contradict
     // the buffer. Do not "fix" this to a history-preserving mutation.
+    //
+    // The store notifies its subscribers synchronously and unguarded, so a *different*
+    // subscriber throwing propagates out of `loadDocument`. The guard must reset regardless:
+    // left latched, every later external change would be silently adopted as this controller's
+    // own commit, and the sync would be broken for good with nothing announcing it.
     this.#selfCommitting = true;
-    this.#store.loadDocument(mergeDecorations(parsed.document, this.#store.getState().document));
-    // The store clones on load, so the reconciled baseline must be read back rather than
-    // reusing the object that was handed in — they are not the same reference.
-    this.#baseDocument = this.#store.getState().document;
-    this.#selfCommitting = false;
+    try {
+      this.#store.loadDocument(mergeDecorations(parsed.document, this.#store.getState().document));
+      // The store clones on load, so the reconciled baseline must be read back rather than
+      // reusing the object that was handed in — they are not the same reference.
+      this.#baseDocument = this.#store.getState().document;
+    } finally {
+      this.#selfCommitting = false;
+    }
 
     this.#dirty = false;
     this.#status = 'synced';

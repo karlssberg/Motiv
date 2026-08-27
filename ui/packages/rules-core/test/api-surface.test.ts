@@ -51,6 +51,7 @@ const APPROVED_API = [
   'isSpecNode',
   'joinSteps',
   'listPaths',
+  'literalCountOf',
   'mergeDecorations',
   'nodeKind',
   'normalizeAt',

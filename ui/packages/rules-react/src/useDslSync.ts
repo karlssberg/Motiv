@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { DslSyncController, type DslSyncState, type RuleEditorStore } from '@motiv-rules/core';
 
 /** A {@link DslSyncState} snapshot plus the actions that drive it — what a component binds to. */
@@ -20,7 +20,19 @@ export interface DslSync extends DslSyncState {
  * shape to React's subscription primitive.
  */
 export function useDslSync(store: RuleEditorStore): DslSync {
-  const controller = useMemo(() => new DslSyncController(store), [store]);
+  // The controller holds the user's uncommitted buffer, so it lives in state, not `useMemo` —
+  // React documents the memo cache as discardable, and a rebuilt controller would reprint from
+  // the store, evaporating dirty text mid-edit. A store swap rebinds during render (the
+  // documented adjust-state-on-prop-change pattern); the superseded controller was never
+  // connected past its own effect cleanup, so it holds no timer and follows nothing.
+  const [binding, setBinding] = useState(() => ({ store, controller: new DslSyncController(store) }));
+  let active = binding;
+  if (binding.store !== store) {
+    active = { store, controller: new DslSyncController(store) };
+    setBinding(active);
+  }
+  const { controller } = active;
+
   useEffect(() => controller.connect(), [controller]);
 
   const subscribe = useCallback(

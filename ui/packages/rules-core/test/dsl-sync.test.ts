@@ -223,4 +223,46 @@ describe('DslSyncController', () => {
     const { sync } = syncOver({ spec: 'is-active' });
     expect(() => sync.connect()).toThrowError(/already connected/);
   });
+
+  it('does not commit text set after a disconnect, even on a later timer', () => {
+    const { store, sync, disconnect } = syncOver({ spec: 'is-active' });
+
+    disconnect();
+    sync.setText('is-recent');
+    vi.advanceTimersByTime(300);
+
+    expect(store.getState().document).toEqual({ rule: { spec: 'is-active' } });
+    expect(sync.getState().text).toBe('is-recent');
+    expect(sync.getState().status).toBe('dirty');
+  });
+
+  it('a dirty buffer left from a disconnected edit commits once reconnected and re-armed', () => {
+    const { store, sync, disconnect } = syncOver({ spec: 'is-active' });
+
+    disconnect();
+    sync.setText('is-recent');
+    sync.connect();
+    sync.keepEditing();
+    vi.advanceTimersByTime(300);
+
+    expect(store.getState().document).toEqual({ rule: { spec: 'is-recent' } });
+  });
+
+  it('keeps following external changes even after another store subscriber throws mid-commit', () => {
+    const { store, sync } = syncOver({ spec: 'is-active' });
+    const unsubscribe = store.subscribe(() => {
+      throw new Error('a broken subscriber elsewhere');
+    });
+
+    sync.setText('is-recent');
+    expect(() => vi.advanceTimersByTime(300)).toThrowError(/broken subscriber/);
+    unsubscribe();
+
+    // The interrupted commit left the buffer dirty; what must survive the throw is the
+    // *following* itself — the next external change is reconciled (held apart as a conflict),
+    // not silently swallowed by a self-commit guard that never reset.
+    store.replaceNode('$.rule', { spec: 'is-verified' });
+    expect(sync.getState().conflict).toBe(true);
+    expect(sync.getState().text).toBe('is-recent');
+  });
 });

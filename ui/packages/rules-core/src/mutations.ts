@@ -23,8 +23,12 @@ export const N_QUANTIFIER_KINDS: readonly HigherOrderKey[] = [
   'asNSatisfied', 'asAtLeastNSatisfied', 'asAtMostNSatisfied',
 ];
 
-/** The `n` count a node carries, when it is an N-kind node holding a literal count. */
-function countOf(node: HigherOrderNode): number | undefined {
+/**
+ * The `n` count a node carries, when it is an N-kind node holding a literal count — `undefined`
+ * for the kinds without one and for a `@param` reference. Exported so a control *displaying*
+ * the count and the mutations *committing* it share one fallback rule instead of drifting.
+ */
+export function literalCountOf(node: HigherOrderNode): number | undefined {
   return 'n' in node && typeof node.n === 'number' ? node.n : undefined;
 }
 
@@ -41,7 +45,7 @@ export function setQuantifierKind(
   const rebuilt: Record<string, unknown> = {
     ...rest, // keeps path, name, whenTrue, whenFalse
     [kind]: child,
-    ...(N_QUANTIFIER_KINDS.includes(kind) ? { n: countOf(node) ?? 1 } : {}),
+    ...(N_QUANTIFIER_KINDS.includes(kind) ? { n: literalCountOf(node) ?? 1 } : {}),
   };
   store.replaceNode(path, rebuilt as unknown as RuleNode);
 }
@@ -57,6 +61,6 @@ export function setQuantifierCollection(
 export function setQuantifierN(
   store: RuleEditorStore, path: string, node: HigherOrderNode, n: number,
 ): void {
-  const safeN = Number.isFinite(n) ? n : countOf(node) ?? 1;
+  const safeN = Number.isFinite(n) ? n : literalCountOf(node) ?? 1;
   store.replaceNode(path, { ...node, n: safeN } as RuleNode);
 }

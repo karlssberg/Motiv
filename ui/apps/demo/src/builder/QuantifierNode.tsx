@@ -1,5 +1,5 @@
 import {
-  HIGHER_ORDER_KEYS, N_QUANTIFIER_KINDS, higherOrderKey,
+  HIGHER_ORDER_KEYS, N_QUANTIFIER_KINDS, higherOrderKey, literalCountOf,
   setQuantifierCollection, setQuantifierKind, setQuantifierN,
   type Catalog, type HigherOrderKey, type HigherOrderNode,
 } from '@motiv-rules/core';
@@ -71,7 +71,7 @@ export function QuantifierNode(props: {
             min={0}
             aria-label={`quantifier n at ${path}`}
             className="control"
-            value={'n' in node && typeof node.n === 'number' ? node.n : 1}
+            value={literalCountOf(node) ?? 1}
             onChange={(e) => setQuantifierN(store, path, node, Number(e.target.value))}
           />
         </label>

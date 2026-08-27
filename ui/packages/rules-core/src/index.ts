@@ -46,7 +46,7 @@ export { normalizeAt } from './normalize.js';
 // The subscribable editor store, and the mutations the builder performs on it.
 export { RuleEditorStore, errorsForNode, type EditorState } from './editor.js';
 export {
-  N_QUANTIFIER_KINDS,
+  N_QUANTIFIER_KINDS, literalCountOf,
   setBinaryOperator, setQuantifierKind, setQuantifierCollection, setQuantifierN,
 } from './mutations.js';
 
