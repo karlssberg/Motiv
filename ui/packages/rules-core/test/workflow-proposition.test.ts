@@ -273,6 +273,27 @@ describe('PropositionWorkflowController', () => {
       expect(onSelect).not.toHaveBeenCalled();
     });
 
+    it('navigation is dropped too when the selection moves during the listing refresh', async () => {
+      const listGate = deferred<PropositionListEntry[]>();
+      const client = makeClient({
+        listPropositions: vi.fn().mockReturnValue(listGate.promise),
+      });
+      const { controller, onSelect } = makeController(client);
+      await controller.select('pricing.is-vip');
+
+      const inFlight = controller.remove(entries[0]!);
+      // Wait until the DELETE has landed and the listing refresh is in flight — the selection
+      // was still the removed entry's at that point, so the outcome guard has already passed.
+      await vi.waitFor(() => expect(client.listPropositions).toHaveBeenCalled());
+      await controller.select('is-adult');
+      listGate.resolve(entries);
+      await inFlight;
+
+      // The DELETE landed while its entry was still selected, but by the time the listing came
+      // back the user had moved on — handing the selection over now would drag them off it.
+      expect(onSelect).not.toHaveBeenCalled();
+    });
+
     it("an outcome for an entry that is no longer selected is dropped", async () => {
       const { controller, client, onSelect } = makeController();
       await controller.select('is-adult');

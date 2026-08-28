@@ -55,20 +55,16 @@ export function usePropositionWorkflow(
   // state, not `useMemo` — React documents the memo cache as discardable. A client or store swap
   // rebinds during render (the documented adjust-state-on-prop-change pattern): a different
   // client is a different server world, and nothing carries over.
-  const [binding, setBinding] = useState(() => ({
+  const makeBinding = () => ({
     client, store,
     controller: new PropositionWorkflowController(client, store, {
       onSelect: (name) => onSelectRef.current?.(name),
     }),
-  }));
+  });
+  const [binding, setBinding] = useState(makeBinding);
   let active = binding;
   if (binding.client !== client || binding.store !== store) {
-    active = {
-      client, store,
-      controller: new PropositionWorkflowController(client, store, {
-        onSelect: (name) => onSelectRef.current?.(name),
-      }),
-    };
+    active = makeBinding();
     setBinding(active);
   }
   const { controller } = active;

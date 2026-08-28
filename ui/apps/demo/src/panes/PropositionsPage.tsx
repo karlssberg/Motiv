@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { PropositionListEntry, RulesApiClient } from '@motiv-rules/core';
+import type { RulesApiClient } from '@motiv-rules/core';
 import { whyPropositionSaveUnavailable } from '@motiv-rules/core/workflow';
 import { useRuleEditorStore } from '@motiv-rules/react';
 import { usePropositionWorkflow } from '@motiv-rules/react/workflow';
@@ -184,7 +184,7 @@ export function PropositionsPage(props: {
               startsFrom: null,
               title: 'New proposition',
             }),
-            onDelete: (entry: PropositionListEntry) => void remove(entry),
+            onDelete: (entry) => void remove(entry),
           }}
         />
       )}

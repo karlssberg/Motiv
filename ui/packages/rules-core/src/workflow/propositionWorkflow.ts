@@ -227,6 +227,9 @@ export class PropositionWorkflowController {
     this.#notify();
     if (result.outcome !== 'saved') return;
     await this.refreshEntries();
+    // Re-checked after the await: the selection can move while the listing refetches, and the
+    // handover below is a claim about the removed entry, not about wherever the user went.
+    if (this.#selected !== entry.name) return;
 
     if (reverts) {
       await this.reload();

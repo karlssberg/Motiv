@@ -22,12 +22,13 @@ export function useRuleWorkflow(client: RulesApiClient, store: RuleEditorStore):
   // lives in state, not `useMemo` — React documents the memo cache as discardable. A client or
   // store swap rebinds during render (the documented adjust-state-on-prop-change pattern): a
   // different client is a different server world, and nothing carries over.
-  const [binding, setBinding] = useState(() => ({
+  const makeBinding = () => ({
     client, store, controller: new RuleWorkflowController(client, store),
-  }));
+  });
+  const [binding, setBinding] = useState(makeBinding);
   let active = binding;
   if (binding.client !== client || binding.store !== store) {
-    active = { client, store, controller: new RuleWorkflowController(client, store) };
+    active = makeBinding();
     setBinding(active);
   }
   const { controller } = active;
