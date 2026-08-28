@@ -167,7 +167,7 @@ app.MapMotivRules("/api/rules");
 
 `AddPropositions()` enables the [proposition endpoints](AspNetCore.md) and points them at an
 [`IPropositionStore`](IPropositionStore.md); omitting the argument uses `InMemoryPropositionStore`.
-`JsonFilePropositionStore` above is the sample host's own implementation of that interface, not a
+`JsonFilePropositionStore` above is Studio's own implementation of that interface, not a
 library type &mdash; durability stays outside the library, exactly as transport does.
 Propositions load before rule defaults bind, so a rule's compiled-in default document may reference
 one.

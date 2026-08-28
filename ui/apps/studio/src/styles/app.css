@@ -1,0 +1,1570 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/*
+  Shell layout: a fixed app bar (brand + breadcrumb + save) above columns that sit
+  flush against each other — divider borders only, no gaps, no per-column shadow/radius. The
+  previous grid gave every pane its own border + radius + shadow *and* a gap between them,
+  which compounds into the "boxes inside boxes" look; a single shell frame with thin dividers
+  reads much lighter at the same information density. Collapses to stacked full-width
+  sections (divider moves from the right edge to the bottom) on narrow viewports.
+*/
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--sh-canvas);
+}
+
+/*
+  Sized to content rather than stretched to fill the viewport: with a fourth section
+  (CheckoutPane, below) after it, forcing this row to fill all remaining vertical space would
+  push that section down past a large dead gap of empty canvas whenever the columns' own
+  content is shorter than the viewport. Each pane instead caps its own body height and scrolls
+  internally (see `.pane-body`/`.surface-panel`), which is what actually needs to happen when a
+  column's content — the JSON document, say — grows taller than is comfortable.
+*/
+.shell-body {
+  display: flex;
+  align-items: stretch;
+}
+
+@media (max-width: 900px) {
+  .shell-body {
+    flex-direction: column;
+  }
+}
+
+/* App bar: brand mark, breadcrumb trail (whose leaf picks the rule), model-type pill, then the
+   loaded rule's version and Save */
+.appbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-height: 46px;
+  padding: 8px 14px;
+  background: var(--sh-appbar);
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+
+.appbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.appbar-mark {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 700 13px var(--sans);
+  color: #fff;
+  flex: none;
+}
+
+.appbar-wordmark {
+  font: 700 14px var(--sans);
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+/* Page tabs: the Rules/Propositions switch in the appbar. Reuses `.tab` from the surface tabs so
+   both switches read as the same control at two altitudes. */
+.page-tabs {
+  display: flex;
+  gap: 2px;
+  margin-left: var(--space);
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--sh-inset);
+  border: 1px solid var(--border);
+}
+
+.breadcrumb-sep {
+  color: var(--faint);
+  font-size: 13px;
+}
+
+.breadcrumb-item {
+  font: 500 13px var(--sans);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.breadcrumb-current {
+  font: 600 13px var(--sans);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.model-pill {
+  margin-left: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: 600 11px var(--mono);
+  color: var(--accent);
+  background: var(--sh-inset);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.appbar-fill {
+  flex: 1;
+  min-width: 8px;
+}
+
+.appbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.rule-version {
+  font-size: 0.75rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/*
+  Conflict banner: another writer saved a newer version. It sits below the app bar rather than
+  wrapping inside it — both pages raise it, and the propositions page's own strip sits in the same
+  place — so it is inset to the app bar's inline padding rather than being full-bleed, which keeps
+  it reading as part of the header block it belongs to.
+*/
+.conflict-banner {
+  flex: none;
+  margin: var(--space) 14px 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space);
+  color: var(--danger);
+  font-size: 0.8rem;
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  padding: calc(var(--space) / 4) var(--space);
+}
+
+/* Pane: one divided column of the shell (or a full-width footer section below it) */
+.pane {
+  background: var(--sh-panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.pane:last-child {
+  border-right: none;
+}
+
+@media (max-width: 900px) {
+  .pane {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+/*
+  CheckoutPane sits below the three-column shell body, not beside it (the source design has no
+  fourth column for it — it's Studio's own addition). As a direct child of `.app`'s column
+  flex it must size to its content rather than compete with `.shell-body` for the remaining
+  vertical space, and its divider belongs on top, not the right.
+*/
+.app > .pane {
+  flex: none;
+  max-height: 40vh;
+  overflow: auto;
+  border-right: none;
+  border-top: 1px solid var(--border);
+}
+
+/*
+  Every pane opens with the same fixed-height title bar, which is either a bare `<h2>` or a
+  `.pane-header` row pairing the title with trailing controls (tabs, extension-point affordances).
+*/
+.pane > h2,
+.pane-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 12px;
+  margin: 0;
+  background: var(--sh-panel-head);
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+
+.pane > h2,
+.pane-header > h2 {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text);
+}
+
+/*
+  Scrollable body below a pane's title bar — `.surface-panel` is the EditorPane's own, which
+  additionally hosts the Builder/DSL tabpanel.
+*/
+.pane-body,
+.surface-panel {
+  max-height: 78vh;
+  overflow: auto;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+}
+
+/* micro label badge beside a pane title, e.g. "read-only · live" */
+.pane-badge {
+  font: 500 10px var(--sans);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--faint);
+  background: var(--sh-inset);
+  border: 1px solid var(--border);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.pane-header {
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: var(--space);
+}
+
+/*
+  At the three-column layout each pane is only ~400px wide, which is narrower than the header's
+  contents lay out at their natural widths. The controls keep theirs — a clipped tab or button is
+  an unusable one — so anything that may be shortened must opt in with `.truncate`.
+*/
+.pane-header > .btn,
+.pane-header > h2,
+.pane-header > .surface-tabs {
+  flex: none;
+}
+
+/* Field: a label + control stack (also used by the DSL payload popover's own fields) */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) / 4);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* Shared control styling for selects, inputs, textareas */
+.control {
+  width: 100%;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: calc(var(--space) * 0.5) calc(var(--space) * 0.75);
+  font-family: inherit;
+  font-size: 0.8rem;
+  resize: vertical;
+}
+
+.control:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+/* Buttons */
+.btn {
+  appearance: none;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--bg);
+  height: 26px;
+  padding: 0 11px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.05s ease;
+}
+
+.btn:hover {
+  background: color-mix(in srgb, var(--accent) 85%, black);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-danger {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: var(--bg);
+}
+
+.btn-danger:hover {
+  background: color-mix(in srgb, var(--danger) 85%, black);
+}
+
+/* Extension points: inert affordances for not-yet-evaluable node kinds */
+.ext-point {
+  background: transparent;
+  color: var(--muted);
+  border: 1px dashed var(--border);
+  cursor: not-allowed;
+}
+
+.ext-point:hover {
+  background: transparent;
+}
+
+/* Document JSON pane */
+.json {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.65;
+  background: transparent;
+  padding: 0;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+/* Validation errors */
+.errors {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) / 2);
+}
+
+.error {
+  color: var(--danger);
+  font-size: 0.8rem;
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  padding: calc(var(--space) / 2) var(--space);
+}
+
+/*
+  Builder: a rule node's row. Two independent view concerns meet here — the caret folds the
+  subtree (structure, open by default), and the `⋯` toggle opens the detail panel (metadata and
+  edit controls, closed by default, single-open unless pinned). A collapsed node therefore costs
+  exactly one compact row rather than a full bordered card.
+
+  Indentation is structural rather than computed: a level's rows sit inside their parent's
+  `.node-kids`, whose left margin is the one indent step. Multiplying a `--depth` custom property
+  on top of that (as an earlier revision did) double-counts the nesting and fans the tree out
+  further at every level. `--depth` still earns its keep on `.assertion`, which renders the
+  justification tree as a flat list with no nesting to read the level from.
+*/
+.node {
+  display: flex;
+  flex-direction: column;
+}
+
+.node-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+  padding: 6px 9px;
+  background: var(--sh-inset);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+}
+
+/* The caret discloses whatever is inside a node — children on a parent, metadata on a leaf — so
+   it is the one control on every row and is sized to read as such. */
+.node-chev {
+  appearance: none;
+  border: none;
+  background: transparent;
+  width: 16px;
+  flex: none;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+/* Colour carries the node's kind: operators accent, quantifiers muted, leaves plain text. */
+.node-badge {
+  font: 600 12.5px var(--mono);
+  white-space: nowrap;
+}
+
+/* Narrower than the actions menu: the entries are one word each. */
+.node-operator-menu { min-width: 96px; }
+
+.node-menu-item[aria-selected='true'] {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.node-badge-op { color: var(--accent); }
+.node-badge-quant { color: var(--muted); }
+.node-badge-spec { color: var(--text); }
+
+.node-desc {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.node-name {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+/* The badge/gloss/name group, or — once collapsed — the node's DSL text. Never interactive:
+   in DSL view it hosts a text editor, which cannot live inside a button. */
+.node-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Row controls stay quiet until the row is hovered or the control is active, so a resting tree
+   reads as structure rather than as a grid of buttons. Focus must still reveal them, or they
+   become keyboard-inaccessible. */
+.node-menu-trigger,
+.node-pin,
+.node-select,
+.node-insert {
+  appearance: none;
+  border: none;
+  background: transparent;
+  flex: none;
+  padding: 0 4px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0;
+}
+
+.node-row:hover .node-menu-trigger,
+.node-row:hover .node-pin,
+.node-row:hover .node-select,
+.node-row:hover .node-insert,
+.node-menu-trigger:focus-visible,
+.node-pin:focus-visible,
+.node-select:focus-visible,
+.node-insert:focus-visible,
+.node-menu-trigger.open,
+.node-pin.pinned,
+.node-select[aria-pressed='true'] {
+  opacity: 1;
+}
+
+.node-pin.pinned { color: var(--accent); }
+
+/* A value that is also the control that changes it: the operator badge in the tree, the rule at the
+   end of the breadcrumb trail. Stripped back to read as the text it replaces — the affordance is
+   the hover fill and the caret, not form-control chrome that would shout louder than the line it
+   sits in. The caller supplies only the typography. Its own popup replaces the platform's, so the
+   trigger is as wide as the value it names rather than as wide as the longest one on offer. */
+.picker-trigger {
+  appearance: none;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  padding: 1px 3px;
+  margin-left: -3px;
+  cursor: pointer;
+}
+
+/* Drawn in the flow rather than as a background, so the trigger keeps hugging its label. */
+.picker-trigger::after {
+  content: '▾';
+  margin-left: 3px;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.picker-trigger:hover,
+.picker-trigger:focus-visible,
+.picker-trigger[aria-expanded='true'] {
+  background-color: var(--bg);
+  outline: none;
+}
+
+/* A popup card, positioned in viewport coordinates by `placePopover` — the same flip-and-clamp
+   the DSL pane's payload card uses. Fixed rather than absolute so an ancestor's `overflow` cannot
+   clip it, since rows sit inside a scrolling pane. Worn by both the row actions menu and the
+   value pickers. */
+.node-menu {
+  display: flex;
+  flex-direction: column;
+  min-width: 132px;
+  padding: 4px;
+  overflow-y: auto;
+  background: var(--sh-inset);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
+  z-index: 30;
+}
+
+.node-menu-item {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.node-menu-item:hover,
+.node-menu-item:focus-visible {
+  background: var(--bg);
+}
+
+/* The detail panel: the node's edit controls and decoration fields, inset from the row by the
+   same step that indents the level below. */
+.node-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+  margin: 0 0 8px 10px;
+  padding: 9px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.node-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--space) / 2);
+}
+
+.node-kids {
+  display: flex;
+  flex-direction: column;
+  margin-left: 10px;
+}
+
+/* A node's DSL text. `min-width: 0` is load-bearing: `.node-row` is a flex container, and a flex
+   item's default `min-width: auto` floors it at its content width — without this the ellipsis
+   never engages and a long expression pushes the row controls off the end. */
+.node-dsl {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 12.5px/1.4 var(--mono);
+  color: var(--dsl-fg);
+}
+
+/* Read-state token colours, sharing the custom properties the CodeMirror highlight style binds
+   to, so a row reads identically before and after it is focused for editing. */
+.tok-spec { color: var(--dsl-spec); }
+.tok-paramRef { color: var(--dsl-param); }
+.tok-keyword,
+.tok-quantifier { color: var(--dsl-keyword); }
+.tok-type { color: var(--dsl-type); }
+.tok-operator { color: var(--dsl-operator); }
+.tok-paren,
+.tok-brace { color: var(--dsl-bracket); }
+.tok-colon,
+.tok-comma,
+.tok-equals { color: var(--dsl-punctuation); }
+.tok-string { color: var(--dsl-string); }
+.tok-expression { color: var(--dsl-expression); }
+.tok-number { color: var(--dsl-number); }
+.tok-error { color: var(--danger); }
+
+button.node-dsl {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  cursor: text;
+}
+
+/* Stacked, not side by side: an error placed beside the field competes with it for the row's
+   width, and it appears exactly when the expression is half-typed and needs that width most. */
+.node-dsl-editing {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+  overflow: visible;
+  white-space: normal;
+}
+
+.node-dsl-host {
+  width: 100%;
+  min-width: 0;
+}
+
+/* The editor sheds the pane chrome — no page-height, no padding of its own — and adopts the row's
+   typography instead of the DSL pane's, so the expression occupies exactly the pixels it did while
+   it was static text.
+
+   A row edits *in place*, which makes this stricter than it looks: anything CodeMirror brings with
+   it moves the very characters the user is aiming at, between the moment they aim and the moment
+   they land. Two things did. `motivEditorTheme` sizes text for a full-height editor (13.5px) where
+   the row's static text is 12.5px, and CodeMirror's base theme indents every line by 6px
+   (`.cm-line { padding: 0 2px 0 6px }`) — so the expression grew and jumped right the instant it
+   was clicked. Both are overridden here rather than in the theme, which the DSL pane shares and
+   wants as it is.
+
+   Each override has to sit on the element CodeMirror declares it on, not merely on an ancestor
+   that would pass it down: an own declaration beats an inherited value however specific the
+   ancestor's rule is. Hence `line-height` on `.cm-scroller`, where the base theme puts its 1.4 —
+   set on `.cm-editor` it is silently inert, and the row stays aligned only for as long as the two
+   ratios coincide. */
+.node-dsl-host .cm-editor {
+  height: auto;
+  background: transparent;
+  font-size: inherit;
+}
+.node-dsl-host .cm-scroller { line-height: inherit; }
+.node-dsl-host .cm-content,
+.node-dsl-host .cm-line { padding: 0; }
+
+/* One line, truncated — the full text is on the element's `title`. Without `min-width: 0` a flex
+   item is floored at its content width, so a long message would widen the row instead. */
+.node-dsl-error {
+  min-width: 0;
+  padding: 1px 6px;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Reserved-height strip above the tree: it holds the pin count and close-all once anything is
+   pinned, and stays empty (but present) otherwise so the tree never shifts underneath. */
+.accordion-strip {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: calc(var(--space) / 2);
+  min-height: 26px;
+  padding: 0 2px;
+}
+
+.decoration {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) / 2);
+}
+
+/* Evaluate outcome */
+.outcome {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* Justification tree row, indented by depth */
+.assertion {
+  padding-left: calc(var(--depth, 0) * 18px);
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) / 2);
+}
+
+/* Checkout outcome: Approved/Rejected plus the two rule verdicts */
+.checkout-outcome {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+}
+
+.verdict h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.verdict ul {
+  margin: calc(var(--space) / 2) 0 0;
+  padding-left: calc(var(--space) * 2.5);
+  font-size: 0.9rem;
+}
+
+/* ==========================================================================
+   DSL editor — surface tabs, editor frame, sync pill, conflict banner,
+   hover tooltip and payload popover. Colours come from the --dsl-* tokens.
+   ========================================================================== */
+
+/* Surface tabs: the Builder/DSL switch living in the pane header, as a segmented control */
+.surface-tabs {
+  display: inline-flex;
+  background: var(--sh-inset);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  appearance: none;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  height: 24px;
+  padding: 0 11px;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab.active {
+  background: var(--sh-panel);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 14%);
+}
+
+.pane-hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Opts a flex item into giving up its width: it shortens to an ellipsis instead of wrapping. */
+.truncate {
+  flex: 0 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The panel both tabs swap the contents of */
+.surface-panel {
+  max-height: 78vh;
+  overflow: auto;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+}
+
+/* Editor frame: positioned so CodeMirror's own overlays have a containing block to sit in */
+.dsl-frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--dsl-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.dsl-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space);
+  padding: calc(var(--space) / 2) var(--space);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.dsl-filename {
+  flex: 1;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.dsl-toolbar button,
+.dsl-conflict button,
+.dsl-popover-actions button {
+  appearance: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  padding: calc(var(--space) / 2) var(--space);
+  font-family: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.dsl-toolbar button:hover,
+.dsl-conflict button:hover,
+.dsl-popover-actions button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* A definite height, so the CodeMirror view below can fill it and scroll internally */
+.dsl-surface {
+  flex: none;
+  height: 320px;
+  overflow: auto;
+}
+
+.dsl-surface .cm-editor {
+  height: 100%;
+}
+
+/* Sync pill: how the buffer currently relates to the document */
+.dsl-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--space) / 2);
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 0 calc(var(--space) * 0.75);
+  font-size: 0.75rem;
+  line-height: 1.8;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.dsl-pill::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.dsl-pill-synced { color: var(--dsl-ok); }
+.dsl-pill-dirty { color: var(--dsl-warn); }
+.dsl-pill-error { color: var(--dsl-err); }
+
+/* Conflict banner: the tree moved under a dirty buffer */
+.dsl-conflict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space);
+  padding: calc(var(--space) / 2) var(--space);
+  background: var(--dsl-banner-bg);
+  border-bottom: 1px solid var(--dsl-banner-bd);
+  color: var(--dsl-banner-fg);
+  font-size: 0.8rem;
+}
+
+.dsl-conflict span {
+  flex: 1;
+}
+
+/* Hover tooltip: the diagnostic under the pointer (chrome is themed in theme.ts) */
+.dsl-hover {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) / 4);
+  max-width: 320px;
+  padding: calc(var(--space) / 2) var(--space);
+  font-size: 0.8rem;
+}
+
+.dsl-hover-code {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.dsl-hover-message {
+  line-height: 1.4;
+}
+
+.dsl-hover-path {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  opacity: 0.6;
+}
+
+/*
+  Payload chip: the affordance that opens a spec node's decorations, drawn at the end of its
+  token and inside it (see payloadChips.ts). Its glyph is a pseudo-element so the button stays
+  textless — the chip is chrome sitting inside the content, and text in there reads as part of
+  the document.
+
+  A chip is dim until its own spec name is hovered, so a document full of specs is not a document
+  full of buttons — but never invisible, since a chip nobody can find is the caret trigger it
+  replaced with extra steps. The hover target is the name rather than the line: a line holds
+  every chip on it, and lighting them all up says nothing about which one you are reaching for.
+*/
+.dsl-chip {
+  appearance: none;
+  margin-left: 0.15em;
+  padding: 0 0.15em;
+  border: none;
+  border-radius: calc(var(--radius) / 2);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.75em;
+  line-height: 1;
+  vertical-align: baseline;
+  opacity: 0.35;
+  cursor: pointer;
+  transition: opacity 120ms ease, color 120ms ease;
+}
+
+.dsl-chip::before {
+  content: '✎';
+}
+
+.dsl-spec-hit:hover .dsl-chip {
+  opacity: 1;
+}
+
+.dsl-chip:hover {
+  background: var(--accent-weak);
+  color: var(--accent);
+}
+
+.dsl-chip:focus-visible {
+  opacity: 1;
+  background: var(--accent-weak);
+  color: var(--accent);
+}
+
+/*
+  Payload popover: decorations for the spec node whose chip was pressed. It is a card anchored to
+  that node's token, so it is positioned against the viewport and free to overhang the pane —
+  the pane is narrower than the card, and confining it there would blanket the very text it
+  annotates. `top`/`left`/`max-height` are measured and applied inline (see popoverPlacement.ts),
+  so the offsets are deliberately absent here and the card stays hidden until they are known.
+*/
+.dsl-popover {
+  position: fixed;
+  z-index: 10;
+  width: 320px;
+  max-width: calc(100vw - var(--space) * 2);
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) / 2);
+  padding: var(--space);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 18%);
+}
+
+/*
+  The card takes focus when it opens, so the keyboard lands somewhere useful — but it is a
+  container, not a control, and a ring around the whole thing reads as a selected element. Its
+  fields keep their own focus styling.
+*/
+.dsl-popover:focus {
+  outline: none;
+}
+
+.dsl-popover-head {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) / 2);
+}
+
+.dsl-popover-spec {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.dsl-popover-close {
+  appearance: none;
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.dsl-popover-close:hover {
+  color: var(--text);
+}
+
+.dsl-badge {
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent-weak);
+  color: var(--accent);
+  padding: 0 calc(var(--space) / 2);
+  font-size: 0.7rem;
+}
+
+.dsl-popover-desc {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.dsl-popover-meta,
+.dsl-popover-hint {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.dsl-popover-error {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--danger);
+}
+
+.dsl-popover-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: calc(var(--space) / 2);
+}
+
+/* The permanent DSL line above the builder tree. It renders as its own row, above
+   `.accordion-strip` rather than sharing its reserved band — `.accordion-strip` keeps its own
+   `min-height` regardless, so this strip is additional vertical space, not free space reused. It
+   still shifts nothing when a node is first pinned, since `.accordion-strip`'s own reservation is
+   what prevents that jump; this strip is simply a constant-height row above it.
+
+   Scrolls horizontally rather than wrapping: a rule of any size stays one line, and the strip
+   scrolls whichever marked span the user just moved to into view. The mask fades both edges so
+   off-screen content is visible as such without spending width on an ellipsis.
+
+   The fade width and the horizontal padding are two views of one measurement, so they are one
+   custom property. Written independently they drift, and the failure is quiet: padding narrower
+   than the fade leaves the label and the first glyphs permanently half-transparent, which reads
+   as a rendering fault rather than as the "there is more this way" hint the fade is for. Padding
+   clears the fade with a little room to spare so text sits in fully opaque space at rest.
+
+   `scroll-padding-inline` extends the same idea to the scrolled case: without it, scrolling a
+   marked span into view can park it flush against the edge and therefore under the fade — the one
+   span the user is trying to read.
+
+   `flex: 0 0 auto` is load-bearing, and its necessity is a side effect of the line above it.
+   This strip is a flex item of a column panel, and a column item's automatic minimum size —
+   the thing that normally stops a flex parent crushing it below its own content — applies only
+   while its overflow is `visible`. `overflow-y: hidden` is here to suppress a vertical scrollbar
+   alongside the horizontal one, and it also drops that automatic minimum to zero. So in a short
+   viewport the panel was free to squeeze the strip to a few pixels and clip the text inside it.
+   Refusing to shrink is the fix: this is fixed-height chrome, and the overflow belongs to the
+   panel below, which scrolls. */
+.dsl-strip {
+  --strip-fade: 0.625rem;
+  --strip-inset: calc(var(--strip-fade) + 0.25rem);
+
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  scroll-padding-inline: var(--strip-inset);
+  padding: 0.1875rem var(--strip-inset);
+  background: var(--sh-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--strip-fade),
+    #000 calc(100% - var(--strip-fade)),
+    transparent 100%
+  );
+}
+.dsl-strip::-webkit-scrollbar { display: none; }
+
+.dsl-strip-label {
+  flex: 0 0 auto;
+  font: 0.5625rem var(--sans);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.dsl-strip-text {
+  font: 0.72rem/1.5 var(--mono);
+  white-space: nowrap;
+  color: var(--dsl-fg);
+}
+
+/* Two marks on two axes: a fill behind the hover, a rule beneath the selection. Same-axis marks
+   would nest as a box inside a box, which at this size is two rectangles to pull apart — and
+   hovering a child of the selected node is the common case, not a rare one.
+
+   Selection is the quieter of the two on purpose. The selected *row* already carries a strong
+   accent bar, so this is a confirmation; hover has no other indicator anywhere, so its fill is the
+   only evidence it exists. Weight follows necessity, not deliberateness. */
+.dsl-strip-hover {
+  background: var(--accent-weak);
+  border-radius: 2px;
+}
+
+.dsl-strip-selected {
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 1px;
+}
+
+/* The selected row. A left accent bar rather than a fill: the row already carries a DSL editor
+   whose own background must stay readable, and a bar reads at a glance down a column of rows. */
+.node-row.selected {
+  border-color: var(--accent);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.node-select {
+  padding: 0 2px;
+  font-size: 10px;
+  color: var(--faint);
+}
+.node-select[aria-pressed='true'] { color: var(--accent); }
+
+/* The phantom row. Dashed, because it is a position rather than a node — it has no path, is in no
+   document, and will either become a row or vanish. */
+.node-row-pending {
+  border-style: dashed;
+  border-color: var(--accent);
+}
+
+.node-insert {
+  padding: 0 2px;
+  color: var(--faint);
+}
+.node-insert:hover { color: var(--accent); }
+
+/* ---------------------------------------------------------------------------
+   Proposition explorer — the namespaced tree the command palette browses while
+   its query is empty. Indentation is driven by a --depth custom property set
+   per node, so nesting needs no per-level selectors.
+
+   Surfaces reuse the app's existing tokens rather than adding a parallel scale:
+   --sh-inset is the resting/hover fill (as in .tab.active), --accent-weak the
+   "this one" tint (as in .dsl-badge), and --danger the single problem colour
+   (as in .error) — there is no separate warning tier.
+
+   Horizontal padding matches .palette-row's, so a browsed row and a matched
+   row start on the same edge as the query is typed.
+   --------------------------------------------------------------------------- */
+.explorer-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--space) / 2);
+  padding: calc(var(--space) / 2) 12px;
+}
+
+.explorer-count {
+  margin-left: auto;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+/* A model chip that is filtering. Selected on the ARIA attribute the button already carries, so
+   the toggled state is stated once — the same approach as .node-select[aria-pressed='true']. */
+.model-pill[aria-pressed='true'] {
+  background: var(--accent-weak);
+  border-color: var(--accent);
+}
+
+.explorer-tree,
+.explorer-tree ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.explorer-node {
+  --depth: 0;
+}
+
+.explorer-leaf,
+.explorer-namespace {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) / 2);
+  padding: 2px 12px;
+  padding-left: calc(12px + var(--depth) * var(--space) * 1.5);
+  border-radius: var(--radius);
+}
+
+.explorer-leaf {
+  cursor: pointer;
+}
+
+.explorer-leaf:hover {
+  background: var(--sh-inset);
+}
+
+.explorer-namespace {
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.explorer-node[aria-selected='true'] > .explorer-leaf {
+  background: var(--accent-weak);
+}
+
+/* The focusable element is the <li>, and an <li> wraps its whole nested subtree — so the UA's
+   default ring lands around every descendant row rather than the one that has focus. Drawn on the
+   row instead, the same shape the selected rule above already uses for the same reason. */
+.explorer-node:focus-visible {
+  outline: none;
+}
+
+.explorer-node:focus-visible > .explorer-leaf {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.origin-badge,
+.quarantine-badge {
+  font-size: 0.7rem;
+  padding: 0 4px;
+  border-radius: var(--radius);
+  opacity: 0.75;
+}
+
+/* Quarantine reads as a problem and stacks with the origin badge rather than replacing it —
+   an overridden proposition can also be quarantined. */
+.quarantine-badge {
+  background: color-mix(in srgb, var(--danger) 15%, transparent);
+  color: var(--danger);
+  opacity: 1;
+}
+
+.explorer-empty {
+  padding: calc(var(--space) / 2) 12px;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+/* ---------------------------------------------------------------------------
+   New/Derive/Override dialog and the dependents strip.
+   --------------------------------------------------------------------------- */
+/* Right padding keeps a long title ("Override some.long.name") clear of `Modal`'s close control,
+   which floats over the dialog's top-right corner. */
+.dialog-title {
+  margin: 0;
+  padding-right: 24px;
+  font-size: 1rem;
+}
+
+.dialog-field,
+.dialog-field label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dialog-field small {
+  color: var(--muted);
+}
+
+/* A hint that is also the reason Create is unavailable, so it is not muted away like the others. */
+.dialog-field small.dialog-warning {
+  color: var(--danger);
+}
+
+.dialog-error {
+  margin: 0;
+  color: var(--danger);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space);
+}
+
+/* Kept in view while editing rather than sprung at save time. */
+.dependents-strip {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space);
+  padding: var(--space) 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+
+.dependents-strip ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Native <dialog>. The element is display:none until opened, so `[open]` carries the layout. */
+.modal {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--sh-panel);
+  color: var(--text);
+  padding: 0;
+  box-shadow: 0 12px 40px rgb(0 0 0 / 22%);
+  max-width: min(680px, 92vw);
+  width: 100%;
+}
+
+.modal::backdrop {
+  background: rgb(15 18 22 / 42%);
+}
+
+.modal-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+/* The New/Derive/Override dialog is a `Modal` variant — the surface (border, radius, background,
+   shadow) comes from `.modal`, so only the form's own measure is stated here. It has to precede
+   the mobile rule below: both are single-class selectors setting `width` on the same element, so
+   source order is the whole of the cascade between them.
+
+   The padding and the row rhythm are deliberately *not* here — see `.dialog-form`. What is left is
+   a measure and nothing else: the only geometry the element can carry without also becoming
+   clickable area. The flex column the phone sheet needs comes from `.modal-mobile-full` below,
+   which `PropositionDialog` always asks for — restating it here would be a duplicate. */
+.dialog {
+  width: min(28rem, calc(100vw - 2rem));
+}
+
+/* The form's frame and the bands between its rows, on a wrapper inside the `<dialog>` rather than
+   on the dialog itself. `Modal` dismisses a click whose target *is* the dialog element, because a
+   dialog's backdrop is part of that element and there is no separate node to listen on — and an
+   element's padding box and flex gaps hit-test as the element too. On the dialog these 16px and
+   12px bands were live backdrop, so a click just outside a field threw away everything typed. On a
+   wrapper that covers the element edge to edge, every click inside the dialog's bounds lands on a
+   descendant. `PropositionDialog` states the same thing at the markup, and
+   `PropositionsPage.test.tsx` pins the structure this depends on. */
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 1.5);
+  padding: calc(var(--space) * 2);
+}
+
+/* The palette's measure, stated here rather than beside the rest of `.palette` further down, for
+   the same reason `.dialog` sits here: it is a single-class selector setting `max-width` on the
+   same element as `.modal-mobile-full` below, so left where it read most naturally it would win on
+   source order and cap the phone-fullscreen palette at 92vw — a 358.8px sheet on a 390px screen,
+   with the border and radius already stripped off it. No unit test can see that; only the e2e
+   `boundingBox` check can. */
+.palette { max-width: min(560px, 92vw); }
+
+@media (max-width: 900px) {
+  .modal-mobile-full {
+    max-width: none;
+    width: 100vw;
+    height: 100dvh;
+    max-height: none;
+    border: none;
+    border-radius: 0;
+  }
+
+  /* The sheet is a full 100dvh here, and the form is shorter than that. Without this the form
+     stacks at the top and the rest of the phone screen is bare dialog element — clickable, and
+     looking like nothing at all. Mirrors what `.modal-body` does for the document viewer. */
+  .modal-mobile-full .dialog-form { flex: 1; overflow-y: auto; }
+}
+
+/* Ghost: invisible at rest, a soft well on hover and focus. The whole toolbar treatment. */
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px;
+  border: none;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.ghost:hover { background: var(--sh-inset); color: var(--text); }
+.ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* Unavailable actions stay focusable — see Toolbar.tsx — so this is the only signal that they
+   are inert, and it must not rely on :disabled. */
+.ghost[aria-disabled='true'] { color: var(--faint); cursor: default; }
+.ghost[aria-disabled='true']:hover { background: none; color: var(--faint); }
+
+.toolbar { display: flex; align-items: center; gap: 4px; }
+.toolbar-slot { display: inline-flex; }
+
+/* Visible to assistive technology, not to the eye. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.palette-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--faint);
+}
+
+.palette-input {
+  flex: 1;
+  border: none;
+  background: none;
+  color: var(--text);
+  font: 14px var(--sans);
+  outline: none;
+}
+
+.palette-count { font: 11px var(--sans); color: var(--faint); }
+
+.palette-list { list-style: none; margin: 0; padding: 4px 0; max-height: 46vh; overflow-y: auto; }
+.palette-browse { padding: 4px 0; max-height: 46vh; overflow-y: auto; }
+
+.palette-row { padding: 5px 12px; font: 13px var(--sans); color: var(--text); cursor: pointer; }
+.palette-row:hover { background: var(--sh-inset); }
+.palette-row.highlighted { background: var(--accent-weak); }
+
+/* A matched row: the leaf in the text colour, the namespace it lives under faded behind it, and
+   the origin pushed to the far edge so the badges line up down the list. */
+.palette-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.palette-ns { color: var(--faint); }
+
+.palette-badge {
+  margin-left: auto;
+  font: 10px var(--sans);
+  color: var(--faint);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 4px;
+}
+
+.palette-footer {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 8px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+@media (max-width: 900px) {
+  .palette-list, .palette-browse { max-height: none; flex: 1; }
+  .palette { display: flex; flex-direction: column; }
+}
+
+.modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  font: 600 13px var(--sans);
+  color: var(--text);
+}
+
+.modal-body { padding: 10px 12px; max-height: 60vh; overflow: auto; }
+
+@media (max-width: 900px) {
+  .modal-mobile-full .modal-body { max-height: none; flex: 1; }
+  .modal-mobile-full { display: flex; flex-direction: column; }
+}
+
+/* Admin: the grants table and the add-grant form beneath it */
+.grants-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.grants-table th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--muted);
+  padding: calc(var(--space) / 2) var(--space);
+  border-bottom: 1px solid var(--border);
+}
+
+.grants-table td {
+  padding: calc(var(--space) / 2) var(--space);
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
+.admin-add-form {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space);
+  flex-wrap: wrap;
+}
+
+.admin-add-form .field {
+  min-width: 140px;
+}

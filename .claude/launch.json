@@ -2,16 +2,16 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "rules-demo",
+      "name": "studio",
       "runtimeExecutable": "dotnet",
-      "runtimeArgs": ["run", "--project", "src/examples/Motiv.RulesEngine.Sample"],
+      "runtimeArgs": ["run", "--project", "src/Motiv.Studio"],
       "port": 5100,
       "autoPort": true
     },
     {
-      "name": "rules-demo-ui",
+      "name": "studio-ui",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--dir", "ui/apps/demo", "dev", "--port", "5173", "--strictPort"],
+      "runtimeArgs": ["--dir", "ui/apps/studio", "dev", "--port", "5173", "--strictPort"],
       "port": 5173
     }
   ]

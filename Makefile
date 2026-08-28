@@ -1,3 +1,3 @@
-.PHONY: demo
-demo:
-	ASPNETCORE_ENVIRONMENT=Development ./run-demo.sh
+.PHONY: studio
+studio:
+	ASPNETCORE_ENVIRONMENT=Development ./run-studio.sh

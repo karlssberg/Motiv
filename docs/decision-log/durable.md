@@ -3,7 +3,7 @@ title: The Durable Sink and Retention
 description: SqlDecisionSink, SqlDecisionSinkOptions, DecisionSqlDialect, DecisionQuery and DecisionPurgeReport — a raw-append decision log in its own database, a retention window it refuses to be built without, and the purge that honours it.
 ---
 
-`InMemoryDecisionSink` is the reference implementation: enough for development, tests and the sample,
+`InMemoryDecisionSink` is the reference implementation: enough for development, tests and Studio,
 and explicitly not enough for production, where the log must outlive the process and be bounded by a
 window. `SqlDecisionSink`, in the **`Motiv.Serialization.Sql`** package, is the durable half.
 

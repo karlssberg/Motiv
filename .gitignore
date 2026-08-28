@@ -32,22 +32,22 @@ node_modules/
 .superpowers/
 .memsearch/
 
-# Sample host state: the file-backed proposition store's data, not source.
-src/examples/Motiv.RulesEngine.Sample/propositions.json
+# Studio host state: the file-backed proposition store's data, not source.
+src/Motiv.Studio/propositions.json
 
-# Sample host state: the file-backed gate store's active approval-gate document. Read at startup;
+# Studio host state: the file-backed gate store's active approval-gate document. Read at startup;
 # written once the gate is configured over HTTP (PUT /gate). Deployment state, not source.
-src/examples/Motiv.RulesEngine.Sample/gate.json
+src/Motiv.Studio/gate.json
 
-# Sample host state: the file-backed rule store's append-only version log. Read at startup; grows
+# Studio host state: the file-backed rule store's append-only version log. Read at startup; grows
 # every time a rule is hot-swapped over HTTP. Deployment state, not source.
-src/examples/Motiv.RulesEngine.Sample/rules.json
+src/Motiv.Studio/rules.json
 
-# Sample host state: the EF Core-backed rule and proposition store's SQLite database (and its
+# Studio host state: the EF Core-backed rule and proposition store's SQLite database (and its
 # journal/WAL sidecar files), created in place by EnsureCreatedAsync on startup. Deployment state,
 # not source — supersedes rules.json/propositions.json above as the default store.
-src/examples/Motiv.RulesEngine.Sample/motiv-store.db
-src/examples/Motiv.RulesEngine.Sample/motiv-store.db-*
+src/Motiv.Studio/motiv-store.db
+src/Motiv.Studio/motiv-store.db-*
 # The decision log is a separate database from the authoring store, deliberately — see Spec 3D.
-src/examples/Motiv.RulesEngine.Sample/motiv-decisions.db
-src/examples/Motiv.RulesEngine.Sample/motiv-decisions.db-*
+src/Motiv.Studio/motiv-decisions.db
+src/Motiv.Studio/motiv-decisions.db-*

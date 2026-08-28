@@ -69,7 +69,7 @@ administrator checks answer with their own fixed wording).
 
 ## Example
 
-`src/examples/Motiv.RulesEngine.Sample/GrantSources.cs` has three real implementations worth reading
+`src/Motiv.Studio/GrantSources.cs` has three real implementations worth reading
 end to end: a zero-config `DevGrantSource` that grants a single dev principal everything, a mutable
 `JsonFileGrantSource` with in-app administration and a last-administrator invariant, and a
 `ClaimsGrantSource` that maps IdP role claims to namespace grants via configuration — the one exercised

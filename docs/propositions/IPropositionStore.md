@@ -57,8 +57,8 @@ public sealed class JsonFilePropositionStore(string path) : IPropositionStore
 }
 ```
 
-The sample host ships exactly this, with the `try`/`catch` and locking spelled out &mdash; see
-`src/examples/Motiv.RulesEngine.Sample/JsonFilePropositionStore.cs`. Note that it *reports* what it
+Studio ships exactly this, with the `try`/`catch` and locking spelled out &mdash; see
+`src/Motiv.Studio/JsonFilePropositionStore.cs`. Note that it *reports* what it
 swallows: because `WriteAsync` rewrites the file from whatever `ReadAll` returned, an unreadable file
 that went unmentioned would be overwritten at the next write rather than kept for repair.
 
@@ -104,7 +104,7 @@ token the store checks.
 That is a real gap, and closing it is deferred to its own spec rather than smuggled in, because it is
 a **breaking change** — it would change `IPropositionStore` (a write would have to be able to report
 a conflict), `PropositionSet` (which would have to decide what to do about one), and every store
-implementation: the in-memory default, the sample's `JsonFilePropositionStore`, and
+implementation: the in-memory default, Studio's `JsonFilePropositionStore`, and
 [`EfPropositionStore`](../live-rules/entity-framework-store.md#the-schema). Until then, treat
 proposition authoring as single-writer, or gate it behind the
 [approval workflow](../governance/index.md), which serialises edits before they reach a store.

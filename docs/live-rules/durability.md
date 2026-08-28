@@ -33,8 +33,8 @@ builder.Services.AddMotivRules(registry, options)
 Without `AddRuleStore()`, rules live for the process lifetime only, exactly as before this feature
 existed &mdash; `InMemoryRuleStore` backs every `RuleSet` that isn't given a store explicitly, and
 is a real store, not a stub: it enforces the same `(Name, Version)` primary key a database store
-would. `JsonFileRuleStore` above is the sample host's own `IRuleStore`, not a library type; see
-`src/examples/Motiv.RulesEngine.Sample/JsonFileRuleStore.cs`.
+would. `JsonFileRuleStore` above is Studio's own `IRuleStore`, not a library type; see
+`src/Motiv.Studio/JsonFileRuleStore.cs`.
 
 `AddMotivRules()` loads the store when the `RuleSet` is first resolved, applying every stored head
 over each rule's compiled default &mdash; after every `AddRule<TRule>()` has enrolled its rule, and
@@ -153,7 +153,7 @@ This release does not ship a background poller that calls `GetGenerationAsync()`
 timer to refresh one replica from another's write, or the client-facing fencing token that would
 ride on it &mdash; both are planned separately, as is an EF Core store (with migrations and an
 importer that round-trips a file-backed store into it). Until then, `IRuleStore` implementations are
-supplied by the host (see `JsonFileRuleStore` in the sample), and a replica only reads the store at
+supplied by the host (see `JsonFileRuleStore` in Studio), and a replica only reads the store at
 its own startup.
 
 ## Remarks

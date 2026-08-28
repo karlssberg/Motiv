@@ -68,7 +68,7 @@ Two safety nets sit under the gate, for when it is misconfigured:
 ## Trying it with a real IdP
 
 The repository's `docker-compose.yml` has an opt-in `auth` profile (`docker compose --profile auth up`)
-that wires the sample host to a real Keycloak instance instead of the zero-config dev identity, for
+that wires Studio to a real Keycloak instance instead of the zero-config dev identity, for
 exercising authentication and namespace grants end to end. The compose file and realm import are a
 sample-app concern, not part of the library surface documented on this page.
 

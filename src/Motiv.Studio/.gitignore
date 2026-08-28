@@ -1,0 +1,2 @@
+# Built SPA assets produced by `pnpm -C ui/apps/studio build`; not committed.
+wwwroot/
