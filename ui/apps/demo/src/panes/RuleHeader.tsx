@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { RuleListEntry, RulesApiClient } from '@motiv-rules/core';
-import { useRuleEditor, useRuleEditorStore } from '@motiv-rules/react';
+import { whyRuleSaveUnavailable } from '@motiv-rules/core/workflow';
+import { useRuleEditorStore } from '@motiv-rules/react';
+import { useRuleWorkflow } from '@motiv-rules/react/workflow';
 import { MODEL_TYPE } from '../App.js';
 import type { Page } from '../routing/useHashRoute.js';
 import { AppBar } from './AppBar.js';
@@ -11,8 +13,8 @@ import { useCommandKey } from '../shell/useCommandKey.js';
 import { IconJson, IconOpen, IconSave } from '../shell/icons.js';
 
 /**
- * One row of the rule palette: the name `load` fetches by, and the text the row reads as. They
- * are the same string for every server rule, and deliberately not for the local draft.
+ * One row of the rule palette: the name the workflow loads by, and the text the row reads as.
+ * They are the same string for every server rule, and deliberately not for the local draft.
  */
 interface RuleOption {
   id: string;
@@ -21,30 +23,17 @@ interface RuleOption {
 
 /**
  * The palette's first row: nothing loaded from the server, so nothing to save back to it. The
- * empty id is what `load` reads as "unload" — the document in the editor is left alone, since
- * it is the draft either way — and the label stands in for the name it has not got.
+ * empty id is what the choose handler reads as "unload" — the document in the editor is left
+ * alone, since it is the draft either way — and the label stands in for the name it has not got.
  */
 const LOCAL_DRAFT: RuleOption = { id: '', label: 'local draft' };
-
-/** The picked rule's server identity: what Save must send back to avoid clobbering. */
-interface LoadedRule {
-  name: string;
-  version: number;
-  isCodeDefault: boolean;
-}
-
-/** Why Save cannot run, or `undefined` when it can. */
-function whyNotSave(loaded: LoadedRule | null, saving: boolean): string | undefined {
-  if (loaded === null) return 'Nothing loaded yet.';
-  if (saving) return 'Saving…';
-  return undefined;
-}
 
 /**
  * Seam: dynamic replacement. Picks a live server rule, loads its document into the shared
  * editor store, and saves it back with the loaded version — a stale version surfaces as a
- * conflict banner (open two tabs to watch the race protection work). Reports the picked
- * rule's catalog entry via onLoaded so the shell can adapt (e.g. async validation).
+ * conflict banner (open two tabs to watch the race protection work). The save loop itself is
+ * `RuleWorkflowController`'s; this renders it. Reports the picked rule's catalog entry via
+ * onLoaded so the shell can adapt (e.g. async validation).
  */
 export function RuleHeader(props: {
   client: RulesApiClient;
@@ -53,11 +42,8 @@ export function RuleHeader(props: {
   onNavigate: (page: Page) => void;
 }) {
   const store = useRuleEditorStore();
-  const state = useRuleEditor(store);
-  const [rules, setRules] = useState<RuleListEntry[]>([]);
-  const [loaded, setLoaded] = useState<LoadedRule | null>(null);
-  const [conflict, setConflict] = useState<number | null>(null);
-  const [saving, setSaving] = useState(false);
+  const { rules, loaded, loadedEntry, conflict, saving, refresh, load, save } =
+    useRuleWorkflow(props.client, store);
   const [picking, setPicking] = useState(false);
   const [documentOpen, setDocumentOpen] = useState(false);
   // Memoised because the palette filters against `items` by identity: a fresh array on every
@@ -67,53 +53,16 @@ export function RuleHeader(props: {
     [rules],
   );
 
-  useEffect(() => {
-    let cancelled = false;
-    void props.client.listRules().then((entries) => {
-      if (!cancelled) setRules(entries);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [props.client]);
+  // `refresh` is stable per (client, store) binding, so this fetches once per server world.
+  useEffect(() => { void refresh(); }, [refresh]);
+
+  // What the shell adapts to is workflow state; the prop is just how it is handed over.
+  const onLoaded = props.onLoaded;
+  useEffect(() => { onLoaded?.(loadedEntry); }, [onLoaded, loadedEntry]);
 
   // The same shortcut the propositions page opens its palette with — one implementation, so the
   // two cannot drift into meaning different things.
   useCommandKey(() => setPicking(true));
-
-  const load = async (name: string): Promise<void> => {
-    if (!name) {
-      setLoaded(null);
-      setConflict(null);
-      props.onLoaded?.(null);
-      return;
-    }
-    const response = await props.client.getRule(name);
-    setConflict(null);
-    setLoaded({ name, version: response.version, isCodeDefault: response.document === null });
-    props.onLoaded?.(rules.find((rule) => rule.name === name) ?? null);
-    if (response.document) store.loadDocument(response.document);
-  };
-
-  const save = async (): Promise<void> => {
-    if (!loaded) return;
-    setSaving(true);
-    try {
-      const result = await props.client.putRule(loaded.name, state.document, loaded.version);
-      if (result.outcome === 'updated') {
-        setConflict(null);
-        setLoaded({ ...loaded, version: result.version, isCodeDefault: false });
-      } else if (result.outcome === 'conflict') {
-        setConflict(result.currentVersion);
-      } else {
-        // Flavour-specific rejections (e.g. PolicyRequired) are invisible to live
-        // validation — surface them in the shared error list.
-        store.setErrors(result.errors);
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
 
   return (
     <>
@@ -132,7 +81,7 @@ export function RuleHeader(props: {
               { id: 'open', label: 'Open', icon: IconOpen, onActivate: () => setPicking(true) },
               {
                 id: 'save', label: 'Save', icon: IconSave, onActivate: () => void save(),
-                unavailable: whyNotSave(loaded, saving),
+                unavailable: whyRuleSaveUnavailable({ loaded, saving }),
               },
               { id: 'json', label: 'JSON', icon: IconJson, onActivate: () => setDocumentOpen(true) },
             ]} />
@@ -164,7 +113,7 @@ export function RuleHeader(props: {
           // empty by design: an id-driven row would read as blank and be unsearchable.
           match={(option, needle) => option.label.toLowerCase().includes(needle.toLowerCase())}
           renderItem={(option) => <span className="palette-name">{option.label}</span>}
-          onChoose={(option) => { void load(option.id); setPicking(false); }}
+          onChoose={(option) => { void load(option.id || null); setPicking(false); }}
           onClose={() => setPicking(false)}
         />
       )}

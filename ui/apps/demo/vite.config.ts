@@ -25,7 +25,16 @@ export default defineConfig({
     // fields point at `dist/`, which is gitignored and built by a separate `pnpm build`,
     // so tests would otherwise run against a stale artefact — or fail outright on a fresh
     // clone. Only tests are aliased; `vite build` still consumes the published entry points.
+    // The subpath entries are listed before the roots: a plain-string alias also matches the
+    // ids that extend it, appending the remainder to the replacement — so the root alias alone
+    // would resolve `@motiv-rules/core/workflow` to `src/index.ts/workflow`.
     alias: {
+      '@motiv-rules/core/workflow': fileURLToPath(
+        new URL('../../packages/rules-core/src/workflow/index.ts', import.meta.url),
+      ),
+      '@motiv-rules/react/workflow': fileURLToPath(
+        new URL('../../packages/rules-react/src/workflow/index.ts', import.meta.url),
+      ),
       '@motiv-rules/core': packageSource('rules-core'),
       '@motiv-rules/react': packageSource('rules-react'),
     },
