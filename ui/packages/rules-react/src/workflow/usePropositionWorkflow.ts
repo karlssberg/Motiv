@@ -46,10 +46,15 @@ export function usePropositionWorkflow(
   // consumer's onSelect is typically an inline closure that changes identity every render — the
   // handover must reach the one the component holds now, not a stale closure captured at
   // construction.
+  //
+  // Updated in an effect rather than during render: React treats refs as commit-phase state, and
+  // a render-phase write would install a callback from a render that concurrent React may yet
+  // discard. The cost is a narrow window after a prop change in which an in-flight completion
+  // still reaches the previous callback — the safer trade, since that callback did render.
   const onSelectRef = useRef(options.onSelect);
   useEffect(() => {
     onSelectRef.current = options.onSelect;
-  });
+  }, [options.onSelect]);
 
   // The controller holds workflow state (the selection, an unreported failure), so it lives in
   // state, not `useMemo` — React documents the memo cache as discardable. A client or store swap

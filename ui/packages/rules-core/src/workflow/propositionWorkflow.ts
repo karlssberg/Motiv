@@ -80,6 +80,8 @@ export class PropositionWorkflowController {
   #selected: string | null = null;
   /** Bumped per select, so only the newest selection's answer lands. */
   #selectOp = 0;
+  /** Bumped per listing fetch, so only the newest listing lands. */
+  #entriesOp = 0;
   /** The state object handed out until something changes, so unchanged reads stay identical. */
   #snapshot: PropositionWorkflowState | null = null;
 
@@ -274,7 +276,12 @@ export class PropositionWorkflowController {
 
   /** The listing fetch itself, throwing to the caller — who decides whether reporting is honest. */
   async #fetchEntries(): Promise<void> {
-    this.#entries = await this.#client.listPropositions();
+    // Listings overlap in ordinary use — the mount refresh against one a save or create
+    // triggered — and the older answer describes a world the newer one has already replaced.
+    const op = ++this.#entriesOp;
+    const entries = await this.#client.listPropositions();
+    if (op !== this.#entriesOp) return;
+    this.#entries = entries;
     this.#notify();
   }
 }
