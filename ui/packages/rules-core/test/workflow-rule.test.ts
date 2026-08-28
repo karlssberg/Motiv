@@ -68,6 +68,17 @@ describe('RuleWorkflowController', () => {
     expect(controller.getState().rules).toEqual([listing[0]]);
   });
 
+  it('refresh re-derives the loaded entry from the listing it adopts', async () => {
+    const { controller } = makeController();
+    // Loaded before the listing ever arrived: nothing to derive the entry from yet.
+    await controller.load('fraud-screening');
+    expect(controller.getState().loadedEntry).toBeNull();
+
+    await controller.refresh();
+
+    expect(controller.getState().loadedEntry).toEqual(listing[1]);
+  });
+
   it('load takes the rule identity and pushes its document into the store', async () => {
     const { controller, store } = makeController();
     await controller.refresh();
@@ -188,6 +199,44 @@ describe('RuleWorkflowController', () => {
     await controller.save();
 
     expect(store.getState().errors).toEqual(errors);
+  });
+
+  it('a save outcome never lands on a newer load', async () => {
+    const put = deferred<{ outcome: string; version: number }>();
+    const client = makeClient({
+      putRule: vi.fn().mockReturnValue(put.promise),
+      getRule: vi.fn()
+        .mockResolvedValueOnce({ document: { rule: { spec: 'is-adult' } }, version: 3 })
+        .mockResolvedValueOnce({ document: { rule: { spec: 'is-vip' } }, version: 7 }),
+    });
+    const { controller } = makeController(client);
+    await controller.load('can-checkout');
+
+    const inFlight = controller.save();
+    await controller.load('fraud-screening');
+    put.resolve({ outcome: 'updated', version: 4 });
+    await inFlight;
+
+    // The save was aimed at can-checkout; fraud-screening keeps its own identity.
+    expect(controller.getState().loaded).toEqual({
+      name: 'fraud-screening', version: 7, isCodeDefault: false,
+    });
+    expect(controller.getState().saving).toBe(false);
+  });
+
+  it('a superseded save conflict never mislabels a newer load', async () => {
+    const put = deferred<{ outcome: string; currentVersion: number }>();
+    const client = makeClient({ putRule: vi.fn().mockReturnValue(put.promise) });
+    const { controller } = makeController(client);
+    await controller.load('can-checkout');
+
+    const inFlight = controller.save();
+    await controller.load('fraud-screening');
+    put.resolve({ outcome: 'conflict', currentVersion: 9 });
+    await inFlight;
+
+    // The conflict belongs to can-checkout, which is no longer on screen.
+    expect(controller.getState().conflict).toBeNull();
   });
 
   it('saving is flagged while the PUT is in flight, and cleared even when it throws', async () => {

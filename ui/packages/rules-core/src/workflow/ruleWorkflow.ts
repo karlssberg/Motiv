@@ -87,6 +87,11 @@ export class RuleWorkflowController {
     const rules = await this.#client.listRules();
     if (op !== this.#refreshOp) return;
     this.#rules = rules;
+    // The loaded entry is a claim about the listing, so it follows the listing: a rule loaded
+    // before the listing arrived (or renamed out of a later one) would otherwise keep a stale
+    // `null`/entry while `rules` moved on.
+    const loaded = this.#loaded;
+    if (loaded) this.#loadedEntry = rules.find((rule) => rule.name === loaded.name) ?? null;
     this.#notify();
   }
 
@@ -123,12 +128,17 @@ export class RuleWorkflowController {
   async save(): Promise<void> {
     const loaded = this.#loaded;
     if (!loaded) return;
+    // The outcome below is a claim about this identity. If a load lands while the PUT is in
+    // flight, applying it would drag the state back to the previously saved rule — a version
+    // badge or conflict describing something no longer on screen.
+    const op = this.#loadOp;
     this.#saving = true;
     this.#notify();
     try {
       const result = await this.#client.putRule(
         loaded.name, this.#store.getState().document, loaded.version,
       );
+      if (op !== this.#loadOp) return;
       if (result.outcome === 'updated') {
         this.#conflict = null;
         this.#loaded = { name: loaded.name, version: result.version, isCodeDefault: false };
