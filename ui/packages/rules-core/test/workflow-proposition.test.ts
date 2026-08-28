@@ -68,6 +68,24 @@ describe('PropositionWorkflowController', () => {
     expect(broken.getState().failure).toBe('listing down');
   });
 
+  it('a superseded listing refresh never overwrites a newer one', async () => {
+    const first = deferred<PropositionListEntry[]>();
+    const client = makeClient({
+      listPropositions: vi.fn()
+        .mockReturnValueOnce(first.promise)
+        .mockResolvedValueOnce([entries[0]!]),
+    });
+    const { controller } = makeController(client);
+
+    // Two listings in the air at once — the mount refresh racing one a save or create triggered.
+    const stale = controller.refreshEntries();
+    await controller.refreshEntries();
+    first.resolve(entries);
+    await stale;
+
+    expect(controller.getState().entries).toEqual([entries[0]]);
+  });
+
   describe('select', () => {
     it('fetches the proposition and its blast radius together', async () => {
       const { controller, store, client } = makeController();
