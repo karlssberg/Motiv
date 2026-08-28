@@ -213,6 +213,25 @@ describe('PropositionWorkflowController', () => {
       expect(controller.getState().failure).toBeNull();
     });
 
+    it('refuses a concurrent save, so the saving flag never lies', async () => {
+      const put = deferred<{ outcome: string; version: number }>();
+      const client = makeClient({ putProposition: vi.fn().mockReturnValue(put.promise) });
+      const { controller } = makeController(client);
+      await controller.select('pricing.is-vip');
+
+      const first = controller.save();
+      // The second call lands while the first PUT is in flight. Issuing it would put two saves in
+      // the air, and the earlier completion would clear `saving` under the one still running.
+      await controller.save();
+
+      expect(client.putProposition).toHaveBeenCalledTimes(1);
+      expect(controller.getState().saving).toBe(true);
+
+      put.resolve({ outcome: 'saved', version: 3 });
+      await first;
+      expect(controller.getState().saving).toBe(false);
+    });
+
     it('reports a thrown save while its selection is still current, and only then', async () => {
       const client = makeClient({
         putProposition: vi.fn().mockRejectedValue(new Error('boom')),
@@ -254,6 +273,29 @@ describe('PropositionWorkflowController', () => {
       // Overridden origin means the DELETE reverts to the compiled spec: the name survives.
       expect(onSelect).toHaveBeenCalledWith('is-adult');
       expect(client.getProposition).toHaveBeenCalledTimes(2);
+    });
+
+    it('a revert hands the selection back only while it is still the selection', async () => {
+      const reloadGate = deferred<PropositionGetResponse>();
+      const client = makeClient({
+        getProposition: vi.fn()
+          .mockResolvedValueOnce({ document: null, version: 1, origin: 'Overridden', hasCompiledDefault: true })
+          .mockReturnValueOnce(reloadGate.promise)
+          .mockResolvedValueOnce({ document: null, version: 2, origin: 'Authored', hasCompiledDefault: false }),
+      });
+      const { controller, onSelect } = makeController(client);
+      await controller.select('is-adult');
+
+      const inFlight = controller.remove(entries[1]!);
+      // Wait until the revert's refetch is in flight — the selection was still the reverted
+      // entry's when the outcome landed — then move it on before that refetch answers.
+      await vi.waitFor(() => expect(client.getProposition).toHaveBeenCalledTimes(2));
+      await controller.select('pricing.is-vip');
+      reloadGate.resolve({ document: null, version: 0, origin: 'Compiled', hasCompiledDefault: true });
+      await inFlight;
+
+      // Handing 'is-adult' back now would drag the user off what they picked during the reload.
+      expect(onSelect).not.toHaveBeenCalled();
     });
 
     it('a refusal is rendered as banner text', async () => {

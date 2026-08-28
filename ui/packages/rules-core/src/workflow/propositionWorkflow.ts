@@ -179,6 +179,10 @@ export class PropositionWorkflowController {
   async save(): Promise<void> {
     const saved = this.#loaded;
     if (!saved) return;
+    // One save at a time, so `saving` cannot lie: a second PUT issued while the first is in
+    // flight would have the earlier completion clear the flag under the one still running, and
+    // `whyPropositionSaveUnavailable` would report a save is available while one is in progress.
+    if (this.#saving) return;
     this.#saving = true;
     this.#notify();
     try {
@@ -233,6 +237,10 @@ export class PropositionWorkflowController {
 
     if (reverts) {
       await this.reload();
+      // The reload is one more await the selection can move across, and the handover below is
+      // still a claim about this entry: the name survived the revert, but only the user's
+      // current selection decides where they should be.
+      if (this.#selected !== entry.name) return;
       this.#onSelect?.(entry.name);
       return;
     }

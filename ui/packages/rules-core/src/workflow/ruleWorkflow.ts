@@ -128,6 +128,10 @@ export class RuleWorkflowController {
   async save(): Promise<void> {
     const loaded = this.#loaded;
     if (!loaded) return;
+    // One save at a time, so `saving` cannot lie: a second PUT issued while the first is in
+    // flight would have the earlier completion clear the flag under the one still running, and
+    // `whyRuleSaveUnavailable` would report a save is available while one is in progress.
+    if (this.#saving) return;
     // The outcome below is a claim about this identity. If a load lands while the PUT is in
     // flight, applying it would drag the state back to the previously saved rule — a version
     // badge or conflict describing something no longer on screen.

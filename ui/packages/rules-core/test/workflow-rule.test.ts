@@ -239,6 +239,25 @@ describe('RuleWorkflowController', () => {
     expect(controller.getState().conflict).toBeNull();
   });
 
+  it('refuses a concurrent save, so the saving flag never lies', async () => {
+    const put = deferred<{ outcome: string; version: number }>();
+    const client = makeClient({ putRule: vi.fn().mockReturnValue(put.promise) });
+    const { controller } = makeController(client);
+    await controller.load('can-checkout');
+
+    const first = controller.save();
+    // The second call lands while the first PUT is in flight. Issuing it would put two saves in
+    // the air, and the earlier completion would clear `saving` under the one still running.
+    await controller.save();
+
+    expect(client.putRule).toHaveBeenCalledTimes(1);
+    expect(controller.getState().saving).toBe(true);
+
+    put.resolve({ outcome: 'updated', version: 4 });
+    await first;
+    expect(controller.getState().saving).toBe(false);
+  });
+
   it('saving is flagged while the PUT is in flight, and cleared even when it throws', async () => {
     const put = deferred<never>();
     const client = makeClient({ putRule: vi.fn().mockReturnValue(put.promise) });
