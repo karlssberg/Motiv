@@ -23,3 +23,13 @@ diagnostics — and renders nothing.
 The package root exports a chosen API, named export by named export — never `export *`. The
 runtime surface is pinned by `test/api-surface.test.ts`; widening it is a deliberate edit to
 that snapshot. Symbols a module exports but the root does not re-export are internal.
+
+## The workflow entry point
+
+`@motiv-rules/core/workflow` carries the authoring *session*'s logic — optimistic save with
+version adoption, 409 conflict recovery, blast-radius reporting, and the failure-text
+projections — as framework-free controllers (`RuleWorkflowController`,
+`PropositionWorkflowController`) with the same `subscribe`/`getState` shape as the stores.
+It is a separate entry point on purpose: taking the document logic from the package root never
+drags in session opinions or the `RulesApiClient` coupling. Its surface is pinned by the same
+approved-API snapshot.

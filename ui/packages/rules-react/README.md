@@ -13,3 +13,9 @@ delegated to the consumer.
   component lifecycle.
 - `JustificationTree` — the one component: a render-prop projection of an evaluation's
   justification that owns the accessibility semantics and none of the markup.
+
+`@motiv-rules/react/workflow` is the matching entry point for the session workflow —
+`useRuleWorkflow` and `usePropositionWorkflow` bind `@motiv-rules/core/workflow`'s controllers
+(optimistic save, 409 recovery, blast-radius reporting) to the component lifecycle, and nothing
+more. It is split out for the same reason core splits it: the document bindings above are
+takeable without the session workflow.

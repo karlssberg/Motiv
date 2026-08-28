@@ -1,10 +1,10 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/index.ts'],
+  entry: ['src/index.ts', 'src/workflow/index.ts'],
   format: ['esm', 'cjs'],
   dts: true,
   clean: true,
   sourcemap: true,
-  external: ['react', '@motiv-rules/core'],
+  external: ['react', '@motiv-rules/core', '@motiv-rules/core/workflow'],
 });

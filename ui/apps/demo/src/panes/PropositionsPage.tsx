@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type {
-  DependentEntry, PropositionListEntry, PropositionSaveResult, RulesApiClient,
-} from '@motiv-rules/core';
-import { useRuleEditor, useRuleEditorStore } from '@motiv-rules/react';
+import { useEffect, useState } from 'react';
+import type { RulesApiClient } from '@motiv-rules/core';
+import { whyPropositionSaveUnavailable } from '@motiv-rules/core/workflow';
+import { useRuleEditorStore } from '@motiv-rules/react';
+import { usePropositionWorkflow } from '@motiv-rules/react/workflow';
 import type { Page } from '../routing/useHashRoute.js';
 import { MODEL_TYPE } from '../App.js';
 import { AppBar } from './AppBar.js';
@@ -16,45 +16,6 @@ import { PropositionExplorer } from '../explorer/PropositionExplorer.js';
 import { PropositionDialog, type DialogSeed, type DialogValues } from '../explorer/PropositionDialog.js';
 import { DependentsStrip } from '../explorer/DependentsStrip.js';
 
-/** The loaded proposition's server identity: what Save must send back to avoid clobbering. */
-interface Loaded {
-  name: string;
-  version: number;
-}
-
-/** Renders a save failure as something a person can act on. */
-function describeFailure(result: PropositionSaveResult): string | null {
-  switch (result.outcome) {
-    case 'saved':
-      return null;
-    case 'conflict':
-      return `Someone else saved version ${result.currentVersion}. Reload before saving again.`;
-    case 'nameTaken':
-      return 'A proposition is already authored under that name.';
-    case 'referenced':
-      return `Still referenced by ${result.referrers.join(', ')}. Change those first.`;
-    case 'invalid': {
-      // Broken dependents are reported apart from document errors, because a document error's path
-      // points into *this* document and cannot address a break somewhere else.
-      const broken = result.brokenDependents.map((dependent) =>
-        `${dependent.kind} ${dependent.name} (${dependent.errors.map((error) => error.message).join('; ')})`);
-      return broken.length > 0
-        ? `This change would break ${broken.join(', ')}.`
-        : result.errors.map((error) => error.message).join('; ');
-    }
-  }
-}
-
-/**
- * Renders a *thrown* failure — everything `describeFailure` cannot see. The typed outcomes cover
- * the refusals the API models; a 500, a 404, or a body that will not parse arrives as a thrown
- * `RulesApiError` instead, and without this it would reach nobody: the page would simply do
- * nothing, which is indistinguishable from the request never having been made.
- */
-function describeThrown(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
 /**
  * The namespace a derivation of `name` should land in: everything up to and including the final
  * dot, or the empty string when the name has no namespace to keep.
@@ -65,24 +26,12 @@ function namespacePrefixOf(name: string): string {
 }
 
 /**
- * Why Save cannot run, or `undefined` when it can.
- *
- * Version 0 is the contract's "purely compiled": no overlay document exists for a PUT to update,
- * and `baseVersion` must be positive, so Save could only ever fail there. Authoring one is what
- * Override is for.
- */
-function whyNotSave(loaded: Loaded | null, saving: boolean): string | undefined {
-  if (loaded === null) return 'Nothing loaded yet.';
-  if (loaded.version === 0) return 'This name is served by a compiled spec. Use Override to author one.';
-  if (saving) return 'Saving…';
-  return undefined;
-}
-
-/**
  * The propositions page: the same Editor / Evaluate panes the rules page uses, with the namespaced
  * explorer behind the toolbar as a command palette and the document behind it as a modal. The panes
  * are reused unmodified — they read from the shared RuleEditorStore and never ask what the document
- * represents, so a proposition and a rule are the same thing to them.
+ * represents, so a proposition and a rule are the same thing to them. The save/delete/create loop
+ * itself — with its blast-radius reporting and stale-continuation guards — is
+ * `PropositionWorkflowController`'s; this renders it and wires the route to its selection.
  */
 export function PropositionsPage(props: {
   client: RulesApiClient;
@@ -92,178 +41,45 @@ export function PropositionsPage(props: {
   onSelect: (name: string | null) => void;
 }) {
   const store = useRuleEditorStore();
-  const state = useRuleEditor(store);
-  const [entries, setEntries] = useState<PropositionListEntry[]>([]);
-  const [loaded, setLoaded] = useState<Loaded | null>(null);
-  const [dependents, setDependents] = useState<DependentEntry[]>([]);
-  const [failure, setFailure] = useState<string | null>(null);
+  const {
+    entries, loaded, dependents, failure, saving,
+    refreshEntries, select, reload, save, remove, create,
+  } = usePropositionWorkflow(props.client, store, { onSelect: props.onSelect });
   const [dialog, setDialog] = useState<DialogSeed | null>(null);
   const [dialogError, setDialogError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [explorerOpen, setExplorerOpen] = useState(false);
   const [documentOpen, setDocumentOpen] = useState(false);
-  // Bumped when the selected name still names something, but something *different* — a revert
-  // being the case. The route cannot express that, since the name did not change.
-  const [reloads, setReloads] = useState(0);
-
-  // What the page is *currently* about, readable from an async continuation. A continuation closes
-  // over the selection as it was when the request went out, so it cannot tell on its own whether
-  // the answer it is holding still describes what is on screen. Nothing else disables the tree
-  // while a request is in flight, so a click during one is ordinary use, not a race to be ignored.
-  const selectedRef = useRef(props.selected);
-  useEffect(() => { selectedRef.current = props.selected; }, [props.selected]);
 
   // The same shortcut the rules page opens its palette with — one implementation, so the two
   // cannot drift into meaning different things.
   useCommandKey(() => setExplorerOpen(true));
 
-  const loadEntries = useCallback(async (): Promise<void> => {
-    setEntries(await props.client.listPropositions());
-  }, [props.client]);
-
-  /**
-   * `loadEntries`, with a failed reload reported in the page banner. Every caller but one wants
-   * this: the listing is reloaded on the back of some other act, so a reload that fails has to
-   * say so on its own behalf or nothing says it at all. `save` is the exception — its reload runs
-   * inside a continuation that decides from `selectedRef` whether reporting is still honest, so it
-   * awaits `loadEntries` directly and lets that decision have the last word.
-   */
-  const refresh = useCallback(async (): Promise<void> => {
-    try {
-      await loadEntries();
-    } catch (error: unknown) {
-      setFailure(describeThrown(error));
-    }
-  }, [loadEntries]);
-
-  useEffect(() => { void refresh(); }, [refresh]);
-
-  // Loading is keyed on the route, so a deep link and a click take exactly the same path.
-  useEffect(() => {
-    let cancelled = false;
-    const name = props.selected;
-
-    // Both of these are claims about whatever was selected a moment ago. Left standing they would
-    // read as claims about the incoming selection, and be wrong — so they go before the fetch, not
-    // when it lands. `loaded` is not cleared with them: it is replaced wholesale on arrival, and
-    // blanking the breadcrumb for one round trip buys nothing.
-    setFailure(null);
-    setDependents([]);
-
-    if (name === null) {
-      setLoaded(null);
-      return;
-    }
-
-    void (async () => {
-      try {
-        const [proposition, affected] = await Promise.all([
-          props.client.getProposition(name),
-          props.client.getDependents(name),
-        ]);
-        if (cancelled) return;
-        setDependents(affected);
-        setLoaded({ name, version: proposition.version });
-        if (proposition.document) store.loadDocument(proposition.document);
-      } catch (error: unknown) {
-        if (cancelled) return;
-        setFailure(describeThrown(error));
-        // `loaded` is deliberately left standing while a load is *in flight* — see above — but once
-        // the load has failed there is nothing coming to replace it, and a stale breadcrumb would
-        // go on naming a proposition the route no longer points at.
-        setLoaded(null);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, [props.client, props.selected, store, reloads]);
+  // `refreshEntries` and `select` are stable per (client, store) binding, so the listing loads
+  // once per server world and the selection follows the route: a deep link and a click take
+  // exactly the same path.
+  useEffect(() => { void refreshEntries(); }, [refreshEntries]);
+  useEffect(() => { void select(props.selected); }, [select, props.selected]);
 
   // The alphabetically first model type in the listing: what a New starts on, and what stands in
   // for an entry the listing has not got. Not de-duplicated first, since only the first is read.
   const defaultModelType = entries.map((entry) => entry.modelType).sort()[0] ?? MODEL_TYPE;
 
-  const save = async (): Promise<void> => {
-    if (!loaded) return;
-    const saved = loaded;
-    setSaving(true);
-    try {
-      const result = await props.client.putProposition(saved.name, state.document, saved.version);
-      // Everything below is a claim about `saved`. If the selection has moved on, those claims
-      // would land on whatever is showing now and be false of it — a version badge naming a save
-      // the visible document never had, or a banner blaming it for another's conflict.
-      if (selectedRef.current !== saved.name) return;
-      setFailure(describeFailure(result));
-      if (result.outcome === 'saved') {
-        setLoaded({ ...saved, version: result.version });
-        await loadEntries();
-      }
-    } catch (error: unknown) {
-      // Covers the reload as well as the PUT, and deliberately: this is the one place where a
-      // failed reload is reported only while the selection it followed is still on screen.
-      if (selectedRef.current === saved.name) setFailure(describeThrown(error));
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const remove = async (entry: PropositionListEntry): Promise<void> => {
-    // DELETE answers the same `{ version: 0 }` whether it reverted an override or removed an
-    // authored proposition outright, so which one is about to happen is read off the entry
-    // *before* the call — afterwards there is nothing in the response to tell them apart.
-    const reverts = entry.origin === 'Overridden';
-    let result: PropositionSaveResult;
-    try {
-      result = await props.client.deleteProposition(entry.name, entry.version);
-    } catch (error: unknown) {
-      if (selectedRef.current === entry.name) setFailure(describeThrown(error));
-      return;
-    }
-    // As with save: a delete's outcome describes the entry it was aimed at, and navigating on its
-    // behalf would drag the user off whatever they moved to while it was in flight.
-    if (selectedRef.current !== entry.name) return;
-    setFailure(describeFailure(result));
-    if (result.outcome !== 'saved') return;
-    await refresh();
-
-    if (reverts) {
-      // The name survives — it is served by the compiled spec now — so the selection stands and
-      // only what sits behind it needs fetching again.
-      setReloads((count) => count + 1);
-      props.onSelect(entry.name);
-      return;
-    }
-    props.onSelect(null);
-  };
-
   // Every flow creates the same shape: a reference to one spec that already exists. UI-authored
   // propositions are composition-only, so there is no emptier document to start from — and reading
   // the editor's draft instead would make what gets created depend on which page was opened first.
-  const create = async ({ startsFrom, ...values }: DialogValues): Promise<void> => {
-    let result: PropositionSaveResult;
-    try {
-      result = await props.client.createProposition({
-        ...values,
-        document: { rule: { spec: startsFrom } },
-      });
-    } catch (error: unknown) {
+  const createFromDialog = async ({ startsFrom, ...values }: DialogValues): Promise<void> => {
+    const refused = await create({
+      ...values,
+      document: { rule: { spec: startsFrom } },
+    });
+    if (refused !== null) {
       // Reported in the dialog rather than the page banner: the form still holds the input that
       // failed, and closing it over an error would throw that input away.
-      setDialogError(describeThrown(error));
+      setDialogError(refused);
       return;
     }
-
-    if (result.outcome !== 'saved') {
-      setDialogError(describeFailure(result));
-      return;
-    }
-
     setDialog(null);
     setDialogError(null);
-    await refresh();
-    // Unguarded on purpose, unlike save and remove: a create is the user's own last explicit act,
-    // taken in a modal dialog that covers the explorer, so selecting what they just made is the
-    // outcome they asked for rather than a stale continuation overtaking a newer choice.
-    props.onSelect(values.name);
   };
 
   /**
@@ -299,7 +115,7 @@ export function PropositionsPage(props: {
                 label: `Save${dependents.length > 0 ? ` (${dependents.length})` : ''}`,
                 icon: IconSave,
                 onActivate: () => void save(),
-                unavailable: whyNotSave(loaded, saving),
+                unavailable: whyPropositionSaveUnavailable({ loaded, saving }),
               },
               { id: 'json', label: 'JSON', icon: IconJson, onActivate: () => setDocumentOpen(true) },
             ]} />
@@ -323,7 +139,7 @@ export function PropositionsPage(props: {
         <div role="alert" className="conflict-banner">
           {failure}
           {loaded && (
-            <button type="button" className="btn" onClick={() => setReloads((count) => count + 1)}>
+            <button type="button" className="btn" onClick={() => void reload()}>
               Reload latest
             </button>
           )}
@@ -392,7 +208,7 @@ export function PropositionsPage(props: {
           sources={entries}
           error={dialogError}
           onCancel={() => { setDialog(null); setDialogError(null); }}
-          onCreate={(values) => void create(values)}
+          onCreate={(values) => void createFromDialog(values)}
         />
       )}
     </>
