@@ -28,9 +28,32 @@ export const ACCESSIBLE_NAME_LIMIT = 120;
  * Cut by code point rather than by `slice`, so a truncation cannot land inside a surrogate pair
  * and end the name with half a character. The ellipsis is part of the name on purpose: a name that
  * stops mid-expression without saying so reads as a complete, and wrong, expression.
+ *
+ * Bounded work, in two steps, because the input is a whole printed subtree and the output is at
+ * most `limit` characters of it — so materialising every code point of a large expression to keep
+ * the first hundred is work with nothing to show for it:
+ *
+ * 1. **The UTF-16 length is an upper bound on the code-point count**, so a string short enough by
+ *    that cheap measure is short enough by the real one. That returns nearly every expression
+ *    without inspecting a single character.
+ * 2. Otherwise walk the code points and stop at the limit — at most `limit + 1` iterations,
+ *    whatever the length of what follows.
  */
 export function accessibleExpression(node: RuleNode, limit: number = ACCESSIBLE_NAME_LIMIT): string {
   const text = printInline(node);
-  const points = [...text];
-  return points.length <= limit ? text : `${points.slice(0, limit).join('')}…`;
+  if (text.length <= limit) return text;
+
+  // `end` tracks the UTF-16 index just past the last code point kept, which is where a cut lands
+  // on a character boundary. Advanced by `character.length` — 2 for an astral character, 1 for the
+  // rest — rather than by 1, which is the whole difference between cutting between characters and
+  // cutting through one.
+  let end = 0;
+  let kept = 0;
+  for (const character of text) {
+    if (kept === limit) return `${text.slice(0, end)}…`;
+    end += character.length;
+    kept += 1;
+  }
+  // Longer than `limit` in UTF-16 units but not in code points — the case step 1 cannot rule out.
+  return text;
 }

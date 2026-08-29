@@ -16,7 +16,10 @@ describe('accessibleExpression', () => {
     const wide: RuleNode = { and: Array.from({ length: 40 }, (_, i) => ({ spec: `spec.number-${i}` })) };
     const name = accessibleExpression(wide);
 
-    expect(name.length).toBeLessThanOrEqual(ACCESSIBLE_NAME_LIMIT + 1);
+    // Counted in code points, which is what the limit is in. `name.length` counts UTF-16 units,
+    // so it agrees only for the ASCII this fixture happens to be — and would be measuring the
+    // wrong thing for the astral cases below, which are the whole reason the cut is code-point-wise.
+    expect([...name]).toHaveLength(ACCESSIBLE_NAME_LIMIT + 1);
     expect(name.endsWith('…')).toBe(true);
     expect(name.startsWith('spec.number-0 & spec.number-1')).toBe(true);
   });
@@ -29,5 +32,33 @@ describe('accessibleExpression', () => {
   it('takes a caller-chosen limit, since one name may have room another does not', () => {
     const node: RuleNode = { and: [{ spec: 'customer.is-active' }, { spec: 'customer.is-adult' }] };
     expect(accessibleExpression(node, 10)).toBe('customer.i…');
+  });
+
+  /**
+   * A decoration can carry arbitrary text, so an expression can carry characters outside the BMP.
+   * Each of those is two UTF-16 units, which is why the limit counts code points: measured in
+   * units, a name of 80 emoji would be cut at 60 of them — and cut *through* the 61st, ending the
+   * name in half a character.
+   */
+  describe('outside the BMP', () => {
+    /** 80 code points, 160 UTF-16 units: over the limit by the wrong measure, under it by the right one. */
+    const wide: RuleNode = { spec: '😀'.repeat(80) };
+
+    it('leaves a name under the limit alone, however many UTF-16 units it occupies', () => {
+      const name = accessibleExpression(wide);
+
+      expect(name).toBe('😀'.repeat(80));
+      expect(name.length).toBeGreaterThan(ACCESSIBLE_NAME_LIMIT);
+    });
+
+    it('cuts between characters, never through one', () => {
+      const name = accessibleExpression(wide, 10);
+
+      expect(name).toBe(`${'😀'.repeat(10)}…`);
+      // A cut through a surrogate pair leaves a lone surrogate, which renders as U+FFFD. Asserting
+      // its absence is what says the cut respected character boundaries rather than byte ones.
+      expect(name).not.toContain('\uFFFD');
+      expect([...name]).toHaveLength(11);
+    });
   });
 });
