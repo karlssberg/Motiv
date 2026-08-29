@@ -1,15 +1,15 @@
 services:
-  demo:
+  studio:
     build:
       context: .
-      dockerfile: src/examples/Motiv.RulesEngine.Sample/Dockerfile
+      dockerfile: src/Motiv.Studio/Dockerfile
     ports:
       - "5100:5100"
     environment:
       Motiv__DevIdentity__Enabled: "true"
-      Motiv__DevIdentity__AllowInProduction: "true"  # demo container only — never copy to a real deployment
+      Motiv__DevIdentity__AllowInProduction: "true"  # this container only — never copy to a real deployment
 
-  # Opt-in OIDC evidence stack — `docker compose --profile auth up`. Leaves the default `demo`
+  # Opt-in OIDC evidence stack — `docker compose --profile auth up`. Leaves the default `studio`
   # service (dev identity, zero config) untouched; this is a second, independent app instance
   # wired to a real Keycloak IdP instead.
   keycloak:
@@ -24,7 +24,7 @@ services:
       # URL (scheme + non-standard port 8081 both need to be explicit — a bare hostname would
       # let Keycloak 26's v2 hostname resolution guess scheme/port from the request instead).
       # Without this, a token fetched from the host via http://localhost:8081 would carry
-      # iss=http://localhost:8081/realms/motiv, while demo-auth's OIDC discovery (Authority
+      # iss=http://localhost:8081/realms/motiv, while studio-auth's OIDC discovery (Authority
       # http://keycloak:8081/realms/motiv) expects iss=http://keycloak:8081/realms/motiv — the
       # mismatch would 401 every authenticated call, host-issued token or not.
       KC_HOSTNAME: http://keycloak:8081
@@ -44,11 +44,11 @@ services:
       timeout: 5s
       retries: 20
 
-  demo-auth:
+  studio-auth:
     profiles: ["auth"]
     build:
       context: .
-      dockerfile: src/examples/Motiv.RulesEngine.Sample/Dockerfile
+      dockerfile: src/Motiv.Studio/Dockerfile
     ports: ["5101:5100"]
     environment:
       Motiv__Oidc__Authority: "http://keycloak:8081/realms/motiv"

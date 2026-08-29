@@ -36,6 +36,73 @@ var app = builder.Build();
 app.MapMotivRules("/api/rules");
 ```
 
+## A complete host
+
+The wiring above in full &mdash; the smallest program that serves live rules. Everything a real
+deployment adds (a durable store, identity, namespace grants, an approval gate, a decision log) is
+layered on top of exactly this, and none of it changes these lines:
+
+```csharp
+using Motiv;
+using Motiv.Serialization;
+using Motiv.Serialization.AspNetCore;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// The spec catalog: rule documents reference specs by these names, and the names
+// are what the authoring UI lists.
+var registry = new SpecRegistry()
+    .Register(
+        "customer.is-active",
+        Spec.Build((Customer c) => c.IsActive)
+            .WhenTrue("customer is active")
+            .WhenFalse("customer is inactive")
+            .Create(),
+        "Whether the customer account is active")
+    .Register(
+        "customer.is-adult",
+        Spec.Build((Customer c) => c.Age >= 18)
+            .WhenTrue("customer is an adult")
+            .WhenFalse("customer is a minor")
+            .Create(),
+        "Whether the customer is 18 or older");
+
+// Evaluable models: each id is the string clients pass as `modelType`.
+var options = new MotivRulesOptions().AddModel<Customer>("customer");
+
+builder.Services.AddMotivRules(registry, options)
+    .AddRule<CanCheckoutRule>();
+
+var app = builder.Build();
+
+// Secure by default — see Security below for the opt-out.
+app.MapMotivRules("/api/rules");
+
+// The rule being *used*: inject the concrete type and evaluate it.
+app.MapPost("/api/checkout", (CanCheckoutRule canCheckout, Customer customer) =>
+    Results.Json(new { approved = canCheckout.Evaluate(customer).Satisfied }));
+
+app.Run();
+
+public sealed class CanCheckoutRule() : Rule<Customer, string>(
+    "can-checkout",
+    Spec.Build((Customer c) => c.IsActive).Create("customer is active"),
+    "Gate for the checkout flow");
+
+public record Customer(bool IsActive, int Age);
+```
+
+Rules live for the process lifetime until a store is added &mdash; `PUT` a document and the next
+request executes it, but a restart returns every rule to its compiled default. See
+[Durability](durability.md) for `AddRuleStore()` and the
+[EF Core store](entity-framework-store.md) for the reference implementation.
+
+**`src/Motiv.Studio` is the worked example.** It is the flagship rules-governance app rather than a
+tutorial, so it is the place to read how these endpoints are hosted for real: an EF Core-backed
+store, a fail-closed development identity, namespace grants from three interchangeable sources, an
+approval gate, and a durable decision log &mdash; each marked with a `Seam:` comment at the point
+where an adopter would substitute their own.
+
 ## Security
 
 The mapped group is **secure by default** &mdash; every route under `{basePath}` requires an

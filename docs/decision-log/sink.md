@@ -27,7 +27,7 @@ themselves. They must not throw for recoverable conditions: a throwing sink cost
 increments `DecisionLog.FailedBatchCount`, and the loop continues — so a permanently failing sink loses
 records. Fail fast at construction instead.
 
-`InMemoryDecisionSink` is the reference implementation, for development, tests and the sample. It keeps
+`InMemoryDecisionSink` is the reference implementation, for development, tests and Studio. It keeps
 `Records` and `Gaps` separately, because a gap is evidence about the log rather than a decision. For
 production, `SqlDecisionSink` appends to a database of its own under a mandatory retention window — see
 [The Durable Sink and Retention](./durable.md).

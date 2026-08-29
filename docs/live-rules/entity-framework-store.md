@@ -3,7 +3,7 @@ title: Entity Framework Core Store
 ---
 
 [`IRuleStore`](durability.md) and [`IPropositionStore`](../propositions/IPropositionStore.md) are
-seams the host supplies — the sample ships a JSON-file implementation, but a process that outlives a
+seams the host supplies — Studio ships a JSON-file implementation, but a process that outlives a
 container or runs more than one replica wants a real database behind them.
 `Motiv.Serialization.EntityFrameworkCore` is that implementation: one EF Core schema, `EfRuleStore`
 and `EfPropositionStore`, backing both interfaces over SQLite, PostgreSQL or SQL Server.
@@ -126,8 +126,8 @@ public class AppStoreDbContext(DbContextOptions<AppStoreDbContext> options)
   the same statements, and one of them fails with "table already exists". A host that can start more
   than one instance against one store should verify the schema rather than trust the call &mdash;
   create it, then check that all three tables read, and only continue past a failure that left the
-  schema complete. `StoreSchema` in `src/examples/Motiv.RulesEngine.Sample/StoreSchema.cs` is that
-  guard, and is what the sample calls on startup; a bad connection string, an unwritable path and a
+  schema complete. `StoreSchema` in `src/Motiv.Studio/StoreSchema.cs` is that
+  guard, and is what Studio calls on startup; a bad connection string, an unwritable path and a
   permission error all still take the process down with their original exception.
 
 - **Production** derives its own context (as above), registers it through the generic overload, and
@@ -150,7 +150,7 @@ public class AppStoreDbContext(DbContextOptions<AppStoreDbContext> options)
 **`EnsureCreated` and migrations deliberately do not mix.** `EnsureCreated` skips the migrations
 history table entirely; calling it against a context that also has migrations leaves the database in
 a state EF can't reconcile on the next `Migrate()`. Pick one path per environment and don't cross
-them &mdash; `EnsureCreated` for the zero-config demo and local dev, migrations for anything that
+them &mdash; `EnsureCreated` for a zero-config demo and local dev, migrations for anything that
 persists past a container restart.
 
 ## Backup and Restore

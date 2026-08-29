@@ -4,7 +4,7 @@ title: ASP.NET Core Integration
 
 `AddPropositions()` extends the [live-rules wiring](../live-rules/AspNetCore.md) with a
 [`PropositionSet`](PropositionSet.md) and mounts six endpoints under the same route group.
-`JsonFilePropositionStore` below is the sample host's own
+`JsonFilePropositionStore` below is Studio's own
 [`IPropositionStore`](IPropositionStore.md) implementation, not a library type &mdash; durability
 stays outside the library, exactly as transport does. Omit the argument to use
 `InMemoryPropositionStore`.

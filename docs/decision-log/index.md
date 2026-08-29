@@ -19,7 +19,7 @@ almost never about an edit — it is about one evaluation, on one input, at one 
 answer it gave can still be explained. That needs a different record, and this is it.
 
 The payload is not new. `ResultSerializer.ToEvaluationResult(...)` has always produced a serialisable
-projection of a result, and `/api/checkout` in the sample built two of them per request and threw them
+projection of a result, and `/api/checkout` in Studio built two of them per request and threw them
 away. The **envelope** around that payload is what this adds.
 
 ## Opting In: `audited` On The Document
