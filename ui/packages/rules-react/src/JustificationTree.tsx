@@ -69,7 +69,16 @@ export function JustificationTree(props: {
       <div key={node.id}>
         {props.children({ row, toggle, groupId: mounted ? groupIdOf(node) : null })}
         {mounted && (
-          <div role="group" id={groupIdOf(node)} aria-label={node.assertions.join(', ')}>
+          <div
+            role="group"
+            id={groupIdOf(node)}
+            // Omitted rather than emptied when the node carries no assertions, which the
+            // `string[]` contract permits: an empty `aria-label` claims a name where there is
+            // none, and assistive technologies disagree about what to do with that — some say
+            // nothing, some fall back to the content — so the same group would read differently
+            // in different readers. An unnamed group is at least unambiguously unnamed.
+            aria-label={node.assertions.join(', ') || undefined}
+          >
             {node.children.map(renderNode)}
           </div>
         )}
@@ -77,8 +86,12 @@ export function JustificationTree(props: {
     );
   };
 
+  // `??` would only catch null and undefined, and a caller's `label` is a string: `""` and a
+  // whitespace-only string both reach the DOM as an empty accessible name. Blank means absent.
+  const label = props.label?.trim() ? props.label : 'justification';
+
   return (
-    <div role="group" aria-label={props.label ?? 'justification'}>
+    <div role="group" aria-label={label}>
       {renderNode(view)}
     </div>
   );

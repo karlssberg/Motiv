@@ -71,6 +71,33 @@ describe('JustificationTree', () => {
     expect(document.getElementById(groupId!)).toBe(screen.getByRole('group', { name: 'is even' }));
   });
 
+  /**
+   * An empty `aria-label` is worse than none: it claims a name where there is none, and assistive
+   * technologies diverge on it — some announce nothing, others fall back to the element's content
+   * — so the same markup reads differently in different readers, which is the one thing an
+   * accessible name exists to prevent. Both sources of an empty one are reachable through the
+   * public types: `assertions` is a `string[]` that may be empty, and `label` is a caller's string.
+   */
+  describe('when there is no text to name a group with', () => {
+    it('omits the label rather than asserting an empty one', () => {
+      const unnamed: ExplanationNode = {
+        assertions: [],
+        underlying: [{ assertions: ['because of this'], underlying: [] }],
+      };
+      const { container } = renderTree({ explanation: unnamed });
+
+      const groups = [...container.querySelectorAll('[role="group"]')];
+      const inner = groups.find((group) => group.getAttribute('aria-label') !== 'justification');
+      expect(inner).toBeDefined();
+      expect(inner!.hasAttribute('aria-label')).toBe(false);
+    });
+
+    it('names the whole tree even when the caller supplies a blank label', () => {
+      renderTree({ label: '   ' });
+      expect(screen.getByRole('group', { name: 'justification' })).toBeDefined();
+    });
+  });
+
   it('offers no group id where there is no group — a leaf, or a collapsed row', () => {
     renderTree();
     expect(screen.getByText('is positive').getAttribute('data-group')).toBe('');

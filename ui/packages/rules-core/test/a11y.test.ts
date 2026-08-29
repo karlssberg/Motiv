@@ -35,6 +35,32 @@ describe('accessibleExpression', () => {
   });
 
   /**
+   * `limit` is exported API, so a caller can pass anything the `number` type allows — a width
+   * divided by a character width, say, which is rarely an integer. The guarantee this function
+   * makes is that its result is bounded, and a limit it cannot interpret must not be allowed to
+   * silently withdraw that.
+   */
+  describe('a limit that is not a whole count', () => {
+    const long: RuleNode = { spec: 'x'.repeat(300) };
+
+    it('floors a fractional limit rather than never reaching it', () => {
+      expect(accessibleExpression(long, 10.5)).toBe(`${'x'.repeat(10)}…`);
+    });
+
+    it('falls back to the default when the limit is not a number at all', () => {
+      expect(accessibleExpression(long, Number.NaN)).toBe(`${'x'.repeat(ACCESSIBLE_NAME_LIMIT)}…`);
+    });
+
+    it('treats a negative limit as no room, not as room measured from the end', () => {
+      expect(accessibleExpression(long, -5)).toBe('…');
+    });
+
+    it('leaves an infinite limit meaning what it says: no limit', () => {
+      expect(accessibleExpression(long, Number.POSITIVE_INFINITY)).toBe('x'.repeat(300));
+    });
+  });
+
+  /**
    * A decoration can carry arbitrary text, so an expression can carry characters outside the BMP.
    * Each of those is two UTF-16 units, which is why the limit counts code points: measured in
    * units, a name of 80 emoji would be cut at 60 of them — and cut *through* the 61st, ending the

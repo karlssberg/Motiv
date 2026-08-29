@@ -13,6 +13,28 @@ import type { RuleNode } from './document.js';
 export const ACCESSIBLE_NAME_LIMIT = 120;
 
 /**
+ * `limit` as a whole count of characters, since that is the only thing the walk below can compare
+ * against.
+ *
+ * This exists because the walk stops on `kept === max`, and an integer counter never equals a
+ * fractional limit and never equals `NaN` at all — so an unvalidated limit runs the loop to
+ * exhaustion and returns the *whole* string, withdrawing the one guarantee this function makes.
+ * `limit` is exported API and a caller may well compute it (a pixel width over a character width
+ * is rarely an integer), so the value is normalised rather than trusted.
+ *
+ * `Infinity` is deliberately preserved: it is a meaningful limit — "no limit" — and the length
+ * check answers it correctly without entering the walk at all.
+ */
+function boundOf(limit: number): number {
+  // NaN is the one value with no sensible reading as a count, so it falls back to the standard
+  // bound rather than to zero: a caller who passed it by accident still gets a usable name.
+  if (Number.isNaN(limit)) return ACCESSIBLE_NAME_LIMIT;
+  // Floored, so 10.5 means ten characters; clamped, so a negative limit means no room at all
+  // rather than `slice`'s count-from-the-end reading, which returned nearly the whole string.
+  return Math.max(0, Math.floor(limit));
+}
+
+/**
  * A rule node's own generated DSL text, bounded for use as an accessible name.
  *
  * This is the product's thesis turned into an affordance. Motiv exists to linearise boolean
@@ -41,7 +63,8 @@ export const ACCESSIBLE_NAME_LIMIT = 120;
  */
 export function accessibleExpression(node: RuleNode, limit: number = ACCESSIBLE_NAME_LIMIT): string {
   const text = printInline(node);
-  if (text.length <= limit) return text;
+  const max = boundOf(limit);
+  if (text.length <= max) return text;
 
   // `end` tracks the UTF-16 index just past the last code point kept, which is where a cut lands
   // on a character boundary. Advanced by `character.length` — 2 for an astral character, 1 for the
@@ -50,10 +73,10 @@ export function accessibleExpression(node: RuleNode, limit: number = ACCESSIBLE_
   let end = 0;
   let kept = 0;
   for (const character of text) {
-    if (kept === limit) return `${text.slice(0, end)}…`;
+    if (kept === max) return `${text.slice(0, end)}…`;
     end += character.length;
     kept += 1;
   }
-  // Longer than `limit` in UTF-16 units but not in code points — the case step 1 cannot rule out.
+  // Longer than `max` in UTF-16 units but not in code points — the case step 1 cannot rule out.
   return text;
 }
