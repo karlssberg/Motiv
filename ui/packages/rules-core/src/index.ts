@@ -75,6 +75,9 @@ export {
 // The one-line summary of a rule node.
 export { OPERATOR_LABELS, summarize, type NodeBadgeKind, type NodeSummary } from './nodeSummary.js';
 
+// The generated text an accessible name is built from.
+export { ACCESSIBLE_NAME_LIMIT, accessibleExpression } from './a11y.js';
+
 // The DSL: lexing, parsing, printing, spans, and the vocabulary they share.
 export {
   type TokenKind, type Token, type DslError, type NodeSpan, type ParseResult,

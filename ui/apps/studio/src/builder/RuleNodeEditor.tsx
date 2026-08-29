@@ -1,7 +1,7 @@
-import { createContext, useContext, useRef, type MouseEvent } from 'react';
+import { createContext, useContext, useMemo, useRef, type MouseEvent } from 'react';
 import {
-  childPaths, firstOperandTarget, insertTargetForRow, isBinaryNode, isCollapsed, isHigherOrderNode,
-  isOpen, isPinned, planInsert, summarize,
+  accessibleExpression, childPaths, firstOperandTarget, insertTargetForRow, isBinaryNode,
+  isCollapsed, isHigherOrderNode, isOpen, isPinned, planInsert, summarize,
   type AccordionModel, type Catalog, type HighlightModel,
 } from '@motiv-rules/core';
 import { useRuleEditorStore, useRuleNode } from '@motiv-rules/react';
@@ -60,6 +60,9 @@ export function useBuilderTree(): BuilderTreeState {
 /** The id tying a node's detail toggle to the panel it opens. */
 const panelId = (path: string): string => `detail-${path}`;
 
+/** The id tying a parent's caret to the group of children it opens. */
+const kidsId = (path: string): string => `operands-${path}`;
+
 /**
  * Recursively renders a rule node.
  *
@@ -94,6 +97,16 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
    * is a hook this component sometimes skips.
    */
   const pressedKind = useRef<CaretKind | null>(null);
+
+  /**
+   * The name of this row's operand group — see the group itself, below.
+   *
+   * Memoised because `printInline` walks the whole subtree, and every expanded parent in the tree
+   * does it: unmemoised, one render of a fully-expanded tree prints every node once per ancestor.
+   * `node` comes straight out of the document (`getNode`), so it changes identity only when the
+   * document does, which is exactly when the printed text can differ.
+   */
+  const expression = useMemo(() => (node ? accessibleExpression(node) : ''), [node]);
 
   /** Binds one of this row's popups to the tree's single open slot. */
   const popover = (kind: PopoverKind): { open: boolean; setOpen: (next: boolean) => void } => ({
@@ -193,6 +206,10 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
             type="button"
             className="node-chev"
             aria-expanded={!collapsed}
+            // Dropped while collapsed, because the group is unmounted then and an IDREF to an
+            // absent element is an invalid relationship rather than a harmless one — the same
+            // rule the palette's `aria-controls` follows while it browses.
+            aria-controls={kidsMounted ? kidsId(path) : undefined}
             aria-label={`${collapsed ? 'expand' : 'collapse'} ${path}`}
             onMouseDown={pressCaret}
             onClick={(event) => { if (releaseMatchesPress(event)) toggleCollapsed(path); }}
@@ -278,7 +295,17 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
         </div>
       )}
       {kidsMounted && (
-        <div className="node-kids">
+        /*
+          Ticket 18: nested labelled `group`s plus disclosure, never `role="tree"` — `tree` is a
+          navigation pattern with a roving tabindex and single-focusable items, and every row here
+          holds editable fields, a popover and a toolbar.
+
+          The name is the node's own generated DSL text, which is the ticket's key move: the
+          indentation and connecting lines a sighted reader takes the structure from convey nothing
+          at all to a screen reader, and Motiv's whole thesis is that boolean structure linearises
+          into readable text. So entering a group announces the composition it holds.
+        */
+        <div className="node-kids" role="group" id={kidsId(path)} aria-label={expression}>
           {pending?.path === path && pending.where === 'first' && slotFor('first')}
           {kids.map((childPath) => (
             <RuleNodeEditor key={childPath} path={childPath} modelType={childModelType} />

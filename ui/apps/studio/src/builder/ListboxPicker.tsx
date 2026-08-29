@@ -86,7 +86,11 @@ export function ListboxPicker<T extends string>(props: {
         className={`picker-trigger ${props.triggerClassName}`}
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-controls={listboxId}
+        // Dropped while closed, because the listbox renders only while open: an IDREF to an
+        // element that is not in the document is an invalid relationship rather than a harmless
+        // one, and closed is where a picker spends nearly all of its life. Same rule as the
+        // palette's `aria-controls` while it browses, and the builder caret's while collapsed.
+        aria-controls={open ? listboxId : undefined}
         // The name restates the value, because it replaces the visible text for assistive tech —
         // name the trigger by its role alone and the one thing it exists to say is never heard.
         aria-label={`${props.triggerName}, ${label}`}

@@ -108,3 +108,48 @@ describe('EvaluatePane', () => {
     await waitFor(() => expect(evaluate).toHaveBeenCalled());
   });
 });
+
+/**
+ * The explanation is the product's answer to "why?", and ticket 18 makes it the accessible
+ * description of the composition too — so the control that hides half of it has to say what it
+ * hides. It was a bare `▸`, whose accessible name was that glyph.
+ */
+describe('EvaluatePane justification', () => {
+  const composed: EvaluationResult = {
+    ...evaluation,
+    explanation: {
+      assertions: ['customer is active'],
+      underlying: [{ assertions: ['account is open'], underlying: [] }],
+    },
+  };
+
+  const evaluated = async () => {
+    renderPane(client({ evaluate: vi.fn().mockResolvedValue(composed) }));
+    await settleCatalog();
+    fireEvent.click(screen.getByRole('button', { name: 'Evaluate' }));
+    await screen.findByRole('group', { name: 'customer is active' });
+  };
+
+  it('names the disclosure by the assertion whose causes it hides', async () => {
+    await evaluated();
+    expect(screen.getByRole('button', { name: 'causes of customer is active' })).toBeDefined();
+  });
+
+  it('reports whether those causes are showing, and points at them while they are', async () => {
+    await evaluated();
+    const toggle = screen.getByRole('button', { name: 'causes of customer is active' });
+
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    const controls = toggle.getAttribute('aria-controls');
+    expect(document.getElementById(controls!)).toBe(screen.getByRole('group', { name: 'customer is active' }));
+
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(toggle.getAttribute('aria-controls')).toBeNull();
+  });
+
+  it('names the explanation as a whole, so arriving in it says what it explains', async () => {
+    await evaluated();
+    expect(screen.getByRole('group', { name: 'why this rule was satisfied' })).toBeDefined();
+  });
+});

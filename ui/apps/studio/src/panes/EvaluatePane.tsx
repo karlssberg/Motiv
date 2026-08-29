@@ -57,15 +57,35 @@ export function EvaluatePane(props: { client: RulesApiClient }) {
         {evaluation.status === 'ready' && (
           <>
             <p aria-label="outcome" className="outcome">{evaluation.result.satisfied ? 'Satisfied' : 'Not satisfied'}</p>
-            <JustificationTree explanation={evaluation.result.explanation}>
-              {({ row, toggle }) => (
-                <div className="assertion" style={{ '--depth': row.depth } as CSSProperties}>
-                  {row.hasChildren && (
-                    <button type="button" onClick={() => toggle(row.id)}>{row.collapsed ? '▸' : '▾'}</button>
-                  )}
-                  <span>{row.assertions.join(', ')}</span>
-                </div>
-              )}
+            {/*
+              The explanation is the answer to "why?", so its disclosures have to say what they
+              hide: the caret's accessible name was the glyph it is drawn as, which tells a reader
+              that a control exists and nothing about what it does. `aria-controls` is dropped once
+              the group is collapsed and unmounted, the same rule the builder's caret follows.
+            */}
+            <JustificationTree
+              explanation={evaluation.result.explanation}
+              label={`why this rule was ${evaluation.result.satisfied ? 'satisfied' : 'not satisfied'}`}
+            >
+              {({ row, toggle, groupId }) => {
+                const causes = row.assertions.join(', ');
+                return (
+                  <div className="assertion" style={{ '--depth': row.depth } as CSSProperties}>
+                    {row.hasChildren && (
+                      <button
+                        type="button"
+                        aria-expanded={!row.collapsed}
+                        aria-controls={groupId ?? undefined}
+                        aria-label={`causes of ${causes}`}
+                        onClick={() => toggle(row.id)}
+                      >
+                        {row.collapsed ? '▸' : '▾'}
+                      </button>
+                    )}
+                    <span>{causes}</span>
+                  </div>
+                );
+              }}
             </JustificationTree>
           </>
         )}

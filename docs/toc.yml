@@ -30,3 +30,5 @@ items:
     href: decision-log/toc.yml
   - name: Structural Limits
     href: limits/toc.yml
+  - name: Accessibility
+    href: accessibility/toc.yml

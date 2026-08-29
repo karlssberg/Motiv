@@ -75,6 +75,7 @@ pnpm -C ui/apps/studio dev
 ```bash
 pnpm -C ui/apps/studio test    # component tests (jsdom)
 pnpm -C ui/apps/studio e2e     # Playwright smoke (builds SPA, starts host)
+pnpm -C ui/apps/studio a11y    # axe-core over every view (builds SPA, no host)
 ```
 
 The Playwright run downloads a browser on first use:
@@ -87,6 +88,20 @@ next checkout flips without a restart; a stale save gets a `409` and the
 conflict banner, and "Reload latest" adopts the winning version. Rules are
 per-process state on the host, so the test reverts to the compiled default
 before and after each run.
+
+## Accessibility
+
+`pnpm -C ui/apps/studio a11y` runs `axe-core` (`e2e-a11y/`) over every view and
+over each hard surface in the state it is hard in — the palette open, the modal
+shown, the operator picker triggered — in both colour schemes. It needs no
+backend: it serves the built bundle and answers the API from fixtures, so a
+finding is a fact about the markup rather than about what a live store holds.
+The `accessibility` job in `.github/workflows/ui.yml` runs it on every push.
+
+That is about half of WCAG 2.1 AA. The other half — focus order, announcement
+quality, whether a generated label means anything — is a scripted manual
+screen-reader pass. Both, plus the conformance report and the two recorded gaps,
+are in [`docs/accessibility`](../../../docs/accessibility/index.md).
 
 ## Extend it
 

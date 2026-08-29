@@ -27,3 +27,33 @@ jobs:
       - run: pnpm -r build
       - run: pnpm -r typecheck
       - run: pnpm -r test
+
+  # The accessibility gate: axe-core over every Studio view and every hard surface, in both colour
+  # schemes (ticket 18 — "in CI on every run"). Its own job rather than a step on `build`, so a
+  # contrast regression is attributable at a glance and does not read as a unit-test failure.
+  #
+  # Scoped to this suite rather than adopting all of `e2e/` as a merge gate: that suite drives the
+  # .NET host, so it needs a second toolchain here and a running backend to stay green, and making
+  # it required is a decision in its own right that nothing has asked for. This one serves a static
+  # build with a stubbed API (`e2e-a11y/stubs.ts`), so it needs neither.
+  accessibility:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: ui/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      # The studio's bundle imports the packages by their published entry points, so they have to
+      # exist before it can be built at all.
+      - run: pnpm -r build
+      - run: pnpm --filter @motiv-rules/studio exec playwright install --with-deps chromium
+      - run: pnpm --filter @motiv-rules/studio a11y
