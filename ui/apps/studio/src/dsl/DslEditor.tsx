@@ -152,6 +152,12 @@ export function DslEditor(props: { store: RuleEditorStore; catalog: Catalog; syn
       state: EditorState.create({
         doc: live.current.sync.text,
         extensions: [
+          // CodeMirror's accessibility is inherited rather than invented (ticket 18) — but the one
+          // thing it cannot supply is what this particular editor is *for*. Its content element is
+          // a `textbox`, and a textbox with no accessible name is announced as an unlabelled edit
+          // field. The builder's inline editors already name themselves this way
+          // (`useInlineDslEditor`'s `ariaLabel`); the pane-sized one did not.
+          EditorView.contentAttributes.of({ 'aria-label': 'rule DSL' }),
           lineNumbers(),
           history(),
           motiv(),

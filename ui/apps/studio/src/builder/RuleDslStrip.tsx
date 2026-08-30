@@ -62,7 +62,16 @@ function segmentize(
  * same tree, and Studio's DSL pane derives its own spans the same way. Memoised on rule identity,
  * so a hover costs no work at all.
  */
-export function RuleDslStrip(props: { rule: RuleNode; highlight: HighlightModel }) {
+export function RuleDslStrip(props: {
+  rule: RuleNode;
+  highlight: HighlightModel;
+  /**
+   * Names the generated text so something else can point at it. The builder does: this line *is*
+   * the composition's accessible description, so the tree describes itself by it rather than
+   * duplicating the string into an `aria-description` that could then disagree with what is shown.
+   */
+  textId?: string;
+}) {
   const { rule, highlight } = props;
 
   const { text, spans } = useMemo(() => {
@@ -119,7 +128,7 @@ export function RuleDslStrip(props: { rule: RuleNode; highlight: HighlightModel 
           roleless span is silently dropped from the accessibility tree rather than exposed.
           `role="group"` gives the element a role that does support naming, so the label the
           existing `getByLabelText('rule expression')` queries actually resolves. */}
-      <span className="dsl-strip-text" role="group" aria-label="rule expression">
+      <span className="dsl-strip-text" id={props.textId} role="group" aria-label="rule expression">
         {segments.map((segment, index) => {
           const marks = [
             segment.selected ? 'dsl-strip-selected' : null,

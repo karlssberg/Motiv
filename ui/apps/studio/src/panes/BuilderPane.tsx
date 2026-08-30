@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import {
   EMPTY_ACCORDION, EMPTY_HIGHLIGHT, closeAll, setHovered, setSelected,
   toggleCollapsed, toggleOpen, togglePin,
@@ -32,12 +32,14 @@ export function BuilderBody(props: { client: RulesApiClient }) {
   /** The open insertion slot, if any: a row path plus which of that row's two positions. */
   const [pending, setPending] = useState<{ path: string; where: 'after' | 'first' } | null>(null);
   const editorState = useRuleEditor(useRuleEditorStore());
+  /** Names the strip's generated text, so the tree below can be described by it. */
+  const expressionId = useId();
 
   return (
     <>
       {catalogState.status === 'loading' && <p>Loading catalog…</p>}
       {catalogState.status === 'error' && <p role="alert">Failed to load catalog.</p>}
-      <RuleDslStrip rule={editorState.document.rule} highlight={highlight} />
+      <RuleDslStrip rule={editorState.document.rule} highlight={highlight} textId={expressionId} />
       {/* Height is reserved rather than conditional, so the tree does not jump when the first
           node is pinned. */}
       <div className="accordion-strip">
@@ -50,24 +52,33 @@ export function BuilderBody(props: { client: RulesApiClient }) {
           </>
         )}
       </div>
-      <BuilderTreeContext.Provider
-        value={{
-          model,
-          toggleCollapsed: (path) => setModel((prev) => toggleCollapsed(prev, path)),
-          toggleOpen: (path) => setModel((prev) => toggleOpen(prev, path)),
-          togglePin: (path) => setModel((prev) => togglePin(prev, path)),
-          openPopover,
-          setOpenPopover,
-          catalog,
-          highlight,
-          setHovered: (path) => setHighlight((prev) => setHovered(prev, path)),
-          setSelected: (path) => setHighlight((prev) => setSelected(prev, path)),
-          pending,
-          setPending,
-        }}
-      >
-        <RuleNodeEditor path={ROOT} modelType={MODEL_TYPE} />
-      </BuilderTreeContext.Provider>
+      {/*
+        The composition, described by the one line that states it (ticket 18). Every group *inside*
+        the tree is named by its own subtree's generated text, but a rule that is a single spec has
+        no subtree and so no group at all — and it is still a composition a reader arriving here
+        needs stated. Pointing at the strip rather than repeating the string into an `aria-label`
+        keeps one source for it: what is announced is what is on screen, including its marks.
+      */}
+      <div role="group" aria-label="rule composition" aria-describedby={expressionId}>
+        <BuilderTreeContext.Provider
+          value={{
+            model,
+            toggleCollapsed: (path) => setModel((prev) => toggleCollapsed(prev, path)),
+            toggleOpen: (path) => setModel((prev) => toggleOpen(prev, path)),
+            togglePin: (path) => setModel((prev) => togglePin(prev, path)),
+            openPopover,
+            setOpenPopover,
+            catalog,
+            highlight,
+            setHovered: (path) => setHighlight((prev) => setHovered(prev, path)),
+            setSelected: (path) => setHighlight((prev) => setSelected(prev, path)),
+            pending,
+            setPending,
+          }}
+        >
+          <RuleNodeEditor path={ROOT} modelType={MODEL_TYPE} />
+        </BuilderTreeContext.Provider>
+      </div>
     </>
   );
 }

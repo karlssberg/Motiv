@@ -101,7 +101,16 @@ export function CommandPalette<T extends PaletteItem>(props: {
           onChange={(event) => { setQuery(event.target.value); setCursor(0); }}
           onKeyDown={onKeyDown}
         />
-        {!browsing && <span className="palette-count">{matches.length} of {props.items.length}</span>}
+        {/*
+          A live region, not just a caption. Typing into the box is the only thing that narrows the
+          list, and the list is exactly what a screen-reader user cannot see — so without an
+          announcement, filtering to one row and filtering to none sound identical: silence. `status`
+          is polite by construction, so a fast typist is not interrupted mid-keystroke, and the count
+          it carries is already the one on screen rather than a second phrasing that could drift.
+        */}
+        {!browsing && (
+          <span className="palette-count" role="status">{matches.length} of {props.items.length}</span>
+        )}
       </div>
 
       {browsing

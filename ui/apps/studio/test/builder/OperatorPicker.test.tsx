@@ -152,3 +152,29 @@ describe('operator picker', () => {
     expect(screen.getByRole('menu')).toBeDefined();
   });
 });
+
+/**
+ * The IDREF the palette already learned to drop (`CommandPalette.tsx`): a control that names a
+ * relationship to an element which is not in the document has an *invalid* relationship, not an
+ * inert one — and a picker spends nearly all of its life closed, so this was the default state of
+ * every operator badge and rule-name picker in the app.
+ */
+describe('operator picker, closed', () => {
+  it('claims no listbox while it renders none', async () => {
+    renderWith(new RuleEditorStore(AND));
+    const trigger = await findPicker();
+
+    expect(trigger.getAttribute('aria-controls')).toBeNull();
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('claims the listbox it does render, once open', async () => {
+    renderWith(new RuleEditorStore(AND));
+    await openPicker();
+    const trigger = await findPicker();
+
+    const controls = trigger.getAttribute('aria-controls');
+    expect(controls).not.toBeNull();
+    expect(document.getElementById(controls!)).toBe(screen.getByRole('listbox'));
+  });
+});

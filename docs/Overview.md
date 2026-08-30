@@ -194,3 +194,21 @@ from.
 | Type / Method                                                            | Description                                                                                       |
 |---------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
 | [Structural Limits](./limits/index.md)                                    | `MotivLimits.MaxEvaluationSize`, the three `RuleSerializerOptions` caps, and the shape of the stack-safety guarantee. |
+
+## Accessibility
+
+Motiv Studio targets **WCAG 2.1 Level AA**, and the key move is the library's own thesis: the text
+Motiv generates for a composition — `Reason`, `Justification`, and the DSL printer's one-line
+expression — *is* the accessible description of that composition, which is what a reader who cannot
+see the indentation actually needs. So the rule builder is nested labelled groups plus disclosure
+rather than a `tree`, and every group is named by its own subtree's generated expression.
+Enforcement is `axe-core` over every view and every open surface in both colour schemes, on every
+CI run, plus a scripted manual screen-reader pass for the half axe cannot judge. See
+[Accessibility](./accessibility/index.md) for the conformance report, the audit script, the two
+recorded gaps, and the honest statement that the headless packages carry no accessibility of their
+own.
+
+| Topic                                          | Description                                                                                                    |
+|------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
+| [Accessibility](./accessibility/index.md)      | The WCAG 2.1 AA conformance report, what `axe-core` enforces, the manual audit script, and the known gaps.     |
+

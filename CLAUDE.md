@@ -221,6 +221,13 @@ the root of a three-policy chain) rather than the flattened causal set.
 - **Batch refactoring verification**: When refactoring multiple files with the same pattern, verify all files are modified before moving to the next phase — use `git status` or `git diff --stat` to confirm the expected set of changed files matches the plan.
 - **Constructor signature changes**: When changing the signature of an `internal` type's constructor, search for all call sites across both production and test code before editing — test files often construct internal types directly via `[InternalsVisibleTo]` and will break if missed.
 - **Example project tests**: When changing behavior that affects justification output, assertion text, or result formatting, run the full solution test suite — not just `Motiv.Tests`. The example projects (`src/examples/Motiv.Poker.Tests`, `src/examples/Motiv.ECommerce.Tests`, `src/examples/Motiv.SmartHome.Tests`) also contain integration-level assertions on justification strings and will break if not updated.
+- **Studio accessibility**: changes to Studio's colour tokens, ARIA attributes or component
+  structure must keep `pnpm -C ui/apps/studio a11y` green — `axe-core` over every view and every
+  open surface in both colour schemes, gated in CI. It needs no .NET host. Two conventions it
+  enforces: an `aria-controls`/`aria-activedescendant` IDREF is dropped whenever its target is
+  unmounted (a reference to an absent element is invalid, not harmless), and the accessible name of
+  a composition is the text Motiv generates for it (`accessibleExpression`), never a hand-written
+  restatement that could drift from what is on screen. See `docs/accessibility/index.md`.
 - **Documentation**: CLAUDE.md is for AI guidance and project conventions — not user-facing feature documentation. When asked to document a feature, add it to `README.md` (brief example under Core Features) and `docs/` (detailed pages following the existing structure: `docs/{feature}/index.md`, individual method pages, `toc.yml`, plus entries in `docs/toc.yml` and `docs/Overview.md`).
 - **Performance refactoring**: When replacing LINQ with manual loops or caching computed values, verify that short-circuiting and lazy evaluation semantics are preserved. Moving a call from a `when` guard or lazy context to eager evaluation is a common regression — the original code may have intentionally deferred work that is only needed in some branches.
 - **`Evaluate` vs `IsSatisfiedBy`**: `Evaluate` is the current public API for rich evaluation (returns `BooleanResultBase`). `IsSatisfiedBy` is retained as an `[Obsolete]` shim for backwards compatibility. `Matches` is the lightweight boolean-only evaluation. Internal overrides use `EvaluateSpec` / `EvaluatePolicy`.

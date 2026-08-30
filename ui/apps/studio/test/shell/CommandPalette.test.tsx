@@ -156,3 +156,31 @@ describe('CommandPalette', () => {
     expect(onChoose).not.toHaveBeenCalled();
   });
 });
+
+/**
+ * Ticket 18 names the palette a known announcement trap. The visible `N of M` count is the only
+ * feedback that typing narrowed anything, and a plain `<span>` that changes is not announced at
+ * all — so a screen-reader user typing into the box hears nothing back from a list they cannot
+ * see, whether it narrowed to one row or to none.
+ */
+describe('CommandPalette announcements', () => {
+  it('announces how many rows a query left, rather than only showing it', async () => {
+    setup();
+    const status = screen.getByRole('status');
+    expect(status.textContent).toBe('4 of 4');
+
+    await userEvent.type(screen.getByRole('combobox'), 'orders');
+    expect(screen.getByRole('status').textContent).toBe('1 of 4');
+  });
+
+  it('says so when a query matched nothing, which the empty list cannot', async () => {
+    setup();
+    await userEvent.type(screen.getByRole('combobox'), 'nothing-matches-this');
+    expect(screen.getByRole('status').textContent).toBe('0 of 4');
+  });
+
+  it('announces nothing while browsing, where there is no result set to report', () => {
+    setup({ renderBrowse: () => <p>browse</p> });
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+});

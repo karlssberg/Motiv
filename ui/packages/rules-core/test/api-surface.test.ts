@@ -9,6 +9,7 @@ import * as workflow from '../src/workflow/index.js';
  * never a side effect of an `export` keyword somewhere in the package.
  */
 const APPROVED_API = [
+  'ACCESSIBLE_NAME_LIMIT',
   'BINARY_OPERATORS',
   'DSL_KEYWORDS',
   'DSL_QUANTIFIERS',
@@ -25,6 +26,7 @@ const APPROVED_API = [
   'RulesApiError',
   'WORD_REST_CHARS',
   'WORD_START_CHARS',
+  'accessibleExpression',
   'binaryOperator',
   'buildNamespaceTree',
   'childPaths',
