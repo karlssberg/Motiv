@@ -10,7 +10,11 @@ import { createRequire } from 'node:module';
 import {
   RuleEditorStore, accessibleExpression, getNode, parse, print, printInline, summarize,
 } from '@motiv-rules/core';
-import { RuleWorkflowController, whyRuleSaveUnavailable } from '@motiv-rules/core/workflow';
+import {
+  PropositionWorkflowController, RuleWorkflowController,
+  describePropositionFailure, describeUnexpectedFailure,
+  whyPropositionSaveUnavailable, whyRuleSaveUnavailable,
+} from '@motiv-rules/core/workflow';
 
 // 1. The central claim: React is not here. If this ever resolves, the tree is not isolated and
 //    every assertion below has been proving something weaker than it appears to.
@@ -48,8 +52,18 @@ assert.equal(printInline(store.getState().document.rule), 'is-active & is-adult 
 assert.equal(accessibleExpression(store.getState().document.rule), 'is-active & is-adult & is-verified');
 assert.equal(summarize(store.getState().document.rule).badge, 'AND');
 
-// 5. The workflow entry point resolves as its own subpath and carries its own surface.
-assert.equal(typeof RuleWorkflowController, 'function');
-assert.equal(typeof whyRuleSaveUnavailable, 'function');
+// 5. The workflow entry point resolves as its own subpath and carries its whole surface. Both
+//    families, not one: the rules and propositions save loops are separate exports of the same
+//    subpath, so a build that dropped either would still satisfy a check that named only the other.
+//    Under ESM the named imports above are themselves the check — a missing export is a link-time
+//    error before this file runs — and these assertions pin what those names must be.
+const workflow = {
+  RuleWorkflowController, whyRuleSaveUnavailable,
+  PropositionWorkflowController, whyPropositionSaveUnavailable,
+  describePropositionFailure, describeUnexpectedFailure,
+};
+for (const [name, value] of Object.entries(workflow)) {
+  assert.equal(typeof value, 'function', `${name} is missing from @motiv-rules/core/workflow`);
+}
 
 console.log('  esm: store, DSL round trip, projections and /workflow — all with nothing else installed');

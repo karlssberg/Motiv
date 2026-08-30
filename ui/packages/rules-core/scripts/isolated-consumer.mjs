@@ -79,7 +79,9 @@ try {
 
   console.log('isolated-consumer: @motiv-rules/core runs with nothing else installed.');
 } catch (error) {
-  console.error(`isolated-consumer: ${error.message}`);
+  // Not every throw is an Error — a string, or a child-process failure shape without `message`,
+  // would otherwise report the failure as the word "undefined".
+  console.error(`isolated-consumer: ${error instanceof Error ? error.message : String(error)}`);
   process.exitCode = 1;
 } finally {
   if (!process.env.MOTIV_KEEP_SCRATCH) rmSync(scratch, { recursive: true, force: true });
