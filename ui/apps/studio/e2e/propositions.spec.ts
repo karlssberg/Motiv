@@ -111,7 +111,7 @@ test('an authored proposition is a building block the live rule follows', async 
   await expectDocument(page, '"customer.has-orders"');
 
   // Reference it from the live rule. The rule is saved exactly once, here.
-  await page.getByRole('tab', { name: 'Rules' }).click();
+  await page.getByRole('link', { name: 'Rules' }).click();
   await chooseFromPalette(page, 'Rules', RULE);
   await replaceBuffer(await openDsl(page), ELIGIBLE);
   await expectDocument(page, `"${ELIGIBLE}"`);
@@ -126,7 +126,7 @@ test('an authored proposition is a building block the live rule follows', async 
   await expect(screening).toContainText('customer has orders');
 
   // Redefine the proposition. The rule is never opened again.
-  await page.getByRole('tab', { name: 'Propositions' }).click();
+  await page.getByRole('link', { name: 'Propositions' }).click();
   await chooseFromPalette(page, 'Propositions', ELIGIBLE);
   await expectDocument(page, '"customer.has-orders"');
 
@@ -141,7 +141,7 @@ test('an authored proposition is a building block the live rule follows', async 
   await expect(page.getByText(/^v2\b/)).toBeVisible();
 
   // The verdict follows. Same rule document, same customer — a different answer.
-  await page.getByRole('tab', { name: 'Rules' }).click();
+  await page.getByRole('link', { name: 'Rules' }).click();
   await page.getByRole('textbox', { name: 'customer', exact: true }).fill(INACTIVE_WITH_ORDERS);
   await page.getByRole('button', { name: 'Try checkout' }).click();
   await expect(screening).toContainText('customer is inactive');

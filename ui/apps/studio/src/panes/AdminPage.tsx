@@ -35,7 +35,7 @@ function describeThrown(error: unknown): string {
  * `AppBar` — the same chrome every other page carries, so navigating here and back is not a dead
  * end even for a caller this page has nothing for.
  */
-export function AdminPage(props: { page: Page; onNavigate: (page: Page) => void }) {
+export function AdminPage(props: { page: Page }) {
   const capabilities = useAdminCapabilities();
   const canAdminister = capabilities.grantAdministration && capabilities.administrator;
 
@@ -109,7 +109,7 @@ export function AdminPage(props: { page: Page; onNavigate: (page: Page) => void 
 
   return (
     <>
-      <AppBar page={props.page} onNavigate={props.onNavigate}>
+      <AppBar page={props.page}>
         <span className="breadcrumb-sep">/</span>
         <span className="breadcrumb-item">Admin</span>
       </AppBar>

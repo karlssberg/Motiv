@@ -91,9 +91,10 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* Page tabs: the Rules/Propositions switch in the appbar. Reuses `.tab` from the surface tabs so
-   both switches read as the same control at two altitudes. */
-.page-tabs {
+/* Page navigation: the Rules/Propositions switch in the appbar. Anchors rather than tabs — see
+   AppBar — but reusing `.tab` from the surface tabs, so both switches read as the same control at
+   two altitudes even though only one of them is a tablist. */
+.page-nav {
   display: flex;
   gap: 2px;
   margin-left: var(--space);
@@ -760,6 +761,7 @@ button.node-dsl {
   font-family: inherit;
   font-size: 0.72rem;
   font-weight: 600;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -767,7 +769,12 @@ button.node-dsl {
   color: var(--text);
 }
 
-.tab.active {
+/* Two ways to be the current one, because the page switcher is navigation and the surface switch
+   is a tablist: a link says so with `aria-current`, a tab with a class beside its `aria-selected`.
+   The link needs no parallel class — the attribute it already carries is the state itself, as with
+   `.model-pill[aria-pressed='true']`. */
+.tab.active,
+.tab[aria-current='page'] {
   background: var(--sh-panel);
   color: var(--text);
   box-shadow: 0 1px 2px rgb(0 0 0 / 14%);
@@ -1254,12 +1261,15 @@ button.node-dsl {
 
 /* The focusable element is the <li>, and an <li> wraps its whole nested subtree — so the UA's
    default ring lands around every descendant row rather than the one that has focus. Drawn on the
-   row instead, the same shape the selected rule above already uses for the same reason. */
+   row instead, the same shape the selected rule above already uses for the same reason. Both kinds
+   of row: the arrow keys move through bare namespaces as well as propositions, so a ring on leaves
+   alone would leave the focus invisible for half the tree. */
 .explorer-node:focus-visible {
   outline: none;
 }
 
-.explorer-node:focus-visible > .explorer-leaf {
+.explorer-node:focus-visible > .explorer-leaf,
+.explorer-node:focus-visible > .explorer-namespace {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
 }

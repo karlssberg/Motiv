@@ -82,16 +82,18 @@ describe('App', () => {
   it('shows the rules page by default', async () => {
     renderApp();
 
-    expect(await screen.findByRole('tab', { name: 'Rules', selected: true })).toBeTruthy();
+    expect(await screen.findByRole('link', { name: 'Rules', current: 'page' })).toBeTruthy();
   });
 
-  it('switches page when a tab is clicked', async () => {
+  it('switches page when a nav link is followed', async () => {
+    // Following the link is the whole navigation: the hash it carries is what the router reads
+    // back, so nothing in the shell has to arrange for the page to change.
     renderApp();
 
-    await userEvent.click(await screen.findByRole('tab', { name: 'Propositions' }));
+    await userEvent.click(await screen.findByRole('link', { name: 'Propositions' }));
 
     expect(window.location.hash).toBe('#/propositions');
-    expect(await screen.findByRole('tab', { name: 'Propositions', selected: true })).toBeTruthy();
+    expect(await screen.findByRole('link', { name: 'Propositions', current: 'page' })).toBeTruthy();
   });
 
   it('opens straight onto the propositions page from a deep link', async () => {
@@ -104,6 +106,6 @@ describe('App', () => {
     // page. Narrowing the route parser to send every hash to the rules page, or dropping the name
     // from the parse, both left it green.
     await waitFor(() => expect(client.getProposition).toHaveBeenCalledWith('customer.is-active'));
-    expect(await screen.findByRole('tab', { name: 'Propositions', selected: true })).toBeTruthy();
+    expect(await screen.findByRole('link', { name: 'Propositions', current: 'page' })).toBeTruthy();
   });
 });

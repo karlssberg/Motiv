@@ -39,7 +39,6 @@ export function RuleHeader(props: {
   client: RulesApiClient;
   onLoaded?: (entry: RuleListEntry | null) => void;
   page: Page;
-  onNavigate: (page: Page) => void;
 }) {
   const store = useRuleEditorStore();
   const { rules, loaded, loadedEntry, conflict, saving, refresh, load, save } =
@@ -68,7 +67,6 @@ export function RuleHeader(props: {
     <>
       <AppBar
         page={props.page}
-        onNavigate={props.onNavigate}
         controls={
           <>
             {loaded && (

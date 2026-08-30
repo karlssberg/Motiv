@@ -69,7 +69,6 @@ function renderPage(
         client={client as never}
         page="propositions"
         selected={name}
-        onNavigate={vi.fn()}
         onSelect={onSelect}
       />
     </RuleEditorProvider>

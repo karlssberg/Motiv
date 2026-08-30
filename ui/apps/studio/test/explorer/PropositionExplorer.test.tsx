@@ -301,18 +301,16 @@ describe('PropositionExplorer', () => {
     expect(namespaceNode.getAttribute('aria-selected')).toBeNull();
   });
 
-  it('keeps a bare namespace out of the tab order', () => {
-    renderExplorer();
+  it('keeps every row but the tree\u2019s one stop out of the tab order', () => {
+    // Out of the *tab* order, not out of reach: `-1` is what makes a row the arrow keys\u2019 to
+    // move to and not the Tab key\u2019s. A bare namespace is included, unlike `aria-selected` one
+    // line up \u2014 a tree navigates its structure even where it cannot select.
+    renderExplorer({ selected: 'customer.risk.is-fraudulent' });
 
-    const namespaceNode = screen.getByRole('treeitem', { name: /^customer/ });
-    expect(namespaceNode.getAttribute('tabindex')).toBeNull();
-  });
-
-  it('puts a selectable leaf in the tab order', () => {
-    renderExplorer();
-
-    const leaf = screen.getByRole('treeitem', { name: /is-fraudulent/ });
-    expect(leaf.getAttribute('tabindex')).toBe('0');
+    expect(screen.getByRole('treeitem', { name: /^customer/ }).getAttribute('tabindex')).toBe('-1');
+    expect(screen.getByRole('treeitem', { name: /is-active/ }).getAttribute('tabindex')).toBe('-1');
+    expect(screen.getByRole('treeitem', { name: /is-fraudulent/ }).getAttribute('tabindex'))
+      .toBe('0');
   });
 
   it('offers Override for a compiled entry whose model has a sibling spec', () => {
@@ -418,5 +416,233 @@ describe('PropositionExplorer', () => {
     expect(reasonFor(/derive/i)).toMatch(/pick a proposition/i);
     expect(reasonFor(/^override/i)).toMatch(/pick a proposition/i);
     expect(reasonFor(/^delete$/i)).toMatch(/pick a proposition/i);
+  });
+});
+
+/**
+ * The palette's namespace browser as a tree that means it: one tab stop, arrow keys to move,
+ * Home/End to the ends, and type-ahead — the WAI-ARIA pattern `role="tree"` promises.
+ *
+ * The tree is never collapsed, so "visible order" is the whole tree in document order:
+ * customer › eligibility › is-active › is-adult › risk › is-fraudulent, then order › is-large.
+ */
+describe('PropositionExplorer namespace navigation', () => {
+  /** Press a key on whatever holds focus, as a keyboard user does. */
+  function press(key: string, init: Record<string, unknown> = {}): boolean {
+    return fireEvent.keyDown(document.activeElement!, { key, ...init });
+  }
+
+  function item(name: RegExp): HTMLElement {
+    return screen.getByRole('treeitem', { name });
+  }
+
+  function focused(): Element | null {
+    return document.activeElement;
+  }
+
+  it('is a single tab stop rather than a column of them', () => {
+    // A tree is one stop in the tab sequence; the arrow keys do the rest. Every row being
+    // separately tabbable is precisely what the role says it is not.
+    renderExplorer();
+
+    const stops = screen.getAllByRole('treeitem')
+      .filter((row) => row.getAttribute('tabindex') === '0');
+
+    expect(stops).toHaveLength(1);
+    expect(screen.getAllByRole('treeitem').every((row) => row.hasAttribute('tabindex'))).toBe(true);
+  });
+
+  it('puts that stop on the selected proposition, so returning lands where you left', () => {
+    renderExplorer({ selected: 'customer.risk.is-fraudulent' });
+
+    expect(item(/is-fraudulent/).getAttribute('tabindex')).toBe('0');
+  });
+
+  it('puts it on the first row when nothing is selected', () => {
+    renderExplorer();
+
+    expect(item(/^customer/).getAttribute('tabindex')).toBe('0');
+  });
+
+  it('is entered at that stop, whatever the tab sequence held before it', async () => {
+    renderExplorer({ selected: 'customer.risk.is-fraudulent' });
+
+    // The model chips sit between the search box and the tree, so this walks up to the tree rather
+    // than assuming how many stops precede it — what matters is which row it lands on.
+    const tree = screen.getByRole('tree');
+    for (let stop = 0; stop < 10 && !tree.contains(focused()); stop += 1) await userEvent.tab();
+
+    expect(focused()).toBe(item(/is-fraudulent/));
+  });
+
+  it('takes one more Tab to cross, however many rows it holds', async () => {
+    renderExplorer({ selected: 'customer.risk.is-fraudulent' });
+    item(/is-fraudulent/).focus();
+
+    await userEvent.tab();
+
+    // Eight rows in this tree, and the next stop is already outside it: the inside belongs to the
+    // arrow keys. Before, crossing the palette meant a Tab per proposition.
+    expect(screen.getByRole('tree').contains(focused())).toBe(false);
+  });
+
+  it('moves to the next row on ArrowDown, bare namespaces included', () => {
+    renderExplorer();
+    item(/^customer/).focus();
+
+    press('ArrowDown');
+    expect(focused()).toBe(item(/^eligibility/));
+
+    press('ArrowDown');
+    expect(focused()).toBe(item(/is-active/));
+  });
+
+  it('moves to the previous row on ArrowUp', () => {
+    renderExplorer();
+    item(/is-active/).focus();
+
+    press('ArrowUp');
+
+    expect(focused()).toBe(item(/^eligibility/));
+  });
+
+  it('crosses out of a subtree, because the movement follows the rows on screen', () => {
+    // is-fraudulent is the last row under customer; the next row down is `order`, a sibling of
+    // customer itself. Walking the rendered order rather than the siblings is what makes ArrowDown
+    // mean "the next row" instead of "the next row at this level".
+    renderExplorer();
+    item(/is-fraudulent/).focus();
+
+    press('ArrowDown');
+
+    expect(focused()).toBe(item(/^order/));
+  });
+
+  it('stops at the ends rather than wrapping', () => {
+    // Wrapping would mean ArrowDown can never tell you that you are at the bottom.
+    renderExplorer();
+    item(/^customer/).focus();
+
+    press('ArrowUp');
+    expect(focused()).toBe(item(/^customer/));
+
+    item(/is-large/).focus();
+    press('ArrowDown');
+    expect(focused()).toBe(item(/is-large/));
+  });
+
+  it('goes to the first and last rows on Home and End', () => {
+    renderExplorer();
+    item(/is-active/).focus();
+
+    press('End');
+    expect(focused()).toBe(item(/is-large/));
+
+    press('Home');
+    expect(focused()).toBe(item(/^customer/));
+  });
+
+  it('enters a subtree on ArrowRight and returns to the parent on ArrowLeft', () => {
+    renderExplorer();
+    item(/^customer/).focus();
+
+    press('ArrowRight');
+    expect(focused()).toBe(item(/^eligibility/));
+
+    press('ArrowLeft');
+    expect(focused()).toBe(item(/^customer/));
+  });
+
+  it('holds still where there is nowhere to go: no parent above, no child within', () => {
+    renderExplorer();
+    item(/^customer/).focus();
+
+    press('ArrowLeft');
+    expect(focused()).toBe(item(/^customer/));
+
+    item(/is-large/).focus();
+    press('ArrowRight');
+    expect(focused()).toBe(item(/is-large/));
+  });
+
+  it('keeps the arrow keys from scrolling the palette out from under the row', () => {
+    renderExplorer();
+    item(/^customer/).focus();
+
+    // fireEvent returns false exactly when preventDefault() was called.
+    expect(press('ArrowDown')).toBe(false);
+    expect(press('Home')).toBe(false);
+  });
+
+  it('moves the tab stop with the focus, so leaving and re-entering returns to the same row', () => {
+    renderExplorer();
+    item(/^customer/).focus();
+
+    press('ArrowDown');
+
+    expect(item(/^eligibility/).getAttribute('tabindex')).toBe('0');
+    expect(item(/^customer/).getAttribute('tabindex')).toBe('-1');
+  });
+
+  it('jumps to the next row whose name starts with what was typed', () => {
+    renderExplorer();
+    item(/^customer/).focus();
+
+    press('o');
+
+    expect(focused()).toBe(item(/^order/));
+  });
+
+  it('accumulates the typed characters, so two rows sharing a first letter stay apart', () => {
+    // `is-active` and `is-adult` are siblings: one character can only ever reach the first.
+    renderExplorer();
+    item(/^eligibility/).focus();
+
+    press('i');
+    expect(focused()).toBe(item(/is-active/));
+
+    press('s');
+    press('-');
+    press('a');
+    press('d');
+    expect(focused()).toBe(item(/is-adult/));
+  });
+
+  it('wraps round the end of the tree when searching', () => {
+    renderExplorer();
+    item(/is-large/).focus();
+
+    press('c');
+
+    expect(focused()).toBe(item(/^customer/));
+  });
+
+  it('stays put when nothing starts with what was typed', () => {
+    renderExplorer();
+    item(/^customer/).focus();
+
+    press('z');
+
+    expect(focused()).toBe(item(/^customer/));
+  });
+
+  it('leaves a chorded keystroke alone, so the shell shortcuts still reach the window', () => {
+    // ⌘K is how the palette opens; a type-ahead that swallowed the K would take the shortcut with
+    // it, and Ctrl/Alt chords are the platform's rather than this tree's.
+    renderExplorer();
+    item(/^customer/).focus();
+
+    expect(press('k', { metaKey: true })).toBe(true);
+    expect(focused()).toBe(item(/^customer/));
+  });
+
+  it('does not activate a bare namespace, whichever key asks', () => {
+    const actions = renderExplorer();
+    item(/^customer/).focus();
+
+    press('Enter');
+    press(' ');
+
+    expect(actions.onSelect).not.toHaveBeenCalled();
   });
 });
