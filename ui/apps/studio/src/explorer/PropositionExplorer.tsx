@@ -287,8 +287,11 @@ const TYPE_AHEAD_MS = 500;
  * or null when nothing does, which leaves the focus where it is.
  *
  * `includeCurrent` is what makes an accumulating search behave: the first character of a search
- * must move *off* the current row (pressing `i` twice walks the rows starting with `i`), while
- * every character after it refines the search the current row may well still satisfy.
+ * starts looking *after* the current row, so pressing `i` twice walks the rows starting with `i`
+ * rather than sticking on the first of them; every character after it starts at the current row,
+ * which a refined search may well still satisfy. Either way the scan wraps the whole tree, so a
+ * first character whose only match is the current row comes back round to it — the same outcome as
+ * finding nothing, since both leave the focus where it is.
  */
 function rowStartingWith(
   rows: TreeRow[],
