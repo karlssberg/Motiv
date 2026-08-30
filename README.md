@@ -470,6 +470,39 @@ Rule documents are refused earlier and more helpfully, at the edge, by
 `MaxDocumentDepth`. Available via the `Motiv` and `Motiv.Serialization`
 packages.
 
+### Authoring UIs and Runtimes
+
+Rules are authored in a UI, and the stack ships two cores so that UI can be
+written in either runtime: `@motiv-rules/core` in TypeScript, and
+`Motiv.Serialization` in C#. Both speak the same JSON rule document, so the
+question is answered per runtime rather than per framework:
+
+| Runtime | Tier | What you take |
+|---|---|---|
+| React | Supported | `@motiv-rules/core` + `@motiv-rules/react` |
+| Vue, Svelte, vanilla | Enabled, not supported | `@motiv-rules/core` + ~180 lines of your own bindings |
+| .NET, including Blazor | Enabled | `Motiv.Serialization` — no JavaScript package at all |
+| Web components | Declined | — |
+
+```csharp
+// A Blazor WebAssembly component, using Motiv.Serialization alone
+var registry = new SpecRegistry()
+    .Register("customer.is-active", Spec.Build((Customer c) => c.IsActive).Create("is active"));
+
+const string json = """{ "rule": { "spec": "customer.is-active" } }""";
+
+var serializer = new RuleSerializer(registry);
+var errors = serializer.Validate<Customer>(json);       // $.rule… paths
+var rule = serializer.Deserialize<Customer>(json);      // a live proposition
+```
+
+The "enabled" tier is a claim about the artefact, so it is enforced like one:
+`@motiv-rules/core` declares no dependencies, imports nothing outside itself,
+compiles without the DOM, and is driven from plain Node in a tree where `react`
+does not resolve — on every CI run. See
+[Runtimes and Support Tiers](docs/adoption/index.md) for
+what each tier costs and where the .NET authoring surface ends.
+
 ## Quick Start
 
 Install the Motiv NuGet package:

@@ -19,3 +19,10 @@ delegated to the consumer.
 (optimistic save, 409 recovery, blast-radius reporting) to the component lifecycle, and nothing
 more. It is split out for the same reason core splits it: the document bindings above are
 takeable without the session workflow.
+
+## Runtimes
+
+This adapter is the supported React binding; it is not the only way to consume the core. See
+[Runtimes and Support Tiers](https://github.com/karlssberg/Motiv/blob/main/docs/adoption/index.md)
+for what a Vue or Svelte adapter costs (the inventory above is the price list), and for the .NET
+and Blazor path, which needs no JavaScript package at all.

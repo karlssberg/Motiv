@@ -212,3 +212,21 @@ own.
 |------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
 | [Accessibility](./accessibility/index.md)      | The WCAG 2.1 AA conformance report, what `axe-core` enforces, the manual audit script, and the known gaps.     |
 
+
+## Runtimes and Support Tiers
+
+The rules stack ships two cores, one per runtime that needs one — `@motiv-rules/core` in TypeScript
+for a browser authoring UI, `Motiv.Serialization` in C# for the server that binds and evaluates —
+and both speak the same JSON rule document, tested on each side against the one
+`schemas/rule.v1.json` in this repository. So *can we use this?* is answered per runtime rather than
+per framework: **React** is the supported JavaScript adapter; **Vue, Svelte and vanilla** are enabled
+over a core that is framework-free by enforcement rather than intention (no dependencies, no bare
+imports, no DOM, and a CI job that drives the packed tarball from plain Node in a tree where `react`
+does not resolve); **.NET including Blazor** uses `Motiv.Serialization` directly and needs no
+JavaScript package at all; **web components** are declined. See
+[Runtimes and Support Tiers](./adoption/index.md) for what each tier costs, the measured size of an
+adapter, and the exact boundary of the .NET authoring surface.
+
+| Topic                                                | Description                                                                                                    |
+|------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
+| [Runtimes and Support Tiers](./adoption/index.md)    | The four tiers, the adapter contract and its real cost, the .NET/Blazor path, and what enforces framework-freeness. |

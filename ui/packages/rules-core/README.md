@@ -33,3 +33,18 @@ projections — as framework-free controllers (`RuleWorkflowController`,
 It is a separate entry point on purpose: taking the document logic from the package root never
 drags in session opinions or the `RulesApiClient` coupling. Its surface is pinned by the same
 approved-API snapshot.
+
+## Runtimes
+
+React is the supported adapter (`@motiv-rules/react`). Vue, Svelte and vanilla consumers bind the
+`subscribe`/`getState` stores themselves — around 180 lines, the measured size of this package's
+React bindings. A .NET consumer, Blazor included, does not need this package at all: the same rule
+documents are parsed, validated and evaluated by `Motiv.Serialization` in C#.
+
+Framework-freeness is enforced rather than intended. This package declares no dependencies and no
+peer dependencies, imports nothing outside itself, compiles with `DOM` removed from its TypeScript
+`lib`, and is exercised by `scripts/isolated-consumer.mjs` — which packs it, extracts the tarball
+into a tree where nothing else is installed, and drives both entry points through both the `import`
+and `require` conditions while asserting that `react` does not resolve. That check runs in CI.
+
+See [Runtimes and Support Tiers](https://github.com/karlssberg/Motiv/blob/main/docs/adoption/index.md).
