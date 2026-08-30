@@ -57,3 +57,30 @@ jobs:
       - run: pnpm -r build
       - run: pnpm --filter @motiv-rules/studio exec playwright install --with-deps chromium
       - run: pnpm --filter @motiv-rules/studio a11y
+
+  # Ticket 17's non-React story, made mechanical: `@motiv-rules/core` is packed the way a publish
+  # would pack it, extracted into a scratch tree where nothing else is installed, and driven from
+  # plain Node with `react` asserted to be unresolvable.
+  #
+  # Its own job because what it proves is a property of the *artefact*, which `build` structurally
+  # cannot see: inside this workspace React is one `node_modules` away from every file, so an
+  # accidental import would resolve, typecheck and pass its tests. This also exercises the `files`
+  # field and the exports map, whose first honest reader is otherwise a consumer.
+  framework-free:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: ui/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @motiv-rules/core build
+      - run: pnpm --filter @motiv-rules/core verify:isolated

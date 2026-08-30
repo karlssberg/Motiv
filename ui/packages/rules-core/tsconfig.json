@@ -3,7 +3,12 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": ".",
-    "types": ["node"]
+    "types": ["node"],
+    // The base config allows the DOM; this package does not. It renders nothing, so a reference to
+    // `document`, `window` or `localStorage` here is a bug in a package whose consumers include
+    // plain Node — and one the compiler can refuse rather than a reviewer having to notice. `fetch`
+    // survives the removal because @types/node declares it.
+    "lib": ["ES2022"]
   },
   "include": ["src", "test", "tsup.config.ts"]
 }
