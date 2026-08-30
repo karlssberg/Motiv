@@ -3,24 +3,54 @@
   "version": "0.1.0",
   "description": "Headless React adapter for @motiv-rules/core.",
   "license": "MIT",
+  "author": "Daniel Karlsson",
+  "homepage": "https://karlssberg.github.io/Motiv",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/karlssberg/Motiv.git",
+    "directory": "ui/packages/rules-react"
+  },
+  "bugs": {
+    "url": "https://github.com/karlssberg/Motiv/issues"
+  },
+  "keywords": [
+    "motiv",
+    "rules-engine",
+    "specification-pattern",
+    "headless",
+    "rules",
+    "react",
+    "hooks"
+  ],
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": {
+        "import": "./dist/index.d.ts",
+        "require": "./dist/index.d.cts"
+      },
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
     "./workflow": {
-      "types": "./dist/workflow/index.d.ts",
+      "types": {
+        "import": "./dist/workflow/index.d.ts",
+        "require": "./dist/workflow/index.d.cts"
+      },
       "import": "./dist/workflow/index.js",
       "require": "./dist/workflow/index.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup",
     "test": "vitest run",
