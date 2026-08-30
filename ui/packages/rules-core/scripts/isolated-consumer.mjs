@@ -19,10 +19,11 @@
 import { execFileSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const packageDir = dirname(fileURLToPath(new URL('.', import.meta.url)));
+// The package root — this file lives one directory below it, in `scripts/`.
+const packageDir = fileURLToPath(new URL('../', import.meta.url));
 const fixtures = join(packageDir, 'scripts', 'consumer');
 
 /** Thrown rather than exited, so the scratch tree is still cleaned up on the way out. */

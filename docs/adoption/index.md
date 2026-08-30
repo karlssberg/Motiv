@@ -117,7 +117,7 @@ var registry = new SpecRegistry()
 
 var serializer = new RuleSerializer(registry);
 
-const string document =
+const string json =
     """
     {
       "name": "customer.can-checkout",
@@ -125,10 +125,10 @@ const string document =
     }
     """;
 
-var errors = serializer.Validate<Customer>(document);
+var errors = serializer.Validate<Customer>(json);
 if (errors.Count == 0)
 {
-    var rule = serializer.Deserialize<Customer>(document);
+    var rule = serializer.Deserialize<Customer>(json);
     var result = rule.Evaluate(customer);
     Console.WriteLine(result.Reason);
 }

@@ -486,9 +486,14 @@ question is answered per runtime rather than per framework:
 
 ```csharp
 // A Blazor WebAssembly component, using Motiv.Serialization alone
+var registry = new SpecRegistry()
+    .Register("customer.is-active", Spec.Build((Customer c) => c.IsActive).Create("is active"));
+
+const string json = """{ "rule": { "spec": "customer.is-active" } }""";
+
 var serializer = new RuleSerializer(registry);
-var errors = serializer.Validate<Customer>(document);      // $.rule… paths
-var rule = serializer.Deserialize<Customer>(document);     // a live proposition
+var errors = serializer.Validate<Customer>(json);       // $.rule… paths
+var rule = serializer.Deserialize<Customer>(json);      // a live proposition
 ```
 
 The "enabled" tier is a claim about the artefact, so it is enforced like one:
