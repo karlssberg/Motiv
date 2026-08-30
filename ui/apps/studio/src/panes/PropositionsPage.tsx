@@ -37,7 +37,6 @@ export function PropositionsPage(props: {
   client: RulesApiClient;
   page: Page;
   selected: string | null;
-  onNavigate: (page: Page) => void;
   onSelect: (name: string | null) => void;
 }) {
   const store = useRuleEditorStore();
@@ -102,7 +101,6 @@ export function PropositionsPage(props: {
     <>
       <AppBar
         page={props.page}
-        onNavigate={props.onNavigate}
         controls={
           <>
             {loaded && <span className="rule-version">v{loaded.version}</span>}

@@ -75,7 +75,7 @@ pnpm -C ui/apps/studio dev
 ```bash
 pnpm -C ui/apps/studio test    # component tests (jsdom)
 pnpm -C ui/apps/studio e2e     # Playwright smoke (builds SPA, starts host)
-pnpm -C ui/apps/studio a11y    # axe-core over every view (builds SPA, no host)
+pnpm -C ui/apps/studio a11y    # axe-core + keyboard suite (builds SPA, no host)
 ```
 
 The Playwright run downloads a browser on first use:
@@ -91,12 +91,14 @@ before and after each run.
 
 ## Accessibility
 
-`pnpm -C ui/apps/studio a11y` runs `axe-core` (`e2e-a11y/`) over every view and
-over each hard surface in the state it is hard in — the palette open, the modal
-shown, the operator picker triggered — in both colour schemes. It needs no
-backend: it serves the built bundle and answers the API from fixtures, so a
-finding is a fact about the markup rather than about what a live store holds.
-The `accessibility` job in `.github/workflows/ui.yml` runs it on every push.
+`pnpm -C ui/apps/studio a11y` runs the accessibility gate (`e2e-a11y/`): `axe-core`
+over every view and over each hard surface in the state it is hard in — the
+palette open, the modal shown, the operator picker triggered — in both colour
+schemes, plus a keyboard suite for what a scan cannot see, which is whether a
+declared role behaves the way it promises. It needs no backend: it serves the
+built bundle and answers the API from fixtures, so a finding is a fact about the
+markup and its behaviour rather than about what a live store holds. The
+`accessibility` job in `.github/workflows/ui.yml` runs it on every push.
 
 That is about half of WCAG 2.1 AA. The other half — focus order, announcement
 quality, whether a generated label means anything — is a scripted manual

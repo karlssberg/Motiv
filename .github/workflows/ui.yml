@@ -29,8 +29,10 @@ jobs:
       - run: pnpm -r test
 
   # The accessibility gate: axe-core over every Studio view and every hard surface, in both colour
-  # schemes (ticket 18 — "in CI on every run"). Its own job rather than a step on `build`, so a
-  # contrast regression is attributable at a glance and does not read as a unit-test failure.
+  # schemes (ticket 18 — "in CI on every run"), plus the keyboard suite for the half a scan cannot
+  # see — whether a declared role behaves the way it promises. Its own job rather than a step on
+  # `build`, so a contrast regression is attributable at a glance and does not read as a unit-test
+  # failure.
   #
   # Scoped to this suite rather than adopting all of `e2e/` as a merge gate: that suite drives the
   # .NET host, so it needs a second toolchain here and a running backend to stay green, and making

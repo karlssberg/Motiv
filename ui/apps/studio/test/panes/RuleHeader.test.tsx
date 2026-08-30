@@ -50,7 +50,6 @@ function renderHeader(
       <RuleHeader
         client={client}
         page="rules"
-        onNavigate={vi.fn()}
         {...(onLoaded ? { onLoaded } : {})}
       />
     </RuleEditorProvider>,

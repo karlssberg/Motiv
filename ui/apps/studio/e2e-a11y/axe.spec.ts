@@ -47,7 +47,7 @@ async function scan(page: Page): Promise<void> {
 /** Load a route — the API is already answered from fixtures — and wait for the chrome to settle. */
 async function visit(page: Page, route: string): Promise<void> {
   await page.goto(route);
-  await expect(page.getByRole('tab', { name: 'Rules' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Rules' })).toBeVisible();
 }
 
 /**
@@ -115,7 +115,7 @@ const VIEWS: readonly Surface[] = [
     name: 'the admin page, with grants to administer',
     reach: async (page) => {
       await visit(page, '/#/admin');
-      await expect(page.getByRole('tab', { name: 'Admin' })).toBeVisible();
+      await expect(page.getByRole('link', { name: 'Admin' })).toBeVisible();
     },
   },
 ];

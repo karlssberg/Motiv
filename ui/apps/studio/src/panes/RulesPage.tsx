@@ -9,7 +9,6 @@ import { CheckoutPane } from './CheckoutPane.js';
 export function RulesPage(props: {
   client: RulesApiClient;
   page: Page;
-  onNavigate: (page: Page) => void;
   onLoaded?: (entry: RuleListEntry | null) => void;
 }) {
   return (
@@ -17,7 +16,6 @@ export function RulesPage(props: {
       <RuleHeader
         client={props.client}
         page={props.page}
-        onNavigate={props.onNavigate}
         {...(props.onLoaded ? { onLoaded: props.onLoaded } : {})}
       />
       {/*

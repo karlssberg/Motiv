@@ -1,8 +1,9 @@
 import { defineConfig } from '@playwright/test';
 
 /**
- * The accessibility sweep: `axe-core` over every Studio view, and over each of the hard surfaces
- * in the state it is hard in.
+ * The accessibility gate: `axe-core` over every Studio view and over each of the hard surfaces in
+ * the state it is hard in, plus the keyboard suite that drives the patterns a scan cannot judge —
+ * a role is a promise about behaviour, and a scan only ever sees the markup.
  *
  * A second config rather than a project inside `playwright.config.ts`, because the two suites need
  * different servers and Playwright's `webServer` is config-wide. The `e2e/` suite drives the real

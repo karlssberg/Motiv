@@ -49,7 +49,7 @@ function mockFetch(options: {
 }
 
 function renderPage() {
-  return render(<AdminPage page="admin" onNavigate={vi.fn()} />);
+  return render(<AdminPage page="admin" />);
 }
 
 describe('AdminPage', () => {
@@ -69,7 +69,7 @@ describe('AdminPage', () => {
     mockFetch({ capabilities: DENIED });
     renderPage();
 
-    await waitFor(() => expect(screen.queryByRole('tab', { name: 'Admin' })).toBeNull());
+    await waitFor(() => expect(screen.queryByRole('link', { name: 'Admin' })).toBeNull());
     expect(screen.queryByRole('table')).toBeNull();
     expect(screen.queryByRole('button', { name: /add grant/i })).toBeNull();
   });
@@ -78,14 +78,14 @@ describe('AdminPage', () => {
     mockFetch({ capabilities: DENIED });
     renderPage();
 
-    await waitFor(() => expect(screen.queryByRole('tab', { name: 'Admin' })).toBeNull());
+    await waitFor(() => expect(screen.queryByRole('link', { name: 'Admin' })).toBeNull());
   });
 
   it('shows the admin nav link when capabilities allow', async () => {
     mockFetch({});
     renderPage();
 
-    expect(await screen.findByRole('tab', { name: 'Admin' })).toBeTruthy();
+    expect(await screen.findByRole('link', { name: 'Admin' })).toBeTruthy();
   });
 
   it('posts a new grant from the add form', async () => {

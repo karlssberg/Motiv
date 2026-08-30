@@ -203,14 +203,14 @@ expression — *is* the accessible description of that composition, which is wha
 see the indentation actually needs. So the rule builder is nested labelled groups plus disclosure
 rather than a `tree`, and every group is named by its own subtree's generated expression.
 Enforcement is `axe-core` over every view and every open surface in both colour schemes, on every
-CI run, plus a scripted manual screen-reader pass for the half axe cannot judge. See
-[Accessibility](./accessibility/index.md) for the conformance report, the audit script, the two
-recorded gaps, and the honest statement that the headless packages carry no accessibility of their
-own.
+CI run, plus a keyboard suite for the roles a scan cannot judge — a declared `tree` that offered no
+arrow keys is exactly what a scan reports green — plus a scripted manual screen-reader pass for the
+rest. See [Accessibility](./accessibility/index.md) for the conformance report, the audit script,
+and the honest statement that the headless packages carry no accessibility of their own.
 
 | Topic                                          | Description                                                                                                    |
 |------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
-| [Accessibility](./accessibility/index.md)      | The WCAG 2.1 AA conformance report, what `axe-core` enforces, the manual audit script, and the known gaps.     |
+| [Accessibility](./accessibility/index.md)      | The WCAG 2.1 AA conformance report, what the mechanical suites enforce, and the manual audit script.           |
 
 
 ## Runtimes and Support Tiers

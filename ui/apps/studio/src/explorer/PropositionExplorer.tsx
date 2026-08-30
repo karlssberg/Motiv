@@ -1,4 +1,7 @@
-import { useMemo, useState, type CSSProperties, type KeyboardEvent, type MouseEvent } from 'react';
+import {
+  useId, useMemo, useRef, useState,
+  type CSSProperties, type KeyboardEvent, type MouseEvent,
+} from 'react';
 import {
   buildNamespaceTree, countLeaves, filterTree,
   type NamespaceNode, type PropositionListEntry,
@@ -164,19 +167,7 @@ function NamespaceBrowse(props: {
         // which is also the state of the very first paint, before the listing has arrived, and of
         // a catalog that is genuinely empty. A failed *search* is said elsewhere.
         ? <p className="explorer-empty">No propositions yet.</p>
-        : (
-          <ul className="explorer-tree" role="tree" aria-label="Proposition namespaces">
-            {filtered.map((node) => (
-              <TreeNode
-                key={node.path}
-                node={node}
-                depth={0}
-                selected={selected}
-                onSelect={onChoose}
-              />
-            ))}
-          </ul>
-        )}
+        : <NamespaceTree nodes={filtered} selected={selected} onSelect={onChoose} />}
     </>
   );
 }
@@ -257,20 +248,196 @@ function ExplorerFooter(props: {
 }
 
 /**
+ * One row of the tree as the keyboard walks it — the rendered rows, flattened into the order they
+ * appear on screen, with the two links (parent, first child) the sideways keys need.
+ *
+ * Flattened rather than walked live because every movement key is an index arithmetic on this
+ * order: down and up are ±1, Home and End are its ends, and type-ahead is a scan of it. Nothing is
+ * ever collapsed, so this really is the whole tree — a row hidden inside a closed branch would have
+ * to be excluded here, and there is no such thing to exclude.
+ */
+interface TreeRow {
+  path: string;
+  /** What type-ahead matches on: the row's own segment, not the dotted name it sits under. */
+  segment: string;
+  parent: string | null;
+  firstChild: string | null;
+  /** The proposition this row *is*, or null for a bare namespace — which is not activatable. */
+  name: string | null;
+}
+
+function flattenTree(nodes: NamespaceNode[], parent: string | null = null): TreeRow[] {
+  return nodes.flatMap((node) => [
+    {
+      path: node.path,
+      segment: node.segment,
+      parent,
+      firstChild: node.children[0]?.path ?? null,
+      name: node.entry?.name ?? null,
+    },
+    ...flattenTree(node.children, node.path),
+  ]);
+}
+
+/** How long a type-ahead keeps accumulating before the next keystroke starts a new search. */
+const TYPE_AHEAD_MS = 500;
+
+/**
+ * The first row at or after `from` whose segment starts with `prefix`, wrapping round the end —
+ * or null when nothing does, which leaves the focus where it is.
+ *
+ * `includeCurrent` is what makes an accumulating search behave: the first character of a search
+ * must move *off* the current row (pressing `i` twice walks the rows starting with `i`), while
+ * every character after it refines the search the current row may well still satisfy.
+ */
+function rowStartingWith(
+  rows: TreeRow[],
+  from: number,
+  prefix: string,
+  includeCurrent: boolean,
+): string | null {
+  const first = includeCurrent ? 0 : 1;
+  for (let step = first; step < first + rows.length; step += 1) {
+    const row = rows[(from + step) % rows.length]!;
+    if (row.segment.toLowerCase().startsWith(prefix)) return row.path;
+  }
+  return null;
+}
+
+/** The path of the treeitem an event came from, or null when it came from anywhere else. */
+function pathOf(target: EventTarget): string | null {
+  return target instanceof HTMLElement ? target.dataset['path'] ?? null : null;
+}
+
+/**
+ * The namespace tree, navigated the way `role="tree"` says it is: **one tab stop**, arrow keys to
+ * move between rows, Home/End to the ends, type-ahead to jump, and Enter/Space to choose. The role
+ * used to be worn without any of that — every row a tab stop, no arrow keys — which told a screen
+ * reader to switch into a navigation mode that then did nothing.
+ *
+ * **Focus is the state.** The keys move it with `focus()` and the roving `tabindex` follows,
+ * because focus is what the user experiences and a second copy of "where am I" could disagree with
+ * it. `focused` is only a mirror, and it is *read* through the rows rather than corrected: the
+ * model chips can filter the focused row away, and a stale path then falls back rather than leaving
+ * the tree with no tab stop at all.
+ *
+ * There is nothing to expand or collapse — the tree renders fully expanded, which is why
+ * `aria-expanded` is always `true` — so ArrowRight and ArrowLeft carry only their movement
+ * meanings: into the subtree, and back out to the parent.
+ */
+function NamespaceTree(props: {
+  nodes: NamespaceNode[];
+  selected: string | null;
+  onSelect: (name: string) => void;
+}) {
+  const { nodes, selected, onSelect } = props;
+  const treeId = useId();
+  const rows = useMemo(() => flattenTree(nodes), [nodes]);
+  const [focused, setFocused] = useState<string | null>(null);
+  // A ref rather than state: a search in progress changes nothing on screen, and re-rendering the
+  // whole tree on every keystroke of a type-ahead would be a render per character for no paint.
+  const typed = useRef({ prefix: '', at: 0 });
+
+  // Rows are addressed by id and reached with `getElementById`, deliberately: a `useId` prefix
+  // contains colons, which are legal in an id and not in a selector — a `querySelector` for the
+  // same string would throw.
+  const rowId = (path: string): string => `${treeId}-${path}`;
+
+  // Where the tab stop sits. The row last focused, else the selected proposition — so tabbing in
+  // lands where the user left off rather than at the top of a list they have already moved past —
+  // else the first row.
+  const stop = rows.find((row) => row.path === focused)?.path
+    ?? rows.find((row) => row.name !== null && row.name === selected)?.path
+    ?? rows[0]?.path
+    ?? null;
+
+  const focusRow = (path: string | null | undefined): void => {
+    if (path != null) document.getElementById(rowId(path))?.focus();
+  };
+
+  const onKeyDown = (event: KeyboardEvent<HTMLUListElement>): void => {
+    const from = rows.findIndex((row) => row.path === pathOf(event.target));
+    const row = rows[from];
+    if (row === undefined) return;
+
+    // Every movement key is claimed whether or not it has somewhere to go: at the last row
+    // ArrowDown must still not scroll the palette out from under the row that has focus.
+    const move = (path: string | null | undefined): void => {
+      event.preventDefault();
+      focusRow(path);
+    };
+
+    switch (event.key) {
+      case 'ArrowDown': return move(rows[from + 1]?.path);
+      case 'ArrowUp': return move(rows[from - 1]?.path);
+      case 'ArrowRight': return move(row.firstChild);
+      case 'ArrowLeft': return move(row.parent);
+      case 'Home': return move(rows[0]?.path);
+      case 'End': return move(rows[rows.length - 1]?.path);
+      case 'Enter':
+      case ' ':
+        event.preventDefault(); // Space must not scroll the page
+        if (row.name !== null) onSelect(row.name);
+        return;
+      default:
+    }
+
+    // Type-ahead. A chord belongs to the shell (⌘K opens this palette) or to the platform, so only
+    // a bare character is taken — and a key that names itself with a word rather than a character
+    // (Tab, Escape, F1) is not a character to search for.
+    if (event.key.length !== 1 || event.metaKey || event.ctrlKey || event.altKey) return;
+    const now = Date.now();
+    const continuing = now - typed.current.at < TYPE_AHEAD_MS;
+    const prefix = (continuing ? typed.current.prefix : '') + event.key.toLowerCase();
+    typed.current = { prefix, at: now };
+    focusRow(rowStartingWith(rows, from, prefix, continuing));
+  };
+
+  return (
+    <ul
+      className="explorer-tree"
+      role="tree"
+      aria-label="Proposition namespaces"
+      onKeyDown={onKeyDown}
+      // Focus events bubble as `focusin`, so one handler on the tree keeps the roving tabindex in
+      // step however focus arrived — arrow key, Tab, or a click on a row.
+      onFocus={(event) => {
+        const path = pathOf(event.target);
+        if (path !== null) setFocused(path);
+      }}
+    >
+      {nodes.map((node) => (
+        <TreeNode
+          key={node.path}
+          node={node}
+          depth={0}
+          selected={selected}
+          stop={stop}
+          rowId={rowId}
+          onSelect={onSelect}
+        />
+      ))}
+    </ul>
+  );
+}
+
+/**
  * One node. A node can be both a namespace and a proposition — `customer` may be a name in its own
  * right — so the entry and the children are rendered independently rather than as an either/or.
  *
- * Keyboard support is intentionally minimal: Enter/Space activates the focused row, matching a
- * click. This is not full WAI-ARIA tree navigation — there is no arrow-key movement, type-ahead,
- * or roving tabindex — so the gap is recorded here rather than implied by the `role="tree"`.
+ * The keyboard lives one level up, on the tree: with a roving tabindex the focused row is the only
+ * one a key can reach, so a handler per row would be the same handler mounted once per row.
  */
 function TreeNode(props: {
   node: NamespaceNode;
   depth: number;
   selected: string | null;
+  /** The path of the tree's one tab stop. */
+  stop: string | null;
+  rowId: (path: string) => string;
   onSelect: (name: string) => void;
 }) {
-  const { node, depth, selected, onSelect } = props;
+  const { node, depth, selected, stop, rowId, onSelect } = props;
   const entry = node.entry;
   const quarantine = entry?.quarantine ?? [];
   const quarantined = quarantine.length > 0;
@@ -294,13 +461,6 @@ function TreeNode(props: {
     activate();
   };
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLLIElement>): void => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault(); // Space must not scroll the page
-      activate();
-    }
-  };
-
   // The accessible name is composed from this node's own segment plus its origin/quarantine state
   // — not the segment alone — because those badges (compiled/overridden/authored, quarantined)
   // are this task's whole deliverable, and an explicit `aria-label` overrides element content
@@ -317,19 +477,24 @@ function TreeNode(props: {
 
   return (
     <li
+      id={rowId(node.path)}
+      data-path={node.path}
       role="treeitem"
       aria-label={accessibleName}
       // `aria-selected="false"` means "selectable, but not selected" — a claim a bare namespace
-      // must not make. Omitting it is what says "not selectable", matching the absent tabindex.
+      // must not make. Omitting it is what says "not selectable"; being reachable by the arrow keys
+      // is a different question, which is why every row carries a tabindex and only some of these.
       aria-selected={entry ? entry.name === selected : undefined}
+      // Always expanded, and honestly so: nothing here collapses, so there is no state to toggle.
       aria-expanded={node.children.length > 0 ? true : undefined}
-      // Only a proposition is focusable; a bare namespace stays out of the tab order entirely.
-      tabIndex={entry ? 0 : undefined}
+      // The roving tabindex: the tree is one stop in the tab sequence, and every other row is
+      // reachable only from inside it. A bare namespace is included — a tree navigates its
+      // structure, and a namespace the arrow keys could not reach would be a hole in it.
+      tabIndex={node.path === stop ? 0 : -1}
       className="explorer-node"
       style={{ '--depth': depth } as CSSProperties}
       title={quarantined ? quarantine.map((error) => error.message).join('\n') : undefined}
       onClick={handleClick}
-      onKeyDown={entry ? handleKeyDown : undefined}
     >
       <span className={entry ? 'explorer-leaf' : 'explorer-namespace'}>
         <span className="explorer-segment">{node.segment}</span>
@@ -350,6 +515,8 @@ function TreeNode(props: {
               node={child}
               depth={depth + 1}
               selected={selected}
+              stop={stop}
+              rowId={rowId}
               onSelect={onSelect}
             />
           ))}
