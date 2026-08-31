@@ -499,7 +499,10 @@ var rule = serializer.Deserialize<Customer>(json);      // a live proposition
 The "enabled" tier is a claim about the artefact, so it is enforced like one:
 `@motiv-rules/core` declares no dependencies, imports nothing outside itself,
 compiles without the DOM, and is driven from plain Node in a tree where `react`
-does not resolve — on every CI run. Neither npm package has been published yet;
+does not resolve — on every CI run. What that tier *costs* is enforced the same
+way: a worked Vue adapter in `ui/examples/vue-adapter` offers the React surface
+symbol for symbol, is tested on every CI run, and is what the price published for
+a second runtime is measured from. Neither npm package has been published yet;
 the release train that will publish them, and the gate that checks the packed
 tarball is installable, are in place. See
 [Runtimes and Support Tiers](docs/adoption/index.md) for

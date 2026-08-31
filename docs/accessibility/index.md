@@ -229,7 +229,12 @@ Two things do carry over:
   tractable case, and it owns its own structure: nested labelled groups, each named by the
   assertions it explains, with a render prop for the visible markup and a group id handed to the
   consumer so a disclosure control can name what it toggles. It is the lone place accessibility is
-  inherited from a package.
+  inherited from a package — and it is inherited **only by React**. An adopter on another runtime
+  gets the decision from this page and writes the markup themselves;
+  [the worked Vue adapter](https://github.com/karlssberg/Motiv/tree/main/ui/examples/vue-adapter)
+  ports it and is tested against the same behaviours, so what that costs is a measured row on the
+  price table in [Runtimes and Support Tiers](../adoption/index.md#other-javascript-frameworks)
+  rather than an estimate.
 - **`accessibleExpression`** (in `@motiv-rules/core`) is the generated text itself, bounded for use
   as an accessible name. It renders nothing, so it does not breach the boundary — but it means an
   adopter's own UI can reuse the key move above rather than reinvent it.

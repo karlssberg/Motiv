@@ -1,3 +1,7 @@
 packages:
   - 'packages/*'
   - 'apps/*'
+  # The worked second adapter (Vue). A workspace member so `pnpm -r` builds, typechecks and tests
+  # it like everything else — and `private: true`, so `pnpm -r publish` and the publish-readiness
+  # gate both skip it. Motiv maintains one adapter; this one is evidence, not a package.
+  - 'examples/*'
