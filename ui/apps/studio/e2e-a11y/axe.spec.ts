@@ -113,6 +113,20 @@ const VIEWS: readonly Surface[] = [
     reach: async (page) => { await visit(page, '/#/propositions/customer.is-verified'); },
   },
   {
+    name: 'the rules page, reporting a failure that reached nowhere else',
+    reach: async (page) => {
+      // Registered after the fixture's catch-all, so this wins for the listing: Playwright checks
+      // handlers most-recent-first. The banner is a coloured surface reachable only when the API
+      // fails, which is precisely why a route-only sweep would never have scanned it — and it is
+      // the same component both pages raise, so one scan covers the pair.
+      await page.route('**/api/rules/rules', (route) => route.fulfill({
+        status: 503, json: { error: 'The rules service is unavailable.' },
+      }));
+      await visit(page, '/#/rules');
+      await expect(page.getByRole('alert')).toContainText('The rules service is unavailable.');
+    },
+  },
+  {
     name: 'the admin page, with grants to administer',
     reach: async (page) => {
       await visit(page, '/#/admin');

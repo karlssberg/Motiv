@@ -41,7 +41,7 @@ describe('RuleWorkflowController', () => {
   it('starts with nothing listed and nothing loaded', () => {
     const { controller } = makeController();
     expect(controller.getState()).toEqual({
-      rules: [], loaded: null, loadedEntry: null, conflict: null, saving: false,
+      rules: [], loaded: null, loadedEntry: null, conflict: null, failure: null, saving: false,
     });
   });
 
@@ -268,8 +268,188 @@ describe('RuleWorkflowController', () => {
     expect(controller.getState().saving).toBe(true);
 
     put.reject(new Error('boom'));
-    await expect(inFlight).rejects.toThrow('boom');
+    // Reported, not rethrown: a consumer writing `void save()` would otherwise get an unhandled
+    // rejection and a surface showing nothing — indistinguishable from never having saved.
+    await expect(inFlight).resolves.toBeUndefined();
     expect(controller.getState().saving).toBe(false);
+    expect(controller.getState().failure).toBe('boom');
+  });
+
+  it('a thrown listing refresh is reported rather than escaping the caller', async () => {
+    const client = makeClient({ listRules: vi.fn().mockRejectedValue(new Error('listing failed')) });
+    const { controller } = makeController(client);
+
+    await expect(controller.refresh()).resolves.toBeUndefined();
+
+    expect(controller.getState().failure).toBe('listing failed');
+    expect(controller.getState().rules).toEqual([]);
+  });
+
+  it('a superseded refresh failure never lands over a newer listing', async () => {
+    const stale = deferred<RuleListEntry[]>();
+    const client = makeClient({
+      listRules: vi.fn()
+        .mockReturnValueOnce(stale.promise)
+        .mockResolvedValueOnce(listing),
+    });
+    const { controller } = makeController(client);
+
+    const first = controller.refresh();
+    await controller.refresh();
+    stale.reject(new Error('listing failed'));
+    await first;
+
+    // The failed fetch describes a world the newer one has already replaced.
+    expect(controller.getState().failure).toBeNull();
+    expect(controller.getState().rules).toEqual(listing);
+  });
+
+  it('a refresh that succeeds clears the failure the one before it raised', async () => {
+    const client = makeClient({
+      listRules: vi.fn()
+        .mockRejectedValueOnce(new Error('listing failed'))
+        .mockResolvedValueOnce(listing),
+    });
+    const { controller } = makeController(client);
+    await controller.refresh();
+    expect(controller.getState().failure).toBe('listing failed');
+
+    await controller.refresh();
+
+    // The listing it described has been replaced; a banner still claiming it failed is a report
+    // about a world that is no longer on screen.
+    expect(controller.getState().failure).toBeNull();
+    expect(controller.getState().rules).toEqual(listing);
+  });
+
+  it('one channel, so whichever operation runs next clears what the last one reported', async () => {
+    const client = makeClient({ putRule: vi.fn().mockRejectedValue(new Error('boom')) });
+    const { controller } = makeController(client);
+    await controller.load('can-checkout');
+    await controller.save();
+    expect(controller.getState().failure).toBe('boom');
+
+    // Not a save, and not about the same subject — but there is one banner, and the newest report
+    // owns it. Keeping a save's failure across an act that succeeded would leave the page saying
+    // something is wrong while nothing is.
+    await controller.refresh();
+
+    expect(controller.getState().failure).toBeNull();
+  });
+
+  it('a thrown load is reported, and leaves the identity it could not replace', async () => {
+    const client = makeClient({
+      getRule: vi.fn()
+        .mockResolvedValueOnce({ document: { rule: { spec: 'is-adult' } }, version: 3 })
+        .mockRejectedValueOnce(new Error('rule unreachable')),
+    });
+    const { controller, store } = makeController(client);
+    await controller.load('can-checkout');
+
+    await expect(controller.load('fraud-screening')).resolves.toBeUndefined();
+
+    expect(controller.getState().failure).toBe('rule unreachable');
+    // Unlike the proposition controller, `loaded` is only ever written *after* a load lands, so
+    // the identity still standing is the one whose document is in the store. Dropping it would
+    // demote a loaded rule to a local draft over a transient 500.
+    expect(controller.getState().loaded).toEqual({
+      name: 'can-checkout', version: 3, isCodeDefault: false,
+    });
+    expect(store.getState().document).toEqual({ rule: { spec: 'is-adult' } });
+  });
+
+  it('a new load clears the previous failure before its own fetch lands', async () => {
+    const arriving = deferred<{ document: unknown; version: number }>();
+    const client = makeClient({
+      getRule: vi.fn()
+        .mockRejectedValueOnce(new Error('rule unreachable'))
+        .mockReturnValueOnce(arriving.promise),
+    });
+    const { controller } = makeController(client);
+    await controller.load('can-checkout');
+    expect(controller.getState().failure).toBe('rule unreachable');
+
+    const retry = controller.load('can-checkout');
+    // Cleared on the way out, not on the way back: a banner that outlives the retry it triggered
+    // reads as the retry having failed too.
+    expect(controller.getState().failure).toBeNull();
+
+    arriving.resolve({ document: { rule: { spec: 'is-adult' } }, version: 3 });
+    await retry;
+    expect(controller.getState().failure).toBeNull();
+  });
+
+  it('a superseded load failure never lands on a newer pick', async () => {
+    const stale = deferred<{ document: unknown; version: number }>();
+    const client = makeClient({
+      getRule: vi.fn()
+        .mockReturnValueOnce(stale.promise)
+        .mockResolvedValueOnce({ document: { rule: { spec: 'is-vip' } }, version: 7 }),
+    });
+    const { controller } = makeController(client);
+
+    const first = controller.load('can-checkout');
+    await controller.load('fraud-screening');
+    stale.reject(new Error('rule unreachable'));
+    await first;
+
+    expect(controller.getState().failure).toBeNull();
+    expect(controller.getState().loaded).toEqual({
+      name: 'fraud-screening', version: 7, isCodeDefault: false,
+    });
+  });
+
+  it('a retried save clears the failure the one before it reported, before the PUT lands', async () => {
+    const retry = deferred<{ outcome: string; version: number }>();
+    const client = makeClient({
+      putRule: vi.fn()
+        .mockRejectedValueOnce(new Error('boom'))
+        .mockReturnValueOnce(retry.promise),
+    });
+    const { controller } = makeController(client);
+    await controller.load('can-checkout');
+    await controller.save();
+    expect(controller.getState().failure).toBe('boom');
+
+    const second = controller.save();
+    // On the way out, not on the way back: a banner still reading 'boom' over a save in flight
+    // says the retry failed before it has answered.
+    expect(controller.getState().failure).toBeNull();
+
+    retry.resolve({ outcome: 'updated', version: 4 });
+    await second;
+    expect(controller.getState().failure).toBeNull();
+    expect(controller.getState().loaded?.version).toBe(4);
+  });
+
+  it('a version conflict is not an unexpected failure', async () => {
+    const client = makeClient({
+      putRule: vi.fn().mockResolvedValue({ outcome: 'conflict', currentVersion: 9 }),
+    });
+    const { controller } = makeController(client);
+    await controller.load('can-checkout');
+
+    await controller.save();
+
+    // A 409 is a typed outcome with its own channel and its own recovery; reporting it twice
+    // would put the same event in two banners saying different things.
+    expect(controller.getState().conflict).toBe(9);
+    expect(controller.getState().failure).toBeNull();
+  });
+
+  it('a superseded save failure never mislabels a newer load', async () => {
+    const put = deferred<never>();
+    const client = makeClient({ putRule: vi.fn().mockReturnValue(put.promise) });
+    const { controller } = makeController(client);
+    await controller.load('can-checkout');
+
+    const inFlight = controller.save();
+    await controller.load('fraud-screening');
+    put.reject(new Error('boom'));
+    await inFlight;
+
+    // The failure belongs to can-checkout, which is no longer on screen.
+    expect(controller.getState().failure).toBeNull();
   });
 
   it('notifies subscribers on every state change, with a stable unchanged snapshot', async () => {

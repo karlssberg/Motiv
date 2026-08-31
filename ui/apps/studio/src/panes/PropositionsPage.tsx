@@ -9,6 +9,7 @@ import { AppBar } from './AppBar.js';
 import { EditorPane } from './EditorPane.js';
 import { EvaluatePane } from './EvaluatePane.js';
 import { DocumentModal } from './DocumentModal.js';
+import { ReportBanner } from '../shell/ReportBanner.js';
 import { Toolbar } from '../shell/Toolbar.js';
 import { useCommandKey } from '../shell/useCommandKey.js';
 import { IconJson, IconOpen, IconSave } from '../shell/icons.js';
@@ -134,14 +135,9 @@ export function PropositionsPage(props: {
       </AppBar>
 
       {failure !== null && (
-        <div role="alert" className="conflict-banner">
+        <ReportBanner {...(loaded ? { onReload: () => void reload() } : {})}>
           {failure}
-          {loaded && (
-            <button type="button" className="btn" onClick={() => void reload()}>
-              Reload latest
-            </button>
-          )}
-        </div>
+        </ReportBanner>
       )}
 
       <DependentsStrip dependents={dependents} />

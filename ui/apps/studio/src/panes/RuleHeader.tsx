@@ -8,6 +8,7 @@ import type { Page } from '../routing/useHashRoute.js';
 import { AppBar } from './AppBar.js';
 import { DocumentModal } from './DocumentModal.js';
 import { CommandPalette } from '../shell/CommandPalette.js';
+import { ReportBanner } from '../shell/ReportBanner.js';
 import { Toolbar } from '../shell/Toolbar.js';
 import { useCommandKey } from '../shell/useCommandKey.js';
 import { IconJson, IconOpen, IconSave } from '../shell/icons.js';
@@ -31,7 +32,8 @@ const LOCAL_DRAFT: RuleOption = { id: '', label: 'local draft' };
 /**
  * Seam: dynamic replacement. Picks a live server rule, loads its document into the shared
  * editor store, and saves it back with the loaded version — a stale version surfaces as a
- * conflict banner (open two tabs to watch the race protection work). The save loop itself is
+ * conflict banner (open two tabs to watch the race protection work), and anything the API does
+ * not model as an outcome surfaces as a failure banner beside it. The save loop itself is
  * `RuleWorkflowController`'s; this renders it. Reports the picked rule's catalog entry via
  * onLoaded so the shell can adapt (e.g. async validation).
  */
@@ -41,7 +43,7 @@ export function RuleHeader(props: {
   page: Page;
 }) {
   const store = useRuleEditorStore();
-  const { rules, loaded, loadedEntry, conflict, saving, refresh, load, save } =
+  const { rules, loaded, loadedEntry, conflict, failure, saving, refresh, load, save } =
     useRuleWorkflow(props.client, store);
   const [picking, setPicking] = useState(false);
   const [documentOpen, setDocumentOpen] = useState(false);
@@ -94,13 +96,20 @@ export function RuleHeader(props: {
           {MODEL_TYPE}
         </span>
       </AppBar>
+      {/*
+        Reported first because it is always the newer event: only a save records a conflict, and
+        every operation clears the failure on its way out — so a failure standing beside a
+        conflict was necessarily raised after it.
+      */}
+      {failure !== null && (
+        <ReportBanner {...(loaded ? { onReload: () => void load(loaded.name) } : {})}>
+          {failure}
+        </ReportBanner>
+      )}
       {conflict !== null && loaded && (
-        <div role="alert" className="conflict-banner">
+        <ReportBanner onReload={() => void load(loaded.name)}>
           Someone else saved version {conflict} of “{loaded.name}”.
-          <button type="button" className="btn" onClick={() => void load(loaded.name)}>
-            Reload latest
-          </button>
-        </div>
+        </ReportBanner>
       )}
       {picking && (
         <CommandPalette<RuleOption>

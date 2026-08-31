@@ -1,11 +1,12 @@
 /*
  * Text colours carry a WCAG 2.1 AA obligation (1.4.3 Contrast (Minimum), 4.5:1 for the sizes used
- * here — every `--faint` site is 9–12px, so none of them is "large text"). `--faint` and the three
- * pill colours are the ones that had to move for it; the ratios are quoted against the *lightest*
- * background each is drawn on, which for `--faint` is a white panel and for the pills is their own
- * 12%-tinted fill. `axe-core` re-checks all of them on every run (`e2e-a11y/axe.spec.ts`), in both
- * colour schemes, so a future palette edit that dropped below the floor fails CI rather than
- * shipping.
+ * here — every `--faint` site is 9–12px, so none of them is "large text"). `--faint`, `--danger`
+ * and the three pill colours are the ones that had to move for it; each ratio is quoted against
+ * the *tightest* ground the colour is actually drawn on, which for `--faint` is the highlighted
+ * palette row and for `--danger` and the pills is their own translucent tint — whose lightness
+ * comes from the surface beneath it, so the darkest of those sets the value. `axe-core` re-checks
+ * all of them on every run (`e2e-a11y/axe.spec.ts`), in both colour schemes, so a future palette
+ * edit that dropped below the floor fails CI rather than shipping.
  */
 :root {
   --bg: #ffffff; --surface: #f6f7f9; --border: #e3e5e9; --text: #1f2328;
@@ -13,7 +14,12 @@
      5.3:1 on a white panel, 4.8:1 on --sh-inset, and 4.8:1 on the palette's --accent-weak
      highlighted row, which is the tightest of the three and the one that set the value. */
   --muted: #5b626b; --faint: #646c76; --accent: #4f46e5; --accent-weak: #eef2ff;
-  --danger: #d1435b; --ho: #2f9e6f; --radius: 6px; --space: 8px;
+  /* --danger was #d1435b: 3.3:1 as banner text on its own 12% tint over the canvas, which is
+     where `.report-banner` is drawn — a translucent fill takes its lightness from whatever is
+     behind it, so the ratio is lower than the same red on a panel. #a8293f is 4.9:1 there, and
+     4.7:1 on the 15% tint `.quarantine-badge` uses. Every other site reads it as solid text or a
+     button fill, where darkening only widens the margin. */
+  --danger: #a8293f; --ho: #2f9e6f; --radius: 6px; --space: 8px;
   --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
   --sans: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 
