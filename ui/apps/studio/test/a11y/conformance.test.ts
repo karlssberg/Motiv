@@ -5,7 +5,7 @@ import axe from 'axe-core';
 import { describe, expect, it } from 'vitest';
 import { CRITERIA, WCAG_AA, axeTagFor } from '../../a11y/criteria.js';
 import { CONFORMANCE, type ConformanceRow } from '../../a11y/conformance.js';
-import { enabledAxeRules, renderConformanceReport } from '../../a11y/report.js';
+import { enabledAxeRules, escapeCell, renderConformanceReport } from '../../a11y/report.js';
 
 /**
  * The gate on the conformance report (ticket 18: "a VPAT / Accessibility Conformance Report is an
@@ -151,6 +151,30 @@ describe('no row rests on nothing', () => {
       .map((row) => row.criterion);
 
     expect(unbacked).toEqual([]);
+  });
+});
+
+describe('a remark cannot break the table it is rendered into', () => {
+  it('escapes a backslash before escaping the pipe it precedes', () => {
+    // Escaping `|` as `\|` without first escaping `\` is incomplete: a remark ending in a backslash
+    // immediately before a pipe renders as `\\|`, which markdown reads as an escaped backslash
+    // followed by a *bare* pipe — the cell ends early and every column after it shifts, silently.
+    expect(escapeCell(String.raw`a backslash \| and more`))
+      .toBe(String.raw`a backslash \\\| and more`);
+  });
+
+  it('escapes a lone backslash, and a lone pipe', () => {
+    expect(escapeCell(String.raw`C:\rules`)).toBe(String.raw`C:\\rules`);
+    expect(escapeCell('a | b')).toBe(String.raw`a \| b`);
+  });
+
+  it('flattens a newline, which would end the row rather than the cell', () => {
+    expect(escapeCell('one\ntwo')).toBe('one two');
+  });
+
+  it('leaves ordinary remark text alone', () => {
+    expect(escapeCell('Every input carries a name, including `CodeMirror`.'))
+      .toBe('Every input carries a name, including `CodeMirror`.');
   });
 });
 

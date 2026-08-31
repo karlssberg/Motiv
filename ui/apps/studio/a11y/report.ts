@@ -53,17 +53,29 @@ function evidenceSummary(row: ConformanceRow): string {
 }
 
 /**
+ * Text made safe to sit in a markdown table cell.
+ *
+ * A pipe would end the cell and a newline would end the row, so both are neutralised. **The
+ * backslash is escaped first, and the order is the whole point**: escaping only the pipe turns a
+ * remark that ends in a backslash before a pipe into `\\|`, which markdown reads as an escaped
+ * backslash followed by a *bare* pipe — the cell ends early and every column after it shifts, in a
+ * document whose entire purpose is to be read as a table of claims. Escaping the backslash first
+ * makes that same input `\\\\\\|`: a literal backslash, then an escaped pipe.
+ */
+export function escapeCell(text: string): string {
+  return text.replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\n/g, ' ');
+}
+
+/**
  * The remarks column: the arguments first, then the row's own remark.
  *
  * A structural verdict *is* its argument — "Supports, structural" with the reason left behind in the
  * source file is the same unsupported assertion the record exists to prevent, merely relocated. So
  * the reason a criterion does not apply, or the property of the build that settles it, is published.
- *
- * Pipes would end the cell and newlines would end the row, so both are neutralised here.
  */
 function remarks(row: ConformanceRow): string {
   const argued = row.evidence.filter(isArgued).map((evidence) => evidence.because);
-  return [...argued, row.remark].join(' ').replace(/\|/g, '\\|').replace(/\n/g, ' ');
+  return escapeCell([...argued, row.remark].join(' '));
 }
 
 /** One conformance table, for the criteria at a level. */
@@ -72,7 +84,7 @@ function table(rows: readonly ConformanceRow[]): string {
     '| Criterion | Conformance | Evidence | Remarks |',
     '|---|---|---|---|',
     ...rows.map((row) =>
-      `| ${nameOf(row.criterion)} | ${row.conformance} | ${evidenceSummary(row)} | ${remarks(row)} |`),
+      `| ${escapeCell(nameOf(row.criterion))} | ${row.conformance} | ${evidenceSummary(row)} | ${remarks(row)} |`),
   ].join('\n');
 }
 
@@ -100,7 +112,7 @@ function axeAppendix(rows: readonly ConformanceRow[]): string {
     .map((row) => ({ criterion: row.criterion, rules: enabledAxeRules(row.criterion) }))
     .filter(({ rules }) => rules.length > 0)
     .map(({ criterion, rules }) =>
-      `| ${nameOf(criterion)} | ${rules.map((rule) => `\`${rule}\``).join(', ')} |`)
+      `| ${escapeCell(nameOf(criterion))} | ${rules.map((rule) => `\`${rule}\``).join(', ')} |`)
     .join('\n');
 }
 
