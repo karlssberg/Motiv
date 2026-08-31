@@ -37,12 +37,13 @@ import {
   cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// The `ui` workspace root — this file lives one directory below it, in `scripts/`.
+// This file lives in `ui/scripts/`, so the two roots are one and two directories above it. Both are
+// resolved through `URL`, which is separator-agnostic, rather than by trimming path text.
 const workspaceRoot = fileURLToPath(new URL('../', import.meta.url));
-const repoRoot = dirname(workspaceRoot.replace(/\/$/, ''));
+const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
 const require = createRequire(import.meta.url);
 
 const failures = [];
