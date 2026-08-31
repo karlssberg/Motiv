@@ -3,6 +3,10 @@ import type { Page } from '@playwright/test';
 import type { Result } from 'axe-core';
 // `test` carries the API fixtures (and refuses a call it has none for) — see `stubs.ts`.
 import { expect, test } from './stubs.js';
+// The one definition of the AA floor. The conformance record's mechanical claims are checked
+// against the same constant, so "enforced by axe" in the report is true of the sweep that runs here
+// rather than of one someone remembers — see `a11y/criteria.ts`.
+import { WCAG_AA } from '../a11y/criteria.js';
 
 /**
  * The mechanical half of WCAG 2.1 AA, on every Studio view (ticket 18).
@@ -23,9 +27,6 @@ import { expect, test } from './stubs.js';
  *   other. Scanning only the default would have left half the palette unchecked.
  */
 
-/** The tags that make up the AA floor. `best-practice` is deliberately excluded: it is not AA. */
-const WCAG_AA = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
-
 /**
  * A violation reduced to what a reader of a failed run needs: the rule, its help text, and the
  * elements that broke it. A raw axe result runs to hundreds of lines per violation, most of it the
@@ -40,7 +41,7 @@ function readable(violations: Result[]): string[] {
 
 /** Scan whatever is currently on screen, and fail naming the rules that were broken. */
 async function scan(page: Page): Promise<void> {
-  const results = await new AxeBuilder({ page }).withTags(WCAG_AA).analyze();
+  const results = await new AxeBuilder({ page }).withTags([...WCAG_AA]).analyze();
   expect(readable(results.violations)).toEqual([]);
 }
 

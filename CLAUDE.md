@@ -237,6 +237,15 @@ the root of a three-policy chain) rather than the flattened causal set.
   unmounted (a reference to an absent element is invalid, not harmless), and the accessible name of
   a composition is the text Motiv generates for it (`accessibleExpression`), never a hand-written
   restatement that could drift from what is on screen. See `docs/accessibility/index.md`.
+- **The conformance report is generated, not written**: `docs/accessibility/vpat.md` is rendered
+  from `ui/apps/studio/a11y/conformance.ts` — never edit it by hand; run
+  `pnpm --filter @motiv-rules/studio a11y:report`. A record row claims a *kind* of evidence
+  (`axe`, the keyboard suite, a structural argument, an owed manual pass) and never names an axe
+  rule; which rules an `axe` claim resolves to is read from axe's own tags at check and render time.
+  `test/a11y/conformance.test.ts` refuses a record that claims axe coverage for a criterion axe has
+  no rule for, omits coverage the sweep does run, cites a keyboard test that does not exist, or
+  rests a *Supports* on nothing but an owed manual pass. Adding a criterion, changing a verdict or
+  upgrading `axe-core` all mean regenerating the report in the same commit.
 - **Documentation**: CLAUDE.md is for AI guidance and project conventions — not user-facing feature documentation. When asked to document a feature, add it to `README.md` (brief example under Core Features) and `docs/` (detailed pages following the existing structure: `docs/{feature}/index.md`, individual method pages, `toc.yml`, plus entries in `docs/toc.yml` and `docs/Overview.md`).
 - **Performance refactoring**: When replacing LINQ with manual loops or caching computed values, verify that short-circuiting and lazy evaluation semantics are preserved. Moving a call from a `when` guard or lazy context to eager evaluation is a common regression — the original code may have intentionally deferred work that is only needed in some branches.
 - **`Evaluate` vs `IsSatisfiedBy`**: `Evaluate` is the current public API for rich evaluation (returns `BooleanResultBase`). `IsSatisfiedBy` is retained as an `[Obsolete]` shim for backwards compatibility. `Matches` is the lightweight boolean-only evaluation. Internal overrides use `EvaluateSpec` / `EvaluatePolicy`.

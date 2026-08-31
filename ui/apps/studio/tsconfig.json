@@ -8,7 +8,7 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
   "include": [
-    "src", "test", "e2e", "e2e-a11y",
+    "src", "test", "e2e", "e2e-a11y", "a11y",
     "vite.config.ts", "playwright.config.ts", "playwright.a11y.config.ts"
   ]
 }

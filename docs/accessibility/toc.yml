@@ -2,3 +2,5 @@
 items:
   - name: Accessibility
     href: index.md
+  - name: Conformance Report
+    href: vpat.md

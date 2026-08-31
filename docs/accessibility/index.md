@@ -62,8 +62,8 @@ well-formed either way — which is why the keyboard suite below exists.
 
 ## What enforces it
 
-Both halves are required. Neither is sufficient, and the report below says which evidence each row
-rests on.
+Both halves are required. Neither is sufficient, and the
+[Accessibility Conformance Report](vpat.md) says which evidence each criterion rests on.
 
 ### Mechanical — `axe-core` and the keyboard suite, on every run
 
@@ -144,41 +144,59 @@ the mechanical suite cannot judge:
 - Tab through it. Does focus stay inside?
 - Escape and backdrop click both dismiss. Does focus return to the opener in both cases?
 
-Record findings against the criteria below, date the result, and note the commit audited.
+The report's [*What the manual pass still owes*](vpat.md#what-the-manual-pass-still-owes) section is
+the worklist: one entry per outstanding criterion, naming what this pass has to establish before that
+criterion can be answered. Record findings there, date the result, and note the commit audited.
 
 ## Status
 
 **Partial. The mechanical half is enforced and green; the manual half is scripted and outstanding.**
 
-This is stated plainly because the alternative is worse: a conformance report that implied an audit
-nobody ran would be a false claim in a document buyers rely on. The rows below say which evidence
-each rests on.
+The full record is the [Accessibility Conformance Report](vpat.md): every WCAG 2.1 Level A and AA
+success criterion — all fifty — with a verdict and the evidence it rests on. This page summarises it;
+that page is the document a procurement process asks for.
 
-No row now rests on an approximation: the two that read *Partially Supports* did so because a role
-promised behaviour the markup did not deliver, and both roles have since been made true — one by
-implementing the pattern, one by dropping a role that was never the right one. What is still owed
-is a person with a screen reader, which is a different kind of evidence and not one any suite can
-stand in for.
+**No criterion is reported as failing, and a good many are reported as not evaluated** — which is
+not the same thing, and the difference is the point. The report's summary carries the tally; it is
+not repeated here, because a count restated in prose is a count that drifts.
 
-| Criterion | Level | Conformance | Evidence and remarks |
-|---|---|---|---|
-| 1.1.1 Non-text Content | A | Supports | Icon-only controls carry `aria-label`; decorative marks are `aria-hidden`. Mechanical. |
-| 1.3.1 Info and Relationships | A | Supports | Nested labelled `group`s carry the composition; disclosures name what they control while it is mounted. Mechanical, plus **owed** manual confirmation that the announced structure is *comprehensible*. |
-| 1.3.2 Meaningful Sequence | A | Owed | Reading order is a manual-audit question. |
-| 1.4.3 Contrast (Minimum) | AA | Supports | Enforced by axe in both colour schemes, on every view and open surface. |
-| 1.4.4 Resize Text | AA | Owed | Not covered by the mechanical suite. |
-| 1.4.11 Non-text Contrast | AA | Supports | Enforced by axe. |
-| 2.1.1 Keyboard | A | Supports | Every control is reachable and operable, and the one surface that declared a keyboard pattern now implements it: the palette's namespace tree has a roving tabindex, arrow-key movement, `Home`/`End` and type-ahead. Enforced by the keyboard suite. |
-| 2.1.2 No Keyboard Trap | A | Supports | The modal is a native `<dialog>` opened with `showModal()`, so the trap and its release are the platform's. |
-| 2.4.2 Page Titled | A | Supports | Mechanical. |
-| 2.4.3 Focus Order | A | Owed | Manual-audit question. |
-| 2.4.7 Focus Visible | AA | Owed | Not judged mechanically. |
-| 3.3.2 Labels or Instructions | A | Supports | Every input carries a name, including the CodeMirror content elements, which name themselves rather than inheriting one. |
-| 4.1.2 Name, Role, Value | A | Supports | Names, roles and states are present throughout and checked mechanically. Every declared role is now honoured: the palette's tree implements the tree pattern, and the page switcher — which controls no panel — is a `<nav>` of links carrying `aria-current` rather than a `tablist`. |
-| 4.1.3 Status Messages | AA | Supports | The palette's result count is a `status` region; errors are `alert`s. **Owed** manual confirmation that the announcements are useful rather than merely present. |
+That distinction is stated plainly because the alternative is worse: a conformance report that
+implied an audit nobody ran would be a false claim in a document buyers rely on.
 
-Criteria not listed are either not applicable to this application (no audio, video, or timed
-content) or are inherited from the platform.
+### The report is generated, and its mechanical claims are checked
+
+The report is not written. It is rendered from a record in `ui/apps/studio/a11y/conformance.ts`, and
+`ui/apps/studio/test/a11y/conformance.test.ts` refuses a record whose claims the suites do not
+support — a row claiming axe coverage where axe has no rule for the criterion, a row omitting axe
+coverage the sweep does run, a row citing a keyboard test that does not exist, a verdict of
+*Supports* resting on nothing but an owed manual pass, or a published document that has drifted from
+the record. A row never names an axe rule: it claims that axe covers the criterion, and which rules
+that resolves to is read from axe's own tags when the record is checked and when the report is
+rendered. So a claim cannot outlive the rule it rests on, and an axe upgrade that drops one shows up
+as a changed report rather than as a sentence nobody re-read.
+
+That gate is not ceremony. It was written because the hand-maintained table it replaced was wrong in
+both directions, and nothing could have noticed:
+
+- **1.4.11 Non-text Contrast** was published as *"Supports — Enforced by axe"*. axe-core has no rule
+  for that criterion at any version: `color-contrast` is tagged `wcag143`, which is text contrast
+  only. Non-text contrast — control boundaries, focus indicators, the builder's state marks — had
+  never been checked by anything. It is now **Not Evaluated**, and it is the sharpest item the manual
+  pass owes.
+- **1.4.4 Resize Text** was published as *"Owed — not covered by the mechanical suite"*, while
+  `meta-viewport` is tagged `wcag144` and had been running in the sweep all along. Under-claiming is
+  the quieter fault and the more dangerous one: coverage the report omits is coverage nobody would
+  notice losing.
+
+### And enumerating the criteria found a defect the sweep could not
+
+The table this replaced answered for fourteen criteria and dismissed the rest in a sentence.
+Answering for all fifty meant answering for **2.4.2 Page Titled** — which the sweep had always passed,
+because axe's `document-title` rule asks only that a title exist. Studio is a single-page application
+with one `<title>` in `index.html`, so all three routes shared the name *Motiv Studio*: the two places
+a title is actually used — what a screen reader announces when the route changes, and how a user tells
+Studio entries in their history apart — got nothing. `src/routing/useDocumentTitle.ts` now writes the
+title from the route, selection first, and is unit-tested.
 
 ## The SDK carries no accessibility
 
