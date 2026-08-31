@@ -1,6 +1,7 @@
 import type { RulesApiClient } from '../client.js';
-import type { RuleListEntry } from '../contracts.js';
+import type { RuleGetResponse, RuleListEntry } from '../contracts.js';
 import type { RuleEditorStore } from '../editor.js';
+import { describeUnexpectedFailure } from './failureText.js';
 
 /** The loaded rule's server identity: what a save must send back to avoid clobbering. */
 export interface LoadedRule {
@@ -20,6 +21,8 @@ export interface RuleWorkflowState {
   loadedEntry: RuleListEntry | null;
   /** The version somebody else saved, when the last save hit one — the 409 to recover from. */
   conflict: number | null;
+  /** The unexpected failure to report against the loaded rule, or `null` when there is none. */
+  failure: string | null;
   /** True while a save is in flight. */
   saving: boolean;
 }
@@ -38,6 +41,11 @@ export function whyRuleSaveUnavailable(
  * store, and save it back optimistically with the version it was loaded at — a stale version
  * comes back as a typed conflict for the consumer to render, and recovery is loading again.
  *
+ * Two channels, because a 409 and a 500 are not the same event: `conflict` carries the typed
+ * refusal the API models, and `failure` carries everything it cannot see — a 500, a 404, a body
+ * that will not parse. Nothing here throws to its caller; a `void save()` that reported nowhere
+ * would be indistinguishable from the request never having been made.
+ *
  * Framework-free by design: the same `subscribe`/`getState` shape as `RuleEditorStore`, adapted
  * by a UI binding (e.g. `@motiv-rules/react/workflow`'s `useRuleWorkflow`). Rendering — the
  * picker, the conflict banner, the disabled save control — stays the consumer's; this owns the
@@ -52,6 +60,7 @@ export class RuleWorkflowController {
   #loaded: LoadedRule | null = null;
   #loadedEntry: RuleListEntry | null = null;
   #conflict: number | null = null;
+  #failure: string | null = null;
   #saving = false;
 
   /** The state object handed out until something changes, so unchanged reads stay identical. */
@@ -71,6 +80,7 @@ export class RuleWorkflowController {
       loaded: this.#loaded,
       loadedEntry: this.#loadedEntry,
       conflict: this.#conflict,
+      failure: this.#failure,
       saving: this.#saving,
     };
     return this.#snapshot;
@@ -81,10 +91,22 @@ export class RuleWorkflowController {
     return () => this.#listeners.delete(listener);
   }
 
-  /** Refetches the listing. A refresh superseded by a newer one never lands. */
+  /**
+   * Refetches the listing, reporting a failed fetch in the failure channel. A refresh superseded
+   * by a newer one never lands — its answer, failure included, describes a world the newer one
+   * has already replaced.
+   */
   async refresh(): Promise<void> {
     const op = ++this.#refreshOp;
-    const rules = await this.#client.listRules();
+    let rules: RuleListEntry[];
+    try {
+      rules = await this.#client.listRules();
+    } catch (error: unknown) {
+      if (op !== this.#refreshOp) return;
+      this.#failure = describeUnexpectedFailure(error);
+      this.#notify();
+      return;
+    }
     if (op !== this.#refreshOp) return;
     this.#rules = rules;
     // The loaded entry is a claim about the listing, so it follows the listing: a rule loaded
@@ -103,6 +125,13 @@ export class RuleWorkflowController {
    */
   async load(name: string | null): Promise<void> {
     const op = ++this.#loadOp;
+    // A failure is a claim about the load before this one, so it clears when the next one starts
+    // rather than when it lands: a banner that outlives the retry it triggered reads as the retry
+    // having failed too.
+    if (this.#failure !== null) {
+      this.#failure = null;
+      this.#notify();
+    }
     if (name === null) {
       this.#loaded = null;
       this.#loadedEntry = null;
@@ -110,7 +139,18 @@ export class RuleWorkflowController {
       this.#notify();
       return;
     }
-    const response = await this.#client.getRule(name);
+    let response: RuleGetResponse;
+    try {
+      response = await this.#client.getRule(name);
+    } catch (error: unknown) {
+      if (op !== this.#loadOp) return;
+      this.#failure = describeUnexpectedFailure(error);
+      // The identity is left standing, unlike the proposition controller's: `loaded` is only ever
+      // written *after* a load lands, so what is still there is the rule whose document is in the
+      // store. Dropping it would demote a loaded rule to a local draft over a transient 500.
+      this.#notify();
+      return;
+    }
     if (op !== this.#loadOp) return;
     this.#conflict = null;
     this.#loaded = { name, version: response.version, isCodeDefault: response.document === null };
@@ -143,6 +183,10 @@ export class RuleWorkflowController {
         loaded.name, this.#store.getState().document, loaded.version,
       );
       if (op !== this.#loadOp) return;
+      // A typed outcome is a round trip that completed: whatever unexpected failure preceded it
+      // is over, and the outcome's own channel — `conflict`, or the store's error list — carries
+      // what it has to say.
+      this.#failure = null;
       if (result.outcome === 'updated') {
         this.#conflict = null;
         this.#loaded = { name: loaded.name, version: result.version, isCodeDefault: false };
@@ -153,6 +197,10 @@ export class RuleWorkflowController {
         // validation — surface them in the shared error list.
         this.#store.setErrors(result.errors);
       }
+    } catch (error: unknown) {
+      // Reported rather than rethrown, and only while the load it was aimed at is still current:
+      // a banner about a rule no longer on screen is false of the one that is.
+      if (op === this.#loadOp) this.#failure = describeUnexpectedFailure(error);
     } finally {
       this.#saving = false;
       this.#notify();

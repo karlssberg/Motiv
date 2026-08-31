@@ -75,8 +75,10 @@ It scans on two axes, because a scan that only visits routes checks none of the 
 matter:
 
 - **Every view** — the rules page, the builder holding a composition, an evaluation with its
-  justification, the DSL surface, the propositions page (browsing and with one selected), and the
-  admin grants page.
+  justification, the DSL surface, the propositions page (browsing and with one selected), the admin
+  grants page, and the rules page reporting an API failure. That last one is a view only a broken
+  server produces, so the sweep breaks one: it is a coloured surface, and the first scan of it found
+  a real contrast failure that no route-only sweep would ever have reached.
 - **Every hard surface in the state it is hard in** — the command palette browsing, filtered, and
   filtered to nothing; the modal document viewer; the operator picker's open listbox; a row's
   actions menu; a node's detail panel.

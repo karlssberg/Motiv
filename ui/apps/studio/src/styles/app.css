@@ -154,12 +154,13 @@ body {
 }
 
 /*
-  Conflict banner: another writer saved a newer version. It sits below the app bar rather than
-  wrapping inside it — both pages raise it, and the propositions page's own strip sits in the same
-  place — so it is inset to the app bar's inline padding rather than being full-bleed, which keeps
-  it reading as part of the header block it belongs to.
+  Report banner: a conflicting version another writer saved, or a failure that reached nowhere
+  else. It sits below the app bar rather than wrapping inside it — both pages raise it, and the
+  propositions page's own strip sits in the same place — so it is inset to the app bar's inline
+  padding rather than being full-bleed, which keeps it reading as part of the header block it
+  belongs to.
 */
-.conflict-banner {
+.report-banner {
   flex: none;
   margin: var(--space) 14px 0;
   display: flex;

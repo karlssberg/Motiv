@@ -180,6 +180,37 @@ describe('RuleHeader', () => {
     await waitFor(() => expect(client.getRule).toHaveBeenCalledTimes(2));
   });
 
+  it('reports a failed listing fetch, which nothing else on the page would say', async () => {
+    const client = makeClient({
+      listRules: vi.fn().mockRejectedValue(new Error('Rules service unavailable (503)')),
+    });
+    renderHeader(client);
+
+    expect(await screen.findByRole('alert')).toBeDefined();
+    expect(screen.getByText(/rules service unavailable \(503\)/i)).toBeDefined();
+    // Nothing is loaded, so there is nothing to reload: an offer to recover an identity the page
+    // has not got would be a button that does nothing.
+    expect(screen.queryByRole('button', { name: /reload latest/i })).toBeNull();
+  });
+
+  it('reports a thrown save, and offers the loaded rule as the way back', async () => {
+    const client = makeClient({
+      putRule: vi.fn().mockRejectedValue(new Error('Rules service unavailable (503)')),
+    });
+    renderHeader(client);
+    await pickViaPalette('can-checkout');
+    await screen.findByText(/v3/);
+
+    await userEvent.click(screen.getByRole('button', { name: /save/i }));
+
+    expect(await screen.findByText(/rules service unavailable \(503\)/i)).toBeDefined();
+    await userEvent.click(screen.getByRole('button', { name: /reload latest/i }));
+    await waitFor(() => expect(client.getRule).toHaveBeenCalledTimes(2));
+    // The reload is the recovery, so the banner goes with it rather than outliving the act that
+    // answered it.
+    await waitFor(() => expect(screen.queryByRole('alert')).toBeNull());
+  });
+
   it('chooses the rule a partial query narrows to', async () => {
     renderHeader();
 
