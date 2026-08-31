@@ -10,6 +10,7 @@
     "test": "vitest run",
     "e2e": "vite build && playwright test",
     "a11y": "vite build && playwright test --config playwright.a11y.config.ts",
+    "a11y:report": "vitest run test/a11y/conformance.test.ts -u",
     "e2e:auth": "playwright test e2e/auth.spec.ts"
   },
   "dependencies": {

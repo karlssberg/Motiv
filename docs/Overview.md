@@ -205,12 +205,16 @@ rather than a `tree`, and every group is named by its own subtree's generated ex
 Enforcement is `axe-core` over every view and every open surface in both colour schemes, on every
 CI run, plus a keyboard suite for the roles a scan cannot judge — a declared `tree` that offered no
 arrow keys is exactly what a scan reports green — plus a scripted manual screen-reader pass for the
-rest. See [Accessibility](./accessibility/index.md) for the conformance report, the audit script,
-and the honest statement that the headless packages carry no accessibility of their own.
+rest. The deliverable is a document: the [Conformance Report](./accessibility/vpat.md) answers for
+every Level A and AA success criterion — all fifty — and is *generated* from a record whose
+mechanical claims are checked against the suites that run, so a row cannot claim coverage axe does
+not have, or omit coverage it does. See [Accessibility](./accessibility/index.md) for the audit
+script and the honest statement that the headless packages carry no accessibility of their own.
 
 | Topic                                          | Description                                                                                                    |
 |------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
-| [Accessibility](./accessibility/index.md)      | The WCAG 2.1 AA conformance report, what the mechanical suites enforce, and the manual audit script.           |
+| [Accessibility](./accessibility/index.md)      | The WCAG 2.1 AA target, what the mechanical suites enforce, and the manual audit script.                      |
+| [Conformance Report](./accessibility/vpat.md)  | Every Level A and AA success criterion, its verdict, and the evidence the verdict rests on.                    |
 
 
 ## Runtimes and Support Tiers

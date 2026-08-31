@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { RuleEditorStore, RulesApiClient, createValidationController } from '@motiv-rules/core';
 import { RuleEditorProvider } from '@motiv-rules/react';
 import { useHashRoute } from './routing/useHashRoute.js';
+import { useDocumentTitle } from './routing/useDocumentTitle.js';
 import { RulesPage } from './panes/RulesPage.js';
 import { PropositionsPage } from './panes/PropositionsPage.js';
 import { AdminPage } from './panes/AdminPage.js';
@@ -32,6 +33,9 @@ export function App(props: { client?: RulesApiClient; store?: RuleEditorStore })
   );
 
   const [route, navigate] = useHashRoute();
+  // The document has one <title> and three routes, so the title has to follow the route: it is what
+  // a screen reader announces on navigation and what tells two Studio history entries apart.
+  useDocumentTitle(route);
 
   let page: JSX.Element;
   if (route.page === 'propositions') {
