@@ -22,8 +22,21 @@ const PARTS = [
   { part: 'component', holds: (file: string) => file.startsWith('JustificationTree.') },
 ] as const;
 
+/**
+ * Lines, as a reader would count them: a trailing newline terminates the last line rather than
+ * starting an empty one, and a file that ends without one still has its last line counted.
+ *
+ * The naive `split('\n').length - 1` agrees with this for every file in the repository today and
+ * disagrees by one for any file saved without a final newline — undercounting exactly the file an
+ * editor is most likely to produce, and only after it is committed.
+ */
+export function countLines(source: string): number {
+  if (source === '') return 0;
+  return source.replace(/\n$/, '').split('\n').length;
+}
+
 /** Lines of code: neither blank nor comment. Block comments are tracked, not guessed at. */
-function codeLines(source: string): number {
+export function codeLines(source: string): number {
   let inBlock = false;
   let count = 0;
   for (const raw of source.split('\n')) {
@@ -43,11 +56,11 @@ function codeLines(source: string): number {
   return count;
 }
 
-/** Every number the table for `adapter` publishes, row by row, `lines` then `code lines`. */
+/** Every number the table for an adapter publishes, row by row, `lines` then `code lines`. */
 function measure(root: string): number[] {
   const files = sourceFiles(root).map((path) => {
     const source = readFileSync(path, 'utf8');
-    return { name: path.slice(root.length), total: source.split('\n').length - 1, code: codeLines(source) };
+    return { name: path.slice(root.length), total: countLines(source), code: codeLines(source) };
   });
   return PARTS.flatMap(({ holds }) => {
     const part = files.filter((file) => holds(file.name));
@@ -62,15 +75,21 @@ function measure(root: string): number[] {
  * The published numbers, read out of the table `docs/adoption/index.md` marks for the purpose. The
  * markers exist so that which table is being read is a decision recorded in the document, rather
  * than a guess made here about which one came first.
+ *
+ * Both the marker and the blank line that ends the table are required rather than assumed. A gate
+ * that reads a malformed document as a shorter one still passes, on numbers that came from
+ * somewhere else — the failure mode this whole file exists to prevent.
  */
-function published(marker: string): number[] {
-  const doc = readFileSync(ADOPTION_DOC, 'utf8');
+export function published(doc: string, marker: string): number[] {
   const marked = doc.split(`<!-- ${marker} -->`)[1];
   if (marked === undefined) throw new Error(`docs/adoption/index.md has no <!-- ${marker} --> table.`);
-  const table = marked.slice(0, marked.indexOf('\n\n'));
+  const end = marked.indexOf('\n\n');
+  if (end === -1) {
+    throw new Error(`The <!-- ${marker} --> table is not followed by a blank line, so its end cannot be found.`);
+  }
   // Lookahead on the closing pipe: two numeric cells are adjacent, and consuming the delimiter
   // between them would read only the first of every pair.
-  return [...table.matchAll(/\|\s*(\d+)\s*(?=\|)/g)].map((match) => Number(match[1]));
+  return [...marked.slice(0, end).matchAll(/\|\s*(\d+)\s*(?=\|)/g)].map((match) => Number(match[1]));
 }
 
 /**
@@ -86,10 +105,51 @@ function published(marker: string): number[] {
  * When this fails, an adapter changed and the page did not. Edit the page.
  */
 describe('the prices the tier table publishes', () => {
+  const doc = readFileSync(ADOPTION_DOC, 'utf8');
+
   it.each([
     ['the React adapter', 'react-adapter-price', REACT_SRC],
     ['the Vue adapter', 'vue-adapter-price', SRC_ROOT],
   ])('are what %s actually costs', (_name, marker, root) => {
-    expect(published(marker)).toEqual(measure(root));
+    expect(published(doc, marker)).toEqual(measure(root));
+  });
+});
+
+/** The gate's own reading, which decides what every number above means. */
+describe('reading a source file', () => {
+  it('counts the last line whether or not the file ends with a newline', () => {
+    expect(countLines('a\nb\nc\n')).toBe(3);
+    expect(countLines('a\nb\nc')).toBe(3);
+    expect(countLines('')).toBe(0);
+    expect(countLines('\n')).toBe(1);
+  });
+
+  it('counts neither blank lines nor comments as code', () => {
+    expect(codeLines('const a = 1;\n\n// note\n/* block\n   more */\nconst b = 2;\n')).toBe(2);
+    expect(codeLines('/** one-line doc */\nconst a = 1;\n')).toBe(1);
+  });
+});
+
+describe('reading the published table', () => {
+  const table = [
+    '<!-- a-price -->',
+    '| Part | Lines | Code lines | What |',
+    '|---|---:|---:|---|',
+    '| bindings | 12 | 7 | 409 recovery and other prose with digits in it |',
+    '',
+    'Text after the table.',
+  ].join('\n');
+
+  it('reads the numeric cells of the marked table, in order, and nothing else', () => {
+    expect(published(table, 'a-price')).toEqual([12, 7]);
+  });
+
+  it('refuses a document with no such marker', () => {
+    expect(() => published(table, 'b-price')).toThrow(/has no <!-- b-price --> table/);
+  });
+
+  it('refuses a table that never ends, rather than reading part of the document', () => {
+    const unterminated = '<!-- a-price -->\n| bindings | 12 | 7 |';
+    expect(() => published(unterminated, 'a-price')).toThrow(/not followed by a blank line/);
   });
 });

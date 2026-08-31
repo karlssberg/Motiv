@@ -3,11 +3,18 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { sourceFiles, SRC_ROOT } from './sources.js';
 
-/** Every bare specifier a source imports, `import type` included. */
-function bareImports(source: string): string[] {
-  return [...source.matchAll(/from\s+'([^']+)'/g)]
-    .map((match) => match[1]!)
-    .filter((specifier) => !specifier.startsWith('.'));
+/**
+ * Every bare specifier a source reaches for, in any spelling that actually resolves a module:
+ * `import`/`export … from`, a side-effect `import`, a dynamic `import()`, and `require()` — under
+ * either quote — with `import type` covered by the first of those.
+ *
+ * Matching one spelling would make this a gate that a different quote character walks past, and a
+ * gate with a known way through is worse than none: it reports a property nobody is checking.
+ */
+export function bareImports(source: string): string[] {
+  return [...source.matchAll(/(?:\bfrom|\bimport|\brequire)\s*\(?\s*(['"])([^'"]+)\1/g)]
+    .map((match) => match[2]!)
+    .filter((specifier) => !specifier.startsWith('.') && !specifier.startsWith('/'));
 }
 
 /**
@@ -35,4 +42,30 @@ describe('the adapter', () => {
       expect(disallowed).toEqual([]);
     },
   );
+});
+
+/** The gate's own reading — what it would and would not have caught. */
+describe('finding what a source reaches for', () => {
+  it('reads every spelling that resolves a module', () => {
+    const source = [
+      "import { a } from 'vue';",
+      'import type { B } from "@motiv-rules/core";',
+      "import 'side-effect';",
+      "export { c } from 'reexported';",
+      "const d = await import('dynamic');",
+      'const e = require("required");',
+    ].join('\n');
+
+    expect(bareImports(source)).toEqual([
+      'vue', '@motiv-rules/core', 'side-effect', 'reexported', 'dynamic', 'required',
+    ]);
+  });
+
+  it('ignores paths inside the package, which are not a dependency on anything', () => {
+    expect(bareImports("import { a } from './observe.js';\nimport { b } from '../paths.js';")).toEqual([]);
+  });
+
+  it('is not fooled by a quote character', () => {
+    expect(bareImports('import { createElement } from "react";')).toEqual(['react']);
+  });
 });
