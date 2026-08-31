@@ -146,7 +146,25 @@ the mechanical suite cannot judge:
 
 The report's [*What the manual pass still owes*](vpat.md#what-the-manual-pass-still-owes) section is
 the worklist: one entry per outstanding criterion, naming what this pass has to establish before that
-criterion can be answered. Record findings there, date the result, and note the commit audited.
+criterion can be answered.
+
+Findings are **not** written into that report — it is generated, and editing it by hand trips the
+drift gate. They go into the record it is generated from, `ui/apps/studio/a11y/conformance.ts`: on
+the criterion's row, replace the `manual` evidence entry with what the pass established (a
+`reasoned` argument, or a verdict of *Does Not Support* with the defect named), move the verdict off
+*Not Evaluated*, and put the audit date and the commit audited in the remark. Then regenerate:
+
+```bash
+pnpm --filter @motiv-rules/studio a11y:report
+```
+
+The report and the worklist above both follow from that one edit, which is the point — an audit
+result recorded in the document alone would be a claim with nothing behind it, and the record's gate
+would refuse it on the next run.
+
+A verdict of *Does Not Support* will additionally fail the check that guards the summary sentence in
+[Status](#status). That is deliberate rather than an obstacle: it means the audit has contradicted a
+claim this page makes, and the page has to be rewritten in the same commit that records the finding.
 
 ## Status
 
