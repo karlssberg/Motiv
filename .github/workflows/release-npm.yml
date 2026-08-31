@@ -1,0 +1,102 @@
+# Release (npm): triggered by pushing a `motiv-rules-v*` tag (e.g. motiv-rules-v0.1.0).
+#
+# Its own tag prefix, and its own workflow, because ticket 06 decided the rules stack releases on a
+# train of its own: `release.yml` fires on `v[0-9]*` and ships `Motiv` to NuGet, and a shared prefix
+# would number the npm packages' first release after Motiv's majors and drag Motiv's major every
+# time the rules stack breaks. `motiv-rules-v*` cannot match `v[0-9]*`, so the two never collide.
+#
+# Both packages release together at one version. `@motiv-rules/react` is an adapter for
+# `@motiv-rules/core` and nothing else; a 0.x pair where one exists only for the other has nothing
+# to gain from independent numbering, and `pnpm publish -r` already resolves them in dependency
+# order.
+#
+# The tag is the authority on the version, but it does not *set* it — the manifests do, and the job
+# refuses if they disagree. npm needs a version in package.json either way, so stamping it in CI
+# would only mean the committed manifests were a lie between releases; asserting instead keeps
+# `git show <tag>` an honest record of what shipped, at the cost of a version-bump commit before
+# the tag. That commit is the release's reviewable artefact.
+#
+# Publishing needs an `NPM_TOKEN` secret with publish rights on the `@motiv-rules` scope.
+
+name: Release (npm)
+
+on:
+  push:
+    tags:
+      - 'motiv-rules-v[0-9]*'
+
+permissions:
+  contents: write   # required to create the GitHub Release
+  id-token: write   # required for npm provenance (the attestation is signed via OIDC)
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: ui/pnpm-lock.yaml
+          # Writes the auth-bearing .npmrc that `NODE_AUTH_TOKEN` fills in below.
+          registry-url: https://registry.npmjs.org
+
+      - run: pnpm install --frozen-lockfile
+
+      # The tag and the manifests have to name the same version, and the manifests have to agree
+      # with each other. Checked before anything is built, so a mistyped tag costs seconds.
+      - name: Check the tag against the manifests
+        id: version
+        run: |
+          version="${GITHUB_REF_NAME#motiv-rules-v}"
+          for manifest in packages/rules-core/package.json packages/rules-react/package.json; do
+            declared=$(node -p "require('./$manifest').version")
+            if [ "$declared" != "$version" ]; then
+              echo "::error::$manifest declares $declared, but the tag says $version." \
+                   "Bump the manifests and re-tag."
+              exit 1
+            fi
+          done
+          echo "Releasing @motiv-rules/core and @motiv-rules/react at $version."
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          # Read off the *version*, never the tag: `motiv-rules-v0.1.0` carries hyphens in its own
+          # prefix, so the NuGet train's `contains(github.ref_name, '-')` test would call every
+          # release here a prerelease.
+          case "$version" in *-*) echo "prerelease=true" ;; *) echo "prerelease=false" ;; esac >> "$GITHUB_OUTPUT"
+
+      # The release gate. Everything `ui.yml` runs against the workspace, plus the two checks that
+      # look at the artefact instead: the packed-tarball readiness gate, and the isolated consumer.
+      # The accessibility suite is deliberately not here — it gates Motiv.Studio, which is private
+      # and ships nothing.
+      - run: pnpm -r build
+      - run: pnpm -r typecheck
+      - run: pnpm -r test
+      - run: pnpm --filter @motiv-rules/core verify:isolated
+      - run: pnpm verify:publishable
+
+      # `-r` publishes every non-private workspace package in dependency order, so `rules-core`
+      # lands before the adapter that depends on it, and pnpm's packer rewrites that dependency's
+      # `workspace:*` range on the way. `--no-git-checks` because a tag build is on a detached HEAD,
+      # which pnpm otherwise refuses to publish from.
+      - name: Publish to npm
+        run: pnpm -r publish --access public --no-git-checks --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          name: "@motiv-rules v${{ steps.version.outputs.version }}"
+          generate_release_notes: true
+          # A hyphenated SemVer version (0.2.0-rc.1) is a GitHub prerelease; a plain one stays
+          # "Latest". Same rule as the NuGet train, read off the version rather than the tag.
+          prerelease: ${{ steps.version.outputs.prerelease == 'true' }}

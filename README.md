@@ -499,9 +499,12 @@ var rule = serializer.Deserialize<Customer>(json);      // a live proposition
 The "enabled" tier is a claim about the artefact, so it is enforced like one:
 `@motiv-rules/core` declares no dependencies, imports nothing outside itself,
 compiles without the DOM, and is driven from plain Node in a tree where `react`
-does not resolve — on every CI run. See
+does not resolve — on every CI run. Neither npm package has been published yet;
+the release train that will publish them, and the gate that checks the packed
+tarball is installable, are in place. See
 [Runtimes and Support Tiers](docs/adoption/index.md) for
-what each tier costs and where the .NET authoring surface ends.
+what each tier costs, where the .NET authoring surface ends, and how a release
+is cut.
 
 ## Quick Start
 

@@ -162,10 +162,61 @@ inherits none of Motiv Studio's accessibility work — the one exception being `
 which is read-only and therefore tractable. See [Accessibility](../accessibility/index.md) for the
 full statement.
 
-## Publishing status
+## Publishing
 
-`Motiv` is published on NuGet. `Motiv.Serialization` and the rest of the rules stack are not yet —
-they are on their own maturity curve, and a deliberate sequence of breaking changes is cheaper
-before a first release than after it. `@motiv-rules/core` and `@motiv-rules/react` have never been
-published either; the `@motiv-rules` npm scope is held, and the names above are final. Until the
-first publish, both packages are consumed from this repository.
+`Motiv` is published on NuGet. `Motiv.Serialization` and the rest of the .NET rules stack are not
+yet — they are on their own maturity curve, and a deliberate sequence of breaking changes is cheaper
+before a first release than after it.
+
+`@motiv-rules/core` and `@motiv-rules/react` have not been published yet either, but the pipeline
+that publishes them is in place and gated. The `@motiv-rules` npm scope is held and the names above
+are final.
+
+### Two trains, two tag prefixes
+
+`Motiv` releases on a `v*` tag and the npm packages on a `motiv-rules-v*` one, and the prefixes
+cannot match each other. The reason is the same one that gave the .NET rules stack its own version
+line: sharing a train would number the packages' *first* release after `Motiv`'s majors, and would
+drag `Motiv` to a new major every time the rules stack took a deliberate break — signalling a
+migration to adopters whose package did not change.
+
+Both npm packages release together, at one version. `@motiv-rules/react` is an adapter for
+`@motiv-rules/core` and exists for nothing else; independent numbering would buy a pair like that
+nothing, and `pnpm publish -r` already orders them so the core lands first.
+
+### Cutting a release
+
+1. Bump `version` in both `ui/packages/rules-core/package.json` and
+   `ui/packages/rules-react/package.json` to the same value, and merge that commit. It is the
+   release's reviewable artefact.
+2. Tag it `motiv-rules-v<version>` and push the tag.
+
+`.github/workflows/release-npm.yml` does the rest: it refuses immediately if the tag and the two
+manifests disagree, runs the build, the typecheck, the full test suite, the isolated consumer and
+the publish-readiness gate on the tagged commit, publishes both packages with
+[npm provenance](https://docs.npmjs.com/generating-provenance-statements), and opens a GitHub
+Release. A hyphenated version (`0.2.0-rc.1`) is marked a prerelease. The tag is the authority on the
+version but does not set it — nothing is rewritten in CI, so `git show <tag>` is an honest record of
+what shipped.
+
+### What a publish is checked against
+
+The packages are checked as a *workspace* by every other job, and a publish ships a tarball. The two
+are not the same artefact, and the gaps between them are where the defects live: in the workspace
+`@motiv-rules/react` reaches `@motiv-rules/core` through a symlink, so its `workspace:*` range is
+never read; TypeScript resolves both packages through their `src`, so the `exports` map is never
+read either; and `files` decides nothing because nothing is copied. All three are read for the first
+time by a consumer, after the version on the registry is immutable.
+
+So `pnpm verify:publishable` packs each package the way a publish would and asserts against the
+tarball — that the entry points the `exports` map advertises exist and resolve from an ESM consumer
+*and* a CommonJS one under `node16` resolution, that no `workspace:` range survived packing, that
+the scope publishes publicly, that the licence text ships, and that the two packages agree on one
+version. It runs as its own CI job on every push, and again on the tagged commit before anything
+reaches the registry.
+
+The CommonJS half of that is not hypothetical. Both packages declare `"type": "module"`, which makes
+a `.d.ts` an ESM declaration, so a `types` condition shared between `import` and `require` leaves a
+CommonJS consumer unable to import the package at all — `TS1479`, at compile time, with a working
+`dist/index.cjs` sitting right beside it. Each entry point therefore names its declarations per
+condition, and the gate is what keeps it that way.

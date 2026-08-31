@@ -221,6 +221,15 @@ the root of a three-policy chain) rather than the flattened causal set.
 - **Batch refactoring verification**: When refactoring multiple files with the same pattern, verify all files are modified before moving to the next phase — use `git status` or `git diff --stat` to confirm the expected set of changed files matches the plan.
 - **Constructor signature changes**: When changing the signature of an `internal` type's constructor, search for all call sites across both production and test code before editing — test files often construct internal types directly via `[InternalsVisibleTo]` and will break if missed.
 - **Example project tests**: When changing behavior that affects justification output, assertion text, or result formatting, run the full solution test suite — not just `Motiv.Tests`. The example projects (`src/examples/Motiv.Poker.Tests`, `src/examples/Motiv.ECommerce.Tests`, `src/examples/Motiv.SmartHome.Tests`) also contain integration-level assertions on justification strings and will break if not updated.
+- **npm package publishability**: `@motiv-rules/core` and `@motiv-rules/react` are published from
+  `ui/`, and changes to either package's `exports` map, `files` field, dependencies or version must
+  keep `pnpm -C ui verify:publishable` green — it packs each package the way a publish would and
+  checks the tarball, which is the only place the exports map, `files` and `workspace:` rewriting are
+  actually read. Both packages carry one version and release together on a `motiv-rules-v*` tag; a
+  `v*` tag is the NuGet train and must not be used for them. Because the packages are
+  `"type": "module"`, every entry point names its declarations *per condition* (`.d.ts` under
+  `import`, `.d.cts` under `require`) — a shared `types` makes the package unimportable from
+  CommonJS. See `docs/adoption/index.md`.
 - **Studio accessibility**: changes to Studio's colour tokens, ARIA attributes or component
   structure must keep `pnpm -C ui/apps/studio a11y` green — `axe-core` over every view and every
   open surface in both colour schemes, gated in CI. It needs no .NET host. Two conventions it

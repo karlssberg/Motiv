@@ -86,3 +86,32 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @motiv-rules/core build
       - run: pnpm --filter @motiv-rules/core verify:isolated
+
+  # The publish-readiness gate: the packages are packed the way a publish would pack them, and the
+  # tarballs are asserted to be installable — the exports map resolving from both an ESM and a
+  # CommonJS consumer, no `workspace:` range surviving, a public scope, the licence text present,
+  # and one version across the two.
+  #
+  # Its own job for the same reason `framework-free` is: what it checks is a property of the
+  # artefact, and every other job here sees the workspace, where `rules-react` reaches `rules-core`
+  # through a symlink and TypeScript resolves both through their `src`. The exports map, the `files`
+  # field and the dependency rewriting are read for the first time by a consumer — which is far too
+  # late, because a version on the registry is immutable.
+  publishable:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: ui/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @motiv-rules/core --filter @motiv-rules/react build
+      - run: pnpm verify:publishable

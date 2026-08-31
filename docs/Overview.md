@@ -225,8 +225,8 @@ imports, no DOM, and a CI job that drives the packed tarball from plain Node in 
 does not resolve); **.NET including Blazor** uses `Motiv.Serialization` directly and needs no
 JavaScript package at all; **web components** are declined. See
 [Runtimes and Support Tiers](./adoption/index.md) for what each tier costs, the measured size of an
-adapter, and the exact boundary of the .NET authoring surface.
+adapter, the exact boundary of the .NET authoring surface, and how an npm release is cut.
 
 | Topic                                                | Description                                                                                                    |
 |------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
-| [Runtimes and Support Tiers](./adoption/index.md)    | The four tiers, the adapter contract and its real cost, the .NET/Blazor path, and what enforces framework-freeness. |
+| [Runtimes and Support Tiers](./adoption/index.md)    | The four tiers, the adapter contract and its real cost, the .NET/Blazor path, what enforces framework-freeness, and the npm release train. |
