@@ -97,9 +97,9 @@ export function RuleHeader(props: {
         </span>
       </AppBar>
       {/*
-        Reported first because it is always the newer event: any typed outcome — a conflict
-        included — clears the failure, so the only way to hold both is a failure that arrived
-        after the conflict was recorded.
+        Reported first because it is always the newer event: only a save records a conflict, and
+        every operation clears the failure on its way out — so a failure standing beside a
+        conflict was necessarily raised after it.
       */}
       {failure !== null && (
         <ReportBanner {...(loaded ? { onReload: () => void load(loaded.name) } : {})}>

@@ -304,6 +304,39 @@ describe('RuleWorkflowController', () => {
     expect(controller.getState().rules).toEqual(listing);
   });
 
+  it('a refresh that succeeds clears the failure the one before it raised', async () => {
+    const client = makeClient({
+      listRules: vi.fn()
+        .mockRejectedValueOnce(new Error('listing failed'))
+        .mockResolvedValueOnce(listing),
+    });
+    const { controller } = makeController(client);
+    await controller.refresh();
+    expect(controller.getState().failure).toBe('listing failed');
+
+    await controller.refresh();
+
+    // The listing it described has been replaced; a banner still claiming it failed is a report
+    // about a world that is no longer on screen.
+    expect(controller.getState().failure).toBeNull();
+    expect(controller.getState().rules).toEqual(listing);
+  });
+
+  it('one channel, so whichever operation runs next clears what the last one reported', async () => {
+    const client = makeClient({ putRule: vi.fn().mockRejectedValue(new Error('boom')) });
+    const { controller } = makeController(client);
+    await controller.load('can-checkout');
+    await controller.save();
+    expect(controller.getState().failure).toBe('boom');
+
+    // Not a save, and not about the same subject — but there is one banner, and the newest report
+    // owns it. Keeping a save's failure across an act that succeeded would leave the page saying
+    // something is wrong while nothing is.
+    await controller.refresh();
+
+    expect(controller.getState().failure).toBeNull();
+  });
+
   it('a thrown load is reported, and leaves the identity it could not replace', async () => {
     const client = makeClient({
       getRule: vi.fn()
@@ -366,21 +399,25 @@ describe('RuleWorkflowController', () => {
     });
   });
 
-  it('a typed save outcome clears a standing failure', async () => {
+  it('a retried save clears the failure the one before it reported, before the PUT lands', async () => {
+    const retry = deferred<{ outcome: string; version: number }>();
     const client = makeClient({
-      getRule: vi.fn().mockRejectedValueOnce(new Error('rule unreachable')),
+      putRule: vi.fn()
+        .mockRejectedValueOnce(new Error('boom'))
+        .mockReturnValueOnce(retry.promise),
     });
     const { controller } = makeController(client);
-    await controller.refresh();
     await controller.load('can-checkout');
-    expect(controller.getState().failure).toBe('rule unreachable');
-    // The failed load left nothing loaded to save, so take an identity the normal way.
-    (client.getRule as ReturnType<typeof vi.fn>)
-      .mockResolvedValue({ document: { rule: { spec: 'is-adult' } }, version: 3 });
-    await controller.load('can-checkout');
-
     await controller.save();
+    expect(controller.getState().failure).toBe('boom');
 
+    const second = controller.save();
+    // On the way out, not on the way back: a banner still reading 'boom' over a save in flight
+    // says the retry failed before it has answered.
+    expect(controller.getState().failure).toBeNull();
+
+    retry.resolve({ outcome: 'updated', version: 4 });
+    await second;
     expect(controller.getState().failure).toBeNull();
     expect(controller.getState().loaded?.version).toBe(4);
   });
