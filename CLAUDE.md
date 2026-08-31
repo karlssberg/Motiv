@@ -306,7 +306,39 @@ This step is mandatory — do not skip it. If the agent identifies improvements,
 ### Issue tracker
 
 Issues and PRDs live as **GitHub issues** on `karlssberg/Motiv`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+`gh` is **not installed in cloud containers** — use the GitHub MCP tools there; that doc carries the mapping.
 
 ### Domain docs
 
 **Single-context** — `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
+### Bundle specs — the build phase
+
+The four implementable bundle specs (Trust & Control, Durability & Data, Operability & Evidence,
+Surface Quality) live **on branch `wayfinder/enterprise-grade-product`**, under
+`.scratch/enterprise-grade-product/specs/` — deliberately off `main`. Read one with
+`git show origin/wayfinder/enterprise-grade-product:.scratch/…`; the design docs under
+`docs/superpowers/specs/` cite them by that path.
+
+- **The ledger is the build map, issue #169.** Its open children are the remaining slices; its table
+  is the shipped ones. Discovery map #100 is closed history — all 22 of its children are locked
+  *decisions*, not work, so it says nothing about build progress. Never derive "what is next" by
+  pattern-matching slice letters against filenames in `docs/superpowers/`: that listing is
+  incomplete, and the letters are not spec-§6 step numbers.
+- **`/next-spec` runs the frontier query** over #169 and claims the winner. Prefer it over
+  reconstructing the state by hand.
+- **Every slice writes its plan and design doc in the same commit as the implementation** —
+  `docs/superpowers/plans/YYYY-MM-DD-spec-<slice>-<name>.md` and the matching
+  `…-design.md` under `docs/superpowers/specs/`. Ten of the first nineteen slices skipped this, which
+  is how the series became unreadable from the docs alone. A slice with green tests and no docs is
+  not done.
+
+### Cloud containers cannot build the .NET side
+
+There is **no .NET SDK** in a Claude Code cloud container for this repo, and egress to the .NET
+distribution is blocked, so one cannot be installed (issue #173). `Motiv.Tests`, the
+`src/examples/*.Tests` suites, `pnpm e2e` and `Motiv.Studio` are all unrunnable there; only the
+`ui/` workspace builds. The instruction above to run the full solution suite therefore cannot be
+followed in a cloud session — when that applies, **say which suites you could not run and why**
+rather than reporting the UI suite green as if it were the whole. A slice that touches C# needs a
+local session.
