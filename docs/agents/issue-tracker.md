@@ -13,6 +13,33 @@ Issues and PRDs for this repo live as GitHub issues. Use the `gh` CLI for all op
 
 Infer the repo from `git remote -v` — `gh` does this automatically when run inside a clone.
 
+## When `gh` is unavailable
+
+`gh` is not installed in Claude Code cloud containers, so every command above fails there. The same
+operations are available through the **GitHub MCP tools**; use them whenever `which gh` comes back
+empty. Infer `owner`/`repo` from `git remote -v` — the MCP tools take them as explicit arguments.
+
+| Operation | `gh` | MCP |
+|---|---|---|
+| Create an issue | `gh issue create` | `issue_write` (`method: create`) |
+| Read an issue | `gh issue view` | `issue_read` (`get`, `get_comments`, `get_labels`) |
+| List issues | `gh issue list` | `list_issues` (`state`, `labels`, `fields`) |
+| Comment | `gh issue comment` | `add_issue_comment` |
+| Label | `gh issue edit --add-label` | `issue_write` (`method: update`, `labels`) |
+| Assign / claim | `gh issue edit --add-assignee @me` | `get_me`, then `issue_write` (`method: update`, `assignees`) |
+| Close | `gh issue close` | `issue_write` (`method: update`, `state: closed`, `state_reason`) |
+| Read a PR | `gh pr view` / `gh pr diff` | `pull_request_read` (`get`, `get_diff`, `get_comments`) |
+| Create a child ticket | `gh issue create` + `gh api` sub-issues endpoint | `issue_write` (`method: create`, `parent_issue_number`) — creates and attaches in one call |
+| Attach an existing issue as a child | `gh api` sub-issues endpoint | `sub_issue_write` (`method: add`, `sub_issue_id` — the **database id**, not the number) |
+| List sub-issues | `gh api` sub-issues endpoint | `issue_read` (`get_sub_issues`) |
+
+**One operation has no MCP equivalent: native issue dependencies.** There is no MCP tool for the
+`dependencies/blocked_by` endpoint, and `issue_dependencies_summary` is not returned. In a cloud
+session, use the documented fallback instead — a `Blocked by: #<n>, #<n>` line at the top of the
+child body — and treat a ticket as unblocked when every issue it names is closed. A dependency added
+this way is still readable by a local session that does have `gh`; it is just not visible in the
+GitHub UI as an edge.
+
 ## Pull requests as a triage surface
 
 **PRs as a request surface: no.** _(Set to `yes` if this repo treats external PRs as feature requests; `/triage` reads this flag.)_
