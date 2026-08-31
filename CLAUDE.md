@@ -230,6 +230,16 @@ the root of a three-policy chain) rather than the flattened causal set.
   `"type": "module"`, every entry point names its declarations *per condition* (`.d.ts` under
   `import`, `.d.cts` under `require`) — a shared `types` makes the package unimportable from
   CommonJS. See `docs/adoption/index.md`.
+- **The second adapter is evidence, not a package**: `ui/examples/vue-adapter` is a worked Vue
+  adapter over `@motiv-rules/core` offering the React surface symbol for symbol. It is
+  `private: true`, so `pnpm -r publish` and `pnpm -C ui verify:publishable` skip it while
+  `pnpm -r build`/`typecheck`/`test` do not — Motiv maintains **one** adapter, so never add it to
+  the release train or to `release-npm.yml`'s manifest list. Its purpose is to make the price the
+  tier table publishes checkable: `test/price.test.ts` measures *both* adapters' source trees and
+  fails when they drift from the two marked tables in `docs/adoption/index.md`
+  (`<!-- react-adapter-price -->`, `<!-- vue-adapter-price -->`). Touching either adapter means
+  editing that page in the same commit; `test/bindings-only.test.ts` additionally refuses any
+  import in the example beyond `vue` and the core.
 - **Studio accessibility**: changes to Studio's colour tokens, ARIA attributes or component
   structure must keep `pnpm -C ui/apps/studio a11y` green — `axe-core` over every view and every
   open surface in both colour schemes, gated in CI. It needs no .NET host. Two conventions it

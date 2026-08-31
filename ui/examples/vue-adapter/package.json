@@ -1,0 +1,25 @@
+{
+  "name": "@motiv-rules/vue-example",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A worked Vue 3 adapter for @motiv-rules/core — the second adapter, kept green by CI and deliberately unpublished.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@motiv-rules/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "vue": ">=3.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.9",
+    "vue": "^3.5.13"
+  }
+}

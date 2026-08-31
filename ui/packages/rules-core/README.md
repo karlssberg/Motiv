@@ -8,8 +8,9 @@ diagnostics — and renders nothing.
 
 ## The boundary
 
-- **No framework**: no React (that adapter is `@motiv-rules/react`; Vue/Svelte adapters are
-  ~200 bindings-only lines over the same `subscribe`/`getState` stores).
+- **No framework**: no React (that adapter is `@motiv-rules/react`; a Vue or Svelte adapter is
+  bindings only, over the same `subscribe`/`getState` stores — and one has been written, so the
+  size is a measurement rather than a guess).
 - **No editor**: completion (`completeDsl`), diagnostics (`diagnosticsFor`) and token runs
   (`tokenSpans`) are expressed in this package's own neutral types. A CodeMirror integration
   maps them onto CodeMirror's shapes on its side of the boundary — this package takes no
@@ -37,8 +38,10 @@ approved-API snapshot.
 ## Runtimes
 
 React is the supported adapter (`@motiv-rules/react`). Vue, Svelte and vanilla consumers bind the
-`subscribe`/`getState` stores themselves — around 180 lines, the measured size of this package's
-React bindings. A .NET consumer, Blazor included, does not need this package at all: the same rule
+`subscribe`/`getState` stores themselves, and what that costs is measured rather than estimated: a
+worked Vue adapter offering the React surface symbol for symbol lives in `ui/examples/vue-adapter`
+in this repository, is tested on every CI run, and is what the price table on the page below is
+computed from. A .NET consumer, Blazor included, does not need this package at all: the same rule
 documents are parsed, validated and evaluated by `Motiv.Serialization` in C#.
 
 Framework-freeness is enforced rather than intended. This package declares no dependencies and no

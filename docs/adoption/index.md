@@ -17,7 +17,7 @@ be discovered.
 | Runtime | Tier | What you take | What Motiv maintains |
 |---|---|---|---|
 | **React** | Supported | `@motiv-rules/core` + `@motiv-rules/react` | The adapter, its tests, and Motiv Studio built on top of it |
-| **Vue, Svelte, Solid, vanilla** | Enabled, not supported | `@motiv-rules/core` + your own bindings | The framework-free core, and a check that keeps it framework-free |
+| **Vue, Svelte, Solid, vanilla** | Enabled, not supported | `@motiv-rules/core` + your own bindings | The framework-free core, a check that keeps it framework-free, and a worked Vue adapter you copy rather than install |
 | **.NET, including Blazor** | Enabled | `Motiv.Serialization` | The C# parser, validator, binder and evaluator — no JavaScript involved |
 | **Web components** | Declined | — | — |
 
@@ -37,20 +37,66 @@ an explanation and none of its markup.
 
 ## Other JavaScript frameworks
 
-An adapter is the whole of what React's costs, and the package is small enough to price honestly.
+An adapter is the whole of what React's costs, and both packages are small enough to price honestly.
 `@motiv-rules/react` is **439 lines**, and they divide like this:
 
-| Part | Lines | What it adapts |
-|---|---:|---|
-| `context`, `useRuleEditor`, `useRuleNode`, `useCatalog`, `useEvaluation`, `useDslSync`, the barrel | 179 | The editor store, one node's view of it, catalogue and evaluation calls, and the DSL⇄tree sync controller |
-| `@motiv-rules/react/workflow` | 162 | The save loops — optimistic save, 409 recovery, blast-radius reporting |
-| `JustificationTree` | 98 | The one component, and the only accessibility the packages carry |
+<!-- react-adapter-price -->
+| Part | Lines | Code lines | What it adapts |
+|---|---:|---:|---|
+| `context`, `useRuleEditor`, `useRuleNode`, `useCatalog`, `useEvaluation`, `useDslSync`, the barrel | 179 | 127 | The editor store, one node's view of it, catalogue and evaluation calls, and the DSL⇄tree sync controller |
+| `@motiv-rules/react/workflow` | 162 | 93 | The save loops — optimistic save, 409 recovery, blast-radius reporting |
+| `JustificationTree` | 98 | 59 | The one component, and the only accessibility the packages carry |
 
-So the document bindings are **179 lines**, and the workflow entry point is a further 162 you take
-only if you want the session logic. That is the real size of a Vue or Svelte adapter, because
-everything else — path arithmetic, insertion planning, the accordion state machine, DSL parsing,
+Everything else — path arithmetic, insertion planning, the accordion state machine, DSL parsing,
 printing, completion, diagnostics, the accessible-name projection — is already in the core and has
-no framework in it.
+no framework in it, so a second adapter re-pays only the table above.
+
+### The second adapter, written
+
+That price used to be an estimate. It is now a measurement, because the adapter it describes has
+been written: [`ui/examples/vue-adapter`](https://github.com/karlssberg/Motiv/tree/main/ui/examples/vue-adapter)
+is a complete Vue 3 adapter over `@motiv-rules/core`, offering the same surface as
+`@motiv-rules/react` symbol for symbol, tested on every CI run against the same behaviours.
+
+<!-- vue-adapter-price -->
+| Part | Lines | Code lines | What it adapts |
+|---|---:|---:|---|
+| `observe`, the context pair, `useRuleEditor`, `useRuleNode`, `useCatalog`, `useEvaluation`, `useDslSync`, the barrel | 250 | 140 | The same stores and client calls, bound to Vue's reactivity instead of React's |
+| the `workflow` entry point | 115 | 71 | The same save loops |
+| `JustificationTree` | 94 | 59 | The same nested-groups structure, rendered through a scoped slot |
+
+The two adapters land within 5% of each other — 459 lines against 439, and 270 lines of code
+against 279 — so the headline claim holds: a second runtime costs what React's adapter costs. Three
+things the estimate got wrong, all of them visible only once someone paid it:
+
+- **The document bindings cost more, not less: 250 lines against React's 179.** Almost all of the
+  difference is one file, `observe.ts`. React re-runs a hook on every render, so the store an action
+  closes over is always the current one and swapping stores needs no code at all; Vue's `setup` runs
+  once, so following a store that can change is an explicit `watch`, and reaching the current
+  controller is an explicit indirection. React's rebinding is not free, it is *prepaid* — and it was
+  the one part of the price nobody had counted.
+- **The workflow entry point costs less: 115 against 162.** React keeps the consumer's `onSelect` in
+  a ref written from an effect, because the controller is built once and the callback is rebuilt
+  every render; Vue reads the options object late instead, and the whole ref-and-effect dance —
+  along with the window in which an in-flight completion still reaches a superseded callback — does
+  not exist.
+- **A non-React adopter loses `JustificationTree`, and no page said so.** It is the only
+  accessibility the packages carry, and it ships in the React adapter alone. Porting it is 94 lines
+  and costs the markup, not the decision — nested labelled groups rather than `role="tree"`, each
+  named by the assertion it explains, `aria-controls` dropped rather than left dangling — but a
+  price list that omitted it was quoting for less than the goods.
+
+The numbers in both tables above are measured from the two source trees by
+`ui/examples/vue-adapter/test/price.test.ts`, and drift between the source and this page is a test
+failure. A page that prices a decision should not be able to go quietly out of date.
+
+### It is evidence, not a package
+
+The Vue adapter is **not published, and not supported**. Motiv maintains one adapter, and shipping a
+second on the release train would say otherwise. What it is for is the sentence above it: the tier
+table makes a claim about a runtime nobody here maintains, and the claim is now backed by an
+artefact CI keeps green rather than by an estimate. Copy it, or read it and write your own — both
+are the intended use.
 
 What you are binding to is one contract, the universal one:
 
@@ -64,8 +110,10 @@ store.addOperand('$.rule', { spec: 'customer.is-adult' });
 `subscribe(listener) => unsubscribe` and a `getState()` that composes the current fields fresh on
 every call. There is deliberately no cached snapshot in it: caching a referentially stable snapshot
 is React's tearing-avoidance requirement, and baking it in would have made the core React-shaped
-without importing React. In Vue that store is a `shallowRef` plus an `onScopeDispose`; in Svelte it
-is a `readable`; in plain JavaScript it is the two lines above.
+without importing React. In Vue that store is a `shallowRef` plus an `onScopeDispose` — and writing
+the adapter confirmed the omission was right in a way the reasoning had not reached: a Vue binding
+that cached by comparing snapshot fields would go *stale*, because the store mutates behind a fresh
+wrapper. In Svelte the same store is a `readable`; in plain JavaScript it is the two lines above.
 
 ### Framework-free is enforced, not asserted
 
@@ -159,8 +207,9 @@ core plus a per-runtime adapter already reaches everybody, without that cost.
 
 Accessibility. The headless packages ship no components, so an adopter building their own UI
 inherits none of Motiv Studio's accessibility work — the one exception being `JustificationTree`,
-which is read-only and therefore tractable. See [Accessibility](../accessibility/index.md) for the
-full statement.
+which is read-only and therefore tractable, and which ships in the React adapter alone. A second
+runtime re-pays it: that is the third row of the Vue table above, and it is why the row is there.
+See [Accessibility](../accessibility/index.md) for the full statement.
 
 ## Publishing
 

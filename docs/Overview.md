@@ -228,8 +228,9 @@ over a core that is framework-free by enforcement rather than intention (no depe
 imports, no DOM, and a CI job that drives the packed tarball from plain Node in a tree where `react`
 does not resolve); **.NET including Blazor** uses `Motiv.Serialization` directly and needs no
 JavaScript package at all; **web components** are declined. See
-[Runtimes and Support Tiers](./adoption/index.md) for what each tier costs, the measured size of an
-adapter, the exact boundary of the .NET authoring surface, and how an npm release is cut.
+[Runtimes and Support Tiers](./adoption/index.md) for what each tier costs — measured from a worked
+Vue adapter that offers the React surface symbol for symbol, not estimated — the exact boundary of
+the .NET authoring surface, and how an npm release is cut.
 
 | Topic                                                | Description                                                                                                    |
 |------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
