@@ -153,7 +153,11 @@ descend `Underlying` and `CausesWithValues`, so two thirds of the premise rested
 rather than being stated. All three are now asserted. This is the same shape as 4H's lesson: *a claim
 about a check is not checked by that check passing.*
 
-Two suggestions were declined and are recorded in the plan's out-of-scope section.
+Of its two larger suggestions, one was declined and is recorded in the plan's out-of-scope section.
+The other — nine repetitions of the same corpus walk across four files in `src/Motiv.Tests/Traversal/` —
+was declined for scope and then taken anyway, as a separate commit, once it proved to be nine
+mechanical call sites and no assertion changes. The plan says why it could not simply wait for a
+standalone branch.
 
 ## Release note
 

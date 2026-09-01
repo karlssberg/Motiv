@@ -57,15 +57,28 @@ real callers.
 #136's unification is what makes it cheap: the fallback now lives in one place instead of three, and
 "wholesale" is no longer something a later change can quietly opt out of.
 
+## Landed here, though not part of the slice
+
+**The `ResultTreeGenerator` corpus-walk duplication** the `code-simplifier` pass surfaced — the same
+nested loop seven times across four files in `src/Motiv.Tests/Traversal/`, plus two `SelectMany`
+variants. It was initially declined for scope, on the grounds that two of the four files were not in
+this diff and half-converting the folder would be worse than leaving it. Converting *all* of it turned
+out to be nine mechanical call sites and no assertion changes, so it rides along as its own commit
+rather than waiting on a merge it structurally could not be based on: the new
+`UnderlyingSourcesFallbackTests.cs` exists only here, so a standalone branch would have had to stack
+on this one.
+
+`ResultTreeGenerator.CorpusNodes(seed)` is exactly `Corpus(seed).SelectMany(Nodes)`, and the ordering
+is load-bearing rather than incidental — `DescriptionBaselineTests` hashes its rendering in traversal
+order, so a helper that reordered or de-duplicated across roots would leave every other suite green and
+fail only that baseline, with a diff pointing at the formatters. That baseline passing unchanged is the
+proof the conversion preserved order.
+
 ## Explicitly out of scope
 
 **`RootValues`' own `ElseIfEmpty(Values)`,** which the ticket asked to consider for the same sweep. It
 stays, on a stated principle, and a test now pins the distinction so a later tidy-up cannot collapse
 the two families by accident. The reasoning is in the design doc.
-
-**The `ResultTreeGenerator` corpus-walk duplication** the `code-simplifier` pass surfaced — the same
-nested loop nine times across four files in `src/Motiv.Tests/Traversal/`. Two of those files are not in
-this diff, and half-converting the folder would be worse than leaving it. Raised separately.
 
 **The residual `RootValues` defect in higher-order subtrees** ([#189](https://github.com/karlssberg/Motiv/issues/189)),
 untouched here.
