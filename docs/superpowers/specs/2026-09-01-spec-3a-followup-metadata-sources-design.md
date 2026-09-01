@@ -105,6 +105,13 @@ CombineAllAssertionSources    = (result, folded) => SourcesOf(result, result.Und
 CombineMetadataSources        = (result, folded) => SourcesOf(result, result.CausesWithValues, folded);
 ```
 
+> **Since superseded.** The two blocks above are what *this* slice shipped and are left as written,
+> because a design doc that describes code its slice did not write is worse than one that is dated.
+> [#188](https://github.com/karlssberg/Motiv/issues/188) then removed the fallback-to-self, which left
+> the `result` parameter unused, so it went too — `SourcesOf` now takes only `children` and
+> `foldedOperations`, and the three combiners read `SourcesOf(result.Causes, folded)` and so on. Read
+> the current signature from the source, not from here.
+
 The three walks are no longer three copies that happen to agree. They are one implementation handed
 three different child-sets, which is what ticket 19's audit said they were all along. The pattern was
 already in the file — `Operations<TResult>`, two methods above, uses the same

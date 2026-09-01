@@ -163,7 +163,12 @@ public abstract class BooleanResultBase
             ReadUnderlyingAssertionSources,
             WriteUnderlyingAssertionSources);
 
-    /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that are the sources of the <see cref="Assertions" />.</summary>
+    /// <summary>
+    /// Gets the underlying <see cref="BooleanResultBase" />s that are the sources of the
+    /// <see cref="AllAssertions" /> — the "all" sibling of <see cref="UnderlyingAssertionSources" />,
+    /// descending <see cref="Underlying" /> rather than <see cref="Causes" /> so that operands which
+    /// did not determine the outcome are included too.
+    /// </summary>
     /// <remarks>Empty for a result with no underlying results — a leaf has nothing underlying it.</remarks>
     public IEnumerable<BooleanResultBase> UnderlyingAllAssertionSources =>
         _underlyingAllAssertionSources ??= PostOrderFold.Fold(
