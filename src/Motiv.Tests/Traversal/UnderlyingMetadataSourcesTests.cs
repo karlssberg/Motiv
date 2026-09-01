@@ -82,7 +82,7 @@ public class UnderlyingMetadataSourcesTests
     [MemberData(nameof(ResultTreeGenerator.SeedData), MemberType = typeof(ResultTreeGenerator))]
     public void Should_reach_every_causal_leaf_from_RootValues(int seed)
     {
-        foreach (var node in ResultTreeGenerator.CorpusNodes(seed).Where(node => !ContainsHigherOrder(node)))
+        foreach (var node in ResultTreeGenerator.CorpusNodes(seed))
             node.RootValues.ShouldBe(
                 DistinctInOrder(CausalLeafValues(node)),
                 $"RootValues is the metadata of every result that evaluated, so it must reach the " +
@@ -91,12 +91,52 @@ public class UnderlyingMetadataSourcesTests
     }
 
     /// <summary>
-    /// Higher-order subtrees are excluded because <c>RootValues</c> still drops contributing operands
-    /// there — issue #189, which #136's fix reduced but did not reach. The exclusion is exact rather
-    /// than defensive: over the whole corpus this invariant holds at every one of the nodes without a
-    /// higher-order result in the subtree, and fails only at those with one. Deleting this filter is
-    /// the acceptance test for #189.
+    /// The invariant above once excluded higher-order subtrees — issue #189, the residue #136's fix
+    /// did not reach. The exclusion is gone, so the exclusion's own premise has to be asserted
+    /// separately: a corpus that stopped generating higher-order results would leave the invariant
+    /// green while covering none of what #189 was about.
     /// </summary>
+    [Fact]
+    public void Should_exercise_the_invariant_over_higher_order_subtrees() =>
+        Enumerable
+            .Range(1, ResultTreeGenerator.SeedCount)
+            .SelectMany(ResultTreeGenerator.CorpusNodes)
+            .Where(ContainsHigherOrder)
+            .ShouldNotBeEmpty(
+                "the corpus must still reach higher-order results, or the RootValues invariant above " +
+                "is no longer covering the case #189 was about");
+
+    /// <summary>
+    /// The corner the corpus cannot reach: a branch that has children but whose whole subtree yields
+    /// no metadata. The walk has to fall back when a branch <i>contributed nothing</i>, not merely
+    /// when it <i>had no children</i> — otherwise such a branch drops its own value, which is #189
+    /// one level up. Its assertion twin, <c>CombineRootAssertions</c>, has always fallen back this
+    /// way; only a proposition yielding an empty sequence tells the two forms apart.
+    /// </summary>
+    [Fact]
+    public void Should_fall_back_for_a_branch_whose_subtree_yields_no_values()
+    {
+        var yieldsNothing = Spec
+            .Build((string _) => true)
+            .WhenTrueYield(_ => Enumerable.Empty<string>())
+            .WhenFalseYield(_ => Enumerable.Empty<string>())
+            .Create("yields nothing");
+
+        var allSatisfied = Spec
+            .Build(yieldsNothing)
+            .AsAllSatisfied()
+            .WhenTrue("all yielded nothing")
+            .WhenFalse("not all yielded nothing")
+            .Create();
+
+        var result = allSatisfied.Evaluate(["a", "b"]).And(Leaf("sibling", true).Evaluate("model"));
+
+        result.RootValues.ShouldBe(
+            ["all yielded nothing", "sibling-true"],
+            "the higher-order branch carries its own value and its operands carry none, so falling " +
+            "back only for a childless branch would drop it");
+    }
+
     private static bool ContainsHigherOrder(BooleanResultBase<string> result) =>
         result.GetType().Namespace?.StartsWith("Motiv.HigherOrderProposition", StringComparison.Ordinal) == true
         || result.UnderlyingWithValues.Any(ContainsHigherOrder);
