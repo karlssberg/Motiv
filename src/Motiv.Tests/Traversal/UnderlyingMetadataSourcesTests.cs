@@ -43,8 +43,7 @@ public class UnderlyingMetadataSourcesTests
         // Every node qualifies since #188. While the walk still fell back to itself, a node with no
         // causal values was its own source, so the claim had to be narrowed to exclude such nodes in
         // case one was ever an operation result.
-        foreach (var root in ResultTreeGenerator.Corpus(seed))
-        foreach (var node in ResultTreeGenerator.Nodes(root))
+        foreach (var node in ResultTreeGenerator.CorpusNodes(seed))
         {
             examined++;
             node.UnderlyingMetadataSources.ShouldNotContain(
@@ -63,8 +62,7 @@ public class UnderlyingMetadataSourcesTests
         var comparer = ReferenceComparer<BooleanResultBase>.Instance;
         var compared = 0;
 
-        foreach (var root in ResultTreeGenerator.Corpus(seed))
-        foreach (var node in ResultTreeGenerator.Nodes(root))
+        foreach (var node in ResultTreeGenerator.CorpusNodes(seed))
         {
             if (!node.Causes.SequenceEqual(node.CausesWithValues, comparer))
                 continue;
@@ -84,8 +82,7 @@ public class UnderlyingMetadataSourcesTests
     [MemberData(nameof(ResultTreeGenerator.SeedData), MemberType = typeof(ResultTreeGenerator))]
     public void Should_reach_every_causal_leaf_from_RootValues(int seed)
     {
-        foreach (var root in ResultTreeGenerator.Corpus(seed))
-        foreach (var node in ResultTreeGenerator.Nodes(root).Where(node => !ContainsHigherOrder(node)))
+        foreach (var node in ResultTreeGenerator.CorpusNodes(seed).Where(node => !ContainsHigherOrder(node)))
             node.RootValues.ShouldBe(
                 DistinctInOrder(CausalLeafValues(node)),
                 $"RootValues is the metadata of every result that evaluated, so it must reach the " +

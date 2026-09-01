@@ -86,8 +86,7 @@ public class UnderlyingSourcesFallbackTests
     {
         const int bound = 1_000;
 
-        foreach (var root in ResultTreeGenerator.Corpus(seed))
-        foreach (var node in ResultTreeGenerator.Nodes(root))
+        foreach (var node in ResultTreeGenerator.CorpusNodes(seed))
         {
             Descend<BooleanResultBase<string>>(node, result => result.UnderlyingMetadataSources, seed);
             Descend<BooleanResultBase>(node, result => result.UnderlyingAssertionSources, seed);
@@ -167,8 +166,7 @@ public class UnderlyingSourcesFallbackTests
             $"the three source walks are one algorithm, so none of them may keep a fallback the " +
             $"others have lost (seed {seed})";
 
-        foreach (var root in ResultTreeGenerator.Corpus(seed))
-        foreach (var node in ResultTreeGenerator.Nodes(root))
+        foreach (var node in ResultTreeGenerator.CorpusNodes(seed))
         {
             var assertionSourcesEmpty = !node.UnderlyingAssertionSources.Any();
 
@@ -178,8 +176,5 @@ public class UnderlyingSourcesFallbackTests
     }
 
     private static IEnumerable<BooleanResultBase<string>> OperationNodes(int seed) =>
-        ResultTreeGenerator
-            .Corpus(seed)
-            .SelectMany(ResultTreeGenerator.Nodes)
-            .Where(node => node is IBooleanOperationResult);
+        ResultTreeGenerator.CorpusNodes(seed).Where(node => node is IBooleanOperationResult);
 }

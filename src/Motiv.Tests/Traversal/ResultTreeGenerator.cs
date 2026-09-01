@@ -55,6 +55,19 @@ internal static class ResultTreeGenerator
         }
     }
 
+    /// <summary>
+    /// Every node of every tree a seed generates — the unit almost every suite in this folder actually
+    /// works in, rather than the roots.
+    /// </summary>
+    /// <remarks>
+    /// Order matters and is exactly <see cref="Corpus" /> then <see cref="Nodes" />, root by root:
+    /// <see cref="DescriptionBaselineTests" /> hashes its rendering in traversal order, so a helper
+    /// that reordered or de-duplicated across roots would leave every other suite green and fail only
+    /// that baseline, pointing at the formatters rather than at here.
+    /// </remarks>
+    internal static IEnumerable<BooleanResultBase<string>> CorpusNodes(int seed) =>
+        Corpus(seed).SelectMany(Nodes);
+
     private static SpecBase<int, string> BuildSpec(Random rng, int depth)
     {
         if (depth <= 0)

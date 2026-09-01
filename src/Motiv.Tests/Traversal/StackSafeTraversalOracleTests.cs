@@ -12,8 +12,7 @@ public class StackSafeTraversalOracleTests
     [MemberData(nameof(ResultTreeGenerator.SeedData), MemberType = typeof(ResultTreeGenerator))]
     public void Should_agree_with_the_recursive_oracle_at_every_node(int seed)
     {
-        foreach (var root in ResultTreeGenerator.Corpus(seed))
-        foreach (var node in ResultTreeGenerator.Nodes(root))
+        foreach (var node in ResultTreeGenerator.CorpusNodes(seed))
         {
             ShouldBeSameResults(
                 node.UnderlyingAssertionSources,
@@ -104,9 +103,7 @@ public class StackSafeTraversalOracleTests
     }
 
     private static IEnumerable<BooleanResultBase<string>> AllNodes() =>
-        Enumerable.Range(1, ResultTreeGenerator.SeedCount)
-            .SelectMany(ResultTreeGenerator.Corpus)
-            .SelectMany(ResultTreeGenerator.Nodes);
+        Enumerable.Range(1, ResultTreeGenerator.SeedCount).SelectMany(ResultTreeGenerator.CorpusNodes);
 
     private static void ShouldBeSameResults<T>(
         IEnumerable<T> actual,
