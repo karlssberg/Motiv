@@ -54,38 +54,38 @@ public static class MetadataExtensions
 
     internal static IEnumerable<TMetadata> GetRootValues<TMetadata>(
         this BooleanResultBase<TMetadata> result) =>
-        RootValuesOf(result.MetadataTier.Underlying)
-            .ElseIfEmpty(result.MetadataTier.Metadata)
-            .DistinctWithOrderPreserved();
+        RootValuesOf(result.MetadataTier).DistinctWithOrderPreserved();
 
     /// <remarks>
     /// The metadata tier is a tree in its own right, so this walk folds rather than recurses for the
-    /// same reason the assertion walks do (Spec 3A / ticket 19).
+    /// same reason the assertion walks do (Spec 3A / ticket 19). The deepest tier is a property of a
+    /// branch, so it descends <see cref="MetadataNode{TMetadata}.Branches" /> rather than
+    /// <see cref="MetadataNode{TMetadata}.Underlying" /> — see that property's remarks for why the
+    /// latter cannot answer the question (ticket #189).
+    /// <para>
+    /// The fallback is on the branches having <i>contributed</i> nothing rather than on there being
+    /// no branches, which is what its assertion twin <c>CombineRootAssertions</c> does. The two forms
+    /// differ only for a branch whose whole subtree yields no metadata, and falling back only for a
+    /// childless branch would drop that branch's own value — #189 one level up.
+    /// </para>
     /// </remarks>
-    private static IEnumerable<TMetadata> RootValuesOf<TMetadata>(IEnumerable<MetadataNode<TMetadata>> tiers)
+    private static TMetadata[] RootValuesOf<TMetadata>(MetadataNode<TMetadata> tier)
     {
         var memo = new Dictionary<MetadataNode<TMetadata>, TMetadata[]>(
             ReferenceEqualityComparer<MetadataNode<TMetadata>>.Instance);
 
-        var values = new List<TMetadata>();
+        return PostOrderFold.Fold(
+            tier,
+            node => node.Branches,
+            (node, foldedBranches) =>
+            {
+                var branchValues = foldedBranches.Flatten();
 
-        foreach (var tier in tiers)
-            values.AddRange(PostOrderFold.Fold(
-                tier,
-                node => node.Underlying as IReadOnlyList<MetadataNode<TMetadata>> ?? node.Underlying.ToArray(),
-                (node, folded) =>
-                {
-                    var rootValues = new List<TMetadata>();
-                    for (var i = 0; i < folded.Count; i++)
-                        rootValues.AddRange(folded[i]);
-
-                    return rootValues.Count == 0
-                        ? node.Metadata.ToArray()
-                        : rootValues.ToArray();
-                },
-                node => memo.TryGetValue(node, out var folded) ? folded : null,
-                (node, folded) => memo[node] = folded));
-
-        return values;
+                return branchValues.Length == 0
+                    ? node.Metadata.ToArray()
+                    : branchValues;
+            },
+            node => memo.TryGetValue(node, out var folded) ? folded : null,
+            (node, folded) => memo[node] = folded);
     }
 }

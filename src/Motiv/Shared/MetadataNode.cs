@@ -45,6 +45,20 @@ public class MetadataNode<TMetadata>
 
     private MetadataNode<TMetadata>[]? _underlying;
 
+    /// <summary>
+    /// The tiers directly beneath this one, before the level-skipping that <see cref="Underlying" />
+    /// applies.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="Underlying" /> drops a level that merely restates itself and returns what is beneath
+    /// it, flattened. Both are correct for a walk over distinct levels, and both are fatal to one
+    /// looking for each branch's own deepest tier: a branch whose deepest level <i>is</i> the dropped
+    /// one leaves nothing behind, and a flat list cannot say which branch a tier came from. That is
+    /// why the root-values walk descends here instead (ticket #189).
+    /// </remarks>
+    internal IReadOnlyList<MetadataNode<TMetadata>> Branches =>
+        _causes is null ? [] : Resolved.Children;
+
     private Resolution<MetadataNode<TMetadata>> Resolved => field ??= Resolve(_metadataSource ?? [], _causes!);
 
     private static readonly Func<MetadataNode<TMetadata>, IReadOnlyList<MetadataNode<TMetadata>>> Descend =
