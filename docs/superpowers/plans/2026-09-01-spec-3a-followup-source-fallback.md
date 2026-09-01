@@ -110,5 +110,7 @@ untouched here.
   node of every generated tree.
 - `dotnet build Motiv.slnx` succeeds across all target frameworks, net472 included.
 - The new tests fail before the change and pass after it.
-- No test outside the three source-walk suites changed, which is the evidence that the change is
-  invisible to every in-library consumer.
+- **In the behaviour commit, no test outside the three source-walk suites changed** — that is the
+  evidence the change is invisible to every in-library consumer. The corpus-walk conversion above is a
+  separate commit and does touch other suites, so read the two apart: the claim is about `9feb7b93`,
+  not about the branch.

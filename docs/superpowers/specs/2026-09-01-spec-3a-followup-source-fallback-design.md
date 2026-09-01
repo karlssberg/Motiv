@@ -83,7 +83,9 @@ says so instead of a user noticing.
 
 **The corroborating evidence:** the whole solution — thirteen test projects, 7,217 tests, including
 `StackSafeTraversalOracleTests` comparing every walk at every node of every generated tree — passed
-with no change beyond the three source-walk suites themselves. `Reason`, `Justification`,
+with no change beyond the three source-walk suites themselves. (That claim is about the behaviour
+commit. The corpus-walk conversion the plan describes is a later, separate commit on the same branch
+and edits other suites; it changes no assertion.) `Reason`, `Justification`,
 `Assertions`, `Values`, `RootValues`, `RootAssertions` and `Explanation.Underlying` are all untouched.
 
 ## Measurement
