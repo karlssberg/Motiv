@@ -4,15 +4,37 @@
     {
       "name": "studio",
       "runtimeExecutable": "dotnet",
-      "runtimeArgs": ["run", "--project", "src/Motiv.Studio"],
+      "runtimeArgs": [
+        "run",
+        "--project",
+        "src/Motiv.Studio"
+      ],
       "port": 5100,
       "autoPort": true
     },
     {
       "name": "studio-ui",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--dir", "ui/apps/studio", "dev", "--port", "5173", "--strictPort"],
+      "runtimeArgs": [
+        "--dir",
+        "ui/apps/studio",
+        "dev",
+        "--port",
+        "5173",
+        "--strictPort"
+      ],
       "port": 5173
+    },
+    {
+      "name": "rule-authoring-blazor",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": [
+        "run",
+        "--project",
+        "src/examples/Motiv.RuleAuthoring.Blazor"
+      ],
+      "port": 5200,
+      "autoPort": true
     }
   ]
 }

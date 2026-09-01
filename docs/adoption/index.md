@@ -18,7 +18,7 @@ be discovered.
 |---|---|---|---|
 | **React** | Supported | `@motiv-rules/core` + `@motiv-rules/react` | The adapter, its tests, and Motiv Studio built on top of it |
 | **Vue, Svelte, Solid, vanilla** | Enabled, not supported | `@motiv-rules/core` + your own bindings | The framework-free core, a check that keeps it framework-free, and a worked Vue adapter you copy rather than install |
-| **.NET, including Blazor** | Enabled | `Motiv.Serialization` | The C# parser, validator, binder and evaluator — no JavaScript involved |
+| **.NET, including Blazor** | Enabled | `Motiv.Serialization` | The C# parser, validator, binder and evaluator, and a worked Blazor WebAssembly sample — no JavaScript involved |
 | **Web components** | Declined | — | — |
 
 The two words carry their full weight:
@@ -181,6 +181,43 @@ if (errors.Count == 0)
     Console.WriteLine(result.Reason);
 }
 ```
+
+### The tier, worked
+
+Like the Vue row above it, this row used to be backed by the snippet above and nothing else.
+[`src/examples/Motiv.RuleAuthoring.Blazor`](https://github.com/karlssberg/Motiv/tree/main/src/examples/Motiv.RuleAuthoring.Blazor)
+is now the artefact: a standalone Blazor WebAssembly app that writes a rule document from its own
+authoring tree, validates it, binds it and evaluates it — every step in the browser, in C#, with no
+JavaScript rules package anywhere in the project.
+
+It is worth reading for what that boundary actually costs, because the sample pays it in the
+open:
+
+- **It brings its own document model.** `DraftNode` is the authoring tree `RuleDocument` cannot be,
+  and `RuleDocumentWriter` turns it into JSON. That is the whole of the "build the JSON yourself"
+  clause, and it is about a hundred lines.
+- **It brings its own path arithmetic, and this is the part the sentence above understates.**
+  `Validate` reports `$.rule.andAlso[0].spec`, and an authoring UI has to put that error beside the
+  control the author is editing. So the writer records the path of every node *during the same walk
+  that emits the JSON* — a separately derived path could disagree with the one the error names, and
+  would do so silently. Resolving an error then means walking up from its path until a node matches,
+  because a path can name a node's property rather than the node.
+- **Everything after that is `Motiv.Serialization`.** Validation, binding, evaluation, and both
+  explanations.
+
+One thing the sample makes visible that the snippet above hides: because the document is *named*,
+Motiv's `== true` / `== false` suffix rule makes `Reason` the document's name and nothing more —
+`customer.can-checkout == true`. The operands that actually caused the outcome survive only in
+`Justification`. A .NET authoring UI that rendered `Reason` alone would show its author a verdict
+with no reasons in it, which is the boolean blindness Motiv exists to remove. The sample renders
+both, and says why on the page.
+
+Three tests keep the claim honest rather than asserted, in the same spirit as the Vue adapter's
+`bindings-only.test.ts`: one reads the sample's `.csproj` and refuses any reference beyond
+`Motiv.Serialization` and the Blazor host, one refuses any JavaScript file anywhere in the project,
+and one refuses any `<script src>` in its page but the Blazor runtime. A C# project cannot
+accidentally `npm install`, but a sample can quietly acquire a script tag — and then the artefact
+stops demonstrating "no JavaScript involved" while every job stays green.
 
 ## One document, both cores
 

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <IsPackable>false</IsPackable>
+        <!--
+            The binder resolves registry entries by name and reflects over the model type, so a
+            trimmed publish can drop members it needs. An example that runs under `dotnet run` and
+            breaks when published would misrepresent the tier it exists to demonstrate.
+        -->
+        <PublishTrimmed>false</PublishTrimmed>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Motiv.Serialization\Motiv.Serialization.csproj" />
+    </ItemGroup>
+
+</Project>
