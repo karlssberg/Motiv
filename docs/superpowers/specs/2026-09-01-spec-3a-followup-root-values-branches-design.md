@@ -22,18 +22,26 @@ closes that.
 ```
 
 and descends a new internal `MetadataNode.Branches` — the node's direct children, un-collapsed —
-falling back to a node's own metadata when *that node* has no children, rather than when the whole
-level came out empty:
+falling back to a node's own metadata when *that node's own branches* contributed nothing, rather than
+when the whole level came out empty:
 
 ```csharp
         return PostOrderFold.Fold(
             tier,
             node => node.Branches,
-            (node, folded) => folded.Count == 0
-                ? node.Metadata.ToArray()
-                : folded.Flatten(),
+            (node, foldedBranches) =>
+            {
+                var branchValues = foldedBranches.Flatten();
+
+                return branchValues.Length == 0
+                    ? node.Metadata.ToArray()
+                    : branchValues;
+            },
             …);
 ```
+
+That fallback condition is its assertion twin's rather than an invention, and it did not start out
+that way — see [what the review pass found](#what-the-review-pass-found).
 
 `Branches` is `Resolution.Children` — already computed, already memoised — guarded for the leaf
 constructor, which has no causes and never resolves. Nothing else moves. `MetadataTier.Underlying`,
