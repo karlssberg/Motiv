@@ -8,21 +8,8 @@ namespace Motiv.Tests.Traversal;
 /// </summary>
 public class StackSafeTraversalOracleTests
 {
-    private const int SeedCount = 150;
-
-    public static TheoryData<int> Seeds
-    {
-        get
-        {
-            var data = new TheoryData<int>();
-            for (var seed = 1; seed <= SeedCount; seed++)
-                data.Add(seed);
-            return data;
-        }
-    }
-
     [Theory]
-    [MemberData(nameof(Seeds))]
+    [MemberData(nameof(ResultTreeGenerator.SeedData), MemberType = typeof(ResultTreeGenerator))]
     public void Should_agree_with_the_recursive_oracle_at_every_node(int seed)
     {
         foreach (var root in ResultTreeGenerator.Corpus(seed))
@@ -117,7 +104,7 @@ public class StackSafeTraversalOracleTests
     }
 
     private static IEnumerable<BooleanResultBase<string>> AllNodes() =>
-        Enumerable.Range(1, SeedCount)
+        Enumerable.Range(1, ResultTreeGenerator.SeedCount)
             .SelectMany(ResultTreeGenerator.Corpus)
             .SelectMany(ResultTreeGenerator.Nodes);
 

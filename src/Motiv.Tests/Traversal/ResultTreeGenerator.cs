@@ -6,8 +6,23 @@ namespace Motiv.Tests.Traversal;
 /// </summary>
 internal static class ResultTreeGenerator
 {
-    internal static IEnumerable<object[]> Seeds(int count) =>
-        Enumerable.Range(1, count).Select(seed => new object[] { seed });
+    /// <summary>The size of the corpus every suite that walks it shares.</summary>
+    internal const int SeedCount = 150;
+
+    /// <summary>
+    /// The seeds as theory data, so a failure names the one case that reproduces it rather than
+    /// collapsing the whole corpus into a single assertion.
+    /// </summary>
+    public static TheoryData<int> SeedData
+    {
+        get
+        {
+            var data = new TheoryData<int>();
+            for (var seed = 1; seed <= SeedCount; seed++)
+                data.Add(seed);
+            return data;
+        }
+    }
 
     internal static IEnumerable<BooleanResultBase<string>> Corpus(int seed)
     {

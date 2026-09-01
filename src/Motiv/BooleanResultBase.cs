@@ -183,11 +183,11 @@ public abstract class BooleanResultBase
 
     private static readonly Func<BooleanResultBase, IReadOnlyList<BooleanResultBase[]>, BooleanResultBase[]>
         CombineCausalAssertionSources = (result, foldedOperations) =>
-            AssertionSourcesOf(result, result.Causes, foldedOperations);
+            SourcesOf(result, result.Causes, foldedOperations);
 
     private static readonly Func<BooleanResultBase, IReadOnlyList<BooleanResultBase[]>, BooleanResultBase[]>
         CombineAllAssertionSources = (result, foldedOperations) =>
-            AssertionSourcesOf(result, result.Underlying, foldedOperations);
+            SourcesOf(result, result.Underlying, foldedOperations);
 
     private static readonly Func<BooleanResultBase, BooleanResultBase[]?> ReadUnderlyingAssertionSources =
         result => result._underlyingAssertionSources;
@@ -219,15 +219,23 @@ public abstract class BooleanResultBase
     }
 
     /// <summary>
-    /// Interleaves each descended child's sources with each child the walk stopped at, in child order,
-    /// falling back to the result itself when nothing was contributed.
+    /// Concatenates, in child order, each descended child's sources and each child the walk stopped
+    /// at, falling back to the result itself when nothing was contributed. Each source walk differs
+    /// only in the children it is handed.
     /// </summary>
-    private static BooleanResultBase[] AssertionSourcesOf(
-        BooleanResultBase result,
-        IEnumerable<BooleanResultBase> children,
-        IReadOnlyList<BooleanResultBase[]> foldedOperations)
+    /// <remarks>
+    /// <paramref name="children" /> must be the same sequence <see cref="Operations{TResult}" /> was
+    /// handed for this <paramref name="result" />: <paramref name="foldedOperations" /> is consumed
+    /// positionally, so a walk whose two delegates disagree about which children they enumerate would
+    /// misattribute sources rather than fail.
+    /// </remarks>
+    private protected static TResult[] SourcesOf<TResult>(
+        TResult result,
+        IEnumerable<TResult> children,
+        IReadOnlyList<TResult[]> foldedOperations)
+        where TResult : BooleanResultBase
     {
-        var sources = new List<BooleanResultBase>();
+        var sources = new List<TResult>();
         var nextOperation = 0;
 
         foreach (var child in children)
@@ -487,13 +495,6 @@ public abstract class BooleanResultBase<TMetadata>
     public abstract IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues { get; }
 
     /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that are the sources of the <see cref="Values" />.</summary>
-    /// <remarks>
-    /// This walk differs from its two assertion-source siblings in two ways that look like defects and
-    /// are preserved deliberately: where they yield the <i>child</i> the walk stopped at, this yields
-    /// the result itself, once per such child; and it has no fallback for a result with no causes, so
-    /// it returns nothing rather than itself. Both are the published behaviour of this property. See
-    /// the follow-up on ticket 19.
-    /// </remarks>
     public IEnumerable<BooleanResultBase<TMetadata>> UnderlyingMetadataSources =>
         _underlyingMetadataSources ??= PostOrderFold.Fold(
             this,
@@ -512,18 +513,7 @@ public abstract class BooleanResultBase<TMetadata>
             IReadOnlyList<BooleanResultBase<TMetadata>[]>,
             BooleanResultBase<TMetadata>[]>
         CombineMetadataSources = (result, foldedOperations) =>
-        {
-            var sources = new List<BooleanResultBase<TMetadata>>();
-            var nextOperation = 0;
-
-            foreach (var child in result.CausesWithValues)
-                if (child is IBooleanOperationResult)
-                    sources.AddRange(foldedOperations[nextOperation++]);
-                else
-                    sources.Add(result);
-
-            return sources.ToArray();
-        };
+            SourcesOf(result, result.CausesWithValues, foldedOperations);
 
     private static readonly Func<BooleanResultBase<TMetadata>, BooleanResultBase<TMetadata>[]?>
         ReadUnderlyingMetadataSources = result => result._underlyingMetadataSources;
