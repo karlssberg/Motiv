@@ -16,7 +16,6 @@ namespace Motiv.Tests.Traversal;
 /// </remarks>
 public class DescriptionBaselineTests
 {
-    private const int SeedCount = 150;
     private const string BaselineResource = "Motiv.Tests.Traversal.DescriptionBaseline.txt";
 
     [Fact]
@@ -24,7 +23,7 @@ public class DescriptionBaselineTests
     {
         var baseline = ReadBaseline();
 
-        baseline.Count.ShouldBe(SeedCount, "the baseline must cover the whole corpus");
+        baseline.Count.ShouldBe(ResultTreeGenerator.SeedCount, "the baseline must cover the whole corpus");
 
         // Indexed rather than deconstructed: net472 has no Deconstruct for KeyValuePair.
         foreach (var entry in baseline)
