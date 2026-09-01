@@ -45,8 +45,7 @@ public class DescriptionBaselineTests
     {
         var rendering = new StringBuilder();
 
-        foreach (var root in ResultTreeGenerator.Corpus(seed))
-        foreach (var node in ResultTreeGenerator.Nodes(root))
+        foreach (var node in ResultTreeGenerator.CorpusNodes(seed))
         {
             rendering.Append(node.Reason).Append('\n');
             rendering.Append(node.Justification.Replace("\r\n", "\n")).Append('\n');

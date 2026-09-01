@@ -105,6 +105,13 @@ CombineAllAssertionSources    = (result, folded) => SourcesOf(result, result.Und
 CombineMetadataSources        = (result, folded) => SourcesOf(result, result.CausesWithValues, folded);
 ```
 
+> **Since superseded.** The two blocks above are what *this* slice shipped and are left as written,
+> because a design doc that describes code its slice did not write is worse than one that is dated.
+> [#188](https://github.com/karlssberg/Motiv/issues/188) then removed the fallback-to-self, which left
+> the `result` parameter unused, so it went too — `SourcesOf` now takes only `children` and
+> `foldedOperations`, and the three combiners read `SourcesOf(result.Causes, folded)` and so on. Read
+> the current signature from the source, not from here.
+
 The three walks are no longer three copies that happen to agree. They are one implementation handed
 three different child-sets, which is what ticket 19's audit said they were all along. The pattern was
 already in the file — `Operations<TResult>`, two methods above, uses the same
@@ -192,7 +199,9 @@ next reader does not "restore" it.
 
 The fallback added here answers "what are my sources?" with **myself** when nothing contributed. That
 is the siblings' behaviour, and matching it is the point. Whether it is *right* is a separate
-question, raised as [#188](https://github.com/karlssberg/Motiv/issues/188).
+question, raised as [#188](https://github.com/karlssberg/Motiv/issues/188) and since settled the other
+way — all three walks now return empty; see
+[that slice's design](2026-09-01-spec-3a-followup-source-fallback-design.md).
 
 Measured over the oracle corpus — 13,680 nodes across 150 seeds — the fallback fires **6,109 times,
 every one on a node with no causes, and never on an operation node**. That is not an artefact of the

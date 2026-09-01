@@ -13,35 +13,38 @@ namespace Motiv.Tests.Traversal;
 /// These copies are deliberately un-memoised. They are only ever run over trees shallow enough that
 /// recursion does not overflow, which is what makes them a usable oracle.
 /// <para>
-/// One member — <see cref="UnderlyingMetadataSources{TMetadata}" /> — is no longer verbatim, because
-/// ticket #136 settled the walk it copied as defective. Its own remark says why.
+/// The three source walks are no longer verbatim. <see cref="UnderlyingMetadataSources{TMetadata}" />
+/// was settled as defective by ticket #136, and all three lost their fallback-to-self by ticket #188.
+/// For those the oracle's claim is weaker than for the rest of this class: not "does the
+/// fold match what shipped before Spec 3A?" but only "does the fold match an independent recursive
+/// formulation?". #188's own tests carry the behavioural claim the oracle can no longer make.
 /// </para>
 /// </remarks>
 internal static class RecursiveTraversalOracle
 {
+    /// <remarks>
+    /// Not verbatim: the trailing <c>ElseIfEmpty(result.ToEnumerable())</c> was removed by ticket
+    /// #188, which settled that a result with no causes has no sources rather than being its own.
+    /// </remarks>
     internal static IEnumerable<BooleanResultBase> UnderlyingAssertionSources(BooleanResultBase result) =>
         result.Causes
             .SelectMany(booleanResult =>
                 booleanResult is IBooleanOperationResult
                     ? UnderlyingAssertionSources(booleanResult)
-                    : booleanResult.ToEnumerable())
-            .ElseIfEmpty(result.ToEnumerable());
+                    : booleanResult.ToEnumerable());
 
+    /// <inheritdoc cref="UnderlyingAssertionSources" />
     internal static IEnumerable<BooleanResultBase> UnderlyingAllAssertionSources(BooleanResultBase result) =>
         result.Underlying
             .SelectMany(booleanResult =>
                 booleanResult is IBooleanOperationResult
                     ? UnderlyingAllAssertionSources(booleanResult)
-                    : booleanResult.ToEnumerable())
-            .ElseIfEmpty(result.ToEnumerable());
+                    : booleanResult.ToEnumerable());
 
     /// <remarks>
-    /// Not a verbatim copy. As it stood this yielded <c>result</c> where its siblings yield
-    /// <c>booleanResult</c>, and carried no <c>ElseIfEmpty</c>; ticket #136 settled that as a
-    /// copy-paste slip, so the oracle records the corrected walk. Its claim therefore differs from the
-    /// rest of this class: for every other member the question is "does the fold match what shipped
-    /// before Spec 3A?", and for this one it is only "does the fold match an independent recursive
-    /// formulation?".
+    /// Not a verbatim copy, twice over. As it stood this yielded <c>result</c> where its siblings
+    /// yield <c>booleanResult</c>, which ticket #136 settled as a copy-paste slip; and the fallback
+    /// #136 gave it to match its siblings was then removed from all three by ticket #188.
     /// </remarks>
     internal static IEnumerable<BooleanResultBase<TMetadata>> UnderlyingMetadataSources<TMetadata>(
         BooleanResultBase<TMetadata> result) =>
@@ -49,8 +52,7 @@ internal static class RecursiveTraversalOracle
             .SelectMany(booleanResult =>
                 booleanResult is IBooleanOperationResult
                     ? UnderlyingMetadataSources(booleanResult)
-                    : booleanResult.ToEnumerable())
-            .ElseIfEmpty(result.ToEnumerable());
+                    : booleanResult.ToEnumerable());
 
     internal static IEnumerable<BooleanResultBase> UnderlyingExpressionResults(BooleanResultBase result) =>
         result.Causes

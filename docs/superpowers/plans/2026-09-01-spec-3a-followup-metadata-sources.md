@@ -88,7 +88,8 @@ One shippable PR.
 **Whether the `ElseIfEmpty(this)` fallback is itself right** — whether a leaf should report *itself*
 or *nothing* as the source of its own values. Raised as
 [#188](https://github.com/karlssberg/Motiv/issues/188). See the design doc for why that has to be a
-wholesale change across all three walks and cannot ride along here.
+wholesale change across all three walks and cannot ride along here. **Settled since:** *nothing* —
+see [the follow-up plan](2026-09-01-spec-3a-followup-source-fallback.md).
 
 **The residual `RootValues` defect in higher-order subtrees.** The repair above does not reach it:
 after the fix, `RootValues` still drops contributing operands when a higher-order result is in the

@@ -7,7 +7,8 @@ namespace Motiv.Tests.Traversal;
 /// <see cref="BooleanResultBase{TMetadata}.UnderlyingMetadataSources" /> had drifted from its two
 /// assertion-source siblings in two ways, both of which are covered here: it yielded the result
 /// <i>itself</i> once per non-operation child rather than the child the walk stopped at, and it had
-/// no fallback for a result that contributed nothing.
+/// no fallback for a result that contributed nothing. That fallback was then removed from all three
+/// walks by ticket #188 — see <see cref="UnderlyingSourcesFallbackTests" />.
 /// </summary>
 /// <remarks>
 /// The last test covers the consequence the ticket did not name. `MetadataNode.Resolve` is the walk's
@@ -39,11 +40,10 @@ public class UnderlyingMetadataSourcesTests
     {
         var examined = 0;
 
-        // Nodes with no causal values are excluded because the ElseIfEmpty fallback makes such a node
-        // its own source — which would be an operation result if one ever had an empty causal set. No
-        // node in the vocabulary does today (see #188), so the filter narrows the count, not the claim.
-        foreach (var root in ResultTreeGenerator.Corpus(seed))
-        foreach (var node in ResultTreeGenerator.Nodes(root).Where(node => node.CausesWithValues.Any()))
+        // Every node qualifies since #188. While the walk still fell back to itself, a node with no
+        // causal values was its own source, so the claim had to be narrowed to exclude such nodes in
+        // case one was ever an operation result.
+        foreach (var node in ResultTreeGenerator.CorpusNodes(seed))
         {
             examined++;
             node.UnderlyingMetadataSources.ShouldNotContain(
@@ -55,14 +55,6 @@ public class UnderlyingMetadataSourcesTests
         examined.ShouldBeGreaterThan(0, "the invariant must actually have been exercised");
     }
 
-    [Fact]
-    public void Should_yield_itself_when_nothing_contributed()
-    {
-        var result = Leaf("a", true).Evaluate("model");
-
-        result.UnderlyingMetadataSources.ShouldHaveSingleItem().ShouldBeSameAs(result);
-    }
-
     [Theory]
     [MemberData(nameof(ResultTreeGenerator.SeedData), MemberType = typeof(ResultTreeGenerator))]
     public void Should_agree_with_its_assertion_source_sibling_wherever_the_causal_sets_agree(int seed)
@@ -70,8 +62,7 @@ public class UnderlyingMetadataSourcesTests
         var comparer = ReferenceComparer<BooleanResultBase>.Instance;
         var compared = 0;
 
-        foreach (var root in ResultTreeGenerator.Corpus(seed))
-        foreach (var node in ResultTreeGenerator.Nodes(root))
+        foreach (var node in ResultTreeGenerator.CorpusNodes(seed))
         {
             if (!node.Causes.SequenceEqual(node.CausesWithValues, comparer))
                 continue;
@@ -91,8 +82,7 @@ public class UnderlyingMetadataSourcesTests
     [MemberData(nameof(ResultTreeGenerator.SeedData), MemberType = typeof(ResultTreeGenerator))]
     public void Should_reach_every_causal_leaf_from_RootValues(int seed)
     {
-        foreach (var root in ResultTreeGenerator.Corpus(seed))
-        foreach (var node in ResultTreeGenerator.Nodes(root).Where(node => !ContainsHigherOrder(node)))
+        foreach (var node in ResultTreeGenerator.CorpusNodes(seed).Where(node => !ContainsHigherOrder(node)))
             node.RootValues.ShouldBe(
                 DistinctInOrder(CausalLeafValues(node)),
                 $"RootValues is the metadata of every result that evaluated, so it must reach the " +

@@ -154,6 +154,7 @@ public abstract class BooleanResultBase
     public abstract IEnumerable<BooleanResultBase> Causes { get; }
 
     /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that are the sources of the <see cref="Assertions" />.</summary>
+    /// <remarks>Empty for a result with no causes — a leaf has nothing underlying it.</remarks>
     public IEnumerable<BooleanResultBase> UnderlyingAssertionSources =>
         _underlyingAssertionSources ??= PostOrderFold.Fold(
             this,
@@ -162,7 +163,13 @@ public abstract class BooleanResultBase
             ReadUnderlyingAssertionSources,
             WriteUnderlyingAssertionSources);
 
-    /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that are the sources of the <see cref="Assertions" />.</summary>
+    /// <summary>
+    /// Gets the underlying <see cref="BooleanResultBase" />s that are the sources of the
+    /// <see cref="AllAssertions" /> — the "all" sibling of <see cref="UnderlyingAssertionSources" />,
+    /// descending <see cref="Underlying" /> rather than <see cref="Causes" /> so that operands which
+    /// did not determine the outcome are included too.
+    /// </summary>
+    /// <remarks>Empty for a result with no underlying results — a leaf has nothing underlying it.</remarks>
     public IEnumerable<BooleanResultBase> UnderlyingAllAssertionSources =>
         _underlyingAllAssertionSources ??= PostOrderFold.Fold(
             this,
@@ -183,11 +190,11 @@ public abstract class BooleanResultBase
 
     private static readonly Func<BooleanResultBase, IReadOnlyList<BooleanResultBase[]>, BooleanResultBase[]>
         CombineCausalAssertionSources = (result, foldedOperations) =>
-            SourcesOf(result, result.Causes, foldedOperations);
+            SourcesOf(result.Causes, foldedOperations);
 
     private static readonly Func<BooleanResultBase, IReadOnlyList<BooleanResultBase[]>, BooleanResultBase[]>
         CombineAllAssertionSources = (result, foldedOperations) =>
-            SourcesOf(result, result.Underlying, foldedOperations);
+            SourcesOf(result.Underlying, foldedOperations);
 
     private static readonly Func<BooleanResultBase, BooleanResultBase[]?> ReadUnderlyingAssertionSources =
         result => result._underlyingAssertionSources;
@@ -220,17 +227,22 @@ public abstract class BooleanResultBase
 
     /// <summary>
     /// Concatenates, in child order, each descended child's sources and each child the walk stopped
-    /// at, falling back to the result itself when nothing was contributed. Each source walk differs
-    /// only in the children it is handed.
+    /// at. A result that contributed nothing has no sources: the answer is empty, not itself. Each
+    /// source walk differs only in the children it is handed.
     /// </summary>
     /// <remarks>
     /// <paramref name="children" /> must be the same sequence <see cref="Operations{TResult}" /> was
-    /// handed for this <paramref name="result" />: <paramref name="foldedOperations" /> is consumed
-    /// positionally, so a walk whose two delegates disagree about which children they enumerate would
-    /// misattribute sources rather than fail.
+    /// handed for this result: <paramref name="foldedOperations" /> is consumed positionally, so a
+    /// walk whose two delegates disagree about which children they enumerate would misattribute
+    /// sources rather than fail.
+    /// <para>
+    /// Ticket #188 removed a fallback to the result itself. It was reachable only from a leaf — every
+    /// operation node has a causal operand, and both in-library consumers reach a walk only behind an
+    /// <see cref="IBooleanOperationResult" /> guard — where it made the property contradict its own
+    /// name and left an obvious fixpoint descent non-terminating.
+    /// </para>
     /// </remarks>
     private protected static TResult[] SourcesOf<TResult>(
-        TResult result,
         IEnumerable<TResult> children,
         IReadOnlyList<TResult[]> foldedOperations)
         where TResult : BooleanResultBase
@@ -244,9 +256,7 @@ public abstract class BooleanResultBase
             else
                 sources.Add(child);
 
-        return sources.Count == 0
-            ? [result]
-            : sources.ToArray();
+        return sources.ToArray();
     }
 
     /// <summary>Gets the underlying <see cref="BooleanResultBase" /> that contribute to this result.</summary>
@@ -495,6 +505,10 @@ public abstract class BooleanResultBase<TMetadata>
     public abstract IEnumerable<BooleanResultBase<TMetadata>> CausesWithValues { get; }
 
     /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that are the sources of the <see cref="Values" />.</summary>
+    /// <remarks>
+    /// Empty for a result with no causal values — a leaf has nothing underlying it, so its own
+    /// values are reached through <see cref="Values" />, not through this property.
+    /// </remarks>
     public IEnumerable<BooleanResultBase<TMetadata>> UnderlyingMetadataSources =>
         _underlyingMetadataSources ??= PostOrderFold.Fold(
             this,
@@ -513,7 +527,7 @@ public abstract class BooleanResultBase<TMetadata>
             IReadOnlyList<BooleanResultBase<TMetadata>[]>,
             BooleanResultBase<TMetadata>[]>
         CombineMetadataSources = (result, foldedOperations) =>
-            SourcesOf(result, result.CausesWithValues, foldedOperations);
+            SourcesOf(result.CausesWithValues, foldedOperations);
 
     private static readonly Func<BooleanResultBase<TMetadata>, BooleanResultBase<TMetadata>[]?>
         ReadUnderlyingMetadataSources = result => result._underlyingMetadataSources;
