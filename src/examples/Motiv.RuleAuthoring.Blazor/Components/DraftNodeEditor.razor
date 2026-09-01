@@ -1,0 +1,120 @@
+@* One node of the draft tree. Recursive: an operator renders an editor per operand. *@
+
+<div class="node">
+    <div class="node-controls">
+        <label>
+            <span class="visually-hidden">Node kind</span>
+            <select class="kind" value="@Node.Kind" @onchange="OnKindChanged">
+                <option value="@DraftNodeKind.Spec">proposition</option>
+                @foreach (var kind in DraftNodeKinds.Operators)
+                {
+                    <option value="@kind">@DraftNodeKinds.Keyword(kind)</option>
+                }
+            </select>
+        </label>
+
+        @if (Node.Kind is DraftNodeKind.Spec)
+        {
+            <label>
+                <span class="visually-hidden">Proposition</span>
+                <select class="spec" value="@Node.SpecName" @onchange="OnSpecChanged">
+                    <option value="">— choose a proposition —</option>
+                    @foreach (var name in SpecNames)
+                    {
+                        <option value="@name">@name</option>
+                    }
+                </select>
+            </label>
+        }
+        else
+        {
+            <button type="button" @onclick="AddOperand" disabled="@DraftNodeKinds.IsUnary(Node.Kind)">
+                add operand
+            </button>
+        }
+
+        @if (Remove.HasDelegate)
+        {
+            <button type="button" class="remove" disabled="@(!Removable)"
+                    @onclick="() => Remove.InvokeAsync(Node)">
+                remove
+            </button>
+        }
+    </div>
+
+    @foreach (var error in ErrorsHere)
+    {
+        <p class="error">@error.Error.Code — @error.Error.Message</p>
+    }
+
+    @if (Node.Children.Count > 0)
+    {
+        <ol class="operands">
+            @foreach (var child in Node.Children)
+            {
+                <li>
+                    <DraftNodeEditor Node="child"
+                                     Errors="Errors"
+                                     SpecNames="SpecNames"
+                                     Changed="Changed"
+                                     Remove="RemoveOperand"
+                                     Removable="CanRemoveOperand" />
+                </li>
+            }
+        </ol>
+    }
+</div>
+
+@code {
+    /// <summary>The node this editor edits.</summary>
+    [Parameter, EditorRequired] public required DraftNode Node { get; set; }
+
+    /// <summary>Every located error from the last authoring pass.</summary>
+    [Parameter, EditorRequired] public required IReadOnlyList<LocatedError> Errors { get; set; }
+
+    /// <summary>The propositions the author may choose from.</summary>
+    [Parameter, EditorRequired] public required IReadOnlyList<string> SpecNames { get; set; }
+
+    /// <summary>Raised whenever the draft changed and needs re-authoring.</summary>
+    [Parameter] public EventCallback Changed { get; set; }
+
+    /// <summary>Raised when this node asks its parent to drop it.</summary>
+    [Parameter] public EventCallback<DraftNode> Remove { get; set; }
+
+    /// <summary>Whether this node's parent can still spare it.</summary>
+    /// <remarks>
+    /// The model refuses a removal its operator still needs, so offering an enabled control for it
+    /// would be a button that does nothing. The parent knows the answer; the child renders it.
+    /// </remarks>
+    [Parameter] public bool Removable { get; set; } = true;
+
+    private IEnumerable<LocatedError> ErrorsHere => Errors.Where(error => error.Node == Node);
+
+    private bool CanRemoveOperand => Node.Children.Count > DraftNodeKinds.MinimumOperands(Node.Kind);
+
+    private Task OnKindChanged(ChangeEventArgs args)
+    {
+        if (Enum.TryParse<DraftNodeKind>(args.Value?.ToString(), out var kind))
+            Node.ChangeKindTo(kind);
+
+        return Changed.InvokeAsync();
+    }
+
+    private Task OnSpecChanged(ChangeEventArgs args)
+    {
+        Node.SpecName = args.Value?.ToString() ?? "";
+        return Changed.InvokeAsync();
+    }
+
+    private Task AddOperand()
+    {
+        Node.AddOperand();
+        return Changed.InvokeAsync();
+    }
+
+    private Task RemoveOperand(DraftNode operand)
+    {
+        Node.RemoveOperand(operand);
+        return Changed.InvokeAsync();
+    }
+}

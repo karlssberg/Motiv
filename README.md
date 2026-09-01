@@ -502,7 +502,11 @@ compiles without the DOM, and is driven from plain Node in a tree where `react`
 does not resolve — on every CI run. What that tier *costs* is enforced the same
 way: a worked Vue adapter in `ui/examples/vue-adapter` offers the React surface
 symbol for symbol, is tested on every CI run, and is what the price published for
-a second runtime is measured from. Neither npm package has been published yet;
+a second runtime is measured from. The .NET row is worked too:
+`src/examples/Motiv.RuleAuthoring.Blazor` is a standalone Blazor WebAssembly app
+that authors, validates, binds and evaluates a rule document entirely in the
+browser over `Motiv.Serialization`, with no JavaScript rules package present.
+Neither npm package has been published yet;
 the release train that will publish them, and the gate that checks the packed
 tarball is installable, are in place. See
 [Runtimes and Support Tiers](docs/adoption/index.md) for

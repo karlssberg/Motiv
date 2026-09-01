@@ -1,0 +1,113 @@
+@page "/"
+
+<PageTitle>Authoring a Motiv rule document in Blazor</PageTitle>
+
+<header>
+    <h1>Authoring a rule document in Blazor</h1>
+    <p>
+        Everything on this page runs in your browser as WebAssembly, over
+        <code>Motiv.Serialization</code> and nothing else. There is no JavaScript rules package here
+        and no server round trip: the document below is written, validated, bound and evaluated in C#.
+    </p>
+</header>
+
+<main>
+    <section aria-labelledby="draft-heading">
+        <h2 id="draft-heading">The draft</h2>
+        <p class="note">
+            Motiv's document model is <code>internal</code>, so this sample brings its own authoring
+            tree and writes the JSON itself — the boundary a .NET adopter actually works against.
+        </p>
+
+        <label class="document-name">
+            Document name
+            <input value="@_name" @oninput="OnNameChanged" />
+        </label>
+
+        <DraftNodeEditor Node="_root"
+                         Errors="_outcome.Errors"
+                         SpecNames="CustomerVocabulary.Names"
+                         Changed="Reauthor" />
+    </section>
+
+    <section aria-labelledby="document-heading">
+        <h2 id="document-heading">The document</h2>
+        <pre class="json">@_outcome.Json</pre>
+    </section>
+
+    <section aria-labelledby="verdict-heading">
+        <h2 id="verdict-heading">What Motiv.Serialization says</h2>
+
+        @if (_outcome.Errors.Count > 0)
+        {
+            <p class="invalid"><strong>@_outcome.Errors.Count</strong> validation error(s).</p>
+            <ul class="errors">
+                @foreach (var error in _outcome.Errors)
+                {
+                    <li>
+                        <code>@error.Error.Path</code> — @error.Error.Code: @error.Error.Message
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <label class="customer">
+                Evaluate against
+                <select value="@_customer.Name" @onchange="OnCustomerChanged">
+                    @foreach (var candidate in CustomerVocabulary.Samples)
+                    {
+                        <option value="@candidate.Name">
+                            @candidate.Name — active: @candidate.IsActive, age: @candidate.Age,
+                            orders: @candidate.OrderCount
+                        </option>
+                    }
+                </select>
+            </label>
+
+            <p class="verdict @(_outcome.Satisfied is true ? "satisfied" : "unsatisfied")">
+                Satisfied: <strong>@_outcome.Satisfied</strong>
+            </p>
+
+            <h3>Reason</h3>
+            <p class="note">
+                The document is named, so Motiv's <code>== true</code> / <code>== false</code> suffix
+                rule makes the name the whole of the summary. The causes are in the justification.
+            </p>
+            <pre class="reason">@_outcome.Reason</pre>
+
+            <h3>Justification</h3>
+            <pre class="justification">@_outcome.Justification</pre>
+        }
+    </section>
+</main>
+
+@code {
+    private readonly AuthoringSession _session = new();
+
+    private readonly DraftNode _root = DraftNode.Operator(
+        DraftNodeKind.AndAlso,
+        DraftNode.Spec("customer.is-active"),
+        DraftNode.Spec("customer.is-adult"));
+
+    private string _name = "customer.can-checkout";
+    private Customer _customer = CustomerVocabulary.Samples[0];
+    private AuthoringOutcome _outcome = null!;
+
+    protected override void OnInitialized() => Reauthor();
+
+    private void Reauthor() => _outcome = _session.Author(_root, _name, _customer);
+
+    private void OnNameChanged(ChangeEventArgs args)
+    {
+        _name = args.Value?.ToString() ?? "";
+        Reauthor();
+    }
+
+    private void OnCustomerChanged(ChangeEventArgs args)
+    {
+        var name = args.Value?.ToString();
+        _customer = CustomerVocabulary.Samples.FirstOrDefault(c => c.Name == name) ?? _customer;
+        Reauthor();
+    }
+}
