@@ -10,6 +10,16 @@ public class MetadataNode<TMetadata>
 
     private readonly IEnumerable<TMetadata>? _metadataSource;
     private readonly IEnumerable<BooleanResultBase<TMetadata>>? _causes;
+
+    /// <summary>
+    /// The same causes as <see cref="_causes" />, and non-null only on a node whose metadata <i>is</i>
+    /// their union. It is a discriminator rather than a second collection: <see cref="Metadata" />
+    /// reads it to decide whether this level has anything of its own to build, while
+    /// <see cref="_causes" /> is read by <see cref="Resolve" /> for the unrelated question of which
+    /// levels the tier walk shows.
+    /// </summary>
+    private readonly IEnumerable<BooleanResultBase<TMetadata>>? _unionOfCauses;
+
     private ISet<TMetadata>? _metadataSet;
 
     /// <summary>Initializes a new instance of the MetadataNode class.</summary>
@@ -29,6 +39,29 @@ public class MetadataNode<TMetadata>
     public MetadataNode(TMetadata metadata, IEnumerable<BooleanResultBase<TMetadata>> causes)
         : this([metadata], causes)
     {
+    }
+
+    /// <summary>
+    /// Initializes a node that carries no metadata of its own — its metadata is the union of its
+    /// causes', which is the shape every composition's tier has.
+    /// </summary>
+    /// <param name="causes">The causes whose metadata this node is the union of.</param>
+    /// <remarks>
+    /// A node built this way computes <see cref="Metadata" /> by walking down to the causes that do
+    /// carry metadata of their own, rather than by unioning each intervening level's set in turn. The
+    /// two agree — union is associative and idempotent — but only the first lets a caller who reads
+    /// one level avoid building every level beneath it, which over a fully-causal chain is the
+    /// difference between an answer's own size and the square of it (ticket #195).
+    /// </remarks>
+    internal MetadataNode(IEnumerable<BooleanResultBase<TMetadata>> causes)
+    {
+        _causes = causes;
+        _unionOfCauses = causes;
+
+        // Not this node's metadata — Metadata never reads it on a union node. It is the lazy sequence
+        // Resolve compares against its children to decide whether this level restates the one below,
+        // so dropping it here would silently change which levels Underlying shows.
+        _metadataSource = causes.GetValues();
     }
 
     /// <summary>Initializes a new instance of the MetadataNode class for a leaf node with a single metadata item and no causes.</summary>
@@ -79,11 +112,61 @@ public class MetadataNode<TMetadata>
         (node, underlying) => node._underlying = underlying;
 
     /// <summary>Gets the metadata associated with this node.</summary>
-    public IEnumerable<TMetadata> Metadata => _metadataSet ??= _metadataSource switch
+    public IEnumerable<TMetadata> Metadata => _metadataSet ??= _unionOfCauses is null
+        ? OwnMetadata()
+        : UnionOf(_unionOfCauses);
+
+    private ISet<TMetadata> OwnMetadata() =>
+        _metadataSource switch
+        {
+            ISet<TMetadata> metadataTier => metadataTier,
+            _ => new HashSet<TMetadata>(_metadataSource ?? [])
+        };
+
+    /// <summary>
+    /// The distinct union of <paramref name="causes" />' metadata, gathered into a single set by
+    /// descending past the levels that only union what is beneath them.
+    /// </summary>
+    /// <remarks>
+    /// The descent is iterative for the same reason every other walk in Motiv is (Spec 3A), which is
+    /// also why nothing needs to materialise these nodes bottom-up before one is read. Only an
+    /// unmaterialised union is descended past; every other level hands over what it already holds, so
+    /// reading a chain level by level still costs each level its own set — what it no longer does is
+    /// charge that to a caller who read only the top.
+    /// </remarks>
+    private static ISet<TMetadata> UnionOf(IEnumerable<BooleanResultBase<TMetadata>> causes)
     {
-        ISet<TMetadata> metadataTier => metadataTier,
-        _ => new HashSet<TMetadata>(_metadataSource ?? [])
-    };
+        var union = new HashSet<TMetadata>();
+        var pending = new Stack<MetadataNode<TMetadata>>();
+
+        PushTiersOf(pending, causes);
+
+        while (pending.Count > 0)
+        {
+            var node = pending.Pop();
+
+            if (node is { _metadataSet: null, _unionOfCauses: { } deeper })
+                PushTiersOf(pending, deeper);
+            else
+                union.UnionWith(node.Metadata);
+        }
+
+        return union;
+    }
+
+    /// <summary>
+    /// Pushes the causes' tiers so that they pop left to right, which is the order the nested unions
+    /// this descent replaces inserted their metadata in.
+    /// </summary>
+    private static void PushTiersOf(
+        Stack<MetadataNode<TMetadata>> pending,
+        IEnumerable<BooleanResultBase<TMetadata>> causes)
+    {
+        var causeList = causes.AsList();
+
+        for (var i = causeList.Count - 1; i >= 0; i--)
+            pending.Push(causeList[i].MetadataTier);
+    }
 
     /// <summary>Returns a string that represents the current object.</summary>
     /// <returns>A string that represents the current object.</returns>

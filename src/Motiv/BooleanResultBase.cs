@@ -448,7 +448,7 @@ public abstract class BooleanResultBase<TMetadata>
     {
         get
         {
-            MaterialiseMetadataTiers();
+            ConstructMetadataTiers();
             return MetadataTier.Metadata;
         }
     }
@@ -458,24 +458,32 @@ public abstract class BooleanResultBase<TMetadata>
     {
         get
         {
-            MaterialiseMetadataTiers();
+            ConstructMetadataTiers();
             return this.GetRootValues().ElseIfEmpty(Values);
         }
     }
 
-    /// <summary>
-    /// Materialises this result's metadata tier and every tier beneath it, deepest first.
-    /// </summary>
+    /// <summary>Constructs the metadata tier of every result beneath this one, deepest first.</summary>
     /// <remarks>
-    /// A composition's tier takes its metadata from a lazy union over its causes' tiers, so touching
-    /// the root's first would recurse the full depth of the tree — the same crash class as the
-    /// assertion walks, reached through <see cref="Values" /> rather than through a traversal
-    /// property. Materialising bottom-up leaves every union with its children already computed.
+    /// It constructs them; it does not read their metadata. Constructing a tier is what is dangerous
+    /// top-down: several of them read their source as they are built — a decorator's is its underlying
+    /// result's <see cref="Values" /> — so building the root's first would build every tier beneath it
+    /// in one nested chain, two frames per level. That is the same crash class as the assertion walks,
+    /// reached through <see cref="Values" /> rather than through a traversal property, and
+    /// <c>MetadataTierMaterialisationTests.Should_build_the_deepest_tier_at_a_constant_stack_depth_however_long_the_chain</c>
+    /// is what holds it.
+    /// <para>
+    /// It used to force each tier's metadata as well. That is what made reading one level build every
+    /// level beneath it, because a composition's tier was a lazy union over its causes' — quadratic in
+    /// a fully-causal chain (ticket #195). <see cref="MetadataNode{TMetadata}.Metadata" /> now computes
+    /// that union by walking rather than recursing, so no tier needs forcing here: each is built when
+    /// something reads it, and nothing reads a level it was not asked for.
+    /// </para>
     /// </remarks>
-    private void MaterialiseMetadataTiers() =>
-        PostOrderFold.Fold(this, CausesWithMetadata, MaterialiseTier, ReadMaterialisedTier, WriteMaterialisedTier);
+    private void ConstructMetadataTiers() =>
+        PostOrderFold.Fold(this, CausesWithMetadata, ConstructTier, ReadConstructedTier, WriteConstructedTier);
 
-    private MetadataNode<TMetadata>? _materialisedTier;
+    private MetadataNode<TMetadata>? _constructedTier;
 
     private static readonly Func<BooleanResultBase<TMetadata>, IReadOnlyList<BooleanResultBase<TMetadata>>>
         CausesWithMetadata = result => result.CausesWithValues.AsList();
@@ -484,19 +492,13 @@ public abstract class BooleanResultBase<TMetadata>
             BooleanResultBase<TMetadata>,
             IReadOnlyList<MetadataNode<TMetadata>>,
             MetadataNode<TMetadata>>
-        MaterialiseTier = (result, _) => Materialised(result.MetadataTier);
+        ConstructTier = (result, _) => result.MetadataTier;
 
-    private static MetadataNode<TMetadata> Materialised(MetadataNode<TMetadata> tier)
-    {
-        _ = tier.Metadata;
-        return tier;
-    }
+    private static readonly Func<BooleanResultBase<TMetadata>, MetadataNode<TMetadata>?> ReadConstructedTier =
+        result => result._constructedTier;
 
-    private static readonly Func<BooleanResultBase<TMetadata>, MetadataNode<TMetadata>?> ReadMaterialisedTier =
-        result => result._materialisedTier;
-
-    private static readonly Action<BooleanResultBase<TMetadata>, MetadataNode<TMetadata>> WriteMaterialisedTier =
-        (result, tier) => result._materialisedTier = tier;
+    private static readonly Action<BooleanResultBase<TMetadata>, MetadataNode<TMetadata>> WriteConstructedTier =
+        (result, tier) => result._constructedTier = tier;
 
     /// <summary>Gets the metadata tree associated with this result.</summary>
     public abstract MetadataNode<TMetadata> MetadataTier { get; }

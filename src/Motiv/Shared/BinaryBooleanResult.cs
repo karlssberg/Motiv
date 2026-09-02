@@ -31,7 +31,7 @@ internal abstract class BinaryBooleanResult<TMetadata>(
     public override Explanation Explanation => field ??= new(CausalResults, AllResults);
 
     public override MetadataNode<TMetadata> MetadataTier =>
-        field ??= new(CausalResults.GetValues(), CausalResults);
+        field ??= new(CausalResults);
 
     public override IEnumerable<BooleanResultBase> Underlying => AllResults;
 
