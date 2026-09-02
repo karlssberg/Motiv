@@ -70,14 +70,17 @@ public class DeepCompositionTests
         OnASmallStack(() => DeepAnd().Values.Count().ShouldBeGreaterThan(0));
 
     /// <remarks>
-    /// On the short-circuiting chain, because the metadata tier over a fully-causal <c>And</c> chain
-    /// has a quadratic-plus number of edges — a cost that predates this slice (measured slower before
-    /// it than after) and is not this slice's to fix. The tree is just as deep either way, which is
-    /// what this case is about.
+    /// On the fully-causal chain like every other case here. Spec 3A had to park this one on the
+    /// short-circuiting chain, whose tier has one causal operand per level: over an <c>And</c> chain
+    /// the walk cost an extra factor of <c>n</c> and 3,000 operands took minutes. Ticket #137
+    /// measured that; ticket #136 removed it, by stopping <c>UnderlyingMetadataSources</c> from
+    /// reporting a composition as its own source. What remains is quadratic and shared with
+    /// <c>Values</c> — see <see cref="MetadataTierCostTests" />, which holds the cover
+    /// for both, and #195 for the remainder.
     /// </remarks>
     [Fact]
     public void Should_read_RootValues_of_a_deep_composition() =>
-        OnASmallStack(() => DeepOrElse().RootValues.Count().ShouldBeGreaterThan(0));
+        OnASmallStack(() => DeepAnd().RootValues.Count().ShouldBeGreaterThan(0));
 
     [Fact]
     public void Should_read_the_underlying_explanations_of_a_deep_composition() =>
@@ -100,6 +103,12 @@ public class DeepCompositionTests
     /// The uniformity invariant: no public member of a result has a lower depth ceiling than any
     /// other. A single result, read through every member, on one small stack.
     /// </summary>
+    /// <remarks>
+    /// The one case still on the short-circuiting chain, and not for cost — it passes on
+    /// <see cref="DeepAnd" /> too. This chain is satisfied at its first operand, so every level of it
+    /// is the single-operand <c>OrElse</c> node, a result shape the <c>And</c> chain does not contain
+    /// at all. Moving it would trade that coverage away for nothing.
+    /// </remarks>
     [Fact]
     public void Should_read_every_member_of_one_deep_result() =>
         OnASmallStack(() =>
