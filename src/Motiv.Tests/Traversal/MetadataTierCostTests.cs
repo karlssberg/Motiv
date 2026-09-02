@@ -30,12 +30,18 @@ public class MetadataTierCostTests
     private const int Operands = 300;
 
     /// <summary>
-    /// The out-of-memory, over every combinator that leaves each operand of the chain causal. The
-    /// chain is satisfied throughout, so <c>AndAlso</c> never short-circuits and belongs here;
-    /// <c>OrElse</c> does, leaving one causal operand per level, and is absent. That is the shape
-    /// Spec 3A parked its <c>RootValues</c> regression on precisely to avoid this cost — and the only
-    /// one of the five that survived the defect.
+    /// The out-of-memory, over every combinator that leaves each operand of the chain causal. Every
+    /// <i>operand</i> is satisfied, so the <c>AndAlso</c> chain never short-circuits and belongs here,
+    /// while the <c>OrElse</c> chain always does — leaving one causal operand per level, which is the
+    /// shape Spec 3A parked its <c>RootValues</c> regression on precisely to avoid this cost, and the
+    /// only one of the five that survived the defect.
     /// </summary>
+    /// <remarks>
+    /// It is the operands rather than the compositions: the <c>XOr</c> chain itself alternates as it
+    /// composes and is unsatisfied at the root, since 300 satisfied operands XOr to <c>false</c>.
+    /// That changes nothing here — <c>XOr</c> is non-short-circuiting and always reports both
+    /// operands, so every one of the 300 stays causal, which is the only property this case needs.
+    /// </remarks>
     [Theory]
     [InlineData("And")]
     [InlineData("Or")]
