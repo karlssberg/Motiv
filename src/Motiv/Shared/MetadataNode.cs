@@ -116,27 +116,6 @@ public class MetadataNode<TMetadata>
         ? OwnMetadata()
         : UnionOf(_unionOfCauses);
 
-    /// <summary>
-    /// Materialises this node's metadata only when it is the node's own, leaving a node that merely
-    /// unions its causes' for <see cref="Metadata" /> to compute if and when it is read.
-    /// </summary>
-    /// <remarks>
-    /// The pass that calls this is what keeps a tier's own metadata from being built top-down. Several
-    /// tiers read their source eagerly as they are constructed — a decorator's is its underlying
-    /// result's <c>Values</c> — so the first read of a deep chain's root would otherwise nest two
-    /// frames per level. Materialising deepest-first leaves each of those sources with an answer
-    /// already waiting.
-    /// <para>
-    /// The union nodes need no such protection and are passed over here: <see cref="UnionOf" /> walks
-    /// rather than recurses, and forcing them is what made a root read quadratic (ticket #195).
-    /// </para>
-    /// </remarks>
-    internal void MaterialiseOwnMetadata()
-    {
-        if (_unionOfCauses is null)
-            _ = Metadata;
-    }
-
     private ISet<TMetadata> OwnMetadata() =>
         _metadataSource switch
         {
@@ -149,7 +128,8 @@ public class MetadataNode<TMetadata>
     /// descending past the levels that only union what is beneath them.
     /// </summary>
     /// <remarks>
-    /// The descent is iterative for the same reason every other walk in Motiv is (Spec 3A). Only an
+    /// The descent is iterative for the same reason every other walk in Motiv is (Spec 3A), which is
+    /// also why nothing needs to materialise these nodes bottom-up before one is read. Only an
     /// unmaterialised union is descended past; every other level hands over what it already holds, so
     /// reading a chain level by level still costs each level its own set — what it no longer does is
     /// charge that to a caller who read only the top.

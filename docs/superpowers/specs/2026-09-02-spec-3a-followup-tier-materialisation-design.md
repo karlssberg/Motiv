@@ -35,7 +35,7 @@ for one level.**
 | File | Change |
 |---|---|
 | `src/Motiv/Shared/MetadataNode.cs` | an internal constructor for a node that is the union of its causes', and an iterative `UnionOf` that computes it by descending past the levels that only union what is beneath them |
-| `src/Motiv/BooleanResultBase.cs` | `MaterialiseMetadataTiers` now materialises a tier's *own* metadata only, passing over the union nodes |
+| `src/Motiv/BooleanResultBase.cs` | the bottom-up pass forces no tier's metadata at all now, and is renamed `ConstructMetadataTiers` for what it does do |
 | `BinaryBooleanResult`, `OrElsePolicyResult`, `AndAlsoPolicyResult` | the three tiers that were unions, now built as unions |
 | `src/Motiv.Tests/Traversal/MetadataTierMaterialisationTests.cs` | six cases: four fail against the pre-change tree, one is the invariant they must not buy their bound with, one holds what the narrowed pass still does |
 | `src/Motiv.Tests/Traversal/ChainSpine.cs` | the left-spine walk both cost files were writing out |
@@ -77,15 +77,15 @@ this slice does not, and the distinction is subtle enough to be worth writing do
 
 ## The bottom-up pass was still load-bearing, and its own comment said why wrongly
 
-`MaterialiseMetadataTiers` is kept. The temptation to delete it as newly-redundant is a trap this
-slice walked into, and the way out is the more interesting half of the work.
+`MaterialiseMetadataTiers` is kept — renamed, and reduced to the half of itself that was ever doing
+anything. Getting there took two wrong turns, and they are the more interesting half of the work.
 
-It looks redundant, and the evidence for that is strong: switch its forcing off and all 5,620 tests
-pass; delete the fold outright and all 5,620 still pass. The review pass reached the same reading
-independently and put the question plainly — either it is vestigial, or there is a shape that needs it
-and it deserves a test.
+**The first wrong turn was believing it had become vestigial.** The evidence looks overwhelming:
+switch its forcing off and all 5,620 tests pass; delete the fold outright and all 5,620 still pass.
+The review pass reached the same reading independently and put the question plainly — either it is
+vestigial, or there is a shape that needs it and it deserves a test.
 
-It is the second, and the instrument that shows it is not a test-count but the stack depth at which
+It is the second, and the instrument that shows it is not a test count but the stack depth at which
 the *deepest* tier is actually constructed. A chain of decorators, read at the root:
 
 | Decorators | pass on | pass off |
@@ -98,30 +98,37 @@ decorator chain deep enough to overflow `DeepCompositionTests`' 1 MB thread exha
 **evaluation** first, and the probes that missed it had been given 64 MB — enough rope for 200,000
 frames, which is how "no overflow" got mistaken for "no recursion".
 
-**The mechanism is the opposite of what the code claimed.** The remark this slice first wrote said a
-tier's own source "may come from a lazy source that reads its causes' values — a decorator's, for one".
-A decorator's is `predicateResult.Values`, and it is read **eagerly**, in the constructor. Eagerness is
-precisely the problem: constructing the root's tier first constructs every tier beneath it, in one
-nested chain. What the pass does is *construct* them deepest-first, so each of those eager reads finds
-an answer already waiting.
+**The second wrong turn was keeping the half that does nothing.** The pass did two things, and the
+first draft of this slice kept both, narrowing only the second:
 
-So the pass has two halves, and only one was ever the union's:
-
-1. **Touching `MetadataTier` bottom-up**, which constructs it. Load-bearing, measured above, and
-   untouched by this slice.
+1. **Touching `MetadataTier`, which constructs it.** This is what the table measures.
 2. **Forcing each tier's `Metadata`.** This is what the composition tiers needed, because their source
-   was a lazy union that only recursed when enumerated — and it is what made a root read quadratic.
-   It now skips them.
+   was a lazy union that recursed only when enumerated — and it is what made a root read quadratic.
 
-Half 2 is kept for the tiers that do carry their own metadata. It is not what the table above measures,
-and this document does not claim it is: some own sources are lazy in the way the unions were —
-`MinimalHigherOrderFromExpressionTreeBooleanResult`'s is a `SelectMany` over its causes'
-`MetadataTier.Metadata` — and materialising deepest-first is the conservative preservation of what
-those got before. It costs nothing beyond building a set that a read would build anyway.
+Half 2 was narrowed to skip the unions and otherwise kept, on the reasoning that some *own* sources are
+lazy in the same way — `MinimalHigherOrderFromExpressionTreeBooleanResult`'s is a deferred `SelectMany`
+over its causes' `MetadataTier.Metadata` — so materialising deepest-first was the conservative
+preservation of what those got before.
 
-`Should_build_the_deepest_tier_at_a_constant_stack_depth_however_long_the_chain` now holds half 1. It
-is the only case in 5,621 that fails when the pass is removed, which is the same thing as saying it was
-the gap.
+That reasoning does not survive being checked. Removing half 2 entirely leaves the hash counts
+identical (600 / 1,499 at 300 operands, 1,200 / 2,999 at 600), the deepest-tier depth still constant,
+and all 5,621 tests green, `Should_build_the_deepest_tier_at_a_constant_stack_depth_however_long_the_chain`
+included — and it is still the only case that fails when the pass goes. The reason is that a lazily
+sourced own tier cannot be *nested*: the one deferred source that reads its causes' tiers takes its
+causes from an expression-tree decomposition, not from another node of its own kind, so there is no
+chain of them to recurse down. Forcing them deepest-first bought nothing, and every set it built would
+have been built by the read that wanted it.
+
+So half 2 is gone, `MaterialiseOwnMetadata` with it, and the pass is renamed `ConstructMetadataTiers`
+because constructing is now all it does. **A guard is worth what it refuses**, and this one refuses
+exactly one thing.
+
+**The mechanism was also the opposite of what the code claimed.** The remark this slice first wrote
+said a tier's own source "may come from a lazy source that reads its causes' values — a decorator's,
+for one". A decorator's is `predicateResult.Values`, and it is read **eagerly**, in the constructor.
+Eagerness is precisely the problem: constructing the root's tier constructs every tier beneath it in
+one nested chain. That the comment named the right file for the wrong reason is why nobody had
+re-examined it.
 
 ## The cost, as a number rather than a duration
 

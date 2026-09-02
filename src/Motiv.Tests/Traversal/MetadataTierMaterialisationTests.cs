@@ -96,10 +96,10 @@ public class MetadataTierMaterialisationTests
     }
 
     /// <summary>
-    /// What the bottom-up pass still does, now that it no longer forces the unions. Several tiers read
-    /// their source as they are constructed — a decorator's is its underlying result's <c>Values</c> —
-    /// so building them top-down nests two frames per level. Materialising deepest-first is what keeps
-    /// the deepest tier's construction a constant distance from the read that asked for it.
+    /// What the bottom-up pass is for, once it is no longer forcing anything. Several tiers read their
+    /// source as they are <i>constructed</i> — a decorator's is its underlying result's <c>Values</c> —
+    /// so building them top-down nests two frames per level. Constructing them deepest-first is what
+    /// keeps the deepest tier's construction a constant distance from the read that asked for it.
     /// </summary>
     /// <remarks>
     /// Stated as the stack depth at which the innermost tier is actually built, which is neither a
@@ -107,7 +107,8 @@ public class MetadataTierMaterialisationTests
     /// the pass removed it moves from roughly <c>2n</c> to <c>8n</c>. This shape has had no cover since
     /// the pass was introduced — <c>DeepCompositionTests</c> exercises composition chains, whose tiers
     /// are the unions this slice made iterative, and a decorator chain deep enough to overflow on their
-    /// 1 MB thread exhausts it during evaluation first.
+    /// 1 MB thread exhausts it during evaluation first. It is the only case in the suite that fails
+    /// when the pass is removed, which is the same thing as saying it was the gap.
     /// </remarks>
     [Fact]
     public void Should_build_the_deepest_tier_at_a_constant_stack_depth_however_long_the_chain()
