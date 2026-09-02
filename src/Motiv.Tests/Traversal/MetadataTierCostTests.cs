@@ -84,19 +84,12 @@ public class MetadataTierCostTests
     [Fact]
     public void Should_not_report_any_composition_in_the_chain_as_its_own_metadata_source()
     {
-        foreach (var composition in Spine(Chain("And", i => $"p{i} is even")))
+        foreach (var composition in ChainSpine.Of(Chain("And", i => $"p{i} is even")))
             composition.UnderlyingMetadataSources.ShouldNotContain(
                 source => ReferenceEquals(source, composition),
                 "a node that is its own metadata source makes the tier tree cyclic — Resolve then " +
                 "finds a child saying exactly what its parent says, collapses the level into itself, " +
                 "and descends for ever");
-    }
-
-    /// <summary>Every operation result down the left spine of a left-deep chain, shallowest first.</summary>
-    private static IEnumerable<BooleanResultBase<string>> Spine(BooleanResultBase<string> result)
-    {
-        for (var node = result; node is IBooleanOperationResult; node = node.UnderlyingWithValues.First())
-            yield return node;
     }
 
     private static BooleanResultBase<string> Chain(string combinator, Func<int, string> name) =>

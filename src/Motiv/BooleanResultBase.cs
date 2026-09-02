@@ -464,13 +464,21 @@ public abstract class BooleanResultBase<TMetadata>
     }
 
     /// <summary>
-    /// Materialises this result's metadata tier and every tier beneath it, deepest first.
+    /// Materialises the metadata that every tier beneath this result carries of its own, deepest
+    /// first.
     /// </summary>
     /// <remarks>
-    /// A composition's tier takes its metadata from a lazy union over its causes' tiers, so touching
-    /// the root's first would recurse the full depth of the tree — the same crash class as the
-    /// assertion walks, reached through <see cref="Values" /> rather than through a traversal
-    /// property. Materialising bottom-up leaves every union with its children already computed.
+    /// A tier's own metadata may come from a lazy source that reads its causes' values — a
+    /// decorator's does — so touching the root's first would recurse the full depth of the tree: the
+    /// same crash class as the assertion walks, reached through <see cref="Values" /> rather than
+    /// through a traversal property. Materialising bottom-up leaves every such source with its
+    /// causes already computed.
+    /// <para>
+    /// A composition's tier is passed over. It carries no metadata of its own — it is the union of
+    /// its causes', which <see cref="MetadataNode{TMetadata}.Metadata" /> computes by walking down to
+    /// the levels that do. Forcing those unions here would build every level's set to answer a read
+    /// of one, which over a fully-causal chain is quadratic in the chain (ticket #195).
+    /// </para>
     /// </remarks>
     private void MaterialiseMetadataTiers() =>
         PostOrderFold.Fold(this, CausesWithMetadata, MaterialiseTier, ReadMaterialisedTier, WriteMaterialisedTier);
@@ -488,7 +496,7 @@ public abstract class BooleanResultBase<TMetadata>
 
     private static MetadataNode<TMetadata> Materialised(MetadataNode<TMetadata> tier)
     {
-        _ = tier.Metadata;
+        tier.MaterialiseOwnMetadata();
         return tier;
     }
 

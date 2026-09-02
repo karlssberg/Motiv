@@ -62,5 +62,5 @@ internal sealed class AndAlsoPolicyResult<TMetadata>(
     }
 
     private MetadataNode<TMetadata> CreateMetadataTier() =>
-        new(CausesWithValues.GetValues(), CausesWithValues);
+        new(CausesWithValues);
 }
