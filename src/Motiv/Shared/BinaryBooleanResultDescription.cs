@@ -15,10 +15,22 @@ internal abstract class BinaryBooleanResultDescription<TMetadata>(
     private protected override IReadOnlyList<ResultDescriptionBase> ReasonOperands =>
         field ??= ReasonRun.Select(result => result.Description).ToArray();
 
+    /// <remarks>
+    /// The single-operand arm is the one that carries meaning: that reason is reproduced verbatim,
+    /// with no separator to join and so no <see cref="ExplainReason" /> and no parentheses — which is
+    /// the second condition <see cref="RunContinuedBy" /> imposes, read from the other side.
+    /// <para>
+    /// There is deliberately no arm for an empty run. A binary composition always has at least one
+    /// cause, and the flatten only descends through an operand contributing two or more, so a run is
+    /// never empty; and were one ever empty, the general arm already answers <c>""</c>, because
+    /// <see cref="string.Join(string, IEnumerable{string})" /> over no elements is <c>""</c>. The arm
+    /// that used to be here was unreachable under the first argument and redundant under the second,
+    /// which is why removing it needs neither.
+    /// </para>
+    /// </remarks>
     private protected override string ComposeReason(IReadOnlyList<string> operandReasons) =>
         ReasonRun.Count switch
         {
-            0 => "",
             1 => operandReasons[0],
             _ => string.Join(Separator, Explained(operandReasons))
         };

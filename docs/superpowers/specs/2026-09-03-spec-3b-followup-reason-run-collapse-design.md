@@ -33,6 +33,15 @@ private IEnumerable<BooleanResultBase<TMetadata>>? RunContinuedBy(BooleanResultB
 rendering changed: `ExplainReason`, `Separator` and `IsSameFamily` are untouched, and so is
 `CausalOperandCount`, which several tests read directly.
 
+One arm went with it. `ComposeReason` opened with `0 => ""`, and coverage on the PR flagged it as the
+one line of the patch no test reaches. It is not a missing test — the arm is **unreachable**, since a
+binary composition always has at least one cause and the flatten only descends through an operand
+contributing two or more, so a run is never empty. It was also **redundant**, since `string.Join` over
+no elements is `""`, which is what the general arm would have answered anyway. Removing it therefore
+needs neither argument to hold on its own, and — the distinction #195 insisted on — neither argument is
+"the suite is still green". A green suite is not evidence a guard is dead; an arm that two independent
+arguments say cannot be observed is.
+
 The `code-simplifier` pass extracted the walk. `FlattenRun` as first written was
 `BooleanResultExtensions.FlattenCollapsible` — the justification's own collapse — transcribed with a
 different predicate, so the two are now one iterative helper, `Motiv.Traversal.RunFlattener`, differing
