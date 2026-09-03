@@ -453,14 +453,40 @@ public abstract class BooleanResultBase<TMetadata>
         }
     }
 
-    /// <summary>Gets the metadata yielded by all results that evaulated.</summary>
-    public IEnumerable<TMetadata> RootValues
+    /// <summary>Gets the metadata yielded by all results that evaluated.</summary>
+    /// <remarks>
+    /// Materialised on the first read and answered from that array thereafter, as its two siblings
+    /// <see cref="BooleanResultBase.RootAssertions" /> and <see cref="BooleanResultBase.AllRootAssertions" />
+    /// already were — a result cannot change once evaluated, which is the premise all three rest on.
+    /// It was the one root projection without a cache, so every read re-folded the tier tree that
+    /// ticket #189 had just made the only reader of (ticket #193).
+    /// <para>
+    /// The alternative was to hoist the walk's memo onto <see cref="MetadataNode{TMetadata}" />, beside
+    /// the <c>Underlying</c> and <c>Resolved</c> it already caches. That is sound but a worse trade:
+    /// the memo holds an array per <i>node</i>, and over a fully-causal chain the tier tree's arrays
+    /// sum to the square of the chain — retained for the lifetime of the result rather than dropped
+    /// when the walk ends. Caching here retains one array per result that was actually asked, which is
+    /// the trade the siblings already make.
+    /// </para>
+    /// </remarks>
+    public IEnumerable<TMetadata> RootValues => field ??= MaterialiseRootValues();
+
+    /// <remarks>
+    /// The tiers are constructed here rather than in the property, so they are built on the read that
+    /// needs them and not on every later one. <see cref="ConstructMetadataTiers" /> is idempotent and
+    /// returns at once once this result's tier exists, so the difference is small — but a cached
+    /// projection that still calls into a walk on every read is the shape this ticket is about.
+    /// <para>
+    /// The two verbs are not the same one: ticket #195 renamed <c>MaterialiseMetadataTiers</c> to
+    /// <see cref="ConstructMetadataTiers" /> precisely because it stopped forcing what it built.
+    /// Forcing is what this method is for, which is why it keeps the word the other gave up.
+    /// </para>
+    /// </remarks>
+    private TMetadata[] MaterialiseRootValues()
     {
-        get
-        {
-            ConstructMetadataTiers();
-            return this.GetRootValues().ElseIfEmpty(Values);
-        }
+        ConstructMetadataTiers();
+
+        return this.GetRootValues().ElseIfEmpty(Values).ToArray();
     }
 
     /// <summary>Constructs the metadata tier of every result beneath this one, deepest first.</summary>
