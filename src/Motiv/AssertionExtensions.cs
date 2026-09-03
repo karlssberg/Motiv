@@ -7,10 +7,10 @@ namespace Motiv;
 /// Provides extension methods for assertions.
 /// </summary>
 /// <remarks>
-/// These four walks take an arbitrary sequence rather than a single result, so they have no node
-/// field to memoise into and use a walk-local memo instead. They were the last members standing
-/// before Spec 3A, at a ceiling of roughly a thousand operands, and — being lazy and un-memoised —
-/// they re-allocated their whole iterator chain on every enumeration.
+/// These walks fold over nodes they do not own — a caller's sequence, or a result's explanation — so
+/// they have no node field to memoise into and use a walk-local memo instead. They were the last
+/// members standing before Spec 3A, at a ceiling of roughly a thousand operands, and — being lazy and
+/// un-memoised — they re-allocated their whole iterator chain on every enumeration.
 /// </remarks>
 public static class AssertionExtensions
 {

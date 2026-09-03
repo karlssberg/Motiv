@@ -185,7 +185,7 @@ internal static class RecursiveTraversalOracle
             .ToArray();
 
         return fromBranches.Length == 0
-            ? explanation.Assertions as string[] ?? explanation.Assertions.ToArray()
+            ? explanation.Assertions.ToArray()
             : fromBranches;
     }
 

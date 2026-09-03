@@ -1,3 +1,5 @@
+using static Motiv.Tests.Traversal.OracleHelpers;
+
 namespace Motiv.Tests.Traversal;
 
 /// <summary>
@@ -5,13 +7,14 @@ namespace Motiv.Tests.Traversal;
 /// <see cref="MetadataNode{TMetadata}" /> are the same tree with the same <c>Resolution</c>, the same
 /// collapse rule and the same <c>Underlying</c>, so the walk that could not ask a level for a
 /// per-branch answer was wrong in both. #189 fixed the metadata half and measured the assertion half
-/// at 84 disagreeing nodes; these are the invariants that close it.
+/// at 84 disagreeing nodes.
+/// <para>
+/// Only the first invariant closes #192. The <c>AllRootAssertions</c> one refutes the ticket's other
+/// half — that walk never had the defect — and is kept as the guard that keeps the absence true.
+/// </para>
 /// </summary>
 public class RootAssertionsBranchesTests
 {
-    private static SpecBase<string, string> Leaf(string name, bool value) =>
-        Spec.Build((string _) => value).WhenTrue($"{name}-true").WhenFalse($"{name}-false").Create();
-
     [Theory]
     [MemberData(nameof(ResultTreeGenerator.SeedData), MemberType = typeof(ResultTreeGenerator))]
     public void Should_reach_every_causal_leaf_from_RootAssertions(int seed)
@@ -36,19 +39,19 @@ public class RootAssertionsBranchesTests
     }
 
     /// <summary>
-    /// The invariants above are about higher-order subtrees — the only shape that makes one branch
+    /// The first invariant is about higher-order subtrees — the only shape that makes one branch
     /// deeper than its siblings, and so the only one where a sibling's collapse is visible. A corpus
-    /// that stopped generating them would leave both green while covering none of what #192 was about.
+    /// that stopped generating them would leave it green while covering none of what #192 was about.
     /// </summary>
     [Fact]
-    public void Should_exercise_the_invariants_over_higher_order_subtrees() =>
+    public void Should_exercise_the_invariant_over_higher_order_subtrees() =>
         Enumerable
             .Range(1, ResultTreeGenerator.SeedCount)
             .SelectMany(ResultTreeGenerator.CorpusNodes)
             .Where(ContainsHigherOrder)
             .ShouldNotBeEmpty(
-                "the corpus must still reach higher-order results, or the RootAssertions invariants " +
-                "above are no longer covering the case #192 was about");
+                "the corpus must still reach higher-order results, or the RootAssertions invariant " +
+                "above is no longer covering the case #192 was about");
 
     /// <summary>
     /// #189's review round found a corner in the metadata tier the corpus cannot reach — a branch
@@ -89,10 +92,6 @@ public class RootAssertionsBranchesTests
             "deepest — the asymmetry is the suffix rule, not a divergence between the two walks");
     }
 
-    private static bool ContainsHigherOrder(BooleanResultBase<string> result) =>
-        result.GetType().Namespace?.StartsWith("Motiv.HigherOrderProposition", StringComparison.Ordinal) == true
-        || result.UnderlyingWithValues.Any(ContainsHigherOrder);
-
     /// <summary>
     /// An independent formulation of "the assertions of every causal leaf", owing nothing to
     /// <c>Explanation</c>. This is the assertion twin of <c>CausalLeafValues</c> in
@@ -112,16 +111,4 @@ public class RootAssertionsBranchesTests
         result.Underlying.Any()
             ? result.Underlying.SelectMany(LeafAssertions)
             : result.Assertions;
-
-    private static string[] DistinctInOrder(IEnumerable<string> assertions)
-    {
-        var seen = new HashSet<string>();
-        var ordered = new List<string>();
-
-        foreach (var assertion in assertions)
-            if (seen.Add(assertion))
-                ordered.Add(assertion);
-
-        return ordered.ToArray();
-    }
 }

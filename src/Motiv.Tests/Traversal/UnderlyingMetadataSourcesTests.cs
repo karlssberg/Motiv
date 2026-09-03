@@ -1,4 +1,5 @@
 using Motiv.Traversal;
+using static Motiv.Tests.Traversal.OracleHelpers;
 
 namespace Motiv.Tests.Traversal;
 
@@ -18,9 +19,6 @@ namespace Motiv.Tests.Traversal;
 /// </remarks>
 public class UnderlyingMetadataSourcesTests
 {
-    private static SpecBase<string, string> Leaf(string name, bool value) =>
-        Spec.Build((string _) => value).WhenTrue($"{name}-true").WhenFalse($"{name}-false").Create();
-
     [Fact]
     public void Should_yield_the_child_the_walk_stopped_at_rather_than_the_result_itself()
     {
@@ -137,10 +135,6 @@ public class UnderlyingMetadataSourcesTests
             "back only for a childless branch would drop it");
     }
 
-    private static bool ContainsHigherOrder(BooleanResultBase<string> result) =>
-        result.GetType().Namespace?.StartsWith("Motiv.HigherOrderProposition", StringComparison.Ordinal) == true
-        || result.UnderlyingWithValues.Any(ContainsHigherOrder);
-
     /// <summary>
     /// An independent formulation of "the values of every causal leaf", owing nothing to
     /// <see cref="MetadataNode{TMetadata}" />. Before #136 the tier tree was built from a walk that
@@ -151,16 +145,4 @@ public class UnderlyingMetadataSourcesTests
         result.CausesWithValues.Any()
             ? result.CausesWithValues.SelectMany(CausalLeafValues)
             : result.Values;
-
-    private static string[] DistinctInOrder(IEnumerable<string> values)
-    {
-        var seen = new HashSet<string>();
-        var ordered = new List<string>();
-
-        foreach (var value in values)
-            if (seen.Add(value))
-                ordered.Add(value);
-
-        return ordered.ToArray();
-    }
 }

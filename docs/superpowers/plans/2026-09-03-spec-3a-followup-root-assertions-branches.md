@@ -74,10 +74,11 @@ and untouched by this change.
    source walks that #136 and #188 already amended, with its claim weakened the same way and the
    behavioural claim moved to the new tests.
 6. **Keep the corpus's premise honest** — assert separately that the corpus still reaches higher-order
-   results, or a generator change would leave both invariants green while covering nothing.
+   results, or a generator change would leave the invariant green while covering nothing.
 7. **Full solution suite**, plus a timing comparison against the pre-change walk, since `Branches`
    visits more nodes than `Underlying` did.
-8. **`code-simplifier` pass**, per `CLAUDE.md`.
+8. **`code-simplifier` pass**, per `CLAUDE.md` — four clarity edits, one decline, and a mutation
+   check it started that had to be re-run safely.
 
 ## Verification
 
@@ -87,9 +88,13 @@ and untouched by this change.
   evidence that the oracle was pinning the defect rather than checking for it.
 - `DeepCompositionTests` green, including the small-stack `RootAssertions` ceiling and the
   `SubAssertions`/`Explanation.Underlying`-are-empty contracts.
+- Both hand-written tests go red against the pre-change production files, re-checked after the fact on
+  committed work rather than on unstaged edits.
 - Over the corpus, exactly **84 of 13,680 nodes** change, every one in a higher-order subtree, every
   one gaining assertions and none losing any.
-- **No existing test changed except the oracle**, despite the 46 lines the ticket flagged across the
-  test suites and example projects.
+- **No existing test's assertions changed**, despite the 46 lines the ticket flagged across the test
+  suites and example projects. The only edits to existing test files are the oracle's amended
+  `GetRootAssertions`, and the review pass lifting three shared fixtures out of
+  `UnderlyingMetadataSourcesTests`.
 - net472 is built but not run: no `mono` host on this machine, a standing local limitation rather than
   anything this change introduces. CI runs it.

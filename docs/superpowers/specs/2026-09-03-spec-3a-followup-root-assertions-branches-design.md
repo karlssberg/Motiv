@@ -190,6 +190,48 @@ hand-written test for a shape outside the boundary is only meaningful where the 
 it across a symmetry without checking would have pinned a false claim, in a file whose whole purpose
 is to hold a real one.
 
+## What the review pass found
+
+The `code-simplifier` round applied four edits, all clarity, and left one finding standing:
+
+- The class-level remark on `AssertionExtensions` justified the walk-local memo by saying *"these four
+  walks take an arbitrary sequence rather than a single result"*. `GetAllRootAssertions` already took
+  a single result, and this change made `GetRootAssertions` take one too, so half the members
+  contradicted the premise of the sentence explaining them. The memo is walk-local because these walks
+  fold over nodes they do not own; that is now what it says.
+- The oracle's fallback had been written `explanation.Assertions as string[] ?? …ToArray()`, importing
+  the production `AsArray` trick into a class whose whole value is being an obviously-correct
+  independent formulation — and handing a live array reference back out of the object under test.
+  Plain `.ToArray()`.
+- `Leaf`, `ContainsHigherOrder` and `DistinctInOrder` were verbatim in both twins' suites. They are
+  context-free fixtures and a shape predicate, not the nuanced builder paths `CLAUDE.md`'s
+  "avoid over-DRYing" rule protects, so they moved to `OracleHelpers`. `DistinctInOrder` stays a
+  hand-written re-implementation there rather than delegating to Motiv's `DistinctWithOrderPreserved`:
+  an expectation that borrows the production helper is one step less independent than it claims.
+- The class summary said these invariants *"close #192"*, which is true of one of them. The
+  `AllRootAssertions` invariant refutes the ticket's other half and guards the absence; the summary
+  now says which is which.
+
+**Declined:** consolidating the `yieldsNothing` fixture, which appears in both suites asserting
+`RootValues` in one and both projections in the other. The duplication is the content — the whole
+point of the assertion-side test is that the same tree gives two different answers — and merging the
+fixtures would leave the contrast stated in one place and assumed in the other.
+
+**The round also left a real question open, and it had a better answer than expected.** Its check on
+whether the two hand-written tests were load-bearing was cut short. Run afterwards against the
+pre-change production files, both go red: the corpus invariant on 14 of 150 seeds, and the
+characterisation test too — the old walk reported `["all yielded nothing", "sibling-true"]` there,
+collapsing past the operand that does assert. So the test that was written to *describe* an asymmetry
+turns out to also *detect* the defect, from a single hand-built tree, where the corpus needed 13,680
+nodes to find 84.
+
+**The round is also the reason this section can be specific about its own process.** Its first act was
+to `git checkout` the two production files to run exactly that mutation check — over the only copy,
+which was unstaged. The check was right and the method destroyed the work; it survived only because
+the same tool call had copied both files aside first. The lesson is the ordinary one and worth writing
+down anyway: **a mutation experiment belongs on a copy of the tree, never on the tree**, and the
+cheapest guard is to commit before inviting anything to mutate the working directory.
+
 ## Measurement
 
 Over the Spec 3A corpus — 13,680 nodes across 150 seeds, comparing the new walk against the old one
