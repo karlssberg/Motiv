@@ -1,3 +1,5 @@
+using static Motiv.Tests.Traversal.SmallStack;
+
 namespace Motiv.Tests.Traversal;
 
 /// <summary>
@@ -15,8 +17,6 @@ public class DeepEvaluationTests
 {
     /// <summary>Comfortably past both measured ceilings, and past twice the higher one.</summary>
     private const int Operands = 50_000;
-
-    private const int StackBytes = 1024 * 1024;
 
     [Fact]
     public void Should_evaluate_a_deep_And_chain() =>
@@ -192,29 +192,4 @@ public class DeepEvaluationTests
         Enumerable
             .Range(0, int.MaxValue)
             .Select(i => (SpecBase<int, string>)Spec.Build((int n) => n % 2 == 0).Create($"p{i} is even"));
-
-    private static void OnASmallStack(Action body)
-    {
-        Exception? failure = null;
-
-        var thread = new Thread(
-            () =>
-            {
-                try
-                {
-                    body();
-                }
-                catch (Exception exception)
-                {
-                    failure = exception;
-                }
-            },
-            StackBytes);
-
-        thread.Start();
-        thread.Join();
-
-        if (failure is not null)
-            throw failure;
-    }
 }
