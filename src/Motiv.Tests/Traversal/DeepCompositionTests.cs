@@ -1,3 +1,5 @@
+using static Motiv.Tests.Traversal.SmallStack;
+
 namespace Motiv.Tests.Traversal;
 
 /// <summary>
@@ -13,7 +15,6 @@ namespace Motiv.Tests.Traversal;
 public class DeepCompositionTests
 {
     private const int Operands = 3_000;
-    private const int StackBytes = 1024 * 1024;
 
     [Fact]
     public void Should_read_UnderlyingAssertionSources_of_a_deep_composition() =>
@@ -160,29 +161,4 @@ public class DeepCompositionTests
             .Range(0, Operands)
             .Select(i => (SpecBase<int, string>)Spec.Build((int n) => n % 2 == 0).Create($"p{i} is even"))
             .Aggregate(combine);
-
-    private static void OnASmallStack(Action body)
-    {
-        Exception? failure = null;
-
-        var thread = new Thread(
-            () =>
-            {
-                try
-                {
-                    body();
-                }
-                catch (Exception exception)
-                {
-                    failure = exception;
-                }
-            },
-            StackBytes);
-
-        thread.Start();
-        thread.Join();
-
-        if (failure is not null)
-            throw failure;
-    }
 }

@@ -21,10 +21,29 @@ Two things are worth knowing about the shape of that guarantee:
 
 - It covers the **logical operators**. A composition that alternates operators with *decorated*
   propositions &mdash; a proposition wrapped in another proposition's `WhenTrue`, wrapped again &mdash;
-  still costs a stack frame per wrapping layer. That depth comes from how an author nests propositions,
-  which is bounded by the catalogue; operator depth comes from how many operands a single expression
-  has, which is not.
-- It covers **synchronous** evaluation. `AsyncSpecBase`'s operators still recurse.
+  still costs stack frames per wrapping layer, because each decorator re-enters the fold rather than
+  being folded into it. Measured on a 1 MB thread, that shape returns to a depth of **1,047**
+  synchronously and **261** asynchronously; a nest of decorators with no operators between them
+  reaches 9,327. Past those the process aborts with a stack overflow no `catch` can see.
+- It covers **synchronous** evaluation more deeply than asynchronous. An async state-machine frame is
+  far fatter than a call frame, so every ceiling above is about four times lower asynchronously.
+
+### The decorator ceiling is reachable from a stored catalogue
+
+Worth stating plainly, because it is the depth the caps below do *not* count. A rule document's every
+node that carries a `name` or a `whenTrue` binds to a decorator, and an authored proposition may
+reference another authored proposition &mdash; so a catalogue of propositions each referencing the one
+before it composes exactly the alternating shape, one link at a time.
+
+None of the three document caps sees it. `MaxDocumentDepth` bounds one document's JSON nesting, and
+such a link nests two levels. `MaxNodeCount` bounds one document's nodes, and such a link has three.
+`MaxCompositionDepth` bounds the composed depth of one document and stops at a `spec` leaf, so a link
+scores 1 however deep the proposition it references happens to be. A chain of 200 links is accepted
+with `MaxCompositionDepth` set to 1.
+
+Until a cap counts across references ([#201](https://github.com/karlssberg/Motiv/issues/201)),
+**treat reference-chain depth as something your authoring surface must bound**: an application that lets untrusted authors publish propositions can be walked
+past the ceiling a few hundred publishes at a time.
 
 ## The engine's backstop: `MotivLimits.MaxEvaluationSize`
 
@@ -54,6 +73,12 @@ Two things it is not:
   below.
 - **Not a bound on all work.** It counts the logical composition. Work done *inside* a node &mdash; a
   higher-order proposition over a large collection &mdash; is not counted by it.
+- **Not a bound across decorator layers.** The count is per *fold*, and a decorator between two
+  operator layers re-enters the fold with a fresh count, so a composition whose size is spread across
+  layers passes a limit its flat equivalent is refused by. Fifty layers of ten operands &mdash; over a
+  thousand nodes &mdash; evaluates under a limit of 100. Do not rely on this as a bound on a
+  document-composed evaluation; refuse the document at the edge instead. Tracked as
+  [#202](https://github.com/karlssberg/Motiv/issues/202).
 
 ## The document edge: `RuleSerializerOptions`
 

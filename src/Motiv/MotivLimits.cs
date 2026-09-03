@@ -37,6 +37,15 @@ public static class MotivLimits
     /// operand array controls. Work done <em>inside</em> a node — a higher-order proposition over a large
     /// collection, say — is not counted and is not bounded by this.
     /// </para>
+    /// <para>
+    /// Neither is work spread across <em>decorator layers</em>. The count is held per fold, and a
+    /// decorator between two operator layers re-enters the fold with a fresh one, so fifty layers of
+    /// ten operands — over a thousand nodes — passes a limit of 100 that refuses the flat chain of 200.
+    /// Making the budget span one evaluation is not a patch: an ambient counter would also charge a
+    /// higher-order proposition's per-element evaluations, which the paragraph above promises it does
+    /// not. Measured, and held by the test suite as behaviour rather than as intent; tracked as
+    /// <see href="https://github.com/karlssberg/Motiv/issues/202">#202</see>.
+    /// </para>
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException">The value is less than one.</exception>
     public static int MaxEvaluationSize
