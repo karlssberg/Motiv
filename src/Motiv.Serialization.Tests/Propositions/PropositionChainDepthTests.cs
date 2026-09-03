@@ -39,10 +39,11 @@ public class PropositionChainDepthTests
     /// <summary>
     /// The cap named for composition depth is set as low as it goes, and a two-hundred-link chain is
     /// still accepted — because it never sees through a <c>spec</c> reference. Each link's own
-    /// document composes exactly one level, which is all the cap ever measures.
+    /// document composes exactly one level, which is all the cap ever measures, so 200 is a sample of
+    /// the behaviour rather than the bound: nothing here is what stops the chain at any length.
     /// </summary>
     [Fact]
-    public async Task Should_accept_a_reference_chain_of_any_length_under_the_lowest_composition_cap()
+    public async Task Should_accept_a_two_hundred_link_reference_chain_under_the_lowest_composition_cap()
     {
         var propositions = new PropositionSet(
             NewRegistry(),

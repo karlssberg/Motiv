@@ -43,7 +43,7 @@ public static class MotivLimits
     /// ten operands — over a thousand nodes — passes a limit of 100 that refuses the flat chain of 200.
     /// Making the budget span one evaluation is not a patch: an ambient counter would also charge a
     /// higher-order proposition's per-element evaluations, which the paragraph above promises it does
-    /// not. Measured and held by <c>DecoratorSeamTests</c>; tracked as
+    /// not. Measured, and held by the test suite as behaviour rather than as intent; tracked as
     /// <see href="https://github.com/karlssberg/Motiv/issues/202">#202</see>.
     /// </para>
     /// </remarks>
