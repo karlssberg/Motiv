@@ -7,10 +7,10 @@ namespace Motiv;
 /// Provides extension methods for assertions.
 /// </summary>
 /// <remarks>
-/// These four walks take an arbitrary sequence rather than a single result, so they have no node
-/// field to memoise into and use a walk-local memo instead. They were the last members standing
-/// before Spec 3A, at a ceiling of roughly a thousand operands, and — being lazy and un-memoised —
-/// they re-allocated their whole iterator chain on every enumeration.
+/// These walks fold over nodes they do not own — a caller's sequence, or a result's explanation — so
+/// they have no node field to memoise into and use a walk-local memo instead. They were the last
+/// members standing before Spec 3A, at a ceiling of roughly a thousand operands, and — being lazy and
+/// un-memoised — they re-allocated their whole iterator chain on every enumeration.
 /// </remarks>
 public static class AssertionExtensions
 {
@@ -68,12 +68,20 @@ public static class AssertionExtensions
     /// </summary>
     /// <param name="result">The boolean result to get the root assertions from.</param>
     /// <returns>A collection of assertions from the root causes of the boolean result.</returns>
+    /// <remarks>
+    /// The deepest explanation is a property of a branch, so this descends an explanation's
+    /// un-collapsed branches rather than <see cref="Explanation.Underlying" /> — see that property's
+    /// remarks for why the latter cannot answer the question (ticket #192). It walks from the result's
+    /// own explanation rather than from the level below it, which is what makes the walk's per-branch
+    /// fallback the root's fallback too; the <c>ElseIfEmpty</c> that used to supply that at the root
+    /// fired only when the <i>whole</i> level came out empty, and so could not tell a level that lost
+    /// one operand from one that kept them all.
+    /// </remarks>
     public static IEnumerable<string> GetRootAssertions(
         this BooleanResultBase result)
     {
-        var rootAssertions = FoldEach(result.Explanation.Underlying, ExplanationUnderlying, CombineRootAssertions)
-            .DistinctWithOrderPreserved()
-            .ElseIfEmpty(result.Assertions);
+        var rootAssertions = FoldEach(result.Explanation.ToEnumerable(), ExplanationBranches, CombineRootAssertions)
+            .DistinctWithOrderPreserved();
 
         foreach (var assertion in rootAssertions)
             yield return assertion;
@@ -101,8 +109,8 @@ public static class AssertionExtensions
     private static readonly Func<BooleanResultBase, IReadOnlyList<BooleanResultBase>> AllOperands =
         result => result.Underlying.AsList();
 
-    private static readonly Func<Explanation, IReadOnlyList<Explanation>> ExplanationUnderlying =
-        explanation => explanation.Underlying.AsList();
+    private static readonly Func<Explanation, IReadOnlyList<Explanation>> ExplanationBranches =
+        explanation => explanation.Branches;
 
     private static readonly Func<BooleanResultBase, IReadOnlyList<string[]>, string[]> CombineAssertions =
         (result, foldedCauses) => result is IBooleanOperationResult
@@ -115,9 +123,9 @@ public static class AssertionExtensions
             : AsArray(result.Explanation.AllAssertions);
 
     private static readonly Func<Explanation, IReadOnlyList<string[]>, string[]> CombineRootAssertions =
-        (explanation, foldedUnderlying) =>
+        (explanation, foldedBranches) =>
         {
-            var rootAssertions = foldedUnderlying.Flatten();
+            var rootAssertions = foldedBranches.Flatten();
 
             return rootAssertions.Length == 0
                 ? AsArray(explanation.Assertions)

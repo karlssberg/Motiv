@@ -107,6 +107,20 @@ public sealed class Explanation
     public IEnumerable<Explanation> AllUnderlying =>
         _allUnderlying ??= PostOrderFold.Fold(this, DescendAll, CombineAll, ReadAllUnderlying, WriteAllUnderlying);
 
+    /// <summary>
+    /// The explanations directly beneath this one, before the level-skipping that
+    /// <see cref="Underlying" /> applies.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="Underlying" /> drops a level that merely restates its children and returns what is
+    /// beneath it, flattened. Both are correct for a walk over distinct levels, and both are fatal to
+    /// one looking for each branch's own deepest explanation: a branch whose deepest level <i>is</i>
+    /// the dropped one leaves nothing behind, and a flat list cannot say which branch a level came
+    /// from. That is why the root-assertion walk descends here instead (ticket #192, the assertion
+    /// twin of <see cref="MetadataNode{TMetadata}.Branches" /> and #189).
+    /// </remarks>
+    internal IReadOnlyList<Explanation> Branches => CausalResolution.Children;
+
     private Explanation[]? _underlying;
 
     private Explanation[]? _allUnderlying;
