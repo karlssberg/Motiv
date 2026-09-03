@@ -184,35 +184,20 @@ public static class BooleanResultExtensions
     /// Flattens the causal results that belong to the same collapsible operation, so that a run of
     /// nested same-operation compositions renders beneath one conjunction heading.
     /// </summary>
-    /// <remarks>Iterative: the run it flattens is unbounded in length (Spec 3A / ticket 19).</remarks>
+    /// <remarks>
+    /// Iterative, through <see cref="RunFlattener" />: the run it flattens is unbounded in length
+    /// (Spec 3A / ticket 19).
+    /// </remarks>
     internal static IReadOnlyList<BooleanResultBase> FlattenCollapsible(
         this IEnumerable<BooleanResultBase> results,
-        string operation)
-    {
-        var flattened = new List<BooleanResultBase>();
-        var pending = new Stack<IEnumerator<BooleanResultBase>>();
-        pending.Push(results.GetEnumerator());
-
-        while (pending.Count > 0)
-        {
-            var current = pending.Peek();
-
-            if (!current.MoveNext())
-            {
-                pending.Pop().Dispose();
-                continue;
-            }
-
-            if (current.Current is IBinaryBooleanOperationResult binary
-                && binary.Operation == operation
-                && binary.IsCollapsable)
-                pending.Push(binary.Causes.GetEnumerator());
-            else
-                flattened.Add(current.Current);
-        }
-
-        return flattened;
-    }
+        string operation) =>
+        RunFlattener.Flatten(
+            results,
+            result => result is IBinaryBooleanOperationResult binary
+                      && binary.Operation == operation
+                      && binary.IsCollapsable
+                ? binary.Causes
+                : null);
 
     private static IEnumerable<BooleanResultBase> AggregateUnderlyingCauses(
         this BooleanResultBase result,
