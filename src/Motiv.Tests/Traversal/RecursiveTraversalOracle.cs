@@ -15,9 +15,11 @@ namespace Motiv.Tests.Traversal;
 /// <para>
 /// The three source walks are no longer verbatim. <see cref="UnderlyingMetadataSources{TMetadata}" />
 /// was settled as defective by ticket #136, and all three lost their fallback-to-self by ticket #188.
-/// For those the oracle's claim is weaker than for the rest of this class: not "does the
-/// fold match what shipped before Spec 3A?" but only "does the fold match an independent recursive
-/// formulation?". #188's own tests carry the behavioural claim the oracle can no longer make.
+/// <see cref="GetRootAssertions" /> joined them at ticket #192, which settled its level-wide fallback
+/// as the defect. For those the oracle's claim is weaker than for the rest of this class: not "does
+/// the fold match what shipped before Spec 3A?" but only "does the fold match an independent
+/// recursive formulation?". #188's and #192's own tests carry the behavioural claim the oracle can no
+/// longer make.
 /// </para>
 /// </remarks>
 internal static class RecursiveTraversalOracle
@@ -92,10 +94,15 @@ internal static class RecursiveTraversalOracle
                     _ => result.Explanation.AllAssertions
                 });
 
+    /// <remarks>
+    /// Not verbatim: ticket #192 settled that descending <c>Explanation.Underlying</c> is the defect
+    /// rather than the contract, so this descends the un-collapsed branches as the fold now does. The
+    /// two formulations stay independent — <see cref="ExplanationBranches" /> rebuilds the children
+    /// here rather than reading <c>Explanation.Branches</c> — but the behavioural claim is carried by
+    /// <see cref="RootAssertionsBranchesTests" />, not by this comparison.
+    /// </remarks>
     internal static IEnumerable<string> GetRootAssertions(BooleanResultBase result) =>
-        GetRootAssertions(result.Explanation.Underlying)
-            .DistinctWithOrderPreserved()
-            .ElseIfEmpty(result.Assertions);
+        RootAssertionsOf(result.Explanation).DistinctWithOrderPreserved();
 
     internal static IEnumerable<string> GetAllRootAssertions(BooleanResultBase result) =>
         GetAllRootAssertions(result.Underlying)
@@ -108,11 +115,12 @@ internal static class RecursiveTraversalOracle
     internal static IEnumerable<Explanation> ExplanationAllUnderlying(Explanation explanation) =>
         ResolveAllUnderlying(explanation.Assertions, explanation.Results);
 
-    private static IEnumerable<Explanation> ResolveUnderlying(
-        IEnumerable<string> assertions,
-        IEnumerable<BooleanResultBase> causes)
-    {
-        var underlying = causes
+    /// <summary>
+    /// An explanation's direct children, before the collapse <see cref="ResolveUnderlying" /> applies
+    /// to them — the oracle's own formulation of <c>Explanation.Branches</c>.
+    /// </summary>
+    private static Explanation[] ExplanationBranches(IEnumerable<BooleanResultBase> causes) =>
+        causes
             .SelectMany(cause =>
                 cause switch
                 {
@@ -121,6 +129,12 @@ internal static class RecursiveTraversalOracle
                 })
             .Select(cause => cause.Explanation)
             .ToArray();
+
+    private static IEnumerable<Explanation> ResolveUnderlying(
+        IEnumerable<string> assertions,
+        IEnumerable<BooleanResultBase> causes)
+    {
+        var underlying = ExplanationBranches(causes);
 
         var underlyingAssertions = underlying
             .SelectMany(explanation => explanation.Assertions)
@@ -160,9 +174,20 @@ internal static class RecursiveTraversalOracle
             : allUnderlying;
     }
 
-    private static IEnumerable<string> GetRootAssertions(IEnumerable<Explanation> explanations) =>
-        explanations.SelectMany(explanation => GetRootAssertions(explanation.Underlying)
-            .ElseIfEmpty(explanation.Assertions));
+    /// <summary>
+    /// The deepest explanation of each branch, falling back to a branch's own assertions when that
+    /// branch contributed nothing — per branch, which is the whole of ticket #192.
+    /// </summary>
+    private static string[] RootAssertionsOf(Explanation explanation)
+    {
+        var fromBranches = ExplanationBranches(explanation.Causes)
+            .SelectMany(RootAssertionsOf)
+            .ToArray();
+
+        return fromBranches.Length == 0
+            ? explanation.Assertions as string[] ?? explanation.Assertions.ToArray()
+            : fromBranches;
+    }
 
     private static IEnumerable<string> GetAllRootAssertions(IEnumerable<BooleanResultBase> results) =>
         results.SelectMany(result => GetAllRootAssertions(result)
