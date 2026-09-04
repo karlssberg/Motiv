@@ -1,3 +1,5 @@
+using Motiv.Traversal;
+
 namespace Motiv.HigherOrderProposition;
 
 internal enum HigherOrderOp
@@ -30,6 +32,10 @@ internal readonly struct HigherOrderShortCircuit(HigherOrderOp op, int n)
     /// non-capturing <c>static</c> lambda). Arrays and <see cref="IReadOnlyList{T}" /> sources iterate by index to
     /// avoid enumerator allocation; the operation's decision logic is shared across all iteration shapes.
     /// </summary>
+    /// <remarks>
+    /// Each element is derived through <see cref="EvaluationBudget.Suppressed{TArgument,TState,TResult}" />, for
+    /// the reason <see cref="HigherOrderResults" /> gives — this is the allocation-free half of the same seam.
+    /// </remarks>
     internal bool Evaluate<TModel, TState>(
         IEnumerable<TModel> source,
         TState state,
@@ -47,23 +53,41 @@ internal readonly struct HigherOrderShortCircuit(HigherOrderOp op, int n)
         switch (source)
         {
             case TModel[] array:
+            {
                 for (var i = 0; i < array.Length; i++)
-                    if (TryDecide(project(array[i], state), ref trueCount, out var decidedArray))
-                        return decidedArray;
+                {
+                    var satisfied = EvaluationBudget.Suppressed(array[i], state, project);
+                    if (TryDecide(satisfied, ref trueCount, out var decided))
+                        return decided;
+                }
+
                 break;
+            }
 
             case IReadOnlyList<TModel> list:
+            {
                 var count = list.Count;
                 for (var i = 0; i < count; i++)
-                    if (TryDecide(project(list[i], state), ref trueCount, out var decidedList))
-                        return decidedList;
+                {
+                    var satisfied = EvaluationBudget.Suppressed(list[i], state, project);
+                    if (TryDecide(satisfied, ref trueCount, out var decided))
+                        return decided;
+                }
+
                 break;
+            }
 
             default:
+            {
                 foreach (var item in source)
-                    if (TryDecide(project(item, state), ref trueCount, out var decidedSeq))
-                        return decidedSeq;
+                {
+                    var satisfied = EvaluationBudget.Suppressed(item, state, project);
+                    if (TryDecide(satisfied, ref trueCount, out var decided))
+                        return decided;
+                }
+
                 break;
+            }
         }
 
         return FinalDecision(trueCount);

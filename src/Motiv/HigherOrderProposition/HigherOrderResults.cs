@@ -1,3 +1,5 @@
+using Motiv.Traversal;
+
 namespace Motiv.HigherOrderProposition;
 
 /// <summary>
@@ -11,6 +13,12 @@ namespace Motiv.HigherOrderProposition;
 ///     The projection receives the per-call <paramref name="state" /> (e.g. the underlying predicate or resolver)
 ///     as an explicit argument so that call sites can pass a non-capturing <c>static</c> lambda, keeping the
 ///     materialization free of per-evaluation closure allocations.
+///     <para>
+///     Each element is resolved through <see cref="EvaluationBudget.Suppressed{TArgument,TState,TResult}" />: a
+///     collection of a quarter of a million models is not a composition of a quarter of a million nodes, and
+///     <see cref="MotivLimits.MaxEvaluationSize" /> has always excluded this seam. Each element is budgeted
+///     afresh, so a single element's own composition is still bounded.
+///     </para>
 /// </remarks>
 internal static class HigherOrderResults
 {
@@ -26,7 +34,7 @@ internal static class HigherOrderResults
         {
             var results = new TResult[array.Length];
             for (var i = 0; i < array.Length; i++)
-                results[i] = project(array[i], state);
+                results[i] = EvaluationBudget.Suppressed(array[i], state, project);
 
             return results;
         }
@@ -36,14 +44,14 @@ internal static class HigherOrderResults
             var count = list.Count;
             var results = new TResult[count];
             for (var i = 0; i < count; i++)
-                results[i] = project(list[i], state);
+                results[i] = EvaluationBudget.Suppressed(list[i], state, project);
 
             return results;
         }
 
         var buffer = new List<TResult>();
         foreach (var item in source)
-            buffer.Add(project(item, state));
+            buffer.Add(EvaluationBudget.Suppressed(item, state, project));
 
         return buffer.ToArray();
     }

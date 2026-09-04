@@ -38,13 +38,19 @@ public static class MotivLimits
     /// collection, say — is not counted and is not bounded by this.
     /// </para>
     /// <para>
-    /// Neither is work spread across <em>decorator layers</em>. The count is held per fold, and a
-    /// decorator between two operator layers re-enters the fold with a fresh one, so fifty layers of
-    /// ten operands — over a thousand nodes — passes a limit of 100 that refuses the flat chain of 200.
-    /// Making the budget span one evaluation is not a patch: an ambient counter would also charge a
-    /// higher-order proposition's per-element evaluations, which the paragraph above promises it does
-    /// not. Measured, and held by the test suite as behaviour rather than as intent; tracked as
-    /// <see href="https://github.com/karlssberg/Motiv/issues/202">#202</see>.
+    /// Work spread across <em>decorator layers</em> is counted, though. A decorator between two operator
+    /// layers is not folded — it re-enters the fold — but the nested fold spends the same budget, so
+    /// fifty layers of ten operands is refused by the same limit of 100 that refuses the flat chain of
+    /// 200. It was not, until
+    /// <see href="https://github.com/karlssberg/Motiv/issues/202">#202</see>: the count lived in a
+    /// fold-local, and the shape a rule document composes is exactly the alternating one.
+    /// </para>
+    /// <para>
+    /// One asymmetry remains. <see cref="AsyncSpecBase{TModel}.EvaluateAsync" /> and
+    /// <see cref="AsyncSpecBase{TModel}.MatchesAsync" /> still count per fold, because the budget is a
+    /// thread-static — correct for the synchronous folds, which never leave the thread that started
+    /// them, and unavailable to an asynchronous one whose continuation may resume elsewhere. Tracked as
+    /// <see href="https://github.com/karlssberg/Motiv/issues/204">#204</see>.
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException">The value is less than one.</exception>
