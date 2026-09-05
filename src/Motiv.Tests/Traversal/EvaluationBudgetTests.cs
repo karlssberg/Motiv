@@ -114,6 +114,129 @@ public class EvaluationBudgetTests : IDisposable
     }
 
     /// <summary>
+    /// The half of the exclusion a leak canary cannot see. <c>OutsideBudget</c> <em>parks</em> the count
+    /// and hands it back; it does not discard it. A version that zeroed the count and never restored
+    /// would leak in the <em>permissive</em> direction — the composition forgetting what it spent before
+    /// the higher-order operand — so the bound would quietly weaken rather than misfire.
+    /// </summary>
+    /// <remarks>
+    /// Nothing else here catches that. Every exclusion case asserts an evaluation <i>succeeds</i>, and
+    /// <see cref="Should_leave_no_budget_behind_however_an_evaluation_fails" /> looks for spending left
+    /// <i>behind</i> — a discarded count leaves none. It was found by deleting the restore and watching
+    /// the suite stay green.
+    /// </remarks>
+    [Fact]
+    public void Should_resume_the_compositions_count_after_a_higher_order_operand()
+    {
+        MotivLimits.MaxEvaluationSize = 7;
+
+        // Seven nodes: four operands and the three operations joining them. Only the first is
+        // higher-order, and its element is a plain leaf, so no nested fold runs beneath the suppression
+        // — were the count discarded rather than parked, the three operands after it would be counted
+        // from zero and this would cost three.
+        var composed = HigherOrderThenChain();
+
+        composed.Evaluate(Enumerable.Repeat(2, 4)).Satisfied.ShouldBeTrue();
+
+        MotivLimits.MaxEvaluationSize = 6;
+
+        var act = () => HigherOrderThenChain().Evaluate(Enumerable.Repeat(2, 4));
+
+        act.ShouldThrow<SpecException>();
+    }
+
+    /// <summary>The same, on the funnel <c>Matches</c> takes.</summary>
+    [Fact]
+    public void Should_resume_the_compositions_count_after_a_higher_order_operand_on_matches()
+    {
+        MotivLimits.MaxEvaluationSize = 6;
+
+        var act = () => { _ = HigherOrderThenChain().Matches(Enumerable.Repeat(2, 4)); };
+
+        act.ShouldThrow<SpecException>();
+    }
+
+    /// <summary>
+    /// The leak invariant, over every way an evaluation can end badly: <b>however an evaluation
+    /// terminates, the thread's count is back to zero.</b>
+    /// </summary>
+    /// <remarks>
+    /// Ambient state's failure mode is that a leak surfaces somewhere other than the fault — the next
+    /// caller on the thread gets an unexplained refusal, and nothing points back here. That makes the
+    /// exceptional paths the ones worth enumerating rather than reasoning about, because reasoning about
+    /// them is exactly what a later edit will get wrong.
+    /// <para>
+    /// Checked black-box, with no test hook into the budget: <see cref="Canary" /> costs precisely the
+    /// limit, so it is satisfied only from a count of zero and refused by a leak of even one node. That
+    /// keeps the invariant stated in terms of behaviour a caller can see, rather than in terms of a
+    /// private field a refactor is free to rename.
+    /// </para>
+    /// </remarks>
+    [Theory]
+    [MemberData(nameof(FailureShapes))]
+    public void Should_leave_no_budget_behind_however_an_evaluation_fails(string shape, Action provoke)
+    {
+        MotivLimits.MaxEvaluationSize = CanaryCost;
+
+        Should.Throw<Exception>(provoke, $"the {shape} case must actually fail, or it proves nothing");
+
+        Canary().Evaluate(2).Satisfied.ShouldBeTrue(
+            $"a composition costing exactly the limit must still be admitted after a {shape} failure; " +
+            "if it is refused, that failure left its spending on the thread");
+        Canary().Matches(2).ShouldBeTrue($"and on the allocation-free path after a {shape} failure");
+    }
+
+    public static TheoryData<string, Action> FailureShapes() =>
+        new()
+        {
+            // The outermost fold refuses. The only shape covered before this theory existed.
+            { "bound-exceeded", () => FlatChain(CanaryCost * 4).Evaluate(2) },
+
+            // The refusal is raised inside a *nested* fold, so it unwinds through an Ownership that
+            // must NOT release, out through one that must.
+            { "bound-exceeded-in-a-nested-fold", () => NestedChain(layers: 20, operandsPerLayer: 2).Evaluate(2) },
+
+            // An arbitrary user exception mid-fold — not the budget's own, so nothing in the budget is
+            // watching for it.
+            { "throwing-predicate", () => Leaf(0).And(Throwing()).Evaluate(2) },
+            { "throwing-predicate-on-matches", () => { _ = Leaf(0).And(Throwing()).Matches(2); } },
+
+            // Thrown from inside OutsideBudget's work, so the restore has to happen on the exceptional
+            // path too — and then the outer fold's release on top of it.
+            { "throwing-element", () => AllElements(Throwing()).And(NonEmpty()).Evaluate(Enumerable.Repeat(2, 4)) },
+            { "throwing-element-on-matches", () => { _ = AllElements(Throwing()).And(NonEmpty()).Matches(Enumerable.Repeat(2, 4)); } },
+
+            // An element whose own composition exceeds the bound: a refusal raised beneath a suppression,
+            // which the composition above it was never spending.
+            { "oversized-element", () => AllElements(FlatChain(CanaryCost * 4)).And(NonEmpty()).Evaluate(Enumerable.Repeat(2, 2)) },
+
+            // Thrown by the sequence itself, between two OutsideBudget calls rather than inside one.
+            { "throwing-sequence", () => AllElements(Leaf(0)).And(NonEmpty()).Evaluate(ThrowingSequence()) }
+        };
+
+    /// <summary>
+    /// A chain of six propositions — <c>2n - 1</c> nodes, so exactly <see cref="CanaryCost" />. Sized to
+    /// the limit deliberately: a composition with any headroom would survive a small leak and the
+    /// invariant would only be half-checked.
+    /// </summary>
+    private const int CanaryCost = 11;
+
+    private static SpecBase<int, string> Canary() => FlatChain(6);
+
+    private static SpecBase<int, string> Throwing() =>
+        Spec.Build((int _) => throw new InvalidOperationException("thrown from inside an evaluation"))
+            .Create("throws");
+
+    private static SpecBase<IEnumerable<int>, string> AllElements(SpecBase<int, string> element) =>
+        Spec.Build(element).AsAllSatisfied().Create("every element holds");
+
+    private static IEnumerable<int> ThrowingSequence()
+    {
+        yield return 2;
+        throw new InvalidOperationException("thrown while enumerating the models");
+    }
+
+    /// <summary>
     /// Two threads are two evaluations. The synchronous folds never leave the thread that started them,
     /// which is what lets the budget be a thread-static at all; this states the property that permission
     /// rests on.
@@ -176,6 +299,19 @@ public class EvaluationBudgetTests : IDisposable
         Spec.Build(Leaf(0).And(Leaf(1)))
             .AsAllSatisfied()
             .Create($"all {elements} elements are even");
+
+    /// <summary>
+    /// A higher-order operand followed by three ordinary ones, all over the same collection model, so
+    /// that the composition's count has to survive the suppression in the middle of it.
+    /// </summary>
+    private static SpecBase<IEnumerable<int>, string> HigherOrderThenChain() =>
+        AllElements(Leaf(0))
+            .And(CollectionLeaf(1))
+            .And(CollectionLeaf(2))
+            .And(CollectionLeaf(3));
+
+    private static SpecBase<IEnumerable<int>, string> CollectionLeaf(int index) =>
+        Spec.Build((IEnumerable<int> models) => models.Any()).Create($"c{index} is not empty");
 
     private static SpecBase<IEnumerable<int>, string> NonEmpty() =>
         Spec.Build((IEnumerable<int> models) => models.Any()).Create("the collection is not empty");

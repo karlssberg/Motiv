@@ -209,6 +209,47 @@ between the two folds before this PR, so it is not a regression, and collapsing 
 async fold a budget — which is [#204](https://github.com/karlssberg/Motiv/issues/204), where it will
 fall out for free.
 
+## The failure paths, and the mutant that got away
+
+Ambient mutable state fails in a way that is hard to reason about and easy to get wrong on a later
+edit: a leaked count surfaces on the *next* caller of the thread, so the error lands nowhere near the
+fault. That deserves mechanical cover rather than an argument, and it reduces to one invariant —
+**however an evaluation terminates, the thread's count is back to zero** — checked black-box, with no
+hook into the budget. A canary composition costing *exactly* the limit is satisfied only from zero and
+refused by a leak of a single node.
+
+Eight failure shapes, run as a theory: the bound exceeded at the top and inside a nested fold; a
+throwing predicate mid-fold; a throwing element (inside `OutsideBudget`); an element whose own
+composition exceeds the bound (a refusal raised *beneath* a suppression); and a sequence that throws
+while being enumerated (between two `OutsideBudget` calls rather than inside one) — each on `Evaluate`
+and, where it differs, `Matches`.
+
+Then the same treatment applied to the implementation, because a suite that has never been seen to
+fail is not evidence:
+
+| Mutation | Caught by | |
+|---|---|---|
+| `Ownership` never releases | all 8 failure shapes | ✅ |
+| every fold releases (the "always reset" encoding) | the layered-arithmetic and abandoned-budget cases | ✅ |
+| `Ownership` restores its entry count | the layered-arithmetic cases | ✅ |
+| **`OutsideBudget` never restores** | **nothing** | ❌ |
+
+**The fourth one survived**, and the reason is worth keeping. Failing to restore leaks in the
+*permissive* direction: the composition forgets what it spent *before* the higher-order operand, so the
+bound quietly weakens. No exclusion test sees it — they all assert an evaluation succeeds — and the
+leak canary cannot either, because a discarded count leaves nothing behind to find. Both halves of the
+suite were looking the other way.
+
+`Should_resume_the_compositions_count_after_a_higher_order_operand` closes it, and states the property
+the other cases don't: `OutsideBudget` **parks** the count and hands it back; it does not discard it.
+Seven nodes — a higher-order operand followed by three ordinary ones — admitted at 7 and refused at 6,
+where a discarded count would make it cost three.
+
+The general lesson, and it is the ledger's own restated: **a bound has two failure directions, and a
+suite written while fixing a too-permissive bug tends to test only the strict one.** Every case here
+was written against over-charging; none was written against under-charging, and that is exactly the gap
+the mutation found.
+
 ### Naming, after the fact
 
 The first names were `Scope` / `owned` / `Suppressed`, and they read as one mechanism spelled twice —
