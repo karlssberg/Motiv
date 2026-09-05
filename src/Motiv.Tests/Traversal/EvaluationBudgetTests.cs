@@ -50,35 +50,103 @@ public class EvaluationBudgetTests : IDisposable
     /// charge a 250,000-element collection 250,000 times over — and the remarks on
     /// <see cref="MotivLimits.MaxEvaluationSize" /> promise it does not.
     /// <para>
+    /// Stated over both funnels and all three iteration shapes, because neither axis is free. The
+    /// materializing funnel and the allocation-free <c>HigherOrderShortCircuit</c> reach their elements
+    /// by different routes, so excluding one would leave the other charging; and each funnel takes a
+    /// <c>T[]</c> fast path, an <see cref="IReadOnlyList{T}" /> path and a <c>foreach</c> fallback, so a
+    /// single shape leaves two branches unpinned.
+    /// </para>
+    /// <para>
     /// The higher-order proposition is composed into an operation deliberately: evaluated on its own it
     /// is the outermost fold's caller, so every element would start a fresh budget whether the
     /// exclusion existed or not, and the case would pass without proving anything.
     /// </para>
     /// </summary>
-    [Fact]
-    public void Should_not_charge_a_higher_order_propositions_per_element_work_to_the_budget()
+    /// <remarks>
+    /// Unwrapping the array branch of either funnel left the whole suite green while this stood as a
+    /// pair of single-shape cases over <see cref="Enumerable.Repeat{TResult}" />, which is never an
+    /// array. A caller handing over an <c>Order[]</c> — the shape <see cref="HigherOrderResults" />' own
+    /// remarks call the one the hot path supplies — would have lost the exclusion with nothing going
+    /// red.
+    /// </remarks>
+    [Theory]
+    [MemberData(nameof(ElementSources))]
+    public void Should_not_charge_a_higher_order_propositions_per_element_work_to_the_budget(
+        string shape,
+        Func<IEnumerable<int>> source)
     {
         MotivLimits.MaxEvaluationSize = 100;
 
         // 50 elements, three nodes apiece — 150 in all, against a limit of 100.
         var composed = AllElementsPass(elements: 50).And(NonEmpty());
 
-        composed.Evaluate(Enumerable.Repeat(2, 50)).Satisfied.ShouldBeTrue();
+        composed.Evaluate(source()).Satisfied.ShouldBeTrue($"as a {shape}, on the materializing funnel");
+        composed.Matches(source()).ShouldBeTrue($"as a {shape}, on the short-circuiting funnel");
     }
 
+    public static TheoryData<string, Func<IEnumerable<int>>> ElementSources() =>
+        new()
+        {
+            { "T[]", () => Enumerable.Repeat(2, 50).ToArray() },
+            { "List<T>", () => Enumerable.Repeat(2, 50).ToList() },
+            { "lazy sequence", () => Enumerable.Range(0, 50).Select(_ => 2) }
+        };
+
     /// <summary>
-    /// The same exclusion on the allocation-free path, which reaches its elements through
-    /// <c>HigherOrderShortCircuit</c> rather than through the materializing helper — a different funnel,
-    /// so suppressing one would leave the other charging.
+    /// Producing an element is part of resolving it. Only the projection was excluded, so a lazy source
+    /// whose <c>MoveNext</c> evaluates a proposition charged the composition once per element — and the
+    /// same models passed as an array did not, because an array is fully produced before the funnel is
+    /// entered. A bound that depends on whether the caller wrote <c>.ToArray()</c> is not a bound.
     /// </summary>
     [Fact]
-    public void Should_not_charge_a_higher_order_propositions_per_element_work_to_a_match()
+    public void Should_not_charge_a_lazy_sources_enumeration_to_the_budget()
     {
         MotivLimits.MaxEvaluationSize = 100;
 
-        var composed = AllElementsPass(elements: 50).And(NonEmpty());
+        var perElement = Leaf(0).And(Leaf(1)).And(Leaf(2)); // five nodes for every MoveNext
+        var composed = AllElements(Leaf(9)).And(NonEmpty());
 
-        composed.Matches(Enumerable.Repeat(2, 50)).ShouldBeTrue();
+        IEnumerable<int> Lazy() => Enumerable.Range(0, 100).Select(_ => 2).Where(perElement.Matches);
+
+        composed.Evaluate(Lazy()).Satisfied.ShouldBeTrue();
+        composed.Matches(Lazy()).ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// <see cref="EnumerableExtensions.Where{TModel,TMetadata}" /> is the library's third place that
+    /// resolves one element at a time, and it was not excluded — which made
+    /// <c>EvaluationBudget</c>'s claim that there were only two of them false in its own assembly.
+    /// </summary>
+    [Fact]
+    public void Should_not_charge_the_where_extensions_per_element_evaluation()
+    {
+        MotivLimits.MaxEvaluationSize = 100;
+
+        var isPriority = Leaf(0).And(Leaf(1)); // three nodes per element
+        var anyPriority = Spec
+            .Build((IEnumerable<int> models) => models.Where(isPriority).Any())
+            .Create("any is priority");
+
+        var composed = anyPriority.And(NonEmpty());
+
+        composed.Evaluate(Enumerable.Repeat(2, 50).ToArray()).Satisfied.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// A <c>Tap</c> callback is a side effect hung off a node, not part of the decision the node makes,
+    /// so whatever it evaluates is work inside that node. Charged, adding an audit hook to a rule could
+    /// make the rule itself refuse — the failure attributed to the decision rather than to the
+    /// observability that caused it.
+    /// </summary>
+    [Fact]
+    public void Should_not_charge_a_tap_callbacks_own_evaluation_to_the_budget()
+    {
+        MotivLimits.MaxEvaluationSize = 20;
+
+        var audit = FlatChain(10); // 19 nodes — within the limit alone, over it when added
+        var composed = Leaf(0).Tap((model, _) => audit.Evaluate(model)).And(Leaf(1));
+
+        composed.Evaluate(2).Satisfied.ShouldBeTrue();
     }
 
     /// <summary>
@@ -114,7 +182,7 @@ public class EvaluationBudgetTests : IDisposable
     }
 
     /// <summary>
-    /// The half of the exclusion a leak canary cannot see. <c>OutsideBudget</c> <em>parks</em> the count
+    /// The half of the exclusion a leak canary cannot see. <c>EvaluationBudget.Exclude</c> <em>parks</em> the count
     /// and hands it back; it does not discard it. A version that zeroed the count and never restored
     /// would leak in the <em>permissive</em> direction — the composition forgetting what it spent before
     /// the higher-order operand — so the bound would quietly weaken rather than misfire.
@@ -201,7 +269,7 @@ public class EvaluationBudgetTests : IDisposable
             { "throwing-predicate", () => Leaf(0).And(Throwing()).Evaluate(2) },
             { "throwing-predicate-on-matches", () => { _ = Leaf(0).And(Throwing()).Matches(2); } },
 
-            // Thrown from inside OutsideBudget's work, so the restore has to happen on the exceptional
+            // Thrown from inside the exclusion scope, so the restore has to happen on the exceptional
             // path too — and then the outer fold's release on top of it.
             { "throwing-element", () => AllElements(Throwing()).And(NonEmpty()).Evaluate(Enumerable.Repeat(2, 4)) },
             { "throwing-element-on-matches", () => { _ = AllElements(Throwing()).And(NonEmpty()).Matches(Enumerable.Repeat(2, 4)); } },
@@ -210,7 +278,7 @@ public class EvaluationBudgetTests : IDisposable
             // which the composition above it was never spending.
             { "oversized-element", () => AllElements(FlatChain(CanaryCost * 4)).And(NonEmpty()).Evaluate(Enumerable.Repeat(2, 2)) },
 
-            // Thrown by the sequence itself, between two OutsideBudget calls rather than inside one.
+            // Thrown by the sequence itself — inside the exclusion scope, but not inside a projection.
             { "throwing-sequence", () => AllElements(Leaf(0)).And(NonEmpty()).Evaluate(ThrowingSequence()) }
         };
 

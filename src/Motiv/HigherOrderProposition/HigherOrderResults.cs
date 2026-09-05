@@ -14,10 +14,11 @@ namespace Motiv.HigherOrderProposition;
 ///     as an explicit argument so that call sites can pass a non-capturing <c>static</c> lambda, keeping the
 ///     materialization free of per-evaluation closure allocations.
 ///     <para>
-///     Each element is resolved through <see cref="EvaluationBudget.OutsideBudget{TArgument,TState,TResult}" />: a
-///     collection of a quarter of a million models is not a composition of a quarter of a million nodes, and
-///     <see cref="MotivLimits.MaxEvaluationSize" /> has always excluded this seam. Each element is budgeted
-///     afresh, so a single element's own composition is still bounded.
+///     Elements are resolved inside <see cref="EvaluationBudget.Exclude" />: a collection of a quarter of a
+///     million models is not a composition of a quarter of a million nodes, and
+///     <see cref="MotivLimits.MaxEvaluationSize" /> has always excluded this seam. The scope spans the
+///     enumeration as well as the projection, because producing an element is part of resolving it. Each
+///     element is budgeted afresh, so a single element's own composition is still bounded.
 ///     </para>
 /// </remarks>
 internal static class HigherOrderResults
@@ -30,11 +31,14 @@ internal static class HigherOrderResults
         if (source is null)
             throw new ArgumentNullException(nameof(source));
 
+        // Excluded for the whole loop, enumeration included — see the remarks above.
+        using var exclusion = EvaluationBudget.Exclude();
+
         if (source is TSource[] array)
         {
             var results = new TResult[array.Length];
             for (var i = 0; i < array.Length; i++)
-                results[i] = EvaluationBudget.OutsideBudget(array[i], state, project);
+                results[i] = project(array[i], state);
 
             return results;
         }
@@ -44,14 +48,14 @@ internal static class HigherOrderResults
             var count = list.Count;
             var results = new TResult[count];
             for (var i = 0; i < count; i++)
-                results[i] = EvaluationBudget.OutsideBudget(list[i], state, project);
+                results[i] = project(list[i], state);
 
             return results;
         }
 
         var buffer = new List<TResult>();
         foreach (var item in source)
-            buffer.Add(EvaluationBudget.OutsideBudget(item, state, project));
+            buffer.Add(project(item, state));
 
         return buffer.ToArray();
     }

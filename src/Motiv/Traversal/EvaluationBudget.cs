@@ -21,11 +21,11 @@ namespace Motiv.Traversal;
 /// <b>The exclusion is documented, and declared rather than detected.</b> A higher-order proposition
 /// resolves its inner spec once per element through that same entry point, and
 /// <see cref="MotivLimits.MaxEvaluationSize" /> has always promised such work is not counted — a
-/// 250,000-element collection is not a 250,000-node
-/// composition. The fold cannot tell the two re-entries apart, so the higher-order funnels say so
-/// themselves through <see cref="OutsideBudget{TArgument,TState,TResult}" /> — see
-/// <c>HigherOrderResults</c> and <c>HigherOrderShortCircuit</c>, the only two places in the library
-/// where an element is resolved.
+/// 250,000-element collection is not a 250,000-node composition. The fold cannot tell the two
+/// re-entries apart, so the places that resolve elements say so themselves through
+/// <see cref="Exclude" /> — <c>HigherOrderResults</c>, <c>HigherOrderShortCircuit</c> and
+/// <c>EnumerableExtensions.Where</c>. The same declaration covers a <c>Tap</c> callback, which is a
+/// side effect hung off a node rather than part of the decision the node makes.
 /// </para>
 /// <para>
 /// <b>Why a thread-static.</b> <see cref="SpecBase{TModel}.Evaluate" /> and
@@ -76,37 +76,44 @@ internal static class EvaluationBudget
             $"{nameof(MotivLimits)}.{nameof(MotivLimits.MaxEvaluationSize)}.");
 
     /// <summary>
-    /// Derives one value with the budget set aside, so that work done <em>inside</em> a node neither
-    /// spends the composition's budget nor goes unbounded itself — whatever <paramref name="work" />
-    /// composes is bounded afresh, as though it had been evaluated on its own.
+    /// Sets the composition's budget aside for a span of work done <em>inside</em> a node, so that the
+    /// work neither spends that budget nor goes unbounded itself — whatever happens within the scope is
+    /// bounded afresh, as though it had been evaluated on its own.
     /// </summary>
     /// <remarks>
-    /// An invocation rather than a second <c>using</c> scope: both callers exclude exactly one
-    /// projection, and holding the rule here rather than as a helper apiece keeps it in one place should
-    /// a third element-resolving call site ever appear. <paramref name="state" /> is threaded through
-    /// rather than captured so those callers can keep handing over a non-capturing <c>static</c> lambda.
-    /// <para>
     /// The count is set aside and handed back rather than released, which is what separates this from
     /// <see cref="Ownership" />: the composition that was in flight resumes counting from where it left
     /// off, so a hundred elements cost it what one does — nothing.
+    /// <para>
+    /// A looping caller scopes it around the whole loop, <em>enumeration included</em>, rather than
+    /// around each element. Wrapping the projection alone left a lazy source's <c>MoveNext</c> outside
+    /// the exclusion, so a sequence whose enumerator evaluated a proposition charged the composition
+    /// once per element while the same models passed as an array did not — a bound that depended on
+    /// whether the caller had written <c>.ToArray()</c>. Producing an element is part of resolving it.
+    /// (<c>EnumerableExtensions.Where</c> is the exception, and per element of necessity: its
+    /// projection is deferred, so the scope has to live where the evaluation does.)
+    /// </para>
+    /// <para>
+    /// Elements do not accumulate against each other within the span, and nothing here arranges that:
+    /// an element's own evaluation enters the fold with the count at zero, so it is a root, and
+    /// <see cref="Ownership" /> releases a root's count on the way out. Each element therefore starts
+    /// from zero and stays bounded on its own account. A per-element reset here would only restate what
+    /// <see cref="Ownership" /> already guarantees — no mutation can tell the two apart.
     /// </para>
     /// </remarks>
-    internal static TResult OutsideBudget<TArgument, TState, TResult>(
-        TArgument argument,
-        TState state,
-        Func<TArgument, TState, TResult> work)
+    internal static Exclusion Exclude()
     {
         var outer = _spent;
         _spent = 0;
+        return new Exclusion(outer);
+    }
 
-        try
-        {
-            return work(argument, state);
-        }
-        finally
-        {
-            _spent = outer;
-        }
+    /// <summary>
+    /// A span of work the composition is not charged for. Disposal hands the composition's count back.
+    /// </summary>
+    internal ref struct Exclusion(int outer)
+    {
+        public readonly void Dispose() => _spent = outer;
     }
 
     /// <summary>
@@ -123,9 +130,9 @@ internal static class EvaluationBudget
     /// per-fold bound that #202 removed: the fifty-layer composition that must be refused at 100 peaks
     /// at about 21 under both, rather than reaching 1,050.
     /// <para>
-    /// Distinct from <see cref="OutsideBudget{TArgument,TState,TResult}" />, which it resembles and is
-    /// not. This asks whether an evaluation is <i>over</i>; that one asserts a span of work was never
-    /// <i>part of</i> the evaluation.
+    /// Distinct from <see cref="Exclude" />, which it resembles and is not. This asks whether an
+    /// evaluation is <i>over</i>; that one asserts a span of work was never <i>part of</i> the
+    /// evaluation.
     /// </para>
     /// </remarks>
     internal ref struct Ownership(bool isRoot)

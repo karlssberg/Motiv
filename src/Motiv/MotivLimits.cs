@@ -38,6 +38,18 @@ public static class MotivLimits
     /// collection, say — is not counted and is not bounded by this.
     /// </para>
     /// <para>
+    /// That exclusion is <em>declared</em> rather than detected, and the distinction matters when you
+    /// write the node. The engine cannot tell a re-entrant evaluation that is part of the composition
+    /// from one that is work inside a node, so the library marks the places it knows: resolving an
+    /// element of a higher-order proposition, <c>EnumerableExtensions.Where</c>, and a <c>Tap</c>
+    /// callback. Everything else that evaluates a proposition while an evaluation is in flight
+    /// <b>is</b> counted — notably a predicate of your own that evaluates a proposition per item
+    /// (<c>Spec.Build((Order o) =&gt; o.Lines.All(line.Matches))</c>), a higher-order predicate supplied
+    /// through <c>As(...)</c>, and a <c>WhenTrue</c>/<c>WhenFalse</c> delegate resolved while another
+    /// evaluation is running. Prefer the built-in quantifiers — <c>AsAllSatisfied</c> and its siblings —
+    /// where the per-item work should not count against the rule that contains it.
+    /// </para>
+    /// <para>
     /// Work spread across <em>decorator layers</em> is counted, though. A decorator between two operator
     /// layers is not folded — it re-enters the fold — but the nested fold spends the same budget, so
     /// fifty layers of ten operands is refused by the same limit of 100 that refuses the flat chain of

@@ -186,8 +186,9 @@ exclusion `HigherOrderResults` documents"). "Avoid over-DRYing" guards *builder 
 differ semantically*; this was a single invariant with two copies, and an invariant that has to name its
 own duplicates is one a third call site can silently omit.
 
-They collapsed into `EvaluationBudget.OutsideBudget(argument, state, work)` — an invocation rather than a
-scope, which deletes the second `ref struct` outright. Both cautions the pass was asked to weigh turned
+They collapsed into a single element-resolution helper on the budget itself — an invocation rather
+than a scope, which deleted the second `ref struct` outright. Code review later moved it back to a
+scope for reasons the section below records. Both cautions the pass was asked to weigh turned
 out not to bite: neither helper closed over anything (both were already `static`, threading `state`
 explicitly so call sites keep handing over non-capturing `static` lambdas), and `using var` compiles to
 try/finally, so nothing was inlineable before either. The 0-byte allocation case is what confirms it.
@@ -219,9 +220,9 @@ hook into the budget. A canary composition costing *exactly* the limit is satisf
 refused by a leak of a single node.
 
 Eight failure shapes, run as a theory: the bound exceeded at the top and inside a nested fold; a
-throwing predicate mid-fold; a throwing element (inside `OutsideBudget`); an element whose own
+throwing predicate mid-fold; a throwing element (inside the exclusion); an element whose own
 composition exceeds the bound (a refusal raised *beneath* a suppression); and a sequence that throws
-while being enumerated (between two `OutsideBudget` calls rather than inside one) — each on `Evaluate`
+while being enumerated (inside the exclusion, but not inside a projection) — each on `Evaluate`
 and, where it differs, `Matches`.
 
 Then the same treatment applied to the implementation, because a suite that has never been seen to
@@ -232,7 +233,7 @@ fail is not evidence:
 | `Ownership` never releases | all 8 failure shapes | ✅ |
 | every fold releases (the "always reset" encoding) | the layered-arithmetic and abandoned-budget cases | ✅ |
 | `Ownership` restores its entry count | the layered-arithmetic cases | ✅ |
-| **`OutsideBudget` never restores** | **nothing** | ❌ |
+| **the exclusion never restores** | **nothing** | ❌ |
 
 **The fourth one survived**, and the reason is worth keeping. Failing to restore leaks in the
 *permissive* direction: the composition forgets what it spent *before* the higher-order operand, so the
@@ -241,7 +242,7 @@ leak canary cannot either, because a discarded count leaves nothing behind to fi
 suite were looking the other way.
 
 `Should_resume_the_compositions_count_after_a_higher_order_operand` closes it, and states the property
-the other cases don't: `OutsideBudget` **parks** the count and hands it back; it does not discard it.
+the other cases don't: the exclusion **parks** the count and hands it back; it does not discard it.
 Seven nodes — a higher-order operand followed by three ordinary ones — admitted at 7 and refused at 6,
 where a discarded count would make it cost three.
 
@@ -258,11 +259,103 @@ both look like "set aside and restore". They are opposites, and the names now sa
 | | Question it answers |
 |---|---|
 | `Ownership` (`isRoot`) | *When this fold ends, does the **evaluation** end?* Only the outermost says yes. |
-| `OutsideBudget` | *This span of work was never **part of** the evaluation.* True at that seam however deeply nested. |
+| `Exclude` | *This span of work was never **part of** the evaluation.* True at that seam however deeply nested. |
 
 Swap either for the other and you get one of the two broken encodings above. `Scope` also collided by
 eye with the unrelated `Diagnostics/EvaluationScope`, which is a telemetry activity and nothing to do
 with counting.
+
+## The code review, and what it moved
+
+A high-effort review over the merged diff returned ten findings. Three confirmed correctness findings
+shared one root cause, and fixing them changed the shape of the exclusion.
+
+### The exclusion was attached to two helpers, not to a concept
+
+`EvaluationBudget`'s remarks claimed `HigherOrderResults` and `HigherOrderShortCircuit` were *"the only
+two places in the library where an element is resolved"*. That was checked before it was written and
+was still wrong: **`EnumerableExtensions.Where(spec)`** resolves one element at a time through a
+deferred `Select`, and was charging every element to whatever composition happened to be in flight. A
+50-element `Where` inside a rule refused at a limit of 100 that the rule itself never approached.
+
+Two more re-entries were charged for the same reason — a `Tap` callback (a side effect hung off a node,
+by definition not part of the decision) and any predicate of the author's own that evaluates a
+proposition per item. The first is now excluded; the second **cannot be**, and the honest fix was to
+stop promising otherwise. `MotivLimits`' remarks and `docs/limits/index.md` now say the exclusion is
+*declared, not detected*, list the three seams that declare it, and name what stays counted —
+`Spec.Build((Order o) => o.Lines.All(line.Matches))` among them, with the `AsAllSatisfied` +
+`ChangeModelTo` form that is excluded shown beside it. (The example is compile-checked, not written
+from memory.)
+
+### The bound depended on whether the caller wrote `.ToArray()`
+
+Wrapping the projection alone left a lazy source's `MoveNext` outside the exclusion. A sequence whose
+enumerator evaluated a proposition charged the composition once per element; the same models passed as
+an array did not, because an array is fully produced before the funnel is entered. Producing an element
+is part of resolving it, so the scope now spans the enumeration too.
+
+### The fix is smaller than the first attempt, and mutation testing is why
+
+The first attempt hoisted the scope around each loop *and* reset the count per element, on the
+reasoning that elements would otherwise accumulate within one span. Mutating that reset away left the
+suite green — and the reason is not a coverage gap:
+
+> An element's own evaluation enters the fold with the count at zero, so it is a **root**, and
+> `Ownership` releases a root's count on the way out. Elements cannot accumulate against each other.
+
+The per-element reset was restating a guarantee that already existed one layer down. Deleting it
+collapsed the change to **one `using` line per funnel**, let `HigherOrderShortCircuit`'s switch revert
+to its original one-line cases, and removed the hand-stepped enumerator the first attempt needed. The
+review's separate complaint about that switch's added braces and locals dissolved with it.
+
+Worth keeping as a rule: *a redundancy that no mutation can distinguish is not defence in depth, it is
+a second statement of an invariant that can drift from the first.*
+
+### What each seam now refuses
+
+Every exclusion is mutation-checked — removing it from any of the four seams turns the suite red:
+
+| Seam | Cases that go red |
+|---|---|
+| `HigherOrderResults.Materialize` | 4 |
+| `HigherOrderShortCircuit.Evaluate` | 4 |
+| `EnumerableExtensions.Where` | 1 |
+| `Tap` callbacks | 1 |
+
+And the source-shape theory (`T[]`, `List<T>`, lazy) closes the coverage gap the review found: every
+earlier case fed `Enumerable.Repeat`, which is an `IReadOnlyList<T>` and never an array, so unwrapping
+either funnel's array fast path had left the whole suite green. The theory subsumed the two
+fixed-shape cases that preceded it, and its failure message names the shape that broke.
+
+The simplifier pass that followed found two mistakes in the fix itself, both of the kind a green suite
+cannot see: a `using` inserted between a `// ReSharper disable once CheckNamespace` comment and the
+`namespace` it suppressed for — silently re-targeting the suppression at the using — and a "the same
+applies to" clause in the limits page whose antecedent had moved when the paragraph was edited. It also
+collapsed the three `Tap*Spec` classes, which were byte-identical but for one boolean and had just
+acquired a third copy of the same four-line rationale, onto a `TapSpecBase` with a single
+`ShouldInvokeCallback` — so the exclusion is stated once. That is not the "avoid over-DRYing" carve-out,
+which CLAUDE.md scopes to builder paths whose branches differ semantically; these had no semantic
+difference at all.
+
+### Findings not taken
+
+- **The asynchronous carrier** stays [#204](https://github.com/karlssberg/Motiv/issues/204). The review
+  added that mixing sync and async can make the bound *scheduling-dependent* rather than merely looser,
+  which #204 now records.
+- **A higher-order predicate supplied through `As(...)`** is still charged —
+  [#208](https://github.com/karlssberg/Motiv/issues/208). One evaluation per node rather than one per
+  element, so the magnitude is bounded where the per-element cases were not; excluding it means
+  touching nineteen proposition classes, and the version worth having (a combined
+  materialize-and-decide helper, so the exclusion is structural rather than repeated) is a reshaping of
+  every higher-order proposition.
+- **`Charge()` increments before it throws** — [#209](https://github.com/karlssberg/Motiv/issues/209).
+  A caught refusal leaves the count over the limit for the rest of the evaluation, and the library
+  swallows `SpecException` in three places around lazy explanation resolution. Its weaker
+  exception-free half is arguably the more interesting one: rendering `Reason` under telemetry charges
+  the composition, and explanation rendering is not composition.
+- **The per-node thread-static cost** was measured at 2–3% on net9 with the sign flipping between runs
+  — inside noise. Only the unmeasured net472 argument survives, and the fold-local alternative adds
+  three synchronisation points for no measured gain.
 
 ## What was left alone, and why
 
@@ -280,7 +373,7 @@ with counting.
 
 | File | What changed |
 |---|---|
-| `src/Motiv/Traversal/EvaluationBudget.cs` | New. `Enter` / `Charge` / `OutsideBudget`, a `[ThreadStatic]` count, one `ref struct` (`Ownership`). Carries the rule and its reasons. |
+| `src/Motiv/Traversal/EvaluationBudget.cs` | New. `Enter` / `Charge` / `Exclude`, a `[ThreadStatic]` count, two `ref struct`s (`Ownership`, `Exclusion`). Carries the rule and its reasons. |
 | `src/Motiv/Traversal/EvaluationFold.cs` | Claims the budget before taking the frame buffer, charges through it; the class remark that stated Spec 3E's refuted argument now says what #145 found. |
 | `src/Motiv/HigherOrderProposition/HigherOrderResults.cs` | Elements resolved under suppression. |
 | `src/Motiv/HigherOrderProposition/HigherOrderShortCircuit.cs` | The same, on the allocation-free path. |
