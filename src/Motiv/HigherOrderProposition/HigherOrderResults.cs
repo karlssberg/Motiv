@@ -1,3 +1,5 @@
+using Motiv.Traversal;
+
 namespace Motiv.HigherOrderProposition;
 
 /// <summary>
@@ -11,6 +13,13 @@ namespace Motiv.HigherOrderProposition;
 ///     The projection receives the per-call <paramref name="state" /> (e.g. the underlying predicate or resolver)
 ///     as an explicit argument so that call sites can pass a non-capturing <c>static</c> lambda, keeping the
 ///     materialization free of per-evaluation closure allocations.
+///     <para>
+///     Elements are resolved inside <see cref="EvaluationBudget.Exclude" />: a collection of a quarter of a
+///     million models is not a composition of a quarter of a million nodes, and
+///     <see cref="MotivLimits.MaxEvaluationSize" /> has always excluded this seam. The scope spans the
+///     enumeration as well as the projection, because producing an element is part of resolving it. Each
+///     element is budgeted afresh, so a single element's own composition is still bounded.
+///     </para>
 /// </remarks>
 internal static class HigherOrderResults
 {
@@ -21,6 +30,9 @@ internal static class HigherOrderResults
     {
         if (source is null)
             throw new ArgumentNullException(nameof(source));
+
+        // Excluded for the whole loop, enumeration included — see the remarks above.
+        using var exclusion = EvaluationBudget.Exclude();
 
         if (source is TSource[] array)
         {
