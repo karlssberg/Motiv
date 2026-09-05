@@ -33,7 +33,7 @@ internal readonly struct HigherOrderShortCircuit(HigherOrderOp op, int n)
     /// avoid enumerator allocation; the operation's decision logic is shared across all iteration shapes.
     /// </summary>
     /// <remarks>
-    /// Each element is derived through <see cref="EvaluationBudget.Suppressed{TArgument,TState,TResult}" />, for
+    /// Each element is derived through <see cref="EvaluationBudget.OutsideBudget{TArgument,TState,TResult}" />, for
     /// the reason <see cref="HigherOrderResults" /> gives — this is the allocation-free half of the same seam.
     /// </remarks>
     internal bool Evaluate<TModel, TState>(
@@ -56,7 +56,7 @@ internal readonly struct HigherOrderShortCircuit(HigherOrderOp op, int n)
             {
                 for (var i = 0; i < array.Length; i++)
                 {
-                    var satisfied = EvaluationBudget.Suppressed(array[i], state, project);
+                    var satisfied = EvaluationBudget.OutsideBudget(array[i], state, project);
                     if (TryDecide(satisfied, ref trueCount, out var decided))
                         return decided;
                 }
@@ -69,7 +69,7 @@ internal readonly struct HigherOrderShortCircuit(HigherOrderOp op, int n)
                 var count = list.Count;
                 for (var i = 0; i < count; i++)
                 {
-                    var satisfied = EvaluationBudget.Suppressed(list[i], state, project);
+                    var satisfied = EvaluationBudget.OutsideBudget(list[i], state, project);
                     if (TryDecide(satisfied, ref trueCount, out var decided))
                         return decided;
                 }
@@ -81,7 +81,7 @@ internal readonly struct HigherOrderShortCircuit(HigherOrderOp op, int n)
             {
                 foreach (var item in source)
                 {
-                    var satisfied = EvaluationBudget.Suppressed(item, state, project);
+                    var satisfied = EvaluationBudget.OutsideBudget(item, state, project);
                     if (TryDecide(satisfied, ref trueCount, out var decided))
                         return decided;
                 }

@@ -186,14 +186,14 @@ exclusion `HigherOrderResults` documents"). "Avoid over-DRYing" guards *builder 
 differ semantically*; this was a single invariant with two copies, and an invariant that has to name its
 own duplicates is one a third call site can silently omit.
 
-They collapsed into `EvaluationBudget.Suppressed(argument, state, work)` — an invocation rather than a
+They collapsed into `EvaluationBudget.OutsideBudget(argument, state, work)` — an invocation rather than a
 scope, which deletes the second `ref struct` outright. Both cautions the pass was asked to weigh turned
 out not to bite: neither helper closed over anything (both were already `static`, threading `state`
 explicitly so call sites keep handing over non-capturing `static` lambdas), and `using var` compiles to
 try/finally, so nothing was inlineable before either. The 0-byte allocation case is what confirms it.
 
-`Enter`/`Scope` were deliberately left as they were. The obvious tidy — have `Scope` restore the entry
-count rather than carry an `owned` flag — is *wrong*: a nested fold would refund its spending on the way
+`Enter`/`Ownership` were deliberately left as they were. The obvious tidy — have `Ownership` restore the
+entry count rather than carry an `isRoot` flag — is *wrong*: a nested fold would refund its spending on the way
 out, so sibling decorator subtrees would each get a fresh allowance and the flat-versus-layered
 equivalence this slice establishes would break in a way none of the tests above are shaped to catch.
 The `bool` is the honest encoding.
@@ -208,6 +208,20 @@ That message is now duplicated between `EvaluationBudget` and `AsyncEvaluationFo
 between the two folds before this PR, so it is not a regression, and collapsing it means giving the
 async fold a budget — which is [#204](https://github.com/karlssberg/Motiv/issues/204), where it will
 fall out for free.
+
+### Naming, after the fact
+
+The first names were `Scope` / `owned` / `Suppressed`, and they read as one mechanism spelled twice —
+both look like "set aside and restore". They are opposites, and the names now say which:
+
+| | Question it answers |
+|---|---|
+| `Ownership` (`isRoot`) | *When this fold ends, does the **evaluation** end?* Only the outermost says yes. |
+| `OutsideBudget` | *This span of work was never **part of** the evaluation.* True at that seam however deeply nested. |
+
+Swap either for the other and you get one of the two broken encodings above. `Scope` also collided by
+eye with the unrelated `Diagnostics/EvaluationScope`, which is a telemetry activity and nothing to do
+with counting.
 
 ## What was left alone, and why
 
@@ -225,7 +239,7 @@ fall out for free.
 
 | File | What changed |
 |---|---|
-| `src/Motiv/Traversal/EvaluationBudget.cs` | New. `Enter` / `Charge` / `Suppressed`, a `[ThreadStatic]` count, one `ref struct` scope. Carries the rule and its reasons. |
+| `src/Motiv/Traversal/EvaluationBudget.cs` | New. `Enter` / `Charge` / `OutsideBudget`, a `[ThreadStatic]` count, one `ref struct` (`Ownership`). Carries the rule and its reasons. |
 | `src/Motiv/Traversal/EvaluationFold.cs` | Claims the budget before taking the frame buffer, charges through it; the class remark that stated Spec 3E's refuted argument now says what #145 found. |
 | `src/Motiv/HigherOrderProposition/HigherOrderResults.cs` | Elements resolved under suppression. |
 | `src/Motiv/HigherOrderProposition/HigherOrderShortCircuit.cs` | The same, on the allocation-free path. |

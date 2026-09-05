@@ -18,12 +18,14 @@ namespace Motiv.Traversal;
 /// fifty decorator layers of ten operands passed a limit of a hundred.
 /// </para>
 /// <para>
-/// <b>Suppression is the documented exception.</b> A higher-order proposition resolves its inner spec
-/// once per element through that same entry point, and <see cref="MotivLimits.MaxEvaluationSize" /> has
-/// always promised such work is not counted — a 250,000-element collection is not a 250,000-node
-/// composition. The fold cannot tell the two re-entries apart, so the higher-order funnels declare it:
-/// see <c>HigherOrderResults</c> and <c>HigherOrderShortCircuit</c>, which are the only two places in
-/// the library where an element is resolved.
+/// <b>The exclusion is documented, and declared rather than detected.</b> A higher-order proposition
+/// resolves its inner spec once per element through that same entry point, and
+/// <see cref="MotivLimits.MaxEvaluationSize" /> has always promised such work is not counted — a
+/// 250,000-element collection is not a 250,000-node
+/// composition. The fold cannot tell the two re-entries apart, so the higher-order funnels say so
+/// themselves through <see cref="OutsideBudget{TArgument,TState,TResult}" /> — see
+/// <c>HigherOrderResults</c> and <c>HigherOrderShortCircuit</c>, the only two places in the library
+/// where an element is resolved.
 /// </para>
 /// <para>
 /// <b>Why a thread-static.</b> <see cref="SpecBase{TModel}.Evaluate" /> and
@@ -39,20 +41,20 @@ internal static class EvaluationBudget
 {
     /// <summary>
     /// Nodes charged to the evaluation in flight on this thread. Zero means no budget is in force, so
-    /// the next <see cref="Enter" /> is the outermost one and owns the reset.
+    /// the next <see cref="Enter" /> is the outermost one and takes <see cref="Ownership" /> of it.
     /// </summary>
     [ThreadStatic] private static int _spent;
 
     /// <summary>
-    /// Charges the fold's root node and returns the scope that releases the budget, if this fold owns
-    /// it. A fold entered while another is unwinding — the decorator case — spends the caller's budget
-    /// and releases nothing.
+    /// Charges the fold's root node and returns its <see cref="Ownership" /> of the budget. A fold
+    /// entered while another is unwinding — the decorator case — spends the caller's budget and owns
+    /// nothing.
     /// </summary>
-    internal static Scope Enter()
+    internal static Ownership Enter()
     {
-        var owned = _spent == 0;
+        var isRoot = _spent == 0;
         Charge();
-        return new Scope(owned);
+        return new Ownership(isRoot);
     }
 
     /// <summary>Charges one node, abandoning the evaluation when the bound is passed.</summary>
@@ -79,13 +81,17 @@ internal static class EvaluationBudget
     /// composes is bounded afresh, as though it had been evaluated on its own.
     /// </summary>
     /// <remarks>
-    /// An invocation rather than a second <c>using</c> scope: both callers suppress for the span of
-    /// exactly one projection, and holding the exclusion here rather than as a helper apiece keeps the
-    /// rule in one place should a third element-resolving call site ever appear.
-    /// <paramref name="state" /> is threaded through rather than captured so those callers can keep
-    /// handing over a non-capturing <c>static</c> lambda.
+    /// An invocation rather than a second <c>using</c> scope: both callers exclude exactly one
+    /// projection, and holding the rule here rather than as a helper apiece keeps it in one place should
+    /// a third element-resolving call site ever appear. <paramref name="state" /> is threaded through
+    /// rather than captured so those callers can keep handing over a non-capturing <c>static</c> lambda.
+    /// <para>
+    /// The count is set aside and handed back rather than released, which is what separates this from
+    /// <see cref="Ownership" />: the composition that was in flight resumes counting from where it left
+    /// off, so a hundred elements cost it what one does — nothing.
+    /// </para>
     /// </remarks>
-    internal static TResult Suppressed<TArgument, TState, TResult>(
+    internal static TResult OutsideBudget<TArgument, TState, TResult>(
         TArgument argument,
         TState state,
         Func<TArgument, TState, TResult> work)
@@ -104,15 +110,29 @@ internal static class EvaluationBudget
     }
 
     /// <summary>
-    /// Releases the budget on the way out of the fold that claimed it — including when the fold is
-    /// abandoned, so that a refused evaluation cannot leave its spending behind for the next caller on
-    /// the thread.
+    /// Answers one question for the fold holding it: <b>when I end, does the evaluation end?</b> Only
+    /// the outermost fold — the one that found no budget in force — can say yes, and only it releases
+    /// the count. That happens however the fold leaves, so a refused evaluation cannot leave its
+    /// spending behind for the next caller on the thread.
     /// </summary>
-    internal ref struct Scope(bool owned)
+    /// <remarks>
+    /// The flag is the load-bearing part, and the two tidier-looking encodings are both wrong. Making
+    /// every fold release would <em>refund</em> a decorator's subtree, so sibling subtrees would each
+    /// get the whole allowance back. Restoring the count this fold entered with does the same thing
+    /// more subtly, charging a whole nested subtree as one node. Either one silently reinstates the
+    /// per-fold bound that #202 removed: the fifty-layer composition that must be refused at 100 peaks
+    /// at about 21 under both, rather than reaching 1,050.
+    /// <para>
+    /// Distinct from <see cref="OutsideBudget{TArgument,TState,TResult}" />, which it resembles and is
+    /// not. This asks whether an evaluation is <i>over</i>; that one asserts a span of work was never
+    /// <i>part of</i> the evaluation.
+    /// </para>
+    /// </remarks>
+    internal ref struct Ownership(bool isRoot)
     {
         public void Dispose()
         {
-            if (owned)
+            if (isRoot)
                 _spent = 0;
         }
     }
