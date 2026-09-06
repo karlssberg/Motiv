@@ -40,32 +40,40 @@ public class DecoratorSeamTests : IDisposable
     /// it is part of the same logical composition, and the documentation therefore claims it is
     /// counted.
     /// <para>
-    /// It is not. <c>EvaluationFold.Fold</c> holds its running size in a local, so every re-entry
-    /// through a decorator starts a fresh count and the bound applies per <em>fold</em> rather than
-    /// per evaluation. Fifty layers of ten operands is over a thousand nodes and passes a limit of a
-    /// hundred, while the flat chain above is refused at two hundred.
+    /// It was not, until <see href="https://github.com/karlssberg/Motiv/issues/202">#202</see>: the
+    /// fold held its running size in a local, so every re-entry through a decorator started a fresh
+    /// count and the bound applied per <em>fold</em>. Fifty layers of ten operands is over a thousand
+    /// nodes and passed a limit of a hundred, while the flat chain above was refused at two hundred.
     /// </para>
     /// </summary>
     [Fact]
-    public void Should_not_yet_bound_a_composition_whose_size_is_spread_across_decorator_layers()
+    public void Should_bound_a_composition_whose_size_is_spread_across_decorator_layers()
     {
         MotivLimits.MaxEvaluationSize = 100;
 
-        // Recorded as it behaves, not as it is documented. Flip this to a ShouldThrow when the bound
-        // becomes per-evaluation.
-        NestedChain(layers: 50, operandsPerLayer: 10).Evaluate(2).Satisfied.ShouldBeTrue();
+        var act = () => NestedChain(layers: 50, operandsPerLayer: 10).Evaluate(2);
+
+        act.ShouldThrow<SpecException>();
     }
 
-    /// <summary>The same hole on the allocation-free path, which shares the defect and not the code.</summary>
+    /// <summary>The same hole on the allocation-free path, which shared the defect and not the code.</summary>
     [Fact]
-    public void Should_not_yet_bound_a_decorator_layered_match()
+    public void Should_bound_a_decorator_layered_match()
     {
         MotivLimits.MaxEvaluationSize = 100;
 
-        NestedChain(layers: 50, operandsPerLayer: 10).Matches(2).ShouldBeTrue();
+        var act = () => { _ = NestedChain(layers: 50, operandsPerLayer: 10).Matches(2); };
+
+        act.ShouldThrow<SpecException>();
     }
 
-    /// <summary>And on the asynchronous fold, whose size local is its own.</summary>
+    /// <summary>
+    /// The asynchronous fold still holds a size local of its own, and #202 fixed only the synchronous
+    /// pair. Its carrier is a separate decision — a thread-static is wrong once a continuation can
+    /// resume elsewhere — and is tracked as
+    /// <see href="https://github.com/karlssberg/Motiv/issues/204">#204</see>. Recorded as it behaves,
+    /// not as it is documented; flip this to a <c>ThrowAsync</c> when that lands.
+    /// </summary>
     [Fact]
     public async Task Should_not_yet_bound_a_decorator_layered_async_evaluation()
     {

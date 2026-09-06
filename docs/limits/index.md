@@ -73,12 +73,40 @@ Two things it is not:
   below.
 - **Not a bound on all work.** It counts the logical composition. Work done *inside* a node &mdash; a
   higher-order proposition over a large collection &mdash; is not counted by it.
-- **Not a bound across decorator layers.** The count is per *fold*, and a decorator between two
-  operator layers re-enters the fold with a fresh count, so a composition whose size is spread across
-  layers passes a limit its flat equivalent is refused by. Fifty layers of ten operands &mdash; over a
-  thousand nodes &mdash; evaluates under a limit of 100. Do not rely on this as a bound on a
-  document-composed evaluation; refuse the document at the edge instead. Tracked as
-  [#202](https://github.com/karlssberg/Motiv/issues/202).
+
+That last exclusion is **declared, not detected**, and it is worth knowing which side of the line your
+code falls on. The engine cannot tell a re-entrant evaluation that is part of the composition from one
+that is work inside a node, so the library marks the places it knows about: resolving an element of a
+higher-order proposition, `Where(spec)`, and a `Tap` callback. Anything else that evaluates a
+proposition while an evaluation is in flight **is** counted &mdash; a predicate of your own that
+evaluates a proposition per item, a higher-order predicate supplied through `As(...)`, and a
+`WhenTrue`/`WhenFalse` delegate resolved while another evaluation is running:
+
+```csharp
+// per-item work that IS counted against the enclosing rule
+var order = Spec.Build((Order o) => o.Lines.All(line.Matches)).Create("lines ok");
+
+// the same intent, where the per-item work is excluded
+var order = Spec.Build(line).AsAllSatisfied().Create("lines ok")
+                .ChangeModelTo((Order o) => o.Lines);
+```
+
+Prefer the built-in quantifiers with [`ChangeModelTo()`](../operators/ChangeModelTo.md) when the
+per-item work should not count against the rule that contains it.
+
+It *does* count across **decorator layers**. A decorator between two operator layers is not folded
+&mdash; it re-enters the fold &mdash; but the nested fold spends the same budget, so a composition
+whose size is spread across layers is refused at the same total its flat equivalent is. Fifty layers
+of ten operands is over a thousand nodes and is refused by a limit of 100, as the flat chain of 200
+is. That is what a rule document composes, since `RuleBinder` wraps every node carrying a `name` or a
+`whenTrue`.
+
+> [!NOTE]
+> Until [#204](https://github.com/karlssberg/Motiv/issues/204), the **asynchronous** fold still counts
+> per fold rather than per evaluation, so `EvaluateAsync` and `MatchesAsync` admit a decorator-layered
+> composition that `Evaluate` and `Matches` refuse. The carrier is the difference: a continuation may
+> resume on another thread, so the synchronous fold's thread-static budget is not available to it.
+> Refuse the document at the edge if you evaluate untrusted compositions asynchronously.
 
 ## The document edge: `RuleSerializerOptions`
 

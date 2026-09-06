@@ -1,4 +1,5 @@
 using Motiv.HigherOrderProposition;
+using Motiv.Traversal;
 // ReSharper disable once CheckNamespace
 using Motiv;
 
@@ -29,6 +30,11 @@ public static class EnumerableExtensions
         var results = sourceCollection
             .Select<TModel, BooleanResult<TModel, TMetadata>>(model =>
             {
+                // Filtering a collection is work inside a node, not a composition of the spec into the
+                // rule being evaluated — the same argument the higher-order funnels make. Scoped per
+                // element rather than around the loop because the projection is deferred: the scope has
+                // to live where the evaluation does, not where Where was called.
+                using var exclusion = EvaluationBudget.Exclude();
                 var result = spec.Evaluate(model);
                 return new BooleanResult<TModel, TMetadata>(model, result);
             });

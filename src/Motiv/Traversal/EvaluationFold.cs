@@ -9,8 +9,16 @@ namespace Motiv.Traversal;
 /// The driver descends through operands that are themselves operations and evaluates everything else —
 /// decorators, higher-order propositions, model-type changes, leaves — through the operand's own
 /// evaluation. A chain of combinators is therefore flat at any depth; a chain of alternating decorators
-/// still costs a frame per decorator layer, which is deliberate: composition depth is attacker-controlled
-/// through a rule document's operand array, and decorator depth is not.
+/// still costs a frame per decorator layer.
+/// <para>
+/// Spec 3E left that standing on the argument that composition depth is attacker-controlled through a
+/// rule document's operand array where decorator depth is not.
+/// <see href="https://github.com/karlssberg/Motiv/issues/145">#145</see> measured the argument and
+/// refuted its bound: a catalogue of propositions each referencing the one before it composes exactly
+/// the alternating shape, whose ceiling is 1,046 links. The depth stays for now
+/// (<see href="https://github.com/karlssberg/Motiv/issues/201">#201</see>), but the <em>size</em> no
+/// longer resets with it — see <see cref="EvaluationBudget" />.
+/// </para>
 /// </remarks>
 internal static class EvaluationFold
 {
@@ -66,6 +74,11 @@ internal static class EvaluationFold
         where TDriver : struct, IFoldDriver<TModel, TMetadata, TValue>
     {
         var driver = default(TDriver);
+
+        // Claimed before the buffer so that a nested fold refused on entry — the decorator layer that
+        // spends the last of its caller's budget — leaves nothing to return.
+        using var budget = EvaluationBudget.Enter();
+
         var frames = FrameBuffer<TModel, TMetadata, TValue>.Take();
         var deepest = 1;
 
@@ -73,7 +86,6 @@ internal static class EvaluationFold
         {
             frames[0] = new Frame<TModel, TMetadata, TValue>(root);
             var depth = 1;
-            var size = 1;
 
             TValue completed = default!;
             var hasCompleted = false;
@@ -102,11 +114,7 @@ internal static class EvaluationFold
                     continue;
                 }
 
-                if (++size > MotivLimits.MaxEvaluationSize)
-                    throw new SpecException(
-                        $"The evaluation exceeded the maximum size of {MotivLimits.MaxEvaluationSize} nodes. " +
-                        "Compose fewer propositions, or raise " +
-                        $"{nameof(MotivLimits)}.{nameof(MotivLimits.MaxEvaluationSize)}.");
+                EvaluationBudget.Charge();
 
                 if (next is IOperationFold<TModel, TMetadata> operation)
                 {
