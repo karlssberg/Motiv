@@ -35,6 +35,29 @@ internal static class EvaluationFold
     /// </summary>
     private const int MaxCachedCapacity = 64;
 
+    /// <summary>
+    /// How many nesting levels keep a buffer for reuse — a count, like
+    /// <see cref="MaxCachedCapacity" />, so the deepest level served is one below it. Not a bound on how
+    /// deep a composition may nest: a fold below it allocates, exactly as every nested fold used to.
+    /// </summary>
+    /// <remarks>
+    /// The width bound is what sets this one. A thread used to retain a single buffer, so at the worst
+    /// case where it had grown to <see cref="MaxCachedCapacity" /> it held around two kilobytes per
+    /// instantiation; retaining a level's buffer takes that to about thirty-two — a sixteenfold rise,
+    /// and about sixty-four times below the two megabytes <see cref="MaxCachedCapacity" /> exists to
+    /// refuse. Left unbounded it would reach exactly that figure:
+    /// <see href="https://github.com/karlssberg/Motiv/issues/201">#201</see> measured the alternating
+    /// ceiling at over a thousand layers.
+    /// <para>
+    /// The figure is per <em>instantiation</em>, and neither bound limits how many of those a process
+    /// has — the pool is a static of a generic type, so a thread that evaluates over many model and
+    /// metadata types holds a pool per closed type it touched. That axis existed before this change at
+    /// a sixteenth of the size, and is the one an application can grow without composing anything
+    /// deeply.
+    /// </para>
+    /// </remarks>
+    private const int MaxCachedDepth = 16;
+
     /// <summary>Evaluates <paramref name="root" />, producing the composed result.</summary>
     internal static BooleanResultBase<TMetadata> Evaluate<TModel, TMetadata>(
         IOperationFold<TModel, TMetadata> root,
@@ -140,40 +163,104 @@ internal static class EvaluationFold
     }
 
     /// <summary>
-    /// One reusable frame buffer per thread, per fold. Without it the shallow compositions that make up
-    /// nearly all evaluation would pay an array allocation each time — and
+    /// Reusable frame buffers, per thread, one per nesting level. Without them the shallow compositions
+    /// that make up nearly all evaluation would pay an array allocation each time — and
     /// <see cref="SpecBase{TModel}.Matches" />, whose contract is that it allocates nothing, would stop
     /// being free.
     /// </summary>
     /// <remarks>
-    /// The buffer is taken rather than borrowed: a fold that calls into an operand's own evaluation can
-    /// re-enter this one, and a nested fold that found the same array would overwrite the frames its
-    /// caller is still unwinding. A nested fold finds nothing and allocates, which is correct and rare.
+    /// A fold that calls into an operand's own evaluation can re-enter this one, and a nested fold
+    /// handed the same array would overwrite the frames its caller is still unwinding. That hazard is
+    /// what one buffer per level answers — two live folds are at two levels, so they read two slots.
+    /// Taking rather than borrowing answers a different question, and <see cref="Take" /> says which.
+    /// <para>
+    /// With a single slot the nested fold found nothing and allocated, which the remarks here called
+    /// "correct and rare". It is correct and it is not rare:
+    /// <see href="https://github.com/karlssberg/Motiv/issues/205">#205</see> measured
+    /// <c>(layers - 1) x 152</c> bytes on the alternating operator/decorator shape, and
+    /// <c>RuleBinder.Decorate</c> wraps every node carrying a <c>name</c> or a <c>whenTrue</c> — so a
+    /// <c>Matches</c> over a document-composed rule allocated linearly in its decorator depth, and the
+    /// allocation-free contract held per <em>fold</em> rather than per evaluation. That is the same
+    /// defect <see href="https://github.com/karlssberg/Motiv/issues/202">#202</see> fixed in
+    /// <see cref="MotivLimits.MaxEvaluationSize" />, in the sibling property.
+    /// </para>
+    /// <para>
+    /// <b>Indexed by nesting level, not by stack position.</b> Both serve every fold up to the cap, and
+    /// they differ only past it — in which levels stop being served, which is the whole question. A
+    /// stack refuses the buffers returned last, and folds return innermost-first, so it would refuse the
+    /// <em>outermost</em>: the one level whose operand run a caller writes by hand and can make wide,
+    /// where the levels a decorator chain adds are two frames each. A wide outermost fold would pop some
+    /// inner level's narrow array, walk the whole resize ladder, and have the result refused — every
+    /// evaluation, and worse than the single slot this replaced, which at least handed the outermost
+    /// fold its own buffer back. Indexing by level inverts that: level <c>d</c> is served level
+    /// <c>d</c>'s own array at every depth, and what goes unserved past the cap is the deep tail.
+    /// </para>
+    /// <para>
+    /// The region-based alternative #205 sketched — one array partitioned by the caller's high-water
+    /// mark — is not in fact contained here. A nested fold that grew the shared array would leave the
+    /// caller's <c>frames</c> local pointing at the array before the resize, so the outer fold would
+    /// unwind against a stale copy; keeping it correct means re-reading the buffer after every leaf, on
+    /// the hot path, which is a change to the fold rather than to its buffer.
+    /// </para>
     /// </remarks>
     private static class FrameBuffer<TModel, TMetadata, TValue>
     {
-        [ThreadStatic] private static Frame<TModel, TMetadata, TValue>[]? _buffer;
+        /// <summary>
+        /// Slot <c>d</c> holds the buffer nesting level <c>d</c> last returned, or <c>null</c> where
+        /// that level has none to hand out. Null until the thread's first <see cref="Return" />.
+        /// </summary>
+        [ThreadStatic] private static Frame<TModel, TMetadata, TValue>[]?[]? _buffers;
+
+        /// <summary>
+        /// Folds of <em>this instantiation</em> in flight on this thread, which is the nesting level the
+        /// next one enters at. A re-entry through <c>ChangeModelTo</c> lands in a different closed type
+        /// with a pool and a count of its own, and enters it at level zero — correct, since separate
+        /// pools cannot alias, but it is not a count of the thread's folds.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Take" /> and <see cref="Return" /> are the only writers and are paired by the
+        /// fold's <c>try</c>/<c>finally</c> — <see cref="Take" /> immediately precedes the <c>try</c> and
+        /// <see cref="Return" /> is its <c>finally</c> — so once a fold has entered, this returns to zero
+        /// however that fold leaves. The gap is an <see cref="OutOfMemoryException" /> from
+        /// <see cref="Take" />'s own allocation, which would leave the count high by one for the life of
+        /// the thread; the pool would then stop serving that instantiation, and nothing would alias,
+        /// because a taken slot is nulled regardless of what the count says.
+        /// </remarks>
+        [ThreadStatic] private static int _depth;
 
         internal static Frame<TModel, TMetadata, TValue>[] Take()
         {
-            var buffer = _buffer;
+            var level = _depth++;
+            var buffers = _buffers;
+
+            if (level >= MaxCachedDepth || buffers is null)
+                return new Frame<TModel, TMetadata, TValue>[InitialCapacity];
+
+            var buffer = buffers[level];
 
             if (buffer is null)
                 return new Frame<TModel, TMetadata, TValue>[InitialCapacity];
 
-            _buffer = null;
+            // Taken rather than borrowed, at the level as well as at the thread: a slot still naming a
+            // buffer that is never returned — one grown past MaxCachedCapacity — would pin it for the
+            // life of the thread.
+            buffers[level] = null;
             return buffer;
         }
 
         internal static void Return(Frame<TModel, TMetadata, TValue>[] buffer, int used)
         {
-            if (buffer.Length > MaxCachedCapacity)
+            var level = --_depth;
+
+            if (level >= MaxCachedDepth || buffer.Length > MaxCachedCapacity)
                 return;
 
             // The frames hold onto operations and their results; a cached buffer that kept them would
-            // pin a whole evaluation's tree until the thread's next fold of the same shape.
+            // pin a whole evaluation's tree until the thread's next fold at this level.
             Array.Clear(buffer, 0, used);
-            _buffer = buffer;
+
+            var buffers = _buffers ??= new Frame<TModel, TMetadata, TValue>[MaxCachedDepth][];
+            buffers[level] = buffer;
         }
     }
 
