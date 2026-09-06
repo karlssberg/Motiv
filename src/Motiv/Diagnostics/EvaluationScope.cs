@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Motiv.Traversal;
 
 namespace Motiv.Diagnostics;
 
@@ -7,6 +8,30 @@ namespace Motiv.Diagnostics;
 /// <see cref="Complete" />, <see cref="Fail" />, or <see cref="Cancel" />. A struct so that an unobserved
 /// evaluation allocates nothing.
 /// </summary>
+/// <remarks>
+/// <b>Nothing done here is part of the composition, and each of the four says so</b> through
+/// <see cref="EvaluationBudget.Exclude" />. The bound on an evaluation's size is ambient, so any
+/// re-entry into the fold from inside a node spends the enclosing composition's allowance unless it is
+/// declared excluded — and every one of these methods can re-enter it. Rendering an explanation runs a
+/// user's <c>WhenTrue</c>/<c>WhenFalse</c> delegate, and <c>Activity.Dispose()</c> synchronously runs
+/// every <c>ActivityStopped</c> callback; either may evaluate a proposition of its own.
+/// <para>
+/// The argument is <c>Tap</c>'s, which is already excluded for it: observability hung off a decision is
+/// not part of the decision. Charged, it would be worse than merely wrong — a scope belonging to an
+/// evaluation nested inside a running one leaves its spending behind, because a nested fold's
+/// <c>Ownership</c> deliberately does not release, so the refusal surfaces at the next node the
+/// composition charges rather than here. That is
+/// <see href="https://github.com/karlssberg/Motiv/issues/209">#209</see>: turning tracing on could turn
+/// a satisfied evaluation into a <c>SpecException</c> at an unrelated node. The rule this restores is
+/// the one <see cref="TrySetExplanationTags" /> already keeps against exceptions — <b>attaching a
+/// listener must not change what an evaluation decides.</b>
+/// </para>
+/// <para>
+/// The exclusion parks the count rather than discarding it, so a listener or a delegate whose own
+/// evaluation is oversized is still refused on its own account; it simply costs the composition
+/// nothing.
+/// </para>
+/// </remarks>
 internal readonly struct EvaluationScope(Activity? activity, long startTimestamp, string proposition)
 {
     /// <summary>Starts a scope, opening an activity if (and only if) something is listening.</summary>
@@ -17,6 +42,8 @@ internal readonly struct EvaluationScope(Activity? activity, long startTimestamp
     /// </returns>
     internal static EvaluationScope Start(string proposition)
     {
+        using var exclusion = EvaluationBudget.Exclude();
+
         var activity = MotivTelemetry.ActivitySource
             .StartActivity(MotivTelemetry.ActivityName, ActivityKind.Internal);
 
@@ -31,6 +58,8 @@ internal readonly struct EvaluationScope(Activity? activity, long startTimestamp
     /// <param name="result">The result produced by the evaluation.</param>
     internal void Complete(BooleanResultBase result)
     {
+        using var exclusion = EvaluationBudget.Exclude();
+
         // Taken before any tagging so the duration measures the evaluation, not telemetry's own cost of
         // resolving Reason/Assertions or dispatching to listeners/exporters via activity.Dispose().
         var endTimestamp = Stopwatch.GetTimestamp();
@@ -84,6 +113,8 @@ internal readonly struct EvaluationScope(Activity? activity, long startTimestamp
     /// <param name="exception">The exception that escaped the evaluation.</param>
     internal void Fail(Exception exception)
     {
+        using var exclusion = EvaluationBudget.Exclude();
+
         // Taken before any tagging so the duration measures the evaluation, not telemetry's own cost — see
         // the equivalent remark on Complete.
         var endTimestamp = Stopwatch.GetTimestamp();
@@ -117,6 +148,8 @@ internal readonly struct EvaluationScope(Activity? activity, long startTimestamp
     /// </summary>
     internal void Cancel()
     {
+        using var exclusion = EvaluationBudget.Exclude();
+
         // Taken before any tagging — see the equivalent remark on Complete.
         var endTimestamp = Stopwatch.GetTimestamp();
 
