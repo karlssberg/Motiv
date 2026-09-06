@@ -124,6 +124,34 @@ public class TelemetryBudgetTests : IDisposable
     }
 
     /// <summary>
+    /// The other direction, and the one three sets of remarks assert while nothing checked: the
+    /// exclusion <em>parks</em> the composition's count, it does not lift the bound. Work telemetry does
+    /// is still bounded — on its own account, from zero.
+    /// </summary>
+    /// <remarks>
+    /// Stated as the observable consequence rather than by catching the exception, because the exception
+    /// is not observable: telemetry swallows it by design, so the only evidence that resolution was
+    /// refused is the tag it failed to write. Both halves are asserted together — an implementation that
+    /// lifted the bound would tag <c>motiv.reason</c>, and one that let the refusal escape would fail the
+    /// evaluation instead of returning a satisfied result.
+    /// </remarks>
+    [Fact]
+    public void Should_refuse_a_telemetry_delegate_that_is_oversized_on_its_own_account()
+    {
+        MotivLimits.MaxEvaluationSize = Limit;
+
+        using var listening = Listening();
+
+        ComposedOverATracedEvaluation().Evaluate(Model).Satisfied.ShouldBeTrue(
+            "the composition still decides what it decided untraced");
+
+        listening.FirstStopped.GetTagItem("motiv.reason").ShouldBeNull(
+            $"the explanation delegate's own evaluation costs 19 nodes against a limit of {Limit}, so it " +
+            "is refused on its own account and the span carries no explanation — the exclusion parks the " +
+            "composition's count, it does not hand telemetry an unbounded one");
+    }
+
+    /// <summary>
     /// Odd, so that the inner proposition below is <em>unsatisfied</em> and its explanation comes from
     /// the delegate rather than the constant. An unnamed explanation proposition is the only shape whose
     /// assertion text is produced by user code at all: name it and the text becomes
@@ -194,19 +222,36 @@ public class TelemetryBudgetTests : IDisposable
             .And(Leaf(1));
     }
 
-    /// <summary>Nineteen nodes: within the limit on its own account, over it when added to a composition.</summary>
+    /// <summary>
+    /// Nineteen nodes, which at <see cref="Limit" /> is over the bound <em>on its own account</em> — so
+    /// wherever telemetry runs this, it is refused and the refusal is swallowed by the <c>catch</c> that
+    /// keeps a listener from failing an evaluation.
+    /// </summary>
+    /// <remarks>
+    /// That is not incidental to these cases, it <em>is</em>
+    /// <see href="https://github.com/karlssberg/Motiv/issues/209">#209</see>'s stack, and the fix is what
+    /// makes the two outcomes differ. Excluded, the audit is bounded afresh from zero, refused on its
+    /// own, and the composition's count comes back untouched. Charged, the same refusal lands with the
+    /// composition's count in force and leaves it above the bound — where a nested fold's
+    /// <c>Ownership</c> will not release it, so the next node the composition charges throws.
+    /// <para>
+    /// <see cref="Should_refuse_a_telemetry_delegate_that_is_oversized_on_its_own_account" /> asserts the
+    /// first half of that directly. The arithmetic here is the reason it can.
+    /// </para>
+    /// </remarks>
     private static SpecBase<int, string> Audit() => FlatChain(10);
 
     /// <summary>
-    /// A listener of this suite's own rather than <c>TelemetryHarness</c>, which records spans this
-    /// suite never asserts on and cannot run an evaluation when one stops.
+    /// A listener of this suite's own rather than <c>TelemetryHarness</c>, which cannot run an evaluation
+    /// when a span stops.
     /// </summary>
     /// <remarks>
     /// The callback is guarded against its own re-entry: the evaluation it runs is itself traced, so an
     /// unguarded callback would stop a span from inside the handler for a stopped span, without end.
     /// </remarks>
-    private static IDisposable Listening(Action? onStopped = null)
+    private static Listener Listening(Action? onStopped = null)
     {
+        var stopped = new List<Activity>();
         var running = false;
 
         var listener = new ActivityListener
@@ -214,8 +259,10 @@ public class TelemetryBudgetTests : IDisposable
             ShouldListenTo = source => source.Name == MotivTelemetry.SourceName,
             Sample = (ref ActivityCreationOptions<ActivityContext> _) =>
                 ActivitySamplingResult.AllDataAndRecorded,
-            ActivityStopped = _ =>
+            ActivityStopped = activity =>
             {
+                stopped.Add(activity);
+
                 if (onStopped is null || running) return;
 
                 running = true;
@@ -226,7 +273,20 @@ public class TelemetryBudgetTests : IDisposable
 
         ActivitySource.AddActivityListener(listener);
 
-        return listener;
+        return new Listener(listener, stopped);
+    }
+
+    /// <summary>The listener and the spans it saw stop, so a case can assert on what was tagged.</summary>
+    private sealed class Listener(ActivityListener listener, List<Activity> stopped) : IDisposable
+    {
+        /// <summary>
+        /// The span opened by the <em>innermost</em> evaluation, which is the one telemetry rendered an
+        /// explanation for. Spans stop innermost-first, and the outer composition's own span stops after
+        /// it.
+        /// </summary>
+        public Activity FirstStopped => stopped[0];
+
+        public void Dispose() => listener.Dispose();
     }
 
     private static SpecBase<int, string> Leaf(int index) =>

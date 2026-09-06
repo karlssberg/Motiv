@@ -78,11 +78,13 @@ declare itself so.
    - explanation rendering, under `ExplanationDetail.Full`;
    - an `ActivityStopped` listener that evaluates, under `ExplanationDetail.None` so nothing else can
      be charged;
-   - the same listener on the `Fail` path, where the caller catches a sub-evaluation's exception and
-     carries on — #209's user-code shape.
+   - the same listener where the span is terminated by a throw rather than a result, so `Fail` is
+     covered as well as `Complete`. (This was planned as "#209's user-code shape"; it is not — that
+     shape is a caught `SpecException`, and the design doc records why nothing here covers it.)
 
-   A fourth was added mid-slice when the *Expected fallout* prediction below turned out to be right;
-   the design doc records it and the mutation that proves it earns its place.
+   Two more were added after the fact: a fourth mid-slice, when the *Expected fallout* prediction
+   below turned out to be right, and a fifth in review, pinning the claim that parking is not
+   *lifting*. The design doc records both, and the mutation that proves each earns its place.
 2. **Declare the exclusion in `EvaluationScope`**, not at its four call sites. `SpecBase`,
    `PolicyBase`, `AsyncSpecBase` and `AsyncPolicyBase` all funnel through it, so one declaration per
    scope method covers every instrumented boundary and cannot be missed when a fifth is added. This is

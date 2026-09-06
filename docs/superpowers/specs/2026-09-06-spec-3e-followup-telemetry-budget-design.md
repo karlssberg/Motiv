@@ -55,14 +55,24 @@ Motiv.SpecException : The evaluation exceeded the maximum size of 3 nodes.
 refusal leaves the count at the limit rather than over it, described as *"cheapest, and probably
 enough."*
 
-**It is not enough, and it changes nothing observable at all.** At `_spent == Max` the next `Charge()`
-still evaluates `Max + 1 > Max` and throws. The overshoot is a lie about how much was spent, but every
-subsequent charge refuses under both encodings, an `Exclude()` parks and restores either value
-identically, and a root `Ownership` zeroes both. That argument was not trusted on its own: candidate 1
-was applied to `Charge()` with the exclusion reverted, and **all three then-existing cases stayed
-red**, with the same message from the same frame. It does not ship. Nothing in the suite would have
-gone red for it either, which is the TDD rule doing its job rather than a formality — a production
-change no test can distinguish is a change nobody can maintain.
+**It is not enough, and nothing in the library's own behaviour can tell the two apart.** At
+`_spent == Max` the next `Charge()` still evaluates `Max + 1 > Max` and throws. The overshoot is a lie
+about how much was spent, but every subsequent charge refuses under both encodings, an `Exclude()`
+parks and restores either value identically, and a root `Ownership` zeroes both.
+
+That argument was not trusted on its own: candidate 1 was applied to `Charge()` with the exclusion
+reverted, and **all three then-existing cases stayed red**, with the same message from the same frame.
+It does not ship. Nothing in the suite would have gone red for it either, which is the TDD rule doing
+its job rather than a formality — a production change no test can distinguish is a change nobody can
+maintain.
+
+One caveat, raised in review and worth stating precisely rather than rounding off. The first draft of
+this section said candidate 1 *"changes nothing observable at all"*, and that is too strong:
+`MaxEvaluationSize` is a **settable** static, so a caller who raises the limit while an evaluation is in
+flight can distinguish `Max` from `Max + 1` — raise it by exactly one and the current encoding still
+refuses where candidate 1 would not. A real difference, and not a reachable one: the property documents
+itself "set it once at startup", and mutating it mid-evaluation is not a supported shape. The defensible
+claim is the narrower one — no test can tell the two apart, and no supported usage can either.
 
 The ticket's own aside is the fix, and it labels it correctly:
 
@@ -95,7 +105,7 @@ whose fold still holds its own budget ([#204](https://github.com/karlssberg/Moti
 this is symmetry rather than a tested claim — a distinction #208 records as worth making, because a
 check reporting a property it is not actually checking is worse than no check.
 
-## The four cases
+## The five cases
 
 In `src/Motiv.Tests/Traversal/TelemetryBudgetTests.cs`, each stated as a **difference** — the same
 composition, model and limit, evaluated once with nothing listening and once with a listener attached.
@@ -105,8 +115,15 @@ The untraced call is the control; without it the case would pass on a limit that
 |---|---|
 | `Should_not_charge_explanation_rendering_to_the_composition` | the `Reason`/`Assertions` half, under `ExplanationDetail.Full` |
 | `Should_not_charge_a_listeners_own_evaluation_to_the_composition` | the `ActivityStopped` half, under `ExplanationDetail.None` so nothing else can be charged |
-| `Should_not_charge_a_failed_spans_listener_to_the_composition` | the same on the `Fail` path — #209's user-code shape, a caller catching a sub-evaluation's exception and carrying on |
+| `Should_not_charge_a_failed_spans_listener_to_the_composition` | the same where the span is terminated by a **throw** rather than a result, so `Fail` is covered as well as `Complete` |
 | `Should_resume_the_compositions_count_after_a_traced_evaluation` | that the exclusion **parks** rather than discards |
+| `Should_refuse_a_telemetry_delegate_that_is_oversized_on_its_own_account` | that parking is not *lifting* — telemetry's own work is still bounded, from zero |
+
+The third deliberately does **not** claim to be #209's user-code shape, though an earlier draft of
+this doc said it was. It catches an `InvalidOperationException`, not a `SpecException`, so what it
+exercises is the `Fail` span path — that a listener consuming a *failed* span is excluded exactly as
+one consuming a completed span is. #209's user-code shape is a caught `SpecException`, and nothing here
+covers it; see *What this does not fix*.
 
 **The fourth exists because the first three cannot see the permissive direction.** They all assert an
 evaluation *succeeds*, and a discarding exclusion makes more evaluations succeed, not fewer — so a
@@ -115,6 +132,16 @@ them green. The fourth asserts a *refusal* instead, and it was red-proved: with 
 discard, it fails alone while the other three pass. That is the same trap
 `Should_resume_the_compositions_count_after_a_higher_order_operand` was written for on the
 higher-order side, where it was found by deleting the restore and watching the suite stay green.
+
+**The fifth closes the opposite gap, and it was the review that found it.** Three sets of remarks — on
+`EvaluationScope`, on `MaxEvaluationSize`, and in `docs/limits/index.md` — assert that a listener or
+delegate whose own evaluation is oversized is still refused. Nothing asserted it. It turns out every
+case already *exercises* it (see the fixture below: at a limit of 3 the audit's nineteen nodes are over
+the bound on their own account, so telemetry's resolution is refused and swallowed in all five), which
+is the worst place for a claim to sit — universally true in the suite and checked nowhere. It is
+asserted through the tag telemetry failed to write, because the exception itself is swallowed by design
+and is therefore not observable. Red-proved against an `Exclude` that sets the count to `int.MinValue`
+— lifting the bound rather than parking it — where it fails alone and the other four pass.
 
 ### The fixture, and the arithmetic that was wrong first
 
@@ -140,6 +167,15 @@ measured one, and the comment says it was measured. Left at 4 the suite would st
 with a node of headroom nobody had accounted for — which is how a case that pins an exact cost quietly
 becomes a case that pins a comfortable margin.
 
+Dropping the limit from 24 to 3 also changed what the audit chain *is*, and the first draft's comment
+did not follow it down. Nineteen nodes was "within the limit on its own account" at 24; at 3 it is well
+over, so telemetry's resolution is refused every time and the refusal is swallowed. That is not a flaw
+in the fixture — it is exactly #209's stack, and it is what makes the two outcomes differ: excluded, the
+audit is bounded afresh from zero and the composition's count comes back untouched; charged, the same
+refusal lands with the composition's count in force and leaves it above the bound. The comment now says
+so, and the fifth case asserts it. A number that moves and a comment that does not is how a fixture
+stops meaning what it says.
+
 ## What was corrected besides the code
 
 Three places enumerate the excluded seams, and all three were wrong the moment the fourth existed:
@@ -164,6 +200,17 @@ putting the enforcement here would land it in the wrong PR.
 - **[#204](https://github.com/karlssberg/Motiv/issues/204)** — the asynchronous fold still bounds one
   fold. The four scope methods are synchronous, so the async boundaries inherit this exclusion; their
   *budget* is still their own.
+- **#209's other reachable route, and this is the important omission.** The ticket names two ways in:
+  telemetry, and *"any user code that catches `SpecException` from a sub-evaluation and carries on."*
+  Only the first is closed here. A user predicate that evaluates another proposition inside a running
+  fold is composition work and is charged correctly; if the caller swallows the resulting refusal, the
+  nested `Ownership` still does not release and the outer fold still throws at its next node. The
+  exclusion cannot reach that — telemetry can declare itself outside the composition, and user code
+  doing composition cannot — and candidate 1 provably does not. **So the ticket as titled is
+  half-closed**, and the honest reading is that the route Motiv is responsible for is fixed while the
+  one a caller creates is not. Whether it is even a defect is arguable — the budget was genuinely spent
+  — but it deserved a line here rather than silence, and the first draft of this section did not have
+  one.
 - **The `Charge()` overshoot.** Left as it is, deliberately and with the measurement above. If a case
   is ever found that can distinguish the two encodings, that case is the argument for changing it — and
   it will be a better argument than "one extra comparison on the hottest path in the library, probably
@@ -171,7 +218,7 @@ putting the enforcement here would land it in the wrong PR.
 
 ## Verification
 
-- `Motiv.Tests` — 5,968 on net8.0, net9.0 and net10.0 (5,964 before, plus these four).
+- `Motiv.Tests` — 5,969 on net8.0, net9.0 and net10.0 (5,964 before, plus these five).
 - Full solution — 17 test projects, all green.
 - `net472` **builds** but does not run here: the VSTest host needs `mono`, which is not installed on
   this machine. CI runs it. The change is framework-agnostic (a `using` over a `ref struct`, already
