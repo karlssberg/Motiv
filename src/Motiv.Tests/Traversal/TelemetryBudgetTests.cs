@@ -24,6 +24,25 @@ namespace Motiv.Tests.Traversal;
 /// surfaces at the next node the composition charges, which is a node that did nothing wrong.
 /// </para>
 /// </remarks>
+/// <remarks>
+/// <b>One collection, three process-wide statics.</b> This class moves
+/// <see cref="MotivLimits.MaxEvaluationSize" />, <see cref="MotivTelemetry.ExplanationDetail" /> and the
+/// global <see cref="ActivitySource" /> listener set, and the first of those is the only one
+/// <see cref="MotivLimitsTestCollection" /> is named for. That is deliberate and not a gap: a
+/// <c>[CollectionDefinition]</c> carrying <c>DisableParallelization</c> is withdrawn from parallel
+/// execution <em>entirely</em>, not merely internally, so a class in one such collection runs beside
+/// nothing at all. <see cref="Motiv.Tests.Diagnostics.TelemetryTestCollection" /> carries the same flag,
+/// and a class may only join one collection, so joining the collection named for the static whose
+/// arithmetic these cases turn on is the right half to pick.
+/// <para>
+/// Measured rather than assumed, because a reviewer has twice read it the other way: two flagged
+/// collections were run against each other, and a flagged one against a class with no
+/// <c>[Collection]</c> at all — the shape that matters, since the listener below is global and would
+/// otherwise put every concurrently-running test on the instrumented path, inflating the allocation
+/// measurements in <see cref="ReasonCostTests" /> among others. Both came back serial; two collections
+/// <em>without</em> the flag, as a control on the probe itself, overlapped.
+/// </para>
+/// </remarks>
 [Collection(MotivLimitsTestCollection.Name)]
 public class TelemetryBudgetTests : IDisposable
 {
