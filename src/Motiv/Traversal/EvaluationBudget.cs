@@ -25,7 +25,9 @@ namespace Motiv.Traversal;
 /// re-entries apart, so the places that resolve elements say so themselves through
 /// <see cref="Exclude" /> — <c>HigherOrderResults</c>, <c>HigherOrderShortCircuit</c> and
 /// <c>EnumerableExtensions.Where</c>. The same declaration covers a <c>Tap</c> callback, which is a
-/// side effect hung off a node rather than part of the decision the node makes.
+/// side effect hung off a node rather than part of the decision the node makes, and
+/// <c>EvaluationScope</c>, which is that argument applied to observability:
+/// <see href="https://github.com/karlssberg/Motiv/issues/209">#209</see>.
 /// </para>
 /// <para>
 /// <b>Why a thread-static.</b> <see cref="SpecBase{TModel}.Evaluate" /> and

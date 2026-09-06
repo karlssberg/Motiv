@@ -77,10 +77,11 @@ Two things it is not:
 That last exclusion is **declared, not detected**, and it is worth knowing which side of the line your
 code falls on. The engine cannot tell a re-entrant evaluation that is part of the composition from one
 that is work inside a node, so the library marks the places it knows about: resolving an element of a
-higher-order proposition, `Where(spec)`, and a `Tap` callback. Anything else that evaluates a
-proposition while an evaluation is in flight **is** counted &mdash; a predicate of your own that
-evaluates a proposition per item, a higher-order predicate supplied through `As(...)`, and a
-`WhenTrue`/`WhenFalse` delegate resolved while another evaluation is running:
+higher-order proposition, `Where(spec)`, a `Tap` callback, and everything Motiv's own telemetry does
+with a span. Anything else that evaluates a proposition while an evaluation is in flight **is** counted
+&mdash; a predicate of your own that evaluates a proposition per item, a higher-order predicate
+supplied through `As(...)`, and a `WhenTrue`/`WhenFalse` delegate you resolve yourself while another
+evaluation is running:
 
 ```csharp
 // per-item work that IS counted against the enclosing rule
@@ -93,6 +94,15 @@ var order = Spec.Build(line).AsAllSatisfied().Create("lines ok")
 
 Prefer the built-in quantifiers with [`ChangeModelTo()`](../operators/ChangeModelTo.md) when the
 per-item work should not count against the rule that contains it.
+
+Telemetry is on the excluded side deliberately, and it is the one entry on that list you do not write
+yourself: **attaching a listener must not change what an evaluation decides.** Motiv tags a span with
+the result's own `Reason` and `Assertions`, which resolves your `WhenTrue`/`WhenFalse` delegates, and
+disposing the span runs every `ActivityStopped` callback &mdash; an exporter or audit hook that
+evaluates a proposition of its own. Charged, merely subscribing to the `Motiv` source could push a
+composition past this limit, and for an evaluation nested inside a running one it would surface at an
+unrelated node &mdash; see [#209](https://github.com/karlssberg/Motiv/issues/209). A listener or
+delegate whose *own* evaluation is oversized is still refused; it just costs the composition nothing.
 
 It *does* count across **decorator layers**. A decorator between two operator layers is not folded
 &mdash; it re-enters the fold &mdash; but the nested fold spends the same budget, so a composition
