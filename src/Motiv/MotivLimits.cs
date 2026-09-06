@@ -40,16 +40,25 @@ public static class MotivLimits
     /// <para>
     /// That exclusion is <em>declared</em> rather than detected, and the distinction matters when you
     /// write the node. The engine cannot tell a re-entrant evaluation that is part of the composition
-    /// from one that is work inside a node, so the library marks the places it knows: resolving an
-    /// element of a higher-order proposition, <c>EnumerableExtensions.Where</c>, a <c>Tap</c>
-    /// callback, and everything Motiv's own telemetry does with a span — tagging it with the result's
-    /// explanation, and the listener callbacks <c>Activity.Dispose()</c> runs. Everything else that
-    /// evaluates a proposition while an evaluation is in flight <b>is</b> counted — notably a predicate
-    /// of your own that evaluates a proposition per item
-    /// (<c>Spec.Build((Order o) =&gt; o.Lines.All(line.Matches))</c>), a higher-order predicate supplied
-    /// through <c>As(...)</c>, and a <c>WhenTrue</c>/<c>WhenFalse</c> delegate you resolve yourself
-    /// while another evaluation is running. Prefer the built-in quantifiers — <c>AsAllSatisfied</c> and
-    /// its siblings — where the per-item work should not count against the rule that contains it.
+    /// from one that is work inside a node, so the library marks the places it knows: <b>reaching a
+    /// higher-order proposition's decision</b> — resolving its elements <em>and</em> applying the
+    /// predicate to them, including one you supplied through <c>As(...)</c> —
+    /// <c>EnumerableExtensions.Where</c>, a <c>Tap</c> callback, and everything Motiv's own telemetry
+    /// does with a span, tagging it with the result's explanation and running the listener callbacks
+    /// <c>Activity.Dispose()</c> fires. Everything else that evaluates a proposition while an
+    /// evaluation is in flight <b>is</b> counted — notably a predicate of your own that evaluates a
+    /// proposition per item (<c>Spec.Build((Order o) =&gt; o.Lines.All(line.Matches))</c>), and a
+    /// <c>WhenTrue</c>/<c>WhenFalse</c> or cause-selecting delegate resolved from a result while
+    /// another evaluation is running. Prefer the built-in quantifiers — <c>AsAllSatisfied</c> and its
+    /// siblings — where the per-item work should not count against the rule that contains it.
+    /// </para>
+    /// <para>
+    /// The <c>As(...)</c> predicate joined the excluded side in
+    /// <see href="https://github.com/karlssberg/Motiv/issues/208">#208</see>. It is how the node
+    /// reaches its own answer — a quorum whose threshold is itself a proposition is one evaluation
+    /// inside one node, not part of the composition the node sits in — and until then the elements
+    /// were excluded while the answer they were resolved for was not, which is not a line anyone
+    /// could have described.
     /// </para>
     /// <para>
     /// Telemetry is on the excluded side deliberately, and it is the one entry a caller does not write:

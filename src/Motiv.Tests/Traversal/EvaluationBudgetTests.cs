@@ -1,3 +1,5 @@
+using Motiv.HigherOrderProposition;
+
 namespace Motiv.Tests.Traversal;
 
 /// <summary>
@@ -239,6 +241,18 @@ public class EvaluationBudgetTests : IDisposable
     /// keeps the invariant stated in terms of behaviour a caller can see, rather than in terms of a
     /// private field a refactor is free to rename.
     /// </para>
+    /// <para>
+    /// <b>What these cases are, and what they are not.</b> They enumerate the exceptional paths; they do
+    /// not individually mutation-prove the restore on each one, and the shapes that fail <em>inside</em>
+    /// an exclusion cannot. Measured: with <c>MaterializeAndDecide</c>'s scope changed to restore only on
+    /// the normal path, every case here stays green — because a root <see cref="Ownership" /> zeroes the
+    /// count on every exit, so whether the parked count was handed back or dropped is invisible to the
+    /// next caller. What holds the exclusion's park-and-restore is
+    /// <see cref="Should_resume_the_compositions_count_after_a_higher_order_operand" />, on the
+    /// <em>normal</em> path, where the composition carries on counting afterwards. These cases earn their
+    /// place as an enumeration a later edit cannot quietly shrink — and as the net that catches a change
+    /// to <see cref="Ownership" /> itself — rather than as proof of the restore.
+    /// </para>
     /// </remarks>
     [Theory]
     [MemberData(nameof(FailureShapes))]
@@ -279,8 +293,25 @@ public class EvaluationBudgetTests : IDisposable
             { "oversized-element", () => AllElements(FlatChain(CanaryCost * 4)).And(NonEmpty()).Evaluate(Enumerable.Repeat(2, 2)) },
 
             // Thrown by the sequence itself — inside the exclusion scope, but not inside a projection.
-            { "throwing-sequence", () => AllElements(Leaf(0)).And(NonEmpty()).Evaluate(ThrowingSequence()) }
+            { "throwing-sequence", () => AllElements(Leaf(0)).And(NonEmpty()).Evaluate(ThrowingSequence()) },
+
+            // A user predicate supplied through As(...) throws. #208 brought it inside the exclusion,
+            // so the restore now has to happen on a path that did not previously exist.
+            { "throwing-higher-order-predicate", () => Quorum(_ => throw new InvalidOperationException("thrown from inside a predicate")).And(NonEmpty()).Evaluate(Enumerable.Repeat(2, 4)) },
+            { "throwing-higher-order-predicate-on-matches", () => { _ = Quorum(_ => throw new InvalidOperationException("thrown from inside a predicate")).And(NonEmpty()).Matches(Enumerable.Repeat(2, 4)); } },
+
+            // And one whose own composition is oversized: a refusal raised beneath the suppression the
+            // predicate now runs under, which the composition above it was never spending.
+            { "oversized-higher-order-predicate", () => Quorum(_ => FlatChain(CanaryCost * 4).Matches(2)).And(NonEmpty()).Evaluate(Enumerable.Repeat(2, 4)) }
         };
+
+    /// <summary>
+    /// A higher-order proposition whose decision is taken by a caller-supplied predicate rather than by
+    /// a built-in quantifier — the shape <see href="https://github.com/karlssberg/Motiv/issues/208">#208</see>
+    /// moved inside the exclusion.
+    /// </summary>
+    private static SpecBase<IEnumerable<int>, string> Quorum(Func<IEnumerable<ModelResult<int>>, bool> decide) =>
+        Spec.Build((int n) => n % 2 == 0).As(decide).Create("the quorum holds");
 
     /// <summary>
     /// A chain of six propositions — <c>2n - 1</c> nodes, so exactly <see cref="CanaryCost" />. Sized to

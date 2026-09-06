@@ -76,12 +76,13 @@ Two things it is not:
 
 That last exclusion is **declared, not detected**, and it is worth knowing which side of the line your
 code falls on. The engine cannot tell a re-entrant evaluation that is part of the composition from one
-that is work inside a node, so the library marks the places it knows about: resolving an element of a
-higher-order proposition, `Where(spec)`, a `Tap` callback, and everything Motiv's own telemetry does
-with a span. Anything else that evaluates a proposition while an evaluation is in flight **is** counted
-&mdash; a predicate of your own that evaluates a proposition per item, a higher-order predicate
-supplied through `As(...)`, and a `WhenTrue`/`WhenFalse` delegate you resolve yourself while another
-evaluation is running:
+that is work inside a node, so the library marks the places it knows about: reaching a higher-order
+proposition's decision &mdash; resolving its elements *and* applying the predicate to them, including
+one you supplied through `As(...)` &mdash; `Where(spec)`, a `Tap` callback, and everything Motiv's own
+telemetry does with a span. Anything else that evaluates a proposition while an evaluation is in flight
+**is** counted &mdash; a predicate of your own that evaluates a proposition per item, and a
+`WhenTrue`/`WhenFalse` or cause-selecting delegate resolved from a result while another evaluation is
+running:
 
 ```csharp
 // per-item work that IS counted against the enclosing rule
@@ -94,6 +95,13 @@ var order = Spec.Build(line).AsAllSatisfied().Create("lines ok")
 
 Prefer the built-in quantifiers with [`ChangeModelTo()`](../operators/ChangeModelTo.md) when the
 per-item work should not count against the rule that contains it.
+
+The `As(...)` predicate moved to the excluded side in
+[#208](https://github.com/karlssberg/Motiv/issues/208). It is how the node reaches its own answer
+&mdash; a quorum whose threshold is itself a proposition is one evaluation *inside* one node, not part
+of the composition the node sits in &mdash; and until then the elements were excluded while the answer
+they were resolved for was not, which is not a line anyone could have described. Its own evaluation is
+still bounded, on its own account; it just costs the composition nothing.
 
 Telemetry is on the excluded side deliberately, and it is the one entry on that list you do not write
 yourself: **attaching a listener must not change what an evaluation decides.** Motiv tags a span with

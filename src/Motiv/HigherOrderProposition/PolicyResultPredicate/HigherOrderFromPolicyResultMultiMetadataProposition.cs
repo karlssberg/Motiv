@@ -32,10 +32,8 @@ internal sealed class HigherOrderFromPolicyResultMultiMetadataProposition<TModel
             causeSelector);
     }
 
-    private (PolicyResult<TModel, TUnderlyingMetadata>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)
-    {
-        var results = HigherOrderResults.Materialize(models, resultResolver,
-            static (model, resolve) => new PolicyResult<TModel, TUnderlyingMetadata>(model, resolve(model)));
-        return (results, higherOrderPredicate(results));
-    }
+    private (PolicyResult<TModel, TUnderlyingMetadata>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models) =>
+        HigherOrderResults.MaterializeAndDecide(models, resultResolver,
+            static (model, resolve) => new PolicyResult<TModel, TUnderlyingMetadata>(model, resolve(model)),
+            higherOrderPredicate);
 }

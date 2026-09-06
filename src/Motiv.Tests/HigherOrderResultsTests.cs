@@ -5,9 +5,14 @@ namespace Motiv.Tests;
 public class HigherOrderResultsTests
 {
     // The projection receives the explicit state argument (here, a multiplier) so that
-    // production call sites can pass a non-capturing static lambda.
+    // production call sites can pass a non-capturing static lambda. Materializing is not offered
+    // apart from deciding, so these cases reach the projection through the predicate's seam.
     private static int[] Multiply(IEnumerable<int> source, int factor) =>
-        HigherOrderResults.Materialize(source, factor, static (value, f) => value * f);
+        HigherOrderResults.MaterializeAndDecide(
+            source,
+            factor,
+            static (value, f) => value * f,
+            static _ => true).Results;
 
     [Fact]
     public void Should_materialize_a_read_only_list_source_via_the_pre_sized_indexed_path()

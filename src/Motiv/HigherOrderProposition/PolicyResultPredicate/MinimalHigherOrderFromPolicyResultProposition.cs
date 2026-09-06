@@ -28,10 +28,8 @@ internal sealed class MinimalHigherOrderFromPolicyResultProposition<TModel, TMet
             causeSelector);
     }
 
-    private (PolicyResult<TModel, TMetadata>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)
-    {
-        var results = HigherOrderResults.Materialize(models, resultResolver,
-            static (model, resolve) => new PolicyResult<TModel, TMetadata>(model, resolve(model)));
-        return (results, higherOrderPredicate(results));
-    }
+    private (PolicyResult<TModel, TMetadata>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models) =>
+        HigherOrderResults.MaterializeAndDecide(models, resultResolver,
+            static (model, resolve) => new PolicyResult<TModel, TMetadata>(model, resolve(model)),
+            higherOrderPredicate);
 }

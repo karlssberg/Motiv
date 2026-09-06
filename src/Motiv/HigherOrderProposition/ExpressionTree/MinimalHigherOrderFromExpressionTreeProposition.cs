@@ -34,10 +34,8 @@ internal sealed class MinimalHigherOrderFromExpressionTreeProposition<TModel, TP
             causeSelector);
     }
 
-    private (BooleanResult<TModel, string>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)
-    {
-        var results = HigherOrderResults.Materialize(models, _predicate,
-            static (model, predicate) => new BooleanResult<TModel, string>(model, predicate.Execute(model)));
-        return (results, higherOrderPredicate(results));
-    }
+    private (BooleanResult<TModel, string>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models) =>
+        HigherOrderResults.MaterializeAndDecide(models, _predicate,
+            static (model, predicate) => new BooleanResult<TModel, string>(model, predicate.Execute(model)),
+            higherOrderPredicate);
 }
