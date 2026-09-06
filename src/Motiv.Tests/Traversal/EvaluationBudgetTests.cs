@@ -339,7 +339,7 @@ public class EvaluationBudgetTests : IDisposable
     {
         var spec = FlatChain(operands: 16);
 
-        _ = spec.Matches(2); // warm: the first call JITs the fold and fills its frame buffer
+        _ = spec.Matches(2); // warm: the first call JITs the fold and fills the frame buffer pool
 
         var before = GC.GetAllocatedBytesForCurrentThread();
         _ = spec.Matches(2);

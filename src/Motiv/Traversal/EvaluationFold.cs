@@ -43,9 +43,9 @@ internal static class EvaluationFold
     /// <remarks>
     /// The width bound is what sets this one. A thread used to retain a single buffer, so at the worst
     /// case where it had grown to <see cref="MaxCachedCapacity" /> it held around two kilobytes per
-    /// instantiation; retaining a level's buffer takes that to about thirty-two — a sixteenfold rise,
-    /// and about sixty-four times below the two megabytes <see cref="MaxCachedCapacity" /> exists to
-    /// refuse. Left unbounded it would reach exactly that figure:
+    /// instantiation; retaining one buffer per level takes that to about thirty-two kilobytes — a
+    /// sixteenfold rise, and about sixty-four times below the two megabytes
+    /// <see cref="MaxCachedCapacity" /> exists to refuse. Left unbounded it would reach exactly that figure:
     /// <see href="https://github.com/karlssberg/Motiv/issues/201">#201</see> measured the alternating
     /// ceiling at over a thousand layers.
     /// <para>
