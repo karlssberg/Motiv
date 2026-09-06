@@ -38,13 +38,31 @@ public static class MotivLimits
     /// collection, say — is not counted and is not bounded by this.
     /// </para>
     /// <para>
-    /// Neither is work spread across <em>decorator layers</em>. The count is held per fold, and a
-    /// decorator between two operator layers re-enters the fold with a fresh one, so fifty layers of
-    /// ten operands — over a thousand nodes — passes a limit of 100 that refuses the flat chain of 200.
-    /// Making the budget span one evaluation is not a patch: an ambient counter would also charge a
-    /// higher-order proposition's per-element evaluations, which the paragraph above promises it does
-    /// not. Measured, and held by the test suite as behaviour rather than as intent; tracked as
-    /// <see href="https://github.com/karlssberg/Motiv/issues/202">#202</see>.
+    /// That exclusion is <em>declared</em> rather than detected, and the distinction matters when you
+    /// write the node. The engine cannot tell a re-entrant evaluation that is part of the composition
+    /// from one that is work inside a node, so the library marks the places it knows: resolving an
+    /// element of a higher-order proposition, <c>EnumerableExtensions.Where</c>, and a <c>Tap</c>
+    /// callback. Everything else that evaluates a proposition while an evaluation is in flight
+    /// <b>is</b> counted — notably a predicate of your own that evaluates a proposition per item
+    /// (<c>Spec.Build((Order o) =&gt; o.Lines.All(line.Matches))</c>), a higher-order predicate supplied
+    /// through <c>As(...)</c>, and a <c>WhenTrue</c>/<c>WhenFalse</c> delegate resolved while another
+    /// evaluation is running. Prefer the built-in quantifiers — <c>AsAllSatisfied</c> and its siblings —
+    /// where the per-item work should not count against the rule that contains it.
+    /// </para>
+    /// <para>
+    /// Work spread across <em>decorator layers</em> is counted, though. A decorator between two operator
+    /// layers is not folded — it re-enters the fold — but the nested fold spends the same budget, so
+    /// fifty layers of ten operands is refused by the same limit of 100 that refuses the flat chain of
+    /// 200. It was not, until
+    /// <see href="https://github.com/karlssberg/Motiv/issues/202">#202</see>: the count lived in a
+    /// fold-local, and the shape a rule document composes is exactly the alternating one.
+    /// </para>
+    /// <para>
+    /// One asymmetry remains. <see cref="AsyncSpecBase{TModel}.EvaluateAsync" /> and
+    /// <see cref="AsyncSpecBase{TModel}.MatchesAsync" /> still count per fold, because the budget is a
+    /// thread-static — correct for the synchronous folds, which never leave the thread that started
+    /// them, and unavailable to an asynchronous one whose continuation may resume elsewhere. Tracked as
+    /// <see href="https://github.com/karlssberg/Motiv/issues/204">#204</see>.
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException">The value is less than one.</exception>

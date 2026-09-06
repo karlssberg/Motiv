@@ -1,3 +1,5 @@
+using Motiv.Traversal;
+
 namespace Motiv.HigherOrderProposition;
 
 internal enum HigherOrderOp
@@ -30,6 +32,10 @@ internal readonly struct HigherOrderShortCircuit(HigherOrderOp op, int n)
     /// non-capturing <c>static</c> lambda). Arrays and <see cref="IReadOnlyList{T}" /> sources iterate by index to
     /// avoid enumerator allocation; the operation's decision logic is shared across all iteration shapes.
     /// </summary>
+    /// <remarks>
+    /// Elements are resolved inside <see cref="EvaluationBudget.Exclude" />, for the reason
+    /// <see cref="HigherOrderResults" /> gives — this is the allocation-free half of the same seam.
+    /// </remarks>
     internal bool Evaluate<TModel, TState>(
         IEnumerable<TModel> source,
         TState state,
@@ -44,26 +50,44 @@ internal readonly struct HigherOrderShortCircuit(HigherOrderOp op, int n)
 
         var trueCount = 0;
 
+        // Excluded for the whole loop, enumeration included — see the remarks above.
+        using var exclusion = EvaluationBudget.Exclude();
+
         switch (source)
         {
             case TModel[] array:
+            {
                 for (var i = 0; i < array.Length; i++)
-                    if (TryDecide(project(array[i], state), ref trueCount, out var decidedArray))
-                        return decidedArray;
+                {
+                    if (TryDecide(project(array[i], state), ref trueCount, out var decided))
+                        return decided;
+                }
+
                 break;
+            }
 
             case IReadOnlyList<TModel> list:
+            {
                 var count = list.Count;
                 for (var i = 0; i < count; i++)
-                    if (TryDecide(project(list[i], state), ref trueCount, out var decidedList))
-                        return decidedList;
+                {
+                    if (TryDecide(project(list[i], state), ref trueCount, out var decided))
+                        return decided;
+                }
+
                 break;
+            }
 
             default:
+            {
                 foreach (var item in source)
-                    if (TryDecide(project(item, state), ref trueCount, out var decidedSeq))
-                        return decidedSeq;
+                {
+                    if (TryDecide(project(item, state), ref trueCount, out var decided))
+                        return decided;
+                }
+
                 break;
+            }
         }
 
         return FinalDecision(trueCount);

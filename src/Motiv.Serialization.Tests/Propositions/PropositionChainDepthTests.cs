@@ -23,8 +23,13 @@ namespace Motiv.Serialization.Tests.Propositions;
 /// below state that as behaviour rather than leaving it as an argument.
 /// </para>
 /// </remarks>
-public class PropositionChainDepthTests
+[Collection(MotivLimitsTestCollection.Name)]
+public class PropositionChainDepthTests : IDisposable
 {
+    private readonly int _previousEvaluationSize = MotivLimits.MaxEvaluationSize;
+
+    public void Dispose() => MotivLimits.MaxEvaluationSize = _previousEvaluationSize;
+
     private sealed record Model(int Value);
 
     private sealed class ChainRule() : Rule<Model, string>(
@@ -82,6 +87,49 @@ public class PropositionChainDepthTests
             .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
 
         rule.Evaluate(new Model(2)).Satisfied.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// The one cap that does see the chain, since
+    /// <see href="https://github.com/karlssberg/Motiv/issues/202">#202</see>. Each link composes an
+    /// operator level and a decorator level, and the decorator re-enters the evaluation fold — which
+    /// used to start a fresh count, so the chain evaluated under any limit at all however long it grew.
+    /// <para>
+    /// This is the same property <c>DecoratorSeamTests</c> holds against a hand-built alternating shape,
+    /// stated here against the shape a stored catalogue actually composes. The hand-built one is a model
+    /// of this; only this is the thing itself, and the whole reason the defect mattered was that a
+    /// document reaches it.
+    /// </para>
+    /// <para>
+    /// It bounds <em>size</em> and not <em>depth</em>: the chain's 1,046-link stack ceiling is
+    /// unmoved, and is <see href="https://github.com/karlssberg/Motiv/issues/201">#201</see>.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public async Task Should_refuse_a_reference_chain_that_exceeds_the_evaluation_size_bound()
+    {
+        var propositions = new PropositionSet(NewRegistry(), new InMemoryPropositionStore())
+            .AddModel<Model>("m");
+        propositions.Load();
+
+        await CreateChain(propositions, links: 200);
+
+        var rule = new ChainRule();
+        var rules = new RuleSet(propositions).Add(rule);
+        (await rules.UpdateAsync(
+                "chain",
+                """{ "rule": { "spec": "m.p200" } }""",
+                1,
+                new RuleChangeProvenance("test")))
+            .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
+
+        // Bound only the evaluation: everything above is authoring, which the three document caps bound
+        // and this one does not.
+        MotivLimits.MaxEvaluationSize = 100;
+
+        var act = () => rule.Evaluate(new Model(2));
+
+        act.ShouldThrow<SpecException>();
     }
 
     /// <summary>

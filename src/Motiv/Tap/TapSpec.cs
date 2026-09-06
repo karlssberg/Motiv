@@ -1,22 +1,10 @@
 namespace Motiv.Tap;
 
+/// <summary>A <see cref="TapSpecBase{TModel,TMetadata}" /> whose callback fires on every evaluation.</summary>
 internal sealed class TapSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> operand,
     Action<TModel, BooleanResultBase<TMetadata>> callback)
-    : SpecBase<TModel, TMetadata>
+    : TapSpecBase<TModel, TMetadata>(operand, callback)
 {
-    private readonly SpecBase[] _underlying = [operand];
-
-    public override IEnumerable<SpecBase> Underlying => _underlying;
-
-    public override ISpecDescription Description => operand.Description;
-
-    public override bool Matches(TModel model) => operand.Matches(model);
-
-    protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model)
-    {
-        var result = operand.EvaluateInternal(model);
-        callback(model, result);
-        return result;
-    }
+    protected override bool ShouldInvokeCallback(BooleanResultBase<TMetadata> result) => true;
 }
