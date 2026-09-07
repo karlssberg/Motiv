@@ -15,7 +15,7 @@ internal sealed class MinimalHigherOrderFromBooleanResultBooleanResult<TModel, T
     : BooleanResultBase<TMetadata>
 {
     private BooleanResult<TModel, TMetadata>[] CausesInternal =>
-        field ??= causeSelector(Satisfied, underlyingResults).ToArray();
+        field ??= HigherOrderResults.ResolveCauses(Satisfied, underlyingResults, causeSelector);
 
     private HigherOrderBooleanResultEvaluation<TModel, TMetadata> Evaluation =>
         field ??= new HigherOrderBooleanResultEvaluation<TModel, TMetadata>(underlyingResults, CausesInternal);

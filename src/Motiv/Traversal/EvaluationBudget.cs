@@ -37,8 +37,18 @@ namespace Motiv.Traversal;
 /// (<see href="https://github.com/karlssberg/Motiv/issues/208">#208</see>). It now materializes and
 /// applies the predicate under one scope, and does not offer the halves separately, because a list of
 /// seams maintained by hand is only as good as its least careful copy — and that one had nineteen.
-/// The delegates a <em>result</em> resolves lazily are still counted, tracked as
-/// <see href="https://github.com/karlssberg/Motiv/issues/213">#213</see>.
+/// </para>
+/// <para>
+/// <b>The same node's <em>result</em> declares its lazy half, and the reason is a different one.</b>
+/// A higher-order result defers its cause selector and its <c>WhenTrue</c>/<c>WhenFalse</c> to first
+/// property read, so each ran on whatever evaluation was in flight then — and, being memoized, on
+/// whichever one reached the property first, which made the same composition acceptable or refused
+/// depending on whether a logger had already looked at it
+/// (<see href="https://github.com/karlssberg/Motiv/issues/213">#213</see>). They are excluded not
+/// because they are inside the node's decision but because they come <em>after</em> it: the result is
+/// handed <c>Satisfied</c> when it is constructed, so these delegates describe a decision rather than
+/// reach one. <c>HigherOrderResults.ResolveCauses</c>, <c>ResolveValue</c> and <c>ResolveValues</c>
+/// own that scope, covered by the same gate.
 /// </para>
 /// <para>
 /// <b>Two carriers, because an evaluation is bounded by whichever one it is running under.</b>

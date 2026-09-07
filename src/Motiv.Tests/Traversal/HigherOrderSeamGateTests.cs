@@ -51,11 +51,35 @@ public class HigherOrderSeamGateTests
 
     private const int KnownFamilyCount = 19;
 
-    private static Type[] HigherOrderPropositions() =>
+    /// <summary>
+    /// The result classes: every higher-order proposition builds one, and every one of them defers a cause
+    /// selector — sixteen of them a value delegate as well. Their count is pinned for the same reason the
+    /// propositions' is.
+    /// </summary>
+    private const int KnownResultCount = 19;
+
+    private const int KnownValueDelegateResultCount = 16;
+
+    /// <summary>Of those sixteen, the eight whose delegates yield and so must take <c>ResolveValues</c>.</summary>
+    private const int KnownYieldingResultCount = 8;
+
+    private static Type[] HigherOrderPropositions() => FamilyTypesEndingWith("Proposition");
+
+    /// <summary>
+    /// The result population, discovered the same way as the propositions': a non-abstract class in one of
+    /// the four family namespaces whose arity-stripped name ends with <c>Result</c>.
+    /// </summary>
+    private static Type[] HigherOrderResultTypes() => FamilyTypesEndingWith("Result");
+
+    /// <summary>
+    /// Every non-abstract class in one of the four family namespaces whose arity-stripped name ends with
+    /// <paramref name="suffix" />.
+    /// </summary>
+    private static Type[] FamilyTypesEndingWith(string suffix) =>
         typeof(Spec).Assembly
             .GetTypes()
             .Where(type => type is { IsClass: true, IsAbstract: false }
-                           && NameWithoutArity(type).EndsWith("Proposition", StringComparison.Ordinal)
+                           && NameWithoutArity(type).EndsWith(suffix, StringComparison.Ordinal)
                            && Families.Contains(type.Namespace))
             .ToArray();
 
@@ -69,10 +93,64 @@ public class HigherOrderSeamGateTests
         return arity < 0 ? type.Name : type.Name.Substring(0, arity);
     }
 
-    private static MethodInfo Seam() =>
+    private static MethodInfo Seam(string name) =>
         typeof(HigherOrderResults)
-            .GetMethod("MaterializeAndDecide", BindingFlags.NonPublic | BindingFlags.Static)
-            .ShouldNotBeNull("the seam this gate is stated in terms of has to exist");
+            .GetMethod(name, BindingFlags.NonPublic | BindingFlags.Static)
+            .ShouldNotBeNull($"the seam this gate is stated in terms of has to exist: {name}");
+
+    /// <summary>
+    /// Whether the type defers a caller's cause selector, read off the <em>shape</em> of a constructor
+    /// parameter — <c>Func&lt;bool, IEnumerable&lt;T&gt;, IEnumerable&lt;T&gt;&gt;</c> — rather than off a
+    /// parameter name. One of these families spells its value delegates <c>trueBecause</c> where the rest
+    /// spell them <c>whenTrue</c>, which is exactly the kind of drift a name-matched population absorbs
+    /// silently.
+    /// </summary>
+    private static bool DefersACauseSelector(Type type) =>
+        HasConstructorParameter(type, func => func.GetGenericTypeDefinition() == typeof(Func<,,>)
+                                              && func.GetGenericArguments()[0] == typeof(bool));
+
+    /// <summary>
+    /// Whether the type defers a caller's <c>WhenTrue</c>/<c>WhenFalse</c>, again by shape: a one-argument
+    /// delegate over one of the three <c>HigherOrder…Evaluation</c> types.
+    /// </summary>
+    private static bool DefersAValueDelegate(Type type) => DefersAValueDelegate(type, yielding: false)
+                                                           || DefersAValueDelegate(type, yielding: true);
+
+    /// <summary>
+    /// The same shape, split by whether the delegate <em>yields</em> — its return type is a constructed
+    /// <see cref="IEnumerable{T}" /> — because which of the two value seams a result must take depends on
+    /// exactly that, and nothing else can tell them apart.
+    /// </summary>
+    /// <remarks>
+    /// <b>The split is the point, not a refinement of it.</b> <c>ResolveValue</c> and <c>ResolveValues</c>
+    /// have different names but overlapping signatures: a yielding delegate binds to <c>ResolveValue</c>
+    /// perfectly well, with <c>TValue</c> inferred as <c>IEnumerable&lt;string&gt;</c>. The exclusion scope
+    /// then closes over the <em>invocation</em>, which for an iterator block runs none of the caller's
+    /// code — and the body runs later, at enumeration, outside it. That is #213 reopened, and a gate that
+    /// accepted either seam would report success over it.
+    /// <para>
+    /// A single-valued delegate returns the class's own open <c>TMetadata</c>, or <c>string</c>; neither is
+    /// a constructed <see cref="IEnumerable{T}" />, so the two populations do not overlap.
+    /// </para>
+    /// </remarks>
+    private static bool DefersAValueDelegate(Type type, bool yielding) =>
+        HasConstructorParameter(type, func => func.GetGenericTypeDefinition() == typeof(Func<,>)
+                                              && NameWithoutArity(func.GetGenericArguments()[0])
+                                                  .EndsWith("Evaluation", StringComparison.Ordinal)
+                                              && Yields(func.GetGenericArguments()[1]) == yielding);
+
+    private static bool Yields(Type returnType) =>
+        returnType.IsGenericType && returnType.GetGenericTypeDefinition() == typeof(IEnumerable<>);
+
+    /// <summary>
+    /// Whether any constructor of <paramref name="type" /> takes a parameter matching
+    /// <paramref name="shape" />. Only generic parameter types are offered to it, so a shape may call
+    /// <see cref="Type.GetGenericTypeDefinition" /> without guarding first.
+    /// </summary>
+    private static bool HasConstructorParameter(Type type, Func<Type, bool> shape) =>
+        type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+            .SelectMany(constructor => constructor.GetParameters())
+            .Any(parameter => parameter.ParameterType is { IsGenericType: true } func && shape(func));
 
     /// <summary>
     /// The population, pinned. A reflection query that quietly stops matching is a gate reporting a
@@ -95,7 +173,7 @@ public class HigherOrderSeamGateTests
     [Fact]
     public void Should_decide_every_higher_order_proposition_through_the_declared_seam()
     {
-        var seam = Seam();
+        var seam = Seam("MaterializeAndDecide");
 
         var undeclared = HigherOrderPropositions()
             .Where(type => !DeclaredMethods(type).Any(method => Calls(method, seam)))
@@ -127,7 +205,81 @@ public class HigherOrderSeamGateTests
             .ToArray();
 
         control.ShouldNotBeEmpty("the control has to be a method that exists and has a body");
-        control.ShouldAllBe(method => !Calls(method, Seam()));
+        control.ShouldAllBe(method => !Calls(method, Seam("MaterializeAndDecide")));
+    }
+
+    /// <summary>
+    /// The result population, pinned, and the two properties it is stated over. Nineteen result classes,
+    /// every one of them deferring a cause selector; sixteen of them a value delegate as well.
+    /// </summary>
+    [Fact]
+    public void Should_find_every_higher_order_result()
+    {
+        var results = HigherOrderResultTypes();
+
+        results.Length.ShouldBe(KnownResultCount, "the gates below are only as good as the population they sweep");
+        results.Count(DefersACauseSelector).ShouldBe(
+            KnownResultCount,
+            "a result whose cause selector stopped matching by shape drops out of the gate below");
+        results.Count(DefersAValueDelegate).ShouldBe(
+            KnownValueDelegateResultCount,
+            "and so does one whose value delegates do");
+        results.Count(type => DefersAValueDelegate(type, yielding: true)).ShouldBe(
+            KnownYieldingResultCount,
+            "the two value seams are gated separately, so their populations are pinned separately");
+        results.Count(type => DefersAValueDelegate(type, yielding: false)).ShouldBe(
+            KnownValueDelegateResultCount - KnownYieldingResultCount,
+            "and the two must still account for every result that defers a value delegate");
+    }
+
+    /// <summary>
+    /// The lazy half of the same seam. A higher-order result defers its cause selector to first property
+    /// read, so it runs on whatever evaluation happens to be in flight then — and, being memoized, on
+    /// whichever one <em>got there first</em>
+    /// (<see href="https://github.com/karlssberg/Motiv/issues/213">#213</see>).
+    /// </summary>
+    [Fact]
+    public void Should_resolve_every_results_cause_selector_through_the_declared_seam()
+    {
+        var seam = Seam("ResolveCauses");
+
+        var undeclared = HigherOrderResultTypes()
+            .Where(DefersACauseSelector)
+            .Where(type => !DeclaredMethods(type).Any(method => Calls(method, seam)))
+            .Select(type => type.Name)
+            .OrderBy(name => name)
+            .ToArray();
+
+        undeclared.ShouldBeEmpty(
+            "a result that resolves its cause selector outside the seam charges the caller's " +
+            "As(...) predicate to whichever evaluation read the property first");
+    }
+
+    /// <summary>
+    /// The value delegates, gated per seam rather than per class. A yielding delegate must go through
+    /// <c>ResolveValues</c>, which materializes <em>inside</em> the scope; a single-valued one through
+    /// <c>ResolveValue</c>. Accepting either would leave the one bug the split exists to prevent
+    /// reachable with the gate green — see <see cref="DefersAValueDelegate(Type, bool)" />.
+    /// </summary>
+    [Theory]
+    [InlineData(true, "ResolveValues")]
+    [InlineData(false, "ResolveValue")]
+    public void Should_resolve_every_results_value_delegate_through_the_seam_its_shape_requires(
+        bool yielding,
+        string seamName)
+    {
+        var seam = Seam(seamName);
+
+        var undeclared = HigherOrderResultTypes()
+            .Where(type => DefersAValueDelegate(type, yielding))
+            .Where(type => !DeclaredMethods(type).Any(method => Calls(method, seam)))
+            .Select(type => type.Name)
+            .OrderBy(name => name)
+            .ToArray();
+
+        undeclared.ShouldBeEmpty(
+            $"a result whose WhenTrue/WhenFalse {(yielding ? "yields" : "returns one value")} must take " +
+            $"{seamName}, or explanation rendering runs outside the exclusion that was written for it");
     }
 
     private static IEnumerable<MethodInfo> DeclaredMethods(Type type) =>
@@ -176,7 +328,7 @@ public class HigherOrderSeamGateTests
 
     /// <summary>
     /// Reduces a constructed generic method to the definition the gate compares against, so that the
-    /// nineteen call sites — each closing the seam over its own element type — all resolve to one thing.
+    /// call sites — each closing a seam over its own element type — all resolve to one thing.
     /// </summary>
     private static MethodBase? Definition(MethodBase? called) =>
         called is MethodInfo { IsGenericMethod: true, IsGenericMethodDefinition: false } constructed

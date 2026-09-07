@@ -23,13 +23,13 @@ internal sealed class HigherOrderFromBooleanResultPolicyResult<TModel, TMetadata
     {
         get
         {
-            if (!_hasValue) { field = Satisfied ? whenTrue(Evaluation) : whenFalse(Evaluation); _hasValue = true; }
+            if (!_hasValue) { field = HigherOrderResults.ResolveValue(Satisfied, Evaluation, whenTrue, whenFalse); _hasValue = true; }
             return field;
         }
     } = default!;
 
     private BooleanResult<TModel, TUnderlyingMetadata>[] CausesInternal =>
-        field ??= causeSelector(Satisfied, underlyingResults).ToArray();
+        field ??= HigherOrderResults.ResolveCauses(Satisfied, underlyingResults, causeSelector);
 
     private HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata> Evaluation =>
         field ??= new HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>(underlyingResults, CausesInternal);

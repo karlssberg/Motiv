@@ -59,6 +59,83 @@ internal static class HigherOrderResults
     }
 
     /// <summary>
+    ///     Resolves a result's causes through the caller's cause selector, outside the budget of whatever
+    ///     evaluation happens to be reading the property.
+    /// </summary>
+    /// <remarks>
+    ///     <b>The selector runs after <c>Satisfied</c> is fixed.</b> Every higher-order result takes its
+    ///     outcome as a constructor argument, so nothing resolved from the result afterwards can change what
+    ///     it decided — the selector picks which elements to <em>name</em> as the cause of a decision already
+    ///     made. That is describing a decision rather than reaching one, which is the argument that keeps
+    ///     telemetry's explanation rendering excluded
+    ///     (<see href="https://github.com/karlssberg/Motiv/issues/209">#209</see>) and the argument that keeps
+    ///     a leaf predicate counted, because a leaf predicate <em>is</em> how its node reaches an answer.
+    ///     <para>
+    ///     Charged, it was charged to whichever evaluation was in flight at the moment of the first read — and
+    ///     because the property is memoized, that is a fact about who read it first rather than about the
+    ///     composition. The same rule was therefore accepted or refused depending on whether an earlier
+    ///     consumer, Motiv's own telemetry among them, had already touched the property
+    ///     (<see href="https://github.com/karlssberg/Motiv/issues/213">#213</see>).
+    ///     </para>
+    ///     <para>
+    ///     The default selector for <c>As(...)</c> is <c>Causes.Get(..., higherOrderPredicate)</c>, which
+    ///     re-invokes the predicate <see cref="MaterializeAndDecide" /> already excludes, so leaving this one
+    ///     charged had a single delegate excluded in one place and counted in another.
+    ///     </para>
+    /// </remarks>
+    internal static TElement[] ResolveCauses<TElement>(
+        bool satisfied,
+        TElement[] underlyingResults,
+        Func<bool, IEnumerable<TElement>, IEnumerable<TElement>> causeSelector)
+    {
+        using var exclusion = EvaluationBudget.Exclude();
+
+        return causeSelector(satisfied, underlyingResults).ToArray();
+    }
+
+    /// <summary>
+    ///     Resolves a result's single <c>WhenTrue</c>/<c>WhenFalse</c> value outside the reader's budget. See
+    ///     <see cref="ResolveCauses{TElement}" /> for why.
+    /// </summary>
+    /// <remarks>
+    ///     <b>A sequence-returning delegate belongs in <see cref="ResolveValues{TEvaluation,TValue}" />, which
+    ///     this will not tell you.</b> Passed one, <typeparamref name="TValue" /> binds to the sequence and the
+    ///     scope closes over the invocation alone — leaving the caller's code to run at enumeration, outside
+    ///     it, which is the state this seam exists to end.
+    /// </remarks>
+    internal static TValue ResolveValue<TEvaluation, TValue>(
+        bool satisfied,
+        TEvaluation evaluation,
+        Func<TEvaluation, TValue> whenTrue,
+        Func<TEvaluation, TValue> whenFalse)
+    {
+        using var exclusion = EvaluationBudget.Exclude();
+
+        return satisfied ? whenTrue(evaluation) : whenFalse(evaluation);
+    }
+
+    /// <summary>
+    ///     Resolves a result's yielded <c>WhenTrue</c>/<c>WhenFalse</c> values outside the reader's budget,
+    ///     <em>materializing them inside the scope</em>: a yielding delegate is an iterator block, so invoking
+    ///     it runs none of the caller's code and enumerating it runs all of it.
+    /// </summary>
+    /// <remarks>
+    ///     Null-tolerant because a caller may return a null sequence, which three of these results already
+    ///     admitted with <c>?.ToArray()</c> and three did not. The tolerant form is the wider of the two, so
+    ///     it is the one that can stand for both.
+    /// </remarks>
+    internal static TValue[] ResolveValues<TEvaluation, TValue>(
+        bool satisfied,
+        TEvaluation evaluation,
+        Func<TEvaluation, IEnumerable<TValue>> whenTrue,
+        Func<TEvaluation, IEnumerable<TValue>> whenFalse)
+    {
+        using var exclusion = EvaluationBudget.Exclude();
+
+        return (satisfied ? whenTrue(evaluation) : whenFalse(evaluation))?.ToArray()!;
+    }
+
+    /// <summary>
     ///     Projects every element in one pass. Arrays — the type the internal hot path always supplies — are
     ///     indexed directly to avoid per-element interface dispatch; other <see cref="IReadOnlyList{T}" />
     ///     sources (e.g. <see cref="List{T}" />) are pre-sized and filled via an indexed loop; anything else
