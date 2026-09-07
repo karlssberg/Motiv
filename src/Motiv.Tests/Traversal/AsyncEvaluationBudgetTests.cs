@@ -241,10 +241,11 @@ public class AsyncEvaluationBudgetTests : IDisposable
     private static AsyncSpecBase<int, string> FlatChain(int operands) =>
         Enumerable.Range(0, operands).Select(Leaf).Aggregate((left, right) => left.And(right));
 
+    private static SpecBase<int, string> SyncLeaf(int index) =>
+        Spec.Build((int n) => n % 2 == 0).Create($"s{index} is even");
+
     private static SpecBase<int, string> SyncFlatChain(int operands) =>
-        Enumerable.Range(0, operands)
-            .Select(SpecBase<int, string> (index) => Spec.Build((int n) => n % 2 == 0).Create($"s{index} is even"))
-            .Aggregate((left, right) => left.And(right));
+        Enumerable.Range(0, operands).Select(SyncLeaf).Aggregate((left, right) => left.And(right));
 
     /// <summary>
     /// The alternating shape — an operator run, a decorator over it, another operator run over that —
