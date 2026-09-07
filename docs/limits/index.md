@@ -119,12 +119,20 @@ of ten operands is over a thousand nodes and is refused by a limit of 100, as th
 is. That is what a rule document composes, since `RuleBinder` wraps every node carrying a `name` or a
 `whenTrue`.
 
-> [!NOTE]
-> Until [#204](https://github.com/karlssberg/Motiv/issues/204), the **asynchronous** fold still counts
-> per fold rather than per evaluation, so `EvaluateAsync` and `MatchesAsync` admit a decorator-layered
-> composition that `Evaluate` and `Matches` refuse. The carrier is the difference: a continuation may
-> resume on another thread, so the synchronous fold's thread-static budget is not available to it.
-> Refuse the document at the edge if you evaluate untrusted compositions asynchronously.
+It counts the same way on the **asynchronous** surface, which it did not until
+[#204](https://github.com/karlssberg/Motiv/issues/204): `EvaluateAsync` and `MatchesAsync` held a
+fold-local count of their own and admitted a decorator-layered composition that `Evaluate` and
+`Matches` refused. The carrier is what differs and why it took a second change &mdash; a continuation
+may resume on a thread whose slot holds a *suspended* evaluation's count, so the synchronous fold's
+thread-static is not merely unavailable to an asynchronous evaluation but wrong for it. The count
+flows with the evaluation instead, which settles the two shapes the synchronous surface does not have:
+
+- **A concurrent operator** &mdash; `AndConcurrently` and its siblings &mdash; is a fan-out rather than
+  a walk, and both branches count against the one budget. A composition of two ten-thousand-node
+  branches is twenty thousand nodes, not ten.
+- **A synchronous proposition inside an asynchronous composition**, reached through `ToAsyncSpec()`,
+  counts against the asynchronous evaluation that contains it. Moving half a composition behind an
+  adapter does not buy it a second allowance.
 
 ## The document edge: `RuleSerializerOptions`
 

@@ -47,18 +47,20 @@ internal sealed class AsyncXOrSpec<TModel, TMetadata>(
     SpecBase IAsyncBinaryOperationSpec.Left => Left;
 
     /// <summary>
-    /// The concurrent case is a fan-out rather than a walk, so it stays as it was and the fold leaves it
-    /// to evaluate itself. The sequential case — the only one a rule document can produce — is folded.
+    /// The concurrent case is a fan-out rather than a walk, so the fold leaves it to evaluate itself
+    /// through <see cref="AsyncConcurrentFanOut" />, which is also where its two branches are given one
+    /// budget to share. The sequential case — the only one a rule document can produce — is folded.
     /// </summary>
     public override async ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default)
     {
         if (!concurrent)
             return await AsyncEvaluationFold.MatchesAsync(this, model, cancellationToken).ConfigureAwait(false);
 
-        var leftTask = left.MatchesAsync(model, cancellationToken).AsTask();
-        var rightTask = right.MatchesAsync(model, cancellationToken).AsTask();
-        await Task.WhenAll(leftTask, rightTask).ConfigureAwait(false);
-        return await leftTask.ConfigureAwait(false) ^ await rightTask.ConfigureAwait(false);
+        var (leftMatch, rightMatch) = await AsyncConcurrentFanOut
+            .MatchBothAsync(left, right, model, cancellationToken)
+            .ConfigureAwait(false);
+
+        return leftMatch ^ rightMatch;
     }
 
     /// <inheritdoc />
@@ -69,10 +71,11 @@ internal sealed class AsyncXOrSpec<TModel, TMetadata>(
         if (!concurrent)
             return await AsyncEvaluationFold.EvaluateAsync(this, model, cancellationToken).ConfigureAwait(false);
 
-        var leftTask = left.EvaluateSpecAsyncInternal(model, cancellationToken).AsTask();
-        var rightTask = right.EvaluateSpecAsyncInternal(model, cancellationToken).AsTask();
-        await Task.WhenAll(leftTask, rightTask).ConfigureAwait(false);
-        return (await leftTask.ConfigureAwait(false)).XOr(await rightTask.ConfigureAwait(false));
+        var (leftResult, rightResult) = await AsyncConcurrentFanOut
+            .EvaluateBothAsync(left, right, model, cancellationToken)
+            .ConfigureAwait(false);
+
+        return leftResult.XOr(rightResult);
     }
 
     AsyncSpecBase<TModel, TMetadata> IAsyncOperationFold<TModel, TMetadata>.FirstOperand => left;

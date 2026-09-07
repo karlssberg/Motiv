@@ -9,8 +9,14 @@ namespace Motiv.Tests.Traversal;
 /// <remarks>
 /// Spec 3E's design doc left that bound stated but unmeasured, and ticket
 /// <see href="https://github.com/karlssberg/Motiv/issues/145">#145</see> asked for the measurement
-/// before any rewrite. These are the two facts it turned up. Both are recorded as they behave today,
-/// so the follow-ups that fix them turn these red rather than silently passing.
+/// before any rewrite. These are the facts it turned up, recorded as they behaved so that the
+/// follow-ups fixing them turned these red rather than silently passing — which is what
+/// <see href="https://github.com/karlssberg/Motiv/issues/202">#202</see> and
+/// <see href="https://github.com/karlssberg/Motiv/issues/204">#204</see> then did, the first on the
+/// synchronous pair and the second on the asynchronous one. All four now state the bound rather than
+/// the hole. The asynchronous side's own arithmetic lives in
+/// <see cref="AsyncEvaluationBudgetTests" />; what stays here is the parity claim — <b>the same
+/// composition, refused at the same limit, whichever surface evaluates it.</b>
 /// </remarks>
 [Collection(MotivLimitsTestCollection.Name)]
 public class DecoratorSeamTests : IDisposable
@@ -68,20 +74,31 @@ public class DecoratorSeamTests : IDisposable
     }
 
     /// <summary>
-    /// The asynchronous fold still holds a size local of its own, and #202 fixed only the synchronous
-    /// pair. Its carrier is a separate decision — a thread-static is wrong once a continuation can
-    /// resume elsewhere — and is tracked as
-    /// <see href="https://github.com/karlssberg/Motiv/issues/204">#204</see>. Recorded as it behaves,
-    /// not as it is documented; flip this to a <c>ThrowAsync</c> when that lands.
+    /// The asynchronous twin, closed by
+    /// <see href="https://github.com/karlssberg/Motiv/issues/204">#204</see>. It held a size local of
+    /// its own until then, because #202's carrier is a thread-static and a continuation may resume on
+    /// a thread whose slot holds a suspended evaluation's count — so the asynchronous pair admitted
+    /// what the synchronous pair refused.
     /// </summary>
     [Fact]
-    public async Task Should_not_yet_bound_a_decorator_layered_async_evaluation()
+    public async Task Should_bound_a_decorator_layered_async_evaluation()
     {
         MotivLimits.MaxEvaluationSize = 100;
 
         var spec = AsyncNestedChain(layers: 50, operandsPerLayer: 10);
 
-        (await spec.EvaluateAsync(2)).Satisfied.ShouldBeTrue();
+        await Should.ThrowAsync<SpecException>(async () => await spec.EvaluateAsync(2));
+    }
+
+    /// <summary>The same hole on the asynchronous allocation-free path.</summary>
+    [Fact]
+    public async Task Should_bound_a_decorator_layered_async_match()
+    {
+        MotivLimits.MaxEvaluationSize = 100;
+
+        var spec = AsyncNestedChain(layers: 50, operandsPerLayer: 10);
+
+        await Should.ThrowAsync<SpecException>(async () => await spec.MatchesAsync(2));
     }
 
     private static SpecBase<int, string> Leaf(int index) =>

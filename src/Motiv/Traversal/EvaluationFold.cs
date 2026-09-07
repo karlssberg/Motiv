@@ -137,7 +137,7 @@ internal static class EvaluationFold
                     continue;
                 }
 
-                EvaluationBudget.Charge();
+                budget.Charge();
 
                 if (next is IOperationFold<TModel, TMetadata> operation)
                 {
