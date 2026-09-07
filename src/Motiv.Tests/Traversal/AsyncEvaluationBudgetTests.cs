@@ -243,7 +243,7 @@ public class AsyncEvaluationBudgetTests : IDisposable
 
     private static SpecBase<int, string> SyncFlatChain(int operands) =>
         Enumerable.Range(0, operands)
-            .Select(SpecBase<int, string> (index) => Spec.Build((int n) => n % 2 == 0).Create($"s{index} is even"))
+            .Select(index => Spec.Build((int n) => n % 2 == 0).Create($"s{index} is even"))
             .Aggregate((left, right) => left.And(right));
 
     /// <summary>
