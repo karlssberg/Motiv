@@ -5,7 +5,7 @@ namespace Motiv.Traversal;
 /// operand rather than calling it.
 /// </summary>
 /// <remarks>
-/// Two things differ from the synchronous driver, both forced by <c>async</c>:
+/// Three things differ from the synchronous driver, all forced by <c>async</c>:
 /// <list type="bullet">
 /// <item>Frames are addressed by index rather than through a <c>ref</c> local, because an async method
 /// cannot hold a by-ref local across an <c>await</c>. Array element access is still a variable, so the
@@ -14,6 +14,12 @@ namespace Motiv.Traversal;
 /// one that started the fold, so a thread-static buffer would be returned to the wrong thread — and an
 /// async evaluation already allocates a state machine per operand it awaits, next to which one array is
 /// not the cost worth chasing.</item>
+/// <item>The budget is flowed rather than thread-static, for the same reason and a sharper one: the
+/// slot a continuation resumes onto may hold a <em>suspended</em> evaluation's count, so a thread-static
+/// would not merely be unavailable but would let two interleaved evaluations corrupt each other. See
+/// <see cref="EvaluationBudget" />, and
+/// <see href="https://github.com/karlssberg/Motiv/issues/204">#204</see> for why this arrived a change
+/// later than the synchronous half.</item>
 /// </list>
 /// </remarks>
 internal static class AsyncEvaluationFold
@@ -52,10 +58,14 @@ internal static class AsyncEvaluationFold
         where TDriver : struct, IAsyncFoldDriver<TModel, TMetadata, TValue>
     {
         var driver = default(TDriver);
+
+        // Claimed in the synchronous prefix, before the first await, so that the counter is in the
+        // execution context every continuation below captures. See EvaluationBudget.EnterAsync.
+        using var budget = EvaluationBudget.EnterAsync();
+
         var frames = new Frame<TModel, TMetadata, TValue>[InitialCapacity];
         frames[0] = new Frame<TModel, TMetadata, TValue>(root);
         var depth = 1;
-        var size = 1;
 
         TValue completed = default!;
         var hasCompleted = false;
@@ -88,11 +98,7 @@ internal static class AsyncEvaluationFold
                 continue;
             }
 
-            if (++size > MotivLimits.MaxEvaluationSize)
-                throw new SpecException(
-                    $"The evaluation exceeded the maximum size of {MotivLimits.MaxEvaluationSize} nodes. " +
-                    "Compose fewer propositions, or raise " +
-                    $"{nameof(MotivLimits)}.{nameof(MotivLimits.MaxEvaluationSize)}.");
+            budget.Charge();
 
             if (next is IAsyncOperationFold<TModel, TMetadata> { IsConcurrent: false } operation)
             {

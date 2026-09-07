@@ -76,11 +76,16 @@ public static class MotivLimits
     /// fold-local, and the shape a rule document composes is exactly the alternating one.
     /// </para>
     /// <para>
-    /// One asymmetry remains. <see cref="AsyncSpecBase{TModel}.EvaluateAsync" /> and
-    /// <see cref="AsyncSpecBase{TModel}.MatchesAsync" /> still count per fold, because the budget is a
-    /// thread-static — correct for the synchronous folds, which never leave the thread that started
-    /// them, and unavailable to an asynchronous one whose continuation may resume elsewhere. Tracked as
-    /// <see href="https://github.com/karlssberg/Motiv/issues/204">#204</see>.
+    /// <see cref="AsyncSpecBase{TModel}.EvaluateAsync" /> and
+    /// <see cref="AsyncSpecBase{TModel}.MatchesAsync" /> count the same way, which they did not until
+    /// <see href="https://github.com/karlssberg/Motiv/issues/204">#204</see>: they held a fold-local
+    /// count of their own, because the budget was a thread-static — correct for the synchronous folds,
+    /// which never leave the thread that started them, and <em>wrong</em> for an asynchronous one, whose
+    /// continuation may resume on a thread whose slot holds a suspended evaluation's count. The count
+    /// flows with the evaluation instead, which settles the two shapes the synchronous surface does not
+    /// have: a concurrent operator's two branches count against one budget, and a synchronous
+    /// proposition reached through <c>ToAsyncSpec()</c> counts against the asynchronous evaluation
+    /// containing it rather than starting a second one.
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException">The value is less than one.</exception>
