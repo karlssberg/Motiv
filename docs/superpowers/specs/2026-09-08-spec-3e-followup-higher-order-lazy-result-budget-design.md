@@ -103,8 +103,23 @@ One consequence, called out because it is a behaviour change and not only a budg
 is a normalization onto the majority shape, and it is what makes the seam honest for that class rather
 than merely applied to it.
 
-`ResolveValues` is also null-tolerant (`?.ToArray()!`) because three of the six sites already were and
-three were not; one seam has to stand for both, and the tolerant form is the wider.
+### The null contract, and a claim this design first got wrong
+
+`ResolveValues` returns `TValue[]?`, and the nullability is a contract rather than an oversight — but
+the first version of this slice said the opposite, that three sites tolerated null and four did not
+because of copy-drift, and that "the tolerant form is the wider". The review round is what corrected
+it, and the correction came from running the suite rather than from reading the diff.
+
+The three `MultiAssertionExplanation` families **have a designed, tested degradation**: a resolver
+returning null yields empty `Values` and an `Explanation` that falls back to the statement's own
+reason, pinned in both outcomes by `HigherOrderFrom*MultiAssertionExplanationBooleanResultTests`.
+The four metadata families threw a prompt `ArgumentNullException` through a bare `.ToArray()`, with no
+test either way.
+
+So one side was a contract and the other was a default. One seam stands for both, and it stands for
+the tested one: **the metadata families now degrade where they used to throw.** That is a behaviour
+change, it is stated here rather than left to be found, and
+`Should_degrade_a_yielded_null_to_empty_values` pins it.
 
 ### Nesting
 

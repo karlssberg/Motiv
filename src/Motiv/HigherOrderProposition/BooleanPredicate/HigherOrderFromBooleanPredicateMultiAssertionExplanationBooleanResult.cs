@@ -20,7 +20,7 @@ internal sealed class HigherOrderFromBooleanPredicateMultiAssertionExplanationBo
         new HigherOrderBooleanEvaluation<TModel>(underlyingResults, HigherOrderResults.ResolveCauses(Satisfied, underlyingResults, causeSelector));
 
     private IEnumerable<string> MetadataValues =>
-        field ??= HigherOrderResults.ResolveValues(Satisfied, Evaluation, whenTrue, whenFalse);
+        field ??= HigherOrderResults.ResolveValues(Satisfied, Evaluation, whenTrue, whenFalse)!;
 
     private IEnumerable<string> ResolvedAssertions =>
         field ??= MetadataValues.ElseFallback(() => specDescription.ToReason(Satisfied));

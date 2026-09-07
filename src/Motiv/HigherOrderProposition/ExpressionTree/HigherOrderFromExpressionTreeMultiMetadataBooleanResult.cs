@@ -25,7 +25,7 @@ internal sealed class HigherOrderFromExpressionTreeMultiMetadataBooleanResult<TM
         field ??= new HigherOrderBooleanResultEvaluation<TModel, string>(underlyingResults, CausesInternal);
 
     private IEnumerable<TMetadata> MetadataValues =>
-        field ??= HigherOrderResults.ResolveValues(Satisfied, Evaluation, whenTrue, whenFalse);
+        field ??= HigherOrderResults.ResolveValues(Satisfied, Evaluation, whenTrue, whenFalse)!;
 
     /// <inheritdoc />
     public override MetadataNode<TMetadata> MetadataTier => field ??=

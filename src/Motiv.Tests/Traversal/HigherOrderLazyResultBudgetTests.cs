@@ -122,6 +122,34 @@ public class HigherOrderLazyResultBudgetTests : IDisposable
     }
 
     /// <summary>
+    /// The seam's null contract, over the family that did <em>not</em> have one. A resolver returning null
+    /// degrades to empty values rather than throwing.
+    /// </summary>
+    /// <remarks>
+    /// The eight results this seam stands for disagreed here, and only one side was tested. The three
+    /// <c>MultiAssertionExplanation</c> families used <c>?.ToArray()</c> and pin the degradation in
+    /// <c>HigherOrderFrom*MultiAssertionExplanationBooleanResultTests</c> — <c>Values</c> empty,
+    /// <c>Explanation</c> falling back to the statement's reason. The four metadata families used a bare
+    /// <c>.ToArray()</c> and threw, with nothing covering it either way. One seam stands for both, so it
+    /// stands for the tested contract; this case is the resulting change stated as behaviour rather than
+    /// left to be discovered.
+    /// </remarks>
+    [Fact]
+    public void Should_degrade_a_yielded_null_to_empty_values()
+    {
+        var result = Spec.Build((int n) => n % 2 == 0)
+            .AsAllSatisfied()
+            .WhenTrueYield(_ => (IEnumerable<string>)null!)
+            .WhenFalseYield(_ => (IEnumerable<string>)null!)
+            .Create("all models are even")
+            .Evaluate(Models);
+
+        Should.NotThrow(
+            () => result.Values.ShouldBeEmpty(),
+            "the assertion families' tested null contract is the one the shared seam carries");
+    }
+
+    /// <summary>
     /// The case that does not turn on where the line is drawn. Two results of the same proposition over
     /// the same models, read by the same composition against the same limit; the only difference is that
     /// one of them had its property read earlier, by someone else. The delegate is memoized, so the
