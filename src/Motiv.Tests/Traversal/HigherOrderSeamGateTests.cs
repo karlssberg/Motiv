@@ -27,10 +27,19 @@ namespace Motiv.Tests.Traversal;
 public class HigherOrderSeamGateTests
 {
     /// <summary>
-    /// The four families, by namespace. A higher-order proposition is a non-abstract <c>*Proposition</c>
-    /// class in one of them; the convention is exact today, which
+    /// The four families, by namespace. A higher-order proposition is a non-abstract class in one of them
+    /// whose name <em>ends</em> with <c>Proposition</c> — a suffix rather than a substring, so that a
+    /// helper named <c>PropositionBuilder</c> or <c>PropositionExtensions</c> added to one of these
+    /// namespaces later cannot join the population. The convention is exact today, which
     /// <see cref="Should_find_every_higher_order_proposition" /> pins so that a family added elsewhere
     /// shows up as a miscount rather than as a silent omission.
+    /// <para>
+    /// The suffix is tested against the name with its <b>arity stripped</b>. All nineteen are generic, and
+    /// a generic type reflects as <c>HigherOrderFromBooleanPredicateProposition`2</c> — so a plain
+    /// <c>EndsWith("Proposition")</c> matches none of them and empties the population. It was the count
+    /// case below that said so, which is the reason it is a separate assertion rather than a guard clause
+    /// inside the gate.
+    /// </para>
     /// </summary>
     private static readonly string[] Families =
     [
@@ -46,9 +55,19 @@ public class HigherOrderSeamGateTests
         typeof(Spec).Assembly
             .GetTypes()
             .Where(type => type is { IsClass: true, IsAbstract: false }
-                           && type.Name.Contains("Proposition")
+                           && NameWithoutArity(type).EndsWith("Proposition", StringComparison.Ordinal)
                            && Families.Contains(type.Namespace))
             .ToArray();
+
+    /// <summary>
+    ///     A generic type's <see cref="Type.Name" /> carries its arity — <c>Foo`2</c> — so the suffix has to be
+    ///     tested against the part before the backtick.
+    /// </summary>
+    private static string NameWithoutArity(Type type)
+    {
+        var arity = type.Name.IndexOf('`');
+        return arity < 0 ? type.Name : type.Name.Substring(0, arity);
+    }
 
     private static MethodInfo Seam() =>
         typeof(HigherOrderResults)

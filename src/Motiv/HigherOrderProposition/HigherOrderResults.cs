@@ -36,9 +36,10 @@ internal static class HigherOrderResults
     ///     </para>
     ///     <para>
     ///     <paramref name="decide" /> takes an <see cref="IEnumerable{T}" /> rather than the array, because that
-    ///     is the shape of the predicate a caller supplies. So the decision itself does allocate an enumerator,
-    ///     once — the allocation <see cref="Materialize{TSource,TState,TResult}" /> goes to some length to avoid
-    ///     <em>per element</em>.
+    ///     is the shape of the predicate a caller supplies. The results reach it as the array, so how often it is
+    ///     enumerated — and therefore how many enumerators are allocated — is the predicate's business: none for
+    ///     one that ignores its argument, one for <c>All(...)</c>, two for a <c>Count(...)</c> and an
+    ///     <c>Any(...)</c>. What the loop below buys is that none of that is <em>per element</em>.
     ///     </para>
     /// </remarks>
     internal static (TResult[] Results, bool IsSatisfied) MaterializeAndDecide<TSource, TState, TResult>(

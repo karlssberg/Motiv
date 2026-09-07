@@ -186,6 +186,28 @@ left a green that a reader takes as proof of a restore nobody checked. This is #
 a test rather than at a guard: *a green suite is not evidence about the specific thing you assume it is
 evidence about* — and the way to settle it is to run the mutation, not to reason about it.
 
+### The count-pin earned its keep on the next review round
+
+A bot review of the PR suggested tightening the population matcher from `Name.Contains("Proposition")`
+to `Name.EndsWith("Proposition")`, on the correct ground that a substring match would also admit a
+`PropositionBuilder` or `PropositionExtensions` added to one of these namespaces later.
+
+**Applied literally it empties the population.** All nineteen are generic, and a generic type reflects
+as `HigherOrderFromBooleanPredicateProposition`2` — the arity suffix means a plain `EndsWith` matches
+none of them. The gate's own assertion, `undeclared.ShouldBeEmpty()`, then passes **vacuously**: zero
+propositions, zero undeclared.
+
+The separate count case caught it immediately, which is exactly the reason it is a separate assertion
+rather than a guard clause inside the gate. The shipped matcher strips the arity and then tests the
+suffix, so the reviewer's concern is addressed without the failure mode their fix would have
+introduced. Two things generalise:
+
+- **A tightening is as capable of blinding a gate as a loosening**, and the direction that blinds it is
+  the one that leaves everything green.
+- **The vacuity guard has to be a peer of the gate, not a precondition inside it.** Had it been an
+  early `if (population.Length == 0) return;`, or even an assertion in the same method, the fix would
+  have been applied, the suite would have been green, and the gate would have been dead.
+
 ### Findings taken and not taken
 
 Taken, beyond the two above: the class-level doc on `HigherOrderResults` moved onto
