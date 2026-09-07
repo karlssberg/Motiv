@@ -30,6 +30,17 @@ namespace Motiv.Traversal;
 /// <see href="https://github.com/karlssberg/Motiv/issues/209">#209</see>.
 /// </para>
 /// <para>
+/// <b>The unit a seam declares is the node's whole decision, not its elements.</b>
+/// <c>HigherOrderResults</c> excluded the projection and stopped there, so a predicate supplied
+/// through <c>As(...)</c> that evaluated a proposition of its own was charged: the elements were
+/// excluded while the answer they were resolved for was not
+/// (<see href="https://github.com/karlssberg/Motiv/issues/208">#208</see>). It now materializes and
+/// applies the predicate under one scope, and does not offer the halves separately, because a list of
+/// seams maintained by hand is only as good as its least careful copy — and that one had nineteen.
+/// The delegates a <em>result</em> resolves lazily are still counted, tracked as
+/// <see href="https://github.com/karlssberg/Motiv/issues/213">#213</see>.
+/// </para>
+/// <para>
 /// <b>Why a thread-static.</b> <see cref="SpecBase{TModel}.Evaluate" /> and
 /// <see cref="SpecBase{TModel}.Matches" /> never leave the thread that started them, so a thread-static
 /// is both correct and free — and <c>Matches</c> allocates nothing, which is a contract Spec 3E paid for

@@ -32,10 +32,8 @@ internal sealed class HigherOrderFromBooleanPredicateProposition<TModel, TMetada
             causeSelector);
     }
 
-    private (ModelResult<TModel>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models)
-    {
-        var results = HigherOrderResults.Materialize(models, predicate,
-            static (model, p) => new ModelResult<TModel>(model, p(model)));
-        return (results, higherOrderPredicate(results));
-    }
+    private (ModelResult<TModel>[] Results, bool IsSatisfied) EvaluateModels(IEnumerable<TModel> models) =>
+        HigherOrderResults.MaterializeAndDecide(models, predicate,
+            static (model, p) => new ModelResult<TModel>(model, p(model)),
+            higherOrderPredicate);
 }
