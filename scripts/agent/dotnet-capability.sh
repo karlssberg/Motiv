@@ -112,7 +112,9 @@ SDK_VERSION=
 resolve_muxer() {
   local candidate version
   for candidate in "$(command -v dotnet 2>/dev/null)" "${DOTNET_ROOT:-}/dotnet" "$INSTALL_ROOT/dotnet"; do
-    [ -n "$candidate" ] && [ -x "$candidate" ] || continue
+    # `[ -x "" ]` is false, so this covers the empty candidate `command -v` yields when there is
+    # no dotnet on PATH, and the "$DOTNET_ROOT/dotnet" that degenerates to "/dotnet" when unset.
+    [ -x "$candidate" ] || continue
     version=$(usable_sdk_version "$candidate")
     if [ -n "$version" ]; then
       MUXER=$candidate

@@ -98,6 +98,29 @@ about the new one. Eleven mutants (the ten above with M2 and M5 corrected, plus 
 `FULL_SUITE` sentence the pass extracted), all killed. **A refactor does not inherit the mutation
 evidence of the code it replaced.**
 
+## The gate's first run failed, and the reason was the gate
+
+The workflow's first run went red on `SC2015` at `resolve_muxer`'s
+`[ -n "$candidate" ] && [ -x "$candidate" ] || continue` — a line the author's local shellcheck
+**0.11.0 did not report at all**. The runner image carried a different version.
+
+Both halves were fixed, and the second is the one worth recording.
+
+The line itself was genuinely the pattern shellcheck names, and the `-n` guard was redundant besides:
+`[ -x "" ]` is already false, so it covers both the empty string `command -v` yields and the
+`"/dotnet"` that `"${DOTNET_ROOT:-}/dotnet"` degenerates to when unset. It is now a single test.
+
+But **the gate's verdict depended on which shellcheck the machine happened to have**, which makes
+`make hooks-lint` passing locally not a statement about CI, and CI passing not a statement about a
+contributor's box. Two answers is not one answer. The workflow now installs a pinned release rather
+than apt's, named once in an `env:` block so the pin and the local expectation are visible in the same
+place. This is the same family as 4I's import gate written weaker than the test it mirrored: the check
+was reporting a property — *this shell is clean* — that it was not actually checking, because *clean*
+was not a fixed thing.
+
+Recorded here rather than swallowed, because it is the second gate in this slice to be wrong in a way
+its own green could not show, after M8.
+
 ## Decisions worth recording
 
 **The fetch is the probe.** Rather than a `HEAD` request followed by a download, the hook downloads
