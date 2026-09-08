@@ -86,12 +86,13 @@ internal static class CompositionDepth
     }
 
     /// <summary>The measure of the spec a whole document binds to, root decoration included.</summary>
+    /// <remarks>
+    /// Takes a parsed document with a root, as the binders do one line later — every caller reaches
+    /// here only once parsing has succeeded without errors, and a rootless document is a parse error.
+    /// </remarks>
     public static CompositionMeasure Of(RuleDocument document, ISpecSource source)
     {
-        if (document.Root is null)
-            return CompositionMeasure.Leaf;
-
-        var measure = Of(document.Root, source);
+        var measure = Of(document.Root!, source);
 
         // RuleBinder.Bind wraps a named document's root, which is one more decorator level than the
         // root node's own name would account for.
