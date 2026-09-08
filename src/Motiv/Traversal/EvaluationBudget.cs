@@ -43,8 +43,7 @@ namespace Motiv.Traversal;
 /// A higher-order result defers its cause selector and its <c>WhenTrue</c>/<c>WhenFalse</c> to first
 /// property read, so each ran on whatever evaluation was in flight then — and, being memoized, on
 /// whichever one reached the property first, which made the same composition acceptable or refused
-/// depending on whether a logger had already looked at it
-/// (<see href="https://github.com/karlssberg/Motiv/issues/213">#213</see>). They are excluded not
+/// depending on whether a logger had already looked at it (<see href="https://github.com/karlssberg/Motiv/issues/213">#213</see>). They are excluded not
 /// because they are inside the node's decision but because they come <em>after</em> it: the result is
 /// handed <c>Satisfied</c> when it is constructed, so these delegates describe a decision rather than
 /// reach one. <c>HigherOrderResults.ResolveCauses</c>, <c>ResolveValue</c> and <c>ResolveValues</c>

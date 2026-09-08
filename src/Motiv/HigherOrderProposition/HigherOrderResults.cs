@@ -120,21 +120,15 @@ internal static class HigherOrderResults
     ///     it runs none of the caller's code and enumerating it runs all of it.
     /// </summary>
     /// <remarks>
-    ///     <b>The return is nullable because a null sequence is a contract, not an accident.</b> The three
-    ///     assertion-resolving results — the <c>MultiAssertionExplanation</c> families — degrade gracefully
-    ///     when a caller's resolver returns null: <c>Values</c> comes back empty and <c>Explanation</c>
-    ///     falls back to the statement's own reason, which
-    ///     <c>HigherOrderFrom*MultiAssertionExplanationBooleanResultTests</c> pin in both outcomes. They
-    ///     reached that through <c>?.ToArray()</c>; the four metadata-resolving results reached a prompt
-    ///     <see cref="ArgumentNullException" /> through a bare <c>.ToArray()</c>, untested either way.
-    ///     <para>
-    ///     One seam has to stand for both, and it stands for the tested one — so the metadata families now
-    ///     degrade where they used to throw. Declaring the return <c>TValue[]?</c> rather than suppressing
-    ///     with <c>!</c> is what keeps that legible: the null is real, it reaches the caller, and the
-    ///     suppression belongs at the field whose non-nullable declaration is the thing being asserted.
-    ///     </para>
+    ///     <b>Null sequences are normalized to empty arrays.</b> The assertion-resolving results — the
+    ///     <c>MultiAssertionExplanation</c> families — degrade gracefully when a caller's resolver returns
+    ///     null: <c>Values</c> comes back empty and <c>Explanation</c> falls back to the statement's own
+    ///     reason, which <c>HigherOrderFrom*MultiAssertionExplanationBooleanResultTests</c> pin in both
+    ///     outcomes. Normalizing null to an empty array here ensures a consistent contract: the method
+    ///     always returns a valid, non-null array, and the caller can rely on <c>ToArray()</c> without
+    ///     defensive null checks.
     /// </remarks>
-    internal static TValue[]? ResolveValues<TEvaluation, TValue>(
+    internal static TValue[] ResolveValues<TEvaluation, TValue>(
         bool satisfied,
         TEvaluation evaluation,
         Func<TEvaluation, IEnumerable<TValue>> whenTrue,
@@ -142,7 +136,7 @@ internal static class HigherOrderResults
     {
         using var exclusion = EvaluationBudget.Exclude();
 
-        return (satisfied ? whenTrue(evaluation) : whenFalse(evaluation))?.ToArray();
+        return (satisfied ? whenTrue(evaluation) : whenFalse(evaluation))?.ToArray() ?? Array.Empty<TValue>();
     }
 
     /// <summary>
