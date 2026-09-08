@@ -58,13 +58,23 @@ new_env() {
   # the confstr path under /var/folders, which an agent sandbox will not let us write to.
   SANDBOX="$(mktemp -d "${TMPDIR:-/tmp}/motiv-dotnet-hook.XXXXXX")"
   export SANDBOX
-  mkdir -p "$SANDBOX/bin" "$SANDBOX/home" "$SANDBOX/state"
+  mkdir -p "$SANDBOX/bin" "$SANDBOX/hostbin" "$SANDBOX/home" "$SANDBOX/state"
   export HOME="$SANDBOX/home"
   export MOTIV_DOTNET_HOOK_STATE_DIR="$SANDBOX/state"
   export MOTIV_DOTNET_HOOK_INSTALL_ROOT="$SANDBOX/home/.dotnet"
   unset MOTIV_DOTNET_HOOK_SKIP MOTIV_DOTNET_HOOK_FORCE DOTNET_ROOT 2>/dev/null || true
-  # A minimal PATH: the stubs, then the real coreutils the script needs.
-  export PATH="$SANDBOX/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+  # A fabricated PATH, and the hazard it has to survive. The stub dir comes first, then a dir
+  # standing in for a host that already has .NET, then the real coreutils the script needs.
+  #
+  # `hostbin` exists because leaving the host's own PATH underneath the stubs made this suite pass
+  # for the wrong reason: GitHub's ubuntu runners ship a real `dotnet` on /usr/bin, so `command -v
+  # dotnet` found a genuine SDK 10 and 24 assertions went red in CI while green on a Mac, where the
+  # muxer lives somewhere /usr/bin does not reach. Every case now runs with a working muxer sitting
+  # on PATH behind the stubs, so the shadowing is exercised continuously rather than assumed.
+  export PATH="$SANDBOX/bin:$SANDBOX/hostbin:/usr/bin:/bin:/usr/sbin:/sbin"
+  stub_muxer "$SANDBOX/hostbin/dotnet" "10.0.999"
+  # And a `dotnet` that reports no SDKs, shadowing it. Cases wanting a usable one overwrite this.
+  stub_muxer "$SANDBOX/bin/dotnet" ""
   # Every case gets a failing curl by default, so no case can silently reach the real network — a
   # test suite that does is both slow and a liar about what it proved.
   stub_curl 6
@@ -286,6 +296,17 @@ ctx="$(hook_context)"
 assert_contains "$ctx" "UNAVAILABLE" "exit 0 is not taken as proof of an SDK"
 assert_contains "$ctx" "install-failed" "reported as a failed install, not as blocked egress"
 assert_not_contains "$ctx" "PROVISIONED" "does not claim a provision it did not verify"
+drop_env
+
+echo
+echo "a usable dotnet further along PATH does not leak into the verdict"
+# The regression case for the CI failure above, asserted directly rather than only as a side effect
+# of every other case's fabrication.
+new_env
+out="$(run_hook)"
+ctx="$(printf '%s' "$out" | json_field hookSpecificOutput.additionalContext)"
+assert_contains "$ctx" "UNAVAILABLE" "the shadowed host muxer is not resolved"
+assert_not_contains "$ctx" "10.0.999" "the host SDK version does not appear in the verdict"
 drop_env
 
 echo

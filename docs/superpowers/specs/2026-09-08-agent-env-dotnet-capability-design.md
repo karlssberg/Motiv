@@ -14,7 +14,7 @@ child of the build map [#169](https://github.com/karlssberg/Motiv/issues/169).
   build and test the .NET side, provisions an SDK when it can, and reports `PRESENT`, `PROVISIONED`
   or `UNAVAILABLE` as session context.
 - `.claude/settings.json` — registers it, with `timeout: 900`.
-- `scripts/agent/tests/dotnet-capability.test.sh` — 36 assertions over 11 fabricated environments.
+- `scripts/agent/tests/dotnet-capability.test.sh` — 38 assertions over 12 fabricated environments.
 - `.github/workflows/agent-env.yml` — shellcheck, the suite, and a check that `settings.json` still
   registers the hook.
 - `Makefile` — `hooks-lint` and `hooks-test` targets, which the workflow invokes rather than
@@ -121,6 +121,29 @@ was not a fixed thing.
 Recorded here rather than swallowed, because it is the second gate in this slice to be wrong in a way
 its own green could not show, after M8.
 
+### And the third: the suite fabricated PATH but left the host's underneath it
+
+The next run went red differently, and worse: **12 passed, 24 failed**. Every case from the third
+onward. The stub `PATH` was `"$SANDBOX/bin:/usr/bin:/bin:…"` — the stubs first, then the real
+coreutils the script needs — and **GitHub's ubuntu runners ship a real `dotnet` on `/usr/bin`**. So
+`command -v dotnet` found a genuine SDK 10, every case resolved `PRESENT` at step 1, and the stub
+`curl` was never invoked at all.
+
+The same suite is green on a Mac, where the muxer lives at `/usr/local/share/dotnet` and nothing on
+the fabricated `PATH` reaches it. **The fabrication was only ever partial, and which half was missing
+was invisible on the machine it was written on.** That is the counterpart to the shellcheck pin one
+paragraph up: there the gate's *tool* varied by machine, here its *fixture* did.
+
+The fix is not to test for a host `dotnet` and skip. `new_env` now puts a working SDK-10 muxer on
+`PATH` behind the stubs, in a `hostbin` dir, and shadows it with a `dotnet` that reports no SDKs — so
+**every case runs under the hazard continuously** rather than under a `PATH` that happened to be clean.
+One case asserts it directly, and deleting the shadow reproduces CI's failure locally to the
+assertion: 12 passed, 26 failed (the two extra being that case's own).
+
+Three gates, three ways of being green while wrong: M8 could not tell *verified* from *assumed*, the
+lint could not tell *clean* from *clean-per-this-shellcheck*, and the suite could not tell *the hook
+found nothing* from *the host had something*. None of the three is visible from the green.
+
 ## Decisions worth recording
 
 **The fetch is the probe.** Rather than a `HEAD` request followed by a download, the hook downloads
@@ -181,7 +204,7 @@ Stated here rather than glossed, because the green below is narrower than it loo
   day it changes becomes observable: the recorded reason names the URL and the timeout, and
   `MOTIV_DOTNET_HOOK_FORCE=1` re-probes on demand.
 
-Suites run for this change: `make hooks-test` (36/36), `make hooks-lint` (clean), the workflow's
+Suites run for this change: `make hooks-test` (38/38), `make hooks-lint` (clean), the workflow's
 `settings.json` registration check, and the hook against this machine's real environment (`PRESENT —
 SDK 10.0.203 at /usr/local/share/dotnet/dotnet`). The .NET suites were **not** run and did not need
 to be — no C# is touched, and nothing here can affect a build. That disclosure is, fittingly, the
