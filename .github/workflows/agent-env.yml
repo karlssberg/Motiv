@@ -1,0 +1,62 @@
+# Continuous integration for the agent-environment scripts under scripts/agent/.
+#
+# These are not library code, but they are load-bearing: dotnet-capability.sh is what tells an agent
+# session whether it can run the .NET suites at all (issue #173), and a session that believes a wrong
+# answer either reports a partial run as a whole one or declines work it could have done. A check
+# nobody runs is worth nothing, so the hook's tests run here rather than only on a developer's box.
+#
+# ubuntu-latest, not windows-latest like dotnet.yml: the hook is a bash script whose entire purpose is
+# to serve Linux containers, and its test suite stubs PATH with POSIX shell.
+
+name: Agent environment
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'scripts/agent/**'
+      - '.claude/settings.json'
+      - '.github/workflows/agent-env.yml'
+      - 'Makefile'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'scripts/agent/**'
+      - '.claude/settings.json'
+      - '.github/workflows/agent-env.yml'
+      - 'Makefile'
+
+jobs:
+  hooks:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+
+    # Both steps go through the Makefile so that what CI runs and what `make hooks-lint` /
+    # `make hooks-test` run locally are the same command, not two copies that can drift.
+    - name: Shellcheck
+      run: |
+        sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
+        make hooks-lint
+
+    # The suite fabricates its own PATH, HOME and network, so it neither needs a .NET SDK nor is
+    # affected by the one this runner happens to have.
+    - name: Hook tests
+      run: make hooks-test
+
+    # The hook is registered by .claude/settings.json; a syntax error there disables it silently,
+    # which is the failure mode the hook itself exists to prevent.
+    - name: Settings are valid JSON and register the hook
+      run: |
+        python3 -c "
+        import json, sys
+        s = json.load(open('.claude/settings.json'))
+        cmds = [
+            h['command']
+            for m in s.get('hooks', {}).get('SessionStart', [])
+            for h in m.get('hooks', [])
+        ]
+        assert any('dotnet-capability.sh' in c for c in cmds), \
+            'SessionStart does not register dotnet-capability.sh: %r' % (cmds,)
+        print('registered:', cmds)
+        "
