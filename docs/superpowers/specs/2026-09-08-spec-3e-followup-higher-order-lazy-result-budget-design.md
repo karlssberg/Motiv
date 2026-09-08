@@ -103,22 +103,33 @@ One consequence, called out because it is a behaviour change and not only a budg
 is a normalization onto the majority shape, and it is what makes the seam honest for that class rather
 than merely applied to it.
 
-### The null contract, and a claim this design first got wrong
+### The null contract, and a claim this design first got wrong twice
 
-`ResolveValues` returns `TValue[]?`, and the nullability is a contract rather than an oversight — but
-the first version of this slice said the opposite, that three sites tolerated null and four did not
-because of copy-drift, and that "the tolerant form is the wider". The review round is what corrected
-it, and the correction came from running the suite rather than from reading the diff.
+`ResolveValues` normalizes a null sequence to an empty array and returns a non-null `TValue[]`. It took
+three passes to get there, and the intermediate states are worth recording because each was wrong in a
+different way.
 
-The three `MultiAssertionExplanation` families **have a designed, tested degradation**: a resolver
-returning null yields empty `Values` and an `Explanation` that falls back to the statement's own
-reason, pinned in both outcomes by `HigherOrderFrom*MultiAssertionExplanationBooleanResultTests`.
-The four metadata families threw a prompt `ArgumentNullException` through a bare `.ToArray()`, with no
-test either way.
+**First pass.** The seam returned `TValue[]` while `?.ToArray()!` could hand back null, and the remark
+justified it by claiming the eight sites' disagreement was copy-drift and that "the tolerant form is the
+wider". Both halves were wrong, and the review round found it.
 
-So one side was a contract and the other was a default. One seam stands for both, and it stands for
-the tested one: **the metadata families now degrade where they used to throw.** That is a behaviour
-change, it is stated here rather than left to be found, and
+**Second pass.** Attempting the stricter reading — refusing null through the house's own
+`ThrowIfFactoryOutputIsNull` — turned **twelve tests red**, which is where the actual answer was. The
+three `MultiAssertionExplanation` families have a *designed, covered* degradation: a resolver returning
+null yields empty `Values` and an `Explanation` that falls back to the statement's own reason. The four
+metadata families threw a prompt `ArgumentNullException` through a bare `.ToArray()`, untested either
+way. One side was a contract; the other was a default. So the seam had to carry the tested one, and the
+return was declared `TValue[]?` with the suppression pushed to the eight call sites.
+
+**Third pass, and the one that shipped.** The maintainer took the reviewer's original suggestion
+directly (`7312a325`): normalize null to `Array.Empty<TValue>()` and keep the return non-null. That
+reaches the same tested degradation by a shorter route — the twelve tests stay green, because the
+fallback triggers on an *empty* sequence just as it does on a null one, which the nullable-return
+version never had to establish. The eight `!` operators became dead weight and were removed; the build
+carries zero warnings, which is what says they were redundant rather than load-bearing.
+
+The behaviour change that remains is unaffected by which of the three routes is taken: **the four
+metadata families now degrade to empty where they used to throw.**
 `Should_degrade_a_yielded_null_to_empty_values` pins it.
 
 ### Nesting

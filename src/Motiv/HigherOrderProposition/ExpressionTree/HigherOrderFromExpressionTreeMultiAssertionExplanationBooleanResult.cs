@@ -25,7 +25,7 @@ internal sealed class HigherOrderFromExpressionTreeMultiAssertionExplanationBool
         field ??= new HigherOrderBooleanResultEvaluation<TModel, string>(underlyingResults, CausesInternal);
 
     private IEnumerable<string> MetadataValues =>
-        field ??= HigherOrderResults.ResolveValues(Satisfied, Evaluation, trueBecause, falseBecause)!;
+        field ??= HigherOrderResults.ResolveValues(Satisfied, Evaluation, trueBecause, falseBecause);
 
     /// <inheritdoc />
     public override MetadataNode<string> MetadataTier => field ??=
