@@ -107,10 +107,15 @@ public sealed class PropositionSet
                 ModelType = typeof(TModel),
                 Bind = (source, name, description, document, isAsync, errors) =>
                 {
-                    // Measured once here and carried on the entry, so the next document to reference
-                    // this proposition by name is bounded against the depth it actually composes
-                    // rather than scoring the reference as a leaf — which is what let a catalogue
-                    // compose past the stack ceiling one publish at a time (#201).
+                    // Carried on the entry, so the next document to reference this proposition by
+                    // name is bounded against the depth it actually composes rather than scoring the
+                    // reference as a leaf — which is what let a catalogue compose past the stack
+                    // ceiling one publish at a time (#201).
+                    //
+                    // The binder walks the document again for its own cap check, and deliberately so:
+                    // handing the measure back out would mean an `out` parameter on all four Bind
+                    // methods and a discard at every RuleSerializer call site, to save one walk of a
+                    // document already bounded by MaxNodeCount at the one site that wants it.
                     var depth = CompositionDepth.Of(document, source);
 
                     if (isAsync)

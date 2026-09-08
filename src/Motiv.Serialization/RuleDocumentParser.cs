@@ -581,11 +581,18 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
     /// <remarks>
     /// <para>
     /// A deliberately weaker measure than <see cref="CompositionDepth" />'s, not a copy of it that
-    /// drifted. Parsing has no <see cref="ISpecSource" />, so this cannot see through a <c>spec</c>
-    /// reference or count the decorator levels a binder wraps; it scores the operator fold alone and
-    /// so can only ever under-report. That makes it a cheap pre-filter that refuses the worst
-    /// documents before anything resolves them, and leaves the binding-time check — which sees both
-    /// axes and both sides of a reference — as the authority.
+    /// drifted. It is weaker in two different senses. One is a limit: parsing has no
+    /// <see cref="ISpecSource" />, so this cannot see through a <c>spec</c> reference and scores one
+    /// as a leaf. The other is a choice: a document's own decorator triggers are right here in the
+    /// node (a <c>name</c>, a <c>whenTrue</c>, a named root) and could be counted, but are not,
+    /// because counting them here would refuse documents at parse time with a message about
+    /// composition depth that the decorator cap should be naming instead.
+    /// <para>
+    /// Both make this score the operator fold alone, so it can only ever under-report — which is what
+    /// makes it safe as a cheap pre-filter that refuses the worst documents before anything resolves
+    /// them, leaving the binding-time check, which sees both axes and both sides of a reference, as
+    /// the authority.
+    /// </para>
     /// </para>
     /// <para>
     /// <see cref="RuleBinder" /> folds an n-ary operator left-deep (<c>((c₁ op c₂) op c₃) …</c>), so
