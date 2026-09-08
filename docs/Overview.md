@@ -186,8 +186,9 @@ a hundred-thousand-operand chain evaluates on a 1 MB thread where it once aborte
 12,787 operands synchronously and at 634 asynchronously. What bounds a composition now is cost rather than stack, through two caps that
 refuse different things: `MotivLimits.MaxEvaluationSize` is the engine's backstop, counted in nodes and
 applying to `Evaluate` and `Matches` alike; `RuleSerializerOptions`' `MaxCompositionDepth`,
-`MaxNodeCount` and `MaxDocumentDepth` refuse an oversized *document* at the edge, before it binds, with
-an error that names the document. See [Structural Limits](./limits/index.md) for what each one counts,
+`MaxDecoratorDepth`, `MaxNodeCount` and `MaxDocumentDepth` refuse an oversized *document* at the edge,
+before it binds, with an error that names the document — and the two depth caps are counted across
+`spec` references, so a catalogue of propositions referencing one another is bounded too. See [Structural Limits](./limits/index.md) for what each one counts,
 why the composed depth is not the document's nesting, and the cost measurements the defaults are derived
 from.
 
