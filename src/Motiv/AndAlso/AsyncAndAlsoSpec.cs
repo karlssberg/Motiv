@@ -9,7 +9,7 @@ internal sealed class AsyncAndAlsoSpec<TModel, TMetadata>(
     AsyncSpecBase<TModel, TMetadata> right)
     : AsyncSpecBase<TModel, TMetadata>,
         IAsyncBinaryOperationSpec<TModel, TMetadata>,
-        IAsyncOperationFold<TModel, TMetadata>,
+        IAsyncFoldableOperation<TModel, TMetadata>,
         IAsyncBinaryOperationSpec
 {
     private readonly SpecBase[] _underlying = [left, right];
@@ -45,17 +45,17 @@ internal sealed class AsyncAndAlsoSpec<TModel, TMetadata>(
         CancellationToken cancellationToken) =>
         AsyncEvaluationFold.EvaluateAsync(this, model, cancellationToken);
 
-    AsyncSpecBase<TModel, TMetadata> IAsyncOperationFold<TModel, TMetadata>.FirstOperand => left;
+    AsyncSpecBase<TModel, TMetadata> IAsyncFoldableOperation<TModel, TMetadata>.FirstOperand => left;
 
-    AsyncSpecBase<TModel, TMetadata>? IAsyncOperationFold<TModel, TMetadata>.NextOperand(bool firstSatisfied) =>
+    AsyncSpecBase<TModel, TMetadata>? IAsyncFoldableOperation<TModel, TMetadata>.NextOperand(bool firstSatisfied) =>
         firstSatisfied ? right : null;
 
-    BooleanResultBase<TMetadata> IAsyncOperationFold<TModel, TMetadata>.Combine(
+    BooleanResultBase<TMetadata> IAsyncFoldableOperation<TModel, TMetadata>.Combine(
         BooleanResultBase<TMetadata> first,
         BooleanResultBase<TMetadata>? second) =>
         new AndAlsoBooleanResult<TMetadata>(first, second);
 
-    bool IAsyncOperationFold<TModel, TMetadata>.CombineMatches(bool first, bool? second) => second ?? first;
+    bool IAsyncFoldableOperation<TModel, TMetadata>.CombineMatches(bool first, bool? second) => second ?? first;
 
-    bool IAsyncOperationFold<TModel, TMetadata>.IsConcurrent => false;
+    bool IAsyncFoldableOperation<TModel, TMetadata>.IsConcurrent => false;
 }

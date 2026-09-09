@@ -4,6 +4,11 @@
 **Ticket:** [#135](https://github.com/karlssberg/Motiv/issues/135), the remainder of
 [19](https://github.com/karlssberg/Motiv/issues/119)
 
+> **Renamed since.** `IOperationFold` and `IAsyncOperationFold`, named below, are now
+> `IFoldableOperation` and `IAsyncFoldableOperation`
+> ([#211](https://github.com/karlssberg/Motiv/issues/211)). The old names are kept here because this
+> document is the record of what shipped on the date above.
+
 ## Global constraints
 
 - **TDD throughout.** Failing test → confirm it fails for the right reason → minimum code → green.

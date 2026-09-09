@@ -11,6 +11,10 @@
 [#202](https://github.com/karlssberg/Motiv/issues/202) / [#206](https://github.com/karlssberg/Motiv/pull/206)
 → this, found while building #206's allocation guard.
 
+> **Renamed since.** `IOperationFold`, named below, is now `IFoldableOperation`
+> ([#211](https://github.com/karlssberg/Motiv/issues/211)). The old name is kept here because this document is the record of what
+> shipped on the date above.
+
 ## What the defect was
 
 `EvaluationFold` kept one frame buffer per thread, in a single `[ThreadStatic]` slot, taken rather than
@@ -349,6 +353,10 @@ thread-static lifetime review as a rounding error inside a diff that is mostly n
 specific cost #211 itself names as the reason not to do the rename standalone. The recommendation is
 still right; it wants a slice with a wider footprint, and #208 (nineteen call sites across four
 proposition families) is the obvious one.
+
+> **Landed since.** The rename shipped standalone after all
+> ([#211](https://github.com/karlssberg/Motiv/issues/211)) — every slice it could have ridden along
+> with declined it for the reviewer-cost reason recorded here, and there were no candidates left.
 
 **The three seams #204, #208 and #201 name are untouched.** Nothing here moves them, and this change is
 neutral to all three: the async fold has no frame buffer, `EvaluationBudget` is a different

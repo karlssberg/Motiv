@@ -8,6 +8,11 @@ Tracked as [#135](https://github.com/karlssberg/Motiv/issues/135). Follows
 [#134](https://github.com/karlssberg/Motiv/pull/134) (Spec 3A), which made every *result*-tree walk
 stack-safe and named this ceiling as the one it was leaving standing.
 
+> **Renamed since.** `IOperationFold` and `IAsyncOperationFold`, named below, are now
+> `IFoldableOperation` and `IAsyncFoldableOperation`
+> ([#211](https://github.com/karlssberg/Motiv/issues/211)). The old names are kept here because this
+> document is the record of what shipped on the date above.
+
 ## Summary
 
 Spec 3A delivered a uniformity invariant — no public member of a result has a lower depth ceiling than

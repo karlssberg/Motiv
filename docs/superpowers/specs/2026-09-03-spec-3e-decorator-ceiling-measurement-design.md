@@ -9,6 +9,10 @@ Tracked as [#145](https://github.com/karlssberg/Motiv/issues/145) (residual 1). 
 one of the two it was leaving standing.
 **Plan:** [2026-09-03-spec-3e-decorator-ceiling-measurement](../plans/2026-09-03-spec-3e-decorator-ceiling-measurement.md)
 
+> **Renamed since.** `IOperationFold`, named below, is now `IFoldableOperation`
+> ([#211](https://github.com/karlssberg/Motiv/issues/211)). The old name is kept here because this document is the record of what
+> shipped on the date above.
+
 ## Summary
 
 Spec 3E made the logical-operator family flat at any depth and stated the honest residual: *"a chain of

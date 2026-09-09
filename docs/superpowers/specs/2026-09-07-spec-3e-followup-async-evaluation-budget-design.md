@@ -179,6 +179,11 @@ They move together because they are the only statement of the line a caller can 
   what the budget *means* would make the semantics harder to check for no gain the ticket cannot get
   later. Its own argument — that the churn is cheap while these files are open — is about the cost to
   the author, and the cost that matters here is to the reviewer.
+
+  > **Landed since.** The rename shipped standalone after all
+  > ([#211](https://github.com/karlssberg/Motiv/issues/211)) — every slice it could have ridden along
+  > with declined it for the reviewer-cost reason recorded here, and there were no candidates left.
+
 - **The asynchronous fold's depth.** #145's residual 2 and
   [#201](https://github.com/karlssberg/Motiv/issues/201) are about how deep a composition may nest;
   this is about how large it may be. The concurrent operators still recurse, and this change does not

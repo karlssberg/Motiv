@@ -1,8 +1,8 @@
 namespace Motiv.Traversal;
 
 /// <summary>
-/// An iterative fold over a tree of <see cref="IOperationFold{TModel,TMetadata}" /> operations, used in
-/// place of the non-tail recursion that evaluating a composition would otherwise use. The frames live on
+/// An iterative fold over a tree of <see cref="IFoldableOperation{TModel,TMetadata}" />, used in place of
+/// the non-tail recursion that evaluating a composition would otherwise use. The frames live on
 /// the heap, so the depth a caller can compose is bounded by memory rather than by the thread's stack.
 /// </summary>
 /// <remarks>
@@ -60,7 +60,7 @@ internal static class EvaluationFold
 
     /// <summary>Evaluates <paramref name="root" />, producing the composed result.</summary>
     internal static BooleanResultBase<TMetadata> Evaluate<TModel, TMetadata>(
-        IOperationFold<TModel, TMetadata> root,
+        IFoldableOperation<TModel, TMetadata> root,
         TModel model) =>
         Fold<TModel, TMetadata, BooleanResultBase<TMetadata>, ResultDriver<TModel, TMetadata>>(root, model);
 
@@ -70,11 +70,11 @@ internal static class EvaluationFold
     /// <remarks>
     /// The cast is safe by construction and stated once here rather than at each policy operator: a
     /// policy operation's operands are policies, so every value the fold hands to
-    /// <see cref="IOperationFold{TModel,TMetadata}.Combine" /> is a <see cref="PolicyResultBase{TMetadata}" />,
+    /// <see cref="IFoldableOperation{TModel,TMetadata}.Combine" /> is a <see cref="PolicyResultBase{TMetadata}" />,
     /// and every policy operator composes one.
     /// </remarks>
     internal static PolicyResultBase<TMetadata> EvaluatePolicy<TModel, TMetadata>(
-        IOperationFold<TModel, TMetadata> root,
+        IFoldableOperation<TModel, TMetadata> root,
         TModel model) =>
         (PolicyResultBase<TMetadata>)Evaluate(root, model);
 
@@ -82,7 +82,7 @@ internal static class EvaluationFold
     /// Evaluates <paramref name="root" /> for its outcome alone, allocating no results.
     /// </summary>
     internal static bool Matches<TModel, TMetadata>(
-        IOperationFold<TModel, TMetadata> root,
+        IFoldableOperation<TModel, TMetadata> root,
         TModel model) =>
         Fold<TModel, TMetadata, bool, MatchDriver<TModel, TMetadata>>(root, model);
 
@@ -92,7 +92,7 @@ internal static class EvaluationFold
     /// paying for the abstraction that lets them.
     /// </summary>
     private static TValue Fold<TModel, TMetadata, TValue, TDriver>(
-        IOperationFold<TModel, TMetadata> root,
+        IFoldableOperation<TModel, TMetadata> root,
         TModel model)
         where TDriver : struct, IFoldDriver<TModel, TMetadata, TValue>
     {
@@ -127,7 +127,7 @@ internal static class EvaluationFold
 
                 if (next is null)
                 {
-                    var value = driver.Combine(frame.Node, frame.First, frame.Second, frame.HasSecond);
+                    var value = driver.Combine(frame.Operation, frame.First, frame.Second, frame.HasSecond);
 
                     if (--depth == 0)
                         return value;
@@ -139,7 +139,7 @@ internal static class EvaluationFold
 
                 budget.Charge();
 
-                if (next is IOperationFold<TModel, TMetadata> operation)
+                if (next is IFoldableOperation<TModel, TMetadata> operation)
                 {
                     if (depth == frames.Length)
                         Array.Resize(ref frames, depth * 2);
@@ -268,12 +268,12 @@ internal static class EvaluationFold
     /// One operation part-way through its operands. At most two values are ever outstanding, so they sit
     /// in the frame rather than in a shared buffer.
     /// </summary>
-    private struct Frame<TModel, TMetadata, TValue>(IOperationFold<TModel, TMetadata> node)
+    private struct Frame<TModel, TMetadata, TValue>(IFoldableOperation<TModel, TMetadata> operation)
     {
         private bool _hasFirst;
         private bool _nextSettled;
 
-        public IOperationFold<TModel, TMetadata> Node { get; } = node;
+        public IFoldableOperation<TModel, TMetadata> Operation { get; } = operation;
 
         public TValue First { get; private set; } = default!;
 
@@ -302,13 +302,13 @@ internal static class EvaluationFold
             where TDriver : struct, IFoldDriver<TModel, TMetadata, TValue>
         {
             if (!_hasFirst)
-                return Node.FirstOperand;
+                return Operation.FirstOperand;
 
             if (_nextSettled)
                 return null;
 
             _nextSettled = true;
-            return Node.NextOperand(driver.Satisfied(First));
+            return Operation.NextOperand(driver.Satisfied(First));
         }
     }
 
@@ -319,7 +319,7 @@ internal static class EvaluationFold
 
         bool Satisfied(TValue value);
 
-        TValue Combine(IOperationFold<TModel, TMetadata> node, TValue first, TValue second, bool hasSecond);
+        TValue Combine(IFoldableOperation<TModel, TMetadata> operation, TValue first, TValue second, bool hasSecond);
     }
 
     private readonly struct ResultDriver<TModel, TMetadata>
@@ -331,11 +331,11 @@ internal static class EvaluationFold
         public bool Satisfied(BooleanResultBase<TMetadata> value) => value.Satisfied;
 
         public BooleanResultBase<TMetadata> Combine(
-            IOperationFold<TModel, TMetadata> node,
+            IFoldableOperation<TModel, TMetadata> operation,
             BooleanResultBase<TMetadata> first,
             BooleanResultBase<TMetadata> second,
             bool hasSecond) =>
-            node.Combine(first, hasSecond ? second : null);
+            operation.Combine(first, hasSecond ? second : null);
     }
 
     private readonly struct MatchDriver<TModel, TMetadata> : IFoldDriver<TModel, TMetadata, bool>
@@ -345,10 +345,10 @@ internal static class EvaluationFold
         public bool Satisfied(bool value) => value;
 
         public bool Combine(
-            IOperationFold<TModel, TMetadata> node,
+            IFoldableOperation<TModel, TMetadata> operation,
             bool first,
             bool second,
             bool hasSecond) =>
-            node.CombineMatches(first, hasSecond ? second : null);
+            operation.CombineMatches(first, hasSecond ? second : null);
     }
 }

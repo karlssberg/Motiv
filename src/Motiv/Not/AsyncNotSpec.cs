@@ -6,7 +6,7 @@ internal sealed class AsyncNotSpec<TModel, TMetadata>(
     AsyncSpecBase<TModel, TMetadata> operand)
     : AsyncSpecBase<TModel, TMetadata>,
         IAsyncUnaryOperationSpec,
-        IAsyncOperationFold<TModel, TMetadata>
+        IAsyncFoldableOperation<TModel, TMetadata>
 {
     private readonly SpecBase[] _underlying = [operand];
 
@@ -30,17 +30,17 @@ internal sealed class AsyncNotSpec<TModel, TMetadata>(
         CancellationToken cancellationToken) =>
         AsyncEvaluationFold.EvaluateAsync(this, model, cancellationToken);
 
-    AsyncSpecBase<TModel, TMetadata> IAsyncOperationFold<TModel, TMetadata>.FirstOperand => operand;
+    AsyncSpecBase<TModel, TMetadata> IAsyncFoldableOperation<TModel, TMetadata>.FirstOperand => operand;
 
-    AsyncSpecBase<TModel, TMetadata>? IAsyncOperationFold<TModel, TMetadata>.NextOperand(bool firstSatisfied) =>
+    AsyncSpecBase<TModel, TMetadata>? IAsyncFoldableOperation<TModel, TMetadata>.NextOperand(bool firstSatisfied) =>
         null;
 
-    BooleanResultBase<TMetadata> IAsyncOperationFold<TModel, TMetadata>.Combine(
+    BooleanResultBase<TMetadata> IAsyncFoldableOperation<TModel, TMetadata>.Combine(
         BooleanResultBase<TMetadata> first,
         BooleanResultBase<TMetadata>? second) =>
         first.Not();
 
-    bool IAsyncOperationFold<TModel, TMetadata>.CombineMatches(bool first, bool? second) => !first;
+    bool IAsyncFoldableOperation<TModel, TMetadata>.CombineMatches(bool first, bool? second) => !first;
 
-    bool IAsyncOperationFold<TModel, TMetadata>.IsConcurrent => false;
+    bool IAsyncFoldableOperation<TModel, TMetadata>.IsConcurrent => false;
 }

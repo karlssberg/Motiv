@@ -14,7 +14,7 @@ internal sealed class ExpressionAndSpec<TModel, TMetadata>(
     IExpressionSpec<TModel> rightExpression)
     : ExpressionSpecBase<TModel, TMetadata>,
         IBinaryOperationSpec<TModel, TMetadata>,
-        IOperationFold<TModel, TMetadata>,
+        IFoldableOperation<TModel, TMetadata>,
         IBinaryOperationSpec<TModel>,
         IBinaryOperationSpec
 {
@@ -54,14 +54,14 @@ internal sealed class ExpressionAndSpec<TModel, TMetadata>(
     protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model) =>
         EvaluationFold.Evaluate(this, model);
 
-    SpecBase<TModel, TMetadata> IOperationFold<TModel, TMetadata>.FirstOperand => left;
+    SpecBase<TModel, TMetadata> IFoldableOperation<TModel, TMetadata>.FirstOperand => left;
 
-    SpecBase<TModel, TMetadata>? IOperationFold<TModel, TMetadata>.NextOperand(bool firstSatisfied) => right;
+    SpecBase<TModel, TMetadata>? IFoldableOperation<TModel, TMetadata>.NextOperand(bool firstSatisfied) => right;
 
-    BooleanResultBase<TMetadata> IOperationFold<TModel, TMetadata>.Combine(
+    BooleanResultBase<TMetadata> IFoldableOperation<TModel, TMetadata>.Combine(
         BooleanResultBase<TMetadata> first,
         BooleanResultBase<TMetadata>? second) =>
         first.And(second!);
 
-    bool IOperationFold<TModel, TMetadata>.CombineMatches(bool first, bool? second) => first & second!.Value;
+    bool IFoldableOperation<TModel, TMetadata>.CombineMatches(bool first, bool? second) => first & second!.Value;
 }
