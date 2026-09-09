@@ -109,3 +109,7 @@ arithmetic was wrong in the first draft, in the flattering direction, and the re
 The asynchronous fold, which has no frame buffer at all and allocates one array per fold by design;
 Spec 3E's reasoning for that is separate and still holds. The `IOperationFold` rename #211 asks to be
 folded into whichever budget slice is next open is deliberately left out — see the design doc.
+
+> **Landed since.** The rename shipped standalone after all
+> ([#211](https://github.com/karlssberg/Motiv/issues/211)) — every slice it could have ridden along
+> with declined it for the reviewer-cost reason recorded here, and there were no candidates left.

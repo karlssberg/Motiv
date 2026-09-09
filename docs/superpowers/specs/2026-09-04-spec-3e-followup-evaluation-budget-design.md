@@ -9,6 +9,10 @@
 **Lineage:** Spec 3E ([#144](https://github.com/karlssberg/Motiv/pull/144)) →
 [#145](https://github.com/karlssberg/Motiv/issues/145) (the measurement) → this.
 
+> **Renamed since.** `IOperationFold`, named below, is now `IFoldableOperation`
+> ([#211](https://github.com/karlssberg/Motiv/issues/211)). The old name is kept here because this document is the record of what
+> shipped on the date above.
+
 ## What the defect was
 
 `MotivLimits.MaxEvaluationSize` is what Spec 3E put in place of the stack overflow: the spec asks for

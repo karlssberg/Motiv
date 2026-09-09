@@ -1,8 +1,9 @@
 namespace Motiv.Traversal;
 
 /// <summary>
-/// A logical operation whose operands are evaluated by <see cref="EvaluationFold" /> rather than by the
-/// operation itself, so that a composition of any depth costs heap frames instead of stack frames.
+/// A logical operation <see cref="EvaluationFold" /> can fold: it hands the driver its operands and its
+/// composition rule instead of evaluating them itself, so a composition of any depth costs heap frames
+/// rather than stack frames.
 /// </summary>
 /// <remarks>
 /// The four members are the whole of what a driver needs that descent alone does not give it: which
@@ -16,7 +17,7 @@ namespace Motiv.Traversal;
 /// </remarks>
 /// <typeparam name="TModel">The model type the operation evaluates against.</typeparam>
 /// <typeparam name="TMetadata">The metadata type the operation's operands carry.</typeparam>
-internal interface IOperationFold<TModel, TMetadata>
+internal interface IFoldableOperation<TModel, TMetadata>
 {
     /// <summary>The operand evaluated first. Every operation has one.</summary>
     SpecBase<TModel, TMetadata> FirstOperand { get; }

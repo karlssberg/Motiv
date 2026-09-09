@@ -9,7 +9,7 @@ internal sealed class OrElseSpec<TModel, TMetadata>(
     SpecBase<TModel, TMetadata> right)
     : SpecBase<TModel, TMetadata>,
         IBinaryOperationSpec<TModel, TMetadata>,
-        IOperationFold<TModel, TMetadata>,
+        IFoldableOperation<TModel, TMetadata>,
         IBinaryOperationSpec<TModel>,
         IBinaryOperationSpec
 {
@@ -44,15 +44,15 @@ internal sealed class OrElseSpec<TModel, TMetadata>(
     protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model) =>
         EvaluationFold.Evaluate(this, model);
 
-    SpecBase<TModel, TMetadata> IOperationFold<TModel, TMetadata>.FirstOperand => left;
+    SpecBase<TModel, TMetadata> IFoldableOperation<TModel, TMetadata>.FirstOperand => left;
 
-    SpecBase<TModel, TMetadata>? IOperationFold<TModel, TMetadata>.NextOperand(bool firstSatisfied) =>
+    SpecBase<TModel, TMetadata>? IFoldableOperation<TModel, TMetadata>.NextOperand(bool firstSatisfied) =>
         firstSatisfied ? null : right;
 
-    BooleanResultBase<TMetadata> IOperationFold<TModel, TMetadata>.Combine(
+    BooleanResultBase<TMetadata> IFoldableOperation<TModel, TMetadata>.Combine(
         BooleanResultBase<TMetadata> first,
         BooleanResultBase<TMetadata>? second) =>
         new OrElseBooleanResult<TMetadata>(first, second);
 
-    bool IOperationFold<TModel, TMetadata>.CombineMatches(bool first, bool? second) => second ?? first;
+    bool IFoldableOperation<TModel, TMetadata>.CombineMatches(bool first, bool? second) => second ?? first;
 }

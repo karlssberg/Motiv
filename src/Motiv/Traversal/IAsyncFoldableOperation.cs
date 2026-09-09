@@ -1,8 +1,9 @@
 namespace Motiv.Traversal;
 
 /// <summary>
-/// The asynchronous counterpart of <see cref="IOperationFold{TModel,TMetadata}" />: a logical operation
-/// whose operands are evaluated by <see cref="AsyncEvaluationFold" /> rather than by the operation itself.
+/// The asynchronous counterpart of <see cref="IFoldableOperation{TModel,TMetadata}" />: a logical
+/// operation <see cref="AsyncEvaluationFold" /> can fold — unless it evaluates its operands
+/// concurrently, which is a fan-out rather than a walk. See <see cref="IsConcurrent" />.
 /// </summary>
 /// <remarks>
 /// Awaiting a synchronously-completing <see cref="ValueTask{TResult}" /> resumes on the same stack, so
@@ -11,7 +12,7 @@ namespace Motiv.Traversal;
 /// </remarks>
 /// <typeparam name="TModel">The model type the operation evaluates against.</typeparam>
 /// <typeparam name="TMetadata">The metadata type the operation's operands carry.</typeparam>
-internal interface IAsyncOperationFold<TModel, TMetadata>
+internal interface IAsyncFoldableOperation<TModel, TMetadata>
 {
     /// <summary>The operand evaluated first. Every operation has one.</summary>
     AsyncSpecBase<TModel, TMetadata> FirstOperand { get; }

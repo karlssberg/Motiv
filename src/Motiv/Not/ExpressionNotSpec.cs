@@ -9,7 +9,7 @@ internal sealed class ExpressionNotSpec<TModel, TMetadata>(
     IExpressionSpec<TModel> operandExpression)
     : ExpressionSpecBase<TModel, TMetadata>,
         IUnaryOperationSpec<TModel, TMetadata>,
-        IOperationFold<TModel, TMetadata>,
+        IFoldableOperation<TModel, TMetadata>,
         IUnaryOperationSpec<TModel>,
         IUnaryOperationSpec
 {
@@ -34,16 +34,16 @@ internal sealed class ExpressionNotSpec<TModel, TMetadata>(
     protected override BooleanResultBase<TMetadata> EvaluateSpec(TModel model) =>
         EvaluationFold.Evaluate(this, model);
 
-    SpecBase<TModel, TMetadata> IOperationFold<TModel, TMetadata>.FirstOperand => operand;
+    SpecBase<TModel, TMetadata> IFoldableOperation<TModel, TMetadata>.FirstOperand => operand;
 
-    SpecBase<TModel, TMetadata>? IOperationFold<TModel, TMetadata>.NextOperand(bool firstSatisfied) => null;
+    SpecBase<TModel, TMetadata>? IFoldableOperation<TModel, TMetadata>.NextOperand(bool firstSatisfied) => null;
 
-    BooleanResultBase<TMetadata> IOperationFold<TModel, TMetadata>.Combine(
+    BooleanResultBase<TMetadata> IFoldableOperation<TModel, TMetadata>.Combine(
         BooleanResultBase<TMetadata> first,
         BooleanResultBase<TMetadata>? second) =>
         first.Not();
 
-    bool IOperationFold<TModel, TMetadata>.CombineMatches(bool first, bool? second) => !first;
+    bool IFoldableOperation<TModel, TMetadata>.CombineMatches(bool first, bool? second) => !first;
 
     public SpecBase<TModel, TMetadata> Operand => operand;
 

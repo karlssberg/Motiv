@@ -119,3 +119,7 @@ TDD, red first.
   [#211](https://github.com/karlssberg/Motiv/issues/211). It recommends being folded into whichever
   budget slice is next open, and this is that slice — but it is a 30-file rename that would swamp a
   semantics change in review. Left open deliberately, with the reason recorded in the design doc.
+
+  > **Landed since.** The rename shipped standalone after all
+  > ([#211](https://github.com/karlssberg/Motiv/issues/211)) — every slice it could have ridden along
+  > with declined it for the reviewer-cost reason recorded here, and there were no candidates left.

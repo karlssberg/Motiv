@@ -28,7 +28,7 @@ internal static class AsyncEvaluationFold
 
     /// <summary>Evaluates <paramref name="root" />, producing the composed result.</summary>
     internal static ValueTask<BooleanResultBase<TMetadata>> EvaluateAsync<TModel, TMetadata>(
-        IAsyncOperationFold<TModel, TMetadata> root,
+        IAsyncFoldableOperation<TModel, TMetadata> root,
         TModel model,
         CancellationToken cancellationToken) =>
         FoldAsync<TModel, TMetadata, BooleanResultBase<TMetadata>, ResultDriver<TModel, TMetadata>>(
@@ -39,20 +39,20 @@ internal static class AsyncEvaluationFold
     /// reason <see cref="EvaluationFold.EvaluatePolicy{TModel,TMetadata}" /> gives.
     /// </summary>
     internal static async ValueTask<PolicyResultBase<TMetadata>> EvaluatePolicyAsync<TModel, TMetadata>(
-        IAsyncOperationFold<TModel, TMetadata> root,
+        IAsyncFoldableOperation<TModel, TMetadata> root,
         TModel model,
         CancellationToken cancellationToken) =>
         (PolicyResultBase<TMetadata>)await EvaluateAsync(root, model, cancellationToken).ConfigureAwait(false);
 
     /// <summary>Evaluates <paramref name="root" /> for its outcome alone, composing no results.</summary>
     internal static ValueTask<bool> MatchesAsync<TModel, TMetadata>(
-        IAsyncOperationFold<TModel, TMetadata> root,
+        IAsyncFoldableOperation<TModel, TMetadata> root,
         TModel model,
         CancellationToken cancellationToken) =>
         FoldAsync<TModel, TMetadata, bool, MatchDriver<TModel, TMetadata>>(root, model, cancellationToken);
 
     private static async ValueTask<TValue> FoldAsync<TModel, TMetadata, TValue, TDriver>(
-        IAsyncOperationFold<TModel, TMetadata> root,
+        IAsyncFoldableOperation<TModel, TMetadata> root,
         TModel model,
         CancellationToken cancellationToken)
         where TDriver : struct, IAsyncFoldDriver<TModel, TMetadata, TValue>
@@ -85,7 +85,7 @@ internal static class AsyncEvaluationFold
             if (next is null)
             {
                 var value = driver.Combine(
-                    frames[index].Node,
+                    frames[index].Operation,
                     frames[index].First,
                     frames[index].Second,
                     frames[index].HasSecond);
@@ -100,7 +100,7 @@ internal static class AsyncEvaluationFold
 
             budget.Charge();
 
-            if (next is IAsyncOperationFold<TModel, TMetadata> { IsConcurrent: false } operation)
+            if (next is IAsyncFoldableOperation<TModel, TMetadata> { IsConcurrent: false } operation)
             {
                 if (depth == frames.Length)
                     Array.Resize(ref frames, depth * 2);
@@ -114,12 +114,12 @@ internal static class AsyncEvaluationFold
         }
     }
 
-    private struct Frame<TModel, TMetadata, TValue>(IAsyncOperationFold<TModel, TMetadata> node)
+    private struct Frame<TModel, TMetadata, TValue>(IAsyncFoldableOperation<TModel, TMetadata> operation)
     {
         private bool _hasFirst;
         private bool _nextSettled;
 
-        public IAsyncOperationFold<TModel, TMetadata> Node { get; } = node;
+        public IAsyncFoldableOperation<TModel, TMetadata> Operation { get; } = operation;
 
         public TValue First { get; private set; } = default!;
 
@@ -144,13 +144,13 @@ internal static class AsyncEvaluationFold
             where TDriver : struct, IAsyncFoldDriver<TModel, TMetadata, TValue>
         {
             if (!_hasFirst)
-                return Node.FirstOperand;
+                return Operation.FirstOperand;
 
             if (_nextSettled)
                 return null;
 
             _nextSettled = true;
-            return Node.NextOperand(driver.Satisfied(First));
+            return Operation.NextOperand(driver.Satisfied(First));
         }
     }
 
@@ -164,7 +164,7 @@ internal static class AsyncEvaluationFold
         bool Satisfied(TValue value);
 
         TValue Combine(
-            IAsyncOperationFold<TModel, TMetadata> node,
+            IAsyncFoldableOperation<TModel, TMetadata> operation,
             TValue first,
             TValue second,
             bool hasSecond);
@@ -182,11 +182,11 @@ internal static class AsyncEvaluationFold
         public bool Satisfied(BooleanResultBase<TMetadata> value) => value.Satisfied;
 
         public BooleanResultBase<TMetadata> Combine(
-            IAsyncOperationFold<TModel, TMetadata> node,
+            IAsyncFoldableOperation<TModel, TMetadata> operation,
             BooleanResultBase<TMetadata> first,
             BooleanResultBase<TMetadata> second,
             bool hasSecond) =>
-            node.Combine(first, hasSecond ? second : null);
+            operation.Combine(first, hasSecond ? second : null);
     }
 
     private readonly struct MatchDriver<TModel, TMetadata> : IAsyncFoldDriver<TModel, TMetadata, bool>
@@ -200,10 +200,10 @@ internal static class AsyncEvaluationFold
         public bool Satisfied(bool value) => value;
 
         public bool Combine(
-            IAsyncOperationFold<TModel, TMetadata> node,
+            IAsyncFoldableOperation<TModel, TMetadata> operation,
             bool first,
             bool second,
             bool hasSecond) =>
-            node.CombineMatches(first, hasSecond ? second : null);
+            operation.CombineMatches(first, hasSecond ? second : null);
     }
 }
