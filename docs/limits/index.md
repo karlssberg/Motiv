@@ -17,6 +17,13 @@ Neither does any more. Result-tree and description-tree walks are iterative, and
 onto the heap rather than onto the thread's stack. A hundred-thousand-operand composition evaluates and
 reads back on a 1 MB thread.
 
+`EvaluateAsync` and `MatchesAsync` fold the **concurrent** operators onto the heap as well. A run of
+`AndConcurrently`/`OrConcurrently`/`XOrConcurrently` is absorbed into one region and every operand at
+its boundary is started together, which is what the nesting already meant &mdash; the operands of a
+nest are all in flight either way &mdash; so a nest of any depth costs one fan-out rather than one per
+layer. Until [#145](https://github.com/karlssberg/Motiv/issues/145) each layer cost a stack frame and
+a nest aborted the process somewhere past four hundred layers.
+
 Two things are worth knowing about the shape of that guarantee:
 
 - It covers the **logical operators**. A composition that alternates operators with *decorated*
@@ -160,8 +167,10 @@ thread-static is not merely unavailable to an asynchronous evaluation but wrong 
 flows with the evaluation instead, which settles the two shapes the synchronous surface does not have:
 
 - **A concurrent operator** &mdash; `AndConcurrently` and its siblings &mdash; is a fan-out rather than
-  a walk, and both branches count against the one budget. A composition of two ten-thousand-node
-  branches is twenty thousand nodes, not ten.
+  a walk, and every operand counts against the one budget. A composition of two ten-thousand-node
+  branches is twenty thousand nodes, not ten. The concurrent operators themselves are counted too,
+  which they were not before [#145](https://github.com/karlssberg/Motiv/issues/145) &mdash; nothing
+  walked them, so a nest of any depth used to cost the budget a single node.
 - **A synchronous proposition inside an asynchronous composition**, reached through `ToAsyncSpec()`,
   counts against the asynchronous evaluation that contains it. Moving half a composition behind an
   adapter does not buy it a second allowance.

@@ -31,6 +31,78 @@ public class ConcurrentOperatorTests
         concurrentResult.Justification.ShouldBe(sequentialResult.Justification);
     }
 
+    /// <summary>
+    /// The same claim for a <em>nest</em>, which is folded rather than nested since
+    /// <see href="https://github.com/karlssberg/Motiv/issues/145">#145</see>: an unbroken run of
+    /// concurrent operations is absorbed into one region and every operand at its boundary is started
+    /// together. The composition it produces has to be the one the nesting produced, node for node.
+    /// </summary>
+    [Theory]
+    [InlineAutoData(true, true, true)]
+    [InlineAutoData(true, false, true)]
+    [InlineAutoData(false, true, false)]
+    [InlineAutoData(false, false, false)]
+    public async Task Should_produce_nested_results_indistinguishable_from_sequential_ones(
+        bool first, bool second, bool third, object model)
+    {
+        // Arrange
+        AsyncPolicyBase<object, string> Operand(string name, bool value) =>
+            Spec.BuildAsync((object _) => new ValueTask<bool>(value)).Create(name);
+
+        var sequential = Operand("first", first) & Operand("second", second) | Operand("third", third);
+        var concurrent = Operand("first", first)
+            .AndConcurrently(Operand("second", second))
+            .OrConcurrently(Operand("third", third));
+
+        // Act
+        var sequentialResult = await sequential.EvaluateAsync(model);
+        var concurrentResult = await concurrent.EvaluateAsync(model);
+
+        // Assert
+        concurrentResult.Satisfied.ShouldBe(sequentialResult.Satisfied);
+        concurrentResult.Reason.ShouldBe(sequentialResult.Reason);
+        concurrentResult.Assertions.ShouldBe(sequentialResult.Assertions);
+        concurrentResult.Justification.ShouldBe(sequentialResult.Justification);
+    }
+
+    /// <summary>
+    /// Flattening a nest must not serialize it. Each of the three operands announces itself and then
+    /// waits for the other two, so the composition completes only if all three were in flight at once
+    /// — and times out rather than hanging if the region were ever walked in order.
+    /// </summary>
+    [Fact]
+    public async Task Should_start_every_operand_of_a_nest_at_once()
+    {
+        // Arrange
+        var started = new[]
+        {
+            new TaskCompletionSource<bool>(),
+            new TaskCompletionSource<bool>(),
+            new TaskCompletionSource<bool>()
+        };
+
+        AsyncPolicyBase<object, string> Operand(int index) =>
+            Spec.BuildAsync(async (object _) =>
+            {
+                started[index].SetResult(true);
+
+                // Net472-safe fallback: WhenAny rather than WaitAsync, as the pairwise case above uses.
+                var all = Task.WhenAll(started.Select(source => source.Task));
+                if (await Task.WhenAny(all, Task.Delay(5000)).ConfigureAwait(false) != all)
+                    throw new TimeoutException("The nest's operands did not all start.");
+
+                return true;
+            }).Create($"operand{index}");
+
+        var nest = Operand(0).AndConcurrently(Operand(1)).AndConcurrently(Operand(2));
+
+        // Act
+        var result = await nest.EvaluateAsync(new object());
+
+        // Assert
+        result.Satisfied.ShouldBeTrue();
+    }
+
     [Fact]
     public async Task Should_evaluate_both_operands_concurrently()
     {
