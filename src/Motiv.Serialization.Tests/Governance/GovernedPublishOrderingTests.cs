@@ -66,7 +66,8 @@ public class GovernedPublishOrderingTests
         public Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken ct) => _inner.LoadAsync(ct);
         public Task<long> GetGenerationAsync(CancellationToken ct) => _inner.GetGenerationAsync(ct);
 
-        public Task WriteAsync(PropositionBatch batch, CancellationToken cancellationToken)
+        public Task<PropositionWriteResult> WriteAsync(
+            PropositionBatch batch, CancellationToken cancellationToken)
         {
             Writes++;
             return _inner.WriteAsync(batch, cancellationToken);
@@ -75,8 +76,10 @@ public class GovernedPublishOrderingTests
 
     /// <summary>
     /// Simulates the infrastructure fault <see cref="ChangeRequestOutcome.PersistenceDesynced"/>
-    /// exists for: an exception, not a business refusal — <see cref="IPropositionStore"/> has no
-    /// conflict result to return instead.
+    /// exists for: an exception rather than the conflict result
+    /// <see cref="IPropositionStore.WriteAsync"/> returns for a stale writer. Both reach
+    /// <c>PersistenceDesynced</c> once the rule half is durable, and for the same reason — a retry
+    /// would collide with the rule row this attempt already wrote — but only one of them is a fault.
     /// </summary>
     private sealed class ThrowingPropositionStore : IPropositionStore
     {
@@ -85,8 +88,24 @@ public class GovernedPublishOrderingTests
             Task.FromResult<IReadOnlyList<StoredProposition>>([]);
         public Task<long> GetGenerationAsync(CancellationToken ct) => Task.FromResult(0L);
 
-        public Task WriteAsync(PropositionBatch batch, CancellationToken cancellationToken) =>
+        public Task<PropositionWriteResult> WriteAsync(
+            PropositionBatch batch, CancellationToken cancellationToken) =>
             throw new InvalidOperationException("simulated proposition store outage");
+    }
+
+    /// <summary>
+    /// Refuses every write as a version conflict — the outcome a replica that moved a name underneath
+    /// this envelope produces, without needing a second replica to schedule against.
+    /// </summary>
+    private sealed class ConflictingPropositionStore : IPropositionStore
+    {
+        public IReadOnlyList<StoredProposition> Load() => [];
+        public Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<StoredProposition>>([]);
+        public Task<long> GetGenerationAsync(CancellationToken ct) => Task.FromResult(0L);
+
+        public Task<PropositionWriteResult> WriteAsync(PropositionBatch batch, CancellationToken ct) =>
+            Task.FromResult(PropositionWriteResult.Conflict(batch.Saves[0].Name, 7));
     }
 
     private sealed record Host(ChangeRequestSet Governance, RuleSet Rules, PropositionSet Propositions);
@@ -329,8 +348,9 @@ public class GovernedPublishOrderingTests
 
     /// <summary>
     /// Important B's scenario: the rule half durably persists, then the proposition half's store call
-    /// throws (an infrastructure fault, not a business refusal — <see cref="IPropositionStore.WriteAsync"/>
-    /// has no conflict result to return instead). Nothing must be live, but the caller must be told
+    /// throws (an infrastructure fault, not the conflict result
+    /// <see cref="IPropositionStore.WriteAsync"/> returns for a stale writer). Nothing must be live,
+    /// but the caller must be told
     /// this request cannot simply be retried — see <see cref="ChangeRequestOutcome.PersistenceDesynced"/>.
     /// </summary>
     [Fact]
@@ -359,6 +379,70 @@ public class GovernedPublishOrderingTests
         var history = await ruleStore.HistoryAsync("a", default);
         history.ShouldHaveSingleItem();
         history[0].Version.ShouldBe(2);
+        host.Rules.FindEntry("a")!.Version.ShouldBe(1);
+        host.Propositions.DocumentJsonOf("customer.p1").ShouldBeNull();
+    }
+
+    /// <summary>
+    /// A proposition-only envelope whose store refuses a name another replica moved. Before
+    /// enforcement lived in the store this outcome was unreachable for propositions: the batch
+    /// returned a bare <c>Task</c>, so the only refusal an envelope's proposition half could produce
+    /// was a thrown exception, and it was reported as <c>PersistenceDesynced</c>.
+    /// </summary>
+    [Fact]
+    public async Task Should_report_a_version_conflict_when_the_proposition_store_refuses_a_stale_envelope()
+    {
+        // Arrange — no rules in the envelope, so nothing is durable when the refusal arrives
+        var host = Harness(new InMemoryRuleStore(), new ConflictingPropositionStore());
+
+        var created = host.Governance.Create("alice", "propositions only",
+        [
+            new(ChangeTargetKind.Proposition, "customer.p1", Document, BaseVersion: 0, RollbackOfVersion: null, ModelTypeId: "customer")
+        ]);
+        created.Outcome.ShouldBe(ChangeRequestOutcome.Ok);
+
+        // Act
+        var result = await host.Governance.PublishAsync(created.Change!.Id, breakGlassActive: false);
+
+        // Assert — an ordinary conflict, naming the proposition and the version to re-base onto
+        result.Outcome.ShouldBe(ChangeRequestOutcome.VersionConflict);
+        result.FailedTarget!.Kind.ShouldBe(ChangeTargetKind.Proposition);
+        result.FailedTarget!.Name.ShouldBe("customer.p1");
+        result.ConflictVersion.ShouldBe(7);
+        host.Propositions.DocumentJsonOf("customer.p1").ShouldBeNull();
+    }
+
+    /// <summary>
+    /// The same refusal, in a mixed envelope whose rule half is already durable. A conflict is not an
+    /// ordinary conflict here: a bare retry would re-prepare against the unchanged live rule version
+    /// and collide with the row this attempt already wrote, refusing forever — which is precisely what
+    /// <see cref="ChangeRequestOutcome.PersistenceDesynced"/> exists to say. The outcome is chosen by
+    /// what is already durable, not by whether the store answered with a value or an exception.
+    /// </summary>
+    [Fact]
+    public async Task Should_report_persistence_desynced_when_the_proposition_store_conflicts_after_the_rule_half_persists()
+    {
+        // Arrange
+        var ruleStore = new InMemoryRuleStore();
+        var host = Harness(ruleStore, new ConflictingPropositionStore());
+
+        var created = host.Governance.Create("alice", "mixed envelope",
+        [
+            new(ChangeTargetKind.Rule, "a", Document, BaseVersion: 1, RollbackOfVersion: null),
+            new(ChangeTargetKind.Proposition, "customer.p1", Document, BaseVersion: 0, RollbackOfVersion: null, ModelTypeId: "customer")
+        ]);
+        created.Outcome.ShouldBe(ChangeRequestOutcome.Ok);
+
+        // Act
+        var result = await host.Governance.PublishAsync(created.Change!.Id, breakGlassActive: false);
+
+        // Assert
+        result.Outcome.ShouldBe(ChangeRequestOutcome.PersistenceDesynced);
+
+        // The rule row landed durably even though nothing is live — the same divergence the
+        // infrastructure-fault case leaves, reached by a refusal rather than a throw.
+        var history = await ruleStore.HistoryAsync("a", default);
+        history.ShouldHaveSingleItem();
         host.Rules.FindEntry("a")!.Version.ShouldBe(1);
         host.Propositions.DocumentJsonOf("customer.p1").ShouldBeNull();
     }

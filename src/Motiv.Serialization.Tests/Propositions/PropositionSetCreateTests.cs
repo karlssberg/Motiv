@@ -391,7 +391,8 @@ public class PropositionSetCreateTests
             Task.FromResult<IReadOnlyList<StoredProposition>>([]);
         public Task<long> GetGenerationAsync(CancellationToken ct) => Task.FromResult(0L);
 
-        public Task WriteAsync(PropositionBatch batch, CancellationToken cancellationToken) =>
+        public Task<PropositionWriteResult> WriteAsync(
+            PropositionBatch batch, CancellationToken cancellationToken) =>
             throw new IOException("store unavailable");
     }
 }

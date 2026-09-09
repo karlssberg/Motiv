@@ -21,11 +21,28 @@ public class DurabilityObligationsTests
 
     private const string Document = """{ "rule": { "spec": "customer.is-active" } }""";
 
+    /// <summary>A second document that binds, so a replaced row is distinguishable from the original.</summary>
+    private const string Replacement = """{ "rule": { "not": { "spec": "customer.is-active" } } }""";
+
     /// <summary>A RuleSet over the given store; two of them over one store are two replicas.</summary>
     private static RuleSet Replica(IRuleStore store)
     {
         var registry = new SpecRegistry().Register("customer.is-active", IsActive);
         var set = new RuleSet(registry, store).Add(new SampleRule());
+        set.Load();
+        return set;
+    }
+
+    /// <summary>
+    /// A PropositionSet over the given store; two of them over one store are two replicas, exactly as
+    /// two <see cref="RuleSet"/>s are. Each gets its own <see cref="BindingScope"/>, because a shared
+    /// scope would be one replica with two handles — and the outer gate would then serialise the very
+    /// race these tests exist to run.
+    /// </summary>
+    private static PropositionSet PropositionReplica(IPropositionStore store)
+    {
+        var set = new PropositionSet(new SpecRegistry().Register("customer.is-active", IsActive), store)
+            .AddModel<Customer>("customer");
         set.Load();
         return set;
     }
@@ -58,10 +75,10 @@ public class DurabilityObligationsTests
         public Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken ct) => _inner.LoadAsync(ct);
         public Task<long> GetGenerationAsync(CancellationToken ct) => _inner.GetGenerationAsync(ct);
 
-        public Task WriteAsync(PropositionBatch batch, CancellationToken ct)
+        public Task<PropositionWriteResult> WriteAsync(PropositionBatch batch, CancellationToken ct)
         {
             written.AddRange(batch.Saves.Select(p => p.Name));
-            written.AddRange(batch.Deletes);
+            written.AddRange(batch.Deletes.Select(deletion => deletion.Name));
             return _inner.WriteAsync(batch, ct);
         }
     }
@@ -122,6 +139,104 @@ public class DurabilityObligationsTests
         // Assert — the refusal must carry the version to re-base onto, or the editor cannot recover
         result.Outcome.ShouldBe(RuleUpdateOutcome.VersionConflict);
         result.Version.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task Should_publish_once_and_reject_once_when_two_replicas_race_a_proposition_write()
+    {
+        // Arrange — the proposition-side twin of the rule obligation above. Separate PropositionSets,
+        // one shared store: separate outer gates, one version compare-and-set.
+        var store = new InMemoryPropositionStore();
+        var a = PropositionReplica(store);
+        await a.CreateAsync("customer.p", "customer", Document, null);
+
+        // Built after the row exists: Load() is the startup read and runs once, so a second replica
+        // at a known basis is constructed at that moment rather than re-reading.
+        var b = PropositionReplica(store);
+
+        // Act — both hold version 1, and neither gate can see the other
+        var results = await Task.WhenAll(
+            a.UpdateAsync("customer.p", Document, 1),
+            b.UpdateAsync("customer.p", Document, 1));
+
+        // Assert — the lost update is impossible. Before this slice both would have returned Updated:
+        // each replica's expectedVersion check compared against its own memory, which is silent about
+        // the other.
+        results.Count(r => r.Outcome == PropositionUpdateOutcome.Updated).ShouldBe(1);
+        results.Count(r => r.Outcome == PropositionUpdateOutcome.VersionConflict).ShouldBe(1);
+
+        // ...and the store holds exactly one published version, not two writes over each other
+        store.Load().ShouldHaveSingleItem();
+        store.Load()[0].Version.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task Should_report_the_current_proposition_version_when_the_base_version_is_stale()
+    {
+        // Arrange
+        var store = new InMemoryPropositionStore();
+        var a = PropositionReplica(store);
+        await a.CreateAsync("customer.p", "customer", Document, null);
+
+        // Built after the row exists: Load() is the startup read and runs once, so a second replica
+        // at a known basis is constructed at that moment rather than re-reading.
+        var b = PropositionReplica(store);
+        await a.UpdateAsync("customer.p", Document, 1);
+
+        // Act — b is now stale and does not know it: its own memory still says version 1, so its
+        // in-process check passes and only the store can refuse this.
+        var result = await b.UpdateAsync("customer.p", Document, 1);
+
+        // Assert — the refusal must carry the version to re-base onto, or the editor cannot recover
+        result.Outcome.ShouldBe(PropositionUpdateOutcome.VersionConflict);
+        result.Version.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task Should_leave_nothing_live_in_the_replica_that_loses_a_proposition_race()
+    {
+        // Arrange
+        var store = new InMemoryPropositionStore();
+        var a = PropositionReplica(store);
+        await a.CreateAsync("customer.p", "customer", Document, null);
+
+        // Built after the row exists: Load() is the startup read and runs once, so a second replica
+        // at a known basis is constructed at that moment rather than re-reading.
+        var b = PropositionReplica(store);
+        await a.UpdateAsync("customer.p", Replacement, 1);
+
+        // Act
+        var result = await b.UpdateAsync("customer.p", Replacement, 1);
+
+        // Assert — a refused publish leaves nothing live, so b must still be on what it loaded, and
+        // the store must still hold a's document rather than b's
+        result.Outcome.ShouldBe(PropositionUpdateOutcome.VersionConflict);
+        b.Find("customer.p")!.Version.ShouldBe(1);
+        store.Load().ShouldHaveSingleItem();
+        store.Load()[0].DocumentJson.ShouldBe(Replacement);
+    }
+
+    [Fact]
+    public async Task Should_refuse_a_withdrawal_whose_version_another_replica_moved_past()
+    {
+        // Arrange — a withdrawal names an existing position rather than claiming a new one, so its
+        // compare-and-set is equality, not "past the head". It still has to be one.
+        var store = new InMemoryPropositionStore();
+        var a = PropositionReplica(store);
+        await a.CreateAsync("customer.p", "customer", Document, null);
+
+        // Built after the row exists: Load() is the startup read and runs once, so a second replica
+        // at a known basis is constructed at that moment rather than re-reading.
+        var b = PropositionReplica(store);
+        await a.UpdateAsync("customer.p", Replacement, 1);
+
+        // Act — b withdraws the version it last saw, which a has already replaced
+        var result = await b.WithdrawAsync("customer.p", 1);
+
+        // Assert — the row a published must survive
+        result.Outcome.ShouldBe(PropositionUpdateOutcome.VersionConflict);
+        result.Version.ShouldBe(2);
+        store.Load().ShouldHaveSingleItem();
     }
 
     [Fact]

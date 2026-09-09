@@ -10,11 +10,13 @@ and the store decides where the bytes go.
 public interface IPropositionStore
 {
     IReadOnlyList<StoredProposition> Load();
-    Task WriteAsync(PropositionBatch batch, CancellationToken cancellationToken);
+    Task<PropositionWriteResult> WriteAsync(PropositionBatch batch, CancellationToken cancellationToken);
 }
 
 public sealed record PropositionBatch(
-    IReadOnlyList<StoredProposition> Saves, IReadOnlyList<string> Deletes);
+    IReadOnlyList<StoredProposition> Saves, IReadOnlyList<PropositionDeletion> Deletes);
+
+public sealed record PropositionDeletion(string Name, int Version);
 
 public sealed record StoredProposition(
     string Name, string ModelType, string DocumentJson, int Version, string? Description);
@@ -24,9 +26,13 @@ public sealed record StoredProposition(
 from its C# class, and an authored proposition has no class.
 
 A `PropositionBatch` is one store round trip: everything a single publish changes, applied all at
-once or not at all. A name never appears in both `Saves` and `Deletes` &mdash; a publish either
-writes a row or removes it. `PropositionBatch.Save(proposition)` and `PropositionBatch.Delete(name)`
-build the single-row shape most writes need.
+once or not at all. A name never appears in both `Saves` and `Deletes`, and never twice in either
+&mdash; a publish either writes a row or removes it, once. `PropositionBatch.Save(proposition)` and
+`PropositionBatch.Delete(name, version)` build the single-row shape most writes need.
+
+Every entry carries a version, and the store compares it against the version it holds. That is what
+makes a write a compare-and-set rather than a blind overwrite &mdash; see
+[Concurrency](#concurrency) below.
 
 ## The Default
 
@@ -40,15 +46,24 @@ public sealed class JsonFilePropositionStore(string path) : IPropositionStore
 {
     public IReadOnlyList<StoredProposition> Load() => ReadAll();
 
-    public Task WriteAsync(PropositionBatch batch, CancellationToken cancellationToken)
+    public Task<PropositionWriteResult> WriteAsync(
+        PropositionBatch batch, CancellationToken cancellationToken)
     {
+        var stored = ReadAll();
+
+        // A save must be past the stored version; a deletion must equal it. One stale entry
+        // refuses the whole batch, and nothing is written.
+        if (FindConflict(batch, stored) is { } conflict)
+            return Task.FromResult(conflict);
+
         // Every name the batch speaks for, whether to replace it or drop it.
-        var superseded = new HashSet<string>(batch.Deletes, StringComparer.Ordinal);
+        var superseded = new HashSet<string>(
+            batch.Deletes.Select(deletion => deletion.Name), StringComparer.Ordinal);
         foreach (var proposition in batch.Saves)
             superseded.Add(proposition.Name);
 
-        Write([.. ReadAll().Where(existing => !superseded.Contains(existing.Name)), .. batch.Saves]);
-        return Task.CompletedTask;
+        Write([.. stored.Where(existing => !superseded.Contains(existing.Name)), .. batch.Saves]);
+        return Task.FromResult(PropositionWriteResult.Written);
     }
 
     // Note the asymmetry: ReadAll swallows everything a filesystem can do (a missing,
@@ -64,10 +79,11 @@ that went unmentioned would be overwritten at the next write rather than kept fo
 
 ## Contract
 
-- **A store is a dumb sink.** It validates nothing and enforces no invariants; legality is decided by
-  [`PropositionSet`](PropositionSet.md) before anything reaches here. In particular, `WriteAsync` must
-  apply the whole batch or none of it, replace any existing row of a saved name, and do nothing when a
-  deleted name is absent.
+- **A store is a dumb sink for *semantic* legality.** It validates no document and enforces no
+  proposition-level invariant; legality is decided by [`PropositionSet`](PropositionSet.md) before
+  anything reaches here. It is not dumb about *structure*: `WriteAsync` must apply the whole batch or
+  none of it, and must enforce the version compare-and-set described under
+  [Concurrency](#concurrency).
 - **`Load` is synchronous; `WriteAsync` is not.** `Load` runs once at startup, on the same
   synchronous surface `RuleSet.Load()` uses, because the DI factory wall that constructs both sets
   cannot await. `WriteAsync` runs under the publish lock but off that surface, with a
@@ -85,6 +101,41 @@ that went unmentioned would be overwritten at the next write rather than kept fo
 - **Never written in the same transaction as [`IRuleStore`](../live-rules/durability.md).** The two
   stores are symmetrical and coordinate independently; no operation spans both.
 
+## Concurrency
+
+Every batch entry is a **compare-and-set against the version the store holds for that name** (`0` when
+it holds no row), and one stale entry refuses the whole batch:
+
+- a **save** claims a position no writer has claimed yet, so it lands only when its
+  `StoredProposition.Version` is *strictly greater* than the stored one;
+- a **deletion** names a position that must still be the writer's, so it lands only when its
+  `PropositionDeletion.Version` *equals* the stored one.
+
+A refusal is a value, not an exception: `PropositionWriteResult.Conflict(name, currentVersion)`
+carries the version the store is actually at, so an editor can re-base rather than guess.
+`PropositionSet` turns it into `PropositionUpdateOutcome.VersionConflict`, and the
+[approval workflow](../governance/index.md) turns it into `ChangeRequestOutcome.VersionConflict`.
+
+You do not have to re-derive that predicate in a store of your own. `PropositionBatch.FindConflict`
+applies it to a whole batch — duplicate names within the batch included — given only a
+`Func<string, int>` returning the version your store holds for a name (`0` when it holds none). Every
+store shipped here calls it, which is what keeps their refusals identical:
+
+```csharp
+if (batch.FindConflict(name => _versions.TryGetValue(name, out var v) ? v : 0) is { } conflict)
+    return conflict;
+```
+
+This is the *same* predicate `IRuleStore` enforces with its `(Name, Version)` primary key. Rule
+versions are contiguous per name, so "this version is not already taken" and "this version is past the
+head" are the same statement — the two stores enforce one predicate against two schemas.
+
+`PropositionSet` also compares the caller's `expectedVersion` against live memory before it prepares a
+write, and that check stays: it is what makes the prepared document bind against the writer's own
+basis. But it is blind to every other replica, which is why *enforcement* lives in the store. Two
+replicas that both read v1 and both publish v2 get one `Updated` and one `VersionConflict`; before
+enforcement moved here, both got `Updated` and one edit vanished.
+
 ## The Asymmetry with `IRuleStore`
 
 The two stores are twins, but they are not mirror images, and the difference is deliberate rather
@@ -93,21 +144,14 @@ than an oversight:
 | | `IRuleStore` | `IPropositionStore` |
 |---|---|---|
 | History | An append-only version log, kept forever | One row per name, replaced in place |
-| A second writer | `RuleAppendResult.Conflict`, carrying the version the store is actually at | No conflict outcome &mdash; **last writer wins** |
-| Compare-and-set | `(Name, Version)`, enforced by the store | None |
+| Rollback | `RestoreAsync` re-publishes a recorded version | None &mdash; a superseded document is gone |
+| A second writer | `RuleAppendResult.Conflict`, carrying the version the store is actually at | `PropositionWriteResult.Conflict`, the same |
+| Compare-and-set | `(Name, Version)` primary key | The row's version, checked on every entry |
 
-So two authors editing one proposition from stale copies do not race the way two rule publishers do:
-the second write simply overwrites the first, and nothing tells either of them it happened. A
-proposition's `Version` is carried on the row, but it is the authored version, not a compare-and-set
-token the store checks.
-
-That is a real gap, and closing it is deferred to its own spec rather than smuggled in, because it is
-a **breaking change** — it would change `IPropositionStore` (a write would have to be able to report
-a conflict), `PropositionSet` (which would have to decide what to do about one), and every store
-implementation: the in-memory default, Studio's `JsonFilePropositionStore`, and
-[`EfPropositionStore`](../live-rules/entity-framework-store.md#the-schema). Until then, treat
-proposition authoring as single-writer, or gate it behind the
-[approval workflow](../governance/index.md), which serialises edits before they reach a store.
+What remains asymmetric is **history**, not concurrency. The rule log exists for rollback and audit
+under an [approval gate](../governance/index.md); propositions offer neither, so a superseded
+proposition document is not recoverable. Whether they should be is an open question, tracked
+separately &mdash; it is a schema and retention decision, not a concurrency one.
 
 ## Next Steps
 

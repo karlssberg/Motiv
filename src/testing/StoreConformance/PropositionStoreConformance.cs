@@ -72,17 +72,23 @@ public abstract class PropositionStoreConformance : IAsyncLifetime
         await Store.WriteAsync(PropositionBatch.Save(Stored("b")), default);
 
         // Act
-        await Store.WriteAsync(PropositionBatch.Delete("a"), default);
+        await Store.WriteAsync(PropositionBatch.Delete("a", version: 1), default);
 
         // Assert
         Store.Load().Select(proposition => proposition.Name).ShouldBe(["b"]);
     }
 
     [Fact]
-    public async Task Should_ignore_deleting_an_absent_name()
+    public async Task Should_refuse_deleting_an_absent_name()
     {
-        // Act & Assert — the store is a dumb sink; the set decides what is legal. Not throwing is the assertion.
-        await Store.WriteAsync(PropositionBatch.Delete("absent"), default);
+        // Act — a store holding no row is at no version at all, so no deletion can name its version.
+        // A writer arriving here observed a row that another writer has already removed.
+        var result = await Store.WriteAsync(PropositionBatch.Delete("absent", version: 1), default);
+
+        // Assert
+        result.IsConflict.ShouldBeTrue();
+        result.Name!.ShouldBe("absent");
+        result.CurrentVersion.ShouldBe(0);
     }
 
     [Fact]
@@ -92,10 +98,127 @@ public abstract class PropositionStoreConformance : IAsyncLifetime
         await Store.WriteAsync(PropositionBatch.Save(Stored("a")), default);
 
         // Act
-        await Store.WriteAsync(new PropositionBatch([Stored("b")], ["a"]), default);
+        var result = await Store.WriteAsync(
+            new PropositionBatch([Stored("b")], [new PropositionDeletion("a", 1)]), default);
 
         // Assert
+        result.IsConflict.ShouldBeFalse();
         Store.Load().Select(proposition => proposition.Name).ShouldBe(["b"]);
+    }
+
+    [Fact]
+    public async Task Should_refuse_a_save_at_the_version_the_store_already_holds()
+    {
+        // Arrange — two replicas both read v1 and both compute v2; this is the second one
+        await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 1)), default);
+        await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 2)), default);
+
+        // Act
+        var result = await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 2)), default);
+
+        // Assert — the lost update is what this refusal exists to make impossible
+        result.IsConflict.ShouldBeTrue();
+        result.Name!.ShouldBe("a");
+        result.CurrentVersion.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task Should_refuse_a_save_at_a_version_the_store_has_already_passed()
+    {
+        // Arrange
+        await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 1)), default);
+        await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 5)), default);
+
+        // Act
+        var result = await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 3)), default);
+
+        // Assert
+        result.IsConflict.ShouldBeTrue();
+        result.CurrentVersion.ShouldBe(5);
+    }
+
+    [Fact]
+    public async Task Should_refuse_creating_a_name_the_store_already_holds()
+    {
+        // Arrange — a create always writes version 1
+        await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 1)), default);
+
+        // Act
+        var result = await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 1)), default);
+
+        // Assert
+        result.IsConflict.ShouldBeTrue();
+        result.CurrentVersion.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Should_accept_a_save_whose_version_skips_ahead()
+    {
+        // Act — the predicate is "past the head", not "the head plus one": the importer copies rows
+        // at the versions they already carry into a store that holds nothing.
+        var result = await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 7)), default);
+
+        // Assert
+        result.IsConflict.ShouldBeFalse();
+        Store.Load()[0].Version.ShouldBe(7);
+    }
+
+    [Fact]
+    public async Task Should_refuse_a_deletion_at_a_stale_version()
+    {
+        // Arrange
+        await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 1)), default);
+        await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 2)), default);
+
+        // Act — a writer that read v1 and is only now withdrawing it
+        var result = await Store.WriteAsync(PropositionBatch.Delete("a", version: 1), default);
+
+        // Assert
+        result.IsConflict.ShouldBeTrue();
+        result.CurrentVersion.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task Should_refuse_a_batch_that_names_one_proposition_twice()
+    {
+        // Act — a batch that cannot say what it wants for a name is the same stale-writer signal as
+        // one that wants something the store has moved past
+        var result = await Store.WriteAsync(
+            new PropositionBatch([Stored("a", version: 1), Stored("a", version: 2)], []), default);
+
+        // Assert
+        result.IsConflict.ShouldBeTrue();
+        result.Name!.ShouldBe("a");
+    }
+
+    [Fact]
+    public async Task Should_leave_the_whole_batch_unwritten_when_one_entry_conflicts()
+    {
+        // Arrange
+        await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 1)), default);
+
+        // Act — "b" is perfectly writable; "a" is not, and the batch is all-or-nothing
+        var result = await Store.WriteAsync(
+            new PropositionBatch([Stored("b", version: 1), Stored("a", version: 1)], []), default);
+
+        // Assert
+        result.IsConflict.ShouldBeTrue();
+        Store.Load().Select(proposition => proposition.Name).ShouldBe(["a"]);
+    }
+
+    [Fact]
+    public async Task Should_leave_the_generation_still_when_a_batch_is_refused()
+    {
+        // Arrange
+        await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 1)), default);
+        var before = await Store.GetGenerationAsync(default);
+
+        // Act
+        var result = await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 1)), default);
+
+        // Assert — nothing landed, so nothing for a replica to converge on
+        result.IsConflict.ShouldBeTrue();
+        (await Store.GetGenerationAsync(default)).ShouldBe(before);
     }
 
     [Fact]

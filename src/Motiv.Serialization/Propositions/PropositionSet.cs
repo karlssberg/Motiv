@@ -368,7 +368,14 @@ public sealed class PropositionSet
         // for what the pair is compared for.
         var before = await TimedGenerationAsync(cancellationToken).ConfigureAwait(false);
 
-        await TimedWriteAsync(SaveBatchFor(prepared.Authored!), cancellationToken).ConfigureAwait(false);
+        var written = await TimedWriteAsync(SaveBatchFor(prepared.Authored!), cancellationToken)
+            .ConfigureAwait(false);
+
+        // The store's answer, not this replica's. PrepareUpdateCore already compared the caller's
+        // expectedVersion against live memory — and that comparison is blind to every other replica,
+        // which is precisely why enforcement lives in the store. See IPropositionStore.WriteAsync.
+        if (written.IsConflict)
+            return Refused(PropositionUpdateResult.VersionConflict(written.CurrentVersion));
 
         // Store-derived, never counted locally — see RuleSet.PersistAndCommitCoreAsync for why the
         // token would be fiction otherwise.
@@ -407,6 +414,14 @@ public sealed class PropositionSet
     /// <summary>The batch a publish of <paramref name="authored"/> writes: one save, nothing removed.</summary>
     private static PropositionBatch SaveBatchFor(AuthoredProposition authored) => PropositionBatch.Save(RowFor(authored));
 
+    /// <summary>
+    /// The deletion a withdrawal of <paramref name="authored"/> writes — the delete half of a governed
+    /// envelope's batch. Carries the version the store must still hold, which is what makes a
+    /// withdrawal a compare-and-set rather than an unconditional removal.
+    /// </summary>
+    internal static PropositionDeletion DeletionFor(AuthoredProposition authored) =>
+        new(authored.Name, authored.Version);
+
     /// <summary>The stored row a publish of <paramref name="authored"/> writes — the save half of a governed envelope's batch.</summary>
     internal static StoredProposition RowFor(AuthoredProposition authored) =>
         new(authored.Name, authored.ModelTypeId, authored.DocumentJson, authored.Version, authored.Description);
@@ -416,7 +431,8 @@ public sealed class PropositionSet
     /// governed envelope's persist phase, mirroring <see cref="RuleSet.AppendCoreAsync"/>. Assumes the
     /// outer gate is held; commits nothing.
     /// </summary>
-    internal Task WriteBatchCoreAsync(PropositionBatch batch, CancellationToken cancellationToken) =>
+    internal Task<PropositionWriteResult> WriteBatchCoreAsync(
+        PropositionBatch batch, CancellationToken cancellationToken) =>
         TimedWriteAsync(batch, cancellationToken);
 
     /// <summary>"proposition", as <c>NodeId.KindLabel</c> spells it — the <c>motiv.rules.kind</c> tag's value here.</summary>
@@ -458,14 +474,11 @@ public sealed class PropositionSet
     /// on making the change durable — and an operator comparing the two halves' write latency should
     /// not have to know that one store spells it differently.
     /// </summary>
-    private Task TimedWriteAsync(PropositionBatch batch, CancellationToken cancellationToken) =>
+    private Task<PropositionWriteResult> TimedWriteAsync(
+        PropositionBatch batch, CancellationToken cancellationToken) =>
         MotivRulesTelemetry.TimeStoreCallAsync(
             NodeKindLabel, StoreOperation.Append,
-            async () =>
-            {
-                await _store.WriteAsync(batch, cancellationToken).ConfigureAwait(false);
-                return true;   // the timer needs a result; a write has none worth naming
-            });
+            () => _store.WriteAsync(batch, cancellationToken));
 
     /// <summary>
     /// Applies a create or update prepared earlier by <see cref="PrepareCreateCore"/> or
@@ -538,7 +551,14 @@ public sealed class PropositionSet
         // save does, so it has to be able to tell whether the position is one this world may claim.
         var before = await TimedGenerationAsync(cancellationToken).ConfigureAwait(false);
 
-        await TimedWriteAsync(PropositionBatch.Delete(name), cancellationToken).ConfigureAwait(false);
+        // The version the row must still be at for this withdrawal to be the writer's to make: a
+        // deletion names an existing position rather than claiming a new one.
+        var written = await TimedWriteAsync(
+                PropositionBatch.Delete(name, prepared.Authored!.Version), cancellationToken)
+            .ConfigureAwait(false);
+
+        if (written.IsConflict)
+            return Refused(PropositionUpdateResult.VersionConflict(written.CurrentVersion));
 
         // A withdrawal moves the store as surely as a save does, and leaves a state — rows gone,
         // generation advanced — that nothing else would ever record.

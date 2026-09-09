@@ -256,7 +256,9 @@ public class PropositionSetLoadTests
         public Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken ct) => Task.FromResult(Load());
         public Task<long> GetGenerationAsync(CancellationToken ct) => Task.FromResult(0L);
 
-        public Task WriteAsync(PropositionBatch batch, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task<PropositionWriteResult> WriteAsync(
+            PropositionBatch batch, CancellationToken cancellationToken) =>
+            Task.FromResult(PropositionWriteResult.Written);
     }
 
     [Theory]

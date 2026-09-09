@@ -62,6 +62,13 @@ public class MotivStoreDbContext : DbContext
             entity.HasKey(row => row.Name);
             entity.Property(row => row.ModelType).IsRequired();
             entity.Property(row => row.DocumentJson).IsRequired();
+            // The concurrency token is what makes the version a real compare-and-set on a table that
+            // replaces rows rather than appending them. It puts `AND Version = @original` into every
+            // generated UPDATE and DELETE, so a replica that committed first leaves this one matching
+            // no rows and EF raises DbUpdateConcurrencyException — the same signal the rule store gets
+            // from a (Name, Version) primary key violation, and equally provider-agnostic. It emits no
+            // DDL of its own: the column already exists, so this needs no migration.
+            entity.Property(row => row.Version).IsConcurrencyToken();
         });
 
         modelBuilder.Entity<StoreGenerationRow>(entity =>

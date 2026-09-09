@@ -83,32 +83,49 @@ public sealed class JsonFilePropositionStore(string path) : IPropositionStore
     }
 
     /// <inheritdoc />
-    public Task WriteAsync(PropositionBatch batch, CancellationToken cancellationToken)
+    public Task<PropositionWriteResult> WriteAsync(
+        PropositionBatch batch, CancellationToken cancellationToken)
     {
         // An empty batch is not a write. Now that the generation is the file's mtime rather than a
         // held counter, rewriting the file here would bump it even though nothing changed —
         // File.WriteAllText touches mtime regardless of whether the bytes it wrote differ from what
         // was already there. A poller would then rebuild its whole world for nothing, on a timer.
         if (batch.Saves.Count == 0 && batch.Deletes.Count == 0)
-            return Task.CompletedTask;
+            return Task.FromResult(PropositionWriteResult.Written);
 
         lock (_gate)
         {
+            // Read once and decide against that reading: the conflict check and the rewrite must see
+            // the same file, or a batch could be cleared against one state and written over another.
+            var stored = ReadAll();
+
+            // Enforced against a file read a moment ago, which is exactly the weakness the class
+            // remarks already own: two processes over one path can both read the same stale contents
+            // and both pass this check. That is a property of the sample store, not of the contract —
+            // the EF store makes the same predicate the database's own.
+            var versions = stored.ToDictionary(row => row.Name, row => row.Version, StringComparer.Ordinal);
+            var conflict = batch.FindConflict(
+                name => versions.TryGetValue(name, out var version) ? version : 0);
+
+            if (conflict is not null)
+                return Task.FromResult(conflict);
+
             // Every name the batch speaks for, whether to replace it or drop it. One set rather than
             // two lookups: a rewritten file keeps the rows the batch says nothing about, then appends
             // the saves.
-            var superseded = new HashSet<string>(batch.Deletes, StringComparer.Ordinal);
+            var superseded = new HashSet<string>(
+                batch.Deletes.Select(deletion => deletion.Name), StringComparer.Ordinal);
             foreach (var proposition in batch.Saves)
                 superseded.Add(proposition.Name);
 
             var previousGeneration = CurrentGeneration();
 
-            Write([.. ReadAll().Where(existing => !superseded.Contains(existing.Name)), .. batch.Saves]);
+            Write([.. stored.Where(existing => !superseded.Contains(existing.Name)), .. batch.Saves]);
 
             EnsureGenerationMovedPast(previousGeneration);
         }
 
-        return Task.CompletedTask;
+        return Task.FromResult(PropositionWriteResult.Written);
     }
 
     /// <summary>
