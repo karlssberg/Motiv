@@ -240,6 +240,183 @@ public class StoreImportTests
         // Assert
         await act.ShouldThrowAsync<ImportFailure>();
     }
+    // ---- Cancellation ----------------------------------------------------------------------
+    //
+    // Every case below captures with xUnit's Record.ExceptionAsync rather than Shouldly's
+    // ShouldThrowAsync, and that is load-bearing rather than stylistic. An async method that throws
+    // an OperationCanceledException does not return a *faulted* task: AsyncTaskMethodBuilder
+    // .SetException special-cases cancellation into TrySetCanceled, so the task enters the Canceled
+    // state. Record.ExceptionAsync rethrows the stored instance; ShouldThrowAsync hands back a
+    // freshly constructed TaskCanceledException — destroying the identity, the derived type and the
+    // Data that these tests exist to assert on. Assert through it and none of them can see their own
+    // subject. Shouldly is still used for the assertions themselves; only the capture differs.
+
+    /// <summary>
+    /// Imports into a fresh target that is interrupted part-way through by <paramref name="failure"/>,
+    /// and returns what reached the caller.
+    /// </summary>
+    /// <remarks>
+    /// With <paramref name="withPropositions"/> the propositions land before the rule side is
+    /// reached, so the import really is partial when it stops — that is what puts the wrapper's
+    /// guard into its true branch. Without them, the interrupted append is the first write
+    /// attempted and the target is still empty.
+    /// </remarks>
+    private static async Task<Exception> ImportInterruptedByAsync(
+        SqliteStoreFixture fixture,
+        Func<Exception> failure,
+        CancellationToken cancellationToken = default,
+        bool withPropositions = true)
+    {
+        var sourceRules = new InMemoryRuleStore();
+        await sourceRules.AppendAsync([Row("a", 1)], default);
+
+        var sourcePropositions = new InMemoryPropositionStore();
+        if (withPropositions)
+            await sourcePropositions.WriteAsync(PropositionBatch.Save(Proposition("p")), default);
+
+        var targetRules = new FailingRuleStore(new EfRuleStore(fixture.Factory), failOnAppend: 1)
+        {
+            AppendFailure = failure
+        };
+
+        // ShouldNotBeNull both unwraps the nullable and turns "the import did not throw at all" —
+        // which would make every assertion below vacuous — into a failure that says so.
+        var thrown = await Record.ExceptionAsync(async () => await StoreImport.CopyAsync(
+            sourceRules, targetRules, sourcePropositions, new EfPropositionStore(fixture.Factory),
+            cancellationToken));
+
+        return thrown.ShouldNotBeNull();
+    }
+
+    /// <summary>
+    /// Cancels <paramref name="cancellation"/> and then reports it, from inside the append.
+    /// </summary>
+    /// <remarks>
+    /// Cancelling here rather than before the call is what makes these tests mean anything.
+    /// <c>CopyAsync</c>'s first act is to read the target, so a token already cancelled on entry
+    /// would throw out there — outside the try — and a test asserting that cancellation is no longer
+    /// swallowed would pass against the unfixed code, having never reached the catch it is about.
+    /// It is also what really happens: the token trips while a write is in flight.
+    /// </remarks>
+    private static Func<Exception> CancelsDuringTheAppend(CancellationTokenSource cancellation) =>
+        () =>
+        {
+            cancellation.Cancel();
+            return new OperationCanceledException(cancellation.Token);
+        };
+
+    [Fact]
+    public async Task Should_let_a_cancellation_out_as_itself_rather_than_the_partial_import_wrapper()
+    {
+        // Arrange — a cancellation is not a failure report, it is the caller's own request coming
+        // back to them. Wrapping it in InvalidOperationException means a caller who cancels for a
+        // graceful shutdown never sees their catch (OperationCanceledException) fire, and instead
+        // handles their own shutdown as an unexpected error.
+        using var cancellation = new CancellationTokenSource();
+        await using var fixture = await SqliteStoreFixture.CreateAsync();
+
+        // Act — the propositions have landed by the time the append is reached, so the wrapper's
+        // guard is in its true branch and the only thing keeping this exception intact is the
+        // cancellation exclusion itself
+        var thrown = await ImportInterruptedByAsync(
+            fixture, CancelsDuringTheAppend(cancellation), cancellation.Token);
+
+        // Assert — an OperationCanceledException, which is already the whole claim: the wrapper the
+        // defect produced is an InvalidOperationException, outside this hierarchy entirely
+        var cancelled = thrown.ShouldBeAssignableTo<OperationCanceledException>();
+        cancelled.CancellationToken.ShouldBe(cancellation.Token);
+    }
+
+    [Fact]
+    public async Task Should_keep_the_derived_cancellation_type_a_caller_may_be_catching()
+    {
+        // Arrange — TaskCanceledException derives from OperationCanceledException, so a fix that
+        // rethrew a freshly constructed OperationCanceledException carrying the partial-state
+        // message would flatten this away: the same defect as the one being fixed, one level down.
+        // Whatever channel surfaces that message must not touch the exception's identity.
+        await using var fixture = await SqliteStoreFixture.CreateAsync();
+        var cancelled = new TaskCanceledException();
+
+        // Act
+        var thrown = await ImportInterruptedByAsync(fixture, () => cancelled);
+
+        // Assert — the very same instance, not a reconstruction of it
+        thrown.ShouldBeSameAs(cancelled);
+    }
+
+    [Fact]
+    public async Task Should_describe_the_partial_state_on_the_cancellation_it_lets_through()
+    {
+        // Arrange — letting cancellation through must not mean letting it through *silently*. A
+        // cancelled import has left the target partially written just as surely as a failed one
+        // has, and every later run will be refused and reported as nothing-to-import. The caller
+        // knows they cancelled; what they cannot know without being told is that the target now
+        // needs emptying before the import can ever succeed again.
+        using var cancellation = new CancellationTokenSource();
+        await using var fixture = await SqliteStoreFixture.CreateAsync();
+
+        // Act
+        var thrown = await ImportInterruptedByAsync(
+            fixture, CancelsDuringTheAppend(cancellation), cancellation.Token);
+
+        // Assert — the same sentence the wrapper would have carried, on a documented key
+        thrown.ShouldBeAssignableTo<OperationCanceledException>();
+        var described = thrown.Data[StoreImport.PartialImportDataKey].ShouldBeOfType<string>();
+        described.ShouldContain("PARTIALLY imported");
+        described.ShouldContain("1 proposition(s)");
+        described.ShouldContain("0 rule version row(s)");
+        described.ShouldContain("Empty the target");
+    }
+
+    [Fact]
+    public async Task Should_not_describe_a_partial_state_on_a_cancellation_that_wrote_nothing()
+    {
+        // Arrange — with no propositions to copy, the cancelled append is the first write attempted:
+        // the target is still empty and a retry is still clean. Marking that exception as a partial
+        // import would send a caller to drop and recreate tables that hold nothing.
+        using var cancellation = new CancellationTokenSource();
+        await using var fixture = await SqliteStoreFixture.CreateAsync();
+
+        // Act
+        var thrown = await ImportInterruptedByAsync(
+            fixture, CancelsDuringTheAppend(cancellation), cancellation.Token,
+            withPropositions: false);
+
+        // Assert
+        thrown.ShouldBeAssignableTo<OperationCanceledException>();
+        thrown.Data[StoreImport.PartialImportDataKey].ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Should_still_let_the_cancellation_out_when_its_Data_refuses_the_description()
+    {
+        // Arrange — Exception.Data is a virtual property, so a consumer's own cancellation type may
+        // return one that refuses writes. Attaching the description is a courtesy; letting the
+        // caller's cancellation reach them is the contract, and the courtesy must never cost the
+        // contract. Failing here would replace their cancellation with a NotSupportedException —
+        // #130's defect again, wearing a different exception type.
+        await using var fixture = await SqliteStoreFixture.CreateAsync();
+        var cancelled = new UnwritableDataCancellation();
+
+        // Act
+        var thrown = await ImportInterruptedByAsync(fixture, () => cancelled);
+
+        // Assert — the caller's own exception, undisturbed
+        thrown.ShouldBeSameAs(cancelled);
+    }
+}
+
+/// <summary>
+/// A cancellation whose <see cref="Exception.Data"/> refuses writes, as a consumer's own
+/// <see cref="OperationCanceledException"/> subclass is free to be. Attaching the partial-state
+/// description must not be able to replace the caller's cancellation with a
+/// <see cref="NotSupportedException"/> — that would be this ticket's defect wearing a different
+/// exception type.
+/// </summary>
+public sealed class UnwritableDataCancellation : OperationCanceledException
+{
+    public override System.Collections.IDictionary Data { get; } =
+        new System.Collections.Generic.Dictionary<string, string?>().AsReadOnly();
 }
 
 /// <summary>The failure an import test injects, distinguishable from anything the code throws.</summary>
@@ -248,6 +425,8 @@ public sealed class ImportFailure() : Exception("injected");
 /// <summary>
 /// A store that fails on demand: on the nth <see cref="AppendAsync"/>, or on any history read.
 /// Everything else forwards, so the target really is left in whatever state the failure implies.
+/// History failures are always <see cref="ImportFailure"/>; only the append path is configurable,
+/// because that is the only one any test needs to vary.
 /// </summary>
 public sealed class FailingRuleStore(IRuleStore inner, int failOnAppend) : IRuleStore
 {
@@ -256,6 +435,17 @@ public sealed class FailingRuleStore(IRuleStore inner, int failOnAppend) : IRule
     public IRuleStore Inner { get; } = inner;
 
     public bool FailOnHistory { get; init; }
+
+    /// <summary>
+    /// What the nth append throws. Defaults to <see cref="ImportFailure"/>; a cancellation test
+    /// substitutes a cancellation exception, which the import must treat differently.
+    /// </summary>
+    /// <remarks>
+    /// Invoked <em>at</em> the failure point rather than when the store is built, so a test may use
+    /// it to arrange state first — the cancellation tests cancel their token from inside it, which
+    /// is the only way to have the token trip mid-import rather than before the call.
+    /// </remarks>
+    public Func<Exception> AppendFailure { get; init; } = static () => new ImportFailure();
 
     public IReadOnlyList<StoredRule> Load() => Inner.Load();
 
@@ -268,7 +458,7 @@ public sealed class FailingRuleStore(IRuleStore inner, int failOnAppend) : IRule
     public Task<RuleAppendResult> AppendAsync(
         IReadOnlyList<StoredRuleVersion> versions, CancellationToken cancellationToken) =>
         ++_appends == failOnAppend
-            ? throw new ImportFailure()
+            ? throw AppendFailure()
             : Inner.AppendAsync(versions, cancellationToken);
 
     public Task<IReadOnlyList<StoredRuleVersion>> HistoryAsync(
