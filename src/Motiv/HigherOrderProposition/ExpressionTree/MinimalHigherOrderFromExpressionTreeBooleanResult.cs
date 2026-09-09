@@ -17,7 +17,7 @@ internal sealed class MinimalHigherOrderFromExpressionTreeBooleanResult<TModel>(
     : BooleanResultBase<string>
 {
     private BooleanResult<TModel, string>[] CausesInternal =>
-        field ??= causeSelector(Satisfied, underlyingResults).ToArray();
+        field ??= HigherOrderResults.ResolveCauses(Satisfied, underlyingResults, causeSelector);
 
     private IEnumerable<string> MetadataValues =>
         field ??= CausesInternal.SelectMany(result => result.MetadataTier.Metadata);

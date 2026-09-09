@@ -25,13 +25,13 @@ internal sealed class HigherOrderFromExpressionTreeExplanationPolicyResult<TMode
     {
         get
         {
-            if (!_hasValue) { field = Satisfied ? trueBecause(Evaluation) : falseBecause(Evaluation); _hasValue = true; }
+            if (!_hasValue) { field = HigherOrderResults.ResolveValue(Satisfied, Evaluation, trueBecause, falseBecause); _hasValue = true; }
             return field;
         }
     } = default!;
 
     private BooleanResult<TModel, string>[] CausesInternal =>
-        field ??= causeSelector(Satisfied, underlyingResults).ToArray();
+        field ??= HigherOrderResults.ResolveCauses(Satisfied, underlyingResults, causeSelector);
 
     private HigherOrderBooleanResultEvaluation<TModel, string> Evaluation =>
         field ??= new HigherOrderBooleanResultEvaluation<TModel, string>(underlyingResults, CausesInternal);

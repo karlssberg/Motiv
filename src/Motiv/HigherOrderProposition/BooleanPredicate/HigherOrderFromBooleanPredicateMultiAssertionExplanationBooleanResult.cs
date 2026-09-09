@@ -17,10 +17,10 @@ internal sealed class HigherOrderFromBooleanPredicateMultiAssertionExplanationBo
     : BooleanResultBase<string>
 {
     private HigherOrderBooleanEvaluation<TModel> Evaluation => field ??=
-        new HigherOrderBooleanEvaluation<TModel>(underlyingResults, causeSelector(Satisfied, underlyingResults).ToArray());
+        new HigherOrderBooleanEvaluation<TModel>(underlyingResults, HigherOrderResults.ResolveCauses(Satisfied, underlyingResults, causeSelector));
 
     private IEnumerable<string> MetadataValues =>
-        field ??= (Satisfied ? whenTrue(Evaluation) : whenFalse(Evaluation))?.ToArray()!;
+        field ??= HigherOrderResults.ResolveValues(Satisfied, Evaluation, whenTrue, whenFalse);
 
     private IEnumerable<string> ResolvedAssertions =>
         field ??= MetadataValues.ElseFallback(() => specDescription.ToReason(Satisfied));
