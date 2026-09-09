@@ -48,8 +48,14 @@ readonly SDK_CHANNEL=10.0
 readonly RUNTIME_CHANNELS="8.0 9.0"
 readonly INSTALL_SCRIPT_URL=https://dot.net/v1/dotnet-install.sh
 
-STATE_DIR=${MOTIV_DOTNET_HOOK_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/motiv}
-INSTALL_ROOT=${MOTIV_DOTNET_HOOK_INSTALL_ROOT:-$HOME/.dotnet}
+# $HOME is expanded for the two defaults below, and under `set -u` an unset HOME aborts the script
+# before it can emit anything — breaking the one guarantee this hook makes, in the environments least
+# likely to have a .NET SDK. There is no durable per-user location without a HOME, so a scratch dir
+# stands in: the verdict is what matters, and a marker that does not outlive the container is still
+# better than no verdict at all.
+HOME_DIR=${HOME:-${TMPDIR:-/tmp}}
+STATE_DIR=${MOTIV_DOTNET_HOOK_STATE_DIR:-${XDG_STATE_HOME:-$HOME_DIR/.local/state}/motiv}
+INSTALL_ROOT=${MOTIV_DOTNET_HOOK_INSTALL_ROOT:-$HOME_DIR/.dotnet}
 TIMEOUT=${MOTIV_DOTNET_HOOK_TIMEOUT:-8}
 RECORD="$STATE_DIR/dotnet-capability"
 

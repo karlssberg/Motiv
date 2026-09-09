@@ -318,6 +318,20 @@ assert_equals "$out" "" "emits nothing"
 drop_env
 
 echo
+echo "an unset HOME does not abort the hook"
+# `set -u` plus a bare $HOME in a default expansion aborts before anything is emitted, which breaks
+# the one guarantee the hook makes. The existing "never fails" case did not catch it: it removed the
+# state dir and pointed STATE_DIR at an unwritable path, but HOME was still set, and HOME is expanded
+# for the *default* of STATE_DIR — so overriding STATE_DIR is exactly what hides this.
+new_env
+out="$(env -u HOME -u XDG_STATE_HOME -u MOTIV_DOTNET_HOOK_STATE_DIR -u MOTIV_DOTNET_HOOK_INSTALL_ROOT \
+  PATH="$PATH" bash "$HOOK" </dev/null 2>"$SANDBOX/stderr")"
+assert_equals "$?" "0" "exits 0 with no HOME in the environment"
+ctx="$(printf '%s' "$out" | json_field hookSpecificOutput.additionalContext)"
+assert_contains "$ctx" "UNAVAILABLE" "still reports a verdict rather than emitting nothing"
+drop_env
+
+echo
 echo "the hook never fails the session"
 new_env
 # No curl, no dotnet, no state dir writability — the worst case available.

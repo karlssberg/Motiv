@@ -26,6 +26,11 @@ on:
       - '.github/workflows/agent-env.yml'
       - 'Makefile'
 
+# The job only reads the checkout and runs two Makefile targets; it publishes nothing and needs no
+# token beyond that. Matches ui.yml, and answers CodeQL's "workflow does not contain permissions".
+permissions:
+  contents: read
+
 env:
   # Keep in step with what contributors run locally; see the pinning note below.
   SHELLCHECK_VERSION: '0.11.0'

@@ -14,7 +14,7 @@ child of the build map [#169](https://github.com/karlssberg/Motiv/issues/169).
   build and test the .NET side, provisions an SDK when it can, and reports `PRESENT`, `PROVISIONED`
   or `UNAVAILABLE` as session context.
 - `.claude/settings.json` — registers it, with `timeout: 900`.
-- `scripts/agent/tests/dotnet-capability.test.sh` — 38 assertions over 12 fabricated environments.
+- `scripts/agent/tests/dotnet-capability.test.sh` — 40 assertions over 13 fabricated environments.
 - `.github/workflows/agent-env.yml` — shellcheck, the suite, and a check that `settings.json` still
   registers the hook.
 - `Makefile` — `hooks-lint` and `hooks-test` targets, which the workflow invokes rather than
@@ -140,9 +140,34 @@ The fix is not to test for a host `dotnet` and skip. `new_env` now puts a workin
 One case asserts it directly, and deleting the shadow reproduces CI's failure locally to the
 assertion: 12 passed, 26 failed (the two extra being that case's own).
 
-Three gates, three ways of being green while wrong: M8 could not tell *verified* from *assumed*, the
-lint could not tell *clean* from *clean-per-this-shellcheck*, and the suite could not tell *the hook
-found nothing* from *the host had something*. None of the three is visible from the green.
+### And the fourth, from review: the "never fails" case could not see the way it fails
+
+Copilot's review found that `set -u` plus a bare `$HOME` in the *defaults* for `STATE_DIR` and
+`INSTALL_ROOT` aborts the script on `HOME: unbound variable` — before it emits anything, breaking the
+one guarantee it makes, and doing so in the environments least likely to have an SDK. Reproduced
+directly: exit 1, no output.
+
+The instructive part is **why the suite's own "the hook never fails the session" case could not see
+it.** That case set `MOTIV_DOTNET_HOOK_STATE_DIR` to an unwritable path and deleted the state dir —
+and `$HOME` is only expanded to compute the *default* of `STATE_DIR`, so overriding it is precisely
+what hides the expansion. The case was built by making the environment hostile along the axes the
+author was thinking about, and the crash was on the one axis that override removed. A test named for
+a total property (*never fails*) tests exactly the paths it enumerates.
+
+Fixed with a `HOME_DIR=${HOME:-${TMPDIR:-/tmp}}` fallback: without a HOME there is no durable
+per-user location anyway, and a marker that does not outlive the container is still better than no
+verdict at all.
+
+Four gates, four ways of being green while wrong, and no two alike: M8 could not tell *verified* from
+*assumed*; the lint could not tell *clean* from *clean-per-this-shellcheck*; the suite could not tell
+*the hook found nothing* from *the host had something*; and the never-fails case could not tell
+*survives a hostile environment* from *survives the three hostilities I listed*. None is visible from
+the green — and the last one arrived from a reviewer after the other three had already been found by
+adversarial passes, which is its own argument against treating a self-run mutation round as
+exhaustive.
+
+CodeQL separately flagged the workflow for carrying no `permissions` block. Fixed as `contents: read`,
+matching `ui.yml`; the job reads a checkout and runs two Makefile targets, and publishes nothing.
 
 ## Decisions worth recording
 
@@ -204,7 +229,7 @@ Stated here rather than glossed, because the green below is narrower than it loo
   day it changes becomes observable: the recorded reason names the URL and the timeout, and
   `MOTIV_DOTNET_HOOK_FORCE=1` re-probes on demand.
 
-Suites run for this change: `make hooks-test` (38/38), `make hooks-lint` (clean), the workflow's
+Suites run for this change: `make hooks-test` (40/40), `make hooks-lint` (clean), the workflow's
 `settings.json` registration check, and the hook against this machine's real environment (`PRESENT —
 SDK 10.0.203 at /usr/local/share/dotnet/dotnet`). The .NET suites were **not** run and did not need
 to be — no C# is touched, and nothing here can affect a build. That disclosure is, fittingly, the
