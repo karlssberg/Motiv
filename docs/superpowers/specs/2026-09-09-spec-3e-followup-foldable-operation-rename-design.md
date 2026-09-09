@@ -284,10 +284,15 @@ Full solution, local, .NET SDK 10.0.302:
 - **17 assembly/TFM combinations green, 0 failures, 21,645 assertions.** `Motiv.Tests` × 6,022 and
   `Motiv.Serialization.Tests` × 983, each on net8.0, net9.0 and net10.0; plus the Studio, EF Core, SQL,
   AspNetCore, Blazor, analyzer, CodeFix and all four example suites on net10.0.
-- **The `net472` test targets could not run** — they need mono, which is not installed on this machine.
-  That TFM is compiled clean by `dotnet build Motiv.slnx` (0 warnings, 0 errors, `netstandard2.0`
-  included), which is the leg CI's net472 job depends on, and an `internal` rename cannot be
-  TFM-sensitive.
+- **The `net472` test targets could not run locally** — they need mono, which is not installed on this
+  machine. **CI covers them fully**, and by more than the compile this series has previously claimed:
+  the Windows `build` job *runs* them, and did on this PR — `Motiv.Tests` × 6,012 and
+  `Motiv.Serialization.Tests` × 996 on `.NETFramework,Version=v4.7.2`, both green.
+
+  That correction is worth keeping. Spec 3E's earlier docs say the net472 leg "depends on" a clean
+  `dotnet build`, which is true but understates the gate: a local mono gap leaves the TFM *tested*, not
+  merely *compiled*. A claim about what a check covers should be read off the check, and this one was
+  read off a prior doc until [#221](https://github.com/karlssberg/Motiv/pull/221)'s run was inspected.
 
 **The baseline run was not clean, and finding that out mattered.** With `-v q`, twelve `Passed!` lines
 scrolled past while the run's exit code was `1`. Behind them: the two expected mono aborts, and one
