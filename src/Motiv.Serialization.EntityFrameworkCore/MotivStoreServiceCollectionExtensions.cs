@@ -18,6 +18,8 @@ public static class MotivStoreServiceCollectionExtensions
     /// <param name="services">The container.</param>
     /// <param name="configure">Selects and configures the provider, e.g. <c>options.UseSqlite(...)</c>.</param>
     /// <returns>The container, to allow chained registration.</returns>
+    /// <exception cref="InvalidOperationException">The store is already registered — see the
+    /// generic overload, which this one delegates to.</exception>
     public static IServiceCollection AddMotivEntityFrameworkStore(
         this IServiceCollection services, Action<DbContextOptionsBuilder> configure) =>
         services.AddMotivEntityFrameworkStore<MotivStoreDbContext>(configure);
@@ -41,17 +43,41 @@ public static class MotivStoreServiceCollectionExtensions
     /// non-generic overload does: no adapter is added in that case, because a factory that resolved
     /// itself to wrap itself would recurse forever.
     /// </para>
+    /// <para>
+    /// Either overload may be called <em>once</em> per container, and a second call of either is
+    /// refused. Registering more than one context is not a layering: both fill the same
+    /// <see cref="IDbContextFactory{TContext}"/> slot that <see cref="EfRuleStore"/> and
+    /// <see cref="EfPropositionStore"/> resolve, so the loser's database is simply never opened.
+    /// </para>
     /// </remarks>
     /// <typeparam name="TContext">The adopter's context, deriving from <see cref="MotivStoreDbContext"/>.</typeparam>
     /// <param name="services">The container.</param>
     /// <param name="configure">Selects and configures the provider, e.g. <c>options.UseSqlite(...)</c>.</param>
     /// <returns>The container, to allow chained registration.</returns>
+    /// <exception cref="InvalidOperationException">The store is already registered, by either
+    /// overload. DI is last-wins, so a second call would silently discard the first database rather
+    /// than layering onto it — an argument quietly ignored is worse than a refusal, the same
+    /// reasoning <c>AddPropositions</c> and <c>AddRuleStore</c> follow.</exception>
     public static IServiceCollection AddMotivEntityFrameworkStore<TContext>(
         this IServiceCollection services, Action<DbContextOptionsBuilder> configure)
         where TContext : MotivStoreDbContext
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configure);
+
+        // Once only, checked before anything is registered so a refusal leaves the container as the
+        // first call left it. IDbContextFactory<MotivStoreDbContext> is the sentinel because every
+        // successful call fills that one slot — directly on the zero-config path, through the
+        // adapter below on the derived one — so this single check catches every collision: either
+        // overload twice, the two overloads in either order, and two different derived contexts. A
+        // sentinel keyed on TContext would miss the mixed-overload pairs by construction.
+        if (services.Any(descriptor =>
+                descriptor.ServiceType == typeof(IDbContextFactory<MotivStoreDbContext>)))
+            throw new InvalidOperationException(
+                $"{nameof(AddMotivEntityFrameworkStore)} has already been called. Call it once — a " +
+                "second call would leave two competing IDbContextFactory<MotivStoreDbContext> " +
+                "registrations, and DI registration is last-wins, so the stores would silently " +
+                "open contexts against whichever database was configured last.");
 
         services.AddDbContextFactory<TContext>(configure);
 
