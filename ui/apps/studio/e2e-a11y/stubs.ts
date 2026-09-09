@@ -1,4 +1,4 @@
-import { expect, test as base, type Route } from '@playwright/test';
+import { expect, test as base, type Page, type Route } from '@playwright/test';
 
 /**
  * The API Studio is scanned against.
@@ -151,5 +151,65 @@ export const test = base.extend<{ stubbedApi: void }>({
     { auto: true },
   ],
 });
+
+/*
+ * The states the coloured surfaces of `--danger` are only drawn in (ticket 168).
+ *
+ * Each is a route registered *after* the fixture's catch-all, which is how Playwright resolves a
+ * pair of matching handlers — most recent first. They live here rather than in the spec because
+ * they are the same kind of thing the constants above are: the shape one endpoint returns, in one
+ * state. A spec that inlined them would be asserting on a payload it also authored two screens
+ * away from the fixture that says what the endpoint normally says.
+ *
+ * They exist because a translucent tint has no colour of its own — `color-mix(… 12%, transparent)`
+ * takes its lightness from whatever is painted beneath it, so the same `--danger` on a pane, a
+ * modal and an inset are three different ratios. Only a scan of the composited pixels can tell
+ * which of them clears the floor, and a state no view produces contributes no pixels at all.
+ */
+
+/** Answer document validation with an error, so the editor's `.error` surfaces render. */
+export async function withValidationError(page: Page): Promise<void> {
+  await page.route('**/api/rules/validate', (route) => route.fulfill({
+    json: {
+      errors: [{
+        path: '$.rule',
+        code: 'UnknownSpec',
+        message: 'No proposition named customer.is-active is registered.',
+      }],
+    },
+  }));
+}
+
+/** Answer the propositions listing with one proposition quarantined. */
+export async function withQuarantinedProposition(page: Page, name: string): Promise<void> {
+  await page.route('**/api/rules/propositions', (route) => route.fulfill({
+    json: PROPOSITIONS.map((proposition) => (proposition.name === name
+      ? {
+        ...proposition,
+        quarantine: [{ path: '$.rule', code: 'UnknownSpec', message: 'Its definition no longer resolves.' }],
+      }
+      : proposition)),
+  }));
+}
+
+/**
+ * Answer the catalog with one spec carrying object metadata.
+ *
+ * The payload popover only *has* a rejection to render when the spec's metadata is an object —
+ * a string payload is taken verbatim and cannot fail to parse. The fixture catalog is all
+ * `String`, so the popover's error is unreachable without moving one spec off it.
+ */
+export async function withObjectMetadata(page: Page, name: string): Promise<void> {
+  await page.route('**/api/rules/catalog', (route) => route.fulfill({
+    json: {
+      ...CATALOG,
+      specs: CATALOG.specs.map((spec) => (spec.name === name ? { ...spec, metadataType: 'Message' } : spec)),
+      metadataTypes: {
+        ...CATALOG.metadataTypes,
+        Message: { type: 'object', properties: { english: { type: 'string' } } },
+      },
+    },
+  }));
+}
 
 export { expect } from '@playwright/test';

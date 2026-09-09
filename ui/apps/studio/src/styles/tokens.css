@@ -4,9 +4,11 @@
  * and the three pill colours are the ones that had to move for it; each ratio is quoted against
  * the *tightest* ground the colour is actually drawn on, which for `--faint` is the highlighted
  * palette row and for `--danger` and the pills is their own translucent tint — whose lightness
- * comes from the surface beneath it, so the darkest of those sets the value. `axe-core` re-checks
- * all of them on every run (`e2e-a11y/axe.spec.ts`), in both colour schemes, so a future palette
- * edit that dropped below the floor fails CI rather than shipping.
+ * comes from the surface beneath it, so the ground that leaves the least separation sets the
+ * value, and which ground that is flips with the scheme: the darkest surface in the light palette,
+ * the lightest in the dark one. `axe-core` re-checks all of them on every run
+ * (`e2e-a11y/axe.spec.ts`), in both colour schemes and in the states that draw them, so a future
+ * palette edit that dropped below the floor fails CI rather than shipping.
  */
 :root {
   --bg: #ffffff; --surface: #f6f7f9; --border: #e3e5e9; --text: #1f2328;
@@ -50,7 +52,13 @@
     /* --faint was #6b6f78: 2.9:1 on the darkest inset. #9398a1 is 4.9:1 there and on the
        highlighted palette row, 6.2:1 on the canvas. */
     --muted: #a0a4ad; --faint: #9398a1; --accent: #8aa0ff; --accent-weak: #222a44;
-    --danger: #ff6d86; --ho: #58c99a;
+    /* --danger was #ff6d86: 4.23:1 as `.quarantine-badge` text on its own 15% tint over the
+       explorer's *highlighted* row (--accent-weak), which is the tightest ground the colour is
+       drawn on in this scheme and half a point below the ordinary row's 4.83:1. #ff8a9d is 4.87:1
+       there, and no site of the colour is below that: 5.6:1 on the same tint over an unhighlighted
+       row, 5.1:1 on the 12% `.error`/`.report-banner` tint over the tightest inset, and 8.0:1 as
+       the --bg label on a solid `.btn-danger` fill, where lightening only widens the margin. */
+    --danger: #ff8a9d; --ho: #58c99a;
 
     --sh-canvas: #141519; --sh-appbar: #1b1c21; --sh-panel: #1e1f24; --sh-panel-head: #212228;
     --sh-inset: #282a31;
