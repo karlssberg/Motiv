@@ -333,15 +333,28 @@ Surface Quality) live **on branch `wayfinder/enterprise-grade-product`**, under
   is how the series became unreadable from the docs alone. A slice with green tests and no docs is
   not done.
 
-### Cloud containers cannot build the .NET side
+### Whether this session can build the .NET side is measured, not assumed
 
-There is **no .NET SDK** in a Claude Code cloud container for this repo, and egress to the .NET
-distribution is blocked, so one cannot be installed (issue #173). `Motiv.Tests`, the
-`src/examples/*.Tests` suites, `pnpm e2e` and `Motiv.Studio` are all unrunnable there; only the
-`ui/` workspace builds. The instruction above to run the full solution suite therefore cannot be
-followed in a cloud session — when that applies, **say which suites you could not run and why**
-rather than reporting the UI suite green as if it were the whole. A slice that touches C# needs a
-local session.
+`scripts/agent/dotnet-capability.sh` runs at SessionStart (registered in `.claude/settings.json`) and
+reports one of three verdicts as session context. **Read that verdict rather than assuming one**, and
+if it is absent — the hook was skipped, or is running somewhere hooks do not — probe before claiming
+either way; `make hooks-test` runs its suite.
+
+- **PRESENT** / **PROVISIONED** — a usable SDK, at the muxer path the verdict names. The
+  full-solution rule above applies as written. A `PROVISIONED` verdict may add a **PARTIAL** line
+  when a runtime channel failed to install; it then names the runnable `--framework` subset, and a
+  run of that subset must be reported as the subset it is.
+- **UNAVAILABLE** — no SDK, and none could be installed. `Motiv.Tests`, the `src/examples/*.Tests`
+  suites, `pnpm e2e` and the `studio` / `rule-authoring-blazor` launch configurations are all
+  unrunnable; only the `ui/` workspace builds. The full-solution instruction cannot be followed —
+  **say which suites you could not run and why** rather than reporting the UI suite green as if it
+  were the whole. A slice that touches C# needs a local session.
+
+This is issue #173, and the reason it is a probe rather than a sentence is that a sentence goes
+stale. Claude Code cloud containers for this repo ship no SDK and, as of 2026-09-08, block egress to
+the .NET distribution, so `UNAVAILABLE` is what a container gets today — but a session that read
+*"there is no .NET SDK"* as a fact would decline work the moment that stops being true, and would
+have no way to notice it had. The verdict carries the reason it measured for exactly that purpose.
 
 ### Code Intelligence
 
