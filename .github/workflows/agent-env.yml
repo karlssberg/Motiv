@@ -1,0 +1,79 @@
+# Continuous integration for the agent-environment scripts under scripts/agent/.
+#
+# These are not library code, but they are load-bearing: dotnet-capability.sh is what tells an agent
+# session whether it can run the .NET suites at all (issue #173), and a session that believes a wrong
+# answer either reports a partial run as a whole one or declines work it could have done. A check
+# nobody runs is worth nothing, so the hook's tests run here rather than only on a developer's box.
+#
+# ubuntu-latest, not windows-latest like dotnet.yml: the hook is a bash script whose entire purpose is
+# to serve Linux containers, and its test suite stubs PATH with POSIX shell.
+
+name: Agent environment
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'scripts/agent/**'
+      - '.claude/settings.json'
+      - '.github/workflows/agent-env.yml'
+      - 'Makefile'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'scripts/agent/**'
+      - '.claude/settings.json'
+      - '.github/workflows/agent-env.yml'
+      - 'Makefile'
+
+# The job only reads the checkout and runs two Makefile targets; it publishes nothing and needs no
+# token beyond that. Matches ui.yml, and answers CodeQL's "workflow does not contain permissions".
+permissions:
+  contents: read
+
+env:
+  # Keep in step with what contributors run locally; see the pinning note below.
+  SHELLCHECK_VERSION: '0.11.0'
+
+jobs:
+  hooks:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+
+    # Pinned, not apt's. The first run of this workflow failed on an SC2015 that the author's local
+    # shellcheck 0.11.0 did not report — the runner image carried a different version, so the gate's
+    # verdict depended on which shellcheck the machine happened to have. A gate that answers
+    # differently in two places is not one answer.
+    - name: Install shellcheck ${{ env.SHELLCHECK_VERSION }}
+      run: |
+        curl -fsSL "https://github.com/koalaman/shellcheck/releases/download/v$SHELLCHECK_VERSION/shellcheck-v$SHELLCHECK_VERSION.linux.x86_64.tar.xz" \
+          | tar -xJf - --strip-components=1 -C /usr/local/bin "shellcheck-v$SHELLCHECK_VERSION/shellcheck"
+        shellcheck --version
+
+    # Both lint and test go through the Makefile so that what CI runs and what `make hooks-lint` /
+    # `make hooks-test` run locally are the same command, not two copies that can drift.
+    - name: Shellcheck
+      run: make hooks-lint
+
+    # The suite fabricates its own PATH, HOME and network, so it neither needs a .NET SDK nor is
+    # affected by the one this runner happens to have.
+    - name: Hook tests
+      run: make hooks-test
+
+    # The hook is registered by .claude/settings.json; a syntax error there disables it silently,
+    # which is the failure mode the hook itself exists to prevent.
+    - name: Settings are valid JSON and register the hook
+      run: |
+        python3 -c "
+        import json, sys
+        s = json.load(open('.claude/settings.json'))
+        cmds = [
+            h['command']
+            for m in s.get('hooks', {}).get('SessionStart', [])
+            for h in m.get('hooks', [])
+        ]
+        assert any('dotnet-capability.sh' in c for c in cmds), \
+            'SessionStart does not register dotnet-capability.sh: %r' % (cmds,)
+        print('registered:', cmds)
+        "
