@@ -23,13 +23,13 @@ internal sealed class HigherOrderFromBooleanPredicateExplanationPolicyResult<TMo
     {
         get
         {
-            if (!_hasValue) { field = Satisfied ? whenTrue(Evaluation) : whenFalse(Evaluation); _hasValue = true; }
+            if (!_hasValue) { field = HigherOrderResults.ResolveValue(Satisfied, Evaluation, whenTrue, whenFalse); _hasValue = true; }
             return field;
         }
     } = default!;
 
     private HigherOrderBooleanEvaluation<TModel> Evaluation => field ??=
-        new HigherOrderBooleanEvaluation<TModel>(underlyingResults, causeSelector(Satisfied, underlyingResults).ToArray());
+        new HigherOrderBooleanEvaluation<TModel>(underlyingResults, HigherOrderResults.ResolveCauses(Satisfied, underlyingResults, causeSelector));
 
     private string Assertion => field ??= Value.ElseFallback(() => specDescription.ToReason(Satisfied));
 

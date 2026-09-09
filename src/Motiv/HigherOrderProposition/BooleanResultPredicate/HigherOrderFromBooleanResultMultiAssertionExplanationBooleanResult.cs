@@ -17,13 +17,13 @@ internal sealed class HigherOrderFromBooleanResultMultiAssertionExplanationBoole
     : BooleanResultBase<string>
 {
     private BooleanResult<TModel, TUnderlyingMetadata>[] CausesInternal =>
-        field ??= causeSelector(Satisfied, underlyingResults).ToArray();
+        field ??= HigherOrderResults.ResolveCauses(Satisfied, underlyingResults, causeSelector);
 
     private HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata> Evaluation =>
         field ??= new HigherOrderBooleanResultEvaluation<TModel, TUnderlyingMetadata>(underlyingResults, CausesInternal);
 
     private IEnumerable<string> MetadataValues =>
-        field ??= (Satisfied ? whenTrue(Evaluation) : whenFalse(Evaluation))?.ToArray()!;
+        field ??= HigherOrderResults.ResolveValues(Satisfied, Evaluation, whenTrue, whenFalse);
 
     /// <inheritdoc />
     public override MetadataNode<string> MetadataTier => field ??=

@@ -85,11 +85,11 @@ That last exclusion is **declared, not detected**, and it is worth knowing which
 code falls on. The engine cannot tell a re-entrant evaluation that is part of the composition from one
 that is work inside a node, so the library marks the places it knows about: reaching a higher-order
 proposition's decision &mdash; resolving its elements *and* applying the predicate to them, including
-one you supplied through `As(...)` &mdash; `Where(spec)`, a `Tap` callback, and everything Motiv's own
-telemetry does with a span. Anything else that evaluates a proposition while an evaluation is in flight
-**is** counted &mdash; a predicate of your own that evaluates a proposition per item, and a
-`WhenTrue`/`WhenFalse` or cause-selecting delegate resolved from a result while another evaluation is
-running:
+one you supplied through `As(...)` &mdash; `Where(spec)`, a `Tap` callback, everything Motiv's own
+telemetry does with a span, and the `WhenTrue`/`WhenFalse` and cause-selecting delegates a
+*higher-order result* resolves when you read one of its properties. Anything else that evaluates a
+proposition while an evaluation is in flight **is** counted &mdash; notably a predicate of your own
+that evaluates a proposition per item:
 
 ```csharp
 // per-item work that IS counted against the enclosing rule
@@ -118,6 +118,31 @@ evaluates a proposition of its own. Charged, merely subscribing to the `Motiv` s
 composition past this limit, and for an evaluation nested inside a running one it would surface at an
 unrelated node &mdash; see [#209](https://github.com/karlssberg/Motiv/issues/209). A listener or
 delegate whose *own* evaluation is oversized is still refused; it just costs the composition nothing.
+
+A higher-order **result**'s own delegates joined the excluded side in
+[#213](https://github.com/karlssberg/Motiv/issues/213), for a reason worth stating separately: **they
+run after `Satisfied` is fixed.** A result is handed its outcome when it is constructed, so a cause
+selector or a `WhenTrue` read off it can only describe a decision, never reach one. That is what puts
+them alongside telemetry rather than alongside the per-item predicate above &mdash; a per-item
+predicate is how its node reaches an answer; these run once the answer is already in hand.
+
+Charged, they were charged to whichever evaluation was running at the moment of the *first* read. They
+are memoized, so that was a fact about who read them first rather than about your composition:
+
+```csharp
+var quorumResult = quorum.Evaluate(orders);   // WhenTrue not resolved yet
+
+// Some rule elsewhere reads it while itself being evaluated:
+var audit = Spec.Build((Order o) => quorumResult.Values.Any()).Create("quorum was reached");
+
+audit.And(otherRules).Evaluate(order);
+//   nobody had touched quorumResult.Values -> WhenTrue runs here, on this rule's budget
+//   a logger, a UI, or Motiv's own telemetry read it first -> free
+```
+
+Attaching a telemetry listener was enough to flip that, because tagging a span reads the result's
+explanation and warms the memo &mdash; [#209](https://github.com/karlssberg/Motiv/issues/209)'s rule
+with the sign reversed, a listener that made a refusal *disappear*. The same fix answers both.
 
 It *does* count across **decorator layers**. A decorator between two operator layers is not folded
 &mdash; it re-enters the fold &mdash; but the nested fold spends the same budget, so a composition

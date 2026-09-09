@@ -43,14 +43,15 @@ public static class MotivLimits
     /// from one that is work inside a node, so the library marks the places it knows: <b>reaching a
     /// higher-order proposition's decision</b> — resolving its elements <em>and</em> applying the
     /// predicate to them, including one you supplied through <c>As(...)</c> —
-    /// <c>EnumerableExtensions.Where</c>, a <c>Tap</c> callback, and everything Motiv's own telemetry
+    /// <c>EnumerableExtensions.Where</c>, a <c>Tap</c> callback, everything Motiv's own telemetry
     /// does with a span, tagging it with the result's explanation and running the listener callbacks
-    /// <c>Activity.Dispose()</c> fires. Everything else that evaluates a proposition while an
-    /// evaluation is in flight <b>is</b> counted — notably a predicate of your own that evaluates a
-    /// proposition per item (<c>Spec.Build((Order o) =&gt; o.Lines.All(line.Matches))</c>), and a
-    /// <c>WhenTrue</c>/<c>WhenFalse</c> or cause-selecting delegate resolved from a result while
-    /// another evaluation is running. Prefer the built-in quantifiers — <c>AsAllSatisfied</c> and its
-    /// siblings — where the per-item work should not count against the rule that contains it.
+    /// <c>Activity.Dispose()</c> fires, and the <c>WhenTrue</c>/<c>WhenFalse</c> and cause-selecting
+    /// delegates a higher-order <em>result</em> resolves when one of its properties is read.
+    /// Everything else that evaluates a proposition while an evaluation is in flight <b>is</b> counted
+    /// — notably a predicate of your own that evaluates a proposition per item
+    /// (<c>Spec.Build((Order o) =&gt; o.Lines.All(line.Matches))</c>). Prefer the built-in
+    /// quantifiers — <c>AsAllSatisfied</c> and its siblings — where the per-item work should not count
+    /// against the rule that contains it.
     /// </para>
     /// <para>
     /// The <c>As(...)</c> predicate joined the excluded side in
@@ -59,6 +60,18 @@ public static class MotivLimits
     /// inside one node, not part of the composition the node sits in — and until then the elements
     /// were excluded while the answer they were resolved for was not, which is not a line anyone
     /// could have described.
+    /// </para>
+    /// <para>
+    /// A higher-order result's own delegates joined the excluded side in
+    /// <see href="https://github.com/karlssberg/Motiv/issues/213">#213</see>, and the reason is that
+    /// <b>they run after <c>Satisfied</c> is fixed</b>: the result is handed its outcome when it is
+    /// constructed, so a cause selector or a <c>WhenTrue</c> read off it describes a decision rather
+    /// than reaching one. That is what separates them from the per-item predicate above, which is how
+    /// its node reaches an answer. Charged, they were charged to whichever evaluation was running at
+    /// the moment of the <em>first</em> read — and these properties are memoized, so that was a fact
+    /// about who read them first rather than about the composition. Merely attaching a telemetry
+    /// listener warmed the memo and made a later refusal disappear, which is #209's rule with the sign
+    /// reversed.
     /// </para>
     /// <para>
     /// Telemetry is on the excluded side deliberately, and it is the one entry a caller does not write:
