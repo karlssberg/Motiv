@@ -28,22 +28,29 @@ Two things are worth knowing about the shape of that guarantee:
 - It covers **synchronous** evaluation more deeply than asynchronous. An async state-machine frame is
   far fatter than a call frame, so every ceiling above is about four times lower asynchronously.
 
-### The decorator ceiling is reachable from a stored catalogue
+### The decorator ceiling is reachable from a stored catalogue &mdash; and now bounded
 
-Worth stating plainly, because it is the depth the caps below do *not* count. A rule document's every
-node that carries a `name` or a `whenTrue` binds to a decorator, and an authored proposition may
-reference another authored proposition &mdash; so a catalogue of propositions each referencing the one
-before it composes exactly the alternating shape, one link at a time.
+A rule document's every node that carries a `name` or a `whenTrue` binds to a decorator, and an
+authored proposition may reference another authored proposition &mdash; so a catalogue of propositions
+each referencing the one before it composes exactly the alternating shape, one link at a time.
 
-None of the three document caps sees it. `MaxDocumentDepth` bounds one document's JSON nesting, and
-such a link nests two levels. `MaxNodeCount` bounds one document's nodes, and such a link has three.
-`MaxCompositionDepth` bounds the composed depth of one document and stops at a `spec` leaf, so a link
-scores 1 however deep the proposition it references happens to be. A chain of 200 links is accepted
-with `MaxCompositionDepth` set to 1.
+Two of the three document caps still do not see that. `MaxDocumentDepth` bounds one document's JSON
+nesting, and such a link nests two levels; `MaxNodeCount` bounds one document's nodes, and such a link
+has three. Neither counts a chain, and neither is meant to.
 
-Until a cap counts across references ([#201](https://github.com/karlssberg/Motiv/issues/201)),
-**treat reference-chain depth as something your authoring surface must bound**: an application that lets untrusted authors publish propositions can be walked
-past the ceiling a few hundred publishes at a time.
+`MaxCompositionDepth` used to miss it too &mdash; it stopped at a `spec` leaf, so a link scored 1
+however deep the proposition it referenced happened to be, and a chain of 200 links was accepted with
+the cap set to 1. Since [#201](https://github.com/karlssberg/Motiv/issues/201) both depth caps are
+measured **at bind time, against the source a `spec` leaf resolves through**: a proposition inherits
+the depth of what it references, and `MaxDecoratorDepth` bounds the decorator subset of that depth
+directly. Under the shipped defaults a reference chain is refused at its 129th link, well short of the
+261 the async ceiling sits at.
+
+One thing the caps deliberately do not count is a spec **compiled** into the application and
+registered through `SpecRegistry.Register`. Motiv has no stack-safe walk of a finished spec tree, so a
+registered entry scores as a leaf. That is the argument the caps were always making, applied where it
+is true: a compiled spec's depth is what a developer wrote, bounded by their source, not by what a
+request or a publish can ask for.
 
 ## The engine's backstop: `MotivLimits.MaxEvaluationSize`
 
@@ -169,8 +176,9 @@ document rather than a count. Three caps, each bounding something different:
 | `MaxDocumentDepth` | 64 | How deeply the JSON nests. |
 | `MaxNodeCount` | 10,000 | How many rule nodes the document contains. |
 | `MaxCompositionDepth` | 4,096 | How deep the *composed spec* is &mdash; which is not the same thing. |
+| `MaxDecoratorDepth` | 128 | How many of those levels are decorators &mdash; the stack half. |
 
-The third is the one that catches the attack the other two miss. `RuleBinder` folds an n-ary operator
+The third is the one that catches the attack the first two miss. `RuleBinder` folds an n-ary operator
 left-deep, so a single shallow document node with 5,000 operands composes 4,999 levels deep while
 nesting only one. Nesting compounds rather than adds: three operands nested three levels compose six
 deep, not three.
@@ -182,4 +190,18 @@ knowing what each level buys.
 
 ```csharp
 var options = new RuleSerializerOptions { MaxCompositionDepth = 1_024 };
+```
+
+`MaxDecoratorDepth` budgets a different resource, which is why it is a separate number rather than a
+lower `MaxCompositionDepth`. Operator levels are folded onto the heap, so their cost is time and
+memory. A decorator level is not folded &mdash; it re-enters the fold, one stack frame at a time
+&mdash; so its cost is **stack**, the one resource whose exhaustion cannot be caught. Its default of
+128 is derived from the measured ceilings above: half of the lower of the two, leaving the rest of a
+1 MB request stack to the caller's own frames.
+
+Both are counted across `spec` references, so a proposition inherits the depth of the propositions it
+resolves through. Raising either raises what a whole catalogue may compose, not just one document.
+
+```csharp
+var options = new RuleSerializerOptions { MaxDecoratorDepth = 64 };
 ```

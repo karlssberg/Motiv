@@ -14,7 +14,8 @@ public sealed class SpecRegistryEntry
         bool isAsync,
         object spec,
         string? description = null,
-        IReadOnlyList<RuleParameterDeclaration>? parameters = null)
+        IReadOnlyList<RuleParameterDeclaration>? parameters = null,
+        CompositionMeasure depth = default)
     {
         Name = name;
         ModelType = modelType;
@@ -23,6 +24,7 @@ public sealed class SpecRegistryEntry
         Spec = spec;
         Description = description;
         Parameters = parameters;
+        Depth = depth;
     }
 
     /// <summary>The stable name that rule documents use to reference the spec.</summary>
@@ -53,6 +55,17 @@ public sealed class SpecRegistryEntry
     /// directly, so the two cases stay indistinguishable to them.
     /// </summary>
     internal object Spec { get; }
+
+    /// <summary>
+    /// How deep the spec this entry holds composes, so a document referencing it by name is measured
+    /// against that depth rather than scoring the reference as a leaf.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="CompositionMeasure.Leaf" /> for a spec registered through the public
+    /// <see cref="SpecRegistry" />, which is compiled code whose depth Motiv cannot walk and whose
+    /// budget is the developer's own. See <see cref="CompositionDepth" /> for why that settles it.
+    /// </remarks>
+    internal CompositionMeasure Depth { get; }
 
     /// <summary>
     /// Resolves the spec a node references: the registered instance for a plain entry, or the

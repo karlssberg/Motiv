@@ -6,6 +6,10 @@ internal sealed class AsyncMetadataRuleBinder<TMetadata>(ISpecSource source, Rul
 {
     public AsyncSpecBase<TModel, TMetadata>? Bind<TModel>(RuleDocument document, List<RuleError> errors)
     {
+        // See RuleBinder.Bind: refused before anything is composed.
+        if (CompositionDepth.ReportIfTooDeep(document, source, options, errors))
+            return null;
+
         var root = BindNode<TModel>(document.Root!, errors);
         if (root is null)
             return null;

@@ -107,18 +107,31 @@ public sealed class PropositionSet
                 ModelType = typeof(TModel),
                 Bind = (source, name, description, document, isAsync, errors) =>
                 {
+                    // Carried on the entry, so the next document to reference this proposition by
+                    // name is bounded against the depth it actually composes rather than scoring the
+                    // reference as a leaf — which is what let a catalogue compose past the stack
+                    // ceiling one publish at a time (#201).
+                    //
+                    // The binder walks the document again for its own cap check, and deliberately so:
+                    // handing the measure back out would mean an `out` parameter on all four Bind
+                    // methods and a discard at every RuleSerializer call site, to save one walk of a
+                    // document already bounded by MaxNodeCount at the one site that wants it.
+                    var depth = CompositionDepth.Of(document, source);
+
                     if (isAsync)
                     {
-                        var asyncSpec = AsyncRuleBinder.Bind<TModel>(document, source, errors);
+                        var asyncSpec = AsyncRuleBinder.Bind<TModel>(document, source, _options, errors);
                         return asyncSpec is null
                             ? null
-                            : new SpecRegistryEntry(name, typeof(TModel), typeof(string), true, asyncSpec, description);
+                            : new SpecRegistryEntry(name, typeof(TModel), typeof(string), true, asyncSpec,
+                                description, depth: depth);
                     }
 
-                    var spec = RuleBinder.Bind<TModel>(document, source, errors);
+                    var spec = RuleBinder.Bind<TModel>(document, source, _options, errors);
                     return spec is null
                         ? null
-                        : new SpecRegistryEntry(name, typeof(TModel), typeof(string), false, spec, description);
+                        : new SpecRegistryEntry(name, typeof(TModel), typeof(string), false, spec,
+                            description, depth: depth);
                 }
             };
             return this;
