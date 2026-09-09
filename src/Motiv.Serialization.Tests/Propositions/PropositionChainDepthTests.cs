@@ -16,11 +16,12 @@ namespace Motiv.Serialization.Tests.Propositions;
 /// alternating shape, whose measured ceiling is 1,047 links synchronously and 261 asynchronously on a
 /// 1 MB thread; past it the process aborts with a stack overflow no <c>catch</c> can see.
 /// <para>
-/// Nothing in the stack counts the chain. <c>MaxDocumentDepth</c> bounds one document's JSON nesting
-/// and each link nests two levels; <c>MaxNodeCount</c> bounds one document's nodes and each link has
-/// three; <c>MaxCompositionDepth</c> bounds the composed depth of one document and stops at a
-/// <c>spec</c> leaf, so each link scores 1 however deep the proposition it references is. The cases
-/// below state that as behaviour rather than leaving it as an argument.
+/// <c>MaxDocumentDepth</c> bounds one document's JSON nesting and each link nests two levels;
+/// <c>MaxNodeCount</c> bounds one document's nodes and each link has three. Neither sees a chain.
+/// Since <see href="https://github.com/karlssberg/Motiv/issues/201">#201</see> the two that do are
+/// <c>MaxCompositionDepth</c> and <c>MaxDecoratorDepth</c>, both measured at bind time against the
+/// source a <c>spec</c> leaf resolves through, so a link scores the depth of what it references
+/// rather than 1. The cases below hold that.
 /// </para>
 /// </remarks>
 [Collection(MotivLimitsTestCollection.Name)]
@@ -42,13 +43,13 @@ public class PropositionChainDepthTests : IDisposable
             Spec.Build((Model m) => m.Value % 2 == 0).WhenTrue("even").WhenFalse("odd").Create());
 
     /// <summary>
-    /// The cap named for composition depth is set as low as it goes, and a two-hundred-link chain is
-    /// still accepted — because it never sees through a <c>spec</c> reference. Each link's own
-    /// document composes exactly one level, which is all the cap ever measures, so 200 is a sample of
-    /// the behaviour rather than the bound: nothing here is what stops the chain at any length.
+    /// The cap named for composition depth now measures what it is named for. Each link composes an
+    /// operator level and a decorator level over the link before it, so a chain two hundred long
+    /// composes four hundred deep — and under a cap of one, the second link is already too deep to
+    /// publish.
     /// </summary>
     [Fact]
-    public async Task Should_accept_a_two_hundred_link_reference_chain_under_the_lowest_composition_cap()
+    public async Task Should_refuse_a_reference_chain_that_composes_past_the_composition_cap()
     {
         var propositions = new PropositionSet(
             NewRegistry(),
@@ -57,31 +58,65 @@ public class PropositionChainDepthTests : IDisposable
             .AddModel<Model>("m");
         propositions.Load();
 
-        await CreateChain(propositions, links: 200);
+        (await propositions.CreateAsync("m.p0", "m", """{ "rule": { "spec": "m.is-even" } }""", null))
+            .Outcome.ShouldBe(PropositionUpdateOutcome.Created);
 
-        // 201 authored links plus the compiled leaf they bottom out on, none of them quarantined.
-        propositions.Propositions.Count.ShouldBe(202);
-        propositions.Find("m.p200").ShouldNotBeNull().Quarantine.ShouldBeEmpty();
+        var result = await propositions.CreateAsync(
+            "m.p1",
+            "m",
+            """{ "name": "m.p1", "rule": { "and": [ { "spec": "m.p0" }, { "spec": "m.is-even" } ] } }""",
+            null);
+
+        result.Outcome.ShouldBe(PropositionUpdateOutcome.Invalid);
+        result.Errors.ShouldContain(error => error.Code == RuleErrorCode.DocumentTooLarge);
     }
 
     /// <summary>
-    /// And the chain evaluates, so the depth is real rather than an artefact of how it was stored:
-    /// two hundred links of recursion on whatever stack the caller happens to be on.
+    /// The cap that bounds the stack rather than the cost. A chain grows one decorator level per
+    /// link — <c>RuleBinder.Bind</c> wraps a named document's root — and it is decorator nesting,
+    /// not the operator fold, that is still recursive after Spec 3E. Ten links, then the eleventh
+    /// is refused.
     /// </summary>
     [Fact]
-    public async Task Should_evaluate_a_two_hundred_link_reference_chain()
+    public async Task Should_refuse_a_reference_chain_that_nests_past_the_decorator_cap()
+    {
+        var propositions = new PropositionSet(
+            NewRegistry(),
+            new InMemoryPropositionStore(),
+            new RuleSerializerOptions { MaxDecoratorDepth = 10 })
+            .AddModel<Model>("m");
+        propositions.Load();
+
+        await CreateChain(propositions, links: 10);
+
+        var result = await propositions.CreateAsync(
+            "m.p11",
+            "m",
+            """{ "name": "m.p11", "rule": { "and": [ { "spec": "m.p10" }, { "spec": "m.is-even" } ] } }""",
+            null);
+
+        result.Outcome.ShouldBe(PropositionUpdateOutcome.Invalid);
+        result.Errors.ShouldContain(error => error.Code == RuleErrorCode.DocumentTooLarge);
+    }
+
+    /// <summary>
+    /// A chain still binds and evaluates under the shipped defaults — the caps refuse the shapes that
+    /// approach the measured ceiling, not ordinary catalogues.
+    /// </summary>
+    [Fact]
+    public async Task Should_evaluate_a_reference_chain_within_the_default_caps()
     {
         var propositions = new PropositionSet(NewRegistry(), new InMemoryPropositionStore())
             .AddModel<Model>("m");
         propositions.Load();
 
-        await CreateChain(propositions, links: 200);
+        await CreateChain(propositions, links: 100);
 
         var rule = new ChainRule();
         var rules = new RuleSet(propositions).Add(rule);
         (await rules.UpdateAsync(
                 "chain",
-                """{ "rule": { "spec": "m.p200" } }""",
+                """{ "rule": { "spec": "m.p100" } }""",
                 1,
                 new RuleChangeProvenance("test")))
             .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
@@ -101,8 +136,8 @@ public class PropositionChainDepthTests : IDisposable
     /// document reaches it.
     /// </para>
     /// <para>
-    /// It bounds <em>size</em> and not <em>depth</em>: the chain's 1,046-link stack ceiling is
-    /// unmoved, and is <see href="https://github.com/karlssberg/Motiv/issues/201">#201</see>.
+    /// It bounds <em>size</em> and not <em>depth</em>; depth is
+    /// <see href="https://github.com/karlssberg/Motiv/issues/201">#201</see>'s two caps above.
     /// </para>
     /// </summary>
     [Fact]
@@ -112,13 +147,13 @@ public class PropositionChainDepthTests : IDisposable
             .AddModel<Model>("m");
         propositions.Load();
 
-        await CreateChain(propositions, links: 200);
+        await CreateChain(propositions, links: 100);
 
         var rule = new ChainRule();
         var rules = new RuleSet(propositions).Add(rule);
         (await rules.UpdateAsync(
                 "chain",
-                """{ "rule": { "spec": "m.p200" } }""",
+                """{ "rule": { "spec": "m.p100" } }""",
                 1,
                 new RuleChangeProvenance("test")))
             .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
@@ -130,6 +165,30 @@ public class PropositionChainDepthTests : IDisposable
         var act = () => rule.Evaluate(new Model(2));
 
         act.ShouldThrow<SpecException>();
+    }
+
+    /// <summary>
+    /// The shipped defaults, with nothing configured: a chain is refused at the 129th link, because
+    /// each link adds one decorator level and <c>MaxDecoratorDepth</c> defaults to 128. Before #201
+    /// the chain grew without limit until the process aborted at 261 links asynchronously.
+    /// </summary>
+    [Fact]
+    public async Task Should_refuse_a_reference_chain_past_the_default_decorator_cap()
+    {
+        var propositions = new PropositionSet(NewRegistry(), new InMemoryPropositionStore())
+            .AddModel<Model>("m");
+        propositions.Load();
+
+        await CreateChain(propositions, links: 128);
+
+        var result = await propositions.CreateAsync(
+            "m.p129",
+            "m",
+            """{ "name": "m.p129", "rule": { "and": [ { "spec": "m.p128" }, { "spec": "m.is-even" } ] } }""",
+            null);
+
+        result.Outcome.ShouldBe(PropositionUpdateOutcome.Invalid);
+        result.Errors.ShouldContain(error => error.Code == RuleErrorCode.DocumentTooLarge);
     }
 
     /// <summary>

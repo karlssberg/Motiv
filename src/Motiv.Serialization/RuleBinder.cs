@@ -5,8 +5,14 @@ internal static class RuleBinder
     public static SpecBase<TModel, string>? Bind<TModel>(
         RuleDocument document,
         ISpecSource source,
+        RuleSerializerOptions options,
         List<RuleError> errors)
     {
+        // Before binding, not after: the caps exist to refuse a composition, so composing it first
+        // would be paying the cost the cap was meant to decline.
+        if (CompositionDepth.ReportIfTooDeep(document, source, options, errors))
+            return null;
+
         var root = BindNode<TModel>(document.Root!, source, errors);
         if (root is null)
             return null;

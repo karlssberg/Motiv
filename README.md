@@ -466,8 +466,9 @@ MotivLimits.MaxEvaluationSize = 50_000; // process-wide; set it once at startup
 ```
 
 Rule documents are refused earlier and more helpfully, at the edge, by
-`RuleSerializerOptions`' `MaxCompositionDepth`, `MaxNodeCount` and
-`MaxDocumentDepth`. Available via the `Motiv` and `Motiv.Serialization`
+`RuleSerializerOptions`' `MaxCompositionDepth`, `MaxDecoratorDepth`,
+`MaxNodeCount` and `MaxDocumentDepth` — the first two counted across `spec`
+references, so a chain of propositions is bounded as well as a single document. Available via the `Motiv` and `Motiv.Serialization`
 packages.
 
 ### Authoring UIs and Runtimes

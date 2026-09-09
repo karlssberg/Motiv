@@ -579,12 +579,29 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
     /// not the document's JSON nesting.
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// A deliberately weaker measure than <see cref="CompositionDepth" />'s, not a copy of it that
+    /// drifted. It is weaker in two different senses. One is a limit: parsing has no
+    /// <see cref="ISpecSource" />, so this cannot see through a <c>spec</c> reference and scores one
+    /// as a leaf. The other is a choice: a document's own decorator triggers are right here in the
+    /// node (a <c>name</c>, a <c>whenTrue</c>, a named root) and could be counted, but are not,
+    /// because counting them here would refuse documents at parse time with a message about
+    /// composition depth that the decorator cap should be naming instead.
+    /// <para>
+    /// Both make this score the operator fold alone, so it can only ever under-report — which is what
+    /// makes it safe as a cheap pre-filter that refuses the worst documents before anything resolves
+    /// them, leaving the binding-time check, which sees both axes and both sides of a reference, as
+    /// the authority.
+    /// </para>
+    /// </para>
+    /// <para>
     /// <see cref="RuleBinder" /> folds an n-ary operator left-deep (<c>((c₁ op c₂) op c₃) …</c>), so
     /// every operand after the first adds a level, and a nested operand's own depth compounds rather
     /// than adds — three operands nested three levels compose six deep, not three. That is why a
     /// per-node operand cap cannot bound this and <see cref="RuleSerializerOptions.MaxDocumentDepth" />
     /// does not either. Recursion here is bounded by <c>MaxDocumentDepth</c>, which is already
     /// enforced during parsing.
+    /// </para>
     /// </remarks>
     private static int CompositionDepthOf(RuleNode node)
     {
