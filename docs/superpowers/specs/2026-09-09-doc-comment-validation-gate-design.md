@@ -248,8 +248,16 @@ three `XmlDocumentationTests` cases.
 
 **Not run locally: the two `net472` combinations** (`Motiv.Tests` and `Motiv.Serialization.Tests`).
 Both aborted with `Could not find 'mono' host` — no mono on this macOS host — which is a standing
-property of this machine and not a consequence of the slice. CI runs them on `windows-latest`, where
-they execute rather than merely compile. That is the whole of what could not be run.
+property of this machine and not a consequence of the slice. That is the whole of what could not be
+run here.
+
+They were then read off CI rather than predicted: PR #223's `build` job on `windows-latest`
+**executes** them — `Motiv.Tests.dll (net472)` 6,015 passed, `Motiv.Serialization.Tests.dll (net472)`
+996 passed, 0 failed. Worth checking rather than assuming for two reasons. #211's design doc
+originally claimed that TFM was only *compiled* clean and had to be corrected against the log. And
+the 6,015 is 3 more than the 6,012 that ran before this slice, which establishes something the local
+run cannot: `XmlDocumentationTests` runs under `net472` as well, so `Motiv.xml` is copied alongside
+the `netstandard2.0` assembly that target resolves to — not only alongside the modern ones.
 
 **Red first.** The three `XmlDocumentationTests` cases were written before the property was set and
 watched fail: all three red, each because `Motiv.xml` did not exist.
