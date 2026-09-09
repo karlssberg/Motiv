@@ -8,6 +8,7 @@ public sealed class RuleSerializerOptions
     private int _maxDocumentDepth = 64;
     private int _maxNodeCount = 10_000;
     private int _maxCompositionDepth = 4_096;
+    private int _maxDecoratorDepth = 128;
 
     /// <summary>The maximum nesting depth a rule document may have. Defaults to 64.</summary>
     /// <exception cref="ArgumentOutOfRangeException">The value is less than 1.</exception>
@@ -70,6 +71,40 @@ public sealed class RuleSerializerOptions
             ? value
             : throw new ArgumentOutOfRangeException(nameof(value), value,
                 "MaxCompositionDepth must be at least 1.");
+    }
+
+    /// <summary>
+    /// The maximum number of <em>decorator</em> levels the composed spec may nest. Defaults to 128.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A subset of what <see cref="MaxCompositionDepth" /> counts, bounded separately because it is a
+    /// different resource. Operator folds are iterative since Spec 3E, so their depth costs time and
+    /// memory — which is what <see cref="MaxCompositionDepth" /> budgets. A decorator is not folded:
+    /// it re-enters the fold, one stack frame per level, so decorator nesting costs <em>stack</em>,
+    /// and stack is the one resource whose exhaustion cannot be caught.
+    /// </para>
+    /// <para>
+    /// Derived from the measurement in <c>DecoratorNestingTests</c>: the alternating
+    /// operator/decorator shape a catalogue composes returns at 1,047 levels synchronously and 261
+    /// asynchronously on a 1 MB thread — the ASP.NET request stack — and aborts the process past
+    /// that. 128 leaves better than a factor of two against the lower of the two, with the balance of
+    /// the stack left to the caller's own frames.
+    /// </para>
+    /// <para>
+    /// A decorator level is added by any node carrying a <c>name</c> or a <c>whenTrue</c>, and by a
+    /// named document's root. Counted across <c>spec</c> references, so a proposition that references
+    /// another inherits its decorator depth rather than scoring it as a leaf.
+    /// </para>
+    /// </remarks>
+    /// <exception cref="ArgumentOutOfRangeException">The value is less than 1.</exception>
+    public int MaxDecoratorDepth
+    {
+        get => _maxDecoratorDepth;
+        set => _maxDecoratorDepth = value >= 1
+            ? value
+            : throw new ArgumentOutOfRangeException(nameof(value), value,
+                "MaxDecoratorDepth must be at least 1.");
     }
 
     /// <summary>

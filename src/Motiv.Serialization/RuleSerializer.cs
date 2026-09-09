@@ -81,7 +81,7 @@ public sealed class RuleSerializer
         var document = Prepare(json, parameters, errors);
         ThrowIfInvalid(errors);
 
-        var spec = RuleBinder.Bind<TModel>(document!, _source, errors);
+        var spec = RuleBinder.Bind<TModel>(document!, _source, _options, errors);
         ThrowIfInvalid(errors);
         return spec!;
     }
@@ -129,7 +129,7 @@ public sealed class RuleSerializer
         var document = Prepare(json, parameters, errors);
         ThrowIfInvalid(errors);
 
-        var spec = AsyncRuleBinder.Bind<TModel>(document!, _source, errors);
+        var spec = AsyncRuleBinder.Bind<TModel>(document!, _source, _options, errors);
         ThrowIfInvalid(errors);
         return spec!;
     }
@@ -253,7 +253,7 @@ public sealed class RuleSerializer
         var errors = new List<RuleError>();
         var document = PrepareForValidation(json, errors);
         if (document?.Root is not null && errors.Count == 0)
-            RuleBinder.Bind<TModel>(document, _source, errors);
+            RuleBinder.Bind<TModel>(document, _source, _options, errors);
         return errors;
     }
 
@@ -293,7 +293,7 @@ public sealed class RuleSerializer
         var errors = new List<RuleError>();
         var document = PrepareForValidation(json, errors);
         if (document?.Root is not null && errors.Count == 0)
-            AsyncRuleBinder.Bind<TModel>(document, _source, errors);
+            AsyncRuleBinder.Bind<TModel>(document, _source, _options, errors);
         return errors;
     }
 
