@@ -19,13 +19,13 @@ internal sealed class HigherOrderFromExpressionTreeMultiMetadataBooleanResult<TM
     : BooleanResultBase<TMetadata>
 {
     private BooleanResult<TModel, string>[] CausesInternal =>
-        field ??= causeSelector(Satisfied, underlyingResults).ToArray();
+        field ??= HigherOrderResults.ResolveCauses(Satisfied, underlyingResults, causeSelector);
 
     private HigherOrderBooleanResultEvaluation<TModel, string> Evaluation =>
         field ??= new HigherOrderBooleanResultEvaluation<TModel, string>(underlyingResults, CausesInternal);
 
     private IEnumerable<TMetadata> MetadataValues =>
-        field ??= (Satisfied ? whenTrue(Evaluation) : whenFalse(Evaluation)).ToArray();
+        field ??= HigherOrderResults.ResolveValues(Satisfied, Evaluation, whenTrue, whenFalse);
 
     /// <inheritdoc />
     public override MetadataNode<TMetadata> MetadataTier => field ??=

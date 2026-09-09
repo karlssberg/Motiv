@@ -19,13 +19,13 @@ internal sealed class HigherOrderFromExpressionTreeMultiAssertionExplanationBool
     : BooleanResultBase<string>
 {
     private BooleanResult<TModel, string>[] CausesInternal =>
-        field ??= causeSelector(Satisfied, underlyingResults).ToArray();
+        field ??= HigherOrderResults.ResolveCauses(Satisfied, underlyingResults, causeSelector);
 
     private HigherOrderBooleanResultEvaluation<TModel, string> Evaluation =>
         field ??= new HigherOrderBooleanResultEvaluation<TModel, string>(underlyingResults, CausesInternal);
 
     private IEnumerable<string> MetadataValues =>
-        field ??= Satisfied ? trueBecause(Evaluation) : falseBecause(Evaluation);
+        field ??= HigherOrderResults.ResolveValues(Satisfied, Evaluation, trueBecause, falseBecause);
 
     /// <inheritdoc />
     public override MetadataNode<string> MetadataTier => field ??=

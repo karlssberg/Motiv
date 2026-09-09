@@ -17,13 +17,13 @@ internal sealed class HigherOrderFromPolicyResultMultiMetadataBooleanResult<TMod
     : BooleanResultBase<TMetadata>
 {
     private PolicyResult<TModel, TUnderlyingMetadata>[] CausesInternal =>
-        field ??= causeSelector(Satisfied, underlyingResults).ToArray();
+        field ??= HigherOrderResults.ResolveCauses(Satisfied, underlyingResults, causeSelector);
 
     private HigherOrderPolicyResultEvaluation<TModel, TUnderlyingMetadata> Evaluation =>
         field ??= new HigherOrderPolicyResultEvaluation<TModel, TUnderlyingMetadata>(underlyingResults, CausesInternal);
 
     private IEnumerable<TMetadata> MetadataValues =>
-        field ??= (Satisfied ? whenTrue(Evaluation) : whenFalse(Evaluation)).ToArray();
+        field ??= HigherOrderResults.ResolveValues(Satisfied, Evaluation, whenTrue, whenFalse);
 
     private string Assertion => field ??= specDescription.ToReason(Satisfied);
 

@@ -15,7 +15,7 @@ internal sealed class MinimalHigherOrderFromPolicyResultBooleanResult<TModel, TM
     : BooleanResultBase<TMetadata>
 {
     private PolicyResult<TModel, TMetadata>[] CausesInternal =>
-        field ??= causeSelector(Satisfied, underlyingResults).ToArray();
+        field ??= HigherOrderResults.ResolveCauses(Satisfied, underlyingResults, causeSelector);
 
     private IEnumerable<TMetadata> MetadataValues =>
         field ??= CausesInternal.Select(result => result.Value).ToArray();
