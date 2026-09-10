@@ -69,7 +69,9 @@ what lets the composing pass run *backwards* over one array with no second trave
 work: by the time a node is reached, both its children have values.
 
 Operand placements are packed into one `int` per slot: a region index is non-negative, a boundary
-index is its bitwise complement, and `int.MinValue` is the operand a node does not have.
+index is its bitwise complement. There is no third value for an operand a node does not have, because
+a concurrent operation is binary and eager by contract — an early draft carried one, and it was the
+only code in the method no test could reach.
 
 ## Decision 3 — the region charges the nodes it walks
 

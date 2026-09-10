@@ -30,12 +30,6 @@ internal static class AsyncEvaluationFold
 {
     private const int InitialCapacity = 8;
 
-    /// <summary>
-    /// The placement of an operand a concurrent operation does not have. No region index and no boundary
-    /// index can collide with it: the one is non-negative and the other the complement of a non-negative.
-    /// </summary>
-    private const int NoOperand = int.MinValue;
-
     /// <summary>Evaluates <paramref name="root" />, producing the composed result.</summary>
     internal static ValueTask<BooleanResultBase<TMetadata>> EvaluateAsync<TModel, TMetadata>(
         IAsyncFoldableOperation<TModel, TMetadata> root,
@@ -189,8 +183,10 @@ internal static class AsyncEvaluationFold
         for (var node = 0; node < region.Count; node++)
         {
             var operation = region[node];
+            // Both operands, unconditionally: a concurrent operation is binary and eager, which is
+            // the contract IAsyncFoldableOperation.IsConcurrent states and this walk depends on.
             var first = Place(operation.FirstOperand);
-            var second = Place(operation.NextOperand(firstSatisfied: true));
+            var second = Place(operation.NextOperand(firstSatisfied: true)!);
             placements.Add((first, second));
         }
 
@@ -204,7 +200,7 @@ internal static class AsyncEvaluationFold
                 region[node],
                 Value(first),
                 Value(second),
-                second != NoOperand);
+                hasSecond: true);
         }
 
         return composed[0];
@@ -212,13 +208,10 @@ internal static class AsyncEvaluationFold
         // A concurrent operand is absorbed into the region and answered by this fold; any other is
         // started now and answered by the task it returns. The two are told apart by the sign of the
         // placement: a region index is non-negative, a boundary index is its bitwise complement.
-        int Place(AsyncSpecBase<TModel, TMetadata>? operand)
+        int Place(AsyncSpecBase<TModel, TMetadata> operand)
         {
             switch (operand)
             {
-                case null:
-                    return NoOperand;
-
                 case IAsyncFoldableOperation<TModel, TMetadata> { IsConcurrent: true } nested:
                     budget.Charge();
                     region.Add(nested);
@@ -237,12 +230,7 @@ internal static class AsyncEvaluationFold
         }
 
         TValue Value(int placement) =>
-            placement switch
-            {
-                NoOperand => default!,
-                >= 0 => composed[placement],
-                _ => boundaryValues[~placement]
-            };
+            placement >= 0 ? composed[placement] : boundaryValues[~placement];
     }
 
     private struct Frame<TModel, TMetadata, TValue>(IAsyncFoldableOperation<TModel, TMetadata> operation)
