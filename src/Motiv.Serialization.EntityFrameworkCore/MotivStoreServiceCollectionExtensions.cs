@@ -45,9 +45,12 @@ public static class MotivStoreServiceCollectionExtensions
     /// </para>
     /// <para>
     /// Either overload may be called <em>once</em> per container, and a second call of either is
-    /// refused. Registering more than one context is not a layering: both fill the same
-    /// <see cref="IDbContextFactory{TContext}"/> slot that <see cref="EfRuleStore"/> and
-    /// <see cref="EfPropositionStore"/> resolve, so the loser's database is simply never opened.
+    /// refused. Registering more than one context is not a layering. The adopter's own
+    /// <c>IDbContextFactory&lt;TContext&gt;</c> registrations are additive — each derived context gets
+    /// its own — but every call also fills the one
+    /// <c>IDbContextFactory&lt;MotivStoreDbContext&gt;</c> slot that <see cref="EfRuleStore"/> and
+    /// <see cref="EfPropositionStore"/> resolve, and that slot is last-wins, so the loser's database
+    /// is simply never opened.
     /// </para>
     /// </remarks>
     /// <typeparam name="TContext">The adopter's context, deriving from <see cref="MotivStoreDbContext"/>.</typeparam>
