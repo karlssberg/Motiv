@@ -2,6 +2,8 @@
 
     <PropertyGroup>
         <IsPackable>true</IsPackable>
+        <!-- Validates doc comments (see Directory.Build.props) and ships the XML file in the package. -->
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageId>Motiv.Serialization.Sql</PackageId>
         <Title>Motiv.Serialization.Sql</Title>
