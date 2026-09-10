@@ -416,7 +416,8 @@ public class StoreImportTests
 public sealed class UnwritableDataCancellation : OperationCanceledException
 {
     public override System.Collections.IDictionary Data { get; } =
-        new System.Collections.Generic.Dictionary<string, string?>().AsReadOnly();
+        new System.Collections.ObjectModel.ReadOnlyDictionary<string, string?>(
+            new Dictionary<string, string?>());
 }
 
 /// <summary>The failure an import test injects, distinguishable from anything the code throws.</summary>
