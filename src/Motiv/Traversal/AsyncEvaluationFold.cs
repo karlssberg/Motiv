@@ -186,7 +186,8 @@ internal static class AsyncEvaluationFold
             // Both operands, unconditionally: a concurrent operation is binary and eager, which is
             // the contract IAsyncFoldableOperation.IsConcurrent states and this walk depends on.
             var first = Place(operation.FirstOperand);
-            var second = Place(operation.NextOperand(firstSatisfied: true)!);
+            var second = Place(
+                operation.NextOperand(firstSatisfied: true) ?? ThrowSecondOperandMissing(operation));
             placements.Add((first, second));
         }
 
@@ -232,6 +233,18 @@ internal static class AsyncEvaluationFold
         TValue Value(int placement) =>
             placement >= 0 ? composed[placement] : boundaryValues[~placement];
     }
+
+    /// <summary>
+    /// The refusal of a concurrent operation that breaks the contract the region walk rests on. Kept
+    /// out of the walk so that a branch never taken does not weigh against inlining the loop it sits in.
+    /// </summary>
+    private static AsyncSpecBase<TModel, TMetadata> ThrowSecondOperandMissing<TModel, TMetadata>(
+        IAsyncFoldableOperation<TModel, TMetadata> operation) =>
+        throw new InvalidOperationException(
+            $"{operation.GetType().Name} reports {nameof(IAsyncFoldableOperation<TModel, TMetadata>.IsConcurrent)} " +
+            "but supplied no second operand. A concurrent operation is binary and eager: " +
+            $"{nameof(IAsyncFoldableOperation<TModel, TMetadata>.NextOperand)} must return an operand " +
+            "whichever outcome it is told.");
 
     private struct Frame<TModel, TMetadata, TValue>(IAsyncFoldableOperation<TModel, TMetadata> operation)
     {
