@@ -27,6 +27,7 @@
 
     <ItemGroup>
         <Compile Include="..\testing\StoreConformance\*.cs" LinkBase="StoreConformance" />
+        <Compile Include="..\testing\PoolClearGate\*.cs" LinkBase="PoolClearGate" />
     </ItemGroup>
 
     <ItemGroup>

@@ -96,7 +96,7 @@ public class StoreSchemaTests
         var path = TempDatabasePath();
         try
         {
-            await using (var connection = new SqliteConnection($"Data Source={path}"))
+            await using (var connection = new SqliteConnection(ConnectionString(path)))
             {
                 await connection.OpenAsync();
                 var command = connection.CreateCommand();
@@ -123,16 +123,21 @@ public class StoreSchemaTests
 
     private static MotivStoreDbContext Context(string path) =>
         new(new DbContextOptionsBuilder<MotivStoreDbContext>()
-            .UseSqlite($"Data Source={path}")
+            .UseSqlite(ConnectionString(path))
             .Options);
 
     private static string TempDatabasePath() =>
         Path.Combine(Path.GetTempPath(), $"motiv-schema-{Guid.NewGuid():N}.db");
 
+    /// <summary>
+    /// Pooling off, so teardown has nothing to release. <c>SqliteConnection.ClearAllPools()</c> is
+    /// process-global and these tests run in parallel with every other fixture in the assembly
+    /// (<see href="https://github.com/karlssberg/Motiv/issues/219">#219</see>).
+    /// </summary>
+    private static string ConnectionString(string path) => $"Data Source={path};Pooling=False";
+
     private static void Cleanup(string path)
     {
-        // Pooled connections keep a handle on the file, so the delete below fails without this.
-        SqliteConnection.ClearAllPools();
         foreach (var file in new[] { path, path + "-shm", path + "-wal" })
         {
             if (File.Exists(file))
