@@ -165,9 +165,12 @@ export const CONFORMANCE: readonly ConformanceRow[] = [
     conformance: 'Supports',
     evidence: [{ kind: 'axe' }],
     remark:
-      'Enforced on every view and every open surface, in both colour schemes — the stylesheet '
-      + 'defines a second palette under `prefers-color-scheme: dark`, and contrast holding in one '
-      + 'says nothing about the other.',
+      'Enforced on every view, every open surface and every state a rejection produces, in both '
+      + 'colour schemes — the stylesheet defines a second palette under `prefers-color-scheme: '
+      + 'dark`, and contrast holding in one says nothing about the other. Error text is drawn on a '
+      + 'translucent tint of its own colour, which takes its lightness from whatever is painted '
+      + 'beneath it, so the ratio is a fact about the state and not about the token: both palettes '
+      + 'moved once a scan reached the states that draw them.',
   },
   {
     criterion: '1.4.4',
