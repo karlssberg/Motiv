@@ -1,3 +1,5 @@
+using Motiv.Traversal;
+
 namespace Motiv.Tests.Traversal;
 
 /// <summary>
@@ -160,11 +162,11 @@ public class EvaluationFoldTests
     }
 
     /// <summary>
-    /// A concurrent operator nested <em>inside</em> a folded one: the fold has to recognise it and hand
-    /// it back its own evaluation rather than descending into it.
+    /// A concurrent operator nested <em>inside</em> a folded one: the fold has to recognise it and fold
+    /// it as a region — both operands started at once, each exactly once — rather than as a frame.
     /// </summary>
     [Fact]
-    public async Task Should_leave_a_nested_concurrent_operator_to_evaluate_itself()
+    public async Task Should_fold_a_nested_concurrent_operator_as_a_region()
     {
         var left = Counting(_ => true);
         var right = Counting(_ => true);
@@ -175,6 +177,24 @@ public class EvaluationFoldTests
         result.Satisfied.ShouldBeTrue();
         left.Evaluations.ShouldBe(1);
         right.Evaluations.ShouldBe(1);
+    }
+
+    /// <summary>
+    /// The contract the region walk rests on, enforced rather than assumed: a concurrent operation is
+    /// binary and eager, so one that reports <c>IsConcurrent</c> and then supplies no second operand is
+    /// refused with a message that names it — not a <see cref="NullReferenceException" /> from inside
+    /// the fold. No shipped operator can do this; the case exists for the next one.
+    /// </summary>
+    [Fact]
+    public async Task Should_refuse_a_concurrent_operation_that_supplies_no_second_operand()
+    {
+        var operation = new UnaryConcurrentOperation(Always().ToAsyncSpec());
+
+        var exception = await Should.ThrowAsync<InvalidOperationException>(
+            async () => await AsyncEvaluationFold.EvaluateAsync(operation, 0, CancellationToken.None));
+
+        exception.Message.ShouldContain(nameof(UnaryConcurrentOperation));
+        exception.Message.ShouldContain("no second operand");
     }
 
     /// <summary>
@@ -212,6 +232,34 @@ public class EvaluationFoldTests
         Spec.Build((int _) => false).Create("never");
 
     private static CountingSpec Counting(Func<int, bool> predicate) => new(predicate);
+
+    /// <summary>A concurrent operation with one operand — the shape the contract forbids.</summary>
+    private sealed class UnaryConcurrentOperation(AsyncSpecBase<int, string> operand)
+        : AsyncSpecBase<int, string>, IAsyncFoldableOperation<int, string>
+    {
+        public override IEnumerable<SpecBase> Underlying => [operand];
+
+        public override ISpecDescription Description => operand.Description;
+
+        public override ValueTask<bool> MatchesAsync(int model, CancellationToken cancellationToken = default) =>
+            AsyncEvaluationFold.MatchesAsync(this, model, cancellationToken);
+
+        protected override ValueTask<BooleanResultBase<string>> EvaluateSpecAsync(
+            int model,
+            CancellationToken cancellationToken) =>
+            AsyncEvaluationFold.EvaluateAsync(this, model, cancellationToken);
+
+        public AsyncSpecBase<int, string> FirstOperand => operand;
+
+        public AsyncSpecBase<int, string>? NextOperand(bool firstSatisfied) => null;
+
+        public BooleanResultBase<string> Combine(BooleanResultBase<string> first, BooleanResultBase<string>? second) =>
+            first;
+
+        public bool CombineMatches(bool first, bool? second) => first;
+
+        public bool IsConcurrent => true;
+    }
 
     private sealed class CountingSpec
     {
