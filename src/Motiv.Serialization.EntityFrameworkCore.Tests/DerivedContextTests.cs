@@ -1,4 +1,3 @@
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Motiv.Serialization;
@@ -29,7 +28,7 @@ public class DerivedContextTests
         {
             var services = new ServiceCollection();
             services.AddMotivEntityFrameworkStore<AppStoreDbContext>(
-                options => options.UseSqlite($"Data Source={path}"));
+                options => options.UseSqlite(ConnectionString(path)));
 
             await using var provider = services.BuildServiceProvider();
 
@@ -76,7 +75,7 @@ public class DerivedContextTests
         {
             var services = new ServiceCollection();
             services.AddMotivEntityFrameworkStore<AppStoreDbContext>(
-                options => options.UseSqlite($"Data Source={path}"));
+                options => options.UseSqlite(ConnectionString(path)));
 
             await using var provider = services.BuildServiceProvider();
 
@@ -113,10 +112,15 @@ public class DerivedContextTests
     private static string TempDatabasePath() =>
         Path.Combine(Path.GetTempPath(), $"motiv-derived-{Guid.NewGuid():N}.db");
 
+    /// <summary>
+    /// Pooling off, so teardown has nothing to release. <c>SqliteConnection.ClearAllPools()</c> is
+    /// process-global and these classes run in parallel with every other fixture in the assembly
+    /// (<see href="https://github.com/karlssberg/Motiv/issues/219">#219</see>).
+    /// </summary>
+    private static string ConnectionString(string path) => $"Data Source={path};Pooling=False";
+
     private static void Cleanup(string path)
     {
-        // Pooled connections keep a handle on the file, so the delete below fails without this.
-        SqliteConnection.ClearAllPools();
         if (File.Exists(path))
             File.Delete(path);
     }

@@ -1,4 +1,3 @@
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Motiv.Serialization.EntityFrameworkCore;
@@ -9,6 +8,13 @@ namespace Motiv.Serialization.EntityFrameworkCore.Tests;
 /// A throwaway SQLite database on disk, plus a context factory over it. On disk rather than
 /// in-memory so the primary key and the transactions under test are the database's own.
 /// </summary>
+/// <remarks>
+/// Pooling is off so the file can be deleted at teardown, matching <c>SqliteDecisionFixture</c> in
+/// Motiv.Serialization.Sql.Tests. The alternative, <c>SqliteConnection.ClearAllPools()</c>, is
+/// process-global — and xunit runs test classes in parallel, so one fixture's teardown reached into
+/// every other live fixture's pool and disposed a connection handle out from under it
+/// (<see href="https://github.com/karlssberg/Motiv/issues/219">#219</see>).
+/// </remarks>
 public sealed class SqliteStoreFixture : IAsyncDisposable
 {
     private readonly string _path;
@@ -18,6 +24,12 @@ public sealed class SqliteStoreFixture : IAsyncDisposable
         _path = path;
         Factory = factory;
     }
+
+    /// <summary>The database file, so a test can assert teardown actually removed it.</summary>
+    public string DatabasePath => _path;
+
+    /// <summary>The one connection string every context over this database is built from.</summary>
+    private static string ConnectionString(string path) => $"Data Source={path};Pooling=False";
 
     /// <summary>Opens a fresh context per call, as the stores do.</summary>
     public IDbContextFactory<MotivStoreDbContext> Factory { get; }
@@ -31,7 +43,7 @@ public sealed class SqliteStoreFixture : IAsyncDisposable
     public IDbContextFactory<MotivStoreDbContext> FactoryWith(params IInterceptor[] interceptors)
     {
         var options = new DbContextOptionsBuilder<MotivStoreDbContext>()
-            .UseSqlite($"Data Source={_path}")
+            .UseSqlite(ConnectionString(_path))
             .AddInterceptors(interceptors)
             .Options;
         return new TestContextFactory(options);
@@ -42,7 +54,7 @@ public sealed class SqliteStoreFixture : IAsyncDisposable
     {
         var path = Path.Combine(Path.GetTempPath(), $"motiv-store-{Guid.NewGuid():N}.db");
         var options = new DbContextOptionsBuilder<MotivStoreDbContext>()
-            .UseSqlite($"Data Source={path}")
+            .UseSqlite(ConnectionString(path))
             .Options;
         var factory = new TestContextFactory(options);
 
@@ -55,8 +67,8 @@ public sealed class SqliteStoreFixture : IAsyncDisposable
     /// <inheritdoc />
     public ValueTask DisposeAsync()
     {
-        // Pooled connections keep a handle on the file, so the delete below fails without this.
-        SqliteConnection.ClearAllPools();
+        // No pool clear here on purpose: see the remarks above. Nothing holds a handle, so the file
+        // is deletable as it stands.
         if (File.Exists(_path))
             File.Delete(_path);
         return ValueTask.CompletedTask;
