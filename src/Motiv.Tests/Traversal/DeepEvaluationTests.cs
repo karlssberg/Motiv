@@ -113,6 +113,31 @@ public class DeepEvaluationTests
         OnASmallStack(() => AsyncPolicyChain(operation)
             .EvaluateAsync(2).AsTask().GetAwaiter().GetResult().Value.ShouldNotBeNull());
 
+    /// <summary>
+    /// The concurrent operators, which the fold used to decline: a fan-out is not a walk, so it was
+    /// left to evaluate itself and a nest of them recursed once per layer. Measured out of process on
+    /// this thread size, the last depth that returned was between 400 and 450 — the ticket recorded 669
+    /// on its own runtime, which is the other reason not to pin a number
+    /// (<see href="https://github.com/karlssberg/Motiv/issues/145">#145</see>). All three, because each
+    /// carried its own copy of the fan-out.
+    /// </summary>
+    [Theory]
+    [InlineData("and")]
+    [InlineData("or")]
+    [InlineData("xor")]
+    public void Should_evaluate_a_deep_concurrent_chain(string operation) =>
+        OnASmallStack(() => _ = ConcurrentChain(operation)
+            .EvaluateAsync(2).AsTask().GetAwaiter().GetResult().Satisfied);
+
+    /// <summary>
+    /// The outcome-only path, which had a fan-out of its own and so a ceiling of its own — the two
+    /// entry points share a driver but not a state machine.
+    /// </summary>
+    [Fact]
+    public void Should_match_a_deep_concurrent_And_chain() =>
+        OnASmallStack(() => ConcurrentChain("and")
+            .MatchesAsync(2).AsTask().GetAwaiter().GetResult().ShouldBeTrue());
+
     [Fact]
     public void Should_match_a_deep_async_And_chain() =>
         OnASmallStack(() => AsyncChain((left, right) => left.And(right))
@@ -152,6 +177,14 @@ public class DeepEvaluationTests
     private static AsyncSpecBase<int, string> AsyncChain(
         Func<AsyncSpecBase<int, string>, AsyncSpecBase<int, string>, AsyncSpecBase<int, string>> combine) =>
         Operand().Take(Operands).Select(spec => spec.ToAsyncSpec()).Aggregate(combine);
+
+    private static AsyncSpecBase<int, string> ConcurrentChain(string operation) =>
+        AsyncChain((left, right) => operation switch
+        {
+            "and" => left.AndConcurrently(right),
+            "or" => left.OrConcurrently(right),
+            _ => left.XOrConcurrently(right)
+        });
 
     private static AsyncPolicyBase<int, string> AsyncPolicyChain(string operation) =>
         Enumerable

@@ -2,8 +2,8 @@ namespace Motiv.Traversal;
 
 /// <summary>
 /// The asynchronous counterpart of <see cref="IFoldableOperation{TModel,TMetadata}" />: a logical
-/// operation <see cref="AsyncEvaluationFold" /> can fold — unless it evaluates its operands
-/// concurrently, which is a fan-out rather than a walk. See <see cref="IsConcurrent" />.
+/// operation <see cref="AsyncEvaluationFold" /> can fold, whether it evaluates its operands in order or
+/// all at once. See <see cref="IsConcurrent" />.
 /// </summary>
 /// <remarks>
 /// Awaiting a synchronously-completing <see cref="ValueTask{TResult}" /> resumes on the same stack, so
@@ -33,13 +33,21 @@ internal interface IAsyncFoldableOperation<TModel, TMetadata>
     bool CombineMatches(bool first, bool? second);
 
     /// <summary>
-    /// Whether this operation evaluates its operands concurrently, in which case the driver leaves it to
-    /// evaluate itself.
+    /// Whether this operation evaluates its operands concurrently, in which case the driver folds it
+    /// as a region rather than as a frame.
     /// </summary>
     /// <remarks>
-    /// Concurrency is a fan-out rather than a walk, and folding it would mean a genuinely parallel
-    /// driver. It is also unreachable from a rule document — <c>AsyncRuleBinder</c> composes only
-    /// sequential operators — so the depth it can recurse to is the depth an author writes by hand.
+    /// Concurrency is a fan-out rather than a walk, so the two are folded by different loops: a frame's
+    /// operands are ordered and a concurrent operation's are not. The driver absorbs an unbroken run of
+    /// concurrent operations into one region and starts every operand at its boundary together
+    /// (<see href="https://github.com/karlssberg/Motiv/issues/145">#145</see>). Until then the driver
+    /// left such a node to evaluate itself, which recursed once per layer.
+    /// <para>
+    /// <b>The flag also says <em>eager</em>, and the region walk depends on it.</b> A concurrent
+    /// operation starts both operands regardless of outcome, so <see cref="NextOperand" /> returns the
+    /// same operand whichever outcome it is told — which is what lets the region's shape be read off the
+    /// composition without evaluating anything.
+    /// </para>
     /// </remarks>
     bool IsConcurrent { get; }
 }

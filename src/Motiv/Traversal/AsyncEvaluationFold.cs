@@ -20,6 +20,10 @@ namespace Motiv.Traversal;
 /// <see cref="EvaluationBudget" />, and
 /// <see href="https://github.com/karlssberg/Motiv/issues/204">#204</see> for why this arrived a change
 /// later than the synchronous half.</item>
+/// <item>A concurrent operation is folded by a second loop rather than the frame machine, because its
+/// operands are not ordered with respect to each other. See
+/// <see cref="FoldConcurrentlyAsync{TModel,TMetadata,TValue,TDriver}" /> and
+/// <see href="https://github.com/karlssberg/Motiv/issues/145">#145</see>.</item>
 /// </list>
 /// </remarks>
 internal static class AsyncEvaluationFold
@@ -63,6 +67,11 @@ internal static class AsyncEvaluationFold
         // execution context every continuation below captures. See EvaluationBudget.EnterAsync.
         using var budget = EvaluationBudget.EnterAsync();
 
+        if (root.IsConcurrent)
+            return await FoldConcurrentlyAsync<TModel, TMetadata, TValue, TDriver>(
+                    root, model, budget, cancellationToken)
+                .ConfigureAwait(false);
+
         var frames = new Frame<TModel, TMetadata, TValue>[InitialCapacity];
         frames[0] = new Frame<TModel, TMetadata, TValue>(root);
         var depth = 1;
@@ -100,8 +109,17 @@ internal static class AsyncEvaluationFold
 
             budget.Charge();
 
-            if (next is IAsyncFoldableOperation<TModel, TMetadata> { IsConcurrent: false } operation)
+            if (next is IAsyncFoldableOperation<TModel, TMetadata> operation)
             {
+                if (operation.IsConcurrent)
+                {
+                    completed = await FoldConcurrentlyAsync<TModel, TMetadata, TValue, TDriver>(
+                            operation, model, budget, cancellationToken)
+                        .ConfigureAwait(false);
+                    hasCompleted = true;
+                    continue;
+                }
+
                 if (depth == frames.Length)
                     Array.Resize(ref frames, depth * 2);
 
@@ -113,6 +131,120 @@ internal static class AsyncEvaluationFold
             hasCompleted = true;
         }
     }
+
+    /// <summary>
+    /// Folds a <em>region</em> of concurrent operations — <paramref name="root" /> and every concurrent
+    /// operation reachable from it through an unbroken run of them — as one fan-out: every operand at the
+    /// region's boundary is started at once, and the region is composed from their answers afterwards.
+    /// </summary>
+    /// <remarks>
+    /// <b>The nest already meant "start every one of these at once", and the nesting was only how that
+    /// was spelled.</b> <c>a.AndConcurrently(b.AndConcurrently(c))</c> starts <c>a</c> and the inner node
+    /// together, and the inner node starts <c>b</c> and <c>c</c> the moment it is reached, so all three
+    /// are in flight either way. Flattening the region therefore preserves the concurrency exactly rather
+    /// than approximating it — what it drops is the <c>Task.WhenAll</c> per layer, and with it the stack
+    /// frame per layer that put a nest's ceiling at a few hundred
+    /// (<see href="https://github.com/karlssberg/Motiv/issues/145">#145</see>).
+    /// <para>
+    /// This is a second loop rather than a case in the frame machine because the two disagree about
+    /// exactly one thing: a frame's operands are ordered — the second is asked for only once the first
+    /// has answered, which is what makes short-circuiting expressible — and a concurrent operation's are
+    /// not. What lets the region be walked without evaluating anything is that concurrency implies
+    /// eagerness: <c>NextOperand</c> returns the same operand whichever outcome it is told, so the
+    /// region's shape is a property of the composition rather than of the run.
+    /// </para>
+    /// <para>
+    /// The walk is breadth-first by construction — appending to a list being indexed forward — so it
+    /// costs no stack of its own, and every node's operands sit at a higher index than the node, which is
+    /// what lets the composing pass run backwards over one array.
+    /// </para>
+    /// <para>
+    /// <b>What is charged, and why it is the region rather than its boundary.</b> Nothing walked these
+    /// nodes before, so nothing charged them: a fan-out reached from a fold was charged by that fold as
+    /// an operand and its nested siblings by no one, which made a nest of any depth cost the budget one
+    /// node. That was invisible while the stack capped the depth at a few hundred, and is not now. So the
+    /// region charges each concurrent node it absorbs. It does not charge an operand it hands to a fold
+    /// of its own, which charges its root on entry — charging here as well would count it twice.
+    /// </para>
+    /// </remarks>
+    private static async ValueTask<TValue> FoldConcurrentlyAsync<TModel, TMetadata, TValue, TDriver>(
+        IAsyncFoldableOperation<TModel, TMetadata> root,
+        TModel model,
+        EvaluationBudget.Ownership budget,
+        CancellationToken cancellationToken)
+        where TDriver : struct, IAsyncFoldDriver<TModel, TMetadata, TValue>
+    {
+        var driver = default(TDriver);
+
+        var region = new List<IAsyncFoldableOperation<TModel, TMetadata>> { root };
+        var placements = new List<(int First, int Second)>();
+        var boundary = new List<Task<TValue>>();
+
+        for (var node = 0; node < region.Count; node++)
+        {
+            var operation = region[node];
+            // Both operands, unconditionally: a concurrent operation is binary and eager, which is
+            // the contract IAsyncFoldableOperation.IsConcurrent states and this walk depends on.
+            var first = Place(operation.FirstOperand);
+            var second = Place(
+                operation.NextOperand(firstSatisfied: true) ?? ThrowSecondOperandMissing(operation));
+            placements.Add((first, second));
+        }
+
+        var boundaryValues = await Task.WhenAll(boundary).ConfigureAwait(false);
+
+        var composed = new TValue[region.Count];
+        for (var node = region.Count - 1; node >= 0; node--)
+        {
+            var (first, second) = placements[node];
+            composed[node] = driver.Combine(
+                region[node],
+                Value(first),
+                Value(second),
+                hasSecond: true);
+        }
+
+        return composed[0];
+
+        // A concurrent operand is absorbed into the region and answered by this fold; any other is
+        // started now and answered by the task it returns. The two are told apart by the sign of the
+        // placement: a region index is non-negative, a boundary index is its bitwise complement.
+        int Place(AsyncSpecBase<TModel, TMetadata> operand)
+        {
+            switch (operand)
+            {
+                case IAsyncFoldableOperation<TModel, TMetadata> { IsConcurrent: true } nested:
+                    budget.Charge();
+                    region.Add(nested);
+                    return region.Count - 1;
+
+                case IAsyncFoldableOperation<TModel, TMetadata>:
+                    break; // Charged by the fold it is about to enter, as that fold's root.
+
+                default:
+                    budget.Charge();
+                    break;
+            }
+
+            boundary.Add(driver.LeafAsync(operand, model, cancellationToken).AsTask());
+            return ~(boundary.Count - 1);
+        }
+
+        TValue Value(int placement) =>
+            placement >= 0 ? composed[placement] : boundaryValues[~placement];
+    }
+
+    /// <summary>
+    /// The refusal of a concurrent operation that breaks the contract the region walk rests on. Kept
+    /// out of the walk so that a branch never taken does not weigh against inlining the loop it sits in.
+    /// </summary>
+    private static AsyncSpecBase<TModel, TMetadata> ThrowSecondOperandMissing<TModel, TMetadata>(
+        IAsyncFoldableOperation<TModel, TMetadata> operation) =>
+        throw new InvalidOperationException(
+            $"{operation.GetType().Name} reports {nameof(IAsyncFoldableOperation<TModel, TMetadata>.IsConcurrent)} " +
+            "but supplied no second operand. A concurrent operation is binary and eager: " +
+            $"{nameof(IAsyncFoldableOperation<TModel, TMetadata>.NextOperand)} must return an operand " +
+            "whichever outcome it is told.");
 
     private struct Frame<TModel, TMetadata, TValue>(IAsyncFoldableOperation<TModel, TMetadata> operation)
     {

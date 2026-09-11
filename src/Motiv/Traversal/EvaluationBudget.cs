@@ -57,8 +57,8 @@ namespace Motiv.Traversal;
 /// An asynchronous evaluation cannot use one: a continuation may resume on a thread whose slot holds a
 /// <em>suspended</em> evaluation's count — not a stale one, a live one — so two interleaved evaluations
 /// would corrupt each other's counts in both directions. It therefore carries a <see cref="Counter" />
-/// in an <see cref="AsyncLocal{T}" />, which flows into continuations and into the branches of a
-/// concurrent fan-out (<see href="https://github.com/karlssberg/Motiv/issues/204">#204</see>).
+/// in an <see cref="AsyncLocal{T}" />, which flows into continuations and into the operands a concurrent
+/// operation starts at once (<see href="https://github.com/karlssberg/Motiv/issues/204">#204</see>).
 /// </para>
 /// <para>
 /// <b>The flowed counter outranks the thread-static, and that is what keeps the seam from moving.</b>
@@ -99,7 +99,6 @@ internal static class EvaluationBudget
     /// <remarks>
     /// The root is charged unconditionally because it is a node no one else has charged: a nested fold's
     /// root is the spec a decorator wraps, and the fold above charged the decorator rather than it.
-    /// <see cref="EnterFanOut" /> is the one entry where that is not true.
     /// </remarks>
     internal static Ownership Enter()
     {
@@ -140,27 +139,6 @@ internal static class EvaluationBudget
     }
 
     /// <summary>
-    /// The entry for a concurrent operator's fan-out, which is not a fold: it evaluates both operands at
-    /// once and each enters a fold of its own, so without a counter reachable from both the bound would
-    /// apply per branch.
-    /// </summary>
-    /// <remarks>
-    /// It differs from <see cref="EnterAsync" /> in one respect, and the difference is which node is
-    /// being entered. A fold's root is the node <em>below</em> whatever reached it; a fan-out's root is
-    /// the concurrent node itself, which the fold above already charged as an operand. Charging here as
-    /// well would count it twice — so it is charged only when nothing reached it, which is to say when
-    /// the concurrent node is the whole evaluation.
-    /// </remarks>
-    internal static Ownership EnterFanOut()
-    {
-        var flowing = Flowing.Value;
-        if (flowing is null)
-            return BeginFlowing();
-
-        return new Ownership(flowing, owned: false); // Deliberately uncharged; see the remarks above.
-    }
-
-    /// <summary>
     /// Begins an asynchronous evaluation: publishes a fresh <see cref="Counter" /> to the execution
     /// context, charges the node that opened it, and takes ownership so that the count is released
     /// however the evaluation leaves.
@@ -181,9 +159,10 @@ internal static class EvaluationBudget
     }
 
     /// <summary>
-    /// Charges one node to a flowed counter. Interlocked because a concurrent operator's two branches
-    /// share it: <c>AsyncAndSpec</c> and its siblings fan out through <see cref="Task.WhenAll(Task[])" />
-    /// and the execution context flows into both, so both reach this box.
+    /// Charges one node to a flowed counter. Interlocked because a concurrent operator's operands share
+    /// it: <see cref="AsyncEvaluationFold" /> starts them together through
+    /// <see cref="Task.WhenAll(Task[])" /> and the execution context flows into each, so each reaches
+    /// this box.
     /// </summary>
     /// <remarks>
     /// The bound is checked on every increment rather than sampled. A fan-out can pass it in two branches

@@ -30,6 +30,9 @@ Each is declared on `AsyncSpecBase<TModel, TMetadata>`, with an overload accepti
   sequentially; use `AndAlso()`/`OrElse()` (sequential) when short-circuiting is required, since skipping an
   operand entirely is incompatible with starting it concurrently.
 - **Exceptions propagate as `Task.WhenAll` propagates them.**
+- **Nesting them is flat.** An unbroken run of concurrent operators is folded into a single fan-out
+  that starts every operand at its boundary together, so a nest costs no stack per layer and composes
+  to any depth. See [Limits](../limits/index.md).
 
 ## Example
 
