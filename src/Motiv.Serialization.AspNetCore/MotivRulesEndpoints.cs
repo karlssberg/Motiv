@@ -66,7 +66,7 @@ public static class MotivRulesEndpoints
     /// <c>GET {basePath}/rules/{{name}}</c>, <c>PUT {basePath}/rules/{{name}}</c>, and
     /// <c>DELETE {basePath}/rules/{{name}}</c> for live rule management with optimistic concurrency.
     /// When a <see cref="PropositionSet"/> is resolvable from the endpoint route builder's service
-    /// provider (i.e. <see cref="MotivRulesBuilder.AddPropositions"/> was called), the
+    /// provider (i.e. <see cref="MotivRulesBuilder.AddPropositions(IPropositionStore)"/> was called), the
     /// <c>{basePath}/propositions</c> endpoints are mapped against it as well, and documents bind
     /// through its authored layer over the registry, so validate/evaluate resolve the same names the
     /// catalog lists. This overload cannot substitute a different one, so pass the same registry and
