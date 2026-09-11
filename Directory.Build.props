@@ -7,6 +7,24 @@
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <NoWarn>$(NoWarn);NETSDK1233;NU1510;MFFG0002</NoWarn>
 
+        <!--
+          Doc-comment diagnostics, for the projects that set GenerateDocumentationFile (the
+          packable ones). Two kinds arrive together and only one is wanted.
+
+          Enforced, because they refuse a doc comment that CONTRADICTS the code and so go stale
+          the moment something is renamed: CS1574 (cref does not resolve), CS1572 (a <param> for
+          a parameter that does not exist), CS0419 (a cref that names an overload group).
+          TreatWarningsAsErrors above makes each of those fail the build.
+
+          Suppressed, because they refuse ABSENT PROSE rather than wrong prose, and this repo
+          deliberately documents only the parameter carrying a non-obvious contract:
+            CS1591 - a public member has no doc comment at all.
+            CS1573 - some of a member's parameters are documented and some are not.
+          Neither can catch a doc that lies about the code, which is what the gate is for.
+          See docs/superpowers/specs/2026-09-09-doc-comment-validation-gate-design.md.
+        -->
+        <NoWarn>$(NoWarn);CS1591;CS1573</NoWarn>
+
         <!-- Common package metadata -->
         <Authors>Daniel Karlsson</Authors>
         <Copyright>Copyright (c) 2026 Daniel Karlsson</Copyright>

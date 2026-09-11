@@ -146,7 +146,7 @@ public sealed class MotivRulesBuilder
     /// <summary>
     /// Enables the governance workflow: an <see cref="ApprovalGate"/> and a
     /// <see cref="ChangeRequestSet"/> over the <see cref="RuleSet"/> and, when
-    /// <see cref="AddPropositions"/> was also called, the <see cref="PropositionSet"/>. Mounting the
+    /// <see cref="AddPropositions(IPropositionStore)"/> was also called, the <see cref="PropositionSet"/>. Mounting the
     /// endpoints then adds the <c>change-requests</c> routes and — the point of the whole exercise —
     /// routes every direct write through the same gate, so the ungoverned surface cannot be used to
     /// walk around the ceremony.
@@ -154,7 +154,7 @@ public sealed class MotivRulesBuilder
     /// <remarks>
     /// The gate's default is permissive, so enabling governance changes no response until a gate
     /// document is installed. Both singletons are built from factories, so this may be called before
-    /// or after <see cref="AddPropositions"/> — the set that exists when the workflow is first
+    /// or after <see cref="AddPropositions(IPropositionStore)"/> — the set that exists when the workflow is first
     /// resolved is the one it governs.
     /// </remarks>
     /// <param name="gateStore">Where the active gate document persists, or null to run without persistence.</param>
@@ -243,7 +243,7 @@ public sealed class MotivRulesBuilder
     /// <returns>This builder, to allow chained registration.</returns>
     /// <exception cref="InvalidOperationException">Refresh is already enabled. DI is last-wins, so a
     /// second call would silently discard the first interval and, worse, register a second
-    /// <see cref="IHostedService"/> slot resolving the same <see cref="MotivRefreshService"/>
+    /// <see cref="Microsoft.Extensions.Hosting.IHostedService"/> slot resolving the same <see cref="MotivRefreshService"/>
     /// singleton — two concurrent poll loops against one store and one <c>LastReport</c> — rather
     /// than layering onto the first call.</exception>
     public MotivRulesBuilder AddRefresh(TimeSpan? interval = null)
@@ -271,15 +271,15 @@ public sealed class MotivRulesBuilder
 }
 
 /// <summary>
-/// Whether <see cref="MotivRulesBuilder.AddRuleStore"/> should stop startup on quarantine. Public so a
+/// Whether <see cref="MotivRulesBuilder.AddRuleStore(IRuleStore,bool)"/> should stop startup on quarantine. Public so a
 /// host that registers an <see cref="IRuleStore"/> directly on <see cref="IServiceCollection"/> —
 /// documented on <see cref="MotivRulesServiceCollectionExtensions.AddMotivRules"/> as a supported
-/// escape hatch from <see cref="MotivRulesBuilder.AddRuleStore"/> — can still register this and have
+/// escape hatch from <see cref="MotivRulesBuilder.AddRuleStore(IRuleStore,bool)"/> — can still register this and have
 /// its choice honoured, rather than the escape hatch silently and permanently fail-fasting because the
 /// type that carries the setting was unreachable outside this assembly.
 /// </summary>
 /// <param name="FailFastOnQuarantine">
-/// See <see cref="MotivRulesBuilder.AddRuleStore"/>'s parameter of the same name.
+/// See <see cref="MotivRulesBuilder.AddRuleStore(IRuleStore,bool)"/>'s parameter of the same name.
 /// </param>
 public sealed record RuleStoreOptions(bool FailFastOnQuarantine);
 

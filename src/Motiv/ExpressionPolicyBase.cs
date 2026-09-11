@@ -112,7 +112,7 @@ public abstract class ExpressionPolicyBase<TModel, TMetadata> : PolicyBase<TMode
 
     /// <summary>
     /// Combines this policy with an ordinary <see cref="PolicyBase{TModel,TMetadata}"/> operand using the
-    /// Policy-Also combinator (see <see cref="PolicyBase{TModel,TMetadata}.AndAlso"/>). Redeclared here (rather
+    /// Policy-Also combinator (see <see cref="PolicyBase{TModel,TMetadata}.AndAlso(PolicyBase{TModel,TMetadata})"/>). Redeclared here (rather
     /// than relying on the inherited base implementation) so this overload remains a candidate of equal
     /// declaring-type precedence to <see cref="AndAlso{TSpec}"/> and the same-metadata <see cref="SpecBase{TModel,TMetadata}"/>
     /// overload below, preserving overload resolution parity and the distinct Policy-Also return type.
@@ -232,7 +232,7 @@ public abstract class ExpressionPolicyBase<TModel, TMetadata> : PolicyBase<TMode
 
     /// <summary>
     /// Combines this policy with an ordinary <see cref="PolicyBase{TModel,TMetadata}"/> alternative using the
-    /// Policy-Else combinator (see <see cref="PolicyBase{TModel,TMetadata}.OrElse"/>). Redeclared here (rather
+    /// Policy-Else combinator (see <see cref="PolicyBase{TModel,TMetadata}.OrElse(PolicyBase{TModel,TMetadata})"/>). Redeclared here (rather
     /// than relying on the inherited base implementation) so this overload remains a candidate of equal
     /// declaring-type precedence to <see cref="OrElse{TSpec}"/> and the same-metadata <see cref="SpecBase{TModel,TMetadata}"/>
     /// overload below, preserving overload resolution parity and the distinct Policy-Else return type.

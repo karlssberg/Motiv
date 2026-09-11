@@ -12,8 +12,8 @@ namespace Motiv.Tests.Traversal;
 /// <remarks>
 /// The asynchronous side has three shapes the synchronous side does not, and each is a case here:
 /// <list type="number">
-/// <item>a <b>concurrent operator</b>, which is a fan-out rather than a walk, so it is not folded and
-/// its two branches run at once against one counter;</item>
+/// <item>a <b>concurrent operator</b>, which is a fan-out rather than a walk: the fold absorbs a run of
+/// them into one region and starts every operand at its boundary at once, against one counter;</item>
 /// <item>a <b>synchronous sub-composition</b> reached through <c>ToAsyncSpec()</c>, which runs a
 /// synchronous fold inside an asynchronous evaluation — the seam where an asymmetry would otherwise
 /// move rather than disappear;</item>
@@ -113,6 +113,36 @@ public class AsyncEvaluationBudgetTests : IDisposable
         var spec = Leaf(0).And(FlatChain(3).AndConcurrently(FlatChain(3)));
 
         (await spec.EvaluateAsync(2)).Satisfied.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// A <em>nest</em> of concurrent operators, which cost the budget nothing at all until
+    /// <see href="https://github.com/karlssberg/Motiv/issues/145">#145</see>. A fan-out reached from a
+    /// fold was charged by that fold as an operand and the ones beneath it by no one, so a nest of any
+    /// depth counted as one node. That was invisible while the stack capped the depth at a few hundred
+    /// and is not now that the fold walks the whole region.
+    /// </summary>
+    /// <remarks>
+    /// Seven nodes: three concurrent operations and the four leaves at the region's boundary. Charged
+    /// as it was before, the whole nest costs one and a limit of six admits it.
+    /// </remarks>
+    [Fact]
+    public async Task Should_charge_every_node_of_a_concurrent_nest()
+    {
+        MotivLimits.MaxEvaluationSize = 6;
+
+        var spec = ConcurrentNest(leaves: 4);
+
+        await Should.ThrowAsync<SpecException>(async () => await spec.EvaluateAsync(2));
+    }
+
+    /// <summary>The companion, so the case above cannot pass on a limit that was simply mean.</summary>
+    [Fact]
+    public async Task Should_admit_a_concurrent_nest_of_exactly_the_limit()
+    {
+        MotivLimits.MaxEvaluationSize = 7;
+
+        (await ConcurrentNest(leaves: 4).EvaluateAsync(2)).Satisfied.ShouldBeTrue();
     }
 
     /// <summary>
@@ -240,6 +270,9 @@ public class AsyncEvaluationBudgetTests : IDisposable
 
     private static AsyncSpecBase<int, string> FlatChain(int operands) =>
         Enumerable.Range(0, operands).Select(Leaf).Aggregate((left, right) => left.And(right));
+
+    private static AsyncSpecBase<int, string> ConcurrentNest(int leaves) =>
+        Enumerable.Range(0, leaves).Select(Leaf).Aggregate((left, right) => left.AndConcurrently(right));
 
     private static SpecBase<int, string> SyncLeaf(int index) =>
         Spec.Build((int n) => n % 2 == 0).Create($"s{index} is even");

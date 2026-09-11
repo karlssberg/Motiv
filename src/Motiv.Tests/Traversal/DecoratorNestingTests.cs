@@ -20,9 +20,15 @@ namespace Motiv.Tests.Traversal;
 /// alternating operator / decorator          Matches             1,235
 /// async minimal decorator nest              EvaluateAsync       1,302
 /// async alternating                         EvaluateAsync         261
-/// AndConcurrently nest                      EvaluateAsync         669
-/// AndConcurrently nest                      MatchesAsync        1,037
+/// AndConcurrently nest                      EvaluateAsync         669   (removed, #145)
+/// AndConcurrently nest                      MatchesAsync        1,037   (removed, #145)
 /// </code>
+/// The last two rows are history. A concurrent operator was the other recursion Spec 3E left standing,
+/// and <see href="https://github.com/karlssberg/Motiv/issues/145">#145</see> folded it: the driver now
+/// absorbs a run of concurrent operations into one region and starts every operand at its boundary
+/// together, so a nest is flat at any depth and its cover moved to
+/// <see cref="DeepEvaluationTests.Should_evaluate_a_deep_concurrent_chain" />. What remains below is
+/// the decorator recursion, whose ceiling is a measured number rather than a removed one.
 /// The alternating shape is an order of magnitude worse than a pure nest because each decorator layer
 /// costs a whole fold re-entry — <c>EvaluateInternal</c> → <c>EvaluateSpec</c> → <c>Evaluate</c> →
 /// <c>Fold</c> → <c>Combine</c> — rather than one wrapper frame.
@@ -36,7 +42,7 @@ namespace Motiv.Tests.Traversal;
 /// </para>
 /// </remarks>
 /// <remarks>
-/// In the <see cref="MotivLimitsTestCollection" /> despite changing no limit: <c>Concurrent(160)</c>
+/// In the <see cref="MotivLimitsTestCollection" /> despite changing no limit: <c>Alternating(256)</c>
 /// composes well past the 100 that <see cref="DecoratorSeamTests" /> lowers the process-wide
 /// <see cref="MotivLimits.MaxEvaluationSize" /> to, and joining the collection is what keeps that
 /// out of view. The collection's <c>DisableParallelization</c> would do it too, from outside — but
@@ -62,17 +68,6 @@ public class DecoratorNestingTests
         OnASmallStack(() => AsyncAlternating(64)
             .EvaluateAsync(2).AsTask().GetAwaiter().GetResult().Satisfied.ShouldBeTrue());
 
-    /// <summary>
-    /// The other recursion Spec 3E named: <c>AndConcurrently</c> fans out through
-    /// <c>Task.WhenAll</c> rather than walking, so the fold leaves it to evaluate itself. Unreachable
-    /// from a rule document — <c>Motiv.Serialization</c>'s <c>RuleOperator</c> has no concurrent member —
-    /// so this depth is whatever an author writes by hand.
-    /// </summary>
-    [Fact]
-    public void Should_evaluate_a_nest_of_concurrent_operators() =>
-        OnASmallStack(() => Concurrent(160)
-            .EvaluateAsync(2).AsTask().GetAwaiter().GetResult().Satisfied.ShouldBeTrue());
-
     private static SpecBase<int, string> Leaf(int index) =>
         Spec.Build((int n) => n % 2 == 0).Create($"p{index} is even");
 
@@ -94,15 +89,6 @@ public class DecoratorNestingTests
         var spec = Leaf(0).ToAsyncSpec();
         for (var layer = 0; layer < layers; layer++)
             spec = Spec.Build(spec.And(Leaf(layer + 1).ToAsyncSpec())).Create($"layer{layer}");
-
-        return spec;
-    }
-
-    private static AsyncSpecBase<int, string> Concurrent(int layers)
-    {
-        var spec = Leaf(0).ToAsyncSpec();
-        for (var layer = 0; layer < layers; layer++)
-            spec = spec.AndConcurrently(Leaf(layer + 1).ToAsyncSpec());
 
         return spec;
     }

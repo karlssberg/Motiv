@@ -71,7 +71,7 @@ Both halves are required. Neither is sufficient, and the
 `wcag2a`, `wcag2aa`, `wcag21a` and `wcag21aa` rule tags. The `accessibility` job in
 `.github/workflows/ui.yml` runs it on every push and pull request.
 
-It scans on two axes, because a scan that only visits routes checks none of the surfaces that
+It scans on three axes, because a scan that only visits routes checks none of the surfaces that
 matter:
 
 - **Every view** — the rules page, the builder holding a composition, an evaluation with its
@@ -82,6 +82,15 @@ matter:
 - **Every hard surface in the state it is hard in** — the command palette browsing, filtered, and
   filtered to nothing; the modal document viewer; the operator picker's open listbox; a row's
   actions menu; a node's detail panel.
+- **Every state a rejection produces** — a sample model the catalog schema refuses, a document
+  validation rejected (in the modal's error list and on the builder row it names), a quarantined
+  proposition in the explorer and on its highlighted row, and the payload popover refusing the JSON
+  typed into it. These share a cause with the failure banner above: each is `--danger` text on a
+  *translucent tint of itself*, and a translucent fill takes its lightness from whatever is painted
+  beneath it — so the same colour is a different ratio on a pane, a modal, an inset and a
+  highlighted row, and hand-arithmetic against a guessed ground is exactly what the sweep replaces.
+  Adding them moved the dark palette's `--danger` and turned up a 1.3.1 failure in the error lists
+  besides.
 
 Both in **light and dark colour schemes**, since the stylesheet defines two palettes and a contrast
 ratio that holds in one says nothing about the other.
