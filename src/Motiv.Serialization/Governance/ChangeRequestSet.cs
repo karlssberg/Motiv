@@ -26,7 +26,7 @@ namespace Motiv.Serialization;
 /// existing proposition keeps the description it was created with.
 /// </param>
 /// <param name="ChangeNote">
-/// A human-supplied reason for the write, or null to fall back to <see cref="DirectWriteAsync"/>'s
+/// A human-supplied reason for the write, or null to fall back to <see cref="ChangeRequestSet.DirectWriteAsync"/>'s
 /// auto-generated one. A direct write mints no <see cref="ChangeRequest"/> row, so this is the only
 /// place a caller's stated reason can reach the version log.
 /// </param>

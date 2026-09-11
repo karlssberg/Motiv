@@ -51,36 +51,19 @@ internal sealed class AsyncOrSpec<TModel, TMetadata>(
     SpecBase IAsyncBinaryOperationSpec.Left => Left;
 
     /// <summary>
-    /// The concurrent case is a fan-out rather than a walk, so the fold leaves it to evaluate itself
-    /// through <see cref="AsyncConcurrentFanOut" />, which is also where its two branches are given one
-    /// budget to share. The sequential case — the only one a rule document can produce — is folded.
+    /// One entry point for both cases. The concurrent one is a fan-out rather than a walk, but the fold
+    /// absorbs it into a region it starts at once rather than leaving it to evaluate itself — see
+    /// <see cref="AsyncEvaluationFold" /> and
+    /// <see href="https://github.com/karlssberg/Motiv/issues/145">#145</see>.
     /// </summary>
-    public override async ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default)
-    {
-        if (!concurrent)
-            return await AsyncEvaluationFold.MatchesAsync(this, model, cancellationToken).ConfigureAwait(false);
-
-        var (leftMatch, rightMatch) = await AsyncConcurrentFanOut
-            .MatchBothAsync(left, right, model, cancellationToken)
-            .ConfigureAwait(false);
-
-        return leftMatch | rightMatch;
-    }
+    public override ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default) =>
+        AsyncEvaluationFold.MatchesAsync(this, model, cancellationToken);
 
     /// <inheritdoc />
-    protected override async ValueTask<BooleanResultBase<TMetadata>> EvaluateSpecAsync(
+    protected override ValueTask<BooleanResultBase<TMetadata>> EvaluateSpecAsync(
         TModel model,
-        CancellationToken cancellationToken)
-    {
-        if (!concurrent)
-            return await AsyncEvaluationFold.EvaluateAsync(this, model, cancellationToken).ConfigureAwait(false);
-
-        var (leftResult, rightResult) = await AsyncConcurrentFanOut
-            .EvaluateBothAsync(left, right, model, cancellationToken)
-            .ConfigureAwait(false);
-
-        return leftResult.Or(rightResult);
-    }
+        CancellationToken cancellationToken) =>
+        AsyncEvaluationFold.EvaluateAsync(this, model, cancellationToken);
 
     AsyncSpecBase<TModel, TMetadata> IAsyncFoldableOperation<TModel, TMetadata>.FirstOperand => left;
 

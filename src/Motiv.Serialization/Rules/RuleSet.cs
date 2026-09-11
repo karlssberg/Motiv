@@ -24,7 +24,7 @@ public sealed class RuleSet
     /// <remarks>
     /// For a host that also authors propositions, build the rule set from the
     /// <see cref="PropositionSet"/> instead — see
-    /// <see cref="RuleSet(PropositionSet, IRuleStore, RuleSerializerOptions)"/>. This overload opens a binding
+    /// <see cref="RuleSet(PropositionSet, IRuleStore, RuleSerializerOptions, DecisionLog)"/>. This overload opens a binding
     /// scope of its own, which a proposition set built from the same registry could never see into.
     /// </remarks>
     /// <param name="registry">The registry rule documents resolve spec references against.</param>
@@ -807,7 +807,7 @@ public sealed class RuleSet
             ? rule.PrepareUpdate(_serializer, documentJson, expectedVersion)
             : RulePrepareResult.NotFound();
 
-    /// <summary>Prepares a revert without publishing it. See <see cref="PrepareUpdateCore"/>.</summary>
+    /// <summary>Prepares a revert without publishing it. See <see cref="PrepareUpdateCore(string,string,int)"/>.</summary>
     internal RulePrepareResult PrepareRevertCore(string name, int expectedVersion) =>
         Find(name) is { } rule
             ? rule.PrepareRevert(_serializer, expectedVersion)

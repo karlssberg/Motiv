@@ -2,7 +2,9 @@ import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 import type { Result } from 'axe-core';
 // `test` carries the API fixtures (and refuses a call it has none for) — see `stubs.ts`.
-import { expect, test } from './stubs.js';
+import {
+  expect, test, withObjectMetadata, withQuarantinedProposition, withValidationError,
+} from './stubs.js';
 // The one definition of the AA floor. The conformance record's mechanical claims are checked
 // against the same constant, so "enforced by axe" in the report is true of the sweep that runs here
 // rather than of one someone remembers — see `a11y/criteria.ts`.
@@ -200,26 +202,103 @@ const HARD_SURFACES: readonly Surface[] = [
   },
 ];
 
+/**
+ * The surfaces `--danger` colours that no route and no *successful* interaction reaches.
+ *
+ * A third group rather than more `VIEWS`, because what makes each of these unreachable is the same
+ * thing: the state is a rejection. Nothing the app does when it is working produces a schema
+ * violation, a failed document validation, a quarantined proposition or a popover that refuses
+ * what was typed into it — so a sweep of every route and every hard surface still scans none of
+ * them. Ticket 4J found a 3.3:1 banner the first time one such state was added; these are the
+ * three that were left, and the point of scanning them is that the ratio is measured against the
+ * ground they are actually composited on rather than a guessed one.
+ */
+const DANGER_SURFACES: readonly Surface[] = [
+  {
+    name: 'the evaluate pane, rejecting the sample model against the catalog schema',
+    reach: async (page) => {
+      await visit(page, '/#/rules');
+      await page.getByLabel('sample model').fill('{ "age": "thirty", "isActive": "yes" }');
+      await page.getByRole('button', { name: 'Evaluate' }).click();
+      await expect(page.getByRole('list', { name: 'schema violations' })).toBeVisible();
+    },
+  },
+  {
+    name: 'the document modal, over a document validation rejected',
+    reach: async (page) => {
+      await withValidationError(page);
+      await visit(page, '/#/rules');
+      await composeRule(page);
+      await page.getByRole('button', { name: 'JSON' }).click();
+      await expect(page.getByRole('list', { name: 'validation errors' })).toBeVisible();
+    },
+  },
+  {
+    name: 'a builder row, carrying the validation error returned for it',
+    reach: async (page) => {
+      await withValidationError(page);
+      await visit(page, '/#/rules');
+      await composeRule(page);
+      await expect(page.getByRole('alert')
+        .filter({ hasText: 'No proposition named' })).toBeVisible();
+    },
+  },
+  {
+    name: 'the explorer, listing a quarantined proposition',
+    reach: async (page) => {
+      await withQuarantinedProposition(page, 'customer.is-verified');
+      await visit(page, '/#/propositions');
+      await page.getByRole('button', { name: 'Open' }).click();
+      await expect(page.getByRole('dialog', { name: 'Propositions' })
+        .getByText('quarantined', { exact: true })).toBeVisible();
+    },
+  },
+  {
+    name: 'the explorer, with the quarantined proposition on the highlighted row',
+    reach: async (page) => {
+      // The badge's tint is drawn over the row, so the selected row — which paints itself
+      // --accent-weak — is a second ground for the same colour and the tighter of the two.
+      await withQuarantinedProposition(page, 'customer.is-verified');
+      await visit(page, '/#/propositions/customer.is-verified');
+      await page.getByRole('button', { name: 'Open' }).click();
+      const row = page.getByRole('treeitem', { selected: true });
+      await expect(row.getByText('quarantined', { exact: true })).toBeVisible();
+    },
+  },
+  {
+    name: 'the payload popover, refusing the JSON typed into it',
+    reach: async (page) => {
+      await withObjectMetadata(page, 'customer.is-active');
+      await visit(page, '/#/rules');
+      await composeRule(page);
+      await page.getByRole('tab', { name: 'DSL' }).click();
+      await page.getByRole('button', { name: 'Edit customer.is-active payload' }).click();
+      const popover = page.getByRole('dialog', { name: 'Payload for customer.is-active' });
+      await popover.getByLabel('When true').fill('{ not json');
+      await popover.getByRole('button', { name: 'Save' }).click();
+      await expect(popover.getByRole('alert')).toContainText('not valid JSON');
+    },
+  },
+];
+
+/** One test per surface: reach the state, then scan whatever that left on screen. */
+function describeSurfaces(title: string, surfaces: readonly Surface[]): void {
+  test.describe(title, () => {
+    for (const surface of surfaces) {
+      test(surface.name, async ({ page }) => {
+        await surface.reach(page);
+        await scan(page);
+      });
+    }
+  });
+}
+
 for (const scheme of ['light', 'dark'] as const) {
   test.describe(`${scheme} scheme`, () => {
     test.use({ colorScheme: scheme });
 
-    test.describe('every view', () => {
-      for (const surface of VIEWS) {
-        test(surface.name, async ({ page }) => {
-          await surface.reach(page);
-          await scan(page);
-        });
-      }
-    });
-
-    test.describe('the hard surfaces, in the state they are hard in', () => {
-      for (const surface of HARD_SURFACES) {
-        test(surface.name, async ({ page }) => {
-          await surface.reach(page);
-          await scan(page);
-        });
-      }
-    });
+    describeSurfaces('every view', VIEWS);
+    describeSurfaces('the hard surfaces, in the state they are hard in', HARD_SURFACES);
+    describeSurfaces('the failure surfaces, in the state that colours them', DANGER_SURFACES);
   });
 }

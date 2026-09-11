@@ -38,6 +38,12 @@ public sealed record StoreImportResult(bool Imported, int RuleVersions, int Prop
 public static class StoreImport
 {
     /// <summary>
+    /// The <see cref="Exception.Data"/> key under which a cancellation that left a partial import
+    /// carries its description — the same sentence a failure gets in its message.
+    /// </summary>
+    public const string PartialImportDataKey = "Motiv.PartialImport";
+
+    /// <summary>
     /// Copies the propositions and then every rule's version log into a target that must be empty.
     /// </summary>
     /// <remarks>
@@ -55,15 +61,31 @@ public static class StoreImport
     /// partial state, because a partially imported target is not something a retry can fix: it must
     /// be emptied first.
     /// </para>
+    /// <para>
+    /// Cancellation is the one exception to that wrapping. It is not a failure the caller needs
+    /// describing to them — it is their own request, and a caller who cancels for a graceful
+    /// shutdown must still be able to catch it as a cancellation. See
+    /// <paramref name="cancellationToken"/> for where the partial-state description goes instead.
+    /// </para>
     /// </remarks>
     /// <param name="sourceRules">The rule store to read from.</param>
     /// <param name="targetRules">The rule store to write to. Must be empty.</param>
     /// <param name="sourcePropositions">The proposition store to read from.</param>
     /// <param name="targetPropositions">The proposition store to write to. Must be empty.</param>
-    /// <param name="cancellationToken">Cancels the copy. Mid-copy, this is a partial import.</param>
+    /// <param name="cancellationToken">
+    /// Cancels the copy. Mid-copy, this is a partial import — but the cancellation is thrown as
+    /// itself rather than wrapped, so a caller cancelling for a graceful shutdown still catches it
+    /// as one. The partial-state description rides on the exception's
+    /// <see cref="Exception.Data"/> under <see cref="PartialImportDataKey"/>, and is present only
+    /// when something had already been written.
+    /// </param>
     /// <exception cref="InvalidOperationException">
     /// The copy failed after writing something. The target is partially imported and must be
     /// emptied before the import is run again.
+    /// </exception>
+    /// <exception cref="OperationCanceledException">
+    /// The copy was cancelled. If it had already written something, the target is partially
+    /// imported and <see cref="PartialImportDataKey"/> says so.
     /// </exception>
     public static async Task<StoreImportResult> CopyAsync(
         IRuleStore sourceRules,
@@ -93,6 +115,12 @@ public static class StoreImport
 
         var ruleVersions = 0;
         var propositionsWritten = 0;
+
+        // Both catch filters below turn on the same question — has the target been mutated yet? —
+        // and they have to keep giving the same answer, because between them they must cover every
+        // way out of the try. Naming it once is what makes that true by construction.
+        bool WroteSomething() => propositionsWritten > 0 || ruleVersions > 0;
+
         try
         {
             if (propositions.Count > 0)
@@ -126,18 +154,51 @@ public static class StoreImport
                 ruleVersions += history.Count;
             }
         }
+        // Cancellation is excluded here and handled below — see <remarks> for why it is not wrapped,
+        // and DecisionLog, ChangeRequestSet and SqlDecisionSink for the same exclusion. What is not
+        // deducible from the code: the test is on the *type* rather than on
+        // cancellationToken.IsCancellationRequested, because a store cancelling on a linked token —
+        // a request abort, an internal timeout — is still cancelling, and still owes its caller a
+        // cancellation exception rather than a failure report.
         catch (Exception exception) when (exception is not OutOfMemoryException
-                                          && (propositionsWritten > 0 || ruleVersions > 0))
+                                          && exception is not OperationCanceledException
+                                          && WroteSomething())
         {
             throw new InvalidOperationException(
-                $"The import failed after copying {propositionsWritten} proposition(s) and " +
-                $"{ruleVersions} rule version row(s). The target is now PARTIALLY imported: running " +
-                "the import again will not repair it, because a non-empty target is refused and " +
-                "reported as nothing-to-import. Empty the target — drop and recreate its tables — " +
-                $"and run the import again. The failure was: {exception.Message}",
+                DescribePartialImport(propositionsWritten, ruleVersions) +
+                $" The failure was: {exception.Message}",
                 exception);
+        }
+        catch (OperationCanceledException exception) when (WroteSomething())
+        {
+            // Let through as *itself* — the same instance, so its type, token and stack all survive.
+            // Rebuilding it to carry the description would flatten TaskCanceledException, which
+            // derives from this one: the very defect being fixed, one level down. The description
+            // rides on Data instead, because there is nothing to log through here — StoreImport is
+            // static, and the rules telemetry is internal to a package this one cannot see.
+            //
+            // Data is virtual, so a consumer's own cancellation type may return null or a dictionary
+            // that refuses writes. Describing the partial state is a courtesy; delivering the
+            // caller's cancellation is the contract, and the courtesy must never cost the contract —
+            // an unguarded write would replace their cancellation with a NotSupportedException,
+            // which is this ticket's defect again in a different exception type.
+            if (exception.Data is { IsReadOnly: false } data)
+                data[PartialImportDataKey] = DescribePartialImport(propositionsWritten, ruleVersions);
+
+            throw;
         }
 
         return new StoreImportResult(true, ruleVersions, propositions.Count);
     }
+
+    /// <summary>
+    /// The one sentence both exits carry, so a caller reading the wrapper's message and a caller
+    /// reading <see cref="PartialImportDataKey"/> are told the same thing about the same state.
+    /// </summary>
+    private static string DescribePartialImport(int propositionsWritten, int ruleVersions) =>
+        $"The import stopped after copying {propositionsWritten} proposition(s) and " +
+        $"{ruleVersions} rule version row(s). The target is now PARTIALLY imported: running " +
+        "the import again will not repair it, because a non-empty target is refused and " +
+        "reported as nothing-to-import. Empty the target — drop and recreate its tables — " +
+        "and run the import again.";
 }
