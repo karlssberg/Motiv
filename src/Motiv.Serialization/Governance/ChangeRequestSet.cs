@@ -793,6 +793,22 @@ public sealed class ChangeRequestSet
         new(outcome, change, null, errors ?? [], target, conflictVersion, null);
 
     /// <summary>
+    /// Reports an envelope whose rule half is already durable while its proposition half is not.
+    /// </summary>
+    /// <remarks>
+    /// A distinct outcome rather than an ordinary conflict, because the remedy is different: a bare
+    /// retry re-prepares against the <em>unchanged</em> live rule version and collides with the row
+    /// this attempt already wrote, refusing forever. See <c>PersistenceDesynced</c>'s own remarks for
+    /// what the caller must do instead. Two callers reach it — an infrastructure fault, and a
+    /// proposition-store conflict arriving after the rule half committed — and both need the same
+    /// wording, so it is written once.
+    /// </remarks>
+    private static ChangeRequestResult Desynced(ChangeRequest change, string detail) =>
+        new(ChangeRequestOutcome.PersistenceDesynced, change, null,
+            [new RuleError("$", RuleErrorCode.InvalidNode, detail)],
+            null, null, null);
+
+    /// <summary>
     /// Applies a whole change request under one <see cref="BindingScope"/> lock: validate every
     /// edit, then apply every edit. All-validate-then-all-apply is the atomicity mechanism — a
     /// refusal happens while nothing has moved, so a rejected envelope leaves no half-published
@@ -1161,7 +1177,27 @@ public sealed class ChangeRequestSet
             {
                 try
                 {
-                    await propositions!.WriteBatchCoreAsync(batch, cancellationToken).ConfigureAwait(false);
+                    var written = await propositions!
+                        .WriteBatchCoreAsync(batch, cancellationToken).ConfigureAwait(false);
+
+                    // The proposition half now has the same refusal the rule half above has, and for
+                    // the same reason: another replica moved a name this envelope prepared against.
+                    // Nothing of the proposition half landed, so — unlike the catch below — the rule
+                    // half is the only thing that may already be durable, which is what
+                    // PersistenceDesynced is for and a conflict is not.
+                    if (written.IsConflict)
+                    {
+                        return prepared.Rules.Count > 0
+                            ? Desynced(
+                                change,
+                                $"the proposition store refused '{written.Name}' at version " +
+                                $"{written.CurrentVersion} after the rule half was already durably " +
+                                "persisted")
+                            : Failure(
+                                ChangeRequestOutcome.VersionConflict, change,
+                                new ChangeTarget(ChangeTargetKind.Proposition, written.Name!),
+                                conflictVersion: written.CurrentVersion);
+                    }
                 }
                 catch (Exception exception) when (exception is not OperationCanceledException)
                 {
@@ -1174,12 +1210,10 @@ public sealed class ChangeRequestSet
                     // remarks for what the caller must do instead of retrying.
                     // ToString(), not Message: an infrastructure fault is exactly when whoever reads
                     // this needs the exception's type and stack, not just its one-line message.
-                    return new ChangeRequestResult(
-                        ChangeRequestOutcome.PersistenceDesynced, change, null,
-                        [new RuleError("$", RuleErrorCode.InvalidNode,
-                            $"the proposition store failed after the rule half was already durably " +
-                            $"persisted: {exception}")],
-                        null, null, null);
+                    return Desynced(
+                        change,
+                        $"the proposition store failed after the rule half was already durably " +
+                        $"persisted: {exception}");
                 }
             }
 
@@ -1392,7 +1426,8 @@ public sealed class ChangeRequestSet
                     ? null
                     : new PropositionBatch(
                         [.. PropositionPublishes.Select(publish => PropositionSet.RowFor(publish.Edit.Authored!))],
-                        [.. PropositionWithdrawals.Select(withdrawal => withdrawal.Name)]);
+                        [.. PropositionWithdrawals.Select(
+                            withdrawal => PropositionSet.DeletionFor(withdrawal.Edit.Authored!))]);
         }
 
         private static InvalidOperationException Unexpected(ChangeTarget target, string outcome, string detail) =>

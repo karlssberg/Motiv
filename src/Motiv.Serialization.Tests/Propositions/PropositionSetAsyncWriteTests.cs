@@ -19,7 +19,8 @@ public class PropositionSetAsyncWriteTests
             Task.FromResult<IReadOnlyList<StoredProposition>>([]);
         public Task<long> GetGenerationAsync(CancellationToken ct) => Task.FromResult(0L);
 
-        public Task WriteAsync(PropositionBatch batch, CancellationToken cancellationToken) =>
+        public Task<PropositionWriteResult> WriteAsync(
+            PropositionBatch batch, CancellationToken cancellationToken) =>
             throw new IOException("disk full");
     }
 
@@ -32,12 +33,14 @@ public class PropositionSetAsyncWriteTests
         public Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken ct) => _inner.LoadAsync(ct);
         public Task<long> GetGenerationAsync(CancellationToken ct) => _inner.GetGenerationAsync(ct);
 
-        public async Task WriteAsync(PropositionBatch batch, CancellationToken cancellationToken)
+        public async Task<PropositionWriteResult> WriteAsync(
+            PropositionBatch batch, CancellationToken cancellationToken)
         {
             lock (timeline) timeline.Add("proposition-enter");
             await Task.Yield();
-            await _inner.WriteAsync(batch, cancellationToken);
+            var written = await _inner.WriteAsync(batch, cancellationToken);
             lock (timeline) timeline.Add("proposition-exit");
+            return written;
         }
     }
 
@@ -122,12 +125,18 @@ public class PropositionSetAsyncWriteTests
         // Arrange — the batch shape is what makes an envelope all-or-nothing
         var store = new InMemoryPropositionStore();
         await store.WriteAsync(
+            PropositionBatch.Save(new StoredProposition("customer.gone", "customer", Document, 1, null)),
+            default);
+
+        // Act
+        var written = await store.WriteAsync(
             new PropositionBatch(
                 [new StoredProposition("customer.a", "customer", Document, 1, null)],
-                ["customer.gone"]),
+                [new PropositionDeletion("customer.gone", 1)]),
             default);
 
         // Assert
+        written.IsConflict.ShouldBeFalse();
         store.Load().ShouldHaveSingleItem();
         store.Load()[0].Name.ShouldBe("customer.a");
     }

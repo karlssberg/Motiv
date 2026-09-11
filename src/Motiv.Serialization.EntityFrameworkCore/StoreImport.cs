@@ -125,8 +125,17 @@ public static class StoreImport
         {
             if (propositions.Count > 0)
             {
-                await targetPropositions.WriteAsync(
+                var written = await targetPropositions.WriteAsync(
                     new PropositionBatch(propositions, []), cancellationToken);
+
+                if (written.IsConflict)
+                {
+                    throw new InvalidOperationException(
+                        $"Import of proposition '{written.Name}' conflicted at version " +
+                        $"{written.CurrentVersion}. The target was empty when the import began, so " +
+                        "something else is writing to it.");
+                }
+
                 propositionsWritten = propositions.Count;
             }
 

@@ -91,9 +91,17 @@ Three tables, one `MotivStoreDbContext`:
   carried straight through from `RuleChangeProvenance`.
 
 **`MotivProposition`** holds one row per authored proposition, replaced in place on every save
-&mdash; there is no version log on this side, and no conflict outcome; see
+&mdash; there is no version log on this side, so a superseded document is not recoverable; see
 [the rule-side asymmetry](../propositions/IPropositionStore.md#the-asymmetry-with-irulestore) for why
-that is deliberate and what closing it would cost.
+that is deliberate.
+
+`Version` is mapped as a **concurrency token**. That is what makes it a real compare-and-set on a
+table that replaces rows rather than appending them: every generated `UPDATE` and `DELETE` carries
+`AND Version = @original`, so a replica that committed first leaves this one matching no rows and EF
+raises `DbUpdateConcurrencyException` &mdash; the same signal `EfRuleStore` gets from a
+`(Name, Version)` primary-key violation, and equally free of provider error codes. A create is guarded
+by the `Name` primary key. The token emits no DDL of its own; it changes only the `WHERE` clause, so
+it needs no migration. See [Concurrency](../propositions/IPropositionStore.md#concurrency).
 
 **`MotivStoreGeneration`** holds two rows, keyed by scope (`"rules"` and `"propositions"`), because
 the two stores share no sequence &mdash; a rule publish never bumps the propositions generation, and

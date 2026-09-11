@@ -189,6 +189,38 @@ public class StoreImportTests
     }
 
     [Fact]
+    public async Task Should_let_a_proposition_conflict_out_unwrapped_naming_the_proposition()
+    {
+        // Arrange — the proposition batch is the import's first write, so a conflict there lands
+        // before anything has been copied. It must not be wrapped as a partial import — the target is
+        // still empty and a rerun is still clean — but it must still say which proposition and which
+        // version, because "the target was empty when we began" is the precondition it contradicts.
+        var sourcePropositions = new InMemoryPropositionStore();
+        await sourcePropositions.WriteAsync(PropositionBatch.Save(Proposition("customer.p")), default);
+
+        await using var fixture = await SqliteStoreFixture.CreateAsync();
+        var targetPropositions = new ConflictingPropositionStore(new EfPropositionStore(fixture.Factory));
+
+        // Act
+        var act = async () => await StoreImport.CopyAsync(
+            new InMemoryRuleStore(), new EfRuleStore(fixture.Factory),
+            sourcePropositions, targetPropositions, default);
+
+        // Assert — unwrapped, and specific
+        var thrown = await act.ShouldThrowAsync<InvalidOperationException>();
+        thrown.Message.ShouldContain("Import of proposition 'customer.p' conflicted at version 7");
+        thrown.Message.ShouldNotContain("PARTIALLY");
+        thrown.InnerException.ShouldBeNull();
+
+        // And the claim is true: nothing landed, so a rerun against the real store imports cleanly
+        var rerun = await StoreImport.CopyAsync(
+            new InMemoryRuleStore(), new EfRuleStore(fixture.Factory),
+            sourcePropositions, new EfPropositionStore(fixture.Factory), default);
+        rerun.Imported.ShouldBeTrue();
+        rerun.Propositions.ShouldBe(1);
+    }
+
+    [Fact]
     public async Task Should_throw_naming_the_partial_state_when_a_write_fails_mid_import()
     {
         // Arrange — 'a' imports, 'b' fails: the target now holds part of the import, and every
@@ -472,6 +504,24 @@ public sealed class FailingRuleStore(IRuleStore inner, int failOnAppend) : IRule
 /// if a second writer had reached the target at the same time — a value returned, not a thrown
 /// exception, which is a different way for <see cref="StoreImport.CopyAsync"/> to fail mid-import.
 /// </summary>
+/// <summary>
+/// Refuses every write as a conflict, as if another writer had already taken the name — the
+/// proposition-side twin of <see cref="ConflictingRuleStore"/>.
+/// </summary>
+public sealed class ConflictingPropositionStore(IPropositionStore inner) : IPropositionStore
+{
+    public IReadOnlyList<StoredProposition> Load() => inner.Load();
+
+    public Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken cancellationToken) =>
+        inner.LoadAsync(cancellationToken);
+
+    public Task<long> GetGenerationAsync(CancellationToken cancellationToken) =>
+        inner.GetGenerationAsync(cancellationToken);
+
+    public Task<PropositionWriteResult> WriteAsync(PropositionBatch batch, CancellationToken cancellationToken) =>
+        Task.FromResult(PropositionWriteResult.Conflict(batch.Saves[0].Name, 7));
+}
+
 public sealed class ConflictingRuleStore(IRuleStore inner, int conflictOnAppend) : IRuleStore
 {
     private int _appends;

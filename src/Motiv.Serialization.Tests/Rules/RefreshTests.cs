@@ -887,15 +887,17 @@ public class RefreshTests
 
         public Task<long> GetGenerationAsync(CancellationToken ct) => inner.GetGenerationAsync(ct);
 
-        public async Task WriteAsync(PropositionBatch batch, CancellationToken ct)
+        public async Task<PropositionWriteResult> WriteAsync(
+            PropositionBatch batch, CancellationToken ct)
         {
-            await inner.WriteAsync(batch, ct);
+            var written = await inner.WriteAsync(batch, ct);
 
             if (OnWritten is not { } refresh)
-                return;
+                return written;
 
             OnWritten = null;
             await refresh();
+            return written;
         }
     }
 

@@ -63,7 +63,7 @@ public class JsonFilePropositionStoreTests : IDisposable
         await store.WriteAsync(PropositionBatch.Save(Stored("customer.b")), default);
 
         // Act
-        await store.WriteAsync(PropositionBatch.Delete("customer.a"), default);
+        await store.WriteAsync(PropositionBatch.Delete("customer.a", 1), default);
 
         // Assert
         new JsonFilePropositionStore(_path).Load()
@@ -78,7 +78,7 @@ public class JsonFilePropositionStoreTests : IDisposable
         await store.WriteAsync(PropositionBatch.Save(Stored("customer.a")), default);
 
         // Act
-        await store.WriteAsync(new PropositionBatch([Stored("customer.b")], ["customer.a"]), default);
+        await store.WriteAsync(new PropositionBatch([Stored("customer.b")], [new PropositionDeletion("customer.a", 1)]), default);
 
         // Assert
         new JsonFilePropositionStore(_path).Load()
