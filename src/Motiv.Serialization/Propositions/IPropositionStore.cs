@@ -55,6 +55,13 @@ public sealed record PropositionBatch(
     /// and surfacing as whatever that store does with a duplicate.
     /// </para>
     /// <para>
+    /// A deletion at a non-positive version is refused before the lookup is consulted. "No row" and
+    /// "version 0" are the same value on the stored side, so an equality check alone would let a
+    /// deletion claiming version 0 through against an absent name — removing nothing in a dictionary
+    /// store and indexing a missing row in a relational one. No row has ever carried version 0, so no
+    /// deletion can honestly name it. (A save at 0 or below already fails "strictly greater".)
+    /// </para>
+    /// <para>
     /// Call it before writing anything: the batch is all-or-nothing, and in a store with no rollback
     /// refusing up front is what makes that true.
     /// </para>
@@ -72,7 +79,9 @@ public sealed record PropositionBatch(
 
         foreach (var deletion in Deletes)
         {
-            if (!claimed.Add(deletion.Name) || deletion.Version != storedVersion(deletion.Name))
+            if (!claimed.Add(deletion.Name)
+                || deletion.Version < 1
+                || deletion.Version != storedVersion(deletion.Name))
                 return PropositionWriteResult.Conflict(deletion.Name, storedVersion(deletion.Name));
         }
 

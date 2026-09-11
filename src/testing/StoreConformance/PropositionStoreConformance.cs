@@ -179,6 +179,21 @@ public abstract class PropositionStoreConformance : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Should_refuse_a_deletion_at_version_zero()
+    {
+        // Act — "the store holds no row" and "version 0" are the same value on the stored side, so
+        // a deletion claiming version 0 would pass an equality check against an absent name. No row
+        // has ever carried version 0 (creates start at 1), so no deletion can honestly name it: it is
+        // refused outright rather than let through to remove nothing.
+        var result = await Store.WriteAsync(PropositionBatch.Delete("absent", version: 0), default);
+
+        // Assert
+        result.IsConflict.ShouldBeTrue();
+        result.Name!.ShouldBe("absent");
+        result.CurrentVersion.ShouldBe(0);
+    }
+
+    [Fact]
     public async Task Should_refuse_a_batch_that_names_one_proposition_twice()
     {
         // Act — a batch that cannot say what it wants for a name is the same stale-writer signal as

@@ -252,3 +252,56 @@ transactional sequence, and splitting the apply loops out would hide that the tr
 three stores.** It could have moved into the shared helper too. Each store's reason for it genuinely
 differs (a counter, an mtime, a transaction round trip) and each carries its own comment saying so.
 That is the case the CLAUDE.md caution is actually about, sitting three lines above the case it is not.
+
+## The review round
+
+Two findings on the PR, both real, both in what the slice *added* rather than in what it moved.
+
+### Copilot: the deletion that named version zero
+
+`storedVersion(name)` returns `0` for an absent row, and a deletion's predicate was equality. So a
+deletion carrying `Version == 0` against an absent name passed — "0 equals 0" — and then reached the
+store's apply phase: a silent no-op in the dictionary stores, and a `KeyNotFoundException` from
+`rows[deletion.Name]` in the EF store, where the conflict check had been the only thing standing between
+the batch and that indexer.
+
+The fix is one clause in the shared predicate — `deletion.Version < 1` is an immediate conflict — with
+the reasoning written where it lives: **"no row" and "version 0" are the same value on the stored side,
+and no row has ever carried version 0, so no deletion can honestly name it.** A save at 0 was already
+caught by "strictly greater"; the asymmetry between the two predicates is what left the hole on the
+deletion side only.
+
+Two things worth keeping from it:
+
+- **The conformance suite tested "delete absent at v1" and not "delete absent at v0"**, and the
+  difference is exactly the sentinel. When a lookup encodes absence as a value, the test that matters
+  is the one that supplies *that value* — every other input is a different case.
+- **The simplifier's consolidation made this a one-line fix in one place**, and it was made *before*
+  the finding arrived. Three copies would have meant three edits and a fourth conformance case to prove
+  they agreed. That is the argument for the extraction, paid out on the first defect.
+
+### Codecov: the branches nothing reached
+
+Patch coverage flagged `EfPropositionStore` at 73% and `StoreImport` at 17% — the race-classification
+branch after `DbUpdateException`, both of its answers, and the importer's proposition-conflict throw.
+None had a test, because the conformance suite runs a single writer and can reach none of them.
+
+`EfPropositionStoreWriteFailureTests` now mirrors `EfRuleStoreAppendFailureTests` shape for shape —
+an interceptor that throws on the first save, a context factory that lets the "other replica" commit
+before the second handout — and adds one the rule side has no need of: **a direct proof that the
+concurrency token is live against SQLite.** A tracked entity is read with no transaction open, a
+second connection replaces the row and commits, and the first saves against the version it read. With
+the token: `DbUpdateConcurrencyException`. Without it: the stale write silently wins.
+
+That last test earns its place by what the others cannot do. The interceptor tests *inject* the
+exception, so they hold whether or not the mapping exists — removing `IsConcurrencyToken()` reddens
+exactly one test of 57, and it is this one. The interceptor tests pin the **classification**; this one
+pins the **mechanism**. A design whose entire EF argument is "one line of mapping, no DDL" needs the
+test that would notice the line being deleted, and that test is not the one that looks like it.
+
+The importer's throw goes out **unwrapped**, and the test says why: the proposition batch is the
+import's first write, so a conflict there lands before anything has been copied. The target is still
+empty, a rerun is still clean, and the "PARTIALLY imported" wrapper — which is gated on something
+having been written — would be a lie. The test asserts both halves: the message names the proposition
+and version, and a rerun against the real store imports cleanly.
+
