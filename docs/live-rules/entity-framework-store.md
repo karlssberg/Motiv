@@ -42,6 +42,14 @@ builder.Services.AddMotivEntityFrameworkStore(options =>
     options.UseSqlServer("Server=localhost;Database=motiv"));
 ```
 
+**Call it once.** Either overload, once per container; a second call of either &mdash; both
+overloads, one overload twice, or two different derived contexts &mdash; throws
+`InvalidOperationException`. Registering two contexts is not layering: both fill the same
+`IDbContextFactory<MotivStoreDbContext>` slot the two stores resolve, and DI is last-wins, so the
+loser's database would simply never be opened. This is the refusal
+[`AddPropositions` and `AddRuleStore`](durability.md) already make, for the same reason &mdash; an
+argument quietly ignored is worse than a refusal.
+
 This registers `IDbContextFactory<MotivStoreDbContext>` &mdash; a factory, not a scoped `DbContext`,
 because `EfRuleStore` and `EfPropositionStore` are singletons and `DbContext` is not thread-safe. Wire
 both stores from that one factory:
