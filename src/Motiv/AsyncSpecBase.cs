@@ -445,7 +445,7 @@ public abstract class AsyncSpecBase<TModel, TMetadata> : AsyncSpecBase<TModel>
 
     /// <summary>
     /// Combines this specification with another asynchronous specification using the logical AND operator,
-    /// evaluating both operands concurrently. The result is indistinguishable from <see cref="And" /> — the
+    /// evaluating both operands concurrently. The result is indistinguishable from <see cref="And(AsyncSpecBase{TModel,TMetadata})" /> — the
     /// reason, assertions, and justification are identical; only the evaluation strategy differs. Only use
     /// this when both operands' predicates are safe to execute concurrently (e.g. they do not share a
     /// non-thread-safe dependency such as an EF Core DbContext).
@@ -457,7 +457,7 @@ public abstract class AsyncSpecBase<TModel, TMetadata> : AsyncSpecBase<TModel>
 
     /// <summary>
     /// Combines this specification with another asynchronous specification using the logical OR operator,
-    /// evaluating both operands concurrently. The result is indistinguishable from <see cref="Or" /> — the
+    /// evaluating both operands concurrently. The result is indistinguishable from <see cref="Or(AsyncSpecBase{TModel,TMetadata})" /> — the
     /// reason, assertions, and justification are identical; only the evaluation strategy differs. Only use
     /// this when both operands' predicates are safe to execute concurrently (e.g. they do not share a
     /// non-thread-safe dependency such as an EF Core DbContext).
@@ -469,7 +469,7 @@ public abstract class AsyncSpecBase<TModel, TMetadata> : AsyncSpecBase<TModel>
 
     /// <summary>
     /// Combines this specification with another asynchronous specification using the logical XOR operator,
-    /// evaluating both operands concurrently. The result is indistinguishable from <see cref="XOr" /> — the
+    /// evaluating both operands concurrently. The result is indistinguishable from <see cref="XOr(AsyncSpecBase{TModel,TMetadata})" /> — the
     /// reason, assertions, and justification are identical; only the evaluation strategy differs. Only use
     /// this when both operands' predicates are safe to execute concurrently (e.g. they do not share a
     /// non-thread-safe dependency such as an EF Core DbContext).

@@ -6,9 +6,6 @@ namespace Motiv;
 /// <summary>
 /// A collection of boolean results for a set of models.
 /// </summary>
-/// <param name="results">
-/// The boolean results for the models.
-/// </param>
 /// <typeparam name="TModel">
 /// The type of the models.
 /// </typeparam>
