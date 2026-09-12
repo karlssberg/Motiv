@@ -37,6 +37,13 @@ export function EditorPane(props: {
   title?: ReactNode;
   /** The document's name as the DSL surface files it; absent for a nameless draft. */
   documentName?: string | undefined;
+  /**
+   * The document's own actions (JSON, Save), drawn at the end of the header after the surface tabs — on the
+   * pane that holds the document, so they read as belonging to it. Optional: the pages still
+   * draw theirs in the app bar. (Added for the dynamic-tabs prototype; kept because it is the
+   * seam the chosen direction needs.)
+   */
+  actions?: ReactNode | undefined;
 }) {
   const store = useRuleEditorStore();
   const catalogState = useCatalog(props.client);
@@ -68,6 +75,8 @@ export function EditorPane(props: {
             </button>
           ))}
         </div>
+        {/* Last in the row, so Save — the action the document is for — ends it. */}
+        {props.actions !== undefined && <div className="pane-actions">{props.actions}</div>}
       </div>
 
       <div

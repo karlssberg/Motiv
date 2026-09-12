@@ -6,6 +6,8 @@ import { useDocumentTitle } from './routing/useDocumentTitle.js';
 import { RulesPage } from './panes/RulesPage.js';
 import { PropositionsPage } from './panes/PropositionsPage.js';
 import { AdminPage } from './panes/AdminPage.js';
+// PROTOTYPE — throwaway. Mounted on the root route behind `?variant=`; dev builds only.
+import { TabsPrototype } from './prototype/tabs/TabsPrototype.js';
 
 const MODEL_TYPE = 'customer';
 
@@ -37,8 +39,13 @@ export function App(props: { client?: RulesApiClient; store?: RuleEditorStore })
   // a screen reader announces on navigation and what tells two Studio history entries apart.
   useDocumentTitle(route);
 
+  // PROTOTYPE — throwaway. `?variant=A|B|C` swaps the two static pages for the dynamic-tab shell.
+  const prototypeVariant = import.meta.env.DEV ? new URLSearchParams(window.location.search).get('variant') : null;
+
   let page: JSX.Element;
-  if (route.page === 'propositions') {
+  if (prototypeVariant !== null) {
+    page = <TabsPrototype client={client} />;
+  } else if (route.page === 'propositions') {
     page = (
       <PropositionsPage
         client={client}

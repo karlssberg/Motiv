@@ -1,0 +1,195 @@
+/* PROTOTYPE — throwaway. Do not ship. Styles for the dynamic-tab variants; tokens are the app's. */
+
+:root { --kind-rule: var(--accent); --kind-proposition: var(--ho); }
+
+/* ---- shared: kind cue, hover card, references strip, palette rows ---- */
+.kind-glyph { display: inline-flex; flex: none; color: var(--faint); }
+.kind-glyph.kind-rule { color: var(--kind-rule); }
+.kind-glyph.kind-proposition { color: var(--kind-proposition); }
+
+.tab-card {
+  position: fixed; z-index: 60; width: 320px; padding: 10px 12px;
+  background: var(--sh-panel); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow);
+  font: 12px/1.45 var(--sans); color: var(--text); pointer-events: none;
+}
+.card-kind { display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--faint); }
+.card-name { font: 600 13px/1.3 var(--mono); margin: 4px 0 6px; word-break: break-all; }
+.card-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.card-state { margin-top: 8px; color: var(--muted); }
+.card-state-dirty { color: var(--warn); font-weight: 500; }
+.card-refs { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 8px; align-items: baseline; }
+.card-ref { font: 11px var(--mono); color: var(--muted); }
+.card-ref-open { color: var(--text); text-decoration: underline dotted var(--faint); }
+.card-hint { margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--border); font-size: 10.5px; color: var(--faint); }
+
+.refs-strip {
+  flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 36px; padding: 5px 20px;
+  border-bottom: 1px solid var(--border); background: var(--sh-inset); font-size: 12px;
+}
+.refs-strip-changed { background: color-mix(in srgb, var(--warn) 10%, var(--bg)); }
+.refs-label { font-size: 10.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--faint); }
+.refs-strip ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.ref-tag {
+  display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 5px;
+  background: var(--bg); border: 1px solid var(--border); font: 12px var(--mono); color: var(--text); cursor: pointer;
+}
+.ref-tag:hover { border-color: var(--accent); }
+.ref-tag:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.ref-version { color: var(--faint); font-size: 11px; }
+.ref-changed { border-color: var(--warn); }
+.ref-badge { font: 600 9.5px/14px var(--sans); letter-spacing: 0.04em; text-transform: uppercase; padding: 0 4px; border-radius: 3px; color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, transparent); }
+.ref-badge-editing { color: var(--accent); background: var(--accent-weak); }
+.ref-editing { border-style: dashed; }
+.refs-ack { margin-left: auto; color: var(--warn); }
+
+.palette-open-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.palette-open-row .palette-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.palette-kind { font-size: 11px; color: var(--faint); }
+
+/* ---- Variant A: browser strip ---- */
+.tabstrip {
+  display: flex; align-items: flex-end; gap: 2px; height: 36px; padding: 0 8px; flex: none; min-width: 0;
+  background: var(--sh-inset); border-bottom: 1px solid var(--border);
+}
+.btab {
+  position: relative; display: flex; align-items: center; gap: 7px; height: 30px; padding: 0 6px 0 10px;
+  flex: 1 1 200px; min-width: 40px; max-width: 220px; border-radius: 7px 7px 0 0;
+  color: var(--muted); font: 500 12.5px var(--sans); cursor: pointer; user-select: none; overflow: hidden;
+}
+.btab::before { content: ''; position: absolute; left: 10px; right: 10px; top: 0; height: 2px; border-radius: 0 0 2px 2px; background: transparent; }
+.btab.kind-rule::before { background: var(--kind-rule); opacity: 0; }
+.btab.kind-proposition::before { background: var(--kind-proposition); opacity: 0; }
+.btab:hover { color: var(--text); background: color-mix(in srgb, var(--bg) 60%, var(--sh-inset)); }
+.btab.active { color: var(--text); background: var(--bg); font-weight: 600; box-shadow: 0 1px 0 var(--bg); }
+.btab.active::before { opacity: 1; }
+.btab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.btab-title { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--mono); font-size: 12px; }
+.btab-close {
+  display: inline-flex; align-items: center; justify-content: center; flex: none; width: 18px; height: 18px;
+  border: none; border-radius: 4px; background: none; color: var(--faint); padding: 0; cursor: pointer;
+}
+.btab-close svg { display: none; }
+.btab:hover .btab-close svg, .btab.active .btab-close svg { display: block; }
+.btab:hover .btab-close, .btab.active .btab-close { color: var(--muted); }
+.btab-close:hover { background: var(--border); color: var(--text); }
+.btab-dot { display: none; width: 8px; height: 8px; border-radius: 50%; background: var(--warn); }
+.btab.dirty .btab-close .btab-dot { display: block; }
+.btab.dirty .btab-close svg { display: none; }
+.btab.dirty:hover .btab-close .btab-dot { display: none; }
+.btab.dirty:hover .btab-close svg { display: block; }
+.tabstrip-new { flex: none; align-self: center; }
+
+/* ---- Variant B: open documents rail ---- */
+.proto-b-body { display: flex; flex: 1; min-height: 0; }
+.open-rail { width: 232px; flex: none; display: flex; flex-direction: column; border-right: 1px solid var(--border); background: var(--sh-canvas); overflow: hidden; transition: width 120ms ease; }
+.open-rail.collapsed { width: 44px; }
+.proto-b-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.rail-head { display: flex; align-items: center; gap: 4px; height: 36px; padding: 0 6px; border-bottom: 1px solid var(--border); }
+.rail-title { flex: 1; font: 600 11px var(--sans); letter-spacing: 0.04em; text-transform: uppercase; color: var(--faint); white-space: nowrap; }
+.rail-caret { display: inline-flex; transition: transform 120ms; }
+.rail-caret.open { transform: rotate(90deg); }
+.rail-group { padding: 6px 0; }
+.rail-heading { display: flex; align-items: center; gap: 6px; margin: 0; padding: 4px 12px; font: 600 11px var(--sans); letter-spacing: 0.04em; text-transform: uppercase; color: var(--faint); white-space: nowrap; }
+.rail-count { margin-left: auto; font-weight: 500; }
+.rail-empty { margin: 0; padding: 2px 12px 6px 30px; font-size: 11.5px; color: var(--faint); font-style: italic; white-space: nowrap; }
+.rail-group ul { list-style: none; margin: 0; padding: 0; }
+.rail-row { position: relative; display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 8px 0 12px; cursor: pointer; color: var(--muted); user-select: none; }
+.rail-row:hover { background: var(--sh-inset); color: var(--text); }
+.rail-row.active { background: var(--accent-weak); color: var(--text); }
+.rail-row.active::before { content: ''; position: absolute; left: 0; top: 4px; bottom: 4px; width: 3px; border-radius: 0 2px 2px 0; }
+.kind-rule .rail-row.active::before { background: var(--kind-rule); }
+.kind-proposition .rail-row.active::before { background: var(--kind-proposition); }
+.rail-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.rail-name { flex: 1; min-width: 0; display: flex; white-space: nowrap; font: 12px var(--mono); }
+/* The namespace gives way first, the leaf second: `flex-shrink` weights, not a bidi trick. */
+.rail-ns { flex: 0 1000 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--faint); }
+.rail-leaf { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.rail-dot { display: none; width: 8px; height: 8px; border-radius: 50%; background: var(--warn); flex: none; }
+.rail-row.dirty .rail-dot { display: block; }
+.rail-row.dirty:hover .rail-dot { display: none; }
+.rail-close { display: none; align-items: center; justify-content: center; width: 18px; height: 18px; border: none; border-radius: 4px; background: none; color: var(--muted); padding: 0; cursor: pointer; flex: none; }
+.rail-row:hover .rail-close { display: inline-flex; }
+.rail-close:hover { background: var(--border); color: var(--text); }
+.open-rail.collapsed .rail-title, .open-rail.collapsed .rail-heading span, .open-rail.collapsed .rail-name, .open-rail.collapsed .rail-empty, .open-rail.collapsed .rail-close, .open-rail.collapsed .rail-head .ghost:last-child { display: none; }
+.open-rail.collapsed .rail-row { padding: 0; justify-content: center; }
+.open-rail.collapsed .rail-row.dirty .rail-dot { display: block; position: absolute; right: 6px; top: 6px; width: 6px; height: 6px; }
+.open-rail.collapsed .rail-heading { justify-content: center; padding: 4px 0; }
+@media (max-width: 700px) {
+  .open-rail:not(.collapsed) { width: 44px; }
+  .open-rail:not(.collapsed) .rail-title, .open-rail:not(.collapsed) .rail-heading span, .open-rail:not(.collapsed) .rail-name, .open-rail:not(.collapsed) .rail-empty, .open-rail:not(.collapsed) .rail-close, .open-rail:not(.collapsed) .rail-head .ghost:last-child { display: none; }
+  .open-rail:not(.collapsed) .rail-row { padding: 0; justify-content: center; }
+  .open-rail:not(.collapsed) .rail-heading { justify-content: center; padding: 4px 0; }
+}
+
+/* ---- Variant C: in-bar chips + overflow ---- */
+.proto-c-bar { gap: 8px; }
+/* Compact: the bar may wrap. The dropdown claims the first row; the actions sit in its free space
+   and, once there is none, reflow onto a second row aligned right. */
+.proto-c-bar.compact { flex-wrap: wrap; height: auto; min-height: 48px; padding: 7px 16px; row-gap: 6px; }
+.proto-c-bar.compact .chipstrip { flex: 1 1 200px; }
+.proto-c-bar.compact .appbar-controls { flex: none; margin-left: auto; }
+/* The strip is a recessed well: the tabs are a contained group, and the brand — outside it, with
+   the hairline between — cannot be read as the first tab. */
+.chipstrip { flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px; height: 34px; padding: 3px; border-radius: 9px; background: var(--sh-inset); }
+.chips { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.chip {
+  display: flex; align-items: center; gap: 7px; width: 172px; height: 28px; padding: 0 4px 0 6px; border-radius: 6px;
+  color: var(--muted); font: 500 12px var(--sans); cursor: pointer; user-select: none; overflow: hidden; border: 1px solid transparent;
+}
+.chip:hover { background: color-mix(in srgb, var(--bg) 50%, var(--sh-inset)); color: var(--text); }
+.chip.active { background: var(--bg); color: var(--text); border-color: var(--border); box-shadow: 0 1px 2px rgb(0 0 0 / 8%); }
+.chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* Outlined, not filled: the one filled tile in the bar is the brand mark, so nothing else may look like it. */
+.kind-tile { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 18px; height: 18px; border-radius: 4px; font: 700 10px var(--sans); border: 1.5px solid currentColor; }
+.kind-tile.kind-rule { color: var(--kind-rule); }
+.kind-tile.kind-proposition { color: var(--kind-proposition); }
+.chip-title { flex: 1; min-width: 0; display: flex; white-space: nowrap; font: 12px var(--mono); }
+.chip-ns { flex: 0 1000 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--faint); }
+.chip-leaf { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.chip-close { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 18px; height: 18px; border: none; border-radius: 4px; background: none; color: var(--faint); padding: 0; cursor: pointer; }
+.chip-close svg { display: none; }
+.chip:hover .chip-close svg, .chip.active .chip-close svg { display: block; }
+.chip-close:hover { background: var(--border); color: var(--text); }
+.chip-dot { display: none; width: 7px; height: 7px; border-radius: 50%; background: var(--warn); }
+.chip.dirty .chip-dot { display: block; }
+.chip.dirty .chip-close svg { display: none; }
+.chip.dirty:hover .chip-dot { display: none; }
+.chip.dirty:hover .chip-close svg { display: block; }
+.chip-new { flex: none; }
+.overflow { position: relative; flex: none; }
+.overflow-button { height: 28px; gap: 2px; font-family: var(--mono); font-size: 12px; }
+.overflow-menu {
+  position: absolute; top: 34px; right: 0; z-index: 50; min-width: 260px; max-height: 320px; overflow-y: auto; margin: 0; padding: 4px; list-style: none;
+  background: var(--sh-panel); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow);
+}
+.overflow-item { display: flex; align-items: center; gap: 8px; width: 100%; height: 30px; padding: 0 8px; border: none; border-radius: 5px; background: none; color: var(--text); font: 12px var(--mono); text-align: left; cursor: pointer; }
+.overflow-item:hover { background: var(--sh-inset); }
+.overflow-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.overflow-item.dirty .chip-dot { display: block; }
+
+/* The editor pane's action slot (EditorPane `actions`): between the title and the surface tabs. */
+.pane-actions { display: flex; align-items: center; flex: none; }
+
+.overflow-row { display: flex; align-items: center; gap: 2px; }
+.overflow-row .overflow-item { flex: 1; min-width: 0; }
+.overflow-item.active { background: var(--accent-weak); }
+.overflow-close { display: inline-flex; color: var(--faint); }
+.overflow-close svg { display: block; }
+.overflow-open { border-top: 1px solid var(--border); margin-top: 4px; padding-top: 4px; }
+.overflow-open .overflow-item { color: var(--muted); font-family: var(--sans); }
+.tab-dropdown { flex: 1; min-width: 0; display: flex; }
+.tab-dropdown-button { width: auto; max-width: 100%; flex: 0 1 auto; gap: 6px; }
+.tab-dropdown-button .chip-title { flex: 0 1 auto; }
+.tab-dropdown-button .chip-dot { flex: none; }
+.tab-dropdown-count { flex: none; font: 600 10.5px/16px var(--mono); color: var(--faint); border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; }
+.tab-dropdown .overflow-menu { left: 0; right: auto; min-width: min(320px, calc(100vw - 32px)); }
+
+/* ---- the switcher: obviously not part of the design ---- */
+.proto-switcher {
+  position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 100;
+  display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 999px;
+  background: #111; color: #fff; font: 12px var(--sans); box-shadow: 0 6px 24px rgb(0 0 0 / 35%); border: 2px solid #f5c400;
+}
+.proto-switcher button { width: 26px; height: 26px; border-radius: 50%; border: none; background: #333; color: #fff; cursor: pointer; font-size: 13px; }
+.proto-switcher button:hover { background: #555; }
+.proto-label strong { color: #f5c400; margin-right: 4px; }
