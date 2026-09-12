@@ -175,6 +175,10 @@ describe('RulesPage', () => {
     await userEvent.click(within(dialog).getByRole('button', { name: 'Discard changes' }));
     expect(onSelect).toHaveBeenLastCalledWith(null);
     expect(await screen.findByRole('region', { name: 'No rule open' })).toBeTruthy();
+    // Discarded means gone: the store is back at what was loaded, not merely hidden. This is what
+    // keeps a code-defined default — whose load fetches no document — from resurfacing the edit.
+    expect(store.getState().document).toEqual({ rule: { spec: 'is-adult' } });
+    expect(store.getState().dirty).toBe(false);
   });
 
   it('saves and closes in one step from the split button', async () => {

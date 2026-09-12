@@ -171,3 +171,29 @@ describe('dirty', () => {
     expect(listener).toHaveBeenCalledOnce();
   });
 });
+
+describe('revert', () => {
+  it('restores the baseline document, clearing history and errors, and is clean', () => {
+    const store = new RuleEditorStore({ rule: { spec: 'a' } });
+    store.loadDocument({ rule: { spec: 'loaded' } });
+    store.markClean();
+    store.replaceNode('$.rule', { spec: 'edited' });
+    store.setErrors([{ path: '$.rule', code: 'UnknownSpec', message: 'x' }]);
+
+    store.revert();
+
+    const state = store.getState();
+    expect(state.document).toEqual({ rule: { spec: 'loaded' } });
+    expect(state.dirty).toBe(false);
+    expect(state.canUndo).toBe(false);
+    expect(state.errors).toEqual([]);
+  });
+
+  it('notifies subscribers', () => {
+    const store = new RuleEditorStore({ rule: { spec: 'a' } });
+    const listener = vi.fn();
+    store.subscribe(listener);
+    store.revert();
+    expect(listener).toHaveBeenCalledOnce();
+  });
+});

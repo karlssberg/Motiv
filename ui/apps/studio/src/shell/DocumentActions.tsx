@@ -17,10 +17,14 @@ const SAVE_DEFAULT_KEY = 'motiv.studio.save-default';
  * because storage can be denied and the toolbar must still render without it.
  */
 function readSaveDefault(): string {
+  const fallback = SAVE_VARIANTS[0]!.id;
   try {
-    return window.localStorage.getItem(SAVE_DEFAULT_KEY) ?? SAVE_VARIANTS[0]!.id;
+    const stored = window.localStorage.getItem(SAVE_DEFAULT_KEY);
+    // Only an id a variant answers to: a corrupted key, or one written by a build with other
+    // variants, would otherwise ride along in state naming nothing.
+    return SAVE_VARIANTS.some((variant) => variant.id === stored) ? stored! : fallback;
   } catch {
-    return SAVE_VARIANTS[0]!.id;
+    return fallback;
   }
 }
 
@@ -54,6 +58,8 @@ export function DocumentActions(props: {
   onJson: () => void;
   onSave: () => Promise<boolean>;
   onClose: () => void;
+  /** Throws the unsaved changes away — called before `onClose` when the dialog's Discard is chosen. */
+  onDiscard: () => void;
 }) {
   const [asking, setAsking] = useState(false);
   const [saveDefault, setSaveDefault] = useState(readSaveDefault);
@@ -97,7 +103,7 @@ export function DocumentActions(props: {
           name={props.name}
           onKeep={() => setAsking(false)}
           onSaveAndClose={() => { setAsking(false); void saveAndClose(); }}
-          onDiscard={() => { setAsking(false); props.onClose(); }}
+          onDiscard={() => { setAsking(false); props.onDiscard(); props.onClose(); }}
         />
       )}
     </>

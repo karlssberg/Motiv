@@ -10,6 +10,7 @@ function renderActions(overrides: Partial<Parameters<typeof DocumentActions>[0]>
     onJson: vi.fn(),
     onSave: vi.fn().mockResolvedValue(true),
     onClose: vi.fn(),
+    onDiscard: vi.fn(),
     ...overrides,
   };
   render(
@@ -63,12 +64,25 @@ describe('DocumentActions', () => {
     expect(handlers.onClose).not.toHaveBeenCalled();
   });
 
-  it('discards on request', async () => {
-    const handlers = renderActions({ dirty: true });
+  it('discards on request: the changes go, then the document closes', async () => {
+    const onDiscard = vi.fn();
+    const onClose = vi.fn();
+    const handlers = renderActions({ dirty: true, onDiscard, onClose });
     await userEvent.click(screen.getByRole('button', { name: 'Close' }));
     await userEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
-    expect(handlers.onClose).toHaveBeenCalledTimes(1);
+    // Discard before close, so what the dialog promised is gone before anything else can see it.
+    expect(onDiscard).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onDiscard.mock.invocationCallOrder[0]!).toBeLessThan(onClose.mock.invocationCallOrder[0]!);
     expect(handlers.onSave).not.toHaveBeenCalled();
+  });
+
+  it('ignores a remembered default it does not recognise', () => {
+    // A corrupted key, or one from a build with other variants: the button must not carry an id
+    // nothing answers to, so the first variant is what is shown *and* what is stored.
+    window.localStorage.setItem('motiv.studio.save-default', 'save-and-deploy');
+    renderActions();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeTruthy();
   });
 
   it('saves then closes from the dialog, only when the save landed', async () => {

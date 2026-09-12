@@ -81,6 +81,20 @@ export class RuleEditorStore {
     this.#notify();
   }
 
+  /**
+   * Throws the changes away: the document goes back to the baseline, as a fresh load would leave
+   * it. "Discard" has to mean this rather than merely closing — a code-defined default fetches no
+   * document on load, so an edit left in the store would resurface the next time it was opened.
+   */
+  revert(): void {
+    this.#document = this.#baseline;
+    this.#errors = [];
+    this.#undo = [];
+    this.#redo = [];
+    this.#dirtyFor = null;
+    this.#notify();
+  }
+
   #isDirty(): boolean {
     if (this.#dirtyFor !== this.#document) {
       this.#dirty = !sameDocument(this.#document, this.#baseline);

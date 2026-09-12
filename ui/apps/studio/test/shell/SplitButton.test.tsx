@@ -84,6 +84,22 @@ describe('SplitButton', () => {
     expect(document.activeElement).toBe(toggle);
   });
 
+  it('starts from either end when the arrow keys arrive with no item focused', async () => {
+    renderSplit();
+    await userEvent.click(screen.getByRole('button', { name: 'Save options' }));
+    const items = screen.getAllByRole('menuitemradio');
+    const menu = screen.getByRole('menu');
+    // Focus can leave the items while the menu stays open — a pointer press on the menu's own
+    // padding, say. The next arrow then starts from the end it came from, not from a phantom index.
+    (items[0] as HTMLElement).blur();
+    menu.focus();
+    await userEvent.keyboard('{ArrowUp}');
+    expect(document.activeElement).toBe(items[1]);
+    menu.focus();
+    await userEvent.keyboard('{ArrowDown}');
+    expect(document.activeElement).toBe(items[0]);
+  });
+
   it('keeps an unavailable action reachable, explained, and inert — toggle included', async () => {
     const onChoose = renderSplit({ unavailable: 'Nothing loaded yet.' });
     const main = screen.getByRole('button', { name: 'Save' });

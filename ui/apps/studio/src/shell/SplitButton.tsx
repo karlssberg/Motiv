@@ -62,11 +62,14 @@ export function SplitButton(props: {
   const onMenuKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     const items = Array.from(card.current?.querySelectorAll<HTMLElement>('[role="menuitemradio"]') ?? []);
     if (items.length === 0) return;
-    // Wraps from either end, and starts from the first item when focus is not on one yet.
+    // Wraps from either end. With no item focused — a press on the menu's own padding leaves
+    // focus on the menu — the first arrow enters from the end it came from: Down lands on the
+    // first item, Up on the last.
     const at = items.findIndex((item) => item === document.activeElement);
     const step = (by: number): void => {
       event.preventDefault();
-      items[(at + by + items.length) % items.length]?.focus();
+      const next = at < 0 ? (by > 0 ? 0 : items.length - 1) : (at + by + items.length) % items.length;
+      items[next]?.focus();
     };
     switch (event.key) {
       case 'ArrowDown': step(1); break;
@@ -110,6 +113,9 @@ export function SplitButton(props: {
           role="menu"
           className="split-menu"
           style={style}
+          // Focusable so a press on its own padding keeps focus inside it — the arrow keys then
+          // still reach `onMenuKeyDown` and enter the list from the end they came from.
+          tabIndex={-1}
           aria-label={optionsLabel}
           onKeyDown={onMenuKeyDown}
         >

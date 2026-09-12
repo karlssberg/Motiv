@@ -139,6 +139,7 @@ export function PropositionsPage(props: {
             onJson={() => setDocumentOpen(true)}
             onSave={save}
             onClose={() => props.onSelect(null)}
+            onDiscard={() => store.revert()}
           />
         }
       />
