@@ -100,3 +100,57 @@ export const IconAdmin = (props: IconProps) => (
     <path d="M9.5 12l1.8 1.8 3.2-3.6" />
   </Glyph>
 );
+
+export const IconChevronRight = (props: IconProps) => (
+  <Glyph {...props}><path d="M9 6l6 6-6 6" /></Glyph>
+);
+
+export const IconChevronDown = (props: IconProps) => (
+  <Glyph {...props}><path d="M6 9l6 6 6-6" /></Glyph>
+);
+
+/**
+ * A disclosure's glyph, pointing the way the content it controls sits: right while closed, down
+ * once open. The state itself is the button's `aria-expanded`; this only draws it.
+ */
+export const Caret = (props: IconProps & { open: boolean }) => {
+  const { open, ...rest } = props;
+  return open ? <IconChevronDown {...rest} /> : <IconChevronRight {...rest} />;
+};
+
+export const IconMore = (props: IconProps) => (
+  <Glyph {...props}>
+    <circle cx="6" cy="12" r="1.2" /><circle cx="12" cy="12" r="1.2" /><circle cx="18" cy="12" r="1.2" />
+  </Glyph>
+);
+
+export const IconPin = (props: IconProps) => (
+  <Glyph {...props}><path d="M9 4h6l-1 6 3 3H7l3-3z" /><path d="M12 13v7" /></Glyph>
+);
+
+export const IconSelect = (props: IconProps) => (
+  <Glyph {...props}><circle cx="12" cy="12" r="7" /><circle cx="12" cy="12" r="2.2" /></Glyph>
+);
+
+export const IconCheck = (props: IconProps) => (
+  <Glyph {...props}><path d="M5 12.5l4.5 4.5L19 7.5" /></Glyph>
+);
+
+export const IconCross = (props: IconProps) => (
+  <Glyph {...props}><path d="M7 7l10 10M17 7L7 17" /></Glyph>
+);
+
+export const IconPlay = (props: IconProps) => (
+  <Glyph {...props}><path d="M8 6l10 6-10 6z" /></Glyph>
+);
+
+export const IconWarn = (props: IconProps) => (
+  <Glyph {...props}><path d="M12 4l9 16H3z" /><path d="M12 10v4M12 17.5v.5" /></Glyph>
+);
+
+export const IconRefresh = (props: IconProps) => (
+  <Glyph {...props}>
+    <path d="M4 12a8 8 0 0 1 13.7-5.6L20 8" /><path d="M20 4v4h-4" />
+    <path d="M20 12a8 8 0 0 1-13.7 5.6L4 16" /><path d="M4 20v-4h4" />
+  </Glyph>
+);

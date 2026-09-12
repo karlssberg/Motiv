@@ -8,9 +8,8 @@
         "run",
         "--project",
         "src/Motiv.Studio",
-        "--",
         "--environment",
-        "Development"
+        "ASPNETCORE_ENVIRONMENT=Development"
       ],
       "port": 5100,
       "autoPort": true

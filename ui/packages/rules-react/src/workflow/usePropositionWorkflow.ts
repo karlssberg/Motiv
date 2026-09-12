@@ -24,7 +24,7 @@ export interface PropositionWorkflow extends PropositionWorkflowState {
   /** Refetches behind the current selection — for a revert, or conflict recovery. */
   reload: () => Promise<void>;
   /** Saves the store's document back under the selected identity. */
-  save: () => Promise<void>;
+  save: () => Promise<boolean>;
   /** Deletes an authored proposition, or reverts an overridden one to its compiled spec. */
   remove: (entry: PropositionListEntry) => Promise<void>;
   /** Authors a new proposition, answering the failure to show — `null` on success. */

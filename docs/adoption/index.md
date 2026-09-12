@@ -38,12 +38,12 @@ an explanation and none of its markup.
 ## Other JavaScript frameworks
 
 An adapter is the whole of what React's costs, and both packages are small enough to price honestly.
-`@motiv-rules/react` is **439 lines**, and they divide like this:
+`@motiv-rules/react` is **440 lines**, and they divide like this:
 
 <!-- react-adapter-price -->
 | Part | Lines | Code lines | What it adapts |
 |---|---:|---:|---|
-| `context`, `useRuleEditor`, `useRuleNode`, `useCatalog`, `useEvaluation`, `useDslSync`, the barrel | 179 | 127 | The editor store, one node's view of it, catalogue and evaluation calls, and the DSL⇄tree sync controller |
+| `context`, `useRuleEditor`, `useRuleNode`, `useCatalog`, `useEvaluation`, `useDslSync`, the barrel | 180 | 128 | The editor store, one node's view of it, catalogue and evaluation calls, and the DSL⇄tree sync controller |
 | `@motiv-rules/react/workflow` | 162 | 93 | The save loops — optimistic save, 409 recovery, blast-radius reporting |
 | `JustificationTree` | 98 | 59 | The one component, and the only accessibility the packages carry |
 
@@ -65,11 +65,11 @@ is a complete Vue 3 adapter over `@motiv-rules/core`, offering the same surface 
 | the `workflow` entry point | 115 | 71 | The same save loops |
 | `JustificationTree` | 94 | 59 | The same nested-groups structure, rendered through a scoped slot |
 
-The two adapters land within 5% of each other — 459 lines against 439, and 270 lines of code
-against 279 — so the headline claim holds: a second runtime costs what React's adapter costs. Three
+The two adapters land within 5% of each other — 459 lines against 440, and 270 lines of code
+against 280 — so the headline claim holds: a second runtime costs what React's adapter costs. Three
 things the estimate got wrong, all of them visible only once someone paid it:
 
-- **The document bindings cost more, not less: 250 lines against React's 179.** Almost all of the
+- **The document bindings cost more, not less: 250 lines against React's 180.** Almost all of the
   difference is one file, `observe.ts`. React re-runs a hook on every render, so the store an action
   closes over is always the current one and swapping stores needs no code at all; Vue's `setup` runs
   once, so following a store that can change is an explicit `watch`, and reaching the current

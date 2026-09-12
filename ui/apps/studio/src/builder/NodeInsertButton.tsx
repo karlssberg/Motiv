@@ -9,6 +9,8 @@
  *
  * Joins the hover-revealed cluster `⋯` and `📌` already form, inheriting their reveal and spacing.
  */
+import { IconNew } from '../shell/icons.js';
+
 export function NodeInsertButton(props: { path: string; onOpen: () => void }) {
   return (
     <button
@@ -17,7 +19,7 @@ export function NodeInsertButton(props: { path: string; onOpen: () => void }) {
       aria-label={`insert after ${props.path}`}
       onClick={props.onOpen}
     >
-      ＋
+      <IconNew size={14} />
     </button>
   );
 }

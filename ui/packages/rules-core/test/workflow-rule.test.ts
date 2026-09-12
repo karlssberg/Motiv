@@ -270,7 +270,7 @@ describe('RuleWorkflowController', () => {
     put.reject(new Error('boom'));
     // Reported, not rethrown: a consumer writing `void save()` would otherwise get an unhandled
     // rejection and a surface showing nothing — indistinguishable from never having saved.
-    await expect(inFlight).resolves.toBeUndefined();
+    await expect(inFlight).resolves.toBe(false);
     expect(controller.getState().saving).toBe(false);
     expect(controller.getState().failure).toBe('boom');
   });
@@ -479,5 +479,52 @@ describe('whyRuleSaveUnavailable', () => {
 
   it('is silent when a save can run', () => {
     expect(whyRuleSaveUnavailable({ loaded, saving: false })).toBeUndefined();
+  });
+});
+
+describe('RuleWorkflowController and the dirty flag', () => {
+  it('a load marks the store clean at the loaded document', async () => {
+    const { controller, store } = makeController();
+    store.replaceNode('$.rule', { spec: 'edited' });
+    expect(store.getState().dirty).toBe(true);
+    await controller.load('can-checkout');
+    expect(store.getState().dirty).toBe(false);
+  });
+
+  it('a load of a code-defined default marks the standing document clean', async () => {
+    const client = makeClient({ getRule: vi.fn().mockResolvedValue({ document: null, version: 1 }) });
+    const { controller, store } = makeController(client);
+    store.replaceNode('$.rule', { spec: 'edited' });
+    await controller.load('can-checkout');
+    expect(store.getState().dirty).toBe(false);
+  });
+
+  it('a save that lands marks the store clean and reports true', async () => {
+    const { controller, store } = makeController();
+    await controller.load('can-checkout');
+    store.replaceNode('$.rule', { spec: 'edited' });
+    expect(await controller.save()).toBe(true);
+    expect(store.getState().dirty).toBe(false);
+  });
+
+  it('a conflicted or rejected save leaves the document dirty and reports false', async () => {
+    const client = makeClient({
+      putRule: vi.fn()
+        .mockResolvedValueOnce({ outcome: 'conflict', currentVersion: 9 })
+        .mockResolvedValueOnce({ outcome: 'invalid', errors: [] })
+        .mockRejectedValueOnce(new Error('boom')),
+    });
+    const { controller, store } = makeController(client);
+    await controller.load('can-checkout');
+    store.replaceNode('$.rule', { spec: 'edited' });
+    expect(await controller.save()).toBe(false);
+    expect(await controller.save()).toBe(false);
+    expect(await controller.save()).toBe(false);
+    expect(store.getState().dirty).toBe(true);
+  });
+
+  it('save without a loaded rule reports false', async () => {
+    const { controller } = makeController();
+    expect(await controller.save()).toBe(false);
   });
 });

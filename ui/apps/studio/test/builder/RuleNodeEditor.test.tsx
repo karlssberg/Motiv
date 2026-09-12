@@ -115,10 +115,13 @@ describe('BuilderPane accordion (boolean)', () => {
     // A leaf has no subtree to fold, so its caret discloses metadata instead — a shortcut to
     // what the actions menu also offers, in the slot a bullet would otherwise waste.
     expect(caret.className).toContain('node-chev');
-    expect(caret.textContent).toBe('▸');
+    // Drawn as an SVG chevron, not a unicode triangle: the glyph set renders the same on every
+    // platform, and the button's state is the attribute, not the character.
+    expect(caret.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
+    expect(caret.textContent).toBe('');
+    expect(caret.getAttribute('aria-expanded')).toBe('false');
 
     fireEvent.click(caret);
-    expect(caret.textContent).toBe('▾');
     expect(caret.getAttribute('aria-expanded')).toBe('true');
     expect(screen.getByLabelText('name at $.rule')).toBeDefined();
   });

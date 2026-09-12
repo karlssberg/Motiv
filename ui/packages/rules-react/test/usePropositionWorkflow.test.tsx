@@ -34,7 +34,8 @@ describe('usePropositionWorkflow', () => {
     expect(result.current.loaded).toEqual({ name: 'pricing.is-vip', version: 2 });
     expect(result.current.dependents).toEqual([{ name: 'can-checkout', kind: 'rule' }]);
 
-    await act(() => result.current.save());
+    // The hook hands the controller's outcome through: this save conflicts, so it did not land.
+    await act(async () => { expect(await result.current.save()).toBe(false); });
     expect(result.current.failure).toBe('Someone else saved version 5. Reload before saving again.');
   });
 

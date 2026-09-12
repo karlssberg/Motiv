@@ -8,6 +8,8 @@ import {
 } from '@motiv-rules/core';
 import { MODEL_TYPE } from '../App.js';
 import { SchemaViolations } from './SchemaViolations.js';
+import { Tick, Verdict } from './Verdict.js';
+import { IconPlay } from '../shell/icons.js';
 
 interface CheckoutResponse {
   approved: boolean;
@@ -91,7 +93,11 @@ export function CheckoutPane(props: { client?: RulesApiClient }) {
 
   return (
     <section aria-label="Checkout" className="pane">
-      <h2>Checkout (live rules)</h2>
+      <div className="pane-header">
+        <h2>Checkout</h2>
+        <span className="pane-badge">live rules</span>
+        <span className="pane-hint truncate">what the server decides right now</span>
+      </div>
       <div className="pane-body">
         <label className="field">
           <span>Customer</span>
@@ -103,17 +109,21 @@ export function CheckoutPane(props: { client?: RulesApiClient }) {
             rows={6}
           />
         </label>
-        <button type="button" className="btn" onClick={() => void tryCheckout()}>
-          Try checkout
-        </button>
-        {error && <p role="alert">{error}</p>}
+        <div className="run-row">
+          <button type="button" className="btn btn-secondary" onClick={() => void tryCheckout()}>
+            <IconPlay size={14} />Try checkout
+          </button>
+          {outcome && (
+            <Verdict satisfied={outcome.approved} text={outcome.approved ? 'Approved' : 'Rejected'} />
+          )}
+        </div>
+        {error && <p role="alert" className="error">{error}</p>}
         <SchemaViolations violations={violations} />
         {outcome && (
           <div className="checkout-outcome">
-            <strong className="outcome">{outcome.approved ? 'Approved' : 'Rejected'}</strong>
-            <Verdict title="Eligibility (sync rule)" result={outcome.eligibility} />
-            <Verdict title="Screening (async rule)" result={outcome.screening} />
-            {outcome.loyalty && <Verdict title="Loyalty (audited rule)" result={outcome.loyalty} />}
+            <RuleVerdict title="Eligibility" kind="sync rule" result={outcome.eligibility} />
+            <RuleVerdict title="Screening" kind="async rule" result={outcome.screening} />
+            {outcome.loyalty && <RuleVerdict title="Loyalty" kind="audited rule" result={outcome.loyalty} />}
           </div>
         )}
       </div>
@@ -121,13 +131,17 @@ export function CheckoutPane(props: { client?: RulesApiClient }) {
   );
 }
 
-function Verdict(props: { title: string; result: EvaluationResult }) {
+/** One rule's part in the decision: its name, what kind of rule it is, and what it asserted. */
+function RuleVerdict(props: { title: string; kind: string; result: EvaluationResult }) {
   return (
-    <div className="verdict">
-      <h3>{props.title}</h3>
-      <ul>
+    <div className="rule-verdict">
+      <h3>{props.title}<span className="pane-badge">{props.kind}</span></h3>
+      <ul className="assertions">
         {props.result.assertions.map((assertion) => (
-          <li key={assertion}>{assertion}</li>
+          <li key={assertion}>
+            <Tick satisfied={props.result.satisfied} />
+            {assertion}
+          </li>
         ))}
       </ul>
     </div>

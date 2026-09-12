@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react';
 import type { RulesApiClient } from '@motiv-rules/core';
 import { whyPropositionSaveUnavailable } from '@motiv-rules/core/workflow';
-import { useRuleEditorStore } from '@motiv-rules/react';
+import { useRuleEditor, useRuleEditorStore } from '@motiv-rules/react';
 import { usePropositionWorkflow } from '@motiv-rules/react/workflow';
 import type { Page } from '../routing/useHashRoute.js';
 import { MODEL_TYPE } from '../App.js';
 import { AppBar } from './AppBar.js';
+import { DocumentTitle } from './DocumentTitle.js';
 import { EditorPane } from './EditorPane.js';
 import { EvaluatePane } from './EvaluatePane.js';
 import { DocumentModal } from './DocumentModal.js';
 import { ReportBanner } from '../shell/ReportBanner.js';
-import { Toolbar } from '../shell/Toolbar.js';
+import { DocumentActions } from '../shell/DocumentActions.js';
 import { useCommandKey } from '../shell/useCommandKey.js';
-import { IconJson, IconOpen, IconSave } from '../shell/icons.js';
+import { rememberSelection } from '../shell/lastSelection.js';
+import { IconNew, IconOpen } from '../shell/icons.js';
 import { PropositionExplorer } from '../explorer/PropositionExplorer.js';
 import { PropositionDialog, type DialogSeed, type DialogValues } from '../explorer/PropositionDialog.js';
 import { DependentsStrip } from '../explorer/DependentsStrip.js';
@@ -24,6 +26,26 @@ import { DependentsStrip } from '../explorer/DependentsStrip.js';
 function namespacePrefixOf(name: string): string {
   const cut = name.lastIndexOf('.');
   return cut < 0 ? '' : name.slice(0, cut + 1);
+}
+
+/**
+ * A dotted proposition name as the trail it already is: one span per segment, separated by the dots
+ * the name is written with, the last one current. It needs no breadcrumb built around it.
+ */
+function NameTrail(props: { name: string }) {
+  const segments = props.name.split('.');
+  return (
+    <>
+      {segments.map((segment, index) => (
+        <span key={`${segment}-${index}`}>
+          {index > 0 && <span className="breadcrumb-sep">.</span>}
+          <span className={index === segments.length - 1 ? 'breadcrumb-current' : 'breadcrumb-item'}>
+            {segment}
+          </span>
+        </span>
+      ))}
+    </>
+  );
 }
 
 /**
@@ -41,6 +63,7 @@ export function PropositionsPage(props: {
   onSelect: (name: string | null) => void;
 }) {
   const store = useRuleEditorStore();
+  const { dirty } = useRuleEditor(store);
   const {
     entries, loaded, dependents, failure, saving,
     refreshEntries, select, reload, save, remove, create,
@@ -59,6 +82,9 @@ export function PropositionsPage(props: {
   // exactly the same path.
   useEffect(() => { void refreshEntries(); }, [refreshEntries]);
   useEffect(() => { void select(props.selected); }, [select, props.selected]);
+  // Remembered for the page switch to bring back — including its absence, so a proposition that
+  // was deselected (deleted, say) is not what the Propositions link reopens.
+  useEffect(() => { rememberSelection('propositions', props.selected); }, [props.selected]);
 
   // The alphabetically first model type in the listing: what a New starts on, and what stands in
   // for an entry the listing has not got. Not de-duplicated first, since only the first is read.
@@ -96,43 +122,27 @@ export function PropositionsPage(props: {
   const modelTypeOf = (name: string): string =>
     entries.find((candidate) => candidate.name === name)?.modelType ?? defaultModelType;
 
-  const segments = loaded?.name.split('.') ?? [];
-
   return (
     <>
       <AppBar
         page={props.page}
         controls={
-          <>
-            {loaded && <span className="rule-version">v{loaded.version}</span>}
-            <Toolbar actions={[
-              { id: 'open', label: 'Open', icon: IconOpen, onActivate: () => setExplorerOpen(true) },
-              {
-                // The blast radius rides on the label, so what a save would affect is legible from
-                // the control that would cause it without reading the strip.
-                id: 'save',
-                label: `Save${dependents.length > 0 ? ` (${dependents.length})` : ''}`,
-                icon: IconSave,
-                onActivate: () => void save(),
-                unavailable: whyPropositionSaveUnavailable({ loaded, saving }),
-              },
-              { id: 'json', label: 'JSON', icon: IconJson, onActivate: () => setDocumentOpen(true) },
-            ]} />
-          </>
+          <DocumentActions
+            kind="proposition"
+            name={loaded?.name ?? null}
+            dirty={dirty}
+            saveUnavailable={whyPropositionSaveUnavailable({ loaded, saving })}
+            // The blast radius rides on the label, so what a save would affect is legible from the
+            // control that would cause it without reading the strip.
+            {...(dependents.length > 0 ? { saveDetail: `(${dependents.length})` } : {})}
+            onOpen={() => setExplorerOpen(true)}
+            onJson={() => setDocumentOpen(true)}
+            onSave={save}
+            onClose={() => props.onSelect(null)}
+            onDiscard={() => store.revert()}
+          />
         }
-      >
-        <span className="breadcrumb-sep">/</span>
-        <span className="breadcrumb-item">Propositions</span>
-        {/* A dotted name is already a path, so it renders as the trail rather than needing one. */}
-        {segments.map((segment, index) => (
-          <span key={`${segment}-${index}`}>
-            <span className="breadcrumb-sep">/</span>
-            <span className={index === segments.length - 1 ? 'breadcrumb-current' : 'breadcrumb-item'}>
-              {segment}
-            </span>
-          </span>
-        ))}
-      </AppBar>
+      />
 
       {failure !== null && (
         <ReportBanner {...(loaded ? { onReload: () => void reload() } : {})}>
@@ -142,10 +152,49 @@ export function PropositionsPage(props: {
 
       <DependentsStrip dependents={dependents} />
 
-      <div className="shell-body">
-        <EditorPane client={props.client} />
-        <EvaluatePane client={props.client} />
-      </div>
+      {/*
+        The editor store is shared with the rules page, so while nothing is selected it still holds
+        whatever was last edited there — a document this page cannot save. Showing it under a
+        "nothing open" title would be a contradiction, so the panes wait for a selection and the
+        page says what to do instead. Both actions are the toolbar's, one click nearer.
+      */}
+      {loaded ? (
+        <div className="shell-body">
+          <EditorPane
+            client={props.client}
+            documentName={loaded.name}
+            title={
+              <DocumentTitle
+                name={<NameTrail name={loaded.name} />}
+                modelType={modelTypeOf(loaded.name)}
+                version={loaded.version}
+              />
+            }
+          />
+          <div className="rail">
+            <EvaluatePane client={props.client} />
+          </div>
+        </div>
+      ) : (
+        <section className="empty-state" aria-label="No proposition open">
+          <h2>No proposition open</h2>
+          <p>Choose one from the listing, or start a new one composed from the registered specs.</p>
+          <div className="run-row">
+            <button type="button" className="btn" onClick={() => setExplorerOpen(true)}>
+              <IconOpen size={14} />Choose a proposition<kbd aria-hidden="true">⌘K</kbd>
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => openDialog({
+                name: '', modelType: defaultModelType, startsFrom: null, title: 'New proposition',
+              })}
+            >
+              <IconNew size={14} />New proposition
+            </button>
+          </div>
+        </section>
+      )}
 
       {explorerOpen && (
         <PropositionExplorer

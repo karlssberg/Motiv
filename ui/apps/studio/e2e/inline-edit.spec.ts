@@ -1,8 +1,9 @@
 import { test, expect, type Locator, type Page } from '@playwright/test';
+import { openScratchRule } from './shell.js';
 
 /** The root row, once the live catalog has loaded and rendered its expression. */
 async function rootRow(page: Page): Promise<Locator> {
-  await page.goto('/');
+  await openScratchRule(page);
   const row = page.getByRole('button', { name: 'edit expression at $.rule' });
   await expect(row).toHaveText('customer.is-active');
   return row;

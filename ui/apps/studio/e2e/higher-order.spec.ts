@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { expectDocument } from './shell.js';
+import { expectDocument, openScratchRule } from './shell.js';
 
 /** Replaces a row's expression by typing DSL into it, the way authoring now works. */
 async function typeExpression(page: Page, path: string, dsl: string): Promise<void> {
@@ -12,7 +12,7 @@ async function typeExpression(page: Page, path: string, dsl: string): Promise<vo
 
 /** Builds `customer.is-adult & all in orders { order.is-large }` through the builder's rows. */
 async function buildHigherOrderRule(page: Page): Promise<void> {
-  await page.goto('/');
+  await openScratchRule(page);
 
   // root row present (catalog loaded)
   await expect(page.getByRole('button', { name: 'edit expression at $.rule' })).toBeVisible();

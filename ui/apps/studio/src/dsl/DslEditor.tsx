@@ -24,8 +24,9 @@ import type { DslSync } from '@motiv-rules/react';
 /** The keystroke that opens the payload card for the spec node under the caret. */
 const OPEN_PAYLOAD_KEY = 'Mod-.';
 
-/** The document Studio edits. The DSL is file-shaped, so it is shown with a filename. */
-const FILENAME = 'quota-rule.motiv';
+/** The DSL is file-shaped, so the buffer is shown under a filename: the document's name, or this
+ *  while the editor holds a draft that has none. */
+const DRAFT_FILENAME = 'draft.motiv';
 
 /** What the sync pill says for each status. */
 const PILL_TEXT: Record<SyncStatus, string> = {
@@ -92,8 +93,15 @@ function targetAtCaret(live: LiveContext, position: number): PayloadTarget | nul
  * latest render's callbacks, catalog and diagnostics, so none of them can go stale while the
  * editor keeps its own state (history, selection, scroll) across renders.
  */
-export function DslEditor(props: { store: RuleEditorStore; catalog: Catalog; sync: DslSync }) {
+export function DslEditor(props: {
+  store: RuleEditorStore;
+  catalog: Catalog;
+  sync: DslSync;
+  /** The document's name, shown as the buffer's filename; absent for a nameless draft. */
+  documentName?: string | undefined;
+}) {
   const { store, catalog, sync } = props;
+  const filename = props.documentName !== undefined ? `${props.documentName}.motiv` : DRAFT_FILENAME;
   const editorState = useRuleEditor(store);
   const [popover, setPopover] = useState<PayloadTarget | null>(null);
 
@@ -234,11 +242,11 @@ export function DslEditor(props: { store: RuleEditorStore; catalog: Catalog; syn
   return (
     <div className="dsl-frame">
       <div className="dsl-toolbar" ref={toolbar}>
-        <span className="dsl-filename">{FILENAME}</span>
-        <button type="button" onClick={sync.format}>Format</button>
+        <span className="dsl-filename">{filename}</span>
         <span aria-label="sync status" className={`dsl-pill dsl-pill-${sync.status}`}>
           {PILL_TEXT[sync.status]}
         </span>
+        <button type="button" onClick={sync.format}>Format</button>
       </div>
 
       {sync.conflict && (

@@ -7,26 +7,48 @@ rule from the spec catalog, watch it validate live, evaluate it against a sample
 The host is `src/Motiv.Studio`; the authoring *logic* beneath this UI lives in
 `@motiv-rules/core` (see **Extend it**).
 
+## Layout
+
+One surface, divided by hairlines: a top bar, the editor, and a rail beside it
+holding the two panes that *run* the rule. The top bar carries the brand, the
+page switch (Rules / Propositions, and Admin when the caller may administer
+grants) and the page's actions — Open (`⌘K`), JSON and a primary Save. The
+document being edited is named where it is edited: the editor pane's header
+shows the rule or proposition, its model type and version. Below 900px the
+rail stacks under the editor and the palette and dialogs fill the screen.
+
 ## Panes
 
-- **Rule header** (`src/panes/RuleHeader.tsx`) — picks a live server rule,
-  loads its document and version into the editor, and saves it back with a
-  versioned `PUT`. A stale save surfaces as a conflict banner with a
-  "Reload latest" escape hatch (open two tabs to watch the race protection
-  work); a save the server rejects as invalid lists its errors in the JSON
-  pane. Rules on a compiled default show a "code-defined default" note.
-  Loading an async rule (e.g. `fraud-screening`) switches live validation to
-  the async path, so documents may reference async specs without red herrings.
-- **Builder** (`src/panes/BuilderPane.tsx`) — the accordion editor over the
-  rule document.
-- **JSON** (`src/panes/JsonPane.tsx`) — the live document with validation
-  errors.
+- **Rules page** (`src/panes/RulesPage.tsx`) — owns the rule workflow: the
+  rule in the route (`#/rules/<name>`) is loaded, document and version, into
+  the editor, and saved back with a versioned `PUT`. With no rule in the route
+  the page shows an empty state and a chooser — there is no local draft. A
+  stale save surfaces as a conflict banner with a "Reload latest" escape hatch
+  (open two tabs to watch the race protection work); a save the server rejects
+  as invalid lists its errors in the JSON modal. Rules on a compiled default
+  show a "code-defined default" note. Loading an async rule (e.g.
+  `fraud-screening`) switches live validation to the async path, so documents
+  may reference async specs without red herrings.
+- **Document actions** (`src/shell/DocumentActions.tsx`) — the toolbar both
+  document pages share: Open, JSON, Close, and Save as a split button whose
+  menu offers *Save* and *Save & close*; the variant chosen becomes the
+  button's default and is remembered per browser. Close on a document with
+  unsaved changes asks first (`DiscardDialog`): Keep editing, Save & close, or
+  Discard. "Unsaved" is the editor store's `dirty` flag, measured against the
+  document last loaded or saved.
+- **Editor** (`src/panes/EditorPane.tsx`) — the document under its title,
+  edited either through the accordion builder (`BuilderPane.tsx`) or as DSL
+  text, switched by the Builder / DSL tabs in its header.
+- **JSON** (`src/panes/DocumentModal.tsx`) — the live document with validation
+  errors, behind the toolbar's JSON action.
 - **Evaluate** (`src/panes/EvaluatePane.tsx`) — evaluates the draft document
-  against a sample model via `POST /api/rules/evaluate`.
+  against a sample model via `POST /api/rules/evaluate`; the outcome is a
+  verdict chip beside the button, with the de-noised justification beneath.
 - **Checkout** (`src/panes/CheckoutPane.tsx`) — the rule being *used*:
   `POST /api/checkout` executes the live `CanCheckoutRule` (sync) and
-  `FraudScreeningRule` (async) on the server. Save a rule change and the very
-  next checkout reflects it.
+  `FraudScreeningRule` (async) on the server, and the decision reads the same
+  way Evaluate's does. Save a rule change and the very next checkout reflects
+  it.
 
 Both JSON textareas (Evaluate's sample model and Checkout's customer) are
 schema-enforced: the catalog's `modelTypes` map carries a JSON Schema for the

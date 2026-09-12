@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { parse, type Catalog, type RuleNode } from '@motiv-rules/core';
 import { useInlineDslEditor } from './useInlineDslEditor.js';
+import { IconNew } from '../shell/icons.js';
 
 /**
  * A row that does not exist yet: an insertion point with a focused editor and nothing behind it.
@@ -64,7 +65,7 @@ export function PendingSlot(props: {
   return (
     <div className="node">
       <div className="node-row node-row-pending">
-        <span className="node-chev">＋</span>
+        <span className="node-chev node-chev-pending"><IconNew size={12} /></span>
         <span className="node-dsl node-dsl-editing">
           <span ref={host} className="node-dsl-host" />
           {error && <span role="alert" className="error node-dsl-error" title={error}>{error}</span>}

@@ -3,6 +3,8 @@ import { validateAgainstSchema, type RulesApiClient, type SchemaViolation } from
 import { JustificationTree, useCatalog, useEvaluation, useRuleEditor, useRuleEditorStore } from '@motiv-rules/react';
 import { MODEL_TYPE } from '../App.js';
 import { SchemaViolations } from './SchemaViolations.js';
+import { Tick, Verdict } from './Verdict.js';
+import { Caret, IconPlay } from '../shell/icons.js';
 
 const SAMPLE_MODEL = '{\n  "age": 30,\n  "isActive": true,\n  "orderCount": 2\n}';
 
@@ -38,7 +40,10 @@ export function EvaluatePane(props: { client: RulesApiClient }) {
 
   return (
     <section aria-label="Evaluate" className="pane">
-      <h2>Evaluate</h2>
+      <div className="pane-header">
+        <h2>Evaluate</h2>
+        <span className="pane-hint truncate">draft, against a sample model</span>
+      </div>
       <div className="pane-body">
         <label className="field">
           <span>Sample model</span>
@@ -50,44 +55,57 @@ export function EvaluatePane(props: { client: RulesApiClient }) {
             rows={5}
           />
         </label>
-        <button type="button" className="btn" onClick={run}>Evaluate</button>
-        {parseError && <p role="alert">{parseError}</p>}
+        <div className="run-row">
+          <button type="button" className="btn" onClick={run}><IconPlay size={14} />Evaluate</button>
+          {evaluation.status === 'ready' && (
+            <Verdict
+              label="outcome"
+              satisfied={evaluation.result.satisfied}
+              text={evaluation.result.satisfied ? 'Satisfied' : 'Not satisfied'}
+            />
+          )}
+        </div>
+        {parseError && <p role="alert" className="error">{parseError}</p>}
         <SchemaViolations violations={violations} />
-        {evaluation.status === 'error' && <p role="alert">Evaluation failed.</p>}
+        {evaluation.status === 'error' && <p role="alert" className="error">Evaluation failed.</p>}
         {evaluation.status === 'ready' && (
-          <>
-            <p aria-label="outcome" className="outcome">{evaluation.result.satisfied ? 'Satisfied' : 'Not satisfied'}</p>
-            {/*
-              The explanation is the answer to "why?", so its disclosures have to say what they
-              hide: the caret's accessible name was the glyph it is drawn as, which tells a reader
-              that a control exists and nothing about what it does. `aria-controls` is dropped once
-              the group is collapsed and unmounted, the same rule the builder's caret follows.
-            */}
-            <JustificationTree
-              explanation={evaluation.result.explanation}
-              label={`why this rule was ${evaluation.result.satisfied ? 'satisfied' : 'not satisfied'}`}
-            >
-              {({ row, toggle, groupId }) => {
-                const causes = row.assertions.join(', ');
-                return (
-                  <div className="assertion" style={{ '--depth': row.depth } as CSSProperties}>
-                    {row.hasChildren && (
-                      <button
-                        type="button"
-                        aria-expanded={!row.collapsed}
-                        aria-controls={groupId ?? undefined}
-                        aria-label={`causes of ${causes}`}
-                        onClick={() => toggle(row.id)}
-                      >
-                        {row.collapsed ? '▸' : '▾'}
-                      </button>
-                    )}
-                    <span>{causes}</span>
-                  </div>
-                );
-              }}
-            </JustificationTree>
-          </>
+          /*
+            The explanation is the answer to "why?", so its disclosures have to say what they
+            hide: the caret's accessible name was the glyph it is drawn as, which tells a reader
+            that a control exists and nothing about what it does. `aria-controls` is dropped once
+            the group is collapsed and unmounted, the same rule the builder's caret follows.
+          */
+          <JustificationTree
+            explanation={evaluation.result.explanation}
+            label={`why this rule was ${evaluation.result.satisfied ? 'satisfied' : 'not satisfied'}`}
+          >
+            {({ row, toggle, groupId }) => {
+              const causes = row.assertions.join(', ');
+              return (
+                <div className="assertion" style={{ '--depth': row.depth } as CSSProperties}>
+                  {/*
+                    Every assertion here is causal — the explanation is de-noised — so each shares
+                    the outcome's polarity, and a check or a cross beside it is a true statement
+                    rather than decoration. A row with children carries the caret in that slot
+                    instead, since what it asserts is unpacked by the rows beneath it.
+                  */}
+                  {row.hasChildren ? (
+                    <button
+                      type="button"
+                      aria-expanded={!row.collapsed}
+                      aria-controls={groupId ?? undefined}
+                      aria-label={`causes of ${causes}`}
+                      className="node-chev"
+                      onClick={() => toggle(row.id)}
+                    >
+                      <Caret open={!row.collapsed} size={12} />
+                    </button>
+                  ) : <Tick satisfied={evaluation.result.satisfied} />}
+                  <span>{causes}</span>
+                </div>
+              );
+            }}
+          </JustificationTree>
         )}
       </div>
     </section>

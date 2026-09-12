@@ -13,6 +13,7 @@ import { NodeDsl } from './NodeDsl.js';
 import { NodeMenu } from './NodeMenu.js';
 import { NodeInsertButton } from './NodeInsertButton.js';
 import { PendingSlot } from './PendingSlot.js';
+import { Caret, IconPin, IconSelect } from '../shell/icons.js';
 
 /**
  * The tree-wide state shared by every {@link RuleNodeEditor} in the tree: accordion state (its
@@ -214,7 +215,7 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
             onMouseDown={pressCaret}
             onClick={(event) => { if (releaseMatchesPress(event)) toggleCollapsed(path); }}
           >
-            {collapsed ? '▸' : '▾'}
+            <Caret open={!collapsed} size={12} />
           </button>
         ) : (
           <button
@@ -226,7 +227,7 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
             onMouseDown={pressCaret}
             onClick={(event) => { if (releaseMatchesPress(event)) toggleOpen(path); }}
           >
-            {open ? '▾' : '▸'}
+            <Caret open={open} size={12} />
           </button>
         )}
         <span className="node-body">
@@ -255,7 +256,7 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
           aria-label={`select ${path}`}
           onClick={() => setSelected(selected ? null : path)}
         >
-          ◈
+          <IconSelect size={14} />
         </button>
         <NodeInsertButton path={path} onOpen={() => setPending({ path, where: 'after' })} />
         <NodeMenu
@@ -274,7 +275,7 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
           aria-label={`${pinned ? 'unpin' : 'pin'} ${path}`}
           onClick={() => togglePin(path)}
         >
-          📌
+          <IconPin size={14} />
         </button>
       </div>
       {errors.length > 0 && (

@@ -1,11 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { expectDocument } from './shell.js';
+import { expectDocument, openScratchRule } from './shell.js';
 
 test('build a rule, then evaluate it end to end', async ({ page }) => {
-  await page.goto('/');
-
-  // Builder loaded from the live catalog: the root row renders its expression.
-  await expect(page.getByRole('button', { name: 'edit expression at $.rule' })).toBeVisible();
+  // A rule has to be open for there to be a builder: the page starts empty otherwise.
+  await openScratchRule(page);
 
   // Build a composite by typing it: the row is where structure is authored.
   await page.getByRole('button', { name: 'edit expression at $.rule' }).click();

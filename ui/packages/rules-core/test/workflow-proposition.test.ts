@@ -480,3 +480,39 @@ describe('whyPropositionSaveUnavailable', () => {
     expect(whyPropositionSaveUnavailable({ loaded: { name: 'is-adult', version: 1 }, saving: false })).toBeUndefined();
   });
 });
+
+describe('PropositionWorkflowController and the dirty flag', () => {
+  it('a select marks the store clean at the loaded document', async () => {
+    const { controller, store } = makeController();
+    store.replaceNode('$.rule', { spec: 'edited' });
+    await controller.select('pricing.is-vip');
+    expect(store.getState().dirty).toBe(false);
+  });
+
+  it('a save that lands marks the store clean and reports true', async () => {
+    const { controller, store } = makeController();
+    await controller.select('pricing.is-vip');
+    store.replaceNode('$.rule', { spec: 'edited' });
+    expect(await controller.save()).toBe(true);
+    expect(store.getState().dirty).toBe(false);
+  });
+
+  it('a refused or failed save leaves the document dirty and reports false', async () => {
+    const client = makeClient({
+      putProposition: vi.fn()
+        .mockResolvedValueOnce({ outcome: 'conflict', currentVersion: 9 })
+        .mockRejectedValueOnce(new Error('boom')),
+    });
+    const { controller, store } = makeController(client);
+    await controller.select('pricing.is-vip');
+    store.replaceNode('$.rule', { spec: 'edited' });
+    expect(await controller.save()).toBe(false);
+    expect(await controller.save()).toBe(false);
+    expect(store.getState().dirty).toBe(true);
+  });
+
+  it('save with nothing selected reports false', async () => {
+    const { controller } = makeController();
+    expect(await controller.save()).toBe(false);
+  });
+});

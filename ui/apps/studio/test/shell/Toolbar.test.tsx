@@ -55,4 +55,22 @@ describe('Toolbar', () => {
     render(<Toolbar actions={[{ id: 'save', label: 'Save', icon: IconSave, onActivate: () => {} }]} />);
     expect(screen.getByRole('button', { name: 'Save' }).getAttribute('aria-describedby')).toBeNull();
   });
+
+  it('renders a primary action as a labelled button, keeping the same accessible name', () => {
+    // Save is the one action a page is *for*, so it wears its word beside its glyph. The name is
+    // stated once — the visible label — rather than an `aria-label` that could drift from it.
+    render(<Toolbar actions={[{ id: 'save', label: 'Save', icon: IconSave, onActivate: () => {}, emphasis: 'primary' }]} />);
+    const button = screen.getByRole('button', { name: 'Save' });
+    expect(button.textContent).toBe('Save');
+    expect(button.className).toContain('btn');
+    expect(button.className).not.toContain('ghost');
+  });
+
+  it('renders every action labelled when the toolbar is', () => {
+    // The palette's footer offers four actions a user meets rarely; a word beside each glyph is
+    // recognition where a tooltip would be recall.
+    render(<Toolbar labelled actions={[{ id: 'new', label: 'New', icon: IconSave, onActivate: () => {} }]} />);
+    const button = screen.getByRole('button', { name: 'New' });
+    expect(button.textContent).toBe('New');
+  });
 });

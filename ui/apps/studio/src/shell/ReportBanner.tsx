@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { IconRefresh, IconWarn } from './icons.js';
 
 /**
  * A report raised against whatever the page currently holds: a conflicting version, or a failure
@@ -16,10 +17,11 @@ export function ReportBanner(props: {
 }) {
   return (
     <div role="alert" className="report-banner">
-      {props.children}
+      <span className="report-icon"><IconWarn size={15} /></span>
+      <span className="report-text">{props.children}</span>
       {props.onReload && (
-        <button type="button" className="btn" onClick={props.onReload}>
-          Reload latest
+        <button type="button" className="btn btn-secondary" onClick={props.onReload}>
+          <IconRefresh size={14} />Reload latest
         </button>
       )}
     </div>
