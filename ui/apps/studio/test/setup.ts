@@ -34,4 +34,30 @@ if (typeof HTMLDialogElement !== 'undefined' && typeof HTMLDialogElement.prototy
   };
 }
 
-afterEach(() => cleanup());
+// vitest 2's jsdom environment hands the page a `sessionStorage` but, under jsdom 25, no
+// `localStorage` — the property is there and reads `undefined`. The shell remembers a preference
+// in it (see `shell/DocumentActions`), so this stands in with the one thing it can honestly
+// model: a per-run map with the Storage surface the code reads and writes.
+if (typeof window.localStorage === 'undefined') {
+  const entries = new Map<string, string>();
+  Object.defineProperty(window, 'localStorage', {
+    configurable: true,
+    value: {
+      getItem: (key: string) => entries.get(key) ?? null,
+      setItem: (key: string, value: string) => { entries.set(key, String(value)); },
+      removeItem: (key: string) => { entries.delete(key); },
+      clear: () => { entries.clear(); },
+      key: (index: number) => [...entries.keys()][index] ?? null,
+      get length() { return entries.size; },
+    } satisfies Storage,
+  });
+}
+
+afterEach(() => {
+  cleanup();
+  // The shell remembers each page's last selection in sessionStorage (see `shell/lastSelection`);
+  // a test that selected something must not hand that selection to the next one.
+  sessionStorage.clear();
+  // Likewise the remembered save variant: a preference set in one test is not the next one's.
+  window.localStorage.clear();
+});

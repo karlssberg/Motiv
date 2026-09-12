@@ -1,5 +1,5 @@
 import { test, expect, type Locator, type Page } from '@playwright/test';
-import { closeDocument, expectDocument, openDocument } from './shell.js';
+import { closeDocument, expectDocument, openDocument, openScratchRule } from './shell.js';
 
 /** Replaces the root row's expression by typing DSL into it, the way authoring works elsewhere. */
 async function buildRootExpression(page: Page, dsl: string): Promise<void> {
@@ -21,7 +21,7 @@ function pendingContent(page: Page): Locator {
  * there would pass whether or not the real editor actually took it — only a browser proves it.
  */
 test('the phantom editor opened by + receives focus', async ({ page }) => {
-  await page.goto('/');
+  await openScratchRule(page);
   await expect(page.getByRole('button', { name: 'edit expression at $.rule' })).toBeVisible();
 
   await page.getByRole('button', { name: 'insert after $.rule', exact: true }).click();
@@ -36,7 +36,7 @@ test('the phantom editor opened by + receives focus', async ({ page }) => {
  * right edge, and asserts the strip's horizontal scroll position actually moved.
  */
 test('the strip scrolls the hovered mark into view', async ({ page }) => {
-  await page.goto('/');
+  await openScratchRule(page);
 
   // Alternating the two customer specs keeps the DSL valid while making it long enough — twenty
   // repeats prints well over a thousand characters, far wider than the strip's card.
@@ -80,7 +80,7 @@ test('the strip scrolls the hovered mark into view', async ({ page }) => {
  * the document — precisely the class of bug this milestone's e2e suite exists to catch.
  */
 test('inserting an operand round-trips into the DSL pane', async ({ page }) => {
-  await page.goto('/');
+  await openScratchRule(page);
   await buildRootExpression(page, 'customer.is-active & customer.is-adult');
   await expectDocument(page, '"and"');
 
@@ -123,7 +123,7 @@ test('inserting an operand round-trips into the DSL pane', async ({ page }) => {
  * once — not twice, and not zero times.
  */
 test('blurring a parseable slot by clicking elsewhere commits it exactly once', async ({ page }) => {
-  await page.goto('/');
+  await openScratchRule(page);
   await buildRootExpression(page, 'customer.is-active & customer.is-adult');
   await expectDocument(page, '"and"');
 
@@ -149,7 +149,7 @@ test('blurring a parseable slot by clicking elsewhere commits it exactly once', 
 });
 
 test('cancelling with Escape does not insert the cancelled buffer', async ({ page }) => {
-  await page.goto('/');
+  await openScratchRule(page);
   await buildRootExpression(page, 'customer.is-active & customer.is-adult');
   await expectDocument(page, '"and"');
 

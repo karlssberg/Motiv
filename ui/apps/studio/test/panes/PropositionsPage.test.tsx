@@ -1,11 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
   RuleEditorStore, RulesApiError, type PropositionListEntry, type RuleDocument,
 } from '@motiv-rules/core';
 import { RuleEditorProvider } from '@motiv-rules/react';
 import { PropositionsPage } from '../../src/panes/PropositionsPage.js';
+import { recallSelection } from '../../src/shell/lastSelection.js';
 
 function entry(overrides: Partial<PropositionListEntry> & { name: string }): PropositionListEntry {
   return {
@@ -74,7 +75,7 @@ function renderPage(
     </RuleEditorProvider>
   );
   const { rerender } = render(page(selected));
-  return { onSelect, select: (name: string | null) => rerender(page(name)) };
+  return { onSelect, store, select: (name: string | null) => rerender(page(name)) };
 }
 
 describe('PropositionsPage', () => {
@@ -88,6 +89,39 @@ describe('PropositionsPage', () => {
     expect(client.listPropositions).toHaveBeenCalled();
   });
 
+  it('shows an empty state instead of the editor while nothing is open', async () => {
+    // The editor store is shared with the rules page, so with no selection it still holds whatever
+    // was last edited there. Rendering that under a "no proposition open" title would show a
+    // document the page cannot save; the page says what to do instead.
+    const { select } = renderPage(stubClient());
+
+    expect(screen.queryByRole('region', { name: 'Editor' })).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Evaluate' })).toBeNull();
+    const empty = screen.getByRole('region', { name: 'No proposition open' });
+    expect(within(empty).getByRole('button', { name: 'Choose a proposition' })).toBeTruthy();
+    expect(within(empty).getByRole('button', { name: 'New proposition' })).toBeTruthy();
+
+    // Its own chooser opens the same palette the toolbar's Open does.
+    await userEvent.click(within(empty).getByRole('button', { name: 'Choose a proposition' }));
+    expect(await screen.findByRole('dialog', { name: 'Propositions' })).toBeTruthy();
+    await userEvent.keyboard('{Escape}');
+
+    select('customer.derived');
+    expect(await screen.findByRole('region', { name: 'Editor' })).toBeTruthy();
+    expect(screen.queryByRole('region', { name: 'No proposition open' })).toBeNull();
+  });
+
+  it('remembers its selection for the page switch to bring back', async () => {
+    const { select } = renderPage(stubClient(), 'customer.derived');
+    await screen.findByRole('region', { name: 'Editor' });
+    expect(recallSelection('propositions')).toBe('customer.derived');
+
+    // Deselecting forgets it too: a deleted proposition must not be what the link reopens.
+    select(null);
+    await screen.findByRole('region', { name: 'No proposition open' });
+    expect(recallSelection('propositions')).toBeNull();
+  });
+
   it('loads the selected proposition document', async () => {
     const client = stubClient();
     renderPage(client, 'customer.derived');
@@ -99,13 +133,16 @@ describe('PropositionsPage', () => {
     const client = stubClient();
     renderPage(client, 'customer.derived');
 
-    // The dotted name renders as a trail, which is the payoff of namespacing by name.
-    // Scoped to the banner: "customer" also appears as a model pill in the explorer, so an
+    // The dotted name renders as a trail, which is the payoff of namespacing by name. It titles
+    // the editor pane rather than the top bar: the document is named where it is edited.
+    // Scoped to the editor: "customer" also appears as a model pill in the explorer, so an
     // unscoped findByText would match several nodes and throw.
-    const bar = await screen.findByRole('banner');
-    await waitFor(() => expect(bar.querySelector('.breadcrumb-current')?.textContent).toBe('derived'));
-    expect([...bar.querySelectorAll('.breadcrumb-item')].map((node) => node.textContent))
+    // The panes mount once the selection has loaded, so the region is awaited, not assumed.
+    const editor = await screen.findByRole('region', { name: 'Editor' });
+    await waitFor(() => expect(editor.querySelector('.breadcrumb-current')?.textContent).toBe('derived'));
+    expect([...editor.querySelectorAll('.breadcrumb-item')].map((node) => node.textContent))
       .toContain('customer');
+    expect(screen.getByRole('banner').querySelector('.breadcrumb-current')).toBeNull();
   });
 
   it('fetches the blast radius for the selection', async () => {
@@ -328,7 +365,8 @@ describe('PropositionsPage', () => {
     });
     const { select } = renderPage(client, 'customer.derived');
     await screen.findByText(/can-checkout/);
-    await userEvent.click(screen.getByRole('button', { name: /^save/i }));
+    // Exact: the split button's toggle is named `Save (1) options`, which a prefix match also finds.
+    await userEvent.click(screen.getByRole('button', { name: 'Save (1)' }));
     await screen.findByRole('alert');
 
     // Both the strip and the banner are claims about the proposition that was selected. Carried
@@ -559,7 +597,7 @@ describe('PropositionsPage', () => {
 
     const dialog = screen.getByRole('dialog');
     // Close floats over the corner rather than sitting in the flow, so it is not part of the count.
-    const close = screen.getByRole('button', { name: /close/i });
+    const close = within(dialog).getByRole('button', { name: /close/i });
     const inFlow = [...dialog.children].filter((child) => child !== close);
 
     expect(inFlow.map((child) => child.className)).toEqual(['dialog-form']);
@@ -702,7 +740,7 @@ describe('PropositionsPage', () => {
     renderPage();
     await openExplorer();
     await userEvent.type(screen.getByRole('combobox'), 'derived');
-    await userEvent.click(screen.getByRole('button', { name: /close/i }));
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /close/i }));
 
     await openExplorer();
 
@@ -720,12 +758,24 @@ describe('PropositionsPage', () => {
     expect(screen.queryByRole('dialog', { name: 'Propositions' })).toBeNull();
   });
 
-  it('opens the document viewer from the toolbar', async () => {
-    renderPage();
+  it('opens the document viewer from the toolbar once a proposition is open', async () => {
+    renderPage(stubClient(), 'customer.derived');
+    await screen.findByRole('region', { name: 'Editor' });
 
     await userEvent.click(screen.getByRole('button', { name: 'JSON' }));
 
     expect(screen.getByRole('dialog', { name: /document/i })).toBeTruthy();
+  });
+
+  it('keeps the document viewer unavailable while nothing is open', async () => {
+    // The store still holds the rules page's last document; a viewer over it would show a
+    // document this page cannot save. Unavailable the toolbar's way — reachable, with the reason.
+    renderPage();
+
+    const json = screen.getByRole('button', { name: 'JSON' });
+    expect(json.getAttribute('aria-disabled')).toBe('true');
+    await userEvent.click(json);
+    expect(screen.queryByRole('dialog', { name: /document/i })).toBeNull();
   });
 
   it('refreshes the listing after a successful create', async () => {
@@ -741,5 +791,39 @@ describe('PropositionsPage', () => {
 
     await waitFor(() =>
       expect(client.listPropositions.mock.calls.length).toBeGreaterThan(before));
+  });
+});
+
+describe('PropositionsPage closing', () => {
+  it('closes a clean proposition back to the listing', async () => {
+    const { onSelect } = renderPage(stubClient(), 'customer.derived');
+    await screen.findByRole('region', { name: 'Editor' });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+    expect(onSelect).toHaveBeenCalledWith(null);
+  });
+
+  it('keeps Close unavailable while nothing is open', async () => {
+    renderPage(stubClient());
+    await screen.findByRole('region', { name: 'No proposition open' });
+    expect(screen.getByRole('button', { name: 'Close' }).getAttribute('aria-disabled')).toBe('true');
+  });
+
+  it('asks before closing a proposition with unsaved changes', async () => {
+    const client = stubClient();
+    const { onSelect, store } = renderPage(client, 'customer.derived');
+    await screen.findByRole('region', { name: 'Editor' });
+    await waitFor(() => expect(client.getProposition).toHaveBeenCalled());
+    act(() => store.replaceNode('$.rule', { spec: 'customer.is-adult' }));
+
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Unsaved changes' });
+    expect(onSelect).not.toHaveBeenCalled();
+
+    // Save & close from the dialog: the save lands, then the selection clears.
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save & close' }));
+    await waitFor(() => expect(client.putProposition).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(onSelect).toHaveBeenCalledWith(null));
   });
 });

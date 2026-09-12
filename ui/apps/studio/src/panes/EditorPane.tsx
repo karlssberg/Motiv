@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { RulesApiClient } from '@motiv-rules/core';
 import { useCatalog, useDslSync, useRuleEditorStore } from '@motiv-rules/react';
 import { DslEditor } from '../dsl/DslEditor.js';
@@ -28,7 +28,16 @@ const tabId = (surface: Surface): string => `editor-tab-${surface}`;
  * surface: switching to the builder tears down the CodeMirror view while uncommitted text, an
  * unresolved conflict and any pending commit all survive to be picked up on the way back.
  */
-export function EditorPane(props: { client: RulesApiClient }) {
+export function EditorPane(props: {
+  client: RulesApiClient;
+  /**
+   * What the pane is editing, named by the host (a `DocumentTitle`, in Studio). First in the header,
+   * so the row reads as "this document, edited this way", with the surface tabs at its end.
+   */
+  title?: ReactNode;
+  /** The document's name as the DSL surface files it; absent for a nameless draft. */
+  documentName?: string | undefined;
+}) {
   const store = useRuleEditorStore();
   const catalogState = useCatalog(props.client);
   const catalog = catalogState.status === 'ready' ? catalogState.data : EMPTY_CATALOG;
@@ -39,6 +48,10 @@ export function EditorPane(props: { client: RulesApiClient }) {
   return (
     <section className="pane" aria-label="Editor">
       <div className="pane-header">
+        {props.title !== undefined && <div className="pane-title truncate">{props.title}</div>}
+        <div className="pane-header-fill" />
+        {/* The header item that yields when the pane is too narrow for everything (see `.truncate`). */}
+        {surface === 'dsl' && <span className="pane-hint truncate">text is the source of truth</span>}
         <div className="surface-tabs" role="tablist" aria-label="Editing surface">
           {SURFACES.map(({ id, label }) => (
             <button
@@ -55,16 +68,6 @@ export function EditorPane(props: { client: RulesApiClient }) {
             </button>
           ))}
         </div>
-        {/* The header item that yields when the pane is too narrow for all three (see `.truncate`). */}
-        {surface === 'dsl' && <span className="pane-hint truncate">text is the source of truth</span>}
-        <button
-          type="button"
-          className="btn ext-point"
-          disabled
-          title="requires backend (coming)"
-        >
-          parameters — coming
-        </button>
       </div>
 
       <div
@@ -75,7 +78,7 @@ export function EditorPane(props: { client: RulesApiClient }) {
       >
         {surface === 'builder'
           ? <BuilderBody client={props.client} />
-          : <DslEditor store={store} catalog={catalog} sync={sync} />}
+          : <DslEditor store={store} catalog={catalog} sync={sync} documentName={props.documentName} />}
       </div>
     </section>
   );

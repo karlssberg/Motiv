@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { expectDocument } from './shell.js';
+import { expectDocument, openScratchRule } from './shell.js';
 
 /**
  * The operator badge is a custom control, so the behaviour a native `<select>` would have supplied
@@ -8,7 +8,7 @@ import { expectDocument } from './shell.js';
  * invisible to the unit tests.
  */
 test('an operator can be changed from the keyboard alone', async ({ page }) => {
-  await page.goto('/');
+  await openScratchRule(page);
 
   await page.getByRole('button', { name: 'edit expression at $.rule' }).click();
   await page.keyboard.press('ControlOrMeta+a');

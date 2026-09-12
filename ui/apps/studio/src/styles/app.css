@@ -10,6 +10,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--sans);
+  font-size: 13px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -18,13 +19,18 @@ body {
   min-height: 100vh;
 }
 
+/* Every glyph is a block, so it sits on the flex axis of whatever button holds it. */
+svg {
+  display: block;
+}
+
 /*
-  Shell layout: a fixed app bar (brand + breadcrumb + save) above columns that sit
-  flush against each other — divider borders only, no gaps, no per-column shadow/radius. The
-  previous grid gave every pane its own border + radius + shadow *and* a gap between them,
-  which compounds into the "boxes inside boxes" look; a single shell frame with thin dividers
-  reads much lighter at the same information density. Collapses to stacked full-width
-  sections (divider moves from the right edge to the bottom) on narrow viewports.
+  Shell layout: one surface. The app bar, the editor and the rail beside it are the same white,
+  divided by hairlines — no canvas grey behind the columns, no tinted pane headers, no gaps. An
+  earlier revision gave the canvas a grey, each pane a white and each header an off-white, and the
+  "boxes inside boxes" that produced was the whole of what the redesign was asked to remove.
+  Collapses to stacked full-width sections (the divider moves from the right edge to the bottom)
+  on narrow viewports.
 */
 .app {
   display: flex;
@@ -34,33 +40,42 @@ body {
 }
 
 /*
-  Sized to content rather than stretched to fill the viewport: with a fourth section
-  (CheckoutPane, below) after it, forcing this row to fill all remaining vertical space would
-  push that section down past a large dead gap of empty canvas whenever the columns' own
-  content is shorter than the viewport. Each pane instead caps its own body height and scrolls
-  internally (see `.pane-body`/`.surface-panel`), which is what actually needs to happen when a
-  column's content — the JSON document, say — grows taller than is comfortable.
+  The editor takes what the rail leaves. The rail is a fixed measure rather than a second flexible
+  column so that a long expression widens nothing but its own row, and the two panes that run the
+  rule keep the width their JSON needs whatever the tree is doing. Each pane caps its own body
+  height and scrolls internally (see `.pane-body`/`.surface-panel`).
 */
 .shell-body {
   display: flex;
   align-items: stretch;
+  flex: 1;
+}
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  width: 480px;
+  flex: none;
+  min-width: 0;
 }
 
 @media (max-width: 900px) {
   .shell-body {
     flex-direction: column;
   }
+
+  .rail {
+    width: auto;
+  }
 }
 
-/* App bar: brand mark, breadcrumb trail (whose leaf picks the rule), model-type pill, then the
-   loaded rule's version and Save */
+/* App bar: brand, a hairline, the page switch, then the page's actions at the far end. */
 .appbar {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  min-height: 46px;
-  padding: 8px 14px;
+  gap: 12px;
+  height: 48px;
+  padding: 0 16px;
   background: var(--sh-appbar);
   border-bottom: 1px solid var(--border);
   flex: none;
@@ -80,59 +95,67 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font: 700 13px var(--sans);
-  color: #fff;
+  font: 700 12px var(--sans);
+  color: var(--on-accent);
   flex: none;
 }
 
 .appbar-wordmark {
-  font: 700 14px var(--sans);
+  font: 600 14px var(--sans);
   color: var(--text);
   letter-spacing: -0.01em;
 }
 
-/* Page navigation: the Rules/Propositions switch in the appbar. Anchors rather than tabs — see
-   AppBar — but reusing `.tab` from the surface tabs, so both switches read as the same control at
-   two altitudes even though only one of them is a tablist. */
+.appbar-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  flex: none;
+}
+
+/*
+  Page navigation: anchors, not tabs — see AppBar. Words with a glyph, and the current page
+  underlined in the accent along the bar's bottom edge, which is where a reader expects the
+  "you are here" of a top bar to be. It shares `.tab` with the surface switch for the button
+  anatomy only; the two say "current" differently because they are different controls.
+*/
 .page-nav {
   display: flex;
   gap: 2px;
-  margin-left: var(--space);
-  padding: 2px;
-  border-radius: 8px;
-  background: var(--sh-inset);
-  border: 1px solid var(--border);
+  align-self: stretch;
+  align-items: stretch;
 }
 
-.breadcrumb-sep {
-  color: var(--faint);
+.page-nav .tab {
+  position: relative;
+  height: auto;
+  border-radius: 0;
+  padding: 0 10px;
   font-size: 13px;
+  font-weight: 500;
 }
 
-.breadcrumb-item {
-  font: 500 13px var(--sans);
-  color: var(--muted);
-  white-space: nowrap;
+.page-nav .tab[aria-current='page'] {
+  background: transparent;
+  box-shadow: none;
+  font-weight: 600;
 }
 
-.breadcrumb-current {
-  font: 600 13px var(--sans);
-  color: var(--text);
-  white-space: nowrap;
+.page-nav .tab[aria-current='page']::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
 }
 
-.model-pill {
-  margin-left: 2px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font: 600 11px var(--mono);
-  color: var(--accent);
-  background: var(--sh-inset);
-  border: 1px solid var(--border);
-  padding: 2px 8px;
-  border-radius: 6px;
-  white-space: nowrap;
+.page-nav .tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: var(--radius);
 }
 
 .appbar-fill {
@@ -144,37 +167,106 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
 }
 
-.rule-version {
-  font-size: 0.75rem;
+/*
+  The document's title, in the editor pane's header — see DocumentTitle. The name leads at the
+  pane's own weight; the model pill, version and any note follow it quietly.
+*/
+.doc-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.doc-name {
+  flex: 1 1 auto;
+  min-width: 48px;
+  font: 600 14px var(--sans);
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.breadcrumb-sep {
+  color: var(--faint);
+  font-weight: 400;
+}
+
+.breadcrumb-item {
+  font-weight: 500;
   color: var(--muted);
+}
+
+.breadcrumb-current {
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* The keystroke that opens the picker, said beside the thing it picks. */
+.kbd,
+kbd {
+  font: 500 10.5px/16px var(--mono);
+  color: var(--faint);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 4px;
+  background: var(--bg);
+  white-space: nowrap;
+}
+
+.model-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: 600 11px/18px var(--mono);
+  color: var(--accent);
+  background: var(--accent-weak);
+  border: 1px solid transparent;
+  padding: 0 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+
+.rule-version,
+.doc-note {
+  font-size: 12px;
+  color: var(--faint);
   white-space: nowrap;
 }
 
 /*
   Report banner: a conflicting version another writer saved, or a failure that reached nowhere
-  else. It sits below the app bar rather than wrapping inside it — both pages raise it, and the
-  propositions page's own strip sits in the same place — so it is inset to the app bar's inline
-  padding rather than being full-bleed, which keeps it reading as part of the header block it
-  belongs to.
+  else. A full-width band under the app bar, tinted in the danger colour, with the way back at its
+  far end. Both pages raise it, and the propositions page's own strip sits in the same place.
 */
 .report-banner {
   flex: none;
-  margin: var(--space) 14px 0;
   display: flex;
   align-items: center;
-  gap: var(--space);
-  color: var(--danger);
-  font-size: 0.8rem;
-  background: color-mix(in srgb, var(--danger) 12%, transparent);
-  border: 1px solid var(--danger);
-  border-radius: var(--radius);
-  padding: calc(var(--space) / 4) var(--space);
+  gap: 10px;
+  min-height: 40px;
+  padding: 6px 20px;
+  color: var(--text);
+  font-size: 12.5px;
+  background: color-mix(in srgb, var(--danger) 10%, var(--bg));
+  border-bottom: 1px solid var(--border);
 }
 
-/* Pane: one divided column of the shell (or a full-width footer section below it) */
+.report-icon {
+  display: inline-flex;
+  color: var(--danger);
+  flex: none;
+}
+
+.report-text {
+  flex: 1;
+  color: var(--danger);
+}
+
+/* Pane: one divided column of the shell */
 .pane {
   background: var(--sh-panel);
   border-right: 1px solid var(--border);
@@ -188,6 +280,16 @@ body {
   border-right: none;
 }
 
+/* The rail's panes stack: the divider moves to the top of every pane after the first. */
+.rail > .pane {
+  flex: none;
+  border-right: none;
+}
+
+.rail > .pane + .pane {
+  border-top: 1px solid var(--border);
+}
+
 @media (max-width: 900px) {
   .pane {
     border-right: none;
@@ -196,30 +298,16 @@ body {
 }
 
 /*
-  CheckoutPane sits below the three-column shell body, not beside it (the source design has no
-  fourth column for it — it's Studio's own addition). As a direct child of `.app`'s column
-  flex it must size to its content rather than compete with `.shell-body` for the remaining
-  vertical space, and its divider belongs on top, not the right.
-*/
-.app > .pane {
-  flex: none;
-  max-height: 40vh;
-  overflow: auto;
-  border-right: none;
-  border-top: 1px solid var(--border);
-}
-
-/*
-  Every pane opens with the same fixed-height title bar, which is either a bare `<h2>` or a
-  `.pane-header` row pairing the title with trailing controls (tabs, extension-point affordances).
+  Every pane opens with the same fixed-height title row, which is either a bare `<h2>` or a
+  `.pane-header` row pairing a document title with trailing controls (the surface tabs).
 */
 .pane > h2,
 .pane-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 40px;
-  padding: 0 12px;
+  gap: 10px;
+  height: 48px;
+  padding: 0 20px;
   margin: 0;
   background: var(--sh-panel-head);
   border-bottom: 1px solid var(--border);
@@ -229,51 +317,59 @@ body {
 .pane > h2,
 .pane-header > h2 {
   margin: 0;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.01em;
   color: var(--text);
 }
 
+.pane-title {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pane-header-fill {
+  flex: 1;
+  min-width: 8px;
+}
+
 /*
-  Scrollable body below a pane's title bar — `.surface-panel` is the EditorPane's own, which
+  Scrollable body below a pane's title row — `.surface-panel` is the EditorPane's own, which
   additionally hosts the Builder/DSL tabpanel.
 */
 .pane-body,
 .surface-panel {
   max-height: 78vh;
   overflow: auto;
-  padding: 12px 14px;
+  padding: 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: var(--space);
+  gap: 12px;
 }
 
-/* micro label badge beside a pane title, e.g. "read-only · live" */
+/* micro label badge beside a pane title, e.g. "live rules", "sync rule" */
 .pane-badge {
-  font: 500 10px var(--sans);
+  font: 600 10px/16px var(--sans);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--faint);
   background: var(--sh-inset);
-  border: 1px solid var(--border);
-  padding: 2px 6px;
+  padding: 0 6px;
   border-radius: 4px;
+  white-space: nowrap;
 }
 
-.pane-header {
-  justify-content: space-between;
-  flex-wrap: nowrap;
-  gap: var(--space);
+.pane-hint {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--faint);
 }
 
 /*
-  At the three-column layout each pane is only ~400px wide, which is narrower than the header's
-  contents lay out at their natural widths. The controls keep theirs — a clipped tab or button is
-  an unusable one — so anything that may be shortened must opt in with `.truncate`.
+  Header items keep their natural widths — a clipped tab or button is an unusable one — so
+  anything that may be shortened must opt in with `.truncate`.
 */
-.pane-header > .btn,
-.pane-header > h2,
 .pane-header > .surface-tabs {
   flex: none;
 }
@@ -282,22 +378,29 @@ body {
 .field {
   display: flex;
   flex-direction: column;
-  gap: calc(var(--space) / 4);
-  font-size: 0.8rem;
+  gap: 4px;
+  font-size: 11.5px;
   color: var(--muted);
 }
 
 /* Shared control styling for selects, inputs, textareas */
 .control {
   width: 100%;
+  min-height: 28px;
   background: var(--bg);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: calc(var(--space) * 0.5) calc(var(--space) * 0.75);
+  padding: 4px 8px;
   font-family: inherit;
-  font-size: 0.8rem;
+  font-size: 12.5px;
   resize: vertical;
+}
+
+textarea.control {
+  font-family: var(--mono);
+  line-height: 1.6;
+  background: var(--sh-inset);
 }
 
 .control:focus {
@@ -306,27 +409,48 @@ body {
   border-color: var(--accent);
 }
 
-/* Buttons */
+/* Buttons: one 28px height, three weights — filled, outlined, danger. */
 .btn {
   appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   border: 1px solid var(--accent);
   border-radius: var(--radius);
   background: var(--accent);
-  color: var(--bg);
-  height: 26px;
-  padding: 0 11px;
-  font-size: 0.75rem;
+  color: var(--on-accent);
+  height: 28px;
+  padding: 0 12px;
+  font-family: inherit;
+  font-size: 12.5px;
   font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
   transition: background-color 0.15s ease, transform 0.05s ease;
 }
 
 .btn:hover {
-  background: color-mix(in srgb, var(--accent) 85%, black);
+  background: color-mix(in srgb, var(--accent) 88%, black);
 }
 
 .btn:active {
   transform: translateY(1px);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.btn-secondary {
+  background: var(--bg);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.btn-secondary:hover {
+  background: var(--sh-inset);
 }
 
 .btn-danger {
@@ -337,6 +461,152 @@ body {
 
 .btn-danger:hover {
   background: color-mix(in srgb, var(--danger) 85%, black);
+}
+
+/* Unavailable actions stay focusable — see Toolbar — so this is the only signal that they are
+   inert, and it must not rely on :disabled. */
+.btn[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.btn[aria-disabled='true']:hover {
+  background: var(--accent);
+}
+
+/* The split primary: one filled control in two parts, the action and the chevron that opens its
+   variants. Drawn as a single pill — the inner edge is a hairline in the on-accent colour — so
+   it reads as one button with a menu, not two buttons that happen to touch. */
+.split { display: inline-flex; }
+
+.split-main {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.split-toggle {
+  width: 24px;
+  padding: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left-color: color-mix(in srgb, var(--on-accent) 35%, transparent);
+}
+
+.split-toggle[aria-expanded='true'] {
+  background: color-mix(in srgb, var(--accent) 80%, black);
+}
+
+/* The variants, one per row, each with its consequence under it. The check marks the variant
+   the main button currently runs; the others keep its width so the labels line up. */
+.split-menu {
+  display: flex;
+  flex-direction: column;
+  min-width: 260px;
+  padding: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  z-index: 30;
+}
+
+.split-item {
+  appearance: none;
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  column-gap: 8px;
+  align-items: start;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.split-item:hover,
+.split-item:focus-visible {
+  background: var(--sh-inset);
+  outline: none;
+}
+
+.split-item:focus-visible { box-shadow: inset 0 0 0 2px var(--accent); }
+
+.split-check {
+  display: inline-flex;
+  margin-top: 1px;
+  color: var(--accent);
+  visibility: hidden;
+}
+
+.split-item[aria-checked='true'] .split-check { visibility: visible; }
+
+.split-item-text { display: flex; flex-direction: column; gap: 2px; }
+.split-item-label { font-size: 12.5px; font-weight: 600; }
+.split-item-desc { font-size: 11.5px; color: var(--muted); }
+
+/* The one paragraph a confirmation dialog carries. */
+.dialog-text { margin: 0; font-size: 13px; color: var(--muted); }
+
+/* A page with nothing open says so in the space the panes would fill, and offers the two ways
+   forward. Quiet: this is the resting state of a fresh visit, not an error.
+
+   Anchored a third of the way down rather than centred: the eye lands in the upper part of an
+   empty area, and dead centre reads as "lower than expected" on a tall viewport. The bottom margin
+   is twice the top, so the block sits at one third of the remaining height whatever that height is. */
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: auto;
+  margin-bottom: auto;
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.empty-state::before,
+.empty-state::after {
+  content: '';
+  flex: 1;
+}
+
+.empty-state::after {
+  flex: 2;
+}
+
+.empty-state h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.empty-state p {
+  margin: 0 0 8px;
+  max-width: 40ch;
+  font-size: 13px;
+}
+
+.empty-state .btn kbd {
+  margin-left: 4px;
+  color: var(--on-accent);
+  border-color: color-mix(in srgb, var(--on-accent) 40%, transparent);
+  background: transparent;
+}
+
+/* The button that runs a rule and the verdict it produced, side by side. */
+.run-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 /* Extension points: inert affordances for not-yet-evaluable node kinds */
@@ -358,27 +628,28 @@ body {
   line-height: 1.65;
   background: transparent;
   padding: 0;
+  margin: 0;
   overflow-x: auto;
   white-space: pre;
 }
 
-/* Validation errors */
+/* Validation errors and rejected inputs: red text with a glyph's worth of tint, no heavy frame. */
 .errors {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: calc(var(--space) / 2);
+  gap: 4px;
 }
 
 .error {
+  margin: 0;
   color: var(--danger);
-  font-size: 0.8rem;
-  background: color-mix(in srgb, var(--danger) 12%, transparent);
-  border: 1px solid var(--danger);
+  font-size: 12px;
+  background: color-mix(in srgb, var(--danger) 10%, var(--bg));
   border-radius: var(--radius);
-  padding: calc(var(--space) / 2) var(--space);
+  padding: 5px 10px;
 }
 
 /*
@@ -387,11 +658,14 @@ body {
   edit controls, closed by default, single-open unless pinned). A collapsed node therefore costs
   exactly one compact row rather than a full bordered card.
 
+  Rows are lines, not cards. Structure is carried by the indent guide `.node-kids` draws down its
+  left edge, hover by a fill, selection by a bar and a tint — so a resting tree reads as an outline
+  of the expression rather than as a stack of boxes, which is what the bordered rows read as.
+
   Indentation is structural rather than computed: a level's rows sit inside their parent's
-  `.node-kids`, whose left margin is the one indent step. Multiplying a `--depth` custom property
-  on top of that (as an earlier revision did) double-counts the nesting and fans the tree out
-  further at every level. `--depth` still earns its keep on `.assertion`, which renders the
-  justification tree as a flat list with no nesting to read the level from.
+  `.node-kids`, whose left margin is the one indent step. `--depth` still earns its keep on
+  `.assertion`, which renders the justification tree as a flat list with no nesting to read the
+  level from.
 */
 .node {
   display: flex;
@@ -402,11 +676,13 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 3px;
-  padding: 6px 9px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: var(--radius);
+}
+
+.node-row:hover {
   background: var(--sh-inset);
-  border: 1px solid var(--border);
-  border-radius: 7px;
 }
 
 /* The caret discloses whatever is inside a node — children on a parent, metadata on a leaf — so
@@ -416,17 +692,33 @@ body {
   border: none;
   background: transparent;
   width: 16px;
+  height: 16px;
   flex: none;
   padding: 0;
-  font-size: 13px;
-  line-height: 1;
-  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--faint);
   cursor: pointer;
+  border-radius: 4px;
+}
+
+.node-chev:hover {
+  color: var(--text);
+}
+
+.node-chev:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.node-chev-pending {
+  color: var(--accent);
 }
 
 /* Colour carries the node's kind: operators accent, quantifiers muted, leaves plain text. */
 .node-badge {
-  font: 600 12.5px var(--mono);
+  font: 600 11.5px var(--mono);
   white-space: nowrap;
 }
 
@@ -475,10 +767,14 @@ body {
   border: none;
   background: transparent;
   flex: none;
-  padding: 0 4px;
-  font-size: 11px;
-  line-height: 1;
-  color: var(--muted);
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  color: var(--faint);
   cursor: pointer;
   opacity: 0;
 }
@@ -497,6 +793,22 @@ body {
   opacity: 1;
 }
 
+.node-menu-trigger:hover,
+.node-pin:hover,
+.node-select:hover,
+.node-insert:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.node-menu-trigger:focus-visible,
+.node-pin:focus-visible,
+.node-select:focus-visible,
+.node-insert:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 .node-pin.pinned { color: var(--accent); }
 
 /* A value that is also the control that changes it: the operator badge in the tree, the rule at the
@@ -506,20 +818,26 @@ body {
    trigger is as wide as the value it names rather than as wide as the longest one on offer. */
 .picker-trigger {
   appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   border: none;
   border-radius: 4px;
   background: transparent;
-  padding: 1px 3px;
-  margin-left: -3px;
+  padding: 1px 4px;
+  margin-left: -4px;
   cursor: pointer;
 }
 
-/* Drawn in the flow rather than as a background, so the trigger keeps hugging its label. */
+/* Drawn as a masked glyph rather than a character, so it renders the same on every platform. */
 .picker-trigger::after {
-  content: '▾';
-  margin-left: 3px;
-  font-size: 11px;
+  content: '';
+  width: 10px;
+  height: 10px;
+  background: currentColor;
   opacity: 0.7;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
 .picker-trigger:hover,
@@ -529,6 +847,11 @@ body {
   outline: none;
 }
 
+.picker-trigger:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 /* A popup card, positioned in viewport coordinates by `placePopover` — the same flip-and-clamp
    the DSL pane's payload card uses. Fixed rather than absolute so an ancestor's `overflow` cannot
    clip it, since rows sit inside a scrolling pane. Worn by both the row actions menu and the
@@ -536,13 +859,13 @@ body {
 .node-menu {
   display: flex;
   flex-direction: column;
-  min-width: 132px;
+  min-width: 160px;
   padding: 4px;
   overflow-y: auto;
-  background: var(--sh-inset);
+  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 8px;
-  box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
+  box-shadow: var(--shadow);
   z-index: 30;
 }
 
@@ -553,7 +876,7 @@ body {
   padding: 6px 10px;
   border-radius: 5px;
   font: inherit;
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--text);
   text-align: left;
   cursor: pointer;
@@ -561,33 +884,48 @@ body {
 
 .node-menu-item:hover,
 .node-menu-item:focus-visible {
-  background: var(--bg);
+  background: var(--sh-inset);
+  outline: none;
 }
 
-/* The detail panel: the node's edit controls and decoration fields, inset from the row by the
-   same step that indents the level below. */
+/* The detail panel: the node's edit controls and decoration fields, a well inset to the row's
+   text column, with the fields side by side where there is room. */
 .node-detail {
   display: flex;
   flex-direction: column;
-  gap: var(--space);
-  margin: 0 0 8px 10px;
-  padding: 9px 10px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  gap: 10px;
+  margin: 2px 0 8px 32px;
+  padding: 12px;
+  background: var(--sh-inset);
+  border-radius: 8px;
 }
 
 .node-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: calc(var(--space) / 2);
+  gap: 8px;
 }
 
+.decoration {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 900px) {
+  .decoration {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+/* The indent guide: one hairline down the caret column of the level above. */
 .node-kids {
   display: flex;
   flex-direction: column;
-  margin-left: 10px;
+  margin-left: 15px;
+  padding-left: 13px;
+  border-left: 1px solid var(--border);
 }
 
 /* A node's DSL text. `min-width: 0` is load-bearing: `.node-row` is a flex container, and a flex
@@ -628,6 +966,12 @@ button.node-dsl {
   padding: 0;
   text-align: left;
   cursor: text;
+}
+
+button.node-dsl:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
 }
 
 /* Stacked, not side by side: an error placed beside the field competes with it for the row's
@@ -689,48 +1033,97 @@ button.node-dsl {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: calc(var(--space) / 2);
-  min-height: 26px;
+  gap: 8px;
+  min-height: 24px;
+  margin: -8px 0;
   padding: 0 2px;
+  font-size: 12px;
+  color: var(--faint);
 }
 
-.decoration {
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--space) / 2);
+.accordion-strip .btn {
+  height: 24px;
+  padding: 0 8px;
+  font-size: 12px;
+  background: transparent;
+  color: var(--muted);
+  border-color: var(--border);
 }
 
-/* Evaluate outcome */
-.outcome {
-  font-weight: 700;
-  font-size: 0.95rem;
+.accordion-strip .btn:hover {
+  background: var(--sh-inset);
+}
+
+/* Evaluate outcome and the checkout decision, said the same way: a chip beside the button. */
+.verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 10%, var(--bg));
+  padding: 3px 10px 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.verdict-no {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, var(--bg));
 }
 
 /* Justification tree row, indented by depth */
 .assertion {
-  padding-left: calc(var(--depth, 0) * 18px);
-  font-size: 0.8rem;
+  padding-left: calc(var(--depth, 0) * 20px);
+  min-height: 26px;
+  font-size: 12.5px;
   display: flex;
   align-items: center;
-  gap: calc(var(--space) / 2);
+  gap: 6px;
 }
 
-/* Checkout outcome: Approved/Rejected plus the two rule verdicts */
+/* Checkout outcome: the three rule verdicts, each a heading and its assertions */
 .checkout-outcome {
   display: flex;
   flex-direction: column;
-  gap: var(--space);
+  gap: 10px;
 }
 
-.verdict h3 {
+.rule-verdict h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 12.5px;
+  font-weight: 600;
 }
 
-.verdict ul {
-  margin: calc(var(--space) / 2) 0 0;
-  padding-left: calc(var(--space) * 2.5);
-  font-size: 0.9rem;
+.assertions {
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.assertions li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+  font-size: 12.5px;
+}
+
+.tick {
+  display: inline-flex;
+  color: var(--ok);
+  flex: none;
+}
+
+.tick-no {
+  color: var(--danger);
 }
 
 /* ==========================================================================
@@ -742,8 +1135,7 @@ button.node-dsl {
 .surface-tabs {
   display: inline-flex;
   background: var(--sh-inset);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 7px;
   padding: 2px;
   gap: 2px;
 }
@@ -754,13 +1146,13 @@ button.node-dsl {
   gap: 6px;
   appearance: none;
   border: none;
-  border-radius: 6px;
+  border-radius: 5px;
   background: transparent;
   color: var(--muted);
   height: 24px;
-  padding: 0 11px;
+  padding: 0 10px;
   font-family: inherit;
-  font-size: 0.72rem;
+  font-size: 12px;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
@@ -770,21 +1162,20 @@ button.node-dsl {
   color: var(--text);
 }
 
+.tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 /* Two ways to be the current one, because the page switcher is navigation and the surface switch
    is a tablist: a link says so with `aria-current`, a tab with a class beside its `aria-selected`.
    The link needs no parallel class — the attribute it already carries is the state itself, as with
    `.model-pill[aria-pressed='true']`. */
 .tab.active,
 .tab[aria-current='page'] {
-  background: var(--sh-panel);
+  background: var(--bg);
   color: var(--text);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 14%);
-}
-
-.pane-hint {
-  font-size: 0.8rem;
-  color: var(--muted);
-  font-style: italic;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 10%);
 }
 
 /* Opts a flex item into giving up its width: it shortens to an ellipsis instead of wrapping. */
@@ -796,16 +1187,6 @@ button.node-dsl {
   text-overflow: ellipsis;
 }
 
-/* The panel both tabs swap the contents of */
-.surface-panel {
-  max-height: 78vh;
-  overflow: auto;
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space);
-}
-
 /* Editor frame: positioned so CodeMirror's own overlays have a containing block to sit in */
 .dsl-frame {
   position: relative;
@@ -814,22 +1195,24 @@ button.node-dsl {
   overflow: hidden;
   background: var(--dsl-bg);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 8px;
 }
 
+/* One 36px bar: the file's name, then how the buffer stands, then the one action. */
 .dsl-toolbar {
   display: flex;
   align-items: center;
-  gap: var(--space);
-  padding: calc(var(--space) / 2) var(--space);
-  background: var(--surface);
+  gap: 10px;
+  height: 36px;
+  padding: 0 8px 0 12px;
+  background: var(--sh-inset);
   border-bottom: 1px solid var(--border);
 }
 
 .dsl-filename {
   flex: 1;
   font-family: var(--mono);
-  font-size: 0.8rem;
+  font-size: 12px;
   color: var(--muted);
 }
 
@@ -837,17 +1220,32 @@ button.node-dsl {
 .dsl-conflict button,
 .dsl-popover-actions button {
   appearance: none;
-  border: 1px solid var(--border);
+  height: 24px;
+  border: 1px solid transparent;
   border-radius: var(--radius);
-  background: var(--bg);
-  color: var(--text);
-  padding: calc(var(--space) / 2) var(--space);
+  background: transparent;
+  color: var(--muted);
+  padding: 0 8px;
   font-family: inherit;
-  font-size: 0.8rem;
+  font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
 }
 
 .dsl-toolbar button:hover,
+.dsl-conflict button:hover,
+.dsl-popover-actions button:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.dsl-conflict button,
+.dsl-popover-actions button {
+  border-color: var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+
 .dsl-conflict button:hover,
 .dsl-popover-actions button:hover {
   border-color: var(--accent);
@@ -869,12 +1267,12 @@ button.node-dsl {
 .dsl-pill {
   display: inline-flex;
   align-items: center;
-  gap: calc(var(--space) / 2);
-  border: 1px solid currentColor;
+  gap: 6px;
   border-radius: 999px;
-  padding: 0 calc(var(--space) * 0.75);
-  font-size: 0.75rem;
-  line-height: 1.8;
+  padding: 0 8px;
+  height: 20px;
+  font-size: 11.5px;
+  font-weight: 500;
   background: color-mix(in srgb, currentColor 12%, transparent);
 }
 
@@ -895,12 +1293,12 @@ button.node-dsl {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space);
-  padding: calc(var(--space) / 2) var(--space);
+  gap: 8px;
+  padding: 6px 12px;
   background: var(--dsl-banner-bg);
   border-bottom: 1px solid var(--dsl-banner-bd);
   color: var(--dsl-banner-fg);
-  font-size: 0.8rem;
+  font-size: 12.5px;
 }
 
 .dsl-conflict span {
@@ -911,15 +1309,15 @@ button.node-dsl {
 .dsl-hover {
   display: flex;
   flex-direction: column;
-  gap: calc(var(--space) / 4);
+  gap: 2px;
   max-width: 320px;
-  padding: calc(var(--space) / 2) var(--space);
-  font-size: 0.8rem;
+  padding: 6px 10px;
+  font-size: 12.5px;
 }
 
 .dsl-hover-code {
   font-family: var(--mono);
-  font-size: 0.7rem;
+  font-size: 10.5px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   opacity: 0.7;
@@ -931,7 +1329,7 @@ button.node-dsl {
 
 .dsl-hover-path {
   font-family: var(--mono);
-  font-size: 0.7rem;
+  font-size: 10.5px;
   opacity: 0.6;
 }
 
@@ -992,16 +1390,16 @@ button.node-dsl {
   position: fixed;
   z-index: 10;
   width: 320px;
-  max-width: calc(100vw - var(--space) * 2);
+  max-width: calc(100vw - 16px);
   overflow: auto;
   display: flex;
   flex-direction: column;
-  gap: calc(var(--space) / 2);
-  padding: var(--space);
-  background: var(--surface);
+  gap: 6px;
+  padding: 12px;
+  background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: 0 6px 20px rgb(0 0 0 / 18%);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
 }
 
 /*
@@ -1016,12 +1414,12 @@ button.node-dsl {
 .dsl-popover-head {
   display: flex;
   align-items: center;
-  gap: calc(var(--space) / 2);
+  gap: 6px;
 }
 
 .dsl-popover-spec {
   font-family: var(--mono);
-  font-size: 0.85rem;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -1041,17 +1439,17 @@ button.node-dsl {
 }
 
 .dsl-badge {
-  border: 1px solid var(--accent);
   border-radius: 999px;
   background: var(--accent-weak);
   color: var(--accent);
-  padding: 0 calc(var(--space) / 2);
-  font-size: 0.7rem;
+  padding: 0 6px;
+  font-size: 10.5px;
+  font-weight: 600;
 }
 
 .dsl-popover-desc {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 12.5px;
   color: var(--muted);
 }
 
@@ -1059,27 +1457,24 @@ button.node-dsl {
 .dsl-popover-hint {
   margin: 0;
   font-family: var(--mono);
-  font-size: 0.7rem;
+  font-size: 11px;
   color: var(--muted);
 }
 
 .dsl-popover-error {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 12.5px;
   color: var(--danger);
 }
 
 .dsl-popover-actions {
   display: flex;
   justify-content: flex-end;
-  gap: calc(var(--space) / 2);
+  gap: 6px;
 }
 
-/* The permanent DSL line above the builder tree. It renders as its own row, above
-   `.accordion-strip` rather than sharing its reserved band — `.accordion-strip` keeps its own
-   `min-height` regardless, so this strip is additional vertical space, not free space reused. It
-   still shifts nothing when a node is first pinned, since `.accordion-strip`'s own reservation is
-   what prevents that jump; this strip is simply a constant-height row above it.
+/* The permanent DSL line above the builder tree: the whole expression, one line, in a quiet well.
+   It renders as its own row, above `.accordion-strip` rather than sharing its reserved band.
 
    Scrolls horizontally rather than wrapping: a rule of any size stays one line, and the strip
    scrolls whichever marked span the user just moved to into view. The mask fades both edges so
@@ -1095,30 +1490,26 @@ button.node-dsl {
    marked span into view can park it flush against the edge and therefore under the fade — the one
    span the user is trying to read.
 
-   `flex: 0 0 auto` is load-bearing, and its necessity is a side effect of the line above it.
-   This strip is a flex item of a column panel, and a column item's automatic minimum size —
-   the thing that normally stops a flex parent crushing it below its own content — applies only
-   while its overflow is `visible`. `overflow-y: hidden` is here to suppress a vertical scrollbar
-   alongside the horizontal one, and it also drops that automatic minimum to zero. So in a short
-   viewport the panel was free to squeeze the strip to a few pixels and clip the text inside it.
-   Refusing to shrink is the fix: this is fixed-height chrome, and the overflow belongs to the
-   panel below, which scrolls. */
+   `flex: 0 0 auto` is load-bearing. This strip is a flex item of a column panel, and a column
+   item's automatic minimum size applies only while its overflow is `visible`; `overflow-y: hidden`
+   drops that minimum to zero, so in a short viewport the panel was free to squeeze the strip to a
+   few pixels. Refusing to shrink is the fix: this is fixed-height chrome, and the overflow belongs
+   to the panel below, which scrolls. */
 .dsl-strip {
-  --strip-fade: 0.625rem;
-  --strip-inset: calc(var(--strip-fade) + 0.25rem);
+  --strip-fade: 10px;
+  --strip-inset: calc(var(--strip-fade) + 4px);
 
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 0.375rem;
+  gap: 10px;
   min-width: 0;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
   scroll-padding-inline: var(--strip-inset);
-  padding: 0.1875rem var(--strip-inset);
+  padding: 6px var(--strip-inset);
   background: var(--sh-inset);
-  border: 1px solid var(--border);
   border-radius: var(--radius);
   mask-image: linear-gradient(
     to right,
@@ -1132,16 +1523,16 @@ button.node-dsl {
 
 .dsl-strip-label {
   flex: 0 0 auto;
-  font: 0.5625rem var(--sans);
+  font: 600 10px var(--sans);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--faint);
 }
 
 .dsl-strip-text {
-  font: 0.72rem/1.5 var(--mono);
+  font: 12.5px/1.6 var(--mono);
   white-space: nowrap;
-  color: var(--dsl-fg);
+  color: var(--muted);
 }
 
 /* Two marks on two axes: a fill behind the hover, a rule beneath the selection. Same-axis marks
@@ -1161,31 +1552,22 @@ button.node-dsl {
   padding-bottom: 1px;
 }
 
-/* The selected row. A left accent bar rather than a fill: the row already carries a DSL editor
-   whose own background must stay readable, and a bar reads at a glance down a column of rows. */
+/* The selected row: a bar down its left edge and the accent's tint behind it, which reads at a
+   glance down a column of rows and leaves the row's own DSL editor legible. */
 .node-row.selected {
-  border-color: var(--accent);
+  background: var(--accent-weak);
   box-shadow: inset 2px 0 0 var(--accent);
 }
 
-.node-select {
-  padding: 0 2px;
-  font-size: 10px;
-  color: var(--faint);
-}
 .node-select[aria-pressed='true'] { color: var(--accent); }
 
 /* The phantom row. Dashed, because it is a position rather than a node — it has no path, is in no
    document, and will either become a row or vanish. */
 .node-row-pending {
-  border-style: dashed;
-  border-color: var(--accent);
+  border: 1px dashed var(--accent);
+  height: 30px;
 }
 
-.node-insert {
-  padding: 0 2px;
-  color: var(--faint);
-}
 .node-insert:hover { color: var(--accent); }
 
 /* ---------------------------------------------------------------------------
@@ -1205,21 +1587,35 @@ button.node-dsl {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: calc(var(--space) / 2);
-  padding: calc(var(--space) / 2) 12px;
+  gap: 6px;
+  padding: 10px 14px 6px;
 }
 
 .explorer-count {
   margin-left: auto;
-  font-size: 0.75rem;
-  opacity: 0.7;
+  font-size: 12px;
+  color: var(--faint);
 }
 
 /* A model chip that is filtering. Selected on the ARIA attribute the button already carries, so
    the toggled state is stated once — the same approach as .node-select[aria-pressed='true']. */
+.explorer-chips .model-pill {
+  appearance: none;
+  cursor: pointer;
+  color: var(--muted);
+  background: var(--bg);
+  border-color: var(--border);
+}
+
+.explorer-chips .model-pill:hover {
+  color: var(--text);
+}
+
+.explorer-chips .model-pill[aria-pressed='true'],
 .model-pill[aria-pressed='true'] {
+  color: var(--accent);
   background: var(--accent-weak);
-  border-color: var(--accent);
+  border-color: transparent;
 }
 
 .explorer-tree,
@@ -1237,10 +1633,12 @@ button.node-dsl {
 .explorer-namespace {
   display: flex;
   align-items: center;
-  gap: calc(var(--space) / 2);
-  padding: 2px 12px;
-  padding-left: calc(12px + var(--depth) * var(--space) * 1.5);
+  gap: 8px;
+  min-height: 30px;
+  padding: 2px 14px;
+  padding-left: calc(14px + var(--depth) * 16px);
   border-radius: var(--radius);
+  font: 12.5px var(--mono);
 }
 
 .explorer-leaf {
@@ -1252,8 +1650,8 @@ button.node-dsl {
 }
 
 .explorer-namespace {
-  font-weight: 600;
-  opacity: 0.8;
+  font: 600 12px var(--sans);
+  color: var(--muted);
 }
 
 .explorer-node[aria-selected='true'] > .explorer-leaf {
@@ -1277,24 +1675,40 @@ button.node-dsl {
 
 .origin-badge,
 .quarantine-badge {
-  font-size: 0.7rem;
-  padding: 0 4px;
-  border-radius: var(--radius);
-  opacity: 0.75;
+  font: 500 10.5px/16px var(--sans);
+  padding: 0 5px;
+  border-radius: 4px;
+  color: var(--faint);
+  border: 1px solid var(--border);
 }
 
 /* Quarantine reads as a problem and stacks with the origin badge rather than replacing it —
    an overridden proposition can also be quarantined. */
 .quarantine-badge {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 10px;
   background: color-mix(in srgb, var(--danger) 15%, transparent);
+  border-color: transparent;
   color: var(--danger);
-  opacity: 1;
+}
+
+/* In a browsed leaf the model and origin sit at the row's far edge, so they line up down the
+   list — and the model reads as a badge like its neighbour, not as the accent chip the title
+   wears: in a tree filtered by model it is a fact about the row, not the thing being named. */
+.explorer-leaf .model-pill {
+  margin-left: auto;
+  font-weight: 500;
+  color: var(--faint);
+  background: transparent;
+  border-color: var(--border);
 }
 
 .explorer-empty {
-  padding: calc(var(--space) / 2) 12px;
-  font-size: 0.85rem;
-  opacity: 0.7;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  color: var(--faint);
 }
 
 /* ---------------------------------------------------------------------------
@@ -1305,7 +1719,8 @@ button.node-dsl {
 .dialog-title {
   margin: 0;
   padding-right: 24px;
-  font-size: 1rem;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .dialog-field,
@@ -1313,6 +1728,27 @@ button.node-dsl {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.dialog-field input,
+.dialog-field select {
+  min-height: 28px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 8px;
+  font-family: inherit;
+  font-size: 12.5px;
+}
+
+.dialog-field input:focus,
+.dialog-field select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
 }
 
 .dialog-field small {
@@ -1332,50 +1768,85 @@ button.node-dsl {
 .dialog-actions {
   display: flex;
   justify-content: flex-end;
-  gap: var(--space);
+  gap: 8px;
 }
 
-/* Kept in view while editing rather than sprung at save time. */
+/* The blast radius, kept in view while editing rather than sprung at save time: a band under the
+   app bar in the warning tint, the affected documents as tags. */
 .dependents-strip {
   flex: none;
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--space);
-  padding: var(--space) 14px;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 6px 20px;
   border-bottom: 1px solid var(--border);
-  font-size: 0.85rem;
+  background: color-mix(in srgb, var(--warn) 10%, var(--bg));
+  font-size: 12.5px;
+}
+
+.dependents-strip strong {
+  font-weight: 500;
+}
+
+.strip-icon {
+  display: inline-flex;
+  color: var(--warn);
+  flex: none;
 }
 
 .dependents-strip ul {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space);
+  gap: 6px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+.dependent-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 5px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.dependent-tag .origin-badge {
+  border: none;
+  padding: 0;
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 /* Native <dialog>. The element is display:none until opened, so `[open]` carries the layout. */
 .modal {
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 10px;
   background: var(--sh-panel);
   color: var(--text);
   padding: 0;
-  box-shadow: 0 12px 40px rgb(0 0 0 / 22%);
+  box-shadow: var(--shadow);
   max-width: min(680px, 92vw);
   width: 100%;
 }
 
 .modal::backdrop {
-  background: rgb(15 18 22 / 42%);
+  background: rgb(15 18 22 / 32%);
+  backdrop-filter: blur(2px);
 }
 
 .modal-close {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 10px;
+  right: 10px;
 }
 
 /* The New/Derive/Override dialog is a `Modal` variant — the surface (border, radius, background,
@@ -1402,8 +1873,8 @@ button.node-dsl {
 .dialog-form {
   display: flex;
   flex-direction: column;
-  gap: calc(var(--space) * 1.5);
-  padding: calc(var(--space) * 2);
+  gap: 12px;
+  padding: 16px;
 }
 
 /* The palette's measure, stated here rather than beside the rest of `.palette` further down, for
@@ -1436,12 +1907,24 @@ button.node-dsl {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 6px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
   border: none;
   border-radius: var(--radius);
   background: none;
   color: var(--muted);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
   cursor: pointer;
+}
+
+/* A ghost wearing its word — the palette's footer — is as wide as the word needs. */
+.ghost-labelled {
+  width: auto;
+  padding: 0 10px;
+  color: var(--text);
 }
 
 .ghost:hover { background: var(--sh-inset); color: var(--text); }
@@ -1471,8 +1954,9 @@ button.node-dsl {
 .palette-search {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
+  gap: 10px;
+  height: 48px;
+  padding: 0 14px;
   border-bottom: 1px solid var(--border);
   color: var(--faint);
 }
@@ -1486,12 +1970,12 @@ button.node-dsl {
   outline: none;
 }
 
-.palette-count { font: 11px var(--sans); color: var(--faint); }
+.palette-count { font: 11px var(--sans); color: var(--faint); white-space: nowrap; }
 
 .palette-list { list-style: none; margin: 0; padding: 4px 0; max-height: 46vh; overflow-y: auto; }
-.palette-browse { padding: 4px 0; max-height: 46vh; overflow-y: auto; }
+.palette-browse { padding: 0 0 6px; max-height: 46vh; overflow-y: auto; }
 
-.palette-row { padding: 5px 12px; font: 13px var(--sans); color: var(--text); cursor: pointer; }
+.palette-row { min-height: 30px; display: flex; align-items: center; padding: 0 14px; font: 13px var(--sans); color: var(--text); cursor: pointer; }
 .palette-row:hover { background: var(--sh-inset); }
 .palette-row.highlighted { background: var(--accent-weak); }
 
@@ -1501,33 +1985,49 @@ button.node-dsl {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex: 1;
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 12.5px;
 }
 
 .palette-ns { color: var(--faint); }
 
 .palette-badge {
   margin-left: auto;
-  font: 10px var(--sans);
+  font: 10.5px var(--sans);
   color: var(--faint);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 0 4px;
+  border-radius: 4px;
+  padding: 0 5px;
+  line-height: 16px;
 }
 
+/* The footer: the actions on the left, wearing their words; the keys on the right. */
 .palette-footer {
   display: flex;
   align-items: center;
-  gap: 3px;
-  padding: 6px 8px;
+  gap: 4px;
+  padding: 8px 10px;
   border-top: 1px solid var(--border);
-  background: var(--surface);
+  background: var(--sh-inset);
+}
+
+.palette-footer .ghost:hover { background: var(--bg); }
+
+.palette-keys {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--faint);
+  white-space: nowrap;
 }
 
 @media (max-width: 900px) {
   .palette-list, .palette-browse { max-height: none; flex: 1; }
   .palette { display: flex; flex-direction: column; }
+  .palette-keys { display: none; }
 }
 
 .modal-title {
@@ -1535,13 +2035,14 @@ button.node-dsl {
   align-items: center;
   gap: 8px;
   margin: 0;
-  padding: 10px 12px;
+  height: 48px;
+  padding: 0 16px;
   border-bottom: 1px solid var(--border);
   font: 600 13px var(--sans);
   color: var(--text);
 }
 
-.modal-body { padding: 10px 12px; max-height: 60vh; overflow: auto; }
+.modal-body { padding: 12px 16px; max-height: 60vh; overflow: auto; }
 
 @media (max-width: 900px) {
   .modal-mobile-full .modal-body { max-height: none; flex: 1; }
@@ -1552,19 +2053,19 @@ button.node-dsl {
 .grants-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.8rem;
+  font-size: 12.5px;
 }
 
 .grants-table th {
   text-align: left;
   font-weight: 600;
   color: var(--muted);
-  padding: calc(var(--space) / 2) var(--space);
+  padding: 6px 8px;
   border-bottom: 1px solid var(--border);
 }
 
 .grants-table td {
-  padding: calc(var(--space) / 2) var(--space);
+  padding: 6px 8px;
   border-bottom: 1px solid var(--border);
   color: var(--text);
 }
@@ -1572,10 +2073,42 @@ button.node-dsl {
 .admin-add-form {
   display: flex;
   align-items: flex-end;
-  gap: var(--space);
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .admin-add-form .field {
   min-width: 140px;
+}
+
+/* ---------------------------------------------------------------------------
+   Narrow viewports. Last in the file on purpose: these override single-class rules of the same
+   specificity above, so source order is the whole of the cascade between them.
+   --------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  /* The bar wraps rather than clipping: the actions drop to a second line before Save is lost. */
+  .appbar {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 48px;
+    padding: 4px 12px;
+    gap: 8px;
+  }
+
+  .page-nav {
+    height: 40px;
+  }
+
+  .appbar-divider,
+  .appbar-wordmark {
+    display: none;
+  }
+
+  /* The name is what a phone has room for; the chord hint, the hint text and the version go. */
+  .doc-title .kbd,
+  .doc-title .rule-version,
+  .doc-title .doc-note,
+  .pane-header > .pane-hint {
+    display: none;
+  }
 }

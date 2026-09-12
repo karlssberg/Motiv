@@ -152,6 +152,8 @@ export class PropositionWorkflowController {
       this.#dependents = affected;
       this.#loaded = { name, version: proposition.version };
       if (proposition.document) this.#store.loadDocument(proposition.document);
+      // What is in the store now is what the server has, so it is the baseline `dirty` measures from.
+      this.#store.markClean();
       this.#notify();
     } catch (error: unknown) {
       if (op !== this.#selectOp) return;
@@ -177,26 +179,31 @@ export class PropositionWorkflowController {
    * Saves the store's current document back under the selected identity. A success adopts the
    * new version and refetches the listing; every refusal lands as failure text. The outcome is
    * a claim about the selection the save was aimed at, and is dropped if that has moved on.
+   *
+   * Resolves `true` only when the save landed, so a caller that wants to do something *after*
+   * saving — close the document, say — can tell a save from a refusal.
    */
-  async save(): Promise<void> {
+  async save(): Promise<boolean> {
     const saved = this.#loaded;
-    if (!saved) return;
+    if (!saved) return false;
     // One save at a time, so `saving` cannot lie: a second PUT issued while the first is in
     // flight would have the earlier completion clear the flag under the one still running, and
     // `whyPropositionSaveUnavailable` would report a save is available while one is in progress.
-    if (this.#saving) return;
+    if (this.#saving) return false;
     this.#saving = true;
     this.#notify();
     try {
       const result = await this.#client.putProposition(
         saved.name, this.#store.getState().document, saved.version,
       );
-      if (this.#selected !== saved.name) return;
+      if (this.#selected !== saved.name) return false;
       this.#failure = describePropositionFailure(result);
       if (result.outcome === 'saved') {
         this.#loaded = { name: saved.name, version: result.version };
+        this.#store.markClean();
         this.#notify();
         await this.#fetchEntries();
+        return true;
       }
     } catch (error: unknown) {
       // Covers the listing refetch as well as the PUT, and deliberately: this is the one place
@@ -206,6 +213,7 @@ export class PropositionWorkflowController {
       this.#saving = false;
       this.#notify();
     }
+    return false;
   }
 
   /**

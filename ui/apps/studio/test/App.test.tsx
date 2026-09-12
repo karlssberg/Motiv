@@ -10,6 +10,7 @@ function testClient(): RulesApiClient {
     validate: vi.fn().mockResolvedValue({ errors: [] }),
     evaluate: vi.fn(),
     listRules: vi.fn().mockResolvedValue([]),
+    getRule: vi.fn().mockResolvedValue({ document: { rule: { spec: 'is-adult' } }, version: 1 }),
     listPropositions: vi.fn().mockResolvedValue([]),
     getProposition: vi.fn().mockResolvedValue({
       document: null, version: 0, origin: 'Compiled', hasCompiledDefault: true,
@@ -30,8 +31,10 @@ describe('App', () => {
   });
 
   it('renders the editor and evaluate panes, with the document behind the toolbar', async () => {
+    // A rule in the route: with nothing open the page shows its empty state, not the panes.
+    window.location.hash = '#/rules/can-checkout';
     renderApp();
-    expect(screen.getByRole('region', { name: 'Editor' })).toBeDefined();
+    expect(await screen.findByRole('region', { name: 'Editor' })).toBeDefined();
     expect(screen.getByRole('region', { name: 'Evaluate' })).toBeDefined();
     // The JSON pane retired in favour of a modal reached from the toolbar — see DocumentModal.
     expect(screen.queryByRole('region', { name: 'Document' })).toBeNull();
@@ -102,7 +105,7 @@ describe('App', () => {
 
     // Both halves of the hash in one assertion, and deliberately: only the propositions page
     // fetches a proposition, and it fetches the one the name names. What stood here before was the
-    // toolbar's Open button — which `RuleHeader` mints identically, so the assertion held on either
+    // toolbar's Open button — which both pages mint identically, so the assertion held on either
     // page. Narrowing the route parser to send every hash to the rules page, or dropping the name
     // from the parse, both left it green.
     await waitFor(() => expect(client.getProposition).toHaveBeenCalledWith('customer.is-active'));

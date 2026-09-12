@@ -1,4 +1,5 @@
 import type { DependentEntry } from '@motiv-rules/core';
+import { IconWarn } from '../shell/icons.js';
 
 /** "1 rule and 2 propositions", pluralised, omitting a kind with no members. */
 function summarise(dependents: DependentEntry[]): string {
@@ -19,11 +20,12 @@ export function DependentsStrip(props: { dependents: DependentEntry[] }) {
 
   return (
     <div className="dependents-strip">
+      <span className="strip-icon"><IconWarn size={15} /></span>
       <strong>Changing this affects {summarise(props.dependents)}:</strong>
       <ul>
         {props.dependents.map((dependent) => (
-          <li key={`${dependent.kind}:${dependent.name}`}>
-            <span className="origin-badge">{dependent.kind}</span> {dependent.name}
+          <li key={`${dependent.kind}:${dependent.name}`} className="dependent-tag">
+            <span className="origin-badge">{dependent.kind}</span>{dependent.name}
           </li>
         ))}
       </ul>

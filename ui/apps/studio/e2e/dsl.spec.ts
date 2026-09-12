@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { openDsl, replaceBuffer } from './dsl-surface.js';
-import { expectDocument } from './shell.js';
+import { expectDocument, openScratchRule } from './shell.js';
 
 test('the DSL surface shows the rule as text, and editing the text drives the document', async ({ page }) => {
-  await page.goto('/');
+  await openScratchRule(page);
   const content = await openDsl(page);
 
   await expect(content).toHaveText('customer.is-active');
@@ -16,7 +16,7 @@ test('the DSL surface shows the rule as text, and editing the text drives the do
 });
 
 test('an unknown spec is reported as a lint diagnostic', async ({ page }) => {
-  await page.goto('/');
+  await openScratchRule(page);
   const content = await openDsl(page);
 
   await replaceBuffer(content, 'not-a-real-spec');
@@ -27,7 +27,7 @@ test('an unknown spec is reported as a lint diagnostic', async ({ page }) => {
 });
 
 test('Format reprints the buffer canonically', async ({ page }) => {
-  await page.goto('/');
+  await openScratchRule(page);
   const content = await openDsl(page);
 
   await replaceBuffer(content, 'customer.is-active     &&      customer.is-adult');

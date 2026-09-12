@@ -22,15 +22,27 @@
      4.7:1 on the 15% tint `.quarantine-badge` uses. Every other site reads it as solid text or a
      button fill, where darkening only widens the margin. */
   --danger: #a8293f; --ho: #2f9e6f; --radius: 6px; --space: 8px;
+  /* Outcome colours. `--ok` is `--dsl-ok`'s value, so a satisfied verdict and a synced buffer are
+     the one green; `--warn` is `--dsl-warn`'s for the same reason. Each is drawn as text on its own
+     10% tint over a white panel (`.verdict`, `.dependents-strip`), where both clear 5:1. */
+  --ok: #116b31; --warn: #8f4d09;
+  /* The one accent-coloured fill's text. Light on the indigo in this scheme, dark on the
+     periwinkle in the other — `#fff` on #8aa0ff is 2.6:1, which is why it is a token at all. */
+  --on-accent: #ffffff;
   --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
   --sans: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 
-  /* Shell chrome: the app bar, pane surfaces and canvas behind the columns. Values mirror the
-     "slate/light" palette from the source design (MotivShell.dc.html) so Studio's boxed-card
-     look matches the flush, divided-column shell it was designed against. Dividers and de-
-     emphasised shell text reuse --border/--faint, which the same palette already sets. */
-  --sh-canvas: #eceef1; --sh-appbar: #ffffff; --sh-panel: #ffffff; --sh-panel-head: #fafbfc;
-  --sh-inset: #f2f3f5;
+  /* Shell chrome. One surface: the app bar, both panes and the canvas behind them are the same
+     white, divided by hairlines, and the only tint is `--sh-inset`, which marks the wells that
+     hold content (the expression strip, code blocks, a hovered row). The previous palette gave the
+     canvas a grey, each pane a white and each pane's header a third off-white, so the eye read
+     three layers of boxes before any content — the redesign's brief was to lose exactly that.
+     The names are kept so the sites that read them need not move; `--sh-canvas`, `--sh-appbar`,
+     `--sh-panel` and `--sh-panel-head` now resolve to one value on purpose. */
+  --sh-canvas: #ffffff; --sh-appbar: #ffffff; --sh-panel: #ffffff; --sh-panel-head: #ffffff;
+  --sh-inset: #f6f7f9;
+  /* Floating surfaces (menus, popovers, modals) lift off the one flat surface with this. */
+  --shadow: 0 1px 2px rgb(16 24 40 / 6%), 0 12px 32px rgb(16 24 40 / 10%);
 
   /* DSL editor chrome */
   --dsl-bg: #ffffff; --dsl-fg: #24292f; --dsl-gutter-bg: #fbfbfa; --dsl-gutter: #9ca3af;
@@ -48,7 +60,7 @@
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #14171a; --surface: #1c2126; --border: #2f313a; --text: #e6e7ea;
+    --bg: #1e1f24; --surface: #252831; --border: #2f313a; --text: #e6e7ea;
     /* --faint was #6b6f78: 2.9:1 on the darkest inset. #9398a1 is 4.9:1 there and on the
        highlighted palette row, 6.2:1 on the canvas. */
     --muted: #a0a4ad; --faint: #9398a1; --accent: #8aa0ff; --accent-weak: #222a44;
@@ -59,11 +71,14 @@
        row, 5.1:1 on the 12% `.error`/`.report-banner` tint over the tightest inset, and 8.0:1 as
        the --bg label on a solid `.btn-danger` fill, where lightening only widens the margin. */
     --danger: #ff8a9d; --ho: #58c99a;
+    --ok: #4ade80; --warn: #fbbf24;
+    --on-accent: #15171b;
 
-    --sh-canvas: #141519; --sh-appbar: #1b1c21; --sh-panel: #1e1f24; --sh-panel-head: #212228;
-    --sh-inset: #282a31;
+    --sh-canvas: #1e1f24; --sh-appbar: #1e1f24; --sh-panel: #1e1f24; --sh-panel-head: #1e1f24;
+    --sh-inset: #252831;
+    --shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 16px 40px rgb(0 0 0 / 55%);
 
-    --dsl-bg: #1e1e22; --dsl-fg: #d4d4d8; --dsl-gutter-bg: #191a1d; --dsl-gutter: #5b5b63;
+    --dsl-bg: #1e1f24; --dsl-fg: #d4d4d8; --dsl-gutter-bg: #1a1b1f; --dsl-gutter: #5b5b63;
     --dsl-spec: #a5b4fc; --dsl-param: #67e8f9; --dsl-keyword: #c4b5fd; --dsl-type: #7dd3fc;
     --dsl-operator: #dcae82; --dsl-bracket: #9ca3af; --dsl-punctuation: #8b8b93;
     --dsl-string: #86efac; --dsl-expression: #5eead4; --dsl-number: #fcd34d;

@@ -54,6 +54,8 @@ export function App(props: { client?: RulesApiClient; store?: RuleEditorStore })
       <RulesPage
         client={client}
         page={route.page}
+        selected={route.name}
+        onSelect={(name) => navigate({ page: 'rules', name })}
         onLoaded={(entry) => setIsAsync(entry?.isAsync ?? false)}
       />
     );

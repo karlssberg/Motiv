@@ -108,7 +108,9 @@ const ROUTES: ReadonlyArray<readonly [RegExp, unknown]> = [
   [/\/api\/rules\/propositions\/[^/]+\/dependents$/, []],
   [/\/api\/rules\/propositions\/[^/]+$/, { document: RULE_DOCUMENT, version: 2, origin: 'Authored', hasCompiledDefault: false }],
   [/\/api\/rules\/propositions$/, PROPOSITIONS],
-  [/\/api\/rules\/rules\/[^/?]+/, { document: RULE_DOCUMENT, version: 3 }],
+  // A code-defined default: the builder starts from the shared store's standing leaf, which is
+  // what `composeRule` types over. A stored composite here would leave no root row to type into.
+  [/\/api\/rules\/rules\/[^/?]+/, { document: null, version: 3 }],
   [/\/api\/rules\/rules$/, RULES],
   [/\/api\/admin\/capabilities$/, { grantAdministration: true, administrator: true, devIdentity: true }],
   [/\/api\/admin\/grants$/, [

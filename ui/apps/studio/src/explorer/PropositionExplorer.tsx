@@ -244,7 +244,15 @@ function ExplorerFooter(props: {
     ...(deletable ? [deleteAction] : []),
   ];
 
-  return <Toolbar actions={toolbar} />;
+  return (
+    <>
+      <Toolbar labelled actions={toolbar} />
+      {/* The keys the list already answers to, said where a mouse user can see them. */}
+      <span className="palette-keys" aria-hidden="true">
+        <kbd>↑↓</kbd> move <kbd>↵</kbd> open
+      </span>
+    </>
+  );
 }
 
 /**

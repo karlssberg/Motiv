@@ -7,7 +7,9 @@
       "runtimeArgs": [
         "run",
         "--project",
-        "src/Motiv.Studio"
+        "src/Motiv.Studio",
+        "--environment",
+        "ASPNETCORE_ENVIRONMENT=Development"
       ],
       "port": 5100,
       "autoPort": true

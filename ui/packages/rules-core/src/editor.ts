@@ -11,6 +11,26 @@ export interface EditorState {
   errors: RuleError[];
   canUndo: boolean;
   canRedo: boolean;
+  /**
+   * Whether the document differs from its baseline — what was last loaded by a workflow or
+   * saved back. Compared structurally, not by reference: the DSL sync replaces the document
+   * wholesale on every text commit, so an edit typed back to what was loaded is clean again.
+   */
+  dirty: boolean;
+}
+
+/** Structural equality over the plain JSON a rule document is made of. */
+function sameDocument(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) return false;
+  return keysA.every((key) => (
+    Object.prototype.hasOwnProperty.call(b, key)
+    && sameDocument((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key])
+  ));
 }
 
 /** Errors anchored on a node or any of its sub-field paths (e.g. whenTrue). */
@@ -25,10 +45,19 @@ export class RuleEditorStore {
   #errors: RuleError[] = [];
   #undo: RuleDocument[] = [];
   #redo: RuleDocument[] = [];
+  /**
+   * The document the workflow last loaded or saved. Not moved by `loadDocument`, which the DSL
+   * sync also calls to commit a text edit; only {@link markClean} moves it.
+   */
+  #baseline: RuleDocument;
+  /** `dirty` memoised against the document it was computed for: it is read on every render. */
+  #dirtyFor: RuleDocument | null = null;
+  #dirty = false;
   readonly #listeners = new Set<() => void>();
 
   constructor(initial: RuleDocument) {
     this.#document = structuredClone(initial);
+    this.#baseline = this.#document;
   }
 
   getState(): EditorState {
@@ -37,7 +66,27 @@ export class RuleEditorStore {
       errors: this.#errors,
       canUndo: this.#undo.length > 0,
       canRedo: this.#redo.length > 0,
+      dirty: this.#isDirty(),
     };
+  }
+
+  /**
+   * Adopts the current document as the baseline `dirty` is measured from. The workflows call it
+   * when a document has just been loaded or has just been saved — the two moments the store's
+   * content and the server's agree.
+   */
+  markClean(): void {
+    this.#baseline = this.#document;
+    this.#dirtyFor = null;
+    this.#notify();
+  }
+
+  #isDirty(): boolean {
+    if (this.#dirtyFor !== this.#document) {
+      this.#dirty = !sameDocument(this.#document, this.#baseline);
+      this.#dirtyFor = this.#document;
+    }
+    return this.#dirty;
   }
 
   subscribe(listener: () => void): () => void {
