@@ -120,7 +120,7 @@ test('an authored proposition is a building block the live rule follows', async 
 
   // The running rule now decides through the proposition, and says so in the proposition's own
   // terms — the assertion text is the compiled spec's, which is what pins *which* spec it resolved to.
-  const screening = page.locator('.verdict', { hasText: 'Screening (async rule)' });
+  const screening = page.locator('.rule-verdict', { hasText: 'Screening' });
   await page.getByRole('textbox', { name: 'customer', exact: true }).fill(INACTIVE_WITH_ORDERS);
   await page.getByRole('button', { name: 'Try checkout' }).click();
   await expect(screening).toContainText('customer has orders');
@@ -137,7 +137,7 @@ test('an authored proposition is a building block the live rule follows', async 
   await replaceBuffer(await openDsl(page), 'customer.is-active');
   await expectDocument(page, '"customer.is-active"');
   // The count on the button is the same blast radius, restated where the commit happens.
-  await page.getByRole('button', { name: 'Save (1)' }).click();
+  await page.getByRole('button', { name: 'Save (1)', exact: true }).click();
   await expect(page.getByText(/^v2\b/)).toBeVisible();
 
   // The verdict follows. Same rule document, same customer — a different answer.
@@ -171,7 +171,7 @@ test('deriving from a proposition shows the blast radius on the one it was deriv
   await chooseFromPalette(page, 'Propositions', BASE);
   await expect(page.getByText('Changing this affects 1 proposition:')).toBeVisible();
   await expect(page.getByRole('listitem').filter({ hasText: DERIVED })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Save (1)' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Save (1)', exact: true })).toBeVisible();
 });
 
 test('a proposition something else references cannot be deleted', async ({ page, request }) => {
@@ -180,7 +180,7 @@ test('a proposition something else references cannot be deleted', async ({ page,
 
   // Deep-linked: the dotted name is the route, so the selection survives a reload.
   await page.goto(`/#/propositions/${BASE}`);
-  await expect(page.getByRole('button', { name: 'Save (1)' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Save (1)', exact: true })).toBeVisible();
 
   // Delete is a palette action, and the only one that leaves the palette standing — there is
   // nothing to go on to. Dismissed here so the banner underneath is reachable again.
@@ -250,6 +250,9 @@ test('⌘K still opens the palette when nothing else is showing', async ({ page 
   // a browser rendering the whole app can say no *other* element carries `dialog[open]`, and if one
   // ever did the shortcut would go quietly dead with every unit test still green.
   await page.goto('/#/propositions');
+  // The chord is bound in an effect, so it exists only once the page has rendered: pressing it
+  // straight after `goto` races React's first commit, and a press that lands first is simply lost.
+  await expect(page.getByRole('link', { name: 'Rules' })).toBeVisible();
 
   await page.keyboard.press('ControlOrMeta+k');
 
@@ -325,12 +328,16 @@ test('the authoring dialog fills the screen on a phone, form and all', async ({ 
 });
 
 test('the document viewer opens from the toolbar on both pages', async ({ page }) => {
+  // With nothing open the propositions page has no document of its own to show, so one is chosen
+  // first — the viewer is unavailable until then.
   await page.goto('/#/propositions');
+  await chooseFromPalette(page, 'Propositions', 'customer.is-active');
   await page.getByRole('button', { name: 'JSON' }).click();
   await expect(page.getByRole('dialog', { name: /document/i })).toBeVisible();
   await page.keyboard.press('Escape');
 
-  await page.goto('/#/rules');
+  // The same holds on the rules page, which shows its empty state until a rule is in the route.
+  await page.goto('/#/rules/can-checkout');
   await page.getByRole('button', { name: 'JSON' }).click();
   await expect(page.getByRole('dialog', { name: /document/i })).toBeVisible();
 });

@@ -1,5 +1,6 @@
 import { useRuleEditorStore } from '@motiv-rules/react';
 import { usePopoverCard } from './usePopoverCard.js';
+import { IconMore } from '../shell/icons.js';
 
 /** One entry in a node's actions menu. */
 interface MenuAction {
@@ -57,7 +58,7 @@ export function NodeMenu(props: {
         aria-label={`actions for ${path}`}
         onClick={() => setOpen(!open)}
       >
-        ⋯
+        <IconMore size={14} />
       </button>
       {open && (
         <div ref={card} role="menu" className="node-menu" style={style} aria-label={`actions for ${path}`}>

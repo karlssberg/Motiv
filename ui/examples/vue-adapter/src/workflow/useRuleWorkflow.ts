@@ -11,7 +11,7 @@ export interface RuleWorkflow {
   /** Loads a rule into the store and takes its identity; `null` returns to the local draft. */
   load(name: string | null): Promise<void>;
   /** Saves the store's document back under the loaded identity. */
-  save(): Promise<void>;
+  save(): Promise<boolean>;
 }
 
 /**

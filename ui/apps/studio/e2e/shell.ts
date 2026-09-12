@@ -106,3 +106,24 @@ export async function expectDocument(
   for (const fragment of fragments) await expect(document).toContainText(fragment);
   await closeDocument(page);
 }
+
+/**
+ * A rule to edit, opened fresh and normalised: the live `can-checkout`, with its root expression
+ * typed back to `customer.is-active`.
+ *
+ * There is no local draft any more — the rules page shows an empty state until a rule is in the
+ * route — so a spec that exercises the builder has to open one. `can-checkout` is a code-defined
+ * default, so what the editor shows is the shared store's standing document rather than anything
+ * fetched; and because another spec may be mid-save on the same rule in a parallel worker, the
+ * root is set explicitly rather than assumed. Nothing here is saved, so the server is untouched.
+ */
+export async function openScratchRule(page: Page): Promise<void> {
+  await page.goto('/#/rules/can-checkout');
+  const root = page.getByRole('button', { name: 'edit expression at $.rule' });
+  await expect(root).toBeVisible();
+  await root.click();
+  await page.keyboard.press('ControlOrMeta+a');
+  await page.keyboard.type('customer.is-active');
+  await page.keyboard.press('Enter');
+  await expect(root).toHaveText('customer.is-active');
+}

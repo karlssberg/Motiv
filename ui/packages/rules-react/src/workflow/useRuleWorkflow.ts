@@ -6,10 +6,10 @@ import { RuleWorkflowController, type RuleWorkflowState } from '@motiv-rules/cor
 export interface RuleWorkflow extends RuleWorkflowState {
   /** Refetches the listing. */
   refresh: () => Promise<void>;
-  /** Loads a rule into the store and takes its identity; `null` returns to the local draft. */
+  /** Loads a rule into the store and takes its identity; `null` closes it. */
   load: (name: string | null) => Promise<void>;
-  /** Saves the store's document back under the loaded identity. */
-  save: () => Promise<void>;
+  /** Saves the store's document back under the loaded identity; `true` when the save landed. */
+  save: () => Promise<boolean>;
 }
 
 /**

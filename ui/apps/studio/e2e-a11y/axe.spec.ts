@@ -75,25 +75,35 @@ interface Surface {
   reach: (page: Page) => Promise<void>;
 }
 
+/** The rules page with the fixture rule open — the page shows an empty state until one is. */
+const RULE_ROUTE = '/#/rules/checkout.eligibility';
+
 const VIEWS: readonly Surface[] = [
+  {
+    name: 'the rules page, with nothing open',
+    reach: async (page) => {
+      await visit(page, '/#/rules');
+      await expect(page.getByRole('region', { name: 'No rule open' })).toBeVisible();
+    },
+  },
   {
     name: 'the rules page — builder, evaluate and checkout',
     reach: async (page) => {
-      await visit(page, '/#/rules');
+      await visit(page, RULE_ROUTE);
       await expect(page.getByRole('group', { name: 'rule composition' })).toBeVisible();
     },
   },
   {
     name: 'the builder, holding a composition',
     reach: async (page) => {
-      await visit(page, '/#/rules');
+      await visit(page, RULE_ROUTE);
       await composeRule(page);
     },
   },
   {
     name: 'an evaluation, with its justification on screen',
     reach: async (page) => {
-      await visit(page, '/#/rules');
+      await visit(page, RULE_ROUTE);
       await page.getByRole('button', { name: 'Evaluate' }).click();
       await expect(page.getByRole('group', { name: /^why this rule was/ })).toBeVisible();
     },
@@ -101,7 +111,7 @@ const VIEWS: readonly Surface[] = [
   {
     name: 'the DSL surface, whose CodeMirror accessibility is inherited',
     reach: async (page) => {
-      await visit(page, '/#/rules');
+      await visit(page, RULE_ROUTE);
       await page.getByRole('tab', { name: 'DSL' }).click();
       await expect(page.getByRole('textbox', { name: 'rule DSL' })).toBeVisible();
     },
@@ -167,9 +177,26 @@ const HARD_SURFACES: readonly Surface[] = [
     },
   },
   {
+    name: 'the save menu, open over the toolbar',
+    reach: async (page) => {
+      await visit(page, RULE_ROUTE);
+      await page.getByRole('button', { name: 'Save options' }).click();
+      await expect(page.getByRole('menu', { name: 'Save options' })).toBeVisible();
+    },
+  },
+  {
+    name: 'the unsaved-changes dialog, asked before a dirty document closes',
+    reach: async (page) => {
+      await visit(page, RULE_ROUTE);
+      await composeRule(page);
+      await page.getByRole('button', { name: 'Close' }).click();
+      await expect(page.getByRole('dialog', { name: 'Unsaved changes' })).toBeVisible();
+    },
+  },
+  {
     name: 'the modal document viewer',
     reach: async (page) => {
-      await visit(page, '/#/rules');
+      await visit(page, RULE_ROUTE);
       await page.getByRole('button', { name: 'JSON' }).click();
       await expect(page.getByLabel('rule document')).toBeVisible();
     },
@@ -177,7 +204,7 @@ const HARD_SURFACES: readonly Surface[] = [
   {
     name: "the builder's operator picker, open over the row it belongs to",
     reach: async (page) => {
-      await visit(page, '/#/rules');
+      await visit(page, RULE_ROUTE);
       await composeRule(page);
       await page.getByRole('combobox', { name: /^operator at \$\.rule/ }).click();
       await expect(page.getByRole('listbox', { name: /^operators for/ })).toBeVisible();
@@ -186,7 +213,7 @@ const HARD_SURFACES: readonly Surface[] = [
   {
     name: "the builder's row menu",
     reach: async (page) => {
-      await visit(page, '/#/rules');
+      await visit(page, RULE_ROUTE);
       await page.getByRole('button', { name: 'actions for $.rule' }).click();
       await expect(page.getByRole('menuitem', { name: 'Details' })).toBeVisible();
     },
@@ -194,7 +221,7 @@ const HARD_SURFACES: readonly Surface[] = [
   {
     name: "a node's detail panel",
     reach: async (page) => {
-      await visit(page, '/#/rules');
+      await visit(page, RULE_ROUTE);
       await page.getByRole('button', { name: 'actions for $.rule' }).click();
       await page.getByRole('menuitem', { name: 'Details' }).click();
       await expect(page.getByLabel('name at $.rule')).toBeVisible();
@@ -217,7 +244,7 @@ const DANGER_SURFACES: readonly Surface[] = [
   {
     name: 'the evaluate pane, rejecting the sample model against the catalog schema',
     reach: async (page) => {
-      await visit(page, '/#/rules');
+      await visit(page, RULE_ROUTE);
       await page.getByLabel('sample model').fill('{ "age": "thirty", "isActive": "yes" }');
       await page.getByRole('button', { name: 'Evaluate' }).click();
       await expect(page.getByRole('list', { name: 'schema violations' })).toBeVisible();
@@ -227,7 +254,7 @@ const DANGER_SURFACES: readonly Surface[] = [
     name: 'the document modal, over a document validation rejected',
     reach: async (page) => {
       await withValidationError(page);
-      await visit(page, '/#/rules');
+      await visit(page, RULE_ROUTE);
       await composeRule(page);
       await page.getByRole('button', { name: 'JSON' }).click();
       await expect(page.getByRole('list', { name: 'validation errors' })).toBeVisible();
@@ -237,7 +264,7 @@ const DANGER_SURFACES: readonly Surface[] = [
     name: 'a builder row, carrying the validation error returned for it',
     reach: async (page) => {
       await withValidationError(page);
-      await visit(page, '/#/rules');
+      await visit(page, RULE_ROUTE);
       await composeRule(page);
       await expect(page.getByRole('alert')
         .filter({ hasText: 'No proposition named' })).toBeVisible();
@@ -269,7 +296,7 @@ const DANGER_SURFACES: readonly Surface[] = [
     name: 'the payload popover, refusing the JSON typed into it',
     reach: async (page) => {
       await withObjectMetadata(page, 'customer.is-active');
-      await visit(page, '/#/rules');
+      await visit(page, RULE_ROUTE);
       await composeRule(page);
       await page.getByRole('tab', { name: 'DSL' }).click();
       await page.getByRole('button', { name: 'Edit customer.is-active payload' }).click();

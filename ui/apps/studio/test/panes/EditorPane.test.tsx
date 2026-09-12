@@ -27,11 +27,11 @@ function client(): RulesApiClient {
   } as unknown as RulesApiClient;
 }
 
-function renderPane() {
+function renderPane(title?: React.ReactNode) {
   const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
   const { container } = render(
     <RuleEditorProvider store={store}>
-      <EditorPane client={client()} />
+      <EditorPane client={client()} {...(title !== undefined ? { title } : {})} />
     </RuleEditorProvider>,
   );
   return { store, container };
@@ -43,6 +43,17 @@ const settleCatalog = () => act(async () => {});
 const tab = (name: string) => screen.getByRole('tab', { name });
 
 describe('EditorPane', () => {
+  it('titles the pane with whatever document the host names, ahead of the surface tabs', async () => {
+    renderPane(<span data-testid="doc">loyalty-discount</span>);
+    await settleCatalog();
+
+    const header = screen.getByTestId('doc').closest('.pane-header');
+    expect(header).not.toBeNull();
+    // Title first, tabs last: the header reads as "this document, edited this way".
+    expect(header!.firstElementChild!.contains(screen.getByTestId('doc'))).toBe(true);
+    expect(header!.lastElementChild!.contains(tab('Builder'))).toBe(true);
+  });
+
   it('shows the Builder surface by default', async () => {
     renderPane();
     await settleCatalog();

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { AppBar } from '../../src/panes/AppBar.js';
+import { rememberSelection } from '../../src/shell/lastSelection.js';
 
 function jsonResponse(body: unknown): Response {
   return new Response(JSON.stringify(body), { status: 200, headers: { 'content-type': 'application/json' } });
@@ -68,6 +69,17 @@ describe('AppBar', () => {
     expect(screen.getByRole('link', { name: 'Propositions' }).getAttribute('aria-current'))
       .toBe('page');
     expect(screen.getByRole('link', { name: 'Rules' }).getAttribute('aria-current')).toBeNull();
+  });
+
+  it('links back to the selection a page last had, so switching pages does not lose it', () => {
+    // A bare `#/propositions` drops the selection, and with it the editor. The page remembers what
+    // it had open; the link carries it, so Rules → Propositions lands where the user left off.
+    rememberSelection('propositions', 'customer.derived');
+    render(<AppBar page="rules" />);
+    expect(screen.getByRole('link', { name: 'Propositions' }).getAttribute('href'))
+      .toBe('#/propositions/customer.derived');
+    // Rules have no route-borne selection, so that link stays bare.
+    expect(screen.getByRole('link', { name: 'Rules' }).getAttribute('href')).toBe('#/rules');
   });
 
   it('hides the nav glyph from the accessible name', () => {

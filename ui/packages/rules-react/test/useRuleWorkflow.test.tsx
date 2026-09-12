@@ -34,7 +34,8 @@ describe('useRuleWorkflow', () => {
     expect(result.current.loaded).toEqual({ name: 'can-checkout', version: 3, isCodeDefault: false });
     expect(store.getState().document).toEqual({ rule: { spec: 'is-adult' } });
 
-    await act(() => result.current.save());
+    // The hook hands the controller's outcome through, so a page can act on a save that landed.
+    await act(async () => { expect(await result.current.save()).toBe(true); });
     expect(client.putRule).toHaveBeenCalledWith('can-checkout', store.getState().document, 3);
     await waitFor(() => expect(result.current.loaded?.version).toBe(4));
   });

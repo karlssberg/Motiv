@@ -19,7 +19,8 @@ export function useRuleEditor(store: RuleEditorStore): EditorState {
       prev.document === next.document &&
       prev.errors === next.errors &&
       prev.canUndo === next.canUndo &&
-      prev.canRedo === next.canRedo
+      prev.canRedo === next.canRedo &&
+      prev.dirty === next.dirty
     ) {
       return prev;
     }

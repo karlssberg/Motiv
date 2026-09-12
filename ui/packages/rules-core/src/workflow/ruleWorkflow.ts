@@ -15,7 +15,7 @@ export interface LoadedRule {
 export interface RuleWorkflowState {
   /** The live-rule listing, for whatever picker the consumer renders. */
   rules: RuleListEntry[];
-  /** The picked rule's identity, or `null` while the document is a local draft. */
+  /** The picked rule's identity, or `null` while nothing is open. */
   loaded: LoadedRule | null;
   /** The loaded rule's listing entry, so the consumer can adapt (e.g. async validation). */
   loadedEntry: RuleListEntry | null;
@@ -129,7 +129,7 @@ export class RuleWorkflowController {
 
   /**
    * Loads a rule's document into the store and takes its identity for later saves; `null` drops
-   * the identity and keeps the document — it is a local draft again, with nothing to save back
+   * the identity and keeps the document — nothing is open, and there is nothing to save back
    * to. Loading also clears any conflict: it *is* the 409 recovery. A load superseded by a newer
    * one never lands.
    */
@@ -151,7 +151,7 @@ export class RuleWorkflowController {
       this.#failure = describeUnexpectedFailure(error);
       // The identity is left standing, unlike the proposition controller's: `loaded` is only ever
       // written *after* a load lands, so what is still there is the rule whose document is in the
-      // store. Dropping it would demote a loaded rule to a local draft over a transient 500.
+      // store. Dropping it would close a loaded rule over a transient 500.
       this.#notify();
       return;
     }
@@ -160,6 +160,9 @@ export class RuleWorkflowController {
     this.#loaded = { name, version: response.version, isCodeDefault: response.document === null };
     this.#loadedEntry = this.#rules.find((rule) => rule.name === name) ?? null;
     if (response.document) this.#store.loadDocument(response.document);
+    // What is in the store now is what the server has — for a code-defined default, the standing
+    // document is what the builder starts from, so it is the baseline too.
+    this.#store.markClean();
     this.#notify();
   }
 
@@ -168,14 +171,17 @@ export class RuleWorkflowController {
    * version (and clears `isCodeDefault` — the save is what authors the stored document);
    * `conflict` records the version somebody else saved; `invalid` routes its errors into the
    * shared store's error list, where live validation also reports.
+   *
+   * Resolves `true` only when the save landed, so a caller that wants to do something *after*
+   * saving — close the document, say — can tell a save from a conflict or a rejection.
    */
-  async save(): Promise<void> {
+  async save(): Promise<boolean> {
     const loaded = this.#loaded;
-    if (!loaded) return;
+    if (!loaded) return false;
     // One save at a time, so `saving` cannot lie: a second PUT issued while the first is in
     // flight would have the earlier completion clear the flag under the one still running, and
     // `whyRuleSaveUnavailable` would report a save is available while one is in progress.
-    if (this.#saving) return;
+    if (this.#saving) return false;
     // The outcome below is a claim about this identity. If a load lands while the PUT is in
     // flight, applying it would drag the state back to the previously saved rule — a version
     // badge or conflict describing something no longer on screen.
@@ -187,13 +193,15 @@ export class RuleWorkflowController {
       const result = await this.#client.putRule(
         loaded.name, this.#store.getState().document, loaded.version,
       );
-      if (op !== this.#loadOp) return;
+      if (op !== this.#loadOp) return false;
       // Nothing to clear here: the failure went when this save started. A typed outcome reports
       // through its own channel — `conflict`, or the store's error list — and writing it into
       // `failure` as well would put one event in two banners saying different things.
       if (result.outcome === 'updated') {
         this.#conflict = null;
         this.#loaded = { name: loaded.name, version: result.version, isCodeDefault: false };
+        this.#store.markClean();
+        return true;
       } else if (result.outcome === 'conflict') {
         this.#conflict = result.currentVersion;
       } else {
@@ -209,6 +217,7 @@ export class RuleWorkflowController {
       this.#saving = false;
       this.#notify();
     }
+    return false;
   }
 
   #notify(): void {

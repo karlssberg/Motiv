@@ -121,3 +121,79 @@ describe('errorsForNode', () => {
     expect(errorsForNode(store.getState().errors, '$.rule.and[1]')).toHaveLength(1);
   });
 });
+
+describe('dirty', () => {
+  it('is clean at construction and after markClean, and dirty after an edit', () => {
+    const store = new RuleEditorStore({ rule: { spec: 'a' } });
+    expect(store.getState().dirty).toBe(false);
+
+    store.replaceNode('$.rule', { spec: 'b' });
+    expect(store.getState().dirty).toBe(true);
+
+    store.markClean();
+    expect(store.getState().dirty).toBe(false);
+  });
+
+  it('is clean again once undo returns to the baseline', () => {
+    const store = new RuleEditorStore({ rule: { spec: 'a' } });
+    store.replaceNode('$.rule', { spec: 'b' });
+    store.undo();
+    expect(store.getState().dirty).toBe(false);
+    store.redo();
+    expect(store.getState().dirty).toBe(true);
+  });
+
+  it('compares structurally, so an edit typed back to what was loaded is clean', () => {
+    // The DSL sync replaces the document wholesale on every commit, so the object the store holds
+    // is never the baseline reference again — what is compared is the content.
+    const store = new RuleEditorStore({ rule: { spec: 'a' } });
+    store.loadDocument({ rule: { and: [{ spec: 'a' }, { spec: 'b' }] } });
+    store.markClean();
+    store.loadDocument({ rule: { and: [{ spec: 'a' }, { spec: 'b' }] } });
+    expect(store.getState().dirty).toBe(false);
+    store.loadDocument({ rule: { and: [{ spec: 'b' }, { spec: 'a' }] } });
+    expect(store.getState().dirty).toBe(true);
+  });
+
+  it('loadDocument alone does not move the baseline', () => {
+    // Loading is what the DSL sync does to commit a text edit, so it cannot be what says the
+    // document is saved: only `markClean` — called by the workflow on load and save — does.
+    const store = new RuleEditorStore({ rule: { spec: 'a' } });
+    store.loadDocument({ rule: { spec: 'b' } });
+    expect(store.getState().dirty).toBe(true);
+  });
+
+  it('markClean notifies subscribers', () => {
+    const store = new RuleEditorStore({ rule: { spec: 'a' } });
+    const listener = vi.fn();
+    store.subscribe(listener);
+    store.markClean();
+    expect(listener).toHaveBeenCalledOnce();
+  });
+});
+
+describe('revert', () => {
+  it('restores the baseline document, clearing history and errors, and is clean', () => {
+    const store = new RuleEditorStore({ rule: { spec: 'a' } });
+    store.loadDocument({ rule: { spec: 'loaded' } });
+    store.markClean();
+    store.replaceNode('$.rule', { spec: 'edited' });
+    store.setErrors([{ path: '$.rule', code: 'UnknownSpec', message: 'x' }]);
+
+    store.revert();
+
+    const state = store.getState();
+    expect(state.document).toEqual({ rule: { spec: 'loaded' } });
+    expect(state.dirty).toBe(false);
+    expect(state.canUndo).toBe(false);
+    expect(state.errors).toEqual([]);
+  });
+
+  it('notifies subscribers', () => {
+    const store = new RuleEditorStore({ rule: { spec: 'a' } });
+    const listener = vi.fn();
+    store.subscribe(listener);
+    store.revert();
+    expect(listener).toHaveBeenCalledOnce();
+  });
+});
