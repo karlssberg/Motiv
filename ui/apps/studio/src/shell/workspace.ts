@@ -1,7 +1,7 @@
 import {
   RuleEditorStore,
   isBinaryNode, isHigherOrderNode, isNotNode, isSpecNode,
-  type RuleDocument, type RuleNode, type RulesApiClient,
+  type PropositionListEntry, type PropositionOrigin, type RuleDocument, type RuleListEntry, type RuleNode,
 } from '@motiv-rules/core';
 
 /** The two kinds of document a tab can hold. */
@@ -26,10 +26,6 @@ export interface OpenDoc {
   id: TabId;
   kind: DocKind;
   name: string;
-  /** The version the tab holds — the loaded one, then whatever its last save produced. */
-  version: number;
-  status: 'loading' | 'ready' | 'failed';
-  error: string | null;
   /**
    * This tab's own editor store. One per document rather than one shared by the shell: a tab that
    * keeps its draft, its undo stack and its dirty flag while another is edited is what tabs are.
@@ -42,8 +38,18 @@ export interface OpenDoc {
   seenAt: number;
 }
 
-/** What the workspace knows about a name: its latest version, and when a tab here last saved it. */
-export interface Latest { kind: DocKind; version: number; savedAt: number | null }
+/**
+ * What the workspace knows about a name: its latest version, when a tab here last saved it, and
+ * the listing's description of it — what the strip's hover card says about a tab.
+ */
+export interface Latest {
+  kind: DocKind;
+  version: number;
+  savedAt: number | null;
+  modelType: string | null;
+  isAsync: boolean;
+  origin: PropositionOrigin | null;
+}
 
 export interface WorkspaceState {
   /** Open tabs, in strip order. */
@@ -108,19 +114,14 @@ export function referencesOf(document: RuleDocument): string[] {
  * latest version. The hash route stays the truth for *which* tab is active — `App` maps a named
  * route onto `open`, and activation back onto the route — so this holds the set, not the cursor.
  *
- * Saves reach the server through each tab's own workflow, exactly as before; the tab then tells
- * the workspace the version it produced (`noteSaved`), which is how every other tab learns that a
- * document it references has moved. Nothing here talks to the server except `open`, which loads
- * the document into the tab's fresh store.
+ * Nothing here talks to the server. Each tab's own workflow loads its document into the tab's
+ * store and saves it back, exactly as the pages did; the tab then tells the workspace the version
+ * the save produced (`noteSaved`), which is how every other tab learns that a document it
+ * references has moved, and the shell hands the listings over (`setListings`) for the rest.
  */
 export class Workspace {
   #state: WorkspaceState = { tabs: [], active: null, docs: {}, latest: {} };
   readonly #listeners = new Set<() => void>();
-  readonly #client: RulesApiClient;
-
-  constructor(client: RulesApiClient) {
-    this.#client = client;
-  }
 
   getState = (): WorkspaceState => this.#state;
 
@@ -148,28 +149,25 @@ export class Workspace {
   }
 
   /** Reopens the tabs a previous page load left open. Activates none: the route says which. */
-  async restore(): Promise<void> {
-    const remembered = readRemembered();
-    for (const tab of remembered) await this.open(tab.kind, tab.name, { activate: false });
+  restore(): void {
+    for (const tab of readRemembered()) this.open(tab.kind, tab.name, { activate: false });
   }
 
   /**
-   * Opens a document in a new tab, or activates the tab it is already open in. Resolves once the
-   * document has loaded (or failed to); the tab exists, loading, from the first call.
+   * Opens a document in a new tab, or activates the tab it is already open in, and returns it.
+   * The store starts on the builder's seed; the tab's workflow loads the real document into it.
    */
-  async open(kind: DocKind, name: string, options: { activate?: boolean } = {}): Promise<void> {
+  open(kind: DocKind, name: string, options: { activate?: boolean } = {}): OpenDoc {
     const activate = options.activate ?? true;
     const id = tabIdOf(kind, name);
-    if (this.#state.docs[id]) {
+    const existing = this.#state.docs[id];
+    if (existing) {
       if (activate) this.activate(id);
-      return;
+      return existing;
     }
 
     const doc: OpenDoc = {
       id, kind, name,
-      version: this.#state.latest[name]?.version ?? 0,
-      status: 'loading',
-      error: null,
       store: new RuleEditorStore(PLACEHOLDER),
       seenAt: Date.now(),
     };
@@ -179,19 +177,7 @@ export class Workspace {
       active: activate ? id : this.#state.active,
     });
     this.#remember();
-
-    try {
-      const response = kind === 'rule'
-        ? await this.#client.getRule(name)
-        : await this.#client.getProposition(name);
-      if (response.document) doc.store.loadDocument(response.document);
-      // What is in the store now is what the server has — for a code-defined default, the
-      // placeholder is what the builder starts from, so it is the baseline too.
-      doc.store.markClean();
-      this.#patchDoc(id, { status: 'ready', version: response.version });
-    } catch (error: unknown) {
-      this.#patchDoc(id, { status: 'failed', error: error instanceof Error ? error.message : String(error) });
-    }
+    return doc;
   }
 
   activate(id: TabId): void {
@@ -233,23 +219,35 @@ export class Workspace {
     const savedAt = Date.now();
     const id = tabIdOf(kind, name);
     const doc = this.#state.docs[id];
+    const known = this.#state.latest[name];
     this.#set({
-      latest: { ...this.#state.latest, [name]: { kind, version, savedAt } },
-      docs: doc ? { ...this.#state.docs, [id]: { ...doc, version, seenAt: savedAt } } : this.#state.docs,
+      latest: {
+        ...this.#state.latest,
+        [name]: {
+          kind, version, savedAt,
+          modelType: known?.modelType ?? null,
+          isAsync: known?.isAsync ?? false,
+          origin: known?.origin ?? null,
+        },
+      },
+      docs: doc ? { ...this.#state.docs, [id]: { ...doc, seenAt: savedAt } } : this.#state.docs,
     });
   }
 
   /**
-   * The listings' word on every name's version. A version a save recorded here is kept over the
-   * listing's — the listing may be the one fetched before that save landed.
+   * The listings' word on every name: version and description. A version a save recorded here is
+   * kept over an older listing's — the listing may be the one fetched before that save landed.
    */
-  setLatest(entries: ReadonlyArray<{ kind: DocKind; name: string; version: number }>): void {
+  setListings(rules: readonly RuleListEntry[], propositions: readonly PropositionListEntry[]): void {
     const latest = { ...this.#state.latest };
-    for (const entry of entries) {
-      const known = latest[entry.name];
-      if (known && known.savedAt !== null && known.version >= entry.version) continue;
-      latest[entry.name] = { kind: entry.kind, version: entry.version, savedAt: known?.savedAt ?? null };
-    }
+    const take = (kind: DocKind, name: string, version: number, modelType: string, isAsync: boolean, origin: PropositionOrigin | null): void => {
+      const known = latest[name];
+      const savedAt = known?.savedAt ?? null;
+      const kept = known !== undefined && savedAt !== null && known.version > version ? known.version : version;
+      latest[name] = { kind, version: kept, savedAt, modelType, isAsync, origin };
+    };
+    for (const rule of rules) take('rule', rule.name, rule.version, rule.modelType, rule.isAsync, null);
+    for (const prop of propositions) take('proposition', prop.name, prop.version, prop.modelType, prop.isAsync, prop.origin);
     this.#set({ latest });
   }
 
