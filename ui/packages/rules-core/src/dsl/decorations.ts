@@ -1,5 +1,5 @@
 import { isSpecNode, nodeKind, type RuleDocument, type RuleNode } from '../document.js';
-import { listPaths } from '../paths.js';
+import { definitionNameOf, listPaths } from '../paths.js';
 
 /** True when two nodes are the same kind and, for specs, the same spec — so payloads still apply. */
 function isCompatible(a: RuleNode, b: RuleNode): boolean {
@@ -25,6 +25,22 @@ export function mergeDecorations(parsed: RuleDocument, prior: RuleDocument): Rul
 
     if (previous.whenTrue !== undefined) node.whenTrue = structuredClone(previous.whenTrue);
     if (previous.whenFalse !== undefined) node.whenFalse = structuredClone(previous.whenFalse);
+
+    // A definition's own whenTrue/whenFalse live on the Definition, not its body node, so they
+    // are carried separately when the body root at this path is still compatible.
+    const definitionName = definitionNameOf(path);
+    if (definitionName && path.endsWith('.rule')) {
+      const priorDefinition = prior.definitions?.[definitionName];
+      const mergedDefinition = merged.definitions?.[definitionName];
+      if (priorDefinition && mergedDefinition) {
+        if (priorDefinition.whenTrue !== undefined) {
+          mergedDefinition.whenTrue = structuredClone(priorDefinition.whenTrue);
+        }
+        if (priorDefinition.whenFalse !== undefined) {
+          mergedDefinition.whenFalse = structuredClone(priorDefinition.whenFalse);
+        }
+      }
+    }
   }
 
   return merged;

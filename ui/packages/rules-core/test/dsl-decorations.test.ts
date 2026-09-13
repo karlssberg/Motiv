@@ -111,6 +111,37 @@ describe('mergeDecorations', () => {
     expect(merged.rule.whenTrue).not.toBe(prior.rule.whenTrue);
   });
 
+  it('carries a definition\'s whenTrue across a reparse when the definition is still compatible', () => {
+    const prior: RuleDocument = {
+      rule: { local: 'quota-check' },
+      definitions: {
+        'quota-check': { rule: { spec: 'is-active' }, whenTrue: 'quota met' },
+      },
+    };
+    const parsed: RuleDocument = {
+      rule: { local: 'quota-check' },
+      definitions: {
+        'quota-check': { rule: { spec: 'is-active' } },
+      },
+    };
+
+    expect(mergeDecorations(parsed, prior).definitions).toEqual({
+      'quota-check': { rule: { spec: 'is-active' }, whenTrue: 'quota met' },
+    });
+  });
+
+  it('drops a definition\'s whenTrue when the definition of that name is gone', () => {
+    const prior: RuleDocument = {
+      rule: { local: 'quota-check' },
+      definitions: {
+        'quota-check': { rule: { spec: 'is-active' }, whenTrue: 'quota met' },
+      },
+    };
+    const parsed: RuleDocument = { rule: { spec: 'is-active' } };
+
+    expect(mergeDecorations(parsed, prior)).toEqual({ rule: { spec: 'is-active' } });
+  });
+
   it('survives a print/parse round-trip, as the editor does on every keystroke', () => {
     const original: RuleDocument = {
       parameters: { minOrders: { type: 'integer', default: 3 } },

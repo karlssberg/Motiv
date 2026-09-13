@@ -41,7 +41,10 @@ export { validateAgainstSchema, type SchemaViolation } from './schema.js';
 export { RulesApiClient, RulesApiError, type RulesApiClientOptions, type StoreGeneration } from './client.js';
 
 // Path arithmetic over a rule document.
-export { joinSteps, splitLast, getNode, setNode, listPaths, childPaths } from './paths.js';
+export {
+  joinSteps, splitLast, getNode, setNode, listPaths, childPaths,
+  DEFINITIONS_ROOT, definitionPath, definitionBodyPath, definitionNameOf,
+} from './paths.js';
 
 // Document normalization.
 export { normalizeAt } from './normalize.js';

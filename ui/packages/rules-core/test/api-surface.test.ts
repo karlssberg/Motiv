@@ -11,6 +11,7 @@ import * as workflow from '../src/workflow/index.js';
 const APPROVED_API = [
   'ACCESSIBLE_NAME_LIMIT',
   'BINARY_OPERATORS',
+  'DEFINITIONS_ROOT',
   'DSL_KEYWORDS',
   'DSL_QUANTIFIERS',
   'DSL_TYPES',
@@ -35,6 +36,9 @@ const APPROVED_API = [
   'completeDsl',
   'countLeaves',
   'createValidationController',
+  'definitionBodyPath',
+  'definitionNameOf',
+  'definitionPath',
   'diagnosticsFor',
   'errorsForNode',
   'filterTree',

@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { childPaths, getNode, setNode, listPaths } from '../src/paths.js';
+import {
+  childPaths, getNode, setNode, listPaths,
+  DEFINITIONS_ROOT, definitionPath, definitionBodyPath, definitionNameOf,
+} from '../src/paths.js';
 import type { RuleDocument } from '../src/document.js';
 
 const doc: RuleDocument = {
@@ -49,6 +52,63 @@ describe('setNode', () => {
   it('replaces the root node', () => {
     const next = setNode(doc, '$.rule', { spec: 'only' });
     expect(next.rule).toEqual({ spec: 'only' });
+  });
+});
+
+describe('definition paths', () => {
+  const docWithDefinition: RuleDocument = {
+    rule: { spec: 'a' },
+    definitions: {
+      'quota-check': { rule: { and: [{ spec: 'x' }, { spec: 'y' }] } },
+    },
+  };
+
+  it('builds a definition path and its body path', () => {
+    expect(definitionPath('quota-check')).toBe(`${DEFINITIONS_ROOT}.quota-check`);
+    expect(definitionBodyPath('quota-check')).toBe(`${DEFINITIONS_ROOT}.quota-check.rule`);
+  });
+
+  it('getNode resolves nested nodes inside a definition body', () => {
+    expect(getNode(docWithDefinition, '$.definitions.quota-check.rule.and[1]')).toEqual({ spec: 'y' });
+  });
+
+  it('setNode inside a definition body returns a new document with the rule untouched', () => {
+    const next = setNode(docWithDefinition, '$.definitions.quota-check.rule.and[1]', { spec: 'z' });
+    expect(getNode(next, '$.definitions.quota-check.rule.and[1]')).toEqual({ spec: 'z' });
+    expect(getNode(docWithDefinition, '$.definitions.quota-check.rule.and[1]')).toEqual({ spec: 'y' });
+    expect(docWithDefinition.rule).toEqual({ spec: 'a' });
+    expect(next.rule).toEqual({ spec: 'a' });
+  });
+
+  it('listPaths includes every definition body after the rule', () => {
+    expect(listPaths(docWithDefinition).map((p) => p.path)).toEqual([
+      '$.rule',
+      '$.definitions.quota-check.rule',
+      '$.definitions.quota-check.rule.and[0]',
+      '$.definitions.quota-check.rule.and[1]',
+    ]);
+  });
+
+  it('rejects a definitions path with an extra segment before .rule', () => {
+    expect(() => getNode(docWithDefinition, '$.definitions.a.b.rule')).toThrow();
+  });
+
+  it('rejects a definitions path with an empty name', () => {
+    expect(() => getNode(docWithDefinition, '$.definitions..rule')).toThrow();
+  });
+
+  it('rejects a definition path without .rule — a definition is not a node', () => {
+    expect(() => getNode(docWithDefinition, '$.definitions.quota-check')).toThrow();
+  });
+
+  it('definitionNameOf extracts the name under a definition path', () => {
+    expect(definitionNameOf('$.definitions.quota-check.rule.and[0]')).toBe('quota-check');
+    expect(definitionNameOf('$.definitions.quota-check')).toBe('quota-check');
+  });
+
+  it('definitionNameOf is undefined for a plain rule path', () => {
+    expect(definitionNameOf('$.rule')).toBeUndefined();
+    expect(definitionNameOf('$.rule.and[0]')).toBeUndefined();
   });
 });
 
