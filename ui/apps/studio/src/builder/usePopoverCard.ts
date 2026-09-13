@@ -1,4 +1,7 @@
-import { useLayoutEffect, useEffect, useRef, useState, type CSSProperties, type MutableRefObject } from 'react';
+import {
+  useLayoutEffect, useEffect, useRef, useState,
+  type CSSProperties, type MutableRefObject, type RefObject,
+} from 'react';
 import { placePopover, type PopoverPlacement } from '../dsl/popoverPlacement.js';
 
 /** Whether a freshly measured placement is the one already applied to the card. */
@@ -39,15 +42,24 @@ export interface PopoverCard {
  * `open` is owned by the caller rather than by the card, so that a tree of rows can enforce one
  * popup at a time — two open at once is reachable by keyboard alone, since only pointer dismissal
  * would close the other.
+ *
+ * `anchorRef` lets a card without a trigger of its own — one opened from a menu item, say —
+ * borrow the caller's control as the thing it is measured against and returns focus to. Left
+ * unset, the card anchors to its own `trigger`, which the caller then renders.
  */
-export function usePopoverCard(open: boolean, setOpen: (open: boolean) => void): PopoverCard {
+export function usePopoverCard(
+  open: boolean,
+  setOpen: (open: boolean) => void,
+  anchorRef?: RefObject<HTMLElement | null>,
+): PopoverCard {
   const [placement, setPlacement] = useState<PopoverPlacement | null>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const card = useRef<HTMLDivElement | null>(null);
+  const anchor = (): HTMLElement | null => anchorRef?.current ?? trigger.current;
 
   const close = (): void => {
     setOpen(false);
-    trigger.current?.focus();
+    anchor()?.focus();
   };
 
   // Measured after the card is in the DOM but before it is painted, so its natural size is known
@@ -60,11 +72,11 @@ export function usePopoverCard(open: boolean, setOpen: (open: boolean) => void):
     }
 
     const place = (): void => {
-      const anchor = trigger.current?.getBoundingClientRect();
+      const anchorBox = anchor()?.getBoundingClientRect();
       const box = card.current?.getBoundingClientRect();
-      if (!anchor || !box) return;
+      if (!anchorBox || !box) return;
       const next = placePopover(
-        { top: anchor.top, bottom: anchor.bottom, left: anchor.left },
+        { top: anchorBox.top, bottom: anchorBox.bottom, left: anchorBox.left },
         { width: box.width, height: box.height },
         { width: window.innerWidth, height: window.innerHeight, minTop: 0 },
       );
@@ -95,7 +107,7 @@ export function usePopoverCard(open: boolean, setOpen: (open: boolean) => void):
     // Focus stays where the pointer put it, so this dismissal does not claw it back.
     const onPointerDown = (event: MouseEvent): void => {
       const target = event.target as Node;
-      if (card.current?.contains(target) || trigger.current?.contains(target)) return;
+      if (card.current?.contains(target) || anchor()?.contains(target)) return;
       setOpen(false);
     };
 

@@ -383,6 +383,13 @@ kbd {
   color: var(--muted);
 }
 
+/* A field's inline validation message — same tint as .dialog-error, scoped to one control. */
+.field-error {
+  margin: 0;
+  font-size: 11px;
+  color: var(--danger);
+}
+
 /* Shared control styling for selects, inputs, textareas */
 .control {
   width: 100%;
