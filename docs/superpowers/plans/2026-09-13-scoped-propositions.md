@@ -250,8 +250,9 @@ Both cores address a definition by path, so errors, spans and decoration-merging
   `ui/apps/studio/test/dsl/lint.test.ts` (a warning reaches CodeMirror as `warning`). Commit:
   `DSL — local token runs, completion and warnings (#234)`.
 
-- [ ] **6. C# parser: `definitions`, `Local` operator, resolve pass, references, depth, comparer,
-  parameters.** `src/Motiv.Serialization/RuleOperator.cs`: add `Local`. `RuleNode.cs`: add
+### Task 6: C# parser: `definitions`, `Local` operator, resolve pass, references, depth, comparer, parameters
+
+- [ ] `src/Motiv.Serialization/RuleOperator.cs`: add `Local`. `RuleNode.cs`: add
   `public string? LocalName { get; set; }` and `public RuleNode? Definition { get; set; }`
   (set by the resolve pass; the definition node carries `Name` = key and the definition's
   `WhenTrueText`/`WhenFalseText`/elements). `RuleDocument.cs`: add
