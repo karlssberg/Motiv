@@ -250,6 +250,24 @@ describe('RuleEditorStore local-definition mutations', () => {
     expect(store.getState().document.definitions).toBeUndefined();
   });
 
+  it('inlineLocal does not alias the prior document — the undo entry is unaffected by mutating the new one', () => {
+    const store = new RuleEditorStore({
+      rule: { local: 'quota-check' },
+      definitions: { 'quota-check': { rule: { spec: 'a' }, whenTrue: { code: 'X' } } },
+    });
+
+    store.inlineLocal('$.rule');
+
+    const inlinedWhenTrue = (store.getState().document.rule as unknown as { whenTrue: { code: string } }).whenTrue;
+    inlinedWhenTrue.code = 'tampered';
+
+    store.undo();
+    expect(store.getState().document.definitions!['quota-check']).toEqual({
+      rule: { spec: 'a' },
+      whenTrue: { code: 'X' },
+    });
+  });
+
   it('inline of one of two references keeps the definition', () => {
     const store = new RuleEditorStore({
       rule: { and: [{ local: 'quota-check' }, { local: 'quota-check' }] },
@@ -330,5 +348,30 @@ describe('RuleEditorStore local-definition mutations', () => {
     store.setDefinitionDecoration('quota-check', { whenTrue: undefined });
 
     expect(store.getState().document.definitions!['quota-check']).toEqual({ rule: { spec: 'x' }, whenFalse: 'no' });
+  });
+
+  it('setDefinitionDecoration does not alias the prior document — the undo entry is unaffected by mutating the new one', () => {
+    const store = new RuleEditorStore({
+      rule: { spec: 'a' },
+      definitions: {
+        'quota-check': { rule: { spec: 'x' }, whenTrue: { code: 'X' }, whenFalse: 'no' },
+      },
+    });
+
+    store.setDefinitionDecoration('quota-check', { whenFalse: 'changed' });
+
+    // Mutate objects reachable from the *new* document: the untouched `rule` and the untouched
+    // `whenTrue` payload. If either was spliced in by reference from the pre-mutation document,
+    // this corrupts the undo-stack entry too.
+    const after = store.getState().document.definitions!['quota-check']!;
+    (after.rule as { spec: string }).spec = 'tampered';
+    (after.whenTrue as { code: string }).code = 'tampered';
+
+    store.undo();
+    expect(store.getState().document.definitions!['quota-check']).toEqual({
+      rule: { spec: 'x' },
+      whenTrue: { code: 'X' },
+      whenFalse: 'no',
+    });
   });
 });

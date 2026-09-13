@@ -188,6 +188,9 @@ export class RuleEditorStore {
   defineLocal(path: string, name: string): void {
     if (!isValidLocalName(name)) throw new Error(`Invalid definition name: ${name}.`);
     if (this.#document.definitions?.[name]) throw new Error(`Definition "${name}" already exists.`);
+    // Defensive rather than reachable: `path` can only resolve under `$.definitions.<name>` if
+    // `definitions[name]` already exists, which the check above already rejects. Kept explicit
+    // per the brief (self-reference must never be possible) rather than relied on implicitly.
     if (path === definitionBodyPath(name) || path.startsWith(`${definitionPath(name)}.`)) {
       throw new Error(`Cannot define "${name}" from inside its own body.`);
     }
@@ -217,9 +220,12 @@ export class RuleEditorStore {
     const definition = this.#document.definitions?.[name];
     if (!definition) throw new Error(`No definition "${name}".`);
 
+    // `definition` is read from the pre-mutation document; every payload taken from it must be
+    // cloned before it is spliced into the document `setNode` builds, or the two documents share
+    // a mutable object and a later edit to one corrupts the other's undo-stack entry.
     const inlined = { ...structuredClone(definition.rule), name } as RuleNode & Decoration;
-    if (definition.whenTrue !== undefined) inlined.whenTrue = definition.whenTrue; else delete inlined.whenTrue;
-    if (definition.whenFalse !== undefined) inlined.whenFalse = definition.whenFalse; else delete inlined.whenFalse;
+    if (definition.whenTrue !== undefined) inlined.whenTrue = structuredClone(definition.whenTrue); else delete inlined.whenTrue;
+    if (definition.whenFalse !== undefined) inlined.whenFalse = structuredClone(definition.whenFalse); else delete inlined.whenFalse;
 
     const next = setNode(this.#document, path, inlined as RuleNode);
     if (localReferences(next, name).length === 0 && next.definitions) {
@@ -278,10 +284,13 @@ export class RuleEditorStore {
     name: string,
     decoration: { whenTrue?: Payload | undefined; whenFalse?: Payload | undefined },
   ): void {
-    const definition = this.#document.definitions?.[name];
-    if (!definition) throw new Error(`No definition "${name}".`);
+    if (!this.#document.definitions?.[name]) throw new Error(`No definition "${name}".`);
     const next = structuredClone(this.#document);
-    const nextDefinition: Definition = { ...definition };
+    // Built from `next.definitions![name]` (the clone), not `this.#document.definitions![name]`
+    // (the pre-mutation object) — otherwise every field `decoration` leaves untouched (`rule`,
+    // and whichever of whenTrue/whenFalse isn't passed) is spliced in by reference and becomes
+    // shared mutable state between the committed document and the undo-stack entry.
+    const nextDefinition: Definition = { ...next.definitions![name]! };
     if ('whenTrue' in decoration) {
       if (decoration.whenTrue === undefined) delete nextDefinition.whenTrue;
       else nextDefinition.whenTrue = decoration.whenTrue;
