@@ -62,6 +62,13 @@ App
 └─ AdminPage (route)
 ```
 
+The route is the one *writer* of which tab is active — a chip click, a palette choice and a close all
+navigate, and the shell's route effect opens and activates the tab the hash names. One refinement
+found in the suites: `openTab` opens the tab in the workspace *before* navigating. `hashchange` is
+asynchronous, so a click that only navigated left the previous panel on screen for a frame; opening
+first means the strip answers in the same tick, and the route effect then finds the tab already
+open and does nothing.
+
 `RulesPage` and `PropositionsPage` become `RuleDocument` and `PropositionDocument`: the same
 workflow hooks, bound to the tab's store rather than the shared one, minus the app bar, the
 palette and the route plumbing, which the shell now owns. `lastSelection` is retired: the tab list
