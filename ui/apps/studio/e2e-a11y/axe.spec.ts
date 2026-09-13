@@ -432,8 +432,15 @@ const DANGER_SURFACES: readonly Surface[] = [
       // Filled, not blurred: committing the field reverts an unusable value rather than keeping
       // it, so the rejection this surface exists to colour is only on screen between the keystroke
       // that types it and the blur that would undo it.
-      await page.getByLabel('name of definition is-active-and-adult').fill('is-large-order');
-      await expect(page.getByText('That name is already in use.')).toBeVisible();
+      const input = page.getByLabel('name of definition is-active-and-adult');
+      await input.fill('is-large-order');
+      await expect(input).toHaveAttribute('aria-invalid', 'true');
+      // Scoped to the definitions region, and asserted via its accessible mechanism (`role="alert"`)
+      // rather than a plain text match — the same precedent the JSON-payload DANGER surface below
+      // sets with `popover.getByRole('alert')`. A generic text match would pass even if the message
+      // were never wired to the field at all.
+      const region = page.getByRole('region', { name: 'Definitions' });
+      await expect(region.getByRole('alert')).toContainText('already in use');
     },
   },
 ];
