@@ -68,6 +68,11 @@ export async function chooseFromPalette(
   await palette(page, name).getByRole('combobox').fill(target);
   await palette(page, name).getByRole('option').filter({ hasText: target }).first().click();
   await expect(palette(page, name)).toBeHidden();
+  // The choice is a navigation, and the tab follows the route a frame later: until it has, the
+  // previous document's panel is still the visible one, and a query made now would land on it.
+  const escaped = target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  await expect(page.getByRole('tab', { name: new RegExp(`${escaped}$`), selected: true })).toBeVisible();
+  await expect(page.getByRole('tabpanel', { name: target })).toBeVisible();
 }
 
 /**

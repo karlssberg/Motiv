@@ -40,7 +40,7 @@ export function SplitButton(props: {
   const menuId = useId();
   const { trigger, card, style, placed, close } = usePopoverCard(open, setOpen);
   const unavailable = props.unavailable !== undefined;
-  const reasonId = `toolbar-${props.id}-reason`;
+  const reasonId = `${menuId}-${props.id}-reason`;
   const current = props.variants.find((variant) => variant.id === props.defaultId) ?? props.variants[0]!;
   // The toggle and the menu it opens carry the same name: one control, named once.
   const optionsLabel = `${current.label} options`;

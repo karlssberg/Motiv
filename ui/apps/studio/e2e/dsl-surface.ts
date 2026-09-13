@@ -9,10 +9,14 @@ import { expect, type Locator, type Page } from '@playwright/test';
 /** Switches the editor pane to its DSL surface, returning the CodeMirror text element. */
 export async function openDsl(page: Page): Promise<Locator> {
   // The builder's root row proves the live catalog loaded before the surface is switched.
-  await expect(page.getByRole('button', { name: 'edit expression at $.rule' })).toBeVisible();
-  await page.getByRole('tab', { name: 'DSL' }).click();
+  // Scoped to the panel in front: every open tab keeps its editor mounted, hidden.
+  const panel = page.locator('.tab-panel:not([hidden])');
+  await expect(panel.getByRole('button', { name: 'edit expression at $.rule' })).toBeVisible();
+  await panel.getByRole('tab', { name: 'DSL' }).click();
 
-  const content = page.locator('.cm-content');
+  // Scoped to the panel in front: every open tab keeps its editor mounted, hidden, and a class
+  // locator — unlike a role query — does not skip hidden content.
+  const content = page.locator('.tab-panel:not([hidden]) .cm-content');
   await expect(content).toBeVisible();
   return content;
 }

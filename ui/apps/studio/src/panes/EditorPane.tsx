@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import type { RulesApiClient } from '@motiv-rules/core';
 import { useCatalog, useDslSync, useRuleEditorStore } from '@motiv-rules/react';
 import { DslEditor } from '../dsl/DslEditor.js';
@@ -13,11 +13,6 @@ const SURFACES: ReadonlyArray<{ id: Surface; label: string }> = [
   { id: 'dsl', label: 'DSL' },
 ];
 
-/** Ties both tabs to the one panel they swap the contents of. */
-const SURFACE_PANEL_ID = 'editor-surface';
-
-/** The id of a surface's tab, which is what names the panel while that surface is shown. */
-const tabId = (surface: Surface): string => `editor-tab-${surface}`;
 
 /**
  * The authoring pane: the same rule document edited either through the accordion builder or
@@ -51,6 +46,14 @@ export function EditorPane(props: {
   const sync = useDslSync(store);
 
   const [surface, setSurface] = useState<Surface>('builder');
+
+  // Per instance: several editors are mounted at once, one per open tab, and an id shared between
+  // them would point every `aria-controls` at whichever came first in the document.
+  const idBase = useId();
+  /** The one panel both tabs swap the contents of. */
+  const SURFACE_PANEL_ID = `${idBase}-surface`;
+  /** The id of a surface's tab, which is what names the panel while that surface is shown. */
+  const tabId = (which: Surface): string => `${idBase}-tab-${which}`;
 
   return (
     <section className="pane" aria-label="Editor">

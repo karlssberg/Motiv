@@ -120,7 +120,7 @@ test('an authored proposition is a building block the live rule follows', async 
 
   // The running rule now decides through the proposition, and says so in the proposition's own
   // terms — the assertion text is the compiled spec's, which is what pins *which* spec it resolved to.
-  const screening = page.locator('.rule-verdict', { hasText: 'Screening' });
+  const screening = page.locator('.tab-panel:not([hidden]) .rule-verdict', { hasText: 'Screening' });
   await page.getByRole('textbox', { name: 'customer', exact: true }).fill(INACTIVE_WITH_ORDERS);
   await page.getByRole('button', { name: 'Try checkout' }).click();
   await expect(screening).toContainText('customer has orders');
