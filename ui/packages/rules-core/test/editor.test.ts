@@ -268,6 +268,31 @@ describe('RuleEditorStore local-definition mutations', () => {
     });
   });
 
+  it('inlineLocal keeps the body root own payloads when the definition has none', () => {
+    const store = new RuleEditorStore({
+      rule: { local: 'quota-check' },
+      definitions: { 'quota-check': { rule: { spec: 'a', whenTrue: 'kept' } } },
+    });
+
+    store.inlineLocal('$.rule');
+
+    expect(store.getState().document.rule).toEqual({ spec: 'a', whenTrue: 'kept', name: 'quota-check' });
+  });
+
+  it('defineLocal does not alias the prior document — the undo entry is unaffected by mutating the new one', () => {
+    const store = new RuleEditorStore({
+      rule: { spec: 'a', whenTrue: { code: 'X' } },
+    });
+
+    store.defineLocal('$.rule', 'quota-check');
+
+    const moved = store.getState().document.definitions!['quota-check']!.whenTrue as { code: string };
+    moved.code = 'tampered';
+
+    store.undo();
+    expect(store.getState().document.rule).toEqual({ spec: 'a', whenTrue: { code: 'X' } });
+  });
+
   it('inline of one of two references keeps the definition', () => {
     const store = new RuleEditorStore({
       rule: { and: [{ local: 'quota-check' }, { local: 'quota-check' }] },

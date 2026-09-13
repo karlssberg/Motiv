@@ -224,8 +224,11 @@ export class RuleEditorStore {
     // cloned before it is spliced into the document `setNode` builds, or the two documents share
     // a mutable object and a later edit to one corrupts the other's undo-stack entry.
     const inlined = { ...structuredClone(definition.rule), name } as RuleNode & Decoration;
-    if (definition.whenTrue !== undefined) inlined.whenTrue = structuredClone(definition.whenTrue); else delete inlined.whenTrue;
-    if (definition.whenFalse !== undefined) inlined.whenFalse = structuredClone(definition.whenFalse); else delete inlined.whenFalse;
+    // Only a payload the *definition* carries is copied down. An undecorated definition leaves the
+    // body's own payloads alone — deleting them would lose decoration the body itself authored,
+    // which was never the definition's to drop.
+    if (definition.whenTrue !== undefined) inlined.whenTrue = structuredClone(definition.whenTrue);
+    if (definition.whenFalse !== undefined) inlined.whenFalse = structuredClone(definition.whenFalse);
 
     const next = setNode(this.#document, path, inlined as RuleNode);
     if (localReferences(next, name).length === 0 && next.definitions) {
