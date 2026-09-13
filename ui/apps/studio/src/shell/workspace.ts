@@ -36,6 +36,12 @@ export interface OpenDoc {
    * since you looked" is measured from. Set on open, on the tab's own save, and on acknowledge.
    */
   seenAt: number;
+  /**
+   * How many times the shell has asked this tab to reload its document from the server — bumped
+   * when a delete reverted the proposition to its compiled definition, which the tab's own
+   * workflow did not perform and so cannot know about.
+   */
+  reloads: number;
 }
 
 /**
@@ -57,6 +63,8 @@ export interface WorkspaceState {
   active: TabId | null;
   docs: Record<TabId, OpenDoc>;
   latest: Record<string, Latest>;
+  /** How many saves tabs have reported: the listings are refreshed on the back of each. */
+  saves: number;
 }
 
 /** A remembered tab: enough to reopen it. */
@@ -120,7 +128,7 @@ export function referencesOf(document: RuleDocument): string[] {
  * references has moved, and the shell hands the listings over (`setListings`) for the rest.
  */
 export class Workspace {
-  #state: WorkspaceState = { tabs: [], active: null, docs: {}, latest: {} };
+  #state: WorkspaceState = { tabs: [], active: null, docs: {}, latest: {}, saves: 0 };
   readonly #listeners = new Set<() => void>();
 
   getState = (): WorkspaceState => this.#state;
@@ -170,6 +178,7 @@ export class Workspace {
       id, kind, name,
       store: new RuleEditorStore(PLACEHOLDER),
       seenAt: Date.now(),
+      reloads: 0,
     };
     this.#set({
       docs: { ...this.#state.docs, [id]: doc },
@@ -180,8 +189,16 @@ export class Workspace {
     return doc;
   }
 
-  activate(id: TabId): void {
-    if (this.#state.docs[id] && this.#state.active !== id) this.#set({ active: id });
+  /** Makes a tab the active one, or — for `null`, a bare route — none of them. */
+  activate(id: TabId | null): void {
+    if (id !== null && !this.#state.docs[id]) return;
+    if (this.#state.active !== id) this.#set({ active: id });
+  }
+
+  /** Asks a tab to reload its document from the server. */
+  requestReload(id: TabId): void {
+    const doc = this.#state.docs[id];
+    if (doc) this.#patchDoc(id, { reloads: doc.reloads + 1 });
   }
 
   /**
@@ -231,6 +248,7 @@ export class Workspace {
         },
       },
       docs: doc ? { ...this.#state.docs, [id]: { ...doc, seenAt: savedAt } } : this.#state.docs,
+      saves: this.#state.saves + 1,
     });
   }
 

@@ -49,6 +49,31 @@ describe('Workspace', () => {
     expect(workspace.getState().tabs).toEqual([]);
   });
 
+  it('deactivates for a bare route, keeping the tabs', () => {
+    const workspace = new Workspace();
+    workspace.open('rule', 'a');
+    workspace.activate(null);
+    expect(workspace.getState().active).toBeNull();
+    expect(workspace.getState().tabs).toEqual([tabIdOf('rule', 'a')]);
+  });
+
+  it('counts saves, so listings can be refreshed on the back of one', () => {
+    const workspace = new Workspace();
+    expect(workspace.getState().saves).toBe(0);
+    workspace.noteSaved('rule', 'a', 2);
+    expect(workspace.getState().saves).toBe(1);
+  });
+
+  it('asks a tab to reload, once per request', () => {
+    const workspace = new Workspace();
+    workspace.open('proposition', 'customer.p');
+    const id = tabIdOf('proposition', 'customer.p');
+    expect(workspace.getState().docs[id]!.reloads).toBe(0);
+    workspace.requestReload(id);
+    workspace.requestReload(id);
+    expect(workspace.getState().docs[id]!.reloads).toBe(2);
+  });
+
   it('closing an inactive tab leaves the active one alone', async () => {
     const workspace = new Workspace();
     workspace.open('rule', 'a');

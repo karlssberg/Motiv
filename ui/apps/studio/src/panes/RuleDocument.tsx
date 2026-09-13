@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { createValidationController, type RulesApiClient } from '@motiv-rules/core';
 import { whyRuleSaveUnavailable } from '@motiv-rules/core/workflow';
 import { RuleEditorProvider } from '@motiv-rules/react';
@@ -13,6 +14,11 @@ import { DocActions } from '../shell/DocActions.js';
 import { ReportBanner } from '../shell/ReportBanner.js';
 import { ReferencesStrip } from '../shell/ReferencesStrip.js';
 import type { OpenDoc, Workspace } from '../shell/workspace.js';
+
+/** The actions in the editor's header, or portalled into the bar while the strip is compact. */
+function placeActions(host: HTMLElement | null | undefined, actions: JSX.Element): JSX.Element {
+  return host ? createPortal(actions, host) : actions;
+}
 
 /**
  * One open rule: the editor beside a rail of the two panes that *run* it — Evaluate against a
@@ -30,6 +36,16 @@ export function RuleDocument(props: {
   workspace: Workspace;
   /** Closes this tab — reached only from a save that landed, so no question is asked. */
   onClose: () => void;
+  /**
+   * Where to draw the document's actions instead of the editor's header: the app bar's free
+   * space, while the tab strip is a dropdown. `null` keeps them in the header.
+   */
+  actionsHost?: HTMLElement | null | undefined;
+  /**
+   * Hands the shell this tab's save, so the unsaved-changes question's *Save & close* can run it
+   * for a tab that is not the active one. Called with `null` on unmount.
+   */
+  onSaver?: ((save: (() => Promise<boolean>) | null) => void) | undefined;
   /** Opens (or activates) a proposition this rule references. */
   onOpenProposition: (name: string) => void;
 }) {
@@ -37,6 +53,12 @@ export function RuleDocument(props: {
   const { loaded, loadedEntry, conflict, failure, saving, refresh, load, save } =
     useRuleWorkflow(client, tab.store);
   const [documentOpen, setDocumentOpen] = useState(false);
+
+  const { onSaver } = props;
+  useEffect(() => {
+    onSaver?.(save);
+    return () => onSaver?.(null);
+  }, [onSaver, save]);
 
   // `refresh` and `load` are stable per (client, store) binding, so the listing loads once per
   // server world and the document once per tab.
@@ -100,14 +122,14 @@ export function RuleDocument(props: {
               note={loaded?.isCodeDefault ? 'code-defined default (builder starts fresh)' : undefined}
             />
           }
-          actions={
+          actions={placeActions(props.actionsHost,
             <DocActions
               saveUnavailable={whyRuleSaveUnavailable({ loaded, saving })}
               onJson={() => setDocumentOpen(true)}
               onSave={save}
               onClose={props.onClose}
-            />
-          }
+            />,
+          )}
         />
         {/*
           One rail for both ways of running the rule: beside Evaluate, Checkout shares one result

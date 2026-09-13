@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { createValidationController, type RulesApiClient } from '@motiv-rules/core';
 import { whyPropositionSaveUnavailable } from '@motiv-rules/core/workflow';
 import { RuleEditorProvider } from '@motiv-rules/react';
@@ -12,6 +13,11 @@ import { ReportBanner } from '../shell/ReportBanner.js';
 import { DocActions } from '../shell/DocActions.js';
 import { DependentsStrip } from '../explorer/DependentsStrip.js';
 import type { OpenDoc, Workspace } from '../shell/workspace.js';
+
+/** The actions in the editor's header, or portalled into the bar while the strip is compact. */
+function placeActions(host: HTMLElement | null | undefined, actions: JSX.Element): JSX.Element {
+  return host ? createPortal(actions, host) : actions;
+}
 
 /**
  * A dotted proposition name as the trail it already is: one span per segment, separated by the dots
@@ -49,16 +55,35 @@ export function PropositionDocument(props: {
   workspace: Workspace;
   /** Closes this tab — reached only from a save that landed, so no question is asked. */
   onClose: () => void;
+  /**
+   * Where to draw the document's actions instead of the editor's header: the app bar's free
+   * space, while the tab strip is a dropdown. `null` keeps them in the header.
+   */
+  actionsHost?: HTMLElement | null | undefined;
+  /**
+   * Hands the shell this tab's save, so the unsaved-changes question's *Save & close* can run it
+   * for a tab that is not the active one. Called with `null` on unmount.
+   */
+  onSaver?: ((save: (() => Promise<boolean>) | null) => void) | undefined;
 }) {
   const { client, tab, workspace } = props;
   const { entries, loaded, dependents, failure, saving, refreshEntries, select, reload, save } =
     usePropositionWorkflow(client, tab.store);
   const [documentOpen, setDocumentOpen] = useState(false);
 
+  const { onSaver } = props;
+  useEffect(() => {
+    onSaver?.(save);
+    return () => onSaver?.(null);
+  }, [onSaver, save]);
+
   // `refreshEntries` and `select` are stable per (client, store) binding, so the listing loads
   // once per server world and the document once per tab.
   useEffect(() => { void refreshEntries(); }, [refreshEntries]);
   useEffect(() => { void select(tab.name); }, [select, tab.name]);
+  // A delete that reverted this proposition to its compiled definition happened in the shell's
+  // workflow, not this one, so the shell asks for the reload rather than this noticing it.
+  useEffect(() => { if (tab.reloads > 0) void reload(); }, [reload, tab.reloads]);
 
   // The listing's model type for this name, else the alphabetically first in scope — what stands
   // in for an entry the listing has not got.
@@ -103,7 +128,7 @@ export function PropositionDocument(props: {
               version={loaded?.version}
             />
           }
-          actions={
+          actions={placeActions(props.actionsHost,
             <DocActions
               saveUnavailable={whyPropositionSaveUnavailable({ loaded, saving })}
               // The blast radius rides on the label, so what a save would affect is legible from
@@ -112,8 +137,8 @@ export function PropositionDocument(props: {
               onJson={() => setDocumentOpen(true)}
               onSave={save}
               onClose={props.onClose}
-            />
-          }
+            />,
+          )}
         />
         <div className="rail">
           <EvaluatePane client={client} />

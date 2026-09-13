@@ -49,7 +49,7 @@ function mockFetch(options: {
 }
 
 function renderPage() {
-  return render(<AdminPage page="admin" />);
+  return render(<AdminPage />);
 }
 
 describe('AdminPage', () => {
