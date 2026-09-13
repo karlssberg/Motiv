@@ -3,6 +3,7 @@ import type { RulesApiClient } from '@motiv-rules/core';
 import { useCatalog, useDslSync, useRuleEditorStore } from '@motiv-rules/react';
 import { DslEditor } from '../dsl/DslEditor.js';
 import { BuilderBody, EMPTY_CATALOG } from './BuilderPane.js';
+import { DefinitionsPane } from './DefinitionsPane.js';
 
 /** The two ways this pane lets you author the same rule document. */
 type Surface = 'builder' | 'dsl';
@@ -89,7 +90,14 @@ export function EditorPane(props: {
         className="surface-panel"
       >
         {surface === 'builder'
-          ? <BuilderBody client={props.client} />
+          ? (
+            <>
+              {/* Above the builder rather than beside it, so a definition is one scroll away from
+                  every `local` reference that points at it, not off in a separate column (#234). */}
+              <DefinitionsPane />
+              <BuilderBody client={props.client} />
+            </>
+          )
           : <DslEditor store={store} catalog={catalog} sync={sync} documentName={props.documentName} />}
       </div>
     </section>

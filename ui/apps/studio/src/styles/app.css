@@ -390,6 +390,66 @@ kbd {
   color: var(--danger);
 }
 
+/*
+  Definitions pane (#234): stacked above the builder rather than beside it, so it never competes
+  with the tree for the rail's width — it grows with its own content instead of sharing `.pane`'s
+  default `flex: 1`.
+*/
+.definitions-pane {
+  flex: none;
+  border-right: none;
+  border-bottom: 1px solid var(--border);
+}
+
+.definitions-empty {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.definition-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--sh-inset);
+}
+
+.definition-row-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.definition-row-head > .control {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.definition-count {
+  flex: none;
+  font-size: 11px;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+.definition-body {
+  font: 12px/1.5 var(--mono, monospace);
+  overflow-wrap: anywhere;
+}
+
+.definition-row-decoration {
+  display: flex;
+  gap: 10px;
+}
+
+.definition-row-decoration > .field {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 /* Shared control styling for selects, inputs, textareas */
 .control {
   width: 100%;
@@ -893,6 +953,16 @@ textarea.control {
 .node-menu-item:focus-visible {
   background: var(--sh-inset);
   outline: none;
+}
+
+.node-menu-item:disabled {
+  color: var(--faint);
+  cursor: default;
+}
+
+.node-menu-item:disabled:hover,
+.node-menu-item:disabled:focus-visible {
+  background: transparent;
 }
 
 /* The detail panel: the node's edit controls and decoration fields, a well inset to the row's
