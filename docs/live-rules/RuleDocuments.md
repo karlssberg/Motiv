@@ -50,6 +50,59 @@ Both `"loyalty-discount.json"` and `"Rules/loyalty-discount.json"` resolve the r
 by whole trailing segment, so `"loyalty.json"` never binds `"e-loyalty.json"`. An
 `InvalidOperationException` is thrown when no resource matches or when the name is ambiguous.
 
+## Definitions
+
+A document may carry a `definitions` object: document-local propositions that the `rule` tree (or
+other definitions) can reference without a catalog round-trip. Each entry maps a local name to a
+**definition** &mdash; a `rule` subtree plus optional `whenTrue` / `whenFalse` decoration &mdash;
+and is referenced with a `{ "local": "<name>" }` node instead of `{ "spec": "<name>" }`:
+
+```json
+{
+  "name": "qualifies for loyalty discount",
+  "definitions": {
+    "is-active-and-adult": {
+      "rule": { "andAlso": [ { "spec": "customer.is-active" }, { "spec": "customer.is-adult" } ] },
+      "whenTrue": "customer is active and an adult",
+      "whenFalse": "customer is inactive or a minor"
+    }
+  },
+  "rule": {
+    "and": [
+      { "local": "is-active-and-adult" },
+      { "spec": "customer.has-orders" }
+    ]
+  }
+}
+```
+
+A local binds exactly as a nested name does today &mdash; `Spec.Build(body).Create(name)`, or with
+`whenTrue`/`whenFalse` supplied, `Spec.Build(body).WhenTrue(...).WhenFalse(...).Create(name)` &mdash;
+so its `Reason` and `Assertions` take the `name == true` / `name == false` form, with any
+`whenTrue`/`whenFalse` strings surfacing as `Values`. A definition declares no model type of its
+own: it is bound at each reference, against that reference's model, so the same local can be used at
+the document root and inside a quantifier body. A definition may reference other locals and any
+catalog proposition, but locals may not be recursive, directly or through other locals.
+
+**Name grammar.** A local name is an ASCII letter or `_`, followed by ASCII letters, digits, `-` or
+`_` &mdash; no dot (locals don't namespace) and no space. The DSL's reserved words (`param`, `let`,
+`in`, `as`, `integer`, `number`, `string`, `boolean`, `all`, `any`, `exactly`, `atLeast`, `atMost`)
+are not valid local names, since a local is also written and referenced as a bare word in the DSL.
+
+**Paths.** A definition is addressed at `$.definitions.<name>`, and its body at
+`$.definitions.<name>.rule…`, exactly as `$.rule…` addresses the root.
+
+**Errors.** `InvalidLocalName` &mdash; a definition key, or the name a `local` node references, is
+not a legal local name. `UnknownLocal` &mdash; a `local` node names a definition the document does
+not declare. `CycleDetected` &mdash; two or more definitions reference each other in a loop; the
+message joins the chain with ` → `. A malformed `definitions` entry or node shape reports the usual
+`InvalidNode`.
+
+**Compatibility.** A reader built before this feature has never heard of `definitions` or `local`
+and rejects the document with `unknown property 'definitions'` &mdash; the same rule that already
+governs every other document-level key. There is no `$schema` version gate: the parser never
+inspects `$schema`, so an old reader's refusal is what marks a document as needing the newer one.
+
 ## Remarks
 
 - **Binding is deferred; failure is not.** A document default is parsed and bound when the rule is

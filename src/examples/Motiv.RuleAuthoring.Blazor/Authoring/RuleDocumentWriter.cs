@@ -5,6 +5,15 @@ using System.Text.Json;
 namespace Motiv.RuleAuthoring.Blazor.Authoring;
 
 /// <summary>Writes a <see cref="DraftNode" /> tree as a Motiv rule document.</summary>
+/// <remarks>
+/// Does not emit <c>definitions</c> or a <c>{ "local": … }</c> reference. <see cref="DraftNode" />
+/// has no concept of a document-local name — it models a spec leaf and the fixed set of operator
+/// kinds only, with nothing to hold a definition's key or its <c>whenTrue</c>/<c>whenFalse</c>
+/// decoration. Adding one would be inventing an authoring feature this sample was never asked for,
+/// rather than surfacing something the format already supports; a document that carries
+/// <c>definitions</c> still reads through <c>RuleSerializer</c> unchanged regardless — see
+/// <c>DefinitionsAreReadThoughUnwrittenTests</c> in the test project.
+/// </remarks>
 public static class RuleDocumentWriter
 {
     /// <summary>Writes the draft as a rule document.</summary>
