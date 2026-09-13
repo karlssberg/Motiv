@@ -9,17 +9,20 @@
 // The rule-document model: node shapes, and the helpers that read them.
 export {
   BINARY_OPERATORS, HIGHER_ORDER_KEYS,
-  nodeKind, isSpecNode, isExpressionNode, isNotNode, isBinaryNode, isHigherOrderNode,
+  nodeKind, isSpecNode, isExpressionNode, isLocalNode, isNotNode, isBinaryNode, isHigherOrderNode,
   binaryOperator, operandsOf, higherOrderKey, higherOrderBody,
   type Payload, type Decoration, type Countable, type ArgValue,
-  type SpecNode, type ExpressionNode, type NotNode,
+  type SpecNode, type ExpressionNode, type LocalNode, type NotNode,
   type AndNode, type OrNode, type XorNode, type AndAlsoNode, type OrElseNode,
   type AsAllSatisfiedNode, type AsAnySatisfiedNode, type AsNSatisfiedNode,
   type AsAtLeastNSatisfiedNode, type AsAtMostNSatisfiedNode,
   type BinaryNode, type HigherOrderNode, type RuleNode,
   type BinaryOperator, type HigherOrderKey, type NodeKind,
-  type ParameterDeclaration, type RuleDocument,
+  type ParameterDeclaration, type Definition, type RuleDocument,
 } from './document.js';
+
+// The document-local proposition name grammar.
+export { LOCAL_NAME_PATTERN, isValidLocalName, normalizeLocalName, finishLocalName } from './localNames.js';
 
 // The wire contracts shared with the ASP.NET Core endpoints.
 export type {

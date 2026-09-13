@@ -4,11 +4,13 @@ import {
   isSpecNode,
   isNotNode,
   isBinaryNode,
+  isLocalNode,
   binaryOperator,
   operandsOf,
   higherOrderBody,
   type RuleNode,
 } from '../src/document.js';
+import { childPaths } from '../src/paths.js';
 
 describe('nodeKind', () => {
   it('identifies a spec leaf', () => {
@@ -21,6 +23,24 @@ describe('nodeKind', () => {
   it('identifies not and higher-order nodes', () => {
     expect(nodeKind({ not: { spec: 'a' } })).toBe('not');
     expect(nodeKind({ asAllSatisfied: { spec: 'a' }, path: 'items' })).toBe('asAllSatisfied');
+  });
+  it('identifies a local node', () => {
+    expect(nodeKind({ local: 'x' })).toBe('local');
+  });
+});
+
+describe('isLocalNode', () => {
+  it('is true for a local node', () => {
+    expect(isLocalNode({ local: 'x' })).toBe(true);
+  });
+  it('is false for a non-local node', () => {
+    expect(isLocalNode({ spec: 'a' })).toBe(false);
+  });
+});
+
+describe('childPaths of a local node', () => {
+  it('has no children', () => {
+    expect(childPaths({ local: 'x' }, '$.rule')).toEqual([]);
   });
 });
 

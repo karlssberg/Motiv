@@ -1,6 +1,6 @@
 import {
   binaryOperator, higherOrderBody, higherOrderKey, isBinaryNode, isExpressionNode,
-  isHigherOrderNode, isNotNode, isSpecNode, operandsOf,
+  isHigherOrderNode, isLocalNode, isNotNode, isSpecNode, operandsOf,
   type ArgValue, type BinaryNode, type BinaryOperator, type HigherOrderKey, type HigherOrderNode,
   type NotNode, type ParameterDeclaration, type RuleDocument, type RuleNode, type SpecNode,
 } from '../document.js';
@@ -200,6 +200,8 @@ function printBody(
   if (isExpressionNode(node)) return `\`${node.expression}\``;
   if (isNotNode(node)) return printNegation(node, indent, layout, options);
   if (isHigherOrderNode(node)) return printQuantifier(node, indent, layout, options);
+  // The DSL does not yet have surface syntax for a local reference — that is a later task.
+  if (isLocalNode(node)) throw new Error(`Cannot print a local node to DSL text: ${node.local}`);
   return printBinary(node, indent, layout, options);
 }
 

@@ -1,6 +1,6 @@
 import {
-  binaryOperator, higherOrderKey, isBinaryNode, isExpressionNode, isHigherOrderNode, isNotNode,
-  isSpecNode, operandsOf,
+  binaryOperator, higherOrderKey, isBinaryNode, isExpressionNode, isHigherOrderNode, isLocalNode,
+  isNotNode, isSpecNode, operandsOf,
   type BinaryOperator, type Countable, type HigherOrderKey, type RuleNode,
 } from './document.js';
 
@@ -61,5 +61,6 @@ export function summarize(node: RuleNode): NodeSummary {
   }
   if (isExpressionNode(node)) return { badge: node.expression, description: '', kind: 'spec' };
   if (isSpecNode(node)) return { badge: node.spec, description: '', kind: 'spec' };
+  if (isLocalNode(node)) return { badge: 'let', description: node.local, kind: 'spec' };
   return { badge: '?', description: '', kind: 'spec' };
 }
