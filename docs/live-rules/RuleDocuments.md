@@ -78,8 +78,11 @@ and is referenced with a `{ "local": "<name>" }` node instead of `{ "spec": "<na
 
 A local binds exactly as a nested name does today &mdash; `Spec.Build(body).Create(name)`, or with
 `whenTrue`/`whenFalse` supplied, `Spec.Build(body).WhenTrue(...).WhenFalse(...).Create(name)` &mdash;
-so its `Reason` and `Assertions` take the `name == true` / `name == false` form, with any
-`whenTrue`/`whenFalse` strings surfacing as `Values`. A definition declares no model type of its
+so its `Reason` takes the `name == true` / `name == false` form. What it *asserts* depends on
+whether it is decorated: a definition carrying `whenTrue`/`whenFalse` gives
+`Assertions == ["<name> == true"]`, with those strings surfacing as `Values`, while an undecorated
+definition adds no assertion of its own and its `Assertions` remain the body's &mdash; a definition
+wrapping `customer.is-active` asserts `["customer is active"]`. A definition declares no model type of its
 own: it is bound at each reference, against that reference's model, so the same local can be used at
 the document root and inside a quantifier body. A definition may reference other locals and any
 catalog proposition, but locals may not be recursive, directly or through other locals.
