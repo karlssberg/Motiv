@@ -56,3 +56,49 @@ describe('promotionSeedFor', () => {
     expect(promotionSeedFor(DOCUMENT, 'absent')).toBeNull();
   });
 });
+
+/** A document whose definitions reference one another, and whose payloads are objects. */
+const NESTED: RuleDocument = {
+  rule: { and: [{ spec: 'a' }, { local: 'myLocal' }] },
+  definitions: {
+    myLocal: { rule: { and: [{ spec: 'b' }, { local: 'inner' }] }, whenTrue: { code: 'T' } },
+    inner: { rule: { spec: 'c' }, whenFalse: { code: 'F' } },
+  },
+};
+
+describe('seeds resolve the locals they carry', () => {
+  it('posts no local node when the extracted subtree references one', () => {
+    const seed = catalogSeedFor(NESTED, '$.rule')!;
+    expect(JSON.stringify(seed)).not.toContain('"local"');
+    expect(seed.rule).toEqual({
+      and: [
+        { spec: 'a' },
+        {
+          and: [{ spec: 'b' }, { spec: 'c', name: 'inner', whenFalse: { code: 'F' } }],
+          name: 'myLocal',
+          whenTrue: { code: 'T' },
+        },
+      ],
+    });
+  });
+
+  it('inlines a definition body that references another definition', () => {
+    const seed = promotionSeedFor(NESTED, 'myLocal')!;
+    expect(JSON.stringify(seed)).not.toContain('"local"');
+    expect(seed.rule).toEqual({
+      and: [{ spec: 'b' }, { spec: 'c', name: 'inner', whenFalse: { code: 'F' } }],
+      name: 'myLocal',
+      whenTrue: { code: 'T' },
+    });
+  });
+
+  it('copies the payloads it carries down rather than sharing the document’s objects', () => {
+    const seed = promotionSeedFor(NESTED, 'myLocal')!;
+    const payload = (seed.rule as { whenTrue: unknown }).whenTrue;
+    expect(payload).toEqual({ code: 'T' });
+    expect(payload).not.toBe(NESTED.definitions!.myLocal!.whenTrue);
+
+    const inner = (seed.rule as { and: Array<{ whenFalse?: unknown }> }).and[1]!;
+    expect(inner.whenFalse).not.toBe(NESTED.definitions!.inner!.whenFalse);
+  });
+});
