@@ -182,7 +182,10 @@ Reusing `spec` with local-first lookup is fewer moving parts, and was rejected f
    can break a document that was valid when saved — the failure surfaces in the wrong place.
 2. **The dependents index.** `DocumentReferences.From` collects `spec` names as the document's
    outgoing edges. With local-first `spec`, it would have to subtract the definitions map before
-   every read. With `local`, the edge set is unchanged: locals are not edges.
+   every read. With `local`, `DocumentReferences` still changes shape — it now walks
+   `definitions` too, because a definition's body can reference catalog propositions, and those
+   are real dependency edges the index must not miss — but it never emits a `local` name as an
+   edge. A local is not a dependency; the catalog propositions it reaches are.
 3. **The DSL resolves, the JSON records.** In the DSL a local *is* a bare word, resolved against
    the document's own `let` declarations at parse time (below). That is acceptable there because
    the declaration is in the same text, a screen above. The JSON is what is stored, bound and
@@ -204,23 +207,26 @@ Spec.Build(subtree).Create(name)
 Spec.Build(subtree).WhenTrue(whenTrue).WhenFalse(whenFalse).Create(name)
 ```
 
-A definition is bound **once per model type per document bind** and the resulting spec is
-shared by every `local` reference to it at that model. Two references to the same local are two
-references to one spec, not two copies of a subtree. This is the reuse the inline name could never
-offer.
+A local is bound **at each reference**, against that reference's model type. Specs are values, so
+binding the same definition twice yields two equal specs, not two distinguishable objects — there
+is nothing to share and nothing a caller could observe by comparing them. Binding twice is an
+optimisation opportunity, not a correctness requirement; memoisation can be added later if it is
+measured to matter, but it is not part of this slice.
 
-**Model type.** A definition declares none. It is bound **per distinct use-site model type**,
-memoised on `(name, TModel)`: a local referenced at the document root binds against the
-document's model, and the same local referenced inside a quantifier body binds again against the
-body's element model. A definition whose catalog references do not fit the use-site model fails
-at that reference with the existing check (`RuleBinder`, "has model type X but the document is
-being loaded for Y"), so nothing new is reported and nothing new is declared. The DSL has no
-place to write a model type, which is the other reason not to have one.
+**Model type.** A definition declares none. It is bound **against the model type of the reference
+that names it**: a local referenced at the document root binds against the document's model, and
+the same local referenced inside a quantifier body binds again against the body's element model.
+A definition whose catalog references do not fit the use-site model fails at that reference with
+the existing check (`RuleBinder`, "has model type X but the document is being loaded for Y"), so
+nothing new is reported and nothing new is declared. The DSL has no place to write a model type,
+which is the other reason not to have one.
 
-**Cycles and depth.** Locals are folded into the existing `CompositionDepth.ReportIfTooDeep`
-measure so that a deep local counts toward `MaxCompositionDepth` exactly as a deep catalog
-reference does. A local cycle (`a` → `b` → `a`, or `a` → `a`) is a bind error with a new
-`RuleErrorCode`, reported at the reference that closes the cycle, before depth is measured.
+**Cycles and depth.** Cycle detection and unknown-local detection are a **resolve pass** in the
+C# parser, run before binding: it walks `definitions`, following `local` references, and reports
+an unknown name or a cycle (`a` → `b` → `a`, or `a` → `a`) as a bind error with a new
+`RuleErrorCode`, at the reference that names the unknown local or closes the cycle. Locals are
+folded into the existing `CompositionDepth.ReportIfTooDeep` measure so that a deep local counts
+toward `MaxCompositionDepth` exactly as a deep catalog reference does.
 
 **Parameters.** A definition may use the document's `@parameter`s; they are substituted by
 `RuleParameterSubstituter` before binding exactly as in the root rule. Definitions do not declare
@@ -228,12 +234,17 @@ parameters of their own — that is what promotion to the catalog is for.
 
 ### Compatibility
 
-`RuleDocumentParser` **rejects unknown document-level properties** (`unknown property
-'definitions'`), and so does its handling of node keys. A document carrying `definitions` or a
-`local` node is therefore **unreadable by a reader that predates this change**. This is a schema
-version bump, not an additive change, and the doc must say so:
+There is no `$schema` version gate: `RuleDocumentParser` accepts any string for `$schema` and
+never compares it, and this stays true after this change. What makes a document carrying
+`definitions` or a `local` node **unreadable by a reader that predates this change** is the same
+rule that already governs every other key: `RuleDocumentParser` **rejects unknown document-level
+properties** (`unknown property 'definitions'`), and so does its handling of node keys. A reader
+built before this slice has never heard of `definitions` or `local` and refuses the document on
+that ground alone, exactly as it would refuse a typo'd key today.
 
-- `$schema` is bumped; the parser accepts both versions and only the new one admits the new keys.
+- The schema *file*, `schemas/rule.v1.json`, is extended in place — the new keys are additive to
+  the file, even though a document that uses them is not additive from an old reader's point of
+  view.
 - Studio and the `@motiv-rules/core` schema validator gain the keys in the same release.
 - The EF and JSON stores need no migration: documents are opaque JSON to them.
 
@@ -243,7 +254,10 @@ as before**. Nothing is removed from the binder.
 ## Studio
 
 - **The details panel** of a nested node no longer shows Name / When true / When false. The root
-  keeps them. The panel indent is corrected so it sits at the row's own level.
+  keeps them. The panel indent is corrected so it sits at the row's own level. `PayloadPopover`,
+  the DSL view's payload editor, is a second place that edits a node's name and payloads by
+  nested path; its Name field is retired for non-root paths alongside `DecorationEditor`'s, for
+  the same reason.
 - **Extract** on any nested composition or leaf offers a scope:
   - **This document** (default): asks for a local name, moves the subtree into `definitions`, and
     replaces it with `{ "local": … }`. No server round-trip; an undo step like any other.
@@ -253,9 +267,10 @@ as before**. Nothing is removed from the binder.
   to `spec`. **Inline** on either kind of reference replaces it with the definition's subtree
   (for a catalog reference, a copy of the proposition's current document — the reference is gone
   and the dependents edge with it, which the confirm says).
-- **A definitions panel** per document lists locals with reference counts. A local opens as a
-  document in the dynamic-tabs shell (#233), editing the same `RuleEditorStore` at a sub-path so
-  the parent tab's draft and undo are shared, not forked.
+- **A definitions panel** per document lists locals with reference counts and is where a local is
+  read and edited. Locals do not open as tabs in the dynamic-tabs shell (#233): a definition is
+  part of its document, not a document of its own, so the panel edits the same `RuleEditorStore`
+  at a sub-path in place, and the parent tab's draft and undo are shared, not forked.
 - **Migration of an existing inline name**: a nested node that carries `name` / `whenTrue` /
   `whenFalse` shows the decoration read-only on the row with a single **Extract** affordance. One
   click converts it into a local of that name. Studio never writes a nested decoration again.
@@ -285,10 +300,11 @@ rule in `CLAUDE.md`).
    as-you-type and on-blur rules above, exported so the editor and tests share one definition),
    validation for invalid name, unknown local, cycle, and unused definition (a warning).
    API-surface snapshot updated.
-2. **C# parser and binder** (`Motiv.Serialization`): `$schema` bump, `RuleDocument.Definitions`,
-   `RuleNode` local kind, `Decorate`-equivalent bind
-   memoised on `(name, TModel)`, cycle error code, `CompositionDepth` measuring through locals, `DocumentReferences`
-   unchanged but tested to *not* emit locals. Sync, async and both metadata binders.
+2. **C# parser and binder** (`Motiv.Serialization`): `RuleDocument.Definitions`,
+   `RuleNode` local kind, `Decorate`-equivalent bind at each reference against that reference's
+   model type, a resolve pass for unknown-local and cycle detection with a new error code,
+   `CompositionDepth` measuring through locals, `DocumentReferences` walking `definitions` for
+   catalog edges while still never emitting a `local` name. Sync, async and both metadata binders.
 3. **DSL**: `let` keyword; preamble parse with pre-collected declarations; bare-word
    resolution to `local` / `spec`; dotted-identifier and duplicate-declaration errors; shadowing
    warning; *prefer `let`* hint and code action for nested `as`; printer with `param` /

@@ -46,6 +46,61 @@ describe('rule.v1.json drift', () => {
   });
 });
 
+describe('definitions and local nodes', () => {
+  it('accepts a document with one definition and one local reference', () => {
+    const document = {
+      definitions: {
+        'is-active-and-adult': { rule: { spec: 'customer.is-active' } },
+      },
+      rule: { local: 'is-active-and-adult' },
+    };
+    expect(validate(document)).toBe(true);
+  });
+
+  it('accepts a definition with whenTrue/whenFalse', () => {
+    const document = {
+      definitions: {
+        'is-active-and-adult': {
+          rule: { spec: 'customer.is-active' },
+          whenTrue: 'active',
+          whenFalse: 'inactive',
+        },
+      },
+      rule: { local: 'is-active-and-adult' },
+    };
+    expect(validate(document)).toBe(true);
+  });
+
+  it('rejects a local with a dotted name', () => {
+    const document = { rule: { local: 'a.b' } };
+    expect(validate(document)).toBe(false);
+  });
+
+  it('rejects a definition missing rule', () => {
+    const document = {
+      definitions: { x: { whenTrue: 'a', whenFalse: 'b' } },
+      rule: { spec: 'a' },
+    };
+    expect(validate(document)).toBe(false);
+  });
+
+  it('rejects a definitions value that is an array', () => {
+    const document = {
+      definitions: [{ rule: { spec: 'a' } }],
+      rule: { spec: 'a' },
+    };
+    expect(validate(document)).toBe(false);
+  });
+
+  it('rejects a definition with an unknown key', () => {
+    const document = {
+      definitions: { x: { rule: { spec: 'a' }, frobnicate: true } },
+      rule: { spec: 'a' },
+    };
+    expect(validate(document)).toBe(false);
+  });
+});
+
 // Real exporter shapes from GET /catalog (pinned by CatalogEndpointTests).
 const stringMetadataSchema: JsonSchema = { type: ['string', 'null'] };
 const verdictMetadataSchema: JsonSchema = {
