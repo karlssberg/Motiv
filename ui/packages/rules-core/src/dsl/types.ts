@@ -3,7 +3,7 @@ import type { RuleDocument } from '../document.js';
 /** The lexical class of a DSL token. */
 export type TokenKind =
   | 'spec'        // is-active, and bare identifiers: param names, collection paths
-  | 'keyword'     // param, let, in, as
+  | 'keyword'     // param, let, in
   | 'type'        // integer, number, string, boolean
   | 'quantifier'  // all, any, exactly, atLeast, atMost
   | 'operator'    // && || & | ^ !
@@ -34,12 +34,6 @@ export interface DslError {
   /** Stable machine-readable code, e.g. `UnexpectedToken`. */
   code: string;
   message: string;
-  /**
-   * The node path this diagnostic is about, when it has one — e.g. the `PreferLet` hint's path is
-   * the node the `as` clause named, so a quick-fix can call `defineLocal(path, …)` without
-   * re-deriving it. Absent when the diagnostic has no path of its own, such as a plain syntax error.
-   */
-  path?: string;
 }
 
 /** Maps a backend node path (e.g. `$.rule.andAlso[0]`) to the text range that produced it. */

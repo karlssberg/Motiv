@@ -116,10 +116,8 @@ export function DslEditor(props: {
   const [popover, setPopover] = useState<PayloadTarget | null>(null);
 
   const diagnostics = useMemo(
-    // `sync` doubles as the quick-fix's `reformatFromTree`, so the `PreferLet` hint's action is
-    // wired up here rather than needing a second parallel context of its own.
-    () => diagnosticsFor(sync.text, sync.parseResult, editorState.errors, { store, sync }),
-    [sync.text, sync.parseResult, editorState.errors, store, sync],
+    () => diagnosticsFor(sync.text, sync.parseResult, editorState.errors),
+    [sync.text, sync.parseResult, editorState.errors],
   );
 
   const live = useRef<LiveContext>({ sync, catalog, diagnostics, store });

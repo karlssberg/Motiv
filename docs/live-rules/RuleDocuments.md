@@ -89,7 +89,7 @@ catalog proposition, but locals may not be recursive, directly or through other 
 
 **Name grammar.** A local name is an ASCII letter or `_`, followed by ASCII letters, digits, `-` or
 `_` &mdash; no dot (locals don't namespace) and no space. The DSL's reserved words (`param`, `let`,
-`in`, `as`, `integer`, `number`, `string`, `boolean`, `all`, `any`, `exactly`, `atLeast`, `atMost`)
+`in`, `integer`, `number`, `string`, `boolean`, `all`, `any`, `exactly`, `atLeast`, `atMost`)
 are not valid local names, since a local is also written and referenced as a bare word in the DSL.
 
 **Paths.** A definition is addressed at `$.definitions.<name>`, and its body at
@@ -128,7 +128,7 @@ regardless of where the declarations sit.
 **A bare word resolves against the document's own `let` declarations.** A word that names a
 declared local becomes a local reference; any other word becomes a catalog reference. This is why a
 local name can't contain a dot (a dotted word is always a catalog reference) and can't be one of the
-DSL's reserved words: `param`, `let`, `in`, `as`, `integer`, `number`, `string`, `boolean`, `all`,
+DSL's reserved words: `param`, `let`, `in`, `integer`, `number`, `string`, `boolean`, `all`,
 `any`, `exactly`, `atLeast`, `atMost`.
 
 **Shadowing a catalog proposition is a warning, not an error.** A root-level catalog proposition can
@@ -136,10 +136,11 @@ share a name with a `let` (a local never has a dot, so it can never collide with
 catalog name). Inside its own document, the local wins; the editor reports a *shadows catalog
 proposition* warning at the declaration so the author notices.
 
-**`as "name"` on a nested node still parses and prints for an existing document, but is retired for
-authoring.** The editor hints *prefer a `let` declaration* on a nested `as` and offers to lift the
-named subtree into one. `as` on the root expression is unaffected &mdash; that's the rule's own
-name.
+**The DSL has no inline naming clause.** A rule's or nested node's `name`, `whenTrue` and
+`whenFalse` live in the JSON document and are set from the builder, not written into the DSL text
+&mdash; and they are preserved across a DSL edit, exactly like any other decoration. A nested named
+node in an existing document is migrated to a `let` declaration with the *Extract to definition*
+builder action.
 
 **`whenTrue`/`whenFalse` on a definition are set in the builder, not in the DSL text** &mdash; as
 for every node, decoration lives outside the expression and is edited alongside it, not written

@@ -89,10 +89,6 @@ describe('parse — errors', () => {
     });
   });
 
-  it('reports a missing name after as', () => {
-    expect(parse('is-active as').errors[0]).toMatchObject({ code: 'ExpectedName' });
-  });
-
   it('reports an empty document', () => {
     expect(parse('').errors[0]).toMatchObject({ code: 'UnexpectedEnd' });
   });
@@ -215,15 +211,15 @@ describe('parse — errors', () => {
 });
 
 describe('parse — unterminated literals', () => {
-  it('reports an unterminated name string over the opening quote to end-of-input', () => {
-    const result = parse('is-active as "x');
+  it('reports an unterminated argument string over the opening quote to end-of-input', () => {
+    const result = parse('s(label = "x');
     expect(result.document).toBeUndefined();
-    expect(result.errors[0]).toMatchObject({ code: 'UnterminatedString', from: 13, to: 15 });
+    expect(result.errors[0]).toMatchObject({ code: 'UnterminatedString', from: 10, to: 12 });
   });
 
   it('reports a lone opening quote', () => {
-    expect(parse('is-active as "').errors[0]).toMatchObject({
-      code: 'UnterminatedString', from: 13, to: 14,
+    expect(parse('s(label = "').errors[0]).toMatchObject({
+      code: 'UnterminatedString', from: 10, to: 11,
     });
   });
 

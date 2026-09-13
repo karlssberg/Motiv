@@ -52,18 +52,10 @@ const QUANTIFIER_WORDS: Record<HigherOrderKey, string> = {
   asAtLeastNSatisfied: 'atLeast', asAtMostNSatisfied: 'atMost',
 };
 
-/**
- * Binding tightness: higher binds tighter. A named node is either a postfix primary or is
- * parenthesised by its own `as` clause, so it always binds as an atom.
- */
+/** Binding tightness: higher binds tighter. */
 function precedenceOf(node: RuleNode): number {
-  if (node.name !== undefined || !isBinaryNode(node)) return ATOM;
+  if (!isBinaryNode(node)) return ATOM;
   return PRECEDENCE.indexOf(binaryOperator(node));
-}
-
-/** True when a trailing `as` clause would bind to something narrower than the whole node. */
-function nameNeedsParens(node: RuleNode): boolean {
-  return isBinaryNode(node) || isNotNode(node);
 }
 
 /**
@@ -135,7 +127,7 @@ function printNegation(
  */
 function operandNeedsParens(operand: RuleNode, operator: BinaryOperator): boolean {
   if (precedenceOf(operand) <= PRECEDENCE.indexOf(operator)) return true;
-  if (operand.name !== undefined || !isBinaryNode(operand)) return false;
+  if (!isBinaryNode(operand)) return false;
   return CONNECTIVE[binaryOperator(operand)] !== CONNECTIVE[operator];
 }
 
@@ -193,8 +185,8 @@ function printArgs(node: SpecNode, options: PrintOptions | undefined): string {
   return `(${rendered.join(', ')})`;
 }
 
-/** Renders a node without its `as` clause. */
-function printBody(
+/** Renders a node, at an indentation its continuation lines start from. */
+function printNode(
   node: RuleNode, indent: string, layout: Layout, options: PrintOptions | undefined,
 ): string {
   if (isSpecNode(node)) return `${node.spec}${printArgs(node, options)}`;
@@ -203,20 +195,6 @@ function printBody(
   if (isHigherOrderNode(node)) return printQuantifier(node, indent, layout, options);
   if (isLocalNode(node)) return node.local;
   return printBinary(node, indent, layout, options);
-}
-
-/** Renders a node and its `as` clause, at an indentation its continuation lines start from. */
-function printNode(
-  node: RuleNode, indent: string, layout: Layout, options: PrintOptions | undefined,
-): string {
-  const name = node.name;
-  if (name === undefined) return printBody(node, indent, layout, options);
-  if (!nameNeedsParens(node)) return `${printBody(node, indent, layout, options)} as ${quote(name)}`;
-
-  const group = parenthesise(
-    indent, isMultiline(node, layout), (inner) => printBody(node, inner, layout, options),
-  );
-  return `${group} as ${quote(name)}`;
 }
 
 function printDefault(value: NonNullable<ParameterDeclaration['default']>): string {

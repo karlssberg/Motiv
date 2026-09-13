@@ -13,8 +13,8 @@ describe('collectLocalNames', () => {
     expect(declarations.map((d) => d.name)).toEqual(['a', 'b']);
   });
 
-  it('does not treat a `let` inside a quoted `as` string as a declaration', () => {
-    const declarations = collectLocalNames(tokenize('x && (is-active as "let x = 1")'));
+  it('does not treat a `let` inside a quoted argument string as a declaration', () => {
+    const declarations = collectLocalNames(tokenize('x && s(label = "let x = 1")'));
     expect(declarations).toEqual([]);
   });
 
@@ -43,8 +43,8 @@ describe('declaredLocals', () => {
     expect(declaredLocals('let a = x\n\na')).toEqual(new Set(['a']));
   });
 
-  it('does not match a `let` inside a quoted `as` string', () => {
-    expect(declaredLocals('x && (is-active as "let x = 1")')).toEqual(new Set());
+  it('does not match a `let` inside a quoted argument string', () => {
+    expect(declaredLocals('x && s(label = "let x = 1")')).toEqual(new Set());
   });
 
   it('does not match a `let` after the rule body', () => {

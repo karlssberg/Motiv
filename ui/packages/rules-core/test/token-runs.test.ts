@@ -39,8 +39,8 @@ describe('tokenSpans', () => {
     expect(spans.map((span) => span.kind)).toEqual(['local']);
   });
 
-  it('does not mistake a `let` inside a quoted `as` string for a declaration of the real spec token', () => {
-    const spans = tokenSpans('x && (is-active as "let x = 1")');
+  it('does not mistake a `let` inside a quoted argument string for a declaration of the real spec token', () => {
+    const spans = tokenSpans('x && s(label = "let x = 1")');
     const realX = spans.find((span) => span.value === 'x');
     expect(realX!.kind).toBe('spec');
   });

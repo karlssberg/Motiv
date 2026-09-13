@@ -82,12 +82,4 @@ describe('diagnosticsFor', () => {
       expect.objectContaining({ code: 'ShadowsCatalog', severity: 'warning' }),
     );
   });
-
-  it('maps a PreferLet warning to hint severity', () => {
-    const text = 'x && y as "z"';
-    const diagnostics = diagnosticsFor(text, parse(text), []);
-    expect(diagnostics).toContainEqual(
-      expect.objectContaining({ code: 'PreferLet', severity: 'hint' }),
-    );
-  });
 });

@@ -6,7 +6,6 @@ import type { RuleDocument } from '../src/document.js';
 /** One document per node kind in rule.v1.json, plus the reference composition. */
 const DOCUMENTS: Array<{ label: string; document: RuleDocument }> = [
   { label: 'spec', document: { rule: { spec: 'is-active' } } },
-  { label: 'named spec', document: { rule: { spec: 'is-active', name: 'activity' } } },
   { label: 'spec with args', document: { rule: { spec: 'gate', args: { n: 1 } } } },
   {
     label: 'spec with every arg literal kind',
@@ -64,20 +63,6 @@ const DOCUMENTS: Array<{ label: string; document: RuleDocument }> = [
     document: { rule: { asAtMostNSatisfied: { spec: 'is-positive' }, n: 1, path: 'orders' } },
   },
   {
-    label: 'named quantifier',
-    document: {
-      rule: { asAllSatisfied: { spec: 'is-positive' }, path: 'orders', name: 'quota' },
-    },
-  },
-  {
-    label: 'named compound',
-    document: { rule: { andAlso: [{ spec: 'a' }, { spec: 'b' }], name: 'pair' } },
-  },
-  {
-    label: 'named negation',
-    document: { rule: { not: { spec: 'is-flagged' }, name: 'unflagged' } },
-  },
-  {
     label: 'negated compound',
     document: { rule: { not: { or: [{ spec: 'a' }, { spec: 'b' }] } } },
   },
@@ -100,15 +85,6 @@ const DOCUMENTS: Array<{ label: string; document: RuleDocument }> = [
           ],
         },
         path: 'orders',
-      },
-    },
-  },
-  {
-    label: 'named compound wrapping a quantifier',
-    document: {
-      rule: {
-        andAlso: [{ spec: 'a' }, { asAllSatisfied: { spec: 'b' }, path: 'orders' }],
-        name: 'both',
       },
     },
   },
@@ -147,7 +123,6 @@ const DOCUMENTS: Array<{ label: string; document: RuleDocument }> = [
             asAtLeastNSatisfied: { andAlso: [{ spec: 'is-positive' }, { spec: 'is-recent' }] },
             n: '@minOrders',
             path: 'orders',
-            name: 'quota',
           },
         ],
       },

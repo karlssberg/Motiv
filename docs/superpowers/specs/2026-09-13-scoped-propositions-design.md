@@ -158,11 +158,9 @@ is-active-and-adult & customer.has-orders(min = @minOrders)
   and a proposition — can share a name with a `let`. The `let` wins inside its document, and
   the parser, which already carries the catalog for argument ordering, reports
   `shadows catalog proposition 'customer'` as a warning at the declaration.
-- **`as "name"` on a nested node is the retired feature.** The parser keeps accepting it and the
-  printer keeps emitting it, so an existing document round-trips unchanged; completion stops
-  offering it below the root, and diagnostics attach a hint, *"prefer `let`"*, with a code
-  action that lifts the named subtree into a declaration. `as` on the root expression is the
-  rule's own name and is untouched.
+- **`as "name"` is removed from the DSL entirely (#234).** The parser no longer accepts it and the
+  printer no longer emits it; a stray `as "…"` is a plain syntax error. See the build-changes note
+  at the end of this document.
 - **`whenTrue` / `whenFalse` stay out of the text**, as they are for every node today, and ride
   the same side channel: `mergeDecorations` carries a definition's payloads across a reparse by
   the definition's path (`definitions.<name>`). Renaming a `let` therefore drops its payloads,
@@ -339,7 +337,7 @@ rule in `CLAUDE.md`).
   The DSL view's payload card is read-only below the root too — its `whenTrue`/`whenFalse` fields
   show what a document already carries but cannot be written, and there is no Save — so no nested
   decoration is authored anywhere in the app.
-- **Reserved DSL words cannot name a local.** `param`, `let`, `in`, `as`, `integer`, `number`,
+- **Reserved DSL words cannot name a local.** `param`, `let`, `in`, `integer`, `number`,
   `string`, `boolean`, `all`, `any`, `exactly`, `atLeast` and `atMost` are rejected at every layer
   that names a local — `isValidLocalName`, `parseLet` (via `ReservedLocalName`), and the C#
   `LocalNames.IsValid`. The JSON-schema name pattern is unchanged, since validation, not the
@@ -378,3 +376,11 @@ rule in `CLAUDE.md`).
   down, key order within a tier. A cycle's members are appended in key order rather than dropped.
   The panel is still mounted when there are no definitions, so the empty state says where one
   will appear.
+- **The `as` clause was removed from the DSL entirely (#234), after review of the built UI.** The
+  original design kept `as "name"` parsing and printing as a retired-but-supported nested-naming
+  clause alongside `let`. Shipping both meant two ways to name the same thing, and a name is a
+  definition — there is exactly one way to name a thing in this design, a `let` declaration — so
+  the clause was cut rather than kept as a second, discouraged spelling. `DSL_KEYWORDS` drops
+  `as`; a stray `as "…"` is now a plain `UnexpectedToken` syntax error; the printer never emits a
+  `name`; and `mergeDecorations` now carries `name` across a reparse exactly like `whenTrue` /
+  `whenFalse`, since the text can no longer carry it at all.

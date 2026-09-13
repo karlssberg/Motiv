@@ -17,7 +17,7 @@ export interface LocalDeclaration {
  * Scans the leading run of `param`/`let` statements — the document's preamble — for every
  * `let NAME = …` declaration, in declaration order, first occurrence only. This is the one real
  * definition of "declared": it walks lexer tokens, not raw text, so a `let` that only appears
- * inside a string literal (`as "let x = 1"`) or after the preamble has ended (the rule body has
+ * inside a string literal (`s(label = "let x = 1")`) or after the preamble has ended (the rule body has
  * begun) is never mistaken for a declaration — the outer loop stops the moment it meets a token
  * that isn't a preamble `param`/`let` keyword. Tracks paren/brace depth so a group or quantifier
  * body nested inside a `let`'s own expression isn't mistaken for the *next* preamble statement.

@@ -47,9 +47,8 @@ describe('completeDsl', () => {
   it('offers quantifiers, keywords and types from the single vocabulary definition', () => {
     const all = completeAtEnd('a');
     const labels = all!.options.map((option) => option.label);
-    expect(labels).toEqual(expect.arrayContaining(['all', 'any', 'atLeast', 'atMost', 'as']));
+    expect(labels).toEqual(expect.arrayContaining(['all', 'any', 'atLeast', 'atMost']));
     expect(all!.options.find((option) => option.label === 'all')).toMatchObject({ kind: 'quantifier', detail: 'quantifier' });
-    expect(all!.options.find((option) => option.label === 'as')).toMatchObject({ kind: 'keyword', detail: 'keyword' });
 
     const types = completeAtEnd('int');
     expect(types!.options).toEqual([{ label: 'integer', kind: 'type', detail: 'type' }]);

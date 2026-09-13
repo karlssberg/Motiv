@@ -41,14 +41,17 @@ describe('print', () => {
       .toBe('a & b && c');
   });
 
-  it('prints a name as a trailing as-clause', () => {
+  it('never prints a name — the DSL has no inline naming clause', () => {
     expect(print({ rule: { spec: 'is-active', name: 'activity' } }))
-      .toBe('is-active as "activity"');
+      .toBe('is-active');
   });
 
-  it('parenthesises a named compound so the name binds to it', () => {
+  it('prints a named compound node with parens only when tightness requires them, never a name', () => {
     expect(print({ rule: { andAlso: [{ spec: 'a' }, { spec: 'b' }], name: 'pair' } }))
-      .toBe('(a && b) as "pair"');
+      .toBe('a && b');
+    expect(print({
+      rule: { and: [{ or: [{ spec: 'a' }, { spec: 'b' }], name: 'inner' }, { spec: 'c' }] },
+    })).toBe('(a | b) & c');
   });
 
   it('prints an uncounted quantifier with an indented body', () => {
@@ -110,7 +113,7 @@ describe('print', () => {
       '    is-verified | !is-flagged\n' +
       ') && atLeast(@minOrders) in orders {\n' +
       '    is-positive && is-recent\n' +
-      '} as "quota"',
+      '}',
     );
   });
 
@@ -128,8 +131,8 @@ describe('print', () => {
     expect(print({ rule: { spec: 'gate', args: {} } })).toBe('gate');
   });
 
-  it('prints args before an `as` clause', () => {
-    expect(print({ rule: { spec: 'gate', args: { n: 1 }, name: 'check' } })).toBe('gate(n = 1) as "check"');
+  it('prints args but never a name', () => {
+    expect(print({ rule: { spec: 'gate', args: { n: 1 }, name: 'check' } })).toBe('gate(n = 1)');
   });
 
   // The last resort. A key that is not word-shaped cannot be represented, and the DSL has no

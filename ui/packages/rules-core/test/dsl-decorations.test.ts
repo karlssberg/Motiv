@@ -61,11 +61,29 @@ describe('mergeDecorations', () => {
     expect(mergeDecorations(parsed, prior)).toEqual({ rule: { spec: 'a' } });
   });
 
-  it('keeps the name from the parsed document, not the prior one', () => {
-    const prior: RuleDocument = { rule: { spec: 'is-active', name: 'old', whenTrue: 'yes' } };
-    const parsed: RuleDocument = { rule: { spec: 'is-active', name: 'new' } };
+  it('carries the name from the prior document onto the root, alongside whenTrue', () => {
+    const prior: RuleDocument = { rule: { spec: 'is-active', name: 'activity', whenTrue: 'yes' } };
+    const parsed: RuleDocument = { rule: { spec: 'is-active' } };
 
-    expect(mergeDecorations(parsed, prior).rule).toMatchObject({ name: 'new', whenTrue: 'yes' });
+    expect(mergeDecorations(parsed, prior).rule).toMatchObject({ name: 'activity', whenTrue: 'yes' });
+  });
+
+  it('carries the name from the prior document onto a nested compatible node', () => {
+    const prior: RuleDocument = {
+      rule: { andAlso: [{ spec: 'a', name: 'first' }, { spec: 'b' }] },
+    };
+    const parsed: RuleDocument = { rule: { andAlso: [{ spec: 'a' }, { spec: 'b' }] } };
+
+    expect(mergeDecorations(parsed, prior).rule).toEqual({
+      andAlso: [{ spec: 'a', name: 'first' }, { spec: 'b' }],
+    });
+  });
+
+  it('drops the name when the node at that path is no longer compatible', () => {
+    const prior: RuleDocument = { rule: { spec: 'is-active', name: 'activity' } };
+    const parsed: RuleDocument = { rule: { spec: 'is-verified' } };
+
+    expect(mergeDecorations(parsed, prior)).toEqual({ rule: { spec: 'is-verified' } });
   });
 
   it('keeps the parameters from the parsed document', () => {

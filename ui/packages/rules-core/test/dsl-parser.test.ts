@@ -28,6 +28,18 @@ describe('parse — leaves and grouping', () => {
     expect(result.document).toEqual({ rule: { spec: 'is-active' } });
   });
 
+  it('reads `as` as a plain word, not a keyword — there is no inline naming clause', () => {
+    expect(parse('as').document).toEqual({ rule: { spec: 'as' } });
+  });
+
+  it('no longer parses a trailing `as "name"` clause — it is a stray, unexpected token', () => {
+    const result = parse('x as "y"');
+    expect(result.document).toBeUndefined();
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ code: 'UnexpectedToken' }),
+    );
+  });
+
   it('records a span for the root node covering the spec token', () => {
     expect(parse('is-active').spans).toEqual([{ path: '$.rule', from: 0, to: 9 }]);
   });
@@ -57,18 +69,6 @@ describe('parse — leaves and grouping', () => {
     expect(parse('(is-active)').document).toEqual({ rule: { spec: 'is-active' } });
   });
 
-  it('attaches a name from a trailing as-clause', () => {
-    expect(parse('is-active as "activity"').document).toEqual({
-      rule: { spec: 'is-active', name: 'activity' },
-    });
-  });
-
-  it('binds as to the group when applied to a parenthesised expression', () => {
-    expect(parse('(is-active) as "activity"').document).toEqual({
-      rule: { spec: 'is-active', name: 'activity' },
-    });
-  });
-
   it('parses a single named argument', () => {
     const result = parse('approver-count-at-least(n = 1)');
     expect(result.errors).toEqual([]);
@@ -82,12 +82,6 @@ describe('parse — leaves and grouping', () => {
       spec: 's',
       args: { count: -2, ratio: 2.5, label: 'high', strict: true, note: null },
     });
-  });
-
-  it('parses a spec with args and a name', () => {
-    const result = parse('s(n = 1) as "gate"');
-    expect(result.errors).toEqual([]);
-    expect(result.document?.rule).toEqual({ spec: 's', args: { n: 1 }, name: 'gate' });
   });
 
   it('parses args on a spec inside a composition', () => {
@@ -202,12 +196,6 @@ describe('parse — binary operators', () => {
     });
   });
 
-  it('names a compound node when the group carries the as-clause', () => {
-    expect(parse('(a && b) as "pair"').document).toEqual({
-      rule: { andAlso: [{ spec: 'a' }, { spec: 'b' }], name: 'pair' },
-    });
-  });
-
   it('paths operands by operator and index', () => {
     const spans = parse('a && b').spans;
     expect(spans.map((s) => s.path)).toEqual([
@@ -250,14 +238,6 @@ describe('parse — quantifiers', () => {
         asAtLeastNSatisfied: { andAlso: [{ spec: 'is-positive' }, { spec: 'is-recent' }] },
         n: 2,
         path: 'orders',
-      },
-    });
-  });
-
-  it('binds a trailing as-clause to the quantifier node', () => {
-    expect(parse('atLeast(2) in orders { is-positive } as "quota"').document).toEqual({
-      rule: {
-        asAtLeastNSatisfied: { spec: 'is-positive' }, n: 2, path: 'orders', name: 'quota',
       },
     });
   });
@@ -311,14 +291,6 @@ describe('parse — span uniqueness', () => {
     expect(parse('(is-active)').spans).toEqual([{ path: '$.rule', from: 0, to: 11 }]);
   });
 
-  it('spans a named group over the parens and the as-clause', () => {
-    expect(parse('(a && b) as "pair"').spans).toEqual([
-      { path: '$.rule', from: 0, to: 18 },
-      { path: '$.rule.andAlso[0]', from: 1, to: 2 },
-      { path: '$.rule.andAlso[1]', from: 6, to: 7 },
-    ]);
-  });
-
   it('collapses redundant nested groups to a single span', () => {
     expect(parse('((a))').spans).toEqual([{ path: '$.rule', from: 0, to: 5 }]);
   });
@@ -327,8 +299,8 @@ describe('parse — span uniqueness', () => {
 describe('parse — span invariants', () => {
   const sources = [
     'a', '!a', '!!a', '(a)', '((a))', 'a && b && c', 'a & b ^ c | d',
-    'a || b && c | d ^ e & !f', '(a && b) || c', '(a && b) as "pair"', 'a && (b | c)',
-    '`n > 0` && a', 'all in orders { is-positive }', 'atLeast(2) in orders { a && b } as "q"',
+    'a || b && c | d ^ e & !f', '(a && b) || c', 'a && (b | c)',
+    '`n > 0` && a', 'all in orders { is-positive }', 'atLeast(2) in orders { a && b }',
     'atLeast(@m) in o { a }', 'any in o { all in p { a || b } } && c', '!(a && b)',
     'param n: integer = 1\n\na && b',
   ];
@@ -463,27 +435,4 @@ describe('parse — warnings', () => {
     expect(result.warnings).toEqual([]);
   });
 
-  it('reports PreferLet for an `as` clause nested under a binary operand, carrying the named node\'s path', () => {
-    const text = 'x && y as "z"';
-    const result = parse(text);
-    const asFrom = text.indexOf('as');
-    expect(result.warnings).toContainEqual({
-      code: 'PreferLet',
-      message: 'prefer a `let` declaration',
-      from: asFrom,
-      to: text.length,
-      path: '$.rule.andAlso[1]',
-    });
-  });
-
-  it('reports no hint for an `as` clause at the document root', () => {
-    const result = parse('x as "y"');
-    expect(result.warnings).toEqual([]);
-  });
-
-  it('reports the hint for an `as` clause nested inside a definition body, whose root is not the document root', () => {
-    const text = 'let a = x as "y"\n\na';
-    const result = parse(text);
-    expect(result.warnings).toContainEqual(expect.objectContaining({ code: 'PreferLet' }));
-  });
 });

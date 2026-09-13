@@ -91,25 +91,25 @@ describe('RuleDslStrip', () => {
 
   /**
    * The strip prints the rule and reparses it for spans, which rests on the printer's round-trip
-   * guarantee. That guarantee has a documented hole: the DSL has no string escapes, so a name
-   * carrying a double quote prints text the parser cannot read back. The spans that come out are
-   * damaged rather than absent, so trusting them silently mis-marks.
+   * guarantee. That guarantee has a documented hole: a non-word-shaped argument name (there are no
+   * escapes for it) prints text the parser cannot read back. The spans that come out are damaged
+   * rather than absent, so trusting them silently mis-marks.
    */
   describe('a rule the printer cannot round-trip', () => {
-    const unquotable = { and: [{ spec: 'a', name: 'x"y' }, { spec: 'b' }] };
+    const unparseable = { and: [{ spec: 'a', args: { 'not a name': 1 } }, { spec: 'b' }] };
 
     it('marks nothing rather than trusting spans from a failed parse', () => {
       const highlight = setHovered(EMPTY_HIGHLIGHT, '$.rule.and[0]');
 
-      const { container } = render(<RuleDslStrip rule={unquotable} highlight={highlight} />);
+      const { container } = render(<RuleDslStrip rule={unparseable} highlight={highlight} />);
 
       expect(container.querySelectorAll('.dsl-strip-hover')).toHaveLength(0);
     });
 
     it('still renders the whole expression, so the strip degrades rather than blanking', () => {
-      render(<RuleDslStrip rule={unquotable} highlight={EMPTY_HIGHLIGHT} />);
+      render(<RuleDslStrip rule={unparseable} highlight={EMPTY_HIGHLIGHT} />);
 
-      expect(screen.getByLabelText('rule expression').textContent).toBe('a as "x\\"y" & b');
+      expect(screen.getByLabelText('rule expression').textContent).toBe('a(not a name = 1) & b');
     });
   });
 });

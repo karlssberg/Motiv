@@ -17,7 +17,7 @@ internal static class LocalNames
     /// </summary>
     private static readonly HashSet<string> Reserved = new(StringComparer.Ordinal)
     {
-        "param", "let", "in", "as",
+        "param", "let", "in",
         "integer", "number", "string", "boolean",
         "all", "any", "exactly", "atLeast", "atMost"
     };

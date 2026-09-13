@@ -48,7 +48,7 @@ describe('motivStreamParser', () => {
   });
 
   it('tags keywords', () => {
-    for (const keyword of ['param', 'in', 'as']) {
+    for (const keyword of ['param', 'in']) {
       expect(tagOf(keyword)).toBe('keyword');
     }
   });
@@ -156,7 +156,7 @@ describe('motivStreamParser', () => {
   });
 
   it('tokenises a quantifier body', () => {
-    expect(classify('atLeast(@min) in orders { is-large as "big" }')).toEqual([
+    expect(classify('atLeast(@min) in orders { is-large }')).toEqual([
       { text: 'atLeast', tag: 'keyword' },
       { text: '(', tag: 'bracket' },
       { text: '@min', tag: 'variableName.special' },
@@ -165,8 +165,6 @@ describe('motivStreamParser', () => {
       { text: 'orders', tag: 'variableName' },
       { text: '{', tag: 'bracket' },
       { text: 'is-large', tag: 'variableName' },
-      { text: 'as', tag: 'keyword' },
-      { text: '"big"', tag: 'string' },
       { text: '}', tag: 'bracket' },
     ]);
   });
@@ -175,7 +173,7 @@ describe('motivStreamParser', () => {
 describe('motiv', () => {
   it('parses a document without emitting unknown-tag warnings', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const doc = 'param n: integer = -1.5\n@n && `x` || "s" ^ !(all in orders { is-a as "b" }) #';
+    const doc = 'param n: integer = -1.5\n@n && `x` || "s" ^ !(all in orders { is-a }) #';
     const state = EditorState.create({ doc, extensions: [motiv()] });
 
     ensureSyntaxTree(state, doc.length, 5000);

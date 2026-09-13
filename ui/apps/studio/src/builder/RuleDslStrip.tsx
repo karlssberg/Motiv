@@ -87,12 +87,12 @@ export function RuleDslStrip(props: {
   const { text, spans } = useMemo(() => {
     const printed = printInline(rule);
     const result = parse(printed, { locals });
-    // The round-trip that licenses this reparse has a documented hole: the DSL has no string
-    // escapes, so a `name` carrying a double quote prints text the parser cannot read back
+    // The round-trip that licenses this reparse has a documented hole: a non-word-shaped
+    // argument name has no escaped form, so it prints text the parser cannot read back
     // (`printer.ts`). What comes out then is not *no* spans but *damaged* ones — for
-    // `{and: [{spec: 'a', name: 'x"y'}, {spec: 'b'}]}` the two operand spans vanish and only a
-    // truncated `$.rule` survives, so both operands would resolve to the same wrong range.
-    // Dropping the lot degrades honestly: the expression still renders, nothing is marked.
+    // `{and: [{spec: 'a', args: {'not a name': 1}}, {spec: 'b'}]}` the two operand spans vanish
+    // and only a truncated `$.rule` survives, so both operands would resolve to the same wrong
+    // range. Dropping the lot degrades honestly: the expression still renders, nothing is marked.
     return { text: printed, spans: result.errors.length > 0 ? [] : result.spans };
   }, [rule, locals]);
 

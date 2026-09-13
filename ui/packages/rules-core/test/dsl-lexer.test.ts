@@ -27,14 +27,14 @@ describe('tokenize', () => {
   });
 
   it('classifies keywords, types and quantifiers', () => {
-    expect(tokenize('param x: integer atLeast in as').map((t) => t.kind)).toEqual([
-      'keyword', 'spec', 'colon', 'type', 'quantifier', 'keyword', 'keyword',
+    expect(tokenize('param x: integer atLeast in').map((t) => t.kind)).toEqual([
+      'keyword', 'spec', 'colon', 'type', 'quantifier', 'keyword',
     ]);
   });
 
   it('lexes a quoted string including its quotes', () => {
-    expect(tokenize('as "quota"')[1]).toEqual({
-      kind: 'string', value: '"quota"', from: 3, to: 10,
+    expect(tokenize('gate "quota"')[1]).toEqual({
+      kind: 'string', value: '"quota"', from: 5, to: 12,
     });
   });
 

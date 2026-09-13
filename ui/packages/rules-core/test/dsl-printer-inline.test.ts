@@ -33,11 +33,6 @@ const NODES: Array<{ label: string; node: RuleNode; text: string }> = [
     node: { and: [{ orElse: [{ spec: 'a' }, { spec: 'b' }] }, { spec: 'c' }] },
     text: '(a || b) & c',
   },
-  {
-    label: 'named compound',
-    node: { andAlso: [{ spec: 'a' }, { spec: 'b' }], name: 'pair' },
-    text: '(a && b) as "pair"',
-  },
 ];
 
 describe('printInline', () => {
@@ -53,10 +48,9 @@ describe('printInline', () => {
     expect(result.document?.rule).toEqual(node);
   });
 
-  it('preserves consecutive spaces inside a name', () => {
-    const node: RuleNode = { spec: 'is-active', name: 'order  total' };
-    expect(printInline(node)).toBe('is-active as "order  total"');
-    expect(parse(printInline(node)).document?.rule).toEqual(node);
+  it('never prints a name, even a compound one with a name attached', () => {
+    const node: RuleNode = { andAlso: [{ spec: 'a' }, { spec: 'b' }], name: 'pair' };
+    expect(printInline(node)).toBe('a && b');
   });
 });
 

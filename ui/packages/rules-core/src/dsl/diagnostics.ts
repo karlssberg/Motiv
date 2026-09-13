@@ -10,14 +10,13 @@ import type { DslError, NodeSpan, ParseResult } from './types.js';
 export interface RuleDiagnostic {
   from: number;
   to: number;
-  severity: 'error' | 'warning' | 'hint';
+  severity: 'error' | 'warning';
   /** Stable machine-readable code, e.g. `UnexpectedToken`, `UnknownSpec`. */
   code: string;
   message: string;
   /**
-   * The node path this diagnostic is about. Set for a backend error (which is keyed by path) and
-   * for the `PreferLet` hint (the path of the node its `as` clause named, for a quick-fix); absent
-   * for every other parser diagnostic, which has no node yet.
+   * The node path this diagnostic is about. Set for a backend error (which is keyed by path);
+   * absent for every other parser diagnostic, which has no node yet.
    */
   path?: string;
 }
@@ -30,7 +29,6 @@ function nonEmpty({ from, to }: SourceRange): SourceRange {
 /** The severity a parser-level code maps to. Warnings carry their own code; anything else is an error. */
 function severityOf(code: string): RuleDiagnostic['severity'] {
   if (code === 'ShadowsCatalog') return 'warning';
-  if (code === 'PreferLet') return 'hint';
   return 'error';
 }
 
@@ -41,7 +39,6 @@ function fromParserError(error: DslError): RuleDiagnostic {
     severity: severityOf(error.code),
     code: error.code,
     message: error.message,
-    ...(error.path !== undefined ? { path: error.path } : {}),
   };
 }
 

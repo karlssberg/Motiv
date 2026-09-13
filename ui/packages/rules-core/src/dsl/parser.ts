@@ -77,9 +77,9 @@ class ParserState {
     this.errors.push({ from, to, code, message });
   }
 
-  /** Records a warning spanning `[from, to)`, optionally tagged with the node path it is about. */
-  warn(code: string, message: string, from: number, to: number, path?: string): void {
-    this.warnings.push({ from, to, code, message, ...(path !== undefined ? { path } : {}) });
+  /** Records a warning spanning `[from, to)`. */
+  warn(code: string, message: string, from: number, to: number): void {
+    this.warnings.push({ from, to, code, message });
   }
 
   span(path: string, from: number, to: number): void {
@@ -132,20 +132,6 @@ function declaredParameters(
   state: ParserState, spec: string,
 ): readonly CatalogParameter[] | null | undefined {
   return catalogEntry(state, spec)?.parameters;
-}
-
-/** Consumes a trailing `as "name"` clause, returning the name when present. */
-function parseAsClause(state: ParserState): string | undefined {
-  const token = state.peek();
-  if (!token || token.kind !== 'keyword' || token.value !== 'as') return undefined;
-  state.next();
-  const nameToken = state.peek();
-  if (!nameToken || nameToken.kind !== 'string') {
-    state.error('ExpectedName', 'expected a quoted name after `as`', nameToken);
-    return undefined;
-  }
-  state.next();
-  return literalValue(state, nameToken, '"', 'UnterminatedString');
 }
 
 /** DSL quantifier keyword → higher-order node key. Counted forms take an `(n)` argument. */
@@ -406,8 +392,8 @@ function parsePrimary(state: ParserState, path: string): RuleNode | undefined {
     const mark = state.spans.length;
     const inner = parseExpression(state, path);
     // The group is not a node of its own, so the inner node keeps `path`. Drop the span the
-    // inner node recorded — `parsePostfix` re-records a wider one covering the parens and any
-    // `as` clause — so each path keeps exactly one span.
+    // inner node recorded — `parsePostfix` re-records a wider one covering the parens —
+    // so each path keeps exactly one span.
     state.dropSpansAt(path, mark);
     const closing = state.peek();
     if (!closing || closing.value !== ')') {
@@ -427,25 +413,13 @@ function parsePrimary(state: ParserState, path: string): RuleNode | undefined {
   return undefined;
 }
 
-/** postfix := primary ('as' STRING)? */
+/** postfix := primary */
 function parsePostfix(state: ParserState, path: string): RuleNode | undefined {
   const start = state.peek()?.from ?? state.lastEnd;
   const node = parsePrimary(state, path);
   if (!node) return undefined;
-  const asToken = state.peek();
-  const name = parseAsClause(state);
-  // A group produces no wrapper node, so `(a as "x") as "y"` has only one node to name:
-  // the outer name deliberately supersedes the inner one.
-  const decorated = name === undefined ? node : { ...node, name };
-  // A named node at the document root already names the rule itself — that's what `Create("name")`
-  // is for. Anywhere else, naming a node inline is exactly what a `let` declaration is for, so
-  // nudge towards it. Carries `path` so a quick-fix can turn this clause into a `let` for the
-  // node it names, the way `defineLocal(path, …)` would.
-  if (name !== undefined && path !== ROOT) {
-    state.warn('PreferLet', 'prefer a `let` declaration', asToken!.from, state.lastEnd, path);
-  }
   state.span(path, start, state.lastEnd);
-  return decorated;
+  return node;
 }
 
 /** unary := '!' unary | postfix */
