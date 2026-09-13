@@ -3,6 +3,7 @@ import type { Catalog, CatalogEntry, CatalogParameter } from '../contracts.js';
 import { RESERVED_LOCAL_NAMES, isValidLocalName } from '../localNames.js';
 import { definitionBodyPath } from '../paths.js';
 import { tokenize } from './lexer.js';
+import { collectLocalNames } from './locals.js';
 import type { DslError, NodeSpan, ParseResult, Token, TokenKind } from './types.js';
 
 const ROOT = '$.rule';
@@ -98,49 +99,6 @@ class ParserState {
  * `quantifier` and `string` a `type` wherever they appear.
  */
 const WORD_KINDS: ReadonlySet<TokenKind> = new Set<TokenKind>(['spec', 'keyword', 'type', 'quantifier']);
-
-/**
- * Scans the whole token stream for every `let NAME = …` in the preamble, before any parsing
- * happens — so a `let` may be referenced by a `let` declared *after* it, and `parsePrimary` can
- * tell a bare word declared as a local apart from an ordinary spec reference regardless of which
- * one it reaches first. Tracks paren/brace depth so a group or quantifier body inside a `let`'s
- * expression is never mistaken for the following `param`/`let` statement.
- *
- * Returns each declaration's name token, first occurrence only, so callers with a reason to
- * revisit a declaration site (e.g. a catalog-shadow check) don't need their own scan.
- */
-function collectLocalNames(state: ParserState): Token[] {
-  const declarations: Token[] = [];
-  let i = 0;
-  while (i < state.tokens.length) {
-    const token = state.tokens[i]!;
-    if (token.kind !== 'keyword' || (token.value !== 'param' && token.value !== 'let')) break;
-
-    if (token.value === 'let') {
-      const nameToken = state.tokens[i + 1];
-      if (nameToken && WORD_KINDS.has(nameToken.kind) && !state.locals.has(nameToken.value)) {
-        declarations.push(nameToken);
-      }
-      if (nameToken && WORD_KINDS.has(nameToken.kind)) state.locals.add(nameToken.value);
-    }
-
-    // Skip past this statement's body to the next one, tracking bracket depth so a nested
-    // group or quantifier body isn't mistaken for the following statement.
-    i++;
-    let depth = 0;
-    while (i < state.tokens.length) {
-      const inner = state.tokens[i]!;
-      if (inner.kind === 'paren' || inner.kind === 'brace') {
-        depth += inner.value === '(' || inner.value === '{' ? 1 : -1;
-      }
-      if (depth <= 0 && inner.kind === 'keyword' && (inner.value === 'param' || inner.value === 'let')) {
-        break;
-      }
-      i++;
-    }
-  }
-  return declarations;
-}
 
 /**
  * Consumes an identifier in a position where the grammar admits nothing but an identifier, so any
@@ -715,13 +673,11 @@ function parsePreamble(
  */
 export function parse(text: string, options?: ParseOptions): ParseResult {
   const state = new ParserState(text, options?.catalog, options?.locals);
-  const declarations = collectLocalNames(state);
-  for (const nameToken of declarations) {
-    if (catalogEntry(state, nameToken.value)) {
-      state.warn(
-        'ShadowsCatalog', `shadows catalog proposition '${nameToken.value}'`,
-        nameToken.from, nameToken.to,
-      );
+  const declarations = collectLocalNames(state.tokens);
+  for (const { name, token } of declarations) {
+    state.locals.add(name);
+    if (catalogEntry(state, name)) {
+      state.warn('ShadowsCatalog', `shadows catalog proposition '${name}'`, token.from, token.to);
     }
   }
   const { parameters, definitions } = parsePreamble(state);

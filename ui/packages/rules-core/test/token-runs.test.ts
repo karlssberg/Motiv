@@ -38,4 +38,16 @@ describe('tokenSpans', () => {
     const spans = tokenSpans('a', new Set(['a']));
     expect(spans.map((span) => span.kind)).toEqual(['local']);
   });
+
+  it('does not mistake a `let` inside a quoted `as` string for a declaration of the real spec token', () => {
+    const spans = tokenSpans('x && (is-active as "let x = 1")');
+    const realX = spans.find((span) => span.value === 'x');
+    expect(realX!.kind).toBe('spec');
+  });
+
+  it('does not mistake a `let` after the rule body for a declaration', () => {
+    const spans = tokenSpans('is-active\n\nlet trap = y');
+    const trap = spans.find((span) => span.value === 'trap');
+    expect(trap!.kind).toBe('spec');
+  });
 });
