@@ -103,6 +103,45 @@ and rejects the document with `unknown property 'definitions'` &mdash; the same 
 governs every other document-level key. There is no `$schema` version gate: the parser never
 inspects `$schema`, so an old reader's refusal is what marks a document as needing the newer one.
 
+### Authoring in the DSL
+
+The rule DSL declares a local with a `let <name> = <expression>` statement, placed after any
+`param` statements and before the rule expression, each on its own line and separated by a blank
+line:
+
+```
+param minOrders: integer = 3
+
+let is-active-and-adult = customer.is-active && customer.is-adult
+
+is-active-and-adult & customer.has-orders(min = @minOrders)
+```
+
+**Declaration order doesn't matter.** Every `let` name is collected before any statement's body is
+parsed, so a `let` may reference another `let` declared further down the preamble. Cycles are still
+refused &mdash; a local may not reference itself, directly or through another local &mdash;
+regardless of where the declarations sit.
+
+**A bare word resolves against the document's own `let` declarations.** A word that names a
+declared local becomes a local reference; any other word becomes a catalog reference. This is why a
+local name can't contain a dot (a dotted word is always a catalog reference) and can't be one of the
+DSL's reserved words: `param`, `let`, `in`, `as`, `integer`, `number`, `string`, `boolean`, `all`,
+`any`, `exactly`, `atLeast`, `atMost`.
+
+**Shadowing a catalog proposition is a warning, not an error.** A root-level catalog proposition can
+share a name with a `let` (a local never has a dot, so it can never collide with a namespaced
+catalog name). Inside its own document, the local wins; the editor reports a *shadows catalog
+proposition* warning at the declaration so the author notices.
+
+**`as "name"` on a nested node still parses and prints for an existing document, but is retired for
+authoring.** The editor hints *prefer a `let` declaration* on a nested `as` and offers to lift the
+named subtree into one. `as` on the root expression is unaffected &mdash; that's the rule's own
+name.
+
+**`whenTrue`/`whenFalse` on a definition are set in the builder, not in the DSL text** &mdash; as
+for every node, decoration lives outside the expression and is edited alongside it, not written
+inline.
+
 ## Remarks
 
 - **Binding is deferred; failure is not.** A document default is parsed and bound when the rule is
