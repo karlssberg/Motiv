@@ -31,7 +31,7 @@ Library, Playwright (e2e and axe sweep), plain CSS on the existing tokens.
 
 ## Tasks
 
-- [ ] **1. Workspace store.** `src/shell/workspace.ts`: `Workspace` with `getState`/`subscribe`,
+- [x] **1. Workspace store.** `src/shell/workspace.ts`: `Workspace` with `getState`/`subscribe`,
   `open(kind, name)` (idempotent; creates a `RuleEditorStore` and remembers the tab in
   `sessionStorage` under `motiv.studio.tabs`), `activate`, `close` (neighbour to the right, else
   left, becomes active), `noteSaved(kind, name, version)`, `acknowledge(id)`, `setLatest(entries)`;
@@ -41,7 +41,7 @@ Library, Playwright (e2e and axe sweep), plain CSS on the existing tokens.
   and re-baselines the saver's `seenAt`; references flagged `changedSinceSeen` only after a save
   newer than `seenAt`, `editingElsewhere` only while another tab's store is dirty; restore
   round-trips through storage and tolerates a denied storage.
-- [ ] **2. Per-tab documents.** `RulesPage` → `src/panes/RuleDocument.tsx`, `PropositionsPage` →
+- [x] **2. Per-tab documents.** `RulesPage` → `src/panes/RuleDocument.tsx`, `PropositionsPage` →
   `src/panes/PropositionDocument.tsx`. Each takes `{ client, tab, workspace, active, onClose }`,
   wraps its body in `RuleEditorProvider store={tab.store}`, keeps the workflow hook, banners,
   editor + rail, `DocumentModal`, and a `DocActions` toolbar (JSON, split Save whose *Save & close*
@@ -50,7 +50,7 @@ Library, Playwright (e2e and axe sweep), plain CSS on the existing tokens.
   files become `RuleDocument.test.tsx` / `PropositionDocument.test.tsx`, keeping every workflow
   case (load, save, conflict, failure, dependents, code-default note, Save & close closes the
   tab, discard question) and dropping the palette, route and app-bar cases, which move to task 5.
-- [ ] **3. Tab strip.** `src/shell/TabStrip.tsx` (chips, overflow menu, compact dropdown, `+`,
+- [x] **3. Tab strip.** `src/shell/TabStrip.tsx` (chips, overflow menu, compact dropdown, `+`,
   active-tab swap), `src/shell/TabCard.tsx` (kind tile / glyph, `splitName`, `useHoverCard`,
   `TabHoverCard`), `src/shell/tabEvents.ts`. Chips are `role="tab"` in a `tablist` labelled
   *Open documents*; the active chip has `aria-selected` and `tabIndex=0`. Tests:
@@ -58,10 +58,10 @@ Library, Playwright (e2e and axe sweep), plain CSS on the existing tokens.
   clicking activates; × asks `onRequestClose`; middle-click and Delete close; ←/→ move; the card
   appears on focus with the full name and `aria-describedby` points at it; more tabs than fit go to
   the "+N" menu and choosing one activates it; the dropdown renders under 640px.
-- [ ] **4. Open palette.** `src/shell/OpenPalette.tsx`: rules and propositions in one
+- [x] **4. Open palette.** `src/shell/OpenPalette.tsx`: rules and propositions in one
   `CommandPalette` named *Open*, rows carry kind and an *open* badge, footer *Manage propositions*
   hands over to the explorer. Tests: `test/shell/OpenPalette.test.tsx`.
-- [ ] **5. Shell and routing.** `src/shell/WorkspaceShell.tsx` owns the workspace, the shell-level
+- [x] **5. Shell and routing.** `src/shell/WorkspaceShell.tsx` owns the workspace, the shell-level
   proposition workflow (listing, create, remove) for the explorer, the palettes, ⌘K / ⌘W, the
   close question, and one hidden `TabPanel` per tab. `App` maps the route onto it: a named route
   opens + activates; activation navigates; closing the active tab navigates to the neighbour or
@@ -71,13 +71,13 @@ Library, Playwright (e2e and axe sweep), plain CSS on the existing tokens.
   (Admin link cases kept; nav cases replaced by "carries the strip"), `WorkspaceShell.test.tsx`
   (⌘K opens *Open*; picking opens a tab; explorer create/delete refresh the listing; a
   proposition save in one tab marks the reference *updated* in a rule tab).
-- [ ] **6. Stylesheet.** Strip, chips, tiles, dropdown, overflow menu, hover card, references
+- [x] **6. Stylesheet.** Strip, chips, tiles, dropdown, overflow menu, hover card, references
   strip, `.pane-actions`, compact bar wrap — moved from `prototype.css` into `app.css` under the
   shell sections, then `src/prototype/` is deleted and the `?variant=` gate leaves `App`.
-- [ ] **7. Suites.** e2e `shell.ts`: `openPalette('Rules')` opens *Open*; `openPalette('Propositions')`
+- [x] **7. Suites.** e2e `shell.ts`: `openPalette('Rules')` opens *Open*; `openPalette('Propositions')`
   opens *Open* then *Manage propositions*; `closing.spec` closes via the chip; `propositions.spec`
   page-switch cases become tab cases; axe sweep `visit` waits for the strip; keyboard suite's link
   cases become chip cases; conformance records regenerated. `useDocumentTitle` names the active
   document.
-- [ ] **8. Docs and review.** README *Layout* / *Panes*; `docs/` if a user-facing page describes
+- [x] **8. Docs and review.** README *Layout* / *Panes*; `docs/` if a user-facing page describes
   the shell; code-simplifier pass; full `pnpm -C ui/apps/studio typecheck`, `test`, `e2e`, `a11y`.

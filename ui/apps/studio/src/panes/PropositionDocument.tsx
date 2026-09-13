@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { createPortal } from 'react-dom';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { createValidationController, type RulesApiClient } from '@motiv-rules/core';
 import { whyPropositionSaveUnavailable } from '@motiv-rules/core/workflow';
 import { RuleEditorProvider, useRuleEditor } from '@motiv-rules/react';
@@ -12,12 +11,8 @@ import { DocumentModal } from './DocumentModal.js';
 import { ReportBanner } from '../shell/ReportBanner.js';
 import { DocActions } from '../shell/DocActions.js';
 import { DependentsStrip } from '../explorer/DependentsStrip.js';
+import { placeActions, useNoteSaves, useSaverRegistration, type SaverSink } from './documentTab.js';
 import type { OpenDoc, Workspace } from '../shell/workspace.js';
-
-/** The actions in the editor's header, or portalled into the bar while the strip is compact. */
-function placeActions(host: HTMLElement | null | undefined, actions: JSX.Element): JSX.Element {
-  return host ? createPortal(actions, host) : actions;
-}
 
 /**
  * A dotted proposition name as the trail it already is: one span per segment, separated by the dots
@@ -64,18 +59,14 @@ export function PropositionDocument(props: {
    * Hands the shell this tab's save, so the unsaved-changes question's *Save & close* can run it
    * for a tab that is not the active one. Called with `null` on unmount.
    */
-  onSaver?: ((save: (() => Promise<boolean>) | null) => void) | undefined;
+  onSaver?: SaverSink | undefined;
 }) {
   const { client, tab, workspace } = props;
   const { entries, loaded, dependents, failure, saving, refreshEntries, select, reload, save } =
     usePropositionWorkflow(client, tab.store);
   const [documentOpen, setDocumentOpen] = useState(false);
 
-  const { onSaver } = props;
-  useEffect(() => {
-    onSaver?.(save);
-    return () => onSaver?.(null);
-  }, [onSaver, save]);
+  useSaverRegistration(props.onSaver, save);
 
   // `refreshEntries` and `select` are stable per (client, store) binding, so the listing loads
   // once per server world and the document once per tab.
@@ -107,18 +98,11 @@ export function PropositionDocument(props: {
     [tab.store, client, modelType],
   );
 
-  // A version that moved *after* the load is a save: the workspace learns it, so a rule tab that
-  // uses this proposition can say so.
-  const seenVersion = useRef<number | null>(null);
-  useEffect(() => {
-    if (!loaded) { seenVersion.current = null; return; }
-    if (seenVersion.current !== null && loaded.version !== seenVersion.current) {
-      workspace.noteSaved('proposition', loaded.name, loaded.version);
-      // Its own bump: what this tab holds *is* the server's, so there is nothing to reload.
-      seenRevision.current = workspace.getState().revision;
-    }
-    seenVersion.current = loaded.version;
-  }, [loaded, workspace]);
+  // Its own bump: what this tab holds *is* the server's, so there is nothing to reload.
+  const rebaseline = useCallback(() => {
+    seenRevision.current = workspace.getState().revision;
+  }, [workspace]);
+  useNoteSaves(workspace, 'proposition', loaded, rebaseline);
 
   return (
     <RuleEditorProvider store={tab.store}>

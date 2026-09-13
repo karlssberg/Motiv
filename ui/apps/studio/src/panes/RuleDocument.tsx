@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useEffect, useState } from 'react';
 import { createValidationController, type RulesApiClient } from '@motiv-rules/core';
 import { whyRuleSaveUnavailable } from '@motiv-rules/core/workflow';
 import { RuleEditorProvider } from '@motiv-rules/react';
@@ -13,12 +12,8 @@ import { CheckoutPane } from './CheckoutPane.js';
 import { DocActions } from '../shell/DocActions.js';
 import { ReportBanner } from '../shell/ReportBanner.js';
 import { ReferencesStrip } from '../shell/ReferencesStrip.js';
+import { placeActions, useNoteSaves, useSaverRegistration, type SaverSink } from './documentTab.js';
 import type { OpenDoc, Workspace } from '../shell/workspace.js';
-
-/** The actions in the editor's header, or portalled into the bar while the strip is compact. */
-function placeActions(host: HTMLElement | null | undefined, actions: JSX.Element): JSX.Element {
-  return host ? createPortal(actions, host) : actions;
-}
 
 /**
  * One open rule: the editor beside a rail of the two panes that *run* it — Evaluate against a
@@ -45,7 +40,7 @@ export function RuleDocument(props: {
    * Hands the shell this tab's save, so the unsaved-changes question's *Save & close* can run it
    * for a tab that is not the active one. Called with `null` on unmount.
    */
-  onSaver?: ((save: (() => Promise<boolean>) | null) => void) | undefined;
+  onSaver?: SaverSink | undefined;
   /** Opens (or activates) a proposition this rule references. */
   onOpenProposition: (name: string) => void;
 }) {
@@ -54,11 +49,7 @@ export function RuleDocument(props: {
     useRuleWorkflow(client, tab.store);
   const [documentOpen, setDocumentOpen] = useState(false);
 
-  const { onSaver } = props;
-  useEffect(() => {
-    onSaver?.(save);
-    return () => onSaver?.(null);
-  }, [onSaver, save]);
+  useSaverRegistration(props.onSaver, save);
 
   // `refresh` and `load` are stable per (client, store) binding, so the listing loads once per
   // server world and the document once per tab.
@@ -73,15 +64,7 @@ export function RuleDocument(props: {
     [tab.store, client, isAsync],
   );
 
-  // A version that moved *after* the load is a save: the workspace learns it, so other tabs can.
-  const seenVersion = useRef<number | null>(null);
-  useEffect(() => {
-    if (!loaded) { seenVersion.current = null; return; }
-    if (seenVersion.current !== null && loaded.version !== seenVersion.current) {
-      workspace.noteSaved('rule', loaded.name, loaded.version);
-    }
-    seenVersion.current = loaded.version;
-  }, [loaded, workspace]);
+  useNoteSaves(workspace, 'rule', loaded);
 
   return (
     <RuleEditorProvider store={tab.store}>

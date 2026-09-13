@@ -6,6 +6,7 @@ import type { Route } from '../routing/useHashRoute.js';
 import { AppBar } from '../panes/AppBar.js';
 import { RuleDocument } from '../panes/RuleDocument.js';
 import { PropositionDocument } from '../panes/PropositionDocument.js';
+import type { SaverSink } from '../panes/documentTab.js';
 import { PropositionExplorer } from '../explorer/PropositionExplorer.js';
 import { PropositionDialog, type DialogSeed, type DialogValues } from '../explorer/PropositionDialog.js';
 import { DiscardDialog } from './DiscardDialog.js';
@@ -42,6 +43,66 @@ function CloseQuestion(props: { doc: OpenDoc; onKeep: () => void; onClose: () =>
       onSaveAndClose={props.onSaveAndClose}
       onDiscard={() => { props.doc.store.revert(); props.onClose(); }}
     />
+  );
+}
+
+/**
+ * ⌘W asks to close the active tab — the same question the chip's × asks, so a dirty tab is not
+ * closed behind the person's back. Unlike ⌘K, it is not gated on whether a modal is showing.
+ */
+function useCloseTabKey(active: TabId | null, onRequestClose: (id: TabId) => void): void {
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent): void => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'w' && active !== null) {
+        event.preventDefault();
+        onRequestClose(active);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [active, onRequestClose]);
+}
+
+/**
+ * One open document, in a panel that stays mounted while its tab is hidden — which is what lets a
+ * draft, an undo stack and a surface choice survive a switch.
+ */
+function TabPanel(props: {
+  client: RulesApiClient;
+  workspace: Workspace;
+  doc: OpenDoc;
+  active: boolean;
+  actionsHost: HTMLElement | null;
+  onClose: () => void;
+  onOpenProposition: (name: string) => void;
+  onSaver: SaverSink;
+}) {
+  const { client, workspace, doc, actionsHost, onClose, onSaver } = props;
+  const common = { client, workspace, tab: doc, actionsHost, onClose, onSaver };
+  return (
+    <section className="tab-panel" role="tabpanel" aria-label={doc.name} hidden={!props.active}>
+      {doc.kind === 'rule'
+        ? <RuleDocument {...common} onOpenProposition={props.onOpenProposition} />
+        : <PropositionDocument {...common} />}
+    </section>
+  );
+}
+
+/** What the shell shows with no tab in front: the two ways to get one. */
+function EmptyState(props: { onOpen: () => void; onNew: () => void }) {
+  return (
+    <section className="empty-state" aria-label="Nothing open">
+      <h2>Nothing open</h2>
+      <p>Open a rule or a proposition in a tab. Several can be open at once, and each keeps its own draft.</p>
+      <div className="run-row">
+        <button type="button" className="btn" onClick={props.onOpen}>
+          <IconOpen size={14} />Open a rule or proposition<kbd aria-hidden="true">⌘K</kbd>
+        </button>
+        <button type="button" className="btn btn-secondary" onClick={props.onNew}>
+          <IconNew size={14} />New proposition
+        </button>
+      </div>
+    </section>
   );
 }
 
@@ -88,9 +149,15 @@ export function WorkspaceShell(props: {
 
   const activeDoc = state.active === null ? null : state.docs[state.active] ?? null;
 
+  // Opened in the workspace *now* and then navigated to: `hashchange` is asynchronous, so a chip
+  // click that only navigated would leave the previous panel on screen for a frame, and a
+  // query made in that frame would land on it. The route effect above then finds the tab already
+  // open and active, and does nothing — the route is still the one writer of *which* tab, this
+  // merely arrives a frame early.
   const openTab = useCallback((kind: DocKind, name: string): void => {
+    workspace.open(kind, name);
     navigate({ page: PAGE_OF[kind], name });
-  }, [navigate]);
+  }, [workspace, navigate]);
 
   const activateTab = useCallback((id: TabId): void => {
     const doc = workspace.getState().docs[id];
@@ -149,20 +216,14 @@ export function WorkspaceShell(props: {
   const [actionsHost, setActionsHost] = useState<HTMLElement | null>(null);
 
   useCommandKey(() => setPalette('open'));
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent): void => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'w' && state.active !== null) {
-        event.preventDefault();
-        setClosing(state.active);
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [state.active]);
+  useCloseTabKey(state.active, setClosing);
 
   const defaultModelType = entries.map((entry) => entry.modelType).sort()[0] ?? 'customer';
   const modelTypeOf = (name: string): string =>
     entries.find((candidate) => candidate.name === name)?.modelType ?? defaultModelType;
+
+  /** What New authors from, wherever it is reached — the empty state, or the explorer. */
+  const newPropositionSeed: DialogSeed = { name: '', modelType: defaultModelType, startsFrom: null, title: 'New proposition' };
 
   /** Opens New / Derive / Override, dismissing the palette they were reached from. */
   const openDialog = (seed: DialogSeed): void => {
@@ -200,11 +261,13 @@ export function WorkspaceShell(props: {
   }, [workspace, navigate, route.page]);
   closeTabRef.current = closeTab;
 
-  // Each tab's save, registered by its document: what the close question's Save & close runs.
+  // Each tab's save, registered by its document: what the close question's Save & close runs. The
+  // sinks are cached per tab so a document is handed the same one on every render — a fresh one
+  // would make it withdraw and re-register its save each time.
   const savers = useRef<Record<TabId, () => Promise<boolean>>>({});
   const saverFor = useMemo(() => {
-    const cache: Record<TabId, (save: (() => Promise<boolean>) | null) => void> = {};
-    return (id: TabId) => (cache[id] ??= (save) => {
+    const sinks: Record<TabId, SaverSink> = {};
+    return (id: TabId): SaverSink => (sinks[id] ??= (save) => {
       if (save) savers.current[id] = save;
       else delete savers.current[id];
     });
@@ -236,50 +299,24 @@ export function WorkspaceShell(props: {
         if (!doc) return null;
         const active = id === state.active;
         return (
-          <section key={id} className="tab-panel" role="tabpanel" aria-label={doc.name} hidden={!active}>
-            {doc.kind === 'rule'
-              ? (
-                <RuleDocument
-                  client={client}
-                  tab={doc}
-                  workspace={workspace}
-                  onClose={() => closeTab(id)}
-                  onOpenProposition={(name) => openTab('proposition', name)}
-                  actionsHost={active && compact ? actionsHost : null}
-                  onSaver={saverFor(id)}
-                />
-              )
-              : (
-                <PropositionDocument
-                  client={client}
-                  tab={doc}
-                  workspace={workspace}
-                  onClose={() => closeTab(id)}
-                  actionsHost={active && compact ? actionsHost : null}
-                  onSaver={saverFor(id)}
-                />
-              )}
-          </section>
+          <TabPanel
+            key={id}
+            client={client}
+            workspace={workspace}
+            doc={doc}
+            active={active}
+            // The actions move into the bar only for the tab in front, and only while the strip
+            // is a dropdown; every other panel keeps them in its own editor header.
+            actionsHost={active && compact ? actionsHost : null}
+            onClose={() => closeTab(id)}
+            onOpenProposition={(name) => openTab('proposition', name)}
+            onSaver={saverFor(id)}
+          />
         );
       })}
 
       {activeDoc === null && (
-        <section className="empty-state" aria-label="Nothing open">
-          <h2>Nothing open</h2>
-          <p>Open a rule or a proposition in a tab. Several can be open at once, and each keeps its own draft.</p>
-          <div className="run-row">
-            <button type="button" className="btn" onClick={() => setPalette('open')}>
-              <IconOpen size={14} />Open a rule or proposition<kbd aria-hidden="true">⌘K</kbd>
-            </button>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => openDialog({ name: '', modelType: defaultModelType, startsFrom: null, title: 'New proposition' })}
-            >
-              <IconNew size={14} />New proposition
-            </button>
-          </div>
-        </section>
+        <EmptyState onOpen={() => setPalette('open')} onNew={() => openDialog(newPropositionSeed)} />
       )}
 
       {palette === 'open' && (
@@ -308,7 +345,7 @@ export function WorkspaceShell(props: {
               // of the model's *other* specs: referencing the name being defined would be a cycle.
               name, modelType: modelTypeOf(name), startsFrom: null, title: `Override ${name}`,
             }),
-            onNew: () => openDialog({ name: '', modelType: defaultModelType, startsFrom: null, title: 'New proposition' }),
+            onNew: () => openDialog(newPropositionSeed),
             onDelete: (entry) => void removeEntry(entry),
           }}
         />

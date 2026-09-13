@@ -6,7 +6,7 @@ import { WorkspaceShell } from './shell/WorkspaceShell.js';
 import { AdminPage } from './panes/AdminPage.js';
 
 /** The model type Studio's rules are validated and evaluated against. */
-const MODEL_TYPE = 'customer';
+export const MODEL_TYPE = 'customer';
 
 /**
  * The Studio shell: owns the client and the route, and hands both to the documents shell — or to
@@ -34,5 +34,3 @@ export function App(props: { client?: RulesApiClient }) {
     </main>
   );
 }
-
-export { MODEL_TYPE };

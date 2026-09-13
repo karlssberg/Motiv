@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type MouseEvent, type ReactNode } from 'react';
 import { useRuleEditor } from '@motiv-rules/react';
 import { IconChevronDown, IconClose, IconNew } from './icons.js';
 import { KIND_LABEL, KindTile, TabHoverCard, splitName, useHoverCard } from './TabCard.js';
@@ -22,6 +22,20 @@ interface StripHandlers {
 
 function isCompact(): boolean {
   return window.innerWidth < COMPACT_BELOW;
+}
+
+/** A close control names the document it closes, and says when closing it would lose work. */
+function closeLabel(name: string, dirty: boolean): string {
+  return dirty ? `Close ${name} (unsaved changes)` : `Close ${name}`;
+}
+
+/** The menu both the dropdown and the "+N" overflow drop: a click inside it is not a click out. */
+function TabMenu(props: { label: string; children: ReactNode }) {
+  return (
+    <ul role="menu" className="overflow-menu" aria-label={props.label} onClick={(event) => event.stopPropagation()}>
+      {props.children}
+    </ul>
+  );
 }
 
 /**
@@ -58,7 +72,7 @@ function Chip(props: StripHandlers & { doc: OpenDoc; active: boolean; visible: r
       <button
         type="button"
         className="chip-close"
-        aria-label={dirty ? `Close ${doc.name} (unsaved changes)` : `Close ${doc.name}`}
+        aria-label={closeLabel(doc.name, dirty)}
         tabIndex={-1}
         onClick={() => props.onRequestClose(doc.id)}
       >
@@ -89,7 +103,7 @@ function MenuRow(props: StripHandlers & { doc: OpenDoc; active: boolean; closabl
         <button
           type="button"
           className="chip-close overflow-close"
-          aria-label={dirty ? `Close ${props.doc.name} (unsaved changes)` : `Close ${props.doc.name}`}
+          aria-label={closeLabel(props.doc.name, dirty)}
           onClick={() => props.onRequestClose(props.doc.id)}
         >
           <IconClose size={11} />
@@ -154,6 +168,11 @@ export function TabStrip(props: StripHandlers & { workspace: Workspace; onCompac
   }
   const activeDoc = active === null ? undefined : docs[active];
 
+  const toggleMenu = (event: MouseEvent<HTMLElement>): void => {
+    event.stopPropagation();
+    setMenuOpen((open) => !open);
+  };
+
   const openButton = (
     <button type="button" className="ghost chip-new" aria-label="Open" title="Open (⌘K)" onClick={props.onOpen}>
       <IconNew size={14} />
@@ -170,7 +189,7 @@ export function TabStrip(props: StripHandlers & { workspace: Workspace; onCompac
             aria-haspopup="menu"
             aria-expanded={menuOpen}
             aria-label={`Open documents: ${activeDoc ? `${KIND_LABEL[activeDoc.kind]} ${activeDoc.name}` : 'none active'}, ${tabs.length} open`}
-            onClick={(event) => { event.stopPropagation(); setMenuOpen((value) => !value); }}
+            onClick={toggleMenu}
           >
             {activeDoc && <KindTile kind={activeDoc.kind} />}
             <span className="chip-title"><span className="chip-leaf">{activeDoc?.name ?? 'Nothing open'}</span></span>
@@ -179,7 +198,7 @@ export function TabStrip(props: StripHandlers & { workspace: Workspace; onCompac
             <IconChevronDown size={12} />
           </button>
           {menuOpen && (
-            <ul role="menu" className="overflow-menu" aria-label="Open documents" onClick={(event) => event.stopPropagation()}>
+            <TabMenu label="Open documents">
               {tabs.map((id) => {
                 const doc = docs[id];
                 return doc ? (
@@ -191,7 +210,7 @@ export function TabStrip(props: StripHandlers & { workspace: Workspace; onCompac
                   <IconNew size={13} /><span className="overflow-name">Open another…</span><kbd aria-hidden="true">⌘K</kbd>
                 </button>
               </li>
-            </ul>
+            </TabMenu>
           )}
         </div>
       </div>
@@ -215,19 +234,19 @@ export function TabStrip(props: StripHandlers & { workspace: Workspace; onCompac
             aria-haspopup="menu"
             aria-expanded={menuOpen}
             aria-label={`+${hidden.length} more open documents`}
-            onClick={(event) => { event.stopPropagation(); setMenuOpen((value) => !value); }}
+            onClick={toggleMenu}
           >
             <span aria-hidden="true">+{hidden.length}</span><IconChevronDown size={12} />
           </button>
           {menuOpen && (
-            <ul role="menu" className="overflow-menu" aria-label="More open documents" onClick={(event) => event.stopPropagation()}>
+            <TabMenu label="More open documents">
               {hidden.map((id) => {
                 const doc = docs[id];
                 return doc ? (
                   <MenuRow key={id} {...props} doc={doc} active={false} closable={false} onPick={() => { props.onActivate(id); setMenuOpen(false); }} />
                 ) : null;
               })}
-            </ul>
+            </TabMenu>
           )}
         </div>
       )}

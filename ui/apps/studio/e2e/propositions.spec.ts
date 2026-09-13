@@ -116,7 +116,10 @@ test('an authored proposition is a building block the live rule follows', async 
   await replaceBuffer(await openDsl(page), ELIGIBLE);
   await expectDocument(page, `"${ELIGIBLE}"`);
   await page.getByRole('button', { name: 'Save', exact: true }).click();
-  await expect(page.getByText(new RegExp(`^v${ruleBaseline + 1}\\b`))).toBeVisible();
+  // Scoped to the panel in front: the hidden proposition panel — and the rule's own Uses strip —
+  // carry versions of their own, and a text query does not skip hidden content.
+  const front = page.locator('.tab-panel:not([hidden])');
+  await expect(front.locator('.doc-title').getByText(new RegExp(`^v${ruleBaseline + 1}\\b`))).toBeVisible();
 
   // The running rule now decides through the proposition, and says so in the proposition's own
   // terms — the assertion text is the compiled spec's, which is what pins *which* spec it resolved to.
@@ -137,7 +140,7 @@ test('an authored proposition is a building block the live rule follows', async 
   await expectDocument(page, '"customer.is-active"');
   // The count on the button is the same blast radius, restated where the commit happens.
   await page.getByRole('button', { name: 'Save (1)', exact: true }).click();
-  await expect(page.getByText(/^v2\b/)).toBeVisible();
+  await expect(front.locator('.doc-title').getByText(/^v2\b/)).toBeVisible();
 
   // The rule's tab knows: the proposition it uses has moved since it last looked.
   await tab(page, 'Rule', RULE).click();

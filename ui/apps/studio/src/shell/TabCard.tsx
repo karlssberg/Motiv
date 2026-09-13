@@ -52,7 +52,7 @@ export function useHoverCard(delayMs = 350) {
     // Dropped while the card is unmounted: an IDREF to an absent element is invalid, not harmless.
     'aria-describedby': shown?.id === id ? CARD_ID : undefined,
   });
-  return { shown, bind, hide };
+  return { shown, bind };
 }
 
 function CardBody(props: { workspace: Workspace; doc: OpenDoc }) {
