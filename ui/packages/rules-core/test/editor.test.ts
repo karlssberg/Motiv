@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { RuleEditorStore, errorsForNode } from '../src/editor.js';
-import { getNode } from '../src/paths.js';
+import { getNode, localReferences } from '../src/paths.js';
 import type { RuleDocument } from '../src/document.js';
 import type { RuleError } from '../src/contracts.js';
 
@@ -195,5 +195,140 @@ describe('revert', () => {
     store.subscribe(listener);
     store.revert();
     expect(listener).toHaveBeenCalledOnce();
+  });
+});
+
+describe('RuleEditorStore local-definition mutations', () => {
+  it('defineLocal then undo restores the original document byte-for-byte', () => {
+    const original: RuleDocument = { rule: { and: [{ spec: 'a' }, { spec: 'b' }] } };
+    const store = new RuleEditorStore(original);
+
+    store.defineLocal('$.rule.and[1]', 'quota-check');
+    expect(store.getState().document.rule).toEqual({ and: [{ spec: 'a' }, { local: 'quota-check' }] });
+    expect(store.getState().document.definitions).toEqual({ 'quota-check': { rule: { spec: 'b' } } });
+
+    store.undo();
+    expect(store.getState().document).toEqual(original);
+    expect(store.getState().canUndo).toBe(false);
+  });
+
+  it('defineLocal moves the subtree own name/whenTrue/whenFalse onto the definition', () => {
+    const store = new RuleEditorStore({
+      rule: { spec: 'a', whenTrue: 'yes', whenFalse: 'no', name: 'inner' },
+    });
+
+    store.defineLocal('$.rule', 'quota-check');
+
+    expect(store.getState().document.rule).toEqual({ local: 'quota-check' });
+    expect(store.getState().document.definitions).toEqual({
+      'quota-check': { rule: { spec: 'a' }, whenTrue: 'yes', whenFalse: 'no' },
+    });
+  });
+
+  it('defineLocal throws on an invalid name', () => {
+    const store = new RuleEditorStore({ rule: { spec: 'a' } });
+    expect(() => store.defineLocal('$.rule', '1-bad')).toThrow();
+  });
+
+  it('defineLocal throws when the definition name already exists', () => {
+    const store = new RuleEditorStore({
+      rule: { and: [{ spec: 'a' }, { spec: 'b' }] },
+      definitions: { 'quota-check': { rule: { spec: 'x' } } },
+    });
+    expect(() => store.defineLocal('$.rule.and[0]', 'quota-check')).toThrow();
+  });
+
+  it('inline of the last reference removes the definition', () => {
+    const store = new RuleEditorStore({
+      rule: { local: 'quota-check' },
+      definitions: { 'quota-check': { rule: { spec: 'a' }, whenTrue: 'yes', whenFalse: 'no' } },
+    });
+
+    store.inlineLocal('$.rule');
+
+    expect(store.getState().document.rule).toEqual({ spec: 'a', whenTrue: 'yes', whenFalse: 'no', name: 'quota-check' });
+    expect(store.getState().document.definitions).toBeUndefined();
+  });
+
+  it('inline of one of two references keeps the definition', () => {
+    const store = new RuleEditorStore({
+      rule: { and: [{ local: 'quota-check' }, { local: 'quota-check' }] },
+      definitions: { 'quota-check': { rule: { spec: 'a' } } },
+    });
+
+    store.inlineLocal('$.rule.and[0]');
+
+    expect(getNode(store.getState().document, '$.rule.and[0]')).toEqual({ spec: 'a', name: 'quota-check' });
+    expect(getNode(store.getState().document, '$.rule.and[1]')).toEqual({ local: 'quota-check' });
+    expect(store.getState().document.definitions).toEqual({ 'quota-check': { rule: { spec: 'a' } } });
+  });
+
+  it('renameLocal rewrites a reference inside another definition', () => {
+    const store = new RuleEditorStore({
+      rule: { local: 'quota-check' },
+      definitions: {
+        'quota-check': { rule: { spec: 'a' } },
+        other: { rule: { local: 'quota-check' } },
+      },
+    });
+
+    store.renameLocal('quota-check', 'quota-check-2');
+
+    const document = store.getState().document;
+    expect(document.definitions).toEqual({
+      'quota-check-2': { rule: { spec: 'a' } },
+      other: { rule: { local: 'quota-check-2' } },
+    });
+    expect(document.rule).toEqual({ local: 'quota-check-2' });
+    expect(localReferences(document, 'quota-check')).toEqual([]);
+  });
+
+  it('renameLocal throws on an invalid or taken name', () => {
+    const store = new RuleEditorStore({
+      rule: { local: 'a' },
+      definitions: { a: { rule: { spec: 'x' } }, b: { rule: { spec: 'y' } } },
+    });
+    expect(() => store.renameLocal('a', '1-bad')).toThrow();
+    expect(() => store.renameLocal('a', 'b')).toThrow();
+  });
+
+  it('removeDefinition throws with a reference outstanding', () => {
+    const store = new RuleEditorStore({
+      rule: { local: 'quota-check' },
+      definitions: { 'quota-check': { rule: { spec: 'a' } } },
+    });
+    expect(() => store.removeDefinition('quota-check')).toThrow();
+  });
+
+  it('removeDefinition removes an unreferenced definition', () => {
+    const store = new RuleEditorStore({
+      rule: { spec: 'a' },
+      definitions: { 'quota-check': { rule: { spec: 'x' } } },
+    });
+    store.removeDefinition('quota-check');
+    expect(store.getState().document.definitions).toBeUndefined();
+  });
+
+  it('replaceLocalWithSpec rewrites two references and drops the definition', () => {
+    const store = new RuleEditorStore({
+      rule: { and: [{ local: 'quota-check' }, { local: 'quota-check' }] },
+      definitions: { 'quota-check': { rule: { spec: 'a' } } },
+    });
+
+    store.replaceLocalWithSpec('quota-check', 'new-spec');
+
+    expect(store.getState().document.rule).toEqual({ and: [{ spec: 'new-spec' }, { spec: 'new-spec' }] });
+    expect(store.getState().document.definitions).toBeUndefined();
+  });
+
+  it('setDefinitionDecoration clears a field when given undefined', () => {
+    const store = new RuleEditorStore({
+      rule: { spec: 'a' },
+      definitions: { 'quota-check': { rule: { spec: 'x' }, whenTrue: 'yes', whenFalse: 'no' } },
+    });
+
+    store.setDefinitionDecoration('quota-check', { whenTrue: undefined });
+
+    expect(store.getState().document.definitions!['quota-check']).toEqual({ rule: { spec: 'x' }, whenFalse: 'no' });
   });
 });

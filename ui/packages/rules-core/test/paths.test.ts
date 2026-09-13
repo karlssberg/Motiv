@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  childPaths, getNode, setNode, listPaths,
+  childPaths, getNode, setNode, listPaths, localReferences,
   DEFINITIONS_ROOT, definitionPath, definitionBodyPath, definitionNameOf,
 } from '../src/paths.js';
 import type { RuleDocument } from '../src/document.js';
@@ -127,5 +127,25 @@ describe('childPaths', () => {
   it('gives a leaf no children', () => {
     expect(childPaths({ spec: 'a' }, '$.rule')).toEqual([]);
     expect(childPaths({ expression: 'n > 0' }, '$.rule')).toEqual([]);
+  });
+});
+
+describe('localReferences', () => {
+  it('finds references in the rule and in definitions, rule first then key order', () => {
+    const document: RuleDocument = {
+      rule: { and: [{ local: 'quota-check' }, { spec: 'b' }] },
+      definitions: {
+        'quota-check': { rule: { spec: 'a' } },
+        other: { rule: { local: 'quota-check' } },
+      },
+    };
+    expect(localReferences(document, 'quota-check')).toEqual([
+      '$.rule.and[0]',
+      '$.definitions.other.rule',
+    ]);
+  });
+
+  it('returns an empty array when there are no references', () => {
+    expect(localReferences({ rule: { spec: 'a' } }, 'quota-check')).toEqual([]);
   });
 });

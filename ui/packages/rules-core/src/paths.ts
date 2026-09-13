@@ -1,6 +1,6 @@
 import {
   binaryOperator, higherOrderBody, higherOrderKey, isBinaryNode, isHigherOrderNode,
-  isNotNode, operandsOf, type RuleDocument, type RuleNode,
+  isLocalNode, isNotNode, operandsOf, type RuleDocument, type RuleNode,
 } from './document.js';
 import { LOCAL_NAME_PATTERN } from './localNames.js';
 
@@ -170,6 +170,13 @@ export function listPaths(document: RuleDocument): Array<{ path: string; node: R
     walk(document.definitions![name]!.rule, definitionBodyPath(name));
   }
   return out;
+}
+
+/** The paths of every `{ local: name }` node, rule first then definitions in key order. */
+export function localReferences(document: RuleDocument, name: string): string[] {
+  return listPaths(document)
+    .filter(({ node }) => isLocalNode(node) && node.local === name)
+    .map(({ path }) => path);
 }
 
 /** The child node paths of a rule node, in the same order the document walks them. */

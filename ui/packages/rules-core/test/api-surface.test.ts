@@ -63,6 +63,7 @@ const APPROVED_API = [
   'joinSteps',
   'listPaths',
   'literalCountOf',
+  'localReferences',
   'mergeDecorations',
   'nodeKind',
   'normalizeAt',
