@@ -94,7 +94,7 @@ export function EditorPane(props: {
             <>
               {/* Above the builder rather than beside it, so a definition is one scroll away from
                   every `local` reference that points at it, not off in a separate column (#234). */}
-              <DefinitionsPane />
+              <DefinitionsPane catalog={catalog} />
               <BuilderBody client={props.client} />
             </>
           )

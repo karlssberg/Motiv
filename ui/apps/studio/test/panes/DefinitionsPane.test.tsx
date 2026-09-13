@@ -1,8 +1,18 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { RuleEditorStore, type RuleDocument } from '@motiv-rules/core';
+import { RuleEditorStore, type Catalog, type RuleDocument } from '@motiv-rules/core';
 import { RuleEditorProvider } from '@motiv-rules/react';
 import { DefinitionsPane } from '../../src/panes/DefinitionsPane.js';
+
+/** A catalog entry whose declared parameter order differs from how a document might supply args. */
+const CATALOG: Catalog = {
+  specs: [{
+    name: 'at-least', modelType: 'customer', metadataType: 'String', isAsync: false,
+    origin: 'Compiled',
+    parameters: [{ name: 'floor', type: 'integer' }, { name: 'label', type: 'string' }],
+  }],
+  collections: [],
+};
 
 /**
  * A document with two definitions: `a`, referenced twice from the rule, and `b`, referenced once
@@ -18,8 +28,8 @@ const twoDefinitionsDocument = (): RuleDocument => ({
   },
 });
 
-const renderWith = (store: RuleEditorStore) =>
-  render(<RuleEditorProvider store={store}><DefinitionsPane /></RuleEditorProvider>);
+const renderWith = (store: RuleEditorStore, catalog?: Catalog) =>
+  render(<RuleEditorProvider store={store}><DefinitionsPane catalog={catalog} /></RuleEditorProvider>);
 
 describe('DefinitionsPane', () => {
   it('shows the empty state when the document has no definitions', () => {
@@ -125,6 +135,19 @@ describe('DefinitionsPane', () => {
 
     fireEvent.change(screen.getByLabelText('whenFalse of definition b'), { target: { value: 'b fails' } });
     expect(store.getState().document.definitions?.['b']?.whenFalse).toBe('b fails');
+  });
+
+  it('prints a definition body with args in the catalog’s declared order, not insertion order', () => {
+    const store = new RuleEditorStore({
+      rule: { local: 'c' },
+      definitions: {
+        // `label` before `floor` here; the catalog declares `floor` first.
+        c: { rule: { spec: 'at-least', args: { label: 'high', floor: 2 } } },
+      },
+    });
+    renderWith(store, CATALOG);
+    const row = document.getElementById('definition-c')!;
+    expect(row.textContent).toContain('at-least(floor = 2, label = "high")');
   });
 
   it('does not show Promote to catalog… without an onPromote handler, and shows it with one', () => {

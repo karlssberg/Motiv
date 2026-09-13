@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { Catalog } from '@motiv-rules/core';
 import { useRuleEditor, useRuleEditorStore } from '@motiv-rules/react';
 import { DefinitionRow } from './DefinitionRow.js';
 
@@ -11,7 +12,15 @@ import { DefinitionRow } from './DefinitionRow.js';
  * exists — an author with no definitions yet still needs to be told where they will show up once
  * `Extract to definition` makes one (#234).
  */
-export function DefinitionsPane(props: { onPromote?: ((name: string) => void) | undefined }) {
+export function DefinitionsPane(props: {
+  /**
+   * Resolved from the same `useCatalog` call `EditorPane` already makes for the builder — needed
+   * so a definition body that calls a parameterised spec prints its args in the catalog's
+   * declared order rather than whatever order the document happens to store them in (#234).
+   */
+  catalog?: Catalog | undefined;
+  onPromote?: ((name: string) => void) | undefined;
+}) {
   const store = useRuleEditorStore();
   const state = useRuleEditor(store);
   const definitions = state.document.definitions ?? {};
@@ -40,6 +49,7 @@ export function DefinitionsPane(props: { onPromote?: ((name: string) => void) | 
               document={state.document}
               taken={new Set(names.filter((other) => other !== name))}
               locals={locals}
+              catalog={props.catalog}
               open={openMenu === name}
               setOpen={(open) => setOpenMenu(open ? name : null)}
               onPromote={props.onPromote}

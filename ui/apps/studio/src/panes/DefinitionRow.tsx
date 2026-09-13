@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import {
   isValidLocalName, localReferences, printInline, tokenSpans,
-  type Definition, type RuleDocument, type RuleEditorStore,
+  type Catalog, type Definition, type RuleDocument, type RuleEditorStore,
 } from '@motiv-rules/core';
 import { useRuleEditorStore } from '@motiv-rules/react';
 import { LocalNameInput } from '../builder/LocalNameInput.js';
@@ -39,11 +39,13 @@ export function DefinitionRow(props: {
   /** Every other definition's name — what this row's rename must not collide with. */
   taken: ReadonlySet<string>;
   locals: ReadonlySet<string>;
+  /** Threaded down to `printInline` so a catalog spec's args print in its declared order. */
+  catalog?: Catalog | undefined;
   open: boolean;
   setOpen: (open: boolean) => void;
   onPromote?: ((name: string) => void) | undefined;
 }) {
-  const { name, definition, document, taken, locals, open, setOpen, onPromote } = props;
+  const { name, definition, document, taken, locals, catalog, open, setOpen, onPromote } = props;
   const store = useRuleEditorStore();
 
   // A draft the input edits freely; committed to the store only once, on blur, and only if it
@@ -72,7 +74,7 @@ export function DefinitionRow(props: {
 
   const references = localReferences(document, name);
   const referenced = references.length > 0;
-  const bodyText = printInline(definition.rule);
+  const bodyText = printInline(definition.rule, catalog ? { catalog } : undefined);
 
   const { trigger, card, style, close } = usePopoverCard(open, setOpen);
 
