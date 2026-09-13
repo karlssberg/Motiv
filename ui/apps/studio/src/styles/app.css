@@ -2145,6 +2145,7 @@ button.node-dsl:focus-visible {
 }
 .refs-strip-changed { background: color-mix(in srgb, var(--warn) 10%, var(--bg)); }
 .refs-label { font-size: 10.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--faint); }
+.refs-none { font-size: 12px; color: var(--faint); font-style: italic; }
 .refs-strip ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .ref-tag {
   display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 5px;

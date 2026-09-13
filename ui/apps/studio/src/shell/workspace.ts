@@ -63,8 +63,12 @@ export interface WorkspaceState {
   active: TabId | null;
   docs: Record<TabId, OpenDoc>;
   latest: Record<string, Latest>;
-  /** How many saves tabs have reported: the listings are refreshed on the back of each. */
-  saves: number;
+  /**
+   * A revision of the set: bumped by every save a tab reports and every create or delete the
+   * shell performs. The listings are refreshed on the back of each, and a clean proposition tab
+   * reloads, so a blast radius that another act just changed is not shown stale.
+   */
+  revision: number;
 }
 
 /** A remembered tab: enough to reopen it. */
@@ -128,7 +132,7 @@ export function referencesOf(document: RuleDocument): string[] {
  * references has moved, and the shell hands the listings over (`setListings`) for the rest.
  */
 export class Workspace {
-  #state: WorkspaceState = { tabs: [], active: null, docs: {}, latest: {}, saves: 0 };
+  #state: WorkspaceState = { tabs: [], active: null, docs: {}, latest: {}, revision: 0 };
   readonly #listeners = new Set<() => void>();
 
   getState = (): WorkspaceState => this.#state;
@@ -248,8 +252,13 @@ export class Workspace {
         },
       },
       docs: doc ? { ...this.#state.docs, [id]: { ...doc, seenAt: savedAt } } : this.#state.docs,
-      saves: this.#state.saves + 1,
+      revision: this.#state.revision + 1,
     });
+  }
+
+  /** Something changed the set without a tab saving — a create or a delete. */
+  noteChanged(): void {
+    this.#set({ revision: this.#state.revision + 1 });
   }
 
   /**

@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { createValidationController, type RulesApiClient } from '@motiv-rules/core';
 import { whyPropositionSaveUnavailable } from '@motiv-rules/core/workflow';
-import { RuleEditorProvider } from '@motiv-rules/react';
+import { RuleEditorProvider, useRuleEditor } from '@motiv-rules/react';
 import { usePropositionWorkflow } from '@motiv-rules/react/workflow';
 import { MODEL_TYPE } from '../App.js';
 import { DocumentTitle } from './DocumentTitle.js';
@@ -84,6 +84,17 @@ export function PropositionDocument(props: {
   // A delete that reverted this proposition to its compiled definition happened in the shell's
   // workflow, not this one, so the shell asks for the reload rather than this noticing it.
   useEffect(() => { if (tab.reloads > 0) void reload(); }, [reload, tab.reloads]);
+  // The set moved — a save, a create or a delete elsewhere — so the blast radius may have too. A
+  // clean tab takes the server's word again; a dirty one keeps its draft and its strip goes stale
+  // until it is saved, which is the lesser wrong.
+  const revision = useSyncExternalStore(workspace.subscribe, () => workspace.getState().revision);
+  const { dirty } = useRuleEditor(tab.store);
+  const seenRevision = useRef(revision);
+  useEffect(() => {
+    if (revision === seenRevision.current) return;
+    seenRevision.current = revision;
+    if (!dirty) void select(tab.name);
+  }, [revision, dirty, select, tab.name]);
 
   // The listing's model type for this name, else the alphabetically first in scope — what stands
   // in for an entry the listing has not got.
@@ -103,6 +114,8 @@ export function PropositionDocument(props: {
     if (!loaded) { seenVersion.current = null; return; }
     if (seenVersion.current !== null && loaded.version !== seenVersion.current) {
       workspace.noteSaved('proposition', loaded.name, loaded.version);
+      // Its own bump: what this tab holds *is* the server's, so there is nothing to reload.
+      seenRevision.current = workspace.getState().revision;
     }
     seenVersion.current = loaded.version;
   }, [loaded, workspace]);

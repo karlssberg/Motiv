@@ -288,7 +288,7 @@ test('the palette traps focus, closes on Escape, and makes the page behind it in
   // measurement against this very button behind an open modal returned `true` — inert content is
   // still laid out, so `not.toBeVisible()` would have passed for no reason and failed to notice
   // if the modal stopped being modal. Not taking focus is the guarantee itself.
-  const openButton = page.getByRole('button', { name: 'Open' });
+  const openButton = page.getByRole('button', { name: 'Open', exact: true });
   await openButton.evaluate((button) => (button as HTMLButtonElement).focus());
   const stillInside = await page.evaluate(() =>
     document.querySelector('dialog[open]')?.contains(document.activeElement) ?? false);

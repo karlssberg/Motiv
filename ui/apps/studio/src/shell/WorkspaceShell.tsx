@@ -118,7 +118,7 @@ export function WorkspaceShell(props: {
 
   // Once on mount, and again after any tab's save, so what the palette and the hover cards say —
   // and what a rule tab's references compare against — is what the server has.
-  useEffect(() => { void refreshEntries(); void refreshRules(); }, [refreshEntries, refreshRules, state.saves]);
+  useEffect(() => { void refreshEntries(); void refreshRules(); }, [refreshEntries, refreshRules, state.revision]);
   useEffect(() => { workspace.setListings(rules, entries); }, [workspace, rules, entries]);
 
   const removeEntry = async (entry: PropositionListEntry): Promise<void> => {
@@ -137,6 +137,7 @@ export function WorkspaceShell(props: {
     // tab holding it cannot know about.
     const id = tabIdOf('proposition', entry.name);
     if (workspace.getState().docs[id]) workspace.requestReload(id);
+    workspace.noteChanged();
   };
 
   // --- palettes, dialogs, the close question ----------------------------------------------------
@@ -179,6 +180,7 @@ export function WorkspaceShell(props: {
     }
     setDialog(null);
     setDialogError(null);
+    workspace.noteChanged();
   };
 
   const closingDoc = closing === null ? null : state.docs[closing] ?? null;

@@ -33,8 +33,8 @@ export function AppBar(props: {
         <span className="appbar-wordmark">Motiv</span>
       </div>
       <span className="appbar-divider" aria-hidden="true" />
-      {props.children}
-      <div className="appbar-fill" />
+      {/* The strip fills the bar itself; the spacer is for a bar with nothing beside the brand. */}
+      {props.children ?? <div className="appbar-fill" />}
       <div className="appbar-controls">{props.controls}</div>
       {(admin || onAdmin) && (
         <nav className="page-nav" aria-label="Pages">

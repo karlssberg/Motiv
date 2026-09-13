@@ -11,7 +11,8 @@ import { referenceStatuses, referencesOf, type OpenDoc, type Workspace } from '.
  * the new version, so nothing else needs refreshing.
  *
  * Reads the tab's own store for the document, so it follows every edit, and the workspace for
- * everyone else's state.
+ * everyone else's state. Always rendered for a rule, empty or not: a strip that appeared with the
+ * first reference would push the editor's header down under the pointer mid-edit.
  */
 export function ReferencesStrip(props: {
   workspace: Workspace;
@@ -25,12 +26,12 @@ export function ReferencesStrip(props: {
   // that captured the tab when it opened would otherwise keep reporting the change it dismissed.
   const doc = state.docs[props.doc.id] ?? props.doc;
   const statuses = referenceStatuses(state, doc, referencesOf(document));
-  if (statuses.length === 0) return null;
   const changed = statuses.filter((status) => status.changedSinceSeen).length;
 
   return (
     <div className={changed > 0 ? 'refs-strip refs-strip-changed' : 'refs-strip'} role="group" aria-label="Uses">
       <span className="refs-label" aria-hidden="true">Uses</span>
+      {statuses.length === 0 && <span className="refs-none">no propositions yet</span>}
       <ul>
         {statuses.map((status) => (
           <li key={status.name}>

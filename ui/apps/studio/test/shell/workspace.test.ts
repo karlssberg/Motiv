@@ -57,11 +57,13 @@ describe('Workspace', () => {
     expect(workspace.getState().tabs).toEqual([tabIdOf('rule', 'a')]);
   });
 
-  it('counts saves, so listings can be refreshed on the back of one', () => {
+  it('revises on every save, create or delete, so listings can be refreshed on the back of one', () => {
     const workspace = new Workspace();
-    expect(workspace.getState().saves).toBe(0);
+    expect(workspace.getState().revision).toBe(0);
     workspace.noteSaved('rule', 'a', 2);
-    expect(workspace.getState().saves).toBe(1);
+    expect(workspace.getState().revision).toBe(1);
+    workspace.noteChanged();
+    expect(workspace.getState().revision).toBe(2);
   });
 
   it('asks a tab to reload, once per request', () => {
