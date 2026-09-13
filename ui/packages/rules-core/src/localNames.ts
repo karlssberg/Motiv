@@ -33,7 +33,11 @@ export function normalizeLocalName(typed: string): string {
 /**
  * The on-blur rule: `normalizeLocalName`, then runs of `-` collapse to one and a trailing `-` is
  * trimmed — so `finishLocalName` always returns either `''` or a name matching {@link LOCAL_NAME_PATTERN}.
+ *
+ * The trailing trim looks at one character, not a run: the collapse before it leaves at most one
+ * `-` at the end, and a `-+$` here would retry from every position of a long dash run (CodeQL's
+ * polynomial-regex finding on this line).
  */
 export function finishLocalName(typed: string): string {
-  return normalizeLocalName(typed).replace(/-+/g, '-').replace(/-+$/, '');
+  return normalizeLocalName(typed).replace(/-+/g, '-').replace(/-$/, '');
 }

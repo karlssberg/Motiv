@@ -53,6 +53,8 @@ describe('finishLocalName', () => {
   it.each([
     ['is--active-', 'is-active'],
     ['---', ''],
+    ['a' + '-'.repeat(50_000), 'a'],
+    ['-'.repeat(50_000) + 'a', 'a'],
   ] as const)('finishLocalName(%j) is %j', (typed, expected) => {
     expect(finishLocalName(typed)).toBe(expected);
   });
