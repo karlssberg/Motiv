@@ -14,6 +14,7 @@ internal static class RuleDocumentComparer
     public static bool StructurallyEqual(RuleDocument left, RuleDocument right) =>
         left.Audited == right.Audited
         && NodesEqual(left.Root, right.Root)
+        && DefinitionsEqual(left.Definitions, right.Definitions)
         && ParametersEqual(left.Parameters, right.Parameters);
 
     // Recursion depth mirrors the parser's own guarded nesting depth, so parser-accepted
@@ -24,6 +25,7 @@ internal static class RuleDocumentComparer
             return left is null && right is null;
         if (left.Operator != right.Operator
             || left.SpecName != right.SpecName
+            || left.LocalName != right.LocalName
             || left.ExpressionText != right.ExpressionText
             || left.N != right.N
             || left.NParameterName != right.NParameterName
@@ -35,6 +37,19 @@ internal static class RuleDocumentComparer
             if (!NodesEqual(left.Children[i], right.Children[i]))
                 return false;
         return true;
+    }
+
+    // A definition key is the address a local node resolves through and the name its body binds
+    // under, so which keys a document declares is logic. Like parameters, definitions are name-keyed
+    // and have no semantic order, so JSON property order must not affect equality — and like the
+    // root, a body's display text does not, which is what comparing them with NodesEqual buys.
+    private static bool DefinitionsEqual(IReadOnlyList<RuleNode> left, IReadOnlyList<RuleNode> right)
+    {
+        if (left.Count != right.Count)
+            return false;
+        var rightByName = right.ToDictionary(definition => definition.Name!, StringComparer.Ordinal);
+        return left.All(definition =>
+            rightByName.TryGetValue(definition.Name!, out var match) && NodesEqual(definition, match));
     }
 
     // An argument feeds the spec a parameterised entry builds, so it is logic, not display text: a

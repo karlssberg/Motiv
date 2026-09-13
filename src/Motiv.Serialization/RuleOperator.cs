@@ -4,6 +4,7 @@ internal enum RuleOperator
 {
     Spec,
     Expression,
+    Local,
     And,
     Or,
     XOr,

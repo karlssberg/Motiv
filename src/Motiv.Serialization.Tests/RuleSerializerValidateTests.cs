@@ -647,4 +647,166 @@ public class RuleSerializerValidateTests
         // Assert
         errors.ShouldBeEmpty();
     }
+
+    [Theory]
+    [InlineData("""
+        { "definitions": { "is-active-and-adult": { "rule": { "andAlso": [ { "spec": "customer.is-active" }, { "spec": "customer.is-adult" } ] }, "whenTrue": "active adult", "whenFalse": "not an active adult" } },
+          "rule": { "and": [ { "local": "is-active-and-adult" }, { "spec": "customer.has-orders" } ] } }
+        """)]
+    [InlineData("""{ "definitions": { "_x": { "rule": { "spec": "a" } } }, "rule": { "local": "_x" } }""")]
+    [InlineData("""{ "definitions": { "d": { "rule": { "spec": "a" } } }, "rule": { "spec": "a" } }""")]
+    public void Should_accept_a_document_with_definitions_and_local_references(string json)
+    {
+        // Act
+        var errors = Validate(json);
+
+        // Assert
+        errors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Should_link_every_local_node_to_its_definition()
+    {
+        // Arrange — Task 7 binds a local by binding this link, so a clean parse must always set it
+        var errors = new List<RuleError>();
+        var json =
+            """
+            { "definitions": { "d": { "rule": { "spec": "a" }, "whenTrue": "yes", "whenFalse": "no" } },
+              "rule": { "not": { "local": "d" } } }
+            """;
+
+        // Act
+        var document = new RuleDocumentParser(new RuleSerializerOptions()).Parse(json, errors);
+
+        // Assert
+        errors.ShouldBeEmpty();
+        var local = document!.Root!.Children[0];
+        local.Operator.ShouldBe(RuleOperator.Local);
+        local.Definition.ShouldBeSameAs(document.Definitions.ShouldHaveSingleItem());
+        local.Definition!.Name!.ShouldBe("d");
+        local.Definition.WhenTrueText!.ShouldBe("yes");
+        local.Definition.WhenFalseText!.ShouldBe("no");
+    }
+
+    [Fact]
+    public void Should_report_a_local_that_names_no_definition()
+    {
+        // Act
+        var errors = Validate("""{ "rule": { "and": [ { "spec": "a" }, { "local": "missing" } ] } }""");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.UnknownLocal);
+        error.Path.ShouldBe("$.rule.and[1]");
+        error.Message.ShouldContain("missing");
+    }
+
+    [Theory]
+    [InlineData("""{ "definitions": { "a.b": { "rule": { "spec": "a" } } }, "rule": { "spec": "a" } }""", "$.definitions.a.b")]
+    [InlineData("""{ "definitions": { "-a": { "rule": { "spec": "a" } } }, "rule": { "spec": "a" } }""", "$.definitions.-a")]
+    [InlineData("""{ "definitions": { "let": { "rule": { "spec": "a" } } }, "rule": { "spec": "a" } }""", "$.definitions.let")]
+    [InlineData("""{ "definitions": { "all": { "rule": { "spec": "a" } } }, "rule": { "spec": "a" } }""", "$.definitions.all")]
+    public void Should_reject_a_definition_key_that_is_not_a_local_name(string json, string expectedPath)
+    {
+        // Act
+        var errors = Validate(json);
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidLocalName);
+        error.Path.ShouldBe(expectedPath);
+    }
+
+    [Theory]
+    [InlineData("""{ "rule": { "local": "a.b" } }""")]
+    [InlineData("""{ "rule": { "local": "-a" } }""")]
+    [InlineData("""{ "rule": { "local": "let" } }""")]
+    public void Should_reject_a_local_reference_that_is_not_a_local_name(string json)
+    {
+        // Act
+        var errors = Validate(json);
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidLocalName);
+        error.Path.ShouldBe("$.rule");
+    }
+
+    [Fact]
+    public void Should_report_a_cycle_between_two_definitions()
+    {
+        // Act
+        var errors = Validate(
+            """
+            { "definitions": { "a": { "rule": { "local": "b" } }, "b": { "rule": { "local": "a" } } },
+              "rule": { "local": "a" } }
+            """);
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.CycleDetected);
+        error.Path.ShouldBe("$.definitions.a");
+        error.Message.ShouldContain("a → b → a");
+    }
+
+    [Fact]
+    public void Should_report_a_definition_that_references_itself()
+    {
+        // Act
+        var errors = Validate(
+            """{ "definitions": { "a": { "rule": { "local": "a" } } }, "rule": { "local": "a" } }""");
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.CycleDetected);
+        error.Path.ShouldBe("$.definitions.a");
+        error.Message.ShouldContain("a → a");
+    }
+
+    [Theory]
+    [InlineData("""{ "definitions": [], "rule": { "spec": "a" } }""", "$.definitions")]
+    [InlineData("""{ "definitions": { "d": { "whenTrue": "yes", "whenFalse": "no" } }, "rule": { "spec": "a" } }""", "$.definitions.d")]
+    [InlineData("""{ "definitions": { "d": { "rule": { "spec": "a" }, "frobnicate": 1 } }, "rule": { "local": "d" } }""", "$.definitions.d.frobnicate")]
+    public void Should_reject_a_structurally_invalid_definitions_block(string json, string expectedPath)
+    {
+        // Act
+        var errors = Validate(json);
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe(expectedPath);
+    }
+
+    [Fact]
+    public void Should_reject_arguments_on_a_local_reference()
+    {
+        // Act — arguments belong to the parameterised spec a definition references, not to the reference
+        var errors = Validate(
+            """
+            { "definitions": { "d": { "rule": { "spec": "a" } } },
+              "rule": { "local": "d", "args": { "threshold": 1 } } }
+            """);
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.UnexpectedArguments);
+    }
+
+    [Fact]
+    public void Should_reject_a_duplicate_definition_key()
+    {
+        // Act — JSON permits a repeated key, so which body the name means would otherwise be luck
+        var errors = Validate(
+            """
+            { "definitions": { "d": { "rule": { "spec": "a" } }, "d": { "rule": { "spec": "b" } } },
+              "rule": { "local": "d" } }
+            """);
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.definitions.d");
+        error.Message.ShouldContain("duplicate");
+    }
 }

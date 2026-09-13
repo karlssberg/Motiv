@@ -4,13 +4,21 @@ internal sealed class RuleDocument(
     string? name,
     RuleNode? root,
     IReadOnlyList<RuleParameterDeclaration> parameters,
-    bool audited = false)
+    bool audited = false,
+    IReadOnlyList<RuleNode>? definitions = null)
 {
     public string? Name { get; } = name;
 
     public RuleNode? Root { get; } = root;
 
     public IReadOnlyList<RuleParameterDeclaration> Parameters { get; } = parameters;
+
+    /// <summary>
+    /// The document-local propositions declared by <c>definitions</c>, in declaration order. Each
+    /// node is a definition's body, carrying the definition key as its <see cref="RuleNode.Name" />
+    /// and the definition's payloads, so binding one is binding any other decorated node.
+    /// </summary>
+    public IReadOnlyList<RuleNode> Definitions { get; } = definitions ?? [];
 
     /// <summary>
     /// Whether every evaluation of this rule is recorded to the decision log. On the document rather

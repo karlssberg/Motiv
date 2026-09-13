@@ -39,6 +39,8 @@ public class CompositionDepthTests
 
     private static readonly RuleSerializerOptions ShallowCompositionCap = new() { MaxCompositionDepth = 2 };
 
+    private static readonly RuleSerializerOptions ShallowestCompositionCap = new() { MaxCompositionDepth = 1 };
+
     [Fact]
     public void Should_refuse_a_too_deep_document_on_the_synchronous_explanation_binder() =>
         Serializer(ShallowDecoratorCap).Validate<int>(DeeplyDecorated)
@@ -87,4 +89,68 @@ public class CompositionDepthTests
     [Fact]
     public void Should_bind_a_document_within_both_caps() =>
         Serializer(new RuleSerializerOptions()).Validate<int>(DeeplyDecorated).ShouldBeEmpty();
+
+    private static RuleDocument AParsedDocument(string json)
+    {
+        var errors = new List<RuleError>();
+        var document = new RuleDocumentParser(new RuleSerializerOptions()).Parse(json, errors);
+        errors.ShouldBeEmpty();
+        return document!;
+    }
+
+    /// <summary>
+    /// A local measures as the definition it names, whose body carries the definition key as its
+    /// name — so referencing one costs exactly the one decorator level that name buys.
+    /// </summary>
+    [Fact]
+    public void Should_measure_a_local_as_the_definition_it_names()
+    {
+        // Arrange
+        var document = AParsedDocument(
+            """{ "definitions": { "d": { "rule": { "spec": "a" } } }, "rule": { "local": "d" } }""");
+
+        // Act
+        var measure = CompositionDepth.Of(document, new SpecRegistry());
+
+        // Assert
+        measure.ShouldBe(new CompositionMeasure(1, 1));
+    }
+
+    /// <summary>And a definition reached through another accumulates both levels.</summary>
+    [Fact]
+    public void Should_measure_a_chain_of_definitions()
+    {
+        // Arrange
+        var document = AParsedDocument(
+            """
+            { "definitions": { "outer": { "rule": { "local": "inner" } }, "inner": { "rule": { "spec": "a" } } },
+              "rule": { "local": "outer" } }
+            """);
+
+        // Act
+        var measure = CompositionDepth.Of(document, new SpecRegistry());
+
+        // Assert
+        measure.ShouldBe(new CompositionMeasure(2, 2));
+    }
+
+    /// <summary>
+    /// The parser's own pre-filter sees through a local too — unlike a catalog reference, the
+    /// definition it names is right here in the document, so scoring it a leaf would under-report a
+    /// composition the document really does perform.
+    /// </summary>
+    [Fact]
+    public void Should_refuse_a_local_whose_definition_composes_past_the_composition_cap()
+    {
+        // Act
+        var errors = new RuleSerializer(new SpecRegistry(), ShallowestCompositionCap).Validate(
+            """
+            { "definitions": { "d": { "rule": { "and": [ { "spec": "a" }, { "spec": "a" }, { "spec": "a" } ] } } },
+              "rule": { "local": "d" } }
+            """);
+
+        // Assert
+        errors.ShouldContain(error =>
+            error.Code == RuleErrorCode.DocumentTooLarge && error.Message.Contains("composition depth"));
+    }
 }
