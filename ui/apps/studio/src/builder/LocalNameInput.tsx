@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, type ChangeEvent, type FocusEvent } from 'react';
+import { useId, useLayoutEffect, useRef, type ChangeEvent, type FocusEvent } from 'react';
 import { finishLocalName, isValidLocalName, normalizeLocalName } from '@motiv-rules/core';
 
 /**
@@ -50,7 +50,10 @@ export function LocalNameInput(props: {
   };
 
   const invalid = taken.has(value) || !isValidLocalName(value);
-  const errorId = `${ariaLabel}-error`;
+  // Generated, not derived from `ariaLabel`: a label like `local name for $.rule.and[0]` carries
+  // spaces, and `aria-describedby` is a space-separated IDREF *list*, so such an id splits into
+  // tokens that name nothing and the error goes unannounced.
+  const errorId = useId();
 
   return (
     <>

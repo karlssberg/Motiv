@@ -83,4 +83,19 @@ describe('LocalNameInput', () => {
     expect((getByLabelText('local name for $.rule') as HTMLInputElement).getAttribute('aria-invalid'))
       .toBe('false');
   });
+
+  it('points aria-describedby at the error element by a resolvable id', () => {
+    const { getByLabelText, getByRole } = render(
+      <Controlled initial="taken" taken={new Set(['taken'])} />,
+    );
+    const input = getByLabelText('local name for $.rule') as HTMLInputElement;
+
+    const describedBy = input.getAttribute('aria-describedby');
+    const alert = getByRole('alert');
+    expect(describedBy).toBe(alert.id);
+    // The IDREF must actually resolve: an id built from the label would carry spaces, which
+    // splits the IDREF list into tokens that name nothing.
+    expect(describedBy).not.toMatch(/\s/);
+    expect(document.getElementById(describedBy!)).toBe(alert);
+  });
 });
