@@ -1,38 +1,30 @@
 import type { ReactNode } from 'react';
-import { formatHash, type Page } from '../routing/useHashRoute.js';
+import { formatHash } from '../routing/useHashRoute.js';
 import { useAdminCapabilities } from '../shell/useAdminCapabilities.js';
-import { recallSelection } from '../shell/lastSelection.js';
-import { IconAdmin, IconPropositions, IconRules, type IconProps } from '../shell/icons.js';
-
-/** A page, as the switcher offers it. */
-interface PageLink { id: Page; label: string; icon: (props: IconProps) => JSX.Element }
-
-/** The pages, in the order they are offered. */
-const PAGES: ReadonlyArray<PageLink> = [
-  { id: 'rules', label: 'Rules', icon: IconRules },
-  { id: 'propositions', label: 'Propositions', icon: IconPropositions },
-];
-
-/** Admin is not one of the base pages: it is offered only once capabilities confirm it. */
-const ADMIN_PAGE: PageLink = { id: 'admin', label: 'Admin', icon: IconAdmin };
+import { IconAdmin, IconRules } from '../shell/icons.js';
 
 /**
- * The shell's top bar: brand, page navigation, then whatever breadcrumb trail the current page
- * supplies, and its controls on the right. Shared by every page so there is one chrome rather
- * than two that drift apart.
+ * The shell's top bar: the brand, then whatever the page puts beside it — the tab strip, for the
+ * documents — and its controls on the right, with Admin as a link at the far end once
+ * capabilities confirm it. Shared by the documents shell and the admin page so there is one
+ * chrome rather than two that drift apart.
+ *
+ * The page switch that used to sit here is gone: with tabs there are no pages to switch between,
+ * only documents to open. Admin keeps its link because it is still a route of its own, and from it
+ * the way back is a link too — anchors in a navigation landmark, whose href is the navigation
+ * itself, minted by `formatHash` so a link and the route it leads to cannot drift.
  */
 export function AppBar(props: {
-  page: Page;
+  /** The current route, when it is the admin page; the documents shell passes nothing. */
+  current?: 'admin';
   controls?: ReactNode;
   children?: ReactNode;
 }) {
-  // Self-fetched rather than threaded down from App: AppBar is mounted fresh from three different
-  // parents (RulesPage, PropositionsPage, AdminPage), and each already re-fetches its own static
-  // data on mount (catalog, listings) rather than sharing a cache — see useAdminCapabilities.
+  // Self-fetched rather than threaded down: the bar is mounted by two parents, and each already
+  // fetches its own data on mount rather than sharing a cache — see useAdminCapabilities.
   const capabilities = useAdminCapabilities();
-  const pages = capabilities.grantAdministration && capabilities.administrator
-    ? [...PAGES, ADMIN_PAGE]
-    : PAGES;
+  const admin = capabilities.grantAdministration && capabilities.administrator;
+  const onAdmin = props.current === 'admin';
 
   return (
     <header className="appbar">
@@ -41,37 +33,27 @@ export function AppBar(props: {
         <span className="appbar-wordmark">Motiv</span>
       </div>
       <span className="appbar-divider" aria-hidden="true" />
-      {/*
-        Page *navigation*, so anchors in a landmark rather than the `role="tablist"` this used to
-        declare: activating one changes the route, and there is no tabpanel here for a tab to
-        control. The href is the navigation itself — no click handler intercepts it — which is what
-        gives middle-click, open-in-new-tab and a visible destination in the status bar. It is
-        minted by `formatHash`, the same function the router parses back, so a link and the route it
-        leads to cannot drift. The name is whatever the page last had open (`lastSelection`), so
-        switching away and back does not lose the selection — a bare page would, and did.
-        EditorPane, one file over, keeps `role="tab"` because its tabs really do switch a panel:
-        each carries `aria-controls` and the panel `aria-labelledby`, and nothing here ever had a
-        counterpart to point at.
-      */}
-      <nav className="page-nav" aria-label="Pages">
-        {pages.map(({ id, label, icon: Icon }) => (
-          <a
-            key={id}
-            href={formatHash({ page: id, name: recallSelection(id) })}
-            // The state a link says its currentness with: `aria-selected` belongs to a tab, and a
-            // link that is not current says nothing rather than saying `false`. The stylesheet
-            // selects on it too, so there is no `active` class to keep in step with it.
-            aria-current={props.page === id ? 'page' : undefined}
-            className="tab"
-          >
-            <Icon size={13} />
-            {label}
-          </a>
-        ))}
-      </nav>
-      {props.children}
-      <div className="appbar-fill" />
+      {/* The strip fills the bar itself; the spacer is for a bar with nothing beside the brand. */}
+      {props.children ?? <div className="appbar-fill" />}
       <div className="appbar-controls">{props.controls}</div>
+      {(admin || onAdmin) && (
+        <nav className="page-nav" aria-label="Pages">
+          {onAdmin && (
+            <a href={formatHash({ page: 'rules', name: null })} className="tab">
+              <IconRules size={13} />Documents
+            </a>
+          )}
+          {admin && (
+            <a
+              href={formatHash({ page: 'admin', name: null })}
+              aria-current={onAdmin ? 'page' : undefined}
+              className="tab"
+            >
+              <IconAdmin size={13} />Admin
+            </a>
+          )}
+        </nav>
+      )}
     </header>
   );
 }

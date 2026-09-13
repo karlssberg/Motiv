@@ -244,7 +244,7 @@ export const CONFORMANCE: readonly ConformanceRow[] = [
           'moves between rows on the arrow keys, and into and out of a subtree',
           'jumps to a namespace by typing its first letters',
           'chooses the focused proposition on Enter, so the palette is crossable by keyboard alone',
-          'navigates on Enter, the key a link is operated with',
+          'moves between tabs on the arrow keys, activating as it goes',
         ],
       },
     ],
@@ -345,7 +345,7 @@ export const CONFORMANCE: readonly ConformanceRow[] = [
     criterion: '2.4.4',
     conformance: 'Supports',
     evidence: [{ kind: 'axe' }],
-    remark: 'Every link has a name, and the page switcher\'s links name their destination.',
+    remark: 'Every link has a name, and the Admin link — the one navigation link left — names its destination.',
   },
   {
     criterion: '2.4.5',
@@ -531,15 +531,16 @@ export const CONFORMANCE: readonly ConformanceRow[] = [
         tests: [
           'is one stop in the tab sequence, not one per proposition',
           'moves between rows on the arrow keys, and into and out of a subtree',
-          'offers links that say which page is current',
+          'offers tabs that say which document is current',
+          'moves between tabs on the arrow keys, activating as it goes',
         ],
       },
     ],
     remark:
       'Names, roles and states are present throughout and checked by the largest group of rules in '
       + 'the sweep. Every declared role is also honoured rather than merely well-formed: the '
-      + 'palette\'s tree implements the tree pattern, and the page switcher — which controls no panel '
-      + '— is a `nav` of links carrying `aria-current` rather than a `tablist`.',
+      + 'palette\'s tree implements the tree pattern, and the tab strip is a real `tablist`: each chip '
+      + 'a `tab` with `aria-selected`, one roving tab stop, arrows between them, a panel per document.',
   },
   {
     criterion: '4.1.3',

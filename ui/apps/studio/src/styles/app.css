@@ -2112,3 +2112,123 @@ button.node-dsl:focus-visible {
     display: none;
   }
 }
+
+/*
+  The tab strip and everything that hangs off it — see TabStrip, TabCard, ReferencesStrip and
+  the design in docs/superpowers/specs/2026-09-13-studio-dynamic-tabs-design.md.
+*/
+:root { --kind-rule: var(--accent); --kind-proposition: var(--ho); }
+
+/* The tab's kind, as a colour: rules in the accent, propositions in the higher-order green. */
+.kind-glyph { display: inline-flex; flex: none; color: var(--faint); }
+.kind-glyph.kind-rule { color: var(--kind-rule); }
+.kind-glyph.kind-proposition { color: var(--kind-proposition); }
+
+.tab-card {
+  position: fixed; z-index: 60; width: 320px; padding: 10px 12px;
+  background: var(--sh-panel); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow);
+  font: 12px/1.45 var(--sans); color: var(--text); pointer-events: none;
+}
+.card-kind { display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--faint); }
+.card-name { font: 600 13px/1.3 var(--mono); margin: 4px 0 6px; word-break: break-all; }
+.card-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.card-state { margin-top: 8px; color: var(--muted); }
+.card-state-dirty { color: var(--warn); font-weight: 500; }
+.card-refs { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 8px; align-items: baseline; }
+.card-ref { font: 11px var(--mono); color: var(--muted); }
+.card-ref-open { color: var(--text); text-decoration: underline dotted var(--faint); }
+.card-hint { margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--border); font-size: 10.5px; color: var(--faint); }
+
+.refs-strip {
+  flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 36px; padding: 5px 20px;
+  border-bottom: 1px solid var(--border); background: var(--sh-inset); font-size: 12px;
+}
+.refs-strip-changed { background: color-mix(in srgb, var(--warn) 10%, var(--bg)); }
+.refs-label { font-size: 10.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--faint); }
+.refs-none { font-size: 12px; color: var(--faint); font-style: italic; }
+.refs-strip ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.ref-tag {
+  display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 5px;
+  background: var(--bg); border: 1px solid var(--border); font: 12px var(--mono); color: var(--text); cursor: pointer;
+}
+.ref-tag:hover { border-color: var(--accent); }
+.ref-tag:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.ref-version { color: var(--faint); font-size: 11px; }
+.ref-changed { border-color: var(--warn); }
+.ref-badge { font: 600 9.5px/14px var(--sans); letter-spacing: 0.04em; text-transform: uppercase; padding: 0 4px; border-radius: 3px; color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, transparent); }
+.ref-badge-editing { color: var(--accent); background: var(--accent-weak); }
+.ref-editing { border-style: dashed; }
+.refs-ack { margin-left: auto; color: var(--warn); }
+
+.palette-open-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.palette-open-row .palette-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.palette-kind { font-size: 11px; color: var(--faint); }
+
+/* Compact: the bar may wrap. The dropdown claims the first row; the actions sit in its free space
+   and, once there is none, reflow onto a second row aligned right. */
+.appbar.compact { flex-wrap: wrap; height: auto; min-height: 48px; padding: 7px 16px; row-gap: 6px; }
+.appbar.compact .chipstrip { flex: 1 1 200px; }
+.appbar.compact .appbar-controls { flex: none; margin-left: auto; }
+/* The strip is a recessed well: the tabs are a contained group, and the brand — outside it, with
+   the hairline between — cannot be read as the first tab. */
+.chipstrip { flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px; height: 34px; padding: 3px; border-radius: 9px; background: var(--sh-inset); }
+.chips { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.chip {
+  display: flex; align-items: center; width: 172px; height: 28px; padding: 0 4px 0 0; border-radius: 6px;
+  color: var(--muted); font: 500 12px var(--sans); user-select: none; overflow: hidden; border: 1px solid transparent;
+}
+/* The tab itself: a transparent button filling the chip, so the × beside it stays outside the
+   tab's own subtree (a tab with a focusable descendant is what axe's nested-interactive forbids). */
+.chip-tab {
+  display: flex; align-items: center; gap: 7px; flex: 1; min-width: 0; height: 100%; padding: 0 6px;
+  border: none; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.chip-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 5px; }
+.chip:hover { background: color-mix(in srgb, var(--bg) 50%, var(--sh-inset)); color: var(--text); }
+.chip.active { background: var(--bg); color: var(--text); border-color: var(--border); box-shadow: 0 1px 2px rgb(0 0 0 / 8%); }
+/* Outlined, not filled: the one filled tile in the bar is the brand mark, so nothing else may look like it. */
+.kind-tile { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 18px; height: 18px; border-radius: 4px; font: 700 10px var(--sans); border: 1.5px solid currentColor; }
+.kind-tile.kind-rule { color: var(--kind-rule); }
+.kind-tile.kind-proposition { color: var(--kind-proposition); }
+.chip-title { flex: 1; min-width: 0; display: flex; white-space: nowrap; font: 12px var(--mono); }
+.chip-ns { flex: 0 1000 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--faint); }
+.chip-leaf { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.chip-close { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 18px; height: 18px; border: none; border-radius: 4px; background: none; color: var(--faint); padding: 0; cursor: pointer; }
+.chip-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.chip-close svg { display: none; }
+.chip:hover .chip-close svg, .chip.active .chip-close svg { display: block; }
+.chip-close:hover { background: var(--border); color: var(--text); }
+.chip-dot { display: none; width: 7px; height: 7px; border-radius: 50%; background: var(--warn); }
+.chip.dirty .chip-dot { display: block; }
+.chip.dirty .chip-close svg { display: none; }
+.chip.dirty:hover .chip-dot { display: none; }
+.chip.dirty:hover .chip-close svg { display: block; }
+.chip-new { flex: none; }
+.overflow { position: relative; flex: none; }
+.overflow-button { height: 28px; gap: 2px; font-family: var(--mono); font-size: 12px; }
+.overflow-menu {
+  position: absolute; top: 34px; right: 0; z-index: 50; min-width: 260px; max-height: 320px; overflow-y: auto; margin: 0; padding: 4px; list-style: none;
+  background: var(--sh-panel); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow);
+}
+.overflow-item { display: flex; align-items: center; gap: 8px; width: 100%; height: 30px; padding: 0 8px; border: none; border-radius: 5px; background: none; color: var(--text); font: 12px var(--mono); text-align: left; cursor: pointer; }
+.overflow-item:hover { background: var(--sh-inset); }
+.overflow-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.overflow-item.dirty .chip-dot { display: block; }
+
+/* The editor pane's action slot (EditorPane `actions`): between the title and the surface tabs. */
+.pane-actions { display: flex; align-items: center; flex: none; }
+
+.overflow-row { display: flex; align-items: center; gap: 2px; }
+.overflow-row .overflow-item { flex: 1; min-width: 0; }
+.overflow-item.active { background: var(--accent-weak); }
+.overflow-close { display: inline-flex; color: var(--faint); }
+.overflow-close svg { display: block; }
+.overflow-open { border-top: 1px solid var(--border); margin-top: 4px; padding-top: 4px; }
+.overflow-open .overflow-item { color: var(--muted); font-family: var(--sans); }
+.tab-dropdown { flex: 1; min-width: 0; display: flex; }
+.tab-dropdown-button { width: auto; max-width: 100%; flex: 0 1 auto; gap: 6px; padding: 0 6px; cursor: pointer; font: 500 12px var(--sans); }
+.tab-dropdown-button .chip-title { flex: 0 1 auto; }
+.tab-dropdown-button .chip-dot { flex: none; }
+.tab-dropdown-count { flex: none; font: 600 10.5px/16px var(--mono); color: var(--faint); border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; }
+.tab-dropdown .overflow-menu { left: 0; right: auto; min-width: min(320px, calc(100vw - 32px)); }
+

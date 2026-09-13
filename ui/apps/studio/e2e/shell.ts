@@ -1,15 +1,25 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 
 /**
- * Driving the minimalist shell — the three-icon toolbar, the command palette, and the modals
- * behind them — shared by every spec that has to get at something the chrome now hides.
+ * Driving the shell — the tab strip, the palettes, and the modals behind them — shared by every
+ * spec that has to get at something the chrome now hides.
  *
  * Not a `.spec.ts`, so Playwright's default `testMatch` leaves it alone and it is only ever
  * imported.
  */
 
-/** The two palettes, named for what they list. The name is also the dialog's accessible name. */
+/**
+ * The two palettes, named for what a spec reaches for. `Rules` is the shell's one **Open**
+ * palette — rules and propositions together, whose dialog is named "Open" — and `Propositions`
+ * is the explorer one step in from it, behind *Manage propositions*, which keeps its own name
+ * and its authoring footer (New / Derive / Override / Delete).
+ */
 export type PaletteName = 'Propositions' | 'Rules';
+
+/** The dialog's accessible name for a palette. */
+function dialogName(name: PaletteName): string {
+  return name === 'Rules' ? 'Open' : 'Propositions';
+}
 
 /**
  * The open palette, as a locator to scope queries to.
@@ -20,12 +30,19 @@ export type PaletteName = 'Propositions' | 'Rules';
  * below reaches through here for that reason.
  */
 export function palette(page: Page, name: PaletteName): Locator {
-  return page.getByRole('dialog', { name });
+  return page.getByRole('dialog', { name: dialogName(name) });
 }
 
-/** Open the palette and wait for it to be ready to type into. */
+/**
+ * Open the palette and wait for it to be ready to type into. The strip's **Open** (also ⌘K) opens
+ * the Open palette; the explorer is one more click, from its footer.
+ */
 export async function openPalette(page: Page, name: PaletteName): Promise<void> {
-  await page.getByRole('button', { name: 'Open' }).click();
+  await page.getByRole('button', { name: 'Open', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Open' })).toBeVisible();
+  if (name === 'Propositions') {
+    await page.getByRole('button', { name: 'Manage propositions' }).click();
+  }
   await expect(palette(page, name)).toBeVisible();
 }
 
@@ -51,6 +68,11 @@ export async function chooseFromPalette(
   await palette(page, name).getByRole('combobox').fill(target);
   await palette(page, name).getByRole('option').filter({ hasText: target }).first().click();
   await expect(palette(page, name)).toBeHidden();
+  // The choice is a navigation, and the tab follows the route a frame later: until it has, the
+  // previous document's panel is still the visible one, and a query made now would land on it.
+  const escaped = target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  await expect(page.getByRole('tab', { name: new RegExp(`${escaped}$`), selected: true })).toBeVisible();
+  await expect(page.getByRole('tabpanel', { name: target })).toBeVisible();
 }
 
 /**
@@ -107,15 +129,26 @@ export async function expectDocument(
   await closeDocument(page);
 }
 
+/** The chip for an open document, by the name its tab carries. */
+export function tab(page: Page, kind: 'Rule' | 'Proposition', name: string): Locator {
+  return page.getByRole('tab', { name: `${kind} ${name}` });
+}
+
+/** Close a document's tab from its ×. */
+export async function closeTab(page: Page, name: string): Promise<void> {
+  // The × is a pointer affordance outside the accessibility tree (see TabStrip), so by attribute.
+  await page.locator(`.chip-close[aria-label^="Close ${name}"]`).click();
+}
+
 /**
  * A rule to edit, opened fresh and normalised: the live `can-checkout`, with its root expression
  * typed back to `customer.is-active`.
  *
- * There is no local draft any more — the rules page shows an empty state until a rule is in the
- * route — so a spec that exercises the builder has to open one. `can-checkout` is a code-defined
- * default, so what the editor shows is the shared store's standing document rather than anything
- * fetched; and because another spec may be mid-save on the same rule in a parallel worker, the
- * root is set explicitly rather than assumed. Nothing here is saved, so the server is untouched.
+ * There is no local draft — the shell shows an empty state until a document is in the route — so
+ * a spec that exercises the builder has to open one. `can-checkout` is a code-defined default, so
+ * what the editor shows is the builder's seed rather than anything fetched; and because another
+ * spec may be mid-save on the same rule in a parallel worker, the root is set explicitly rather
+ * than assumed. Nothing here is saved, so the server is untouched.
  */
 export async function openScratchRule(page: Page): Promise<void> {
   await page.goto('/#/rules/can-checkout');

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import type { RulesApiClient } from '@motiv-rules/core';
 import { useCatalog, useDslSync, useRuleEditorStore } from '@motiv-rules/react';
 import { DslEditor } from '../dsl/DslEditor.js';
@@ -13,11 +13,6 @@ const SURFACES: ReadonlyArray<{ id: Surface; label: string }> = [
   { id: 'dsl', label: 'DSL' },
 ];
 
-/** Ties both tabs to the one panel they swap the contents of. */
-const SURFACE_PANEL_ID = 'editor-surface';
-
-/** The id of a surface's tab, which is what names the panel while that surface is shown. */
-const tabId = (surface: Surface): string => `editor-tab-${surface}`;
 
 /**
  * The authoring pane: the same rule document edited either through the accordion builder or
@@ -37,6 +32,13 @@ export function EditorPane(props: {
   title?: ReactNode;
   /** The document's name as the DSL surface files it; absent for a nameless draft. */
   documentName?: string | undefined;
+  /**
+   * The document's own actions (JSON, Save), drawn at the end of the header after the surface tabs — on the
+   * pane that holds the document, so they read as belonging to it. Optional: the pages still
+   * draw theirs in the app bar. (Added for the dynamic-tabs prototype; kept because it is the
+   * seam the chosen direction needs.)
+   */
+  actions?: ReactNode | undefined;
 }) {
   const store = useRuleEditorStore();
   const catalogState = useCatalog(props.client);
@@ -44,6 +46,14 @@ export function EditorPane(props: {
   const sync = useDslSync(store);
 
   const [surface, setSurface] = useState<Surface>('builder');
+
+  // Per instance: several editors are mounted at once, one per open tab, and an id shared between
+  // them would point every `aria-controls` at whichever came first in the document.
+  const idBase = useId();
+  /** The one panel both tabs swap the contents of. */
+  const SURFACE_PANEL_ID = `${idBase}-surface`;
+  /** The id of a surface's tab, which is what names the panel while that surface is shown. */
+  const tabId = (which: Surface): string => `${idBase}-tab-${which}`;
 
   return (
     <section className="pane" aria-label="Editor">
@@ -68,6 +78,8 @@ export function EditorPane(props: {
             </button>
           ))}
         </div>
+        {/* Last in the row, so Save — the action the document is for — ends it. */}
+        {props.actions !== undefined && <div className="pane-actions">{props.actions}</div>}
       </div>
 
       <div

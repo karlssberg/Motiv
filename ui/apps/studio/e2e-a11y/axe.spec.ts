@@ -50,7 +50,8 @@ async function scan(page: Page): Promise<void> {
 /** Load a route — the API is already answered from fixtures — and wait for the chrome to settle. */
 async function visit(page: Page, route: string): Promise<void> {
   await page.goto(route);
-  await expect(page.getByRole('link', { name: 'Rules' })).toBeVisible();
+  // The bar is inside <main>, so it is no `banner` landmark: waited for as the element it is.
+  await expect(page.locator('header.appbar')).toBeVisible();
 }
 
 /**
@@ -80,10 +81,10 @@ const RULE_ROUTE = '/#/rules/checkout.eligibility';
 
 const VIEWS: readonly Surface[] = [
   {
-    name: 'the rules page, with nothing open',
+    name: 'the shell, with nothing open',
     reach: async (page) => {
       await visit(page, '/#/rules');
-      await expect(page.getByRole('region', { name: 'No rule open' })).toBeVisible();
+      await expect(page.getByRole('region', { name: 'Nothing open' })).toBeVisible();
     },
   },
   {
@@ -134,7 +135,8 @@ const VIEWS: readonly Surface[] = [
       await page.route('**/api/rules/rules', (route) => route.fulfill({
         status: 503, json: { error: 'The rules service is unavailable.' },
       }));
-      await visit(page, '/#/rules');
+      // A rule tab reports the listing failure — its workflow is what fetches the listing.
+      await visit(page, RULE_ROUTE);
       await expect(page.getByRole('alert')).toContainText('The rules service is unavailable.');
     },
   },
@@ -152,15 +154,49 @@ const HARD_SURFACES: readonly Surface[] = [
     name: 'the command palette, browsing its namespace tree',
     reach: async (page) => {
       await visit(page, '/#/propositions');
-      await page.getByRole('button', { name: 'Open' }).click();
+      await page.getByRole('button', { name: 'Open', exact: true }).click();
+      await expect(page.getByRole('dialog', { name: 'Open' })).toBeVisible();
+      await page.getByRole('button', { name: 'Manage propositions' }).click();
       await expect(page.getByRole('dialog', { name: 'Propositions' })).toBeVisible();
+    },
+  },
+  {
+    name: 'the Open palette, listing rules and propositions together',
+    reach: async (page) => {
+      await visit(page, '/#/propositions');
+      await page.getByRole('button', { name: 'Open', exact: true }).click();
+      await expect(page.getByRole('dialog', { name: 'Open' }).getByRole('option').first()).toBeVisible();
+    },
+  },
+  {
+    name: 'the tab strip with two documents open, and the hover card on the focused one',
+    reach: async (page) => {
+      await visit(page, '/#/propositions/customer.is-active');
+      await expect(page.getByRole('tab', { name: 'Proposition customer.is-active' })).toBeVisible();
+      await page.goto('/#/rules/can-checkout');
+      const tab = page.getByRole('tab', { name: 'Rule can-checkout' });
+      await expect(tab).toBeVisible();
+      await tab.focus();
+      await expect(page.getByRole('tooltip')).toBeVisible();
+    },
+  },
+  {
+    name: 'the tab strip as a dropdown on a narrow window, open',
+    reach: async (page) => {
+      await page.setViewportSize({ width: 520, height: 800 });
+      await visit(page, '/#/rules/can-checkout');
+      const dropdown = page.getByRole('button', { name: /^Open documents/ });
+      await expect(dropdown).toBeVisible();
+      await dropdown.click();
+      await expect(page.getByRole('menu', { name: 'Open documents' })).toBeVisible();
     },
   },
   {
     name: 'the command palette, filtered to a result list',
     reach: async (page) => {
       await visit(page, '/#/propositions');
-      await page.getByRole('button', { name: 'Open' }).click();
+      await page.getByRole('button', { name: 'Open', exact: true }).click();
+      await page.getByRole('button', { name: 'Manage propositions' }).click();
       const palette = page.getByRole('dialog', { name: 'Propositions' });
       await palette.getByRole('combobox').fill('customer');
       await expect(palette.getByRole('option').first()).toBeVisible();
@@ -170,7 +206,8 @@ const HARD_SURFACES: readonly Surface[] = [
     name: 'the command palette, filtered to nothing at all',
     reach: async (page) => {
       await visit(page, '/#/propositions');
-      await page.getByRole('button', { name: 'Open' }).click();
+      await page.getByRole('button', { name: 'Open', exact: true }).click();
+      await page.getByRole('button', { name: 'Manage propositions' }).click();
       const palette = page.getByRole('dialog', { name: 'Propositions' });
       await palette.getByRole('combobox').fill('no-such-proposition');
       await expect(palette.getByRole('status')).toHaveText(/^0 of/);
@@ -189,7 +226,7 @@ const HARD_SURFACES: readonly Surface[] = [
     reach: async (page) => {
       await visit(page, RULE_ROUTE);
       await composeRule(page);
-      await page.getByRole('button', { name: 'Close' }).click();
+      await page.locator('.chip-close[aria-label^="Close checkout.eligibility"]').click();
       await expect(page.getByRole('dialog', { name: 'Unsaved changes' })).toBeVisible();
     },
   },
@@ -275,7 +312,8 @@ const DANGER_SURFACES: readonly Surface[] = [
     reach: async (page) => {
       await withQuarantinedProposition(page, 'customer.is-verified');
       await visit(page, '/#/propositions');
-      await page.getByRole('button', { name: 'Open' }).click();
+      await page.getByRole('button', { name: 'Open', exact: true }).click();
+      await page.getByRole('button', { name: 'Manage propositions' }).click();
       await expect(page.getByRole('dialog', { name: 'Propositions' })
         .getByText('quarantined', { exact: true })).toBeVisible();
     },
@@ -287,7 +325,8 @@ const DANGER_SURFACES: readonly Surface[] = [
       // --accent-weak — is a second ground for the same colour and the tighter of the two.
       await withQuarantinedProposition(page, 'customer.is-verified');
       await visit(page, '/#/propositions/customer.is-verified');
-      await page.getByRole('button', { name: 'Open' }).click();
+      await page.getByRole('button', { name: 'Open', exact: true }).click();
+      await page.getByRole('button', { name: 'Manage propositions' }).click();
       const row = page.getByRole('treeitem', { selected: true });
       await expect(row.getByText('quarantined', { exact: true })).toBeVisible();
     },

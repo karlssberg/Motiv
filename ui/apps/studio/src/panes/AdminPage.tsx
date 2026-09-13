@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { Page } from '../routing/useHashRoute.js';
 import { useAdminCapabilities } from '../shell/useAdminCapabilities.js';
 import { IconDelete } from '../shell/icons.js';
 import { AppBar } from './AppBar.js';
@@ -35,7 +34,7 @@ function describeThrown(error: unknown): string {
  * `AppBar` — the same chrome every other page carries, so navigating here and back is not a dead
  * end even for a caller this page has nothing for.
  */
-export function AdminPage(props: { page: Page }) {
+export function AdminPage() {
   const capabilities = useAdminCapabilities();
   const canAdminister = capabilities.grantAdministration && capabilities.administrator;
 
@@ -109,7 +108,7 @@ export function AdminPage(props: { page: Page }) {
 
   return (
     <>
-      <AppBar page={props.page}>
+      <AppBar current="admin">
         <span className="breadcrumb-sep">/</span>
         <span className="breadcrumb-item">Admin</span>
       </AppBar>

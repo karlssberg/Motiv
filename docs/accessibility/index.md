@@ -101,7 +101,9 @@ ratio that holds in one says nothing about the other.
 the same job. A scan judges markup; this judges what the markup *promised*: that the namespace tree
 is one stop in the tab sequence rather than one per proposition, that the arrow keys, `Home`/`End`
 and type-ahead move between its rows, that a proposition can be chosen without a pointer at any
-point, and that the page switcher's links carry `aria-current` and navigate on `Enter`.
+point, and that the tab strip is a tablist: the active document's chip is the one tab stop and
+says so with `aria-selected`, the arrow keys move between chips and activate as they go, and the
+focused chip's card describes it and goes with `Escape`.
 
 It is a real browser on purpose. jsdom has no tab sequence of its own, so a unit test can assert
 which row *would* be reached and only this can assert that `Tab` reaches it.

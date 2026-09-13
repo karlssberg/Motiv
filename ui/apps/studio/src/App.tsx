@@ -1,75 +1,36 @@
-import { useEffect, useMemo, useState } from 'react';
-import { RuleEditorStore, RulesApiClient, createValidationController } from '@motiv-rules/core';
-import { RuleEditorProvider } from '@motiv-rules/react';
+import { useMemo } from 'react';
+import { RulesApiClient } from '@motiv-rules/core';
 import { useHashRoute } from './routing/useHashRoute.js';
 import { useDocumentTitle } from './routing/useDocumentTitle.js';
-import { RulesPage } from './panes/RulesPage.js';
-import { PropositionsPage } from './panes/PropositionsPage.js';
+import { WorkspaceShell } from './shell/WorkspaceShell.js';
 import { AdminPage } from './panes/AdminPage.js';
 
-const MODEL_TYPE = 'customer';
+/** The model type Studio's rules are validated and evaluated against. */
+export const MODEL_TYPE = 'customer';
 
-/** The Studio shell: owns the store + client, runs debounced validation, and lays out the three panes. */
-export function App(props: { client?: RulesApiClient; store?: RuleEditorStore }) {
-  const store = useMemo(
-    () => props.store ?? new RuleEditorStore({ rule: { spec: 'customer.is-active' } }),
-    [props.store],
-  );
-  // Seam: the transport. A RulesApiClient is the only thing that talks to the
-  // backend (GET /catalog, POST /validate, POST /evaluate). Swap baseUrl or inject
-  // a custom `fetch` to point at your own host.
+/**
+ * The Studio shell: owns the client and the route, and hands both to the documents shell — or to
+ * the admin page, which is still a route of its own.
+ */
+export function App(props: { client?: RulesApiClient }) {
+  // Seam: the transport. A RulesApiClient is the only thing that talks to the backend (GET
+  // /catalog, POST /validate, POST /evaluate, the rule and proposition endpoints). Swap baseUrl or
+  // inject a custom `fetch` to point at your own host.
   const client = useMemo(
     () => props.client ?? new RulesApiClient({ baseUrl: '/api/rules' }),
     [props.client],
   );
 
-  // Seam: live validation. Debounces edits to the store and pushes the document to
-  // /validate, writing errors back onto the store for the panes to render. When the
-  // loaded rule is async, validation allows async spec references too.
-  const [isAsync, setIsAsync] = useState(false);
-  useEffect(
-    () => createValidationController(store, client, { modelType: MODEL_TYPE, debounceMs: 300, isAsync }),
-    [store, client, isAsync],
-  );
-
   const [route, navigate] = useHashRoute();
-  // The document has one <title> and three routes, so the title has to follow the route: it is what
-  // a screen reader announces on navigation and what tells two Studio history entries apart.
+  // The document has one <title>, so the title has to follow the route: it is what a screen
+  // reader announces on navigation and what tells two Studio history entries apart.
   useDocumentTitle(route);
 
-  let page: JSX.Element;
-  if (route.page === 'propositions') {
-    page = (
-      <PropositionsPage
-        client={client}
-        page={route.page}
-        selected={route.name}
-        onSelect={(name) => navigate({ page: 'propositions', name })}
-      />
-    );
-  } else if (route.page === 'admin') {
-    page = <AdminPage page={route.page} />;
-  } else {
-    page = (
-      <RulesPage
-        client={client}
-        page={route.page}
-        selected={route.name}
-        onSelect={(name) => navigate({ page: 'rules', name })}
-        onLoaded={(entry) => setIsAsync(entry?.isAsync ?? false)}
-      />
-    );
-  }
-
   return (
-    // Seam: the store hookup. RuleEditorProvider exposes the single RuleEditorStore
-    // to every builder component (useRuleEditorStore / useRuleNode) below it.
-    <RuleEditorProvider store={store}>
-      <main className="app">
-        {page}
-      </main>
-    </RuleEditorProvider>
+    <main className="app">
+      {route.page === 'admin'
+        ? <AdminPage />
+        : <WorkspaceShell client={client} route={route} navigate={navigate} />}
+    </main>
   );
 }
-
-export { MODEL_TYPE };

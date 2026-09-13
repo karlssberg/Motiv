@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import type { IconProps } from './icons.js';
 
 /**
@@ -59,12 +59,14 @@ export function Toolbar(props: {
   /** Controls drawn after the actions, in the same row — the split Save button. */
   children?: ReactNode;
 }) {
+  // Per instance: one toolbar per open document is mounted, and a reason's id must name this one's.
+  const idBase = useId();
   return (
     <div className="toolbar">
       {props.actions.map((action) => {
         const Icon = action.icon;
         const unavailable = action.unavailable !== undefined;
-        const reasonId = `toolbar-${action.id}-reason`;
+        const reasonId = `${idBase}-${action.id}-reason`;
         const worded = action.emphasis === 'primary' || props.labelled === true;
         return (
           <span key={action.id} className="toolbar-slot">
