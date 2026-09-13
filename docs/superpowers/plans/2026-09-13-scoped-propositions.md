@@ -84,7 +84,9 @@ Both cores address a definition by path, so errors, spans and decoration-merging
 
 ## Tasks
 
-- [ ] **0. Amend the design doc; extend the JSON schema.**
+### Task 0: Amend the design doc; extend the JSON schema
+
+- [ ] 
   `docs/superpowers/specs/2026-09-13-scoped-propositions-design.md`: rewrite *Compatibility* to
   match deviation 1; rewrite the *Binding semantics* paragraph on memoisation and the *Model type*
   paragraph to match deviation 2 ("bound at each reference against that reference's model");
@@ -103,7 +105,9 @@ Both cores address a definition by path, so errors, spans and decoration-merging
   `ui/packages/rules-core/test/schema.test.ts` — the same four pairs through Ajv. Run both.
   Commit: `Schema — definitions and local nodes (#234)`.
 
-- [ ] **1. Core model: `LocalNode`, `definitions`, `nodeKind`, name grammar.**
+### Task 1: Core model: `LocalNode`, `definitions`, `nodeKind`, name grammar
+
+- [ ] 
   `ui/packages/rules-core/src/document.ts`: `export interface LocalNode extends Decoration { local: string }`;
   add to `RuleNode`; `NodeKind` gains `'local'`; `KIND_ORDER` gains `'local'` after `'expression'`;
   `export function isLocalNode(node: RuleNode): node is LocalNode`;
@@ -131,7 +135,9 @@ Both cores address a definition by path, so errors, spans and decoration-merging
   `'a b'`. `test/nodeSummary.test.ts` — a local summarises with badge `let`. Commit:
   `Core — LocalNode, definitions and the local-name grammar (#234)`.
 
-- [ ] **2. Core paths: definitions are addressable.**
+### Task 2: Core paths: definitions are addressable
+
+- [ ] 
   `ui/packages/rules-core/src/paths.ts`: `parseSteps` accepts a second root, `$.definitions.<name>`,
   where `<name>` matches `LOCAL_NAME_PATTERN`, followed by `.rule` and then ordinary steps; the
   step tokenizer keeps its `^([A-Za-z]+)(?:\[(\d+)\])?$` rule for ordinary steps and admits the
@@ -153,7 +159,9 @@ Both cores address a definition by path, so errors, spans and decoration-merging
   its body node: `src/dsl/decorations.ts` gains that case, keyed on `definitionNameOf(path) &&
   path.endsWith('.rule')`). Commit: `Core — definitions are addressable paths (#234)`.
 
-- [ ] **3. Core editor mutations: define, inline, rename, promote, decorate.**
+### Task 3: Core editor mutations: define, inline, rename, promote, decorate
+
+- [ ] 
   `ui/packages/rules-core/src/editor.ts`, each one `#commit`, each one undo step:
   `defineLocal(path: string, name: string): void` — moves the subtree at `path` into
   `definitions[name]` (carrying the subtree's own `name`/`whenTrue`/`whenFalse` onto the definition
@@ -182,7 +190,9 @@ Both cores address a definition by path, so errors, spans and decoration-merging
   setDefinitionDecoration clears a field when given `undefined`. Commit:
   `Core — local mutations on the editor store (#234)`.
 
-- [ ] **4. DSL: `let` in lexer, parser and printer; bare-word resolution; round-trip.**
+### Task 4: DSL: `let` in lexer, parser and printer; bare-word resolution; round-trip
+
+- [ ] 
   `src/dsl/lexer.ts`: `DSL_KEYWORDS = ['param', 'let', 'in', 'as']`. `src/dsl/parser.ts`:
   `ParserState` gains `readonly locals = new Set<string>()`; a new `collectLocalNames(state)` runs
   before parsing and scans the token stream for `keyword let` followed by a `spec`-kind token at
@@ -215,7 +225,9 @@ Both cores address a definition by path, so errors, spans and decoration-merging
   definition referenced twice; a definition referencing another). `test/dsl-exports.test.ts` if it
   pins `DSL_KEYWORDS`. Commit: `DSL — let declarations and local references (#234)`.
 
-- [ ] **5. DSL tooling: token runs, completion, diagnostics with severity, spans.**
+### Task 5: DSL tooling: token runs, completion, diagnostics with severity, spans
+
+- [ ] 
   `src/dsl/tokenRuns.ts`: `TokenSpan.kind` gains `'local'`; `tokenSpans(text, locals?: ReadonlySet<string>)`
   marks a `spec` token whose value is in `locals` as `'local'`; new
   `export function declaredLocals(text: string): Set<string>` in `src/dsl/locals.ts` (regex scrape
@@ -280,7 +292,9 @@ Both cores address a definition by path, so errors, spans and decoration-merging
   `CompositionDepthTests.cs` — a local referencing a named definition counts one decorator.
   Commit: `Serialization — definitions, local nodes and the resolve pass (#234)`.
 
-- [ ] **7. C# binders: bind a local through its definition.** In each of `RuleBinder.cs`,
+### Task 7: C# binders: bind a local through its definition
+
+- [ ] In each of `RuleBinder.cs`,
   `AsyncRuleBinder.cs`, `MetadataRuleBinder.cs`, `AsyncMetadataRuleBinder.cs`, the operator switch
   gains one arm: `RuleOperator.Local => BindNode<TModel>(node.Definition!, source, errors)` (the
   metadata binders' inline form; `Definition` is non-null after a clean parse, and `Bind` is never
@@ -298,7 +312,9 @@ Both cores address a definition by path, so errors, spans and decoration-merging
   reference inside the definition body path); the metadata binders' `TMetadata` variants with an
   object payload on the definition. Commit: `Serialization — binders resolve local references (#234)`.
 
-- [ ] **8. Example writer and docs for the document format.**
+### Task 8: Example writer and docs for the document format
+
+- [ ] 
   `src/examples/Motiv.RuleAuthoring.Blazor/Authoring/RuleDocumentWriter.cs`: emit `definitions`
   and `local` if its model can hold them; if its authoring model cannot produce them, add a test
   proving a document with definitions round-trips through *reading* unchanged and leave the writer
@@ -309,7 +325,9 @@ Both cores address a definition by path, so errors, spans and decoration-merging
   gains `let`. `docs/toc.yml` / `docs/Overview.md` only if a page is added. Run the full solution
   suite here (`src/examples/*.Tests` included). Commit: `Docs — definitions in the document format and the DSL (#234)`.
 
-- [ ] **9. Studio builder: local rows, retired nested decoration, read-only migration affordance.**
+### Task 9: Studio builder: local rows, retired nested decoration, read-only migration affordance
+
+- [ ] 
   `ui/apps/studio/src/builder/RuleNodeEditor.tsx`: `const isRoot = path === '$.rule'` (export
   `ROOT` from `BuilderPane.tsx`); the detail panel renders `<DecorationEditor>` only when
   `isRoot`; for a non-root node that carries `name`/`whenTrue`/`whenFalse`, render
@@ -334,7 +352,9 @@ Both cores address a definition by path, so errors, spans and decoration-merging
   appear where specified and not on the root; `test/dsl/PayloadPopover.test.tsx` — no Name field
   on a nested spec. Commit: `Studio — local rows, nested decoration retired, Extract and Inline (#234)`.
 
-- [ ] **10. Studio: the normalising name input and the Extract-to-definition prompt.**
+### Task 10: Studio: the normalising name input and the Extract-to-definition prompt
+
+- [ ] 
   New `ui/apps/studio/src/builder/LocalNameInput.tsx`:
   `props: { value: string; onChange(next: string): void; onCommit(): void; ariaLabel: string; taken: ReadonlySet<string> }`;
   an `<input className="control">` whose `onChange` applies `normalizeLocalName` and preserves the
@@ -350,7 +370,9 @@ Both cores address a definition by path, so errors, spans and decoration-merging
   — seeded, creates, cancels, Escape closes and restores focus to the menu trigger. Commit:
   `Studio — the normalising local-name input (#234)`.
 
-- [ ] **11. Studio: the definitions panel.** New `ui/apps/studio/src/panes/DefinitionsPane.tsx`,
+### Task 11: Studio: the definitions panel
+
+- [ ] New `ui/apps/studio/src/panes/DefinitionsPane.tsx`,
   a `.pane` rendered inside `EditorPane` **above the builder** when the document has definitions
   (and always with an empty-state line when it has none: "No definitions. Extract a node to
   create one."). One row per definition: a `LocalNameInput` (rename via `store.renameLocal` on
@@ -364,7 +386,9 @@ Both cores address a definition by path, so errors, spans and decoration-merging
   Remove is disabled while referenced; decoration edits reach the definition. Commit:
   `Studio — the definitions panel (#234)`.
 
-- [ ] **12. Studio: Extract to catalog and Promote.** `ui/apps/studio/src/shell/WorkspaceShell.tsx`:
+### Task 12: Studio: Extract to catalog and Promote
+
+- [ ] `ui/apps/studio/src/shell/WorkspaceShell.tsx`:
   `createFromDialog` accepts an optional `document: RuleDocument` in `DialogSeed` (new field
   `document?: RuleDocument`) and, when present, sends it instead of `{ rule: { spec: startsFrom } }`;
   the `PropositionDialog` hides the *starts from* select when a seed document is present. A new
@@ -379,7 +403,9 @@ Both cores address a definition by path, so errors, spans and decoration-merging
   definition and rewrites both references; a refused create leaves the document untouched and
   shows the error. Commit: `Studio — Extract to catalog and Promote (#234)`.
 
-- [ ] **13. Studio DSL view: quick-fix for `PreferLet`, local highlighting.**
+### Task 13: Studio DSL view: quick-fix for `PreferLet`, local highlighting
+
+- [ ] 
   `ui/apps/studio/src/dsl/lint.ts`: a diagnostic with code `PreferLet` gets
   `actions: [{ name: 'Extract to definition', apply(view, from, to) }]` which reads the node path
   from the diagnostic, calls `store.defineLocal(path, finishLocalName(name))`, and lets `dslSync`
@@ -394,7 +420,9 @@ Both cores address a definition by path, so errors, spans and decoration-merging
   `test/builder/NodeDsl.test.tsx` — `.tok-local` present. Commit:
   `Studio — prefer-let quick-fix and local highlighting (#234)`.
 
-- [ ] **14. Accessibility gate.** `ui/apps/studio/e2e-a11y/stubs.ts`: `RULE_DOCUMENT` for the
+### Task 14: Accessibility gate
+
+- [ ] `ui/apps/studio/e2e-a11y/stubs.ts`: `RULE_DOCUMENT` for the
   proposition fixture gains a definition and a local reference (the a11y builder scan then holds a
   local row). `e2e-a11y/axe.spec.ts`: `HARD_SURFACES` gains "the row menu on a nested node,
   offering Extract", "the extract-to-definition prompt", "the definitions panel, with a definition
@@ -405,7 +433,9 @@ Both cores address a definition by path, so errors, spans and decoration-merging
   `a11y:report`; commit the regenerated `docs/accessibility/vpat.md`. Commit:
   `Studio — a11y coverage for definitions (#234)`.
 
-- [ ] **15. Wrap-up.** Design doc status → `Implemented`, with the deviations section of this plan
+### Task 15: Wrap-up
+
+- [ ] Design doc status → `Implemented`, with the deviations section of this plan
   summarised under a *What changed in the build* heading. `README.md`: one bullet under the rules
   feature pointing at `let`. Run: `pnpm -C ui/packages/rules-core test typecheck build`,
   `pnpm --filter @motiv-rules/studio test typecheck a11y`, `pnpm -C ui verify:publishable`, the
