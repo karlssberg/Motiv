@@ -40,6 +40,7 @@ internal sealed class MetadataRuleBinder<TMetadata>(ISpecSource source, RuleSeri
         var spec = node.Operator switch
         {
             RuleOperator.Spec => BindSpecLeaf<TModel>(node, errors),
+            RuleOperator.Local => BindNode<TModel>(node.Definition!, errors),
             RuleOperator.Expression => BindExpressionLeaf<TModel>(node, errors),
             RuleOperator.Not => BindNode<TModel>(node.Children[0], errors)?.Not(),
             _ => BindComposition<TModel>(node, errors)
