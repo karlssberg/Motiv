@@ -498,3 +498,119 @@ describe('WorkspaceShell', () => {
     expect(within(rulePanel).getByText('v2')).toBeTruthy();
   });
 });
+
+/**
+ * The two ways an author moves scope outward: a node of the tree, or a definition of the
+ * document, becomes a catalog proposition and the place it stood becomes a reference to it
+ * (#234). Both run the ordinary create dialog, seeded with a document rather than with a source
+ * to start from.
+ */
+describe('WorkspaceShell — Extract to catalog and Promote (#234)', () => {
+  /** A proposition whose body has both a definition to promote and a node to extract. */
+  const SCOPED = {
+    document: {
+      rule: {
+        and: [
+          { local: 'activity' },
+          { spec: 'customer.is-adult', name: 'adulthood' },
+        ],
+      },
+      definitions: {
+        activity: { rule: { spec: 'customer.is-active' }, whenTrue: 'active' },
+      },
+    },
+    version: 1,
+    origin: 'Authored',
+    hasCompiledDefault: false,
+  };
+
+  /** The shell with `customer.derived` open on the scoped document above, loaded. */
+  async function openScoped(client: ReturnType<typeof stubClient>) {
+    const shell = renderShell(client, 'customer.derived');
+    const store = shell.storeOf('proposition', 'customer.derived');
+    await waitFor(() => expect(store.getState().document.definitions).toBeDefined());
+    return { ...shell, store };
+  }
+
+  const scopedClient = (overrides: Record<string, unknown> = {}) =>
+    stubClient({ getProposition: vi.fn().mockResolvedValue(SCOPED), ...overrides });
+
+  it('extracts a node: the subtree is the created document, and the node becomes a reference', async () => {
+    const client = scopedClient();
+    const { store } = await openScoped(client);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'actions for $.rule.and[1]' }));
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Extract to catalog…' }));
+
+    await screen.findByRole('dialog', { name: 'Extract to catalog' });
+    await userEvent.type(screen.getByLabelText('Name'), 'customer.adulthood');
+    await userEvent.click(screen.getByRole('button', { name: /create/i }));
+
+    await waitFor(() => expect(client.createProposition).toHaveBeenCalledWith(expect.objectContaining({
+      name: 'customer.adulthood',
+      modelType: 'customer',
+      document: { rule: { spec: 'customer.is-adult', name: 'adulthood' } },
+    })));
+    await waitFor(() => expect(store.getState().document.rule).toEqual({
+      and: [{ local: 'activity' }, { spec: 'customer.adulthood' }],
+    }));
+  });
+
+  it('asks nothing about what to start from once the flow brings its own document', async () => {
+    const client = scopedClient();
+    await openScoped(client);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'actions for $.rule.and[1]' }));
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Extract to catalog…' }));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Extract to catalog' });
+    expect(within(dialog).queryByLabelText(/starts from/i)).toBeNull();
+    expect((within(dialog).getByLabelText('Name') as HTMLInputElement).value).toBe('');
+  });
+
+  it('promotes a definition: its body is the created document, and both references are rewritten', async () => {
+    const client = scopedClient({
+      getProposition: vi.fn().mockResolvedValue({
+        ...SCOPED,
+        document: {
+          rule: { and: [{ local: 'activity' }, { local: 'activity' }] },
+          definitions: { activity: { rule: { spec: 'customer.is-active' }, whenTrue: 'active' } },
+        },
+      }),
+    });
+    const { store } = await openScoped(client);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'actions for definition activity' }));
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Promote to catalog…' }));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Promote to catalog' });
+    const name = within(dialog).getByLabelText('Name') as HTMLInputElement;
+    expect(name.value).toBe('activity');
+    await userEvent.clear(name);
+    await userEvent.type(name, 'customer.activity');
+    await userEvent.click(within(dialog).getByRole('button', { name: /create/i }));
+
+    await waitFor(() => expect(client.createProposition).toHaveBeenCalledWith(expect.objectContaining({
+      name: 'customer.activity',
+      document: { rule: { spec: 'customer.is-active', name: 'activity', whenTrue: 'active' } },
+    })));
+    await waitFor(() => expect(store.getState().document).toEqual({
+      rule: { and: [{ spec: 'customer.activity' }, { spec: 'customer.activity' }] },
+    }));
+  });
+
+  it('leaves the document alone when the create is refused, and says so in the dialog', async () => {
+    const client = scopedClient({ createProposition: vi.fn().mockResolvedValue({ outcome: 'nameTaken' }) });
+    const { store } = await openScoped(client);
+    const before = store.getState().document;
+
+    await userEvent.click(await screen.findByRole('button', { name: 'actions for $.rule.and[1]' }));
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Extract to catalog…' }));
+    await userEvent.type(await screen.findByLabelText('Name'), 'customer.derived');
+    await userEvent.click(screen.getByRole('button', { name: /create/i }));
+
+    expect(await screen.findByText(/already/i)).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'Extract to catalog' })).toBeTruthy();
+    expect(store.getState().document).toEqual(before);
+  });
+});

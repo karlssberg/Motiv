@@ -9,6 +9,7 @@ import { PropositionDocument } from '../panes/PropositionDocument.js';
 import type { SaverSink } from '../panes/documentTab.js';
 import { PropositionExplorer } from '../explorer/PropositionExplorer.js';
 import { PropositionDialog, type DialogSeed, type DialogValues } from '../explorer/PropositionDialog.js';
+import { catalogSeedFor, promotionSeedFor } from './catalogSeeds.js';
 import { DiscardDialog } from './DiscardDialog.js';
 import { OpenPalette } from './OpenPalette.js';
 import { ReportBanner } from './ReportBanner.js';
@@ -76,9 +77,15 @@ function TabPanel(props: {
   onClose: () => void;
   onOpenProposition: (name: string) => void;
   onSaver: SaverSink;
+  /** The two widening flows, already bound to this document — see the shell's handlers (#234). */
+  onExtractToCatalog: (path: string) => void;
+  onPromote: (name: string) => void;
 }) {
   const { client, workspace, doc, actionsHost, onClose, onSaver } = props;
-  const common = { client, workspace, tab: doc, actionsHost, onClose, onSaver };
+  const common = {
+    client, workspace, tab: doc, actionsHost, onClose, onSaver,
+    onExtractToCatalog: props.onExtractToCatalog, onPromote: props.onPromote,
+  };
   return (
     <section className="tab-panel" role="tabpanel" aria-label={doc.name} hidden={!props.active}>
       {doc.kind === 'rule'
@@ -225,23 +232,73 @@ export function WorkspaceShell(props: {
   /** What New authors from, wherever it is reached — the empty state, or the explorer. */
   const newPropositionSeed: DialogSeed = { name: '', modelType: defaultModelType, startsFrom: null, title: 'New proposition' };
 
-  /** Opens New / Derive / Override, dismissing the palette they were reached from. */
-  const openDialog = (seed: DialogSeed): void => {
+  /**
+   * What a create that lands should do to the document it came out of — rewrite the extracted node
+   * as a reference, or the promoted definition's call sites. Held in a ref, and bound to the
+   * *originating* tab's store when the dialog is opened: a create hands the selection to the new
+   * proposition, which opens a tab of its own, so by the time this runs the active tab is no
+   * longer the one being edited (#234).
+   */
+  const afterCreate = useRef<((createdName: string) => void) | null>(null);
+
+  /** Opens New / Derive / Override / Extract / Promote, dismissing the palette they were reached from. */
+  const openDialog = (seed: DialogSeed, onCreated: ((createdName: string) => void) | null = null): void => {
     setPalette(null);
     setDialogError(null);
+    afterCreate.current = onCreated;
     setDialog(seed);
   };
 
+  const closeDialog = (): void => {
+    afterCreate.current = null;
+    setDialog(null);
+    setDialogError(null);
+  };
+
   const createFromDialog = async ({ startsFrom, ...values }: DialogValues): Promise<void> => {
-    const refused = await create({ ...values, document: { rule: { spec: startsFrom } } });
+    // The seeded flows bring the whole document; the rest compose one from the source picked.
+    const document = dialog?.document ?? (startsFrom === null ? null : { rule: { spec: startsFrom } });
+    if (document === null) return;
+    const rewrite = afterCreate.current;
+    const refused = await create({ ...values, document });
     if (refused !== null) {
       // Reported in the dialog rather than the banner: the form still holds the input that failed.
+      // The document is left exactly as it was — the rewrite is the create's second half.
       setDialogError(refused);
       return;
     }
-    setDialog(null);
-    setDialogError(null);
+    rewrite?.(values.name);
+    closeDialog();
     workspace.noteChanged();
+  };
+
+  /**
+   * *Extract to catalog*: the subtree at `path` becomes a proposition of its own, and the row it
+   * stood at becomes a reference to it. Seeded with an empty name — a catalog name is namespaced,
+   * and a node's own name rarely is.
+   */
+  const extractToCatalog = (doc: OpenDoc, path: string): void => {
+    const seed = catalogSeedFor(doc.store.getState().document, path);
+    if (seed === null) return;
+    openDialog(
+      { name: '', modelType: modelTypeOf(doc.name), startsFrom: null, title: 'Extract to catalog', document: seed },
+      (createdName) => doc.store.replaceNode(path, { spec: createdName }),
+    );
+  };
+
+  /**
+   * *Promote to catalog*: a definition becomes a proposition, and every `local` reference to it a
+   * reference to that name. The local's name is prefilled for the namespace to be typed in front
+   * of it — a local name that cannot be a catalog name (one starting with `_`) is the server's to
+   * refuse, and the dialog reports it.
+   */
+  const promoteDefinition = (doc: OpenDoc, name: string): void => {
+    const seed = promotionSeedFor(doc.store.getState().document, name);
+    if (seed === null) return;
+    openDialog(
+      { name, modelType: modelTypeOf(doc.name), startsFrom: null, title: 'Promote to catalog', document: seed },
+      (createdName) => doc.store.replaceLocalWithSpec(name, createdName),
+    );
   };
 
   const closingDoc = closing === null ? null : state.docs[closing] ?? null;
@@ -311,6 +368,8 @@ export function WorkspaceShell(props: {
             onClose={() => closeTab(id)}
             onOpenProposition={(name) => openTab('proposition', name)}
             onSaver={saverFor(id)}
+            onExtractToCatalog={(path) => extractToCatalog(doc, path)}
+            onPromote={(name) => promoteDefinition(doc, name)}
           />
         );
       })}
@@ -354,11 +413,13 @@ export function WorkspaceShell(props: {
         <PropositionDialog
           // Keyed so that replacing the seed remounts rather than reuses: the dialog seeds its
           // fields from the seed once and never resyncs.
-          key={dialog.title}
+          // The name is part of the key because two openings of the *same* flow — Promote, on one
+          // definition and then another — differ only in what they seed the field with.
+          key={`${dialog.title}:${dialog.name}`}
           seed={dialog}
           sources={entries}
           error={dialogError}
-          onCancel={() => { setDialog(null); setDialogError(null); }}
+          onCancel={closeDialog}
           onCreate={(values) => void createFromDialog(values)}
         />
       )}

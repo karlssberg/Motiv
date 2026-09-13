@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { PropositionListEntry } from '@motiv-rules/core';
+import type { PropositionListEntry, RuleDocument } from '@motiv-rules/core';
 import { Modal } from '../shell/Modal.js';
 
 /** What the New / Derive / Override flows start from. */
@@ -17,6 +17,13 @@ export interface DialogSeed {
    * one flow that arrives with it already answered.
    */
   startsFrom: string | null;
+  /**
+   * The document the new proposition should be created *as*, when the flow arrives with one —
+   * Extract to catalog and Promote both do, because what they create already exists as a subtree
+   * or a definition body. Present, there is nothing to start from to ask about, so the field is
+   * not shown at all: an answer to it would be thrown away (#234).
+   */
+  document?: RuleDocument | undefined;
   /** What this flow is called — the heading and the dialog's accessible name. */
   title: string;
 }
@@ -38,12 +45,15 @@ function isReferenceable(entry: PropositionListEntry): boolean {
   return entry.quarantine.length === 0 || entry.origin !== 'Authored';
 }
 
-/** The values a create is built from. `startsFrom` is the spec the new document references. */
+/**
+ * The values a create is built from. `startsFrom` is the spec the new document references, and is
+ * null for a flow that seeded its own document — that flow never asked.
+ */
 export interface DialogValues {
   name: string;
   modelType: string;
   description: string | null;
-  startsFrom: string;
+  startsFrom: string | null;
 }
 
 /**
@@ -92,7 +102,9 @@ export function PropositionDialog(props: {
     .map((entry) => entry.name)
     .sort();
 
-  const nothingToStartFrom = sourceNames.length === 0;
+  /** A seeded document answers the question the *starts from* field asks, so the field is gone. */
+  const seeded = props.seed.document !== undefined;
+  const nothingToStartFrom = !seeded && sourceNames.length === 0;
 
   // Derived rather than corrected in an effect: changing the model type (or typing the name of the
   // very proposition picked) can invalidate the choice, and a selection that no longer appears in
@@ -100,20 +112,21 @@ export function PropositionDialog(props: {
   const picked = startsFrom !== null && sourceNames.includes(startsFrom) ? startsFrom : null;
   const selectedSource = picked ?? sourceNames[0] ?? null;
 
-  // One statement of what makes the form submittable, shared by the Enter key and the button.
-  const canCreate = trimmedName !== '' && selectedSource !== null;
+  // One statement of what makes the form submittable, shared by the Enter key and the button. A
+  // seeded flow needs only a name: it brought its document with it.
+  const canCreate = trimmedName !== '' && (seeded || selectedSource !== null);
 
   // Guards itself rather than relying on the caller, so it is safe as the Create button's handler:
   // `aria-disabled` — see below — does not stop a click reaching it.
   const submit = (): void => {
     // `canCreate` already covers both, and is restated only because the type-checker cannot narrow
     // `selectedSource` through it.
-    if (!canCreate || selectedSource === null) return;
+    if (!canCreate) return;
     props.onCreate({
       name: trimmedName,
       modelType,
       description: trimmedDescription === '' ? null : trimmedDescription,
-      startsFrom: selectedSource,
+      startsFrom: seeded ? null : selectedSource,
     });
   };
 
@@ -156,33 +169,36 @@ export function PropositionDialog(props: {
           </label>
         </div>
 
-        {/* Left changeable even when the flow seeded it. Derive is a shortcut into ordinary
+        {/* Absent altogether for a flow that brought its own document: see `seeded` above.
+            Otherwise left changeable even when the flow seeded the choice. Derive is a shortcut into ordinary
             authoring, not a separate concept, so the same form answers it — picking the wrong node
             to derive from should be a change of mind, not a cancel and start again. */}
-        <div className="dialog-field">
-          <label>
-            <span>Starts from</span>
-            <select
-              value={selectedSource ?? ''}
-              disabled={nothingToStartFrom}
-              onChange={(event) => setStartsFrom(event.target.value)}
-            >
-              {sourceNames.map((sourceName) => (
-                <option key={sourceName} value={sourceName}>{sourceName}</option>
-              ))}
-            </select>
-          </label>
-          {nothingToStartFrom
-            ? (
-              // Referenced from Create below: the select is disabled and so out of the tab order,
-              // which would leave the reason the button is dead unreachable from the button itself.
-              <small className="dialog-warning" id={NO_SOURCE_ID}>
-                Nothing to start from: an authored proposition is composed from ones that already
-                exist, and no other {modelType} proposition is registered.
-              </small>
-            )
-            : <small>The new proposition begins as a reference to this one; compose it from there.</small>}
-        </div>
+        {!seeded && (
+          <div className="dialog-field">
+            <label>
+              <span>Starts from</span>
+              <select
+                value={selectedSource ?? ''}
+                disabled={nothingToStartFrom}
+                onChange={(event) => setStartsFrom(event.target.value)}
+              >
+                {sourceNames.map((sourceName) => (
+                  <option key={sourceName} value={sourceName}>{sourceName}</option>
+                ))}
+              </select>
+            </label>
+            {nothingToStartFrom
+              ? (
+                // Referenced from Create below: the select is disabled and so out of the tab order,
+                // which would leave the reason the button is dead unreachable from the button itself.
+                <small className="dialog-warning" id={NO_SOURCE_ID}>
+                  Nothing to start from: an authored proposition is composed from ones that already
+                  exist, and no other {modelType} proposition is registered.
+                </small>
+              )
+              : <small>The new proposition begins as a reference to this one; compose it from there.</small>}
+          </div>
+        )}
 
         <div className="dialog-field">
           <label>

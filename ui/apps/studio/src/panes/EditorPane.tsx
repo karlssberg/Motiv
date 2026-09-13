@@ -40,6 +40,13 @@ export function EditorPane(props: {
    * seam the chosen direction needs.)
    */
   actions?: ReactNode | undefined;
+  /**
+   * Opens the host's *Extract to catalog* dialog for a builder row, and its *Promote to catalog*
+   * dialog for a definition. Absent, neither action is offered: the dialog belongs to the shell
+   * that owns the proposition listing, not to the pane (#234).
+   */
+  onExtractToCatalog?: ((path: string) => void) | undefined;
+  onPromote?: ((name: string) => void) | undefined;
 }) {
   const store = useRuleEditorStore();
   const catalogState = useCatalog(props.client);
@@ -94,8 +101,8 @@ export function EditorPane(props: {
             <>
               {/* Above the builder rather than beside it, so a definition is one scroll away from
                   every `local` reference that points at it, not off in a separate column (#234). */}
-              <DefinitionsPane catalog={catalog} />
-              <BuilderBody client={props.client} />
+              <DefinitionsPane catalog={catalog} onPromote={props.onPromote} />
+              <BuilderBody client={props.client} onExtractToCatalog={props.onExtractToCatalog} />
             </>
           )
           : <DslEditor store={store} catalog={catalog} sync={sync} documentName={props.documentName} />}

@@ -22,7 +22,11 @@ export const EMPTY_CATALOG: Catalog = { specs: [], collections: [] };
  * Accordion and highlight state are app-local UI state, not document state, and are held here so
  * that the tree and the strips above it read the one model rather than each keeping their own.
  */
-export function BuilderBody(props: { client: RulesApiClient }) {
+export function BuilderBody(props: {
+  client: RulesApiClient;
+  /** Opens the host's *Extract to catalog* dialog for a row; absent, the row does not offer it (#234). */
+  onExtractToCatalog?: ((path: string) => void) | undefined;
+}) {
   const catalogState = useCatalog(props.client);
   const catalog = catalogState.status === 'ready' ? catalogState.data : EMPTY_CATALOG;
 
@@ -85,6 +89,7 @@ export function BuilderBody(props: { client: RulesApiClient }) {
             setOpenPopover,
             catalog,
             locals,
+            onExtractToCatalog: props.onExtractToCatalog,
             highlight,
             setHovered: (path) => setHighlight((prev) => setHovered(prev, path)),
             setSelected: (path) => setHighlight((prev) => setSelected(prev, path)),

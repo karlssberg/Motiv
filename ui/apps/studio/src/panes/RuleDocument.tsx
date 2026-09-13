@@ -43,6 +43,12 @@ export function RuleDocument(props: {
   onSaver?: SaverSink | undefined;
   /** Opens (or activates) a proposition this rule references. */
   onOpenProposition: (name: string) => void;
+  /**
+   * Opens the shell's *Extract to catalog* dialog for a builder row, and its *Promote to catalog*
+   * dialog for a definition — both act on the proposition *set*, so the shell owns them (#234).
+   */
+  onExtractToCatalog?: ((path: string) => void) | undefined;
+  onPromote?: ((name: string) => void) | undefined;
 }) {
   const { client, tab, workspace } = props;
   const { loaded, loadedEntry, conflict, failure, saving, refresh, load, save } =
@@ -97,6 +103,8 @@ export function RuleDocument(props: {
         <EditorPane
           client={client}
           documentName={tab.name}
+          onExtractToCatalog={props.onExtractToCatalog}
+          onPromote={props.onPromote}
           title={
             <DocumentTitle
               name={tab.name}
