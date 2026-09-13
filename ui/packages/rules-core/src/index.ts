@@ -22,7 +22,9 @@ export {
 } from './document.js';
 
 // The document-local proposition name grammar.
-export { LOCAL_NAME_PATTERN, isValidLocalName, normalizeLocalName, finishLocalName } from './localNames.js';
+export {
+  LOCAL_NAME_PATTERN, RESERVED_LOCAL_NAMES, isValidLocalName, normalizeLocalName, finishLocalName,
+} from './localNames.js';
 
 // The wire contracts shared with the ASP.NET Core endpoints.
 export type {

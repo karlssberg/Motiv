@@ -1,6 +1,6 @@
 import type { ArgValue, Definition, ParameterDeclaration, RuleDocument, RuleNode } from '../document.js';
 import type { Catalog, CatalogEntry, CatalogParameter } from '../contracts.js';
-import { isValidLocalName } from '../localNames.js';
+import { RESERVED_LOCAL_NAMES, isValidLocalName } from '../localNames.js';
 import { definitionBodyPath } from '../paths.js';
 import { tokenize } from './lexer.js';
 import type { DslError, NodeSpan, ParseResult, Token, TokenKind } from './types.js';
@@ -15,6 +15,15 @@ export interface ParseOptions {
    * function of the text for every document the printer can produce.
    */
   catalog?: Catalog;
+  /**
+   * Names to treat as declared locals in addition to whatever the text's own `let` preamble
+   * declares. A full document's text always carries its own preamble, so this is only needed
+   * when parsing a *fragment* — most notably `printInline`'s output, which renders a single node
+   * with no preamble at all. Pass the owning document's `definitions` keys to make a printed
+   * local reference (`{ local: 'a' }` → `'a'`) read back as itself rather than being demoted to a
+   * `{ spec: 'a' }` reference.
+   */
+  locals?: ReadonlySet<string>;
 }
 
 /**
@@ -35,17 +44,21 @@ class ParserState {
   readonly tokens: Token[];
   readonly spans: NodeSpan[] = [];
   readonly errors: DslError[] = [];
-  /** Every `let`-declared name, collected by {@link collectLocalNames} before parsing begins —
-   * so a bare word anywhere in the rule or a later `let` body can resolve against a `let`
-   * declared after it, not just before. */
-  readonly locals = new Set<string>();
+  /**
+   * Every declared local name: seeded from `ParseOptions.locals` (for a fragment parsed without
+   * its owning preamble, e.g. `printInline`'s output), then added to by {@link collectLocalNames}
+   * before parsing begins — so a bare word anywhere in the rule or a later `let` body can resolve
+   * against a `let` declared after it, not just before.
+   */
+  readonly locals: Set<string>;
   /** Names already consumed by a `let` declaration during the actual parse — distinct from
    * {@link locals}, which is the forward-looking pre-scan and never shrinks or reports duplicates. */
   readonly declaredDefinitions = new Set<string>();
   index = 0;
 
-  constructor(readonly text: string, readonly catalog?: Catalog) {
+  constructor(readonly text: string, readonly catalog?: Catalog, locals?: ReadonlySet<string>) {
     this.tokens = tokenize(text);
+    this.locals = new Set(locals);
   }
 
   peek(offset = 0): Token | undefined { return this.tokens[this.index + offset]; }
@@ -593,6 +606,18 @@ function parseLet(state: ParserState): { name: string; definition: Definition } 
     state.error('DottedLocalName', 'a local name cannot contain a dot', nameToken);
     return undefined;
   }
+  // Checked ahead of the generic InvalidLocalName case so a reserved word gets a message that
+  // names the actual problem: `all`/`param`/`integer` etc. are pattern-valid but can never be
+  // read back by parsePrimary's `spec`-kind local branch, since a reserved word never lexes
+  // as `spec`.
+  if (RESERVED_LOCAL_NAMES.has(nameToken.value)) {
+    state.error(
+      'ReservedLocalName',
+      `\`${nameToken.value}\` is a reserved word and cannot name a local`,
+      nameToken,
+    );
+    return undefined;
+  }
   if (!isValidLocalName(nameToken.value)) {
     state.error('InvalidLocalName', `\`${nameToken.value}\` is not a valid local name`, nameToken);
     return undefined;
@@ -666,7 +691,7 @@ function parsePreamble(
  * any errors found. Never throws; a fatal error leaves `document` undefined.
  */
 export function parse(text: string, options?: ParseOptions): ParseResult {
-  const state = new ParserState(text, options?.catalog);
+  const state = new ParserState(text, options?.catalog, options?.locals);
   collectLocalNames(state);
   const { parameters, definitions } = parsePreamble(state);
   const rule = parseExpression(state, ROOT);

@@ -172,10 +172,6 @@ const DOCUMENTS: Array<{ label: string; document: RuleDocument }> = [
   },
 ];
 
-/** Every document below whose rule can round-trip through `printInline` alone — one that has no
- * `definitions`, since a local reference only resolves against its document's `let` preamble. */
-const WITHOUT_DEFINITIONS = DOCUMENTS.filter(({ document }) => document.definitions === undefined);
-
 /** Parses DSL text and reprints it, for asserting a composed rule's text survives unchanged. */
 function roundTrip(text: string): string {
   const result = parse(text);
@@ -203,8 +199,12 @@ describe('DSL round-trip', () => {
     expect(twice).toBe(once);
   });
 
-  it.each(WITHOUT_DEFINITIONS)('parse(printInline(rule)) preserves $label', ({ document }) => {
-    const result = parse(printInline(document.rule));
+  it.each(DOCUMENTS)('parse(printInline(rule)) preserves $label', ({ document }) => {
+    // A local reference only resolves against its document's declared names, which printInline
+    // does not carry on its own — so the caller passes them via `locals`, exactly as a consumer
+    // holding both the rule and its document's `definitions` would.
+    const locals = document.definitions ? new Set(Object.keys(document.definitions)) : undefined;
+    const result = parse(printInline(document.rule), locals ? { locals } : undefined);
     expect(result.errors).toEqual([]);
     expect(result.document?.rule).toEqual(document.rule);
   });
@@ -214,5 +214,20 @@ describe('DSL round-trip', () => {
       const result = parse(print(document));
       expect(result.spans.some((span) => span.path === '$.rule')).toBe(true);
     }
+  });
+
+  it('fails cleanly, rather than round-tripping, for a definition key that is a reserved word', () => {
+    // `RuleDocument.definitions` is a plain record and does not itself validate its keys, so a
+    // document naming a definition `all` is constructible — but the DSL has no way to declare or
+    // reference it (a reserved word never lexes as `spec`), so parse(print(doc)) must fail rather
+    // than silently produce a different document.
+    const document: RuleDocument = {
+      definitions: { all: { rule: { spec: 'x' } } },
+      rule: { local: 'all' },
+    };
+    const text = print(document);
+    const result = parse(text);
+    expect(result.document).toBeUndefined();
+    expect(result.errors.length).toBeGreaterThan(0);
   });
 });

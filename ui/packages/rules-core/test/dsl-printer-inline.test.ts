@@ -59,3 +59,21 @@ describe('printInline', () => {
     expect(parse(printInline(node)).document?.rule).toEqual(node);
   });
 });
+
+describe('printInline — local references need the locals option to round-trip', () => {
+  it('reparses a local reference as itself when its name is passed as a known local', () => {
+    const node: RuleNode = { local: 'a' };
+    const text = printInline(node);
+    expect(text).toBe('a');
+    const result = parse(text, { locals: new Set(['a']) });
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({ local: 'a' });
+  });
+
+  it('demotes a local reference to a spec when its name is not known to the parser', () => {
+    const node: RuleNode = { local: 'a' };
+    const result = parse(printInline(node));
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({ spec: 'a' });
+  });
+});

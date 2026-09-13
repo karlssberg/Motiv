@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { LOCAL_NAME_PATTERN, isValidLocalName, normalizeLocalName, finishLocalName } from '../src/localNames.js';
+import {
+  LOCAL_NAME_PATTERN, RESERVED_LOCAL_NAMES, isValidLocalName, normalizeLocalName, finishLocalName,
+} from '../src/localNames.js';
 
 describe('LOCAL_NAME_PATTERN', () => {
   it('matches the isValidLocalName cases', () => {
@@ -15,8 +17,23 @@ describe('isValidLocalName', () => {
     ['-a', false],
     ['', false],
     ['a b', false],
+    ['all', false],
+    ['param', false],
+    ['let', false],
+    ['integer', false],
+    ['allx', true],
   ] as const)('isValidLocalName(%j) is %j', (name, expected) => {
     expect(isValidLocalName(name)).toBe(expected);
+  });
+});
+
+describe('RESERVED_LOCAL_NAMES', () => {
+  it('contains every DSL keyword, type and quantifier', () => {
+    expect(RESERVED_LOCAL_NAMES.has('all')).toBe(true);
+    expect(RESERVED_LOCAL_NAMES.has('param')).toBe(true);
+    expect(RESERVED_LOCAL_NAMES.has('let')).toBe(true);
+    expect(RESERVED_LOCAL_NAMES.has('integer')).toBe(true);
+    expect(RESERVED_LOCAL_NAMES.has('allx')).toBe(false);
   });
 });
 

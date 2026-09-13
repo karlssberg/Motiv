@@ -294,4 +294,12 @@ describe('parse — let errors', () => {
       expect.objectContaining({ code: 'UnexpectedArguments' }),
     );
   });
+
+  it('rejects a reserved word as a local name', () => {
+    const result = parse('let all = x\n\nall');
+    expect(result.document).toBeUndefined();
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ code: 'ReservedLocalName' }),
+    );
+  });
 });

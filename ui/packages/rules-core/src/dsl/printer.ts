@@ -262,6 +262,13 @@ export function print(document: RuleDocument, options?: PrintOptions): string {
  * `parse(printInline(node)).document.rule` deep-equals `node`, which is what makes a rendered
  * row safe to hand back to the parser after editing — this holds regardless of `options`, since
  * `options` affects argument order only, never the named form the parser reads back.
+ *
+ * The one exception is a {@link LocalNode}: `printInline` renders `{ local: 'a' }` as the bare
+ * word `a`, with no `let` preamble to declare it, since it renders a single node in isolation.
+ * `parse` cannot tell that bare word apart from an ordinary spec reference unless the caller says
+ * so — pass the owning document's `definitions` keys as `parse`'s `locals` option
+ * (`parse(printInline(node), { locals: new Set(Object.keys(document.definitions ?? {})) })`) to
+ * get `{ local: 'a' }` back; without it, `a` reparses as `{ spec: 'a' }`.
  */
 export function printInline(node: RuleNode, options?: PrintOptions): string {
   return printNode(node, '', 'inline', options);

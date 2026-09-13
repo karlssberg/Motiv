@@ -1,9 +1,21 @@
+import { DSL_KEYWORDS, DSL_QUANTIFIERS, DSL_TYPES } from './dsl/lexer.js';
+
 /** A valid definition name: a leading letter or underscore, then letters, digits, `_` or `-`. */
 export const LOCAL_NAME_PATTERN = /^[A-Za-z_][A-Za-z0-9_-]*$/;
 
-/** Whether `name` is a valid definition name in full. */
+/**
+ * Every DSL reserved word — keywords, types and quantifiers — none of which may name a local. A
+ * declared local is read back by `parsePrimary`'s bare-word branch, which only ever sees a `spec`
+ * kind token; a reserved word always lexes as `keyword`/`type`/`quantifier` instead, so a local
+ * named `all` or `param` could declare and print but could never resolve on reparse.
+ */
+export const RESERVED_LOCAL_NAMES: ReadonlySet<string> = new Set<string>([
+  ...DSL_KEYWORDS, ...DSL_TYPES, ...DSL_QUANTIFIERS,
+]);
+
+/** Whether `name` is a valid definition name in full — matches the pattern and is not reserved. */
 export function isValidLocalName(name: string): boolean {
-  return LOCAL_NAME_PATTERN.test(name);
+  return LOCAL_NAME_PATTERN.test(name) && !RESERVED_LOCAL_NAMES.has(name);
 }
 
 /**

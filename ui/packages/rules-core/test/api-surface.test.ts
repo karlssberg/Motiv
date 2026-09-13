@@ -23,6 +23,7 @@ const APPROVED_API = [
   'N_QUANTIFIER_KINDS',
   'OPERATOR_LABELS',
   'PARAM_REST_CHARS',
+  'RESERVED_LOCAL_NAMES',
   'RuleEditorStore',
   'RulesApiClient',
   'RulesApiError',
