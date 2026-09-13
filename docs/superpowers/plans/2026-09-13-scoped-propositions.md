@@ -86,7 +86,7 @@ Both cores address a definition by path, so errors, spans and decoration-merging
 
 ### Task 0: Amend the design doc; extend the JSON schema
 
-- [ ] 
+- [x] 
   `docs/superpowers/specs/2026-09-13-scoped-propositions-design.md`: rewrite *Compatibility* to
   match deviation 1; rewrite the *Binding semantics* paragraph on memoisation and the *Model type*
   paragraph to match deviation 2 ("bound at each reference against that reference's model");
@@ -107,7 +107,7 @@ Both cores address a definition by path, so errors, spans and decoration-merging
 
 ### Task 1: Core model: `LocalNode`, `definitions`, `nodeKind`, name grammar
 
-- [ ] 
+- [x] 
   `ui/packages/rules-core/src/document.ts`: `export interface LocalNode extends Decoration { local: string }`;
   add to `RuleNode`; `NodeKind` gains `'local'`; `KIND_ORDER` gains `'local'` after `'expression'`;
   `export function isLocalNode(node: RuleNode): node is LocalNode`;
@@ -137,7 +137,7 @@ Both cores address a definition by path, so errors, spans and decoration-merging
 
 ### Task 2: Core paths: definitions are addressable
 
-- [ ] 
+- [x] 
   `ui/packages/rules-core/src/paths.ts`: `parseSteps` accepts a second root, `$.definitions.<name>`,
   where `<name>` matches `LOCAL_NAME_PATTERN`, followed by `.rule` and then ordinary steps; the
   step tokenizer keeps its `^([A-Za-z]+)(?:\[(\d+)\])?$` rule for ordinary steps and admits the
@@ -161,7 +161,7 @@ Both cores address a definition by path, so errors, spans and decoration-merging
 
 ### Task 3: Core editor mutations: define, inline, rename, promote, decorate
 
-- [ ] 
+- [x] 
   `ui/packages/rules-core/src/editor.ts`, each one `#commit`, each one undo step:
   `defineLocal(path: string, name: string): void` — moves the subtree at `path` into
   `definitions[name]` (carrying the subtree's own `name`/`whenTrue`/`whenFalse` onto the definition
@@ -192,7 +192,7 @@ Both cores address a definition by path, so errors, spans and decoration-merging
 
 ### Task 4: DSL: `let` in lexer, parser and printer; bare-word resolution; round-trip
 
-- [ ] 
+- [x] 
   `src/dsl/lexer.ts`: `DSL_KEYWORDS = ['param', 'let', 'in', 'as']`. `src/dsl/parser.ts`:
   `ParserState` gains `readonly locals = new Set<string>()`; a new `collectLocalNames(state)` runs
   before parsing and scans the token stream for `keyword let` followed by a `spec`-kind token at
@@ -227,7 +227,7 @@ Both cores address a definition by path, so errors, spans and decoration-merging
 
 ### Task 5: DSL tooling: token runs, completion, diagnostics with severity, spans
 
-- [ ] 
+- [x] 
   `src/dsl/tokenRuns.ts`: `TokenSpan.kind` gains `'local'`; `tokenSpans(text, locals?: ReadonlySet<string>)`
   marks a `spec` token whose value is in `locals` as `'local'`; new
   `export function declaredLocals(text: string): Set<string>` in `src/dsl/locals.ts` (regex scrape
@@ -252,7 +252,7 @@ Both cores address a definition by path, so errors, spans and decoration-merging
 
 ### Task 6: C# parser: `definitions`, `Local` operator, resolve pass, references, depth, comparer, parameters
 
-- [ ] `src/Motiv.Serialization/RuleOperator.cs`: add `Local`. `RuleNode.cs`: add
+- [x] `src/Motiv.Serialization/RuleOperator.cs`: add `Local`. `RuleNode.cs`: add
   `public string? LocalName { get; set; }` and `public RuleNode? Definition { get; set; }`
   (set by the resolve pass; the definition node carries `Name` = key and the definition's
   `WhenTrueText`/`WhenFalseText`/elements). `RuleDocument.cs`: add
@@ -295,7 +295,7 @@ Both cores address a definition by path, so errors, spans and decoration-merging
 
 ### Task 7: C# binders: bind a local through its definition
 
-- [ ] In each of `RuleBinder.cs`,
+- [x] In each of `RuleBinder.cs`,
   `AsyncRuleBinder.cs`, `MetadataRuleBinder.cs`, `AsyncMetadataRuleBinder.cs`, the operator switch
   gains one arm: `RuleOperator.Local => BindNode<TModel>(node.Definition!, source, errors)` (the
   metadata binders' inline form; `Definition` is non-null after a clean parse, and `Bind` is never
@@ -315,7 +315,7 @@ Both cores address a definition by path, so errors, spans and decoration-merging
 
 ### Task 8: Example writer and docs for the document format
 
-- [ ] 
+- [x] 
   `src/examples/Motiv.RuleAuthoring.Blazor/Authoring/RuleDocumentWriter.cs`: emit `definitions`
   and `local` if its model can hold them; if its authoring model cannot produce them, add a test
   proving a document with definitions round-trips through *reading* unchanged and leave the writer
@@ -328,7 +328,7 @@ Both cores address a definition by path, so errors, spans and decoration-merging
 
 ### Task 9: Studio builder: local rows, retired nested decoration, read-only migration affordance
 
-- [ ] 
+- [x] 
   `ui/apps/studio/src/builder/RuleNodeEditor.tsx`: `const isRoot = path === '$.rule'` (export
   `ROOT` from `BuilderPane.tsx`); the detail panel renders `<DecorationEditor>` only when
   `isRoot`; for a non-root node that carries `name`/`whenTrue`/`whenFalse`, render
@@ -355,7 +355,7 @@ Both cores address a definition by path, so errors, spans and decoration-merging
 
 ### Task 10: Studio: the normalising name input and the Extract-to-definition prompt
 
-- [ ] 
+- [x] 
   New `ui/apps/studio/src/builder/LocalNameInput.tsx`:
   `props: { value: string; onChange(next: string): void; onCommit(): void; ariaLabel: string; taken: ReadonlySet<string> }`;
   an `<input className="control">` whose `onChange` applies `normalizeLocalName` and preserves the
@@ -373,7 +373,7 @@ Both cores address a definition by path, so errors, spans and decoration-merging
 
 ### Task 11: Studio: the definitions panel
 
-- [ ] New `ui/apps/studio/src/panes/DefinitionsPane.tsx`,
+- [x] New `ui/apps/studio/src/panes/DefinitionsPane.tsx`,
   a `.pane` rendered inside `EditorPane` **above the builder** when the document has definitions
   (and always with an empty-state line when it has none: "No definitions. Extract a node to
   create one."). One row per definition: a `LocalNameInput` (rename via `store.renameLocal` on
@@ -389,7 +389,7 @@ Both cores address a definition by path, so errors, spans and decoration-merging
 
 ### Task 12: Studio: Extract to catalog and Promote
 
-- [ ] `ui/apps/studio/src/shell/WorkspaceShell.tsx`:
+- [x] `ui/apps/studio/src/shell/WorkspaceShell.tsx`:
   `createFromDialog` accepts an optional `document: RuleDocument` in `DialogSeed` (new field
   `document?: RuleDocument`) and, when present, sends it instead of `{ rule: { spec: startsFrom } }`;
   the `PropositionDialog` hides the *starts from* select when a seed document is present. A new
@@ -406,7 +406,7 @@ Both cores address a definition by path, so errors, spans and decoration-merging
 
 ### Task 13: Studio DSL view: quick-fix for `PreferLet`, local highlighting
 
-- [ ] 
+- [x] 
   `ui/apps/studio/src/dsl/lint.ts`: a diagnostic with code `PreferLet` gets
   `actions: [{ name: 'Extract to definition', apply(view, from, to) }]` which reads the node path
   from the diagnostic, calls `store.defineLocal(path, finishLocalName(name))`, and lets `dslSync`
@@ -423,7 +423,7 @@ Both cores address a definition by path, so errors, spans and decoration-merging
 
 ### Task 14: Accessibility gate
 
-- [ ] `ui/apps/studio/e2e-a11y/stubs.ts`: `RULE_DOCUMENT` for the
+- [x] `ui/apps/studio/e2e-a11y/stubs.ts`: `RULE_DOCUMENT` for the
   proposition fixture gains a definition and a local reference (the a11y builder scan then holds a
   local row). `e2e-a11y/axe.spec.ts`: `HARD_SURFACES` gains "the row menu on a nested node,
   offering Extract", "the extract-to-definition prompt", "the definitions panel, with a definition
@@ -436,13 +436,15 @@ Both cores address a definition by path, so errors, spans and decoration-merging
 
 ### Task 15: Wrap-up
 
-- [ ] Design doc status → `Implemented`, with the deviations section of this plan
+- [x] Design doc status → `Implemented`, with the deviations section of this plan
   summarised under a *What changed in the build* heading. `README.md`: one bullet under the rules
   feature pointing at `let`. Run: `pnpm -C ui/packages/rules-core test typecheck build`,
   `pnpm --filter @motiv-rules/studio test typecheck a11y`, `pnpm -C ui verify:publishable`, the
   full .NET solution `dotnet test` (all target frameworks; report any framework that could not
   run), and `pnpm e2e` in Studio against the real host. Ledger #169: move the #234 row to the
   shipped table with the PR number. Commit: `Scoped propositions — design doc implemented (#234)`.
+
+  **Note:** the ledger row (#169) moves on merge, not in this commit.
 
 ## Self-review against the spec
 

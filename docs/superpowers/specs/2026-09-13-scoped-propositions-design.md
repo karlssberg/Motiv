@@ -1,7 +1,8 @@
 # Scoped propositions: document-local definitions
 
 **Date:** 2026-09-13
-**Status:** Proposed
+**Status:** Implemented
+**Plan:** docs/superpowers/plans/2026-09-13-scoped-propositions.md
 **Ledger:** child of #169
 **Primary source:** the Studio observation below, and the binder as it stands at `345d1b02`.
 
@@ -317,3 +318,45 @@ rule in `CLAUDE.md`).
    confirming); a11y sweep and conformance report regenerated.
 5. **Docs**: `docs/serialization/` schema page for `definitions` and `local`; Studio docs; this
    design doc's status flipped to Implemented in the landing commit.
+
+## What changed in the build
+
+- **No `$schema` version gate.** The parser never inspects `$schema`; `schemas/rule.v1.json` was
+  extended in place, and an old reader rejects a document carrying `definitions` on its own —
+  via the unknown-property rule — rather than through any version check.
+- **A local is bound at each reference against that reference's model, not memoised.** Cycle and
+  unknown-local detection instead live in a dedicated parser resolve pass (`LocalResolver`), which
+  runs before the composition-depth pre-filter; both depth walks memoise per definition within a
+  single call, so the earlier concern about redundant work is addressed without threading a scope
+  object through four binders.
+- **`DocumentReferences` walks definition bodies.** A definition's catalog references are real
+  dependency edges, so they are walked like the root's; a `local` name itself is still never
+  emitted as a reference.
+- **Locals do not open as tabs.** The definitions panel inside the document is the surface for
+  reading and editing a local, sharing the parent tab's draft and undo rather than forking a
+  document of its own. `PayloadPopover`'s Name field is retired below the root alongside
+  `DecorationEditor`'s, since both were nested-name editors the design doc had not accounted for.
+- **Reserved DSL words cannot name a local.** `param`, `let`, `in`, `as`, `integer`, `number`,
+  `string`, `boolean`, `all`, `any`, `exactly`, `atLeast` and `atMost` are rejected at every layer
+  that names a local — `isValidLocalName`, `parseLet` (via `ReservedLocalName`), and the C#
+  `LocalNames.IsValid`. The JSON-schema name pattern is unchanged, since validation, not the
+  pattern, is the authority on reserved words.
+- **`parse` takes an optional `locals` option** so an inline reparse of a single row (as Studio
+  does on every edit) can resolve a bare word to a local. `printInline`'s round-trip only holds
+  with that option supplied, so every Studio reparse site now passes the document's current
+  definition names.
+- **"Declared" has exactly one definition.** `collectLocalNames(tokens)` in `dsl/locals.ts` is
+  used by both the parser's preamble pass and by `declaredLocals(text)`; nothing scrapes source
+  text with a regular expression to guess at declarations.
+- **A definition is always a named proposition**, so its `Reason` reads `<name> == true` /
+  `<name> == false` and its `whenTrue` / `whenFalse` strings surface through `Values` — this is
+  the `== true` rule applying as documented, not a special case for `local`.
+- **`let` is documented in `docs/live-rules/RuleDocuments.md`**, under *Authoring in the DSL*,
+  alongside `param`. A standalone DSL reference page remains a follow-up, not part of this slice.
+- **Error ordering shifted slightly for pre-existing documents.** `DocumentTooLarge`, raised by the
+  composition-depth pre-filter, now reports after later envelope-property errors, because the
+  pre-filter moved out of the `rule` case to run after the new resolve pass. No consumer depends
+  on the relative order of unrelated envelope errors.
+- **A local name may start with `_`** — the shared name pattern allows it — but such a name cannot
+  be promoted to the catalog, whose grammar requires a leading letter; Promote surfaces the
+  server's refusal rather than the client silently blocking the action.
