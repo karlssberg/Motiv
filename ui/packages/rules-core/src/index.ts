@@ -101,6 +101,7 @@ export { mergeDecorations } from './dsl/decorations.js';
 export { rangeOfPath, type SourceRange } from './dsl/spans.js';
 
 // Editor-neutral authoring services: token runs, completion, diagnostics, and DSL/tree sync.
+export { declaredLocals } from './dsl/locals.js';
 export { tokenSpans, type TokenSpan } from './dsl/tokenRuns.js';
 export {
   completeDsl, type CompletionItem, type CompletionItemKind, type DslCompletion,

@@ -24,4 +24,18 @@ describe('tokenSpans', () => {
   it('returns nothing for empty text', () => {
     expect(tokenSpans('')).toEqual([]);
   });
+
+  it('marks a declared local as a local run rather than a spec run', () => {
+    const spans = tokenSpans('let a = is-active\na');
+    const runs = spans.filter((span) => span.kind !== 'gap');
+    // 'a' the declaration name, 'is-active' the spec, 'a' the reference.
+    expect(runs.map((span) => span.kind)).toEqual([
+      'keyword', 'local', 'equals', 'spec', 'local',
+    ]);
+  });
+
+  it('accepts an explicit locals set instead of scraping the text', () => {
+    const spans = tokenSpans('a', new Set(['a']));
+    expect(spans.map((span) => span.kind)).toEqual(['local']);
+  });
 });

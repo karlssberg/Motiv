@@ -93,4 +93,19 @@ describe('completeDsl', () => {
     const result = completeDsl(declared, declared.length, catalog);
     expect(result!.options).toEqual([{ label: '@minOrders', kind: 'parameter', detail: 'parameter' }]);
   });
+
+  it('offers a declared local, boosted above catalog specs', () => {
+    const text = 'let is-eligible = is-active\nis';
+    const result = completeDsl(text, text.length, catalog);
+    expect(result!.options).toContainEqual({ label: 'is-eligible', kind: 'local', detail: 'local', boost: 1 });
+    const local = result!.options.find((option) => option.label === 'is-eligible')!;
+    const spec = result!.options.find((option) => option.label === 'is-active')!;
+    expect(local.boost!).toBeGreaterThanOrEqual(spec.boost!);
+  });
+
+  it('does not offer a local before its `let` line has been typed', () => {
+    const text = 'is';
+    const result = completeDsl(text, text.length, catalog);
+    expect(result!.options.map((option) => option.label)).not.toContain('is-eligible');
+  });
 });

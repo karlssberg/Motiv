@@ -44,6 +44,8 @@ class ParserState {
   readonly tokens: Token[];
   readonly spans: NodeSpan[] = [];
   readonly errors: DslError[] = [];
+  /** Non-fatal advice accumulated as the constructs that prompt it are seen — never suppresses parsing. */
+  readonly warnings: DslError[] = [];
   /**
    * Every declared local name: seeded from `ParseOptions.locals` (for a fragment parsed without
    * its owning preamble, e.g. `printInline`'s output), then added to by {@link collectLocalNames}
@@ -74,6 +76,11 @@ class ParserState {
     this.errors.push({ from, to, code, message });
   }
 
+  /** Records a warning spanning `[from, to)`, optionally tagged with the node path it is about. */
+  warn(code: string, message: string, from: number, to: number, path?: string): void {
+    this.warnings.push({ from, to, code, message, ...(path !== undefined ? { path } : {}) });
+  }
+
   span(path: string, from: number, to: number): void {
     this.spans.push({ path, from, to });
   }
@@ -98,8 +105,12 @@ const WORD_KINDS: ReadonlySet<TokenKind> = new Set<TokenKind>(['spec', 'keyword'
  * tell a bare word declared as a local apart from an ordinary spec reference regardless of which
  * one it reaches first. Tracks paren/brace depth so a group or quantifier body inside a `let`'s
  * expression is never mistaken for the following `param`/`let` statement.
+ *
+ * Returns each declaration's name token, first occurrence only, so callers with a reason to
+ * revisit a declaration site (e.g. a catalog-shadow check) don't need their own scan.
  */
-function collectLocalNames(state: ParserState): void {
+function collectLocalNames(state: ParserState): Token[] {
+  const declarations: Token[] = [];
   let i = 0;
   while (i < state.tokens.length) {
     const token = state.tokens[i]!;
@@ -107,6 +118,9 @@ function collectLocalNames(state: ParserState): void {
 
     if (token.value === 'let') {
       const nameToken = state.tokens[i + 1];
+      if (nameToken && WORD_KINDS.has(nameToken.kind) && !state.locals.has(nameToken.value)) {
+        declarations.push(nameToken);
+      }
       if (nameToken && WORD_KINDS.has(nameToken.kind)) state.locals.add(nameToken.value);
     }
 
@@ -125,6 +139,7 @@ function collectLocalNames(state: ParserState): void {
       i++;
     }
   }
+  return declarations;
 }
 
 /**
@@ -459,10 +474,18 @@ function parsePostfix(state: ParserState, path: string): RuleNode | undefined {
   const start = state.peek()?.from ?? state.lastEnd;
   const node = parsePrimary(state, path);
   if (!node) return undefined;
+  const asToken = state.peek();
   const name = parseAsClause(state);
   // A group produces no wrapper node, so `(a as "x") as "y"` has only one node to name:
   // the outer name deliberately supersedes the inner one.
   const decorated = name === undefined ? node : { ...node, name };
+  // A named node at the document root already names the rule itself — that's what `Create("name")`
+  // is for. Anywhere else, naming a node inline is exactly what a `let` declaration is for, so
+  // nudge towards it. Carries `path` so a quick-fix can turn this clause into a `let` for the
+  // node it names, the way `defineLocal(path, …)` would.
+  if (name !== undefined && path !== ROOT) {
+    state.warn('PreferLet', 'prefer a `let` declaration', asToken!.from, state.lastEnd, path);
+  }
   state.span(path, start, state.lastEnd);
   return decorated;
 }
@@ -692,7 +715,15 @@ function parsePreamble(
  */
 export function parse(text: string, options?: ParseOptions): ParseResult {
   const state = new ParserState(text, options?.catalog, options?.locals);
-  collectLocalNames(state);
+  const declarations = collectLocalNames(state);
+  for (const nameToken of declarations) {
+    if (catalogEntry(state, nameToken.value)) {
+      state.warn(
+        'ShadowsCatalog', `shadows catalog proposition '${nameToken.value}'`,
+        nameToken.from, nameToken.to,
+      );
+    }
+  }
   const { parameters, definitions } = parsePreamble(state);
   const rule = parseExpression(state, ROOT);
 
@@ -705,12 +736,12 @@ export function parse(text: string, options?: ParseOptions): ParseResult {
   // descendant's path strictly extends its ancestor's, so path length orders them correctly.
   const spans = [...state.spans].sort((a, b) => a.from - b.from || a.path.length - b.path.length);
   if (!rule || state.errors.length > 0) {
-    return { errors: state.errors, spans };
+    return { errors: state.errors, spans, warnings: state.warnings };
   }
   const document: RuleDocument = {
     ...(parameters ? { parameters } : {}),
     ...(definitions ? { definitions } : {}),
     rule,
   };
-  return { document, errors: state.errors, spans };
+  return { document, errors: state.errors, spans, warnings: state.warnings };
 }

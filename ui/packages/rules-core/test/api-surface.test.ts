@@ -37,6 +37,7 @@ const APPROVED_API = [
   'completeDsl',
   'countLeaves',
   'createValidationController',
+  'declaredLocals',
   'definitionBodyPath',
   'definitionNameOf',
   'definitionPath',

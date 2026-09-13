@@ -431,3 +431,59 @@ describe('parse — let declarations', () => {
     );
   });
 });
+
+describe('parse — warnings', () => {
+  it('always carries a warnings array, empty for a plain document', () => {
+    const result = parse('is-active');
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('warns without suppressing the document — warnings are not errors', () => {
+    const text = 'let plain = x\n\nplain';
+    const result = parse(text, { catalog: CATALOG });
+    expect(result.errors).toEqual([]);
+    expect(result.document).toBeDefined();
+    expect(result.warnings.length).toBeGreaterThan(0);
+  });
+
+  it('reports ShadowsCatalog at the local declaration name when it names a catalog spec', () => {
+    const text = 'let plain = x\n\nplain';
+    const result = parse(text, { catalog: CATALOG });
+    const nameFrom = text.indexOf('plain');
+    expect(result.warnings).toContainEqual({
+      code: 'ShadowsCatalog',
+      message: "shadows catalog proposition 'plain'",
+      from: nameFrom,
+      to: nameFrom + 'plain'.length,
+    });
+  });
+
+  it('does not warn when a local name is not in the catalog', () => {
+    const result = parse('let a = x\n\na', { catalog: CATALOG });
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('reports PreferLet for an `as` clause nested under a binary operand, carrying the named node\'s path', () => {
+    const text = 'x && y as "z"';
+    const result = parse(text);
+    const asFrom = text.indexOf('as');
+    expect(result.warnings).toContainEqual({
+      code: 'PreferLet',
+      message: 'prefer a `let` declaration',
+      from: asFrom,
+      to: text.length,
+      path: '$.rule.andAlso[1]',
+    });
+  });
+
+  it('reports no hint for an `as` clause at the document root', () => {
+    const result = parse('x as "y"');
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('reports the hint for an `as` clause nested inside a definition body, whose root is not the document root', () => {
+    const text = 'let a = x as "y"\n\na';
+    const result = parse(text);
+    expect(result.warnings).toContainEqual(expect.objectContaining({ code: 'PreferLet' }));
+  });
+});

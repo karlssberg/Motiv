@@ -34,6 +34,12 @@ export interface DslError {
   /** Stable machine-readable code, e.g. `UnexpectedToken`. */
   code: string;
   message: string;
+  /**
+   * The node path this diagnostic is about, when it has one — e.g. the `PreferLet` hint's path is
+   * the node the `as` clause named, so a quick-fix can call `defineLocal(path, …)` without
+   * re-deriving it. Absent when the diagnostic has no path of its own, such as a plain syntax error.
+   */
+  path?: string;
 }
 
 /** Maps a backend node path (e.g. `$.rule.andAlso[0]`) to the text range that produced it. */
@@ -49,4 +55,10 @@ export interface ParseResult {
   document?: RuleDocument;
   errors: DslError[];
   spans: NodeSpan[];
+  /**
+   * Non-fatal advice about the document — always present, possibly empty. A warning never
+   * suppresses `document`; it flags something worth a second look (a local shadowing a catalog
+   * spec, an `as` clause that could be a `let`), not something wrong.
+   */
+  warnings: DslError[];
 }
