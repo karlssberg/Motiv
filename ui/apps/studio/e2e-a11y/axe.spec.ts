@@ -50,7 +50,8 @@ async function scan(page: Page): Promise<void> {
 /** Load a route — the API is already answered from fixtures — and wait for the chrome to settle. */
 async function visit(page: Page, route: string): Promise<void> {
   await page.goto(route);
-  await expect(page.getByRole('banner')).toBeVisible();
+  // The bar is inside <main>, so it is no `banner` landmark: waited for as the element it is.
+  await expect(page.locator('header.appbar')).toBeVisible();
 }
 
 /**
@@ -134,7 +135,8 @@ const VIEWS: readonly Surface[] = [
       await page.route('**/api/rules/rules', (route) => route.fulfill({
         status: 503, json: { error: 'The rules service is unavailable.' },
       }));
-      await visit(page, '/#/rules');
+      // A rule tab reports the listing failure — its workflow is what fetches the listing.
+      await visit(page, RULE_ROUTE);
       await expect(page.getByRole('alert')).toContainText('The rules service is unavailable.');
     },
   },
@@ -224,7 +226,7 @@ const HARD_SURFACES: readonly Surface[] = [
     reach: async (page) => {
       await visit(page, RULE_ROUTE);
       await composeRule(page);
-      await page.getByRole('button', { name: /^Close can-checkout/ }).click();
+      await page.locator('.chip-close[aria-label^="Close checkout.eligibility"]').click();
       await expect(page.getByRole('dialog', { name: 'Unsaved changes' })).toBeVisible();
     },
   },
@@ -310,7 +312,8 @@ const DANGER_SURFACES: readonly Surface[] = [
     reach: async (page) => {
       await withQuarantinedProposition(page, 'customer.is-verified');
       await visit(page, '/#/propositions');
-      await page.getByRole('button', { name: 'Open' }).click();
+      await page.getByRole('button', { name: 'Open', exact: true }).click();
+      await page.getByRole('button', { name: 'Manage propositions' }).click();
       await expect(page.getByRole('dialog', { name: 'Propositions' })
         .getByText('quarantined', { exact: true })).toBeVisible();
     },
@@ -322,7 +325,8 @@ const DANGER_SURFACES: readonly Surface[] = [
       // --accent-weak — is a second ground for the same colour and the tighter of the two.
       await withQuarantinedProposition(page, 'customer.is-verified');
       await visit(page, '/#/propositions/customer.is-verified');
-      await page.getByRole('button', { name: 'Open' }).click();
+      await page.getByRole('button', { name: 'Open', exact: true }).click();
+      await page.getByRole('button', { name: 'Manage propositions' }).click();
       const row = page.getByRole('treeitem', { selected: true });
       await expect(row.getByText('quarantined', { exact: true })).toBeVisible();
     },

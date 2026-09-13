@@ -136,7 +136,8 @@ export function tab(page: Page, kind: 'Rule' | 'Proposition', name: string): Loc
 
 /** Close a document's tab from its ×. */
 export async function closeTab(page: Page, name: string): Promise<void> {
-  await page.getByRole('button', { name: new RegExp(`^Close ${name}`) }).click();
+  // The × is a pointer affordance outside the accessibility tree (see TabStrip), so by attribute.
+  await page.locator(`.chip-close[aria-label^="Close ${name}"]`).click();
 }
 
 /**

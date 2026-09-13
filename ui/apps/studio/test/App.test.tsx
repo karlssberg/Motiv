@@ -80,7 +80,7 @@ describe('App', () => {
     await userEvent.click(screen.getByRole('tab', { name: 'Proposition customer.is-active' }));
     await waitFor(() => expect(window.location.hash).toBe('#/propositions/customer.is-active'));
 
-    await userEvent.click(screen.getByRole('button', { name: 'Close customer.is-active' }));
+    await userEvent.click(screen.getByLabelText('Close customer.is-active'));
     await waitFor(() => expect(window.location.hash).toBe('#/rules/can-checkout'));
     expect(screen.queryByRole('tab', { name: 'Proposition customer.is-active' })).toBeNull();
   });
@@ -89,7 +89,7 @@ describe('App', () => {
     window.location.hash = '#/rules/can-checkout';
     renderApp();
     await screen.findByRole('tab', { name: 'Rule can-checkout' });
-    await userEvent.click(screen.getByRole('button', { name: 'Close can-checkout' }));
+    await userEvent.click(screen.getByLabelText('Close can-checkout'));
     await waitFor(() => expect(window.location.hash).toBe('#/rules'));
     expect(await screen.findByRole('region', { name: 'Nothing open' })).toBeTruthy();
   });

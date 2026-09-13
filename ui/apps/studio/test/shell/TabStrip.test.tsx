@@ -54,7 +54,7 @@ describe('TabStrip', () => {
     await userEvent.click(b!);
     expect(onActivate).toHaveBeenLastCalledWith(tabIdOf('rule', 'b'));
 
-    await userEvent.click(screen.getByRole('button', { name: 'Close a' }));
+    await userEvent.click(screen.getByLabelText('Close a'));
     expect(onRequestClose).toHaveBeenLastCalledWith(tabIdOf('rule', 'a'));
     // The × never activates the tab it closes.
     expect(onActivate).toHaveBeenCalledTimes(1);
@@ -79,7 +79,7 @@ describe('TabStrip', () => {
   it('says a tab has unsaved changes, in the × label and a marker', () => {
     const { workspace } = renderStrip([['rule', 'a']]);
     act(() => workspace.getState().docs[tabIdOf('rule', 'a')]!.store.replaceNode('$.rule', { spec: 'x' }));
-    expect(screen.getByRole('button', { name: 'Close a (unsaved changes)' })).toBeTruthy();
+    expect(screen.getByLabelText('Close a (unsaved changes)')).toBeTruthy();
     expect(screen.getByRole('tab').parentElement!.className).toContain('dirty');
   });
 
@@ -135,7 +135,7 @@ describe('TabStrip', () => {
     expect(onActivate).toHaveBeenLastCalledWith(tabIdOf('rule', 'b'));
 
     await userEvent.click(button);
-    await userEvent.click(within(screen.getByRole('menu')).getByRole('button', { name: 'Close b' }));
+    await userEvent.click(within(screen.getByRole('menu')).getByLabelText('Close b'));
     expect(onRequestClose).toHaveBeenLastCalledWith(tabIdOf('rule', 'b'));
   });
 

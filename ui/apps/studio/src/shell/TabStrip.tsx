@@ -69,10 +69,16 @@ function Chip(props: StripHandlers & { doc: OpenDoc; active: boolean; visible: r
         <KindTile kind={doc.kind} />
         <span className="chip-title"><span className="chip-ns">{namespace}</span><span className="chip-leaf">{leaf}</span></span>
       </button>
+      {/*
+        A pointer affordance, outside the accessibility tree: a `tablist` may own only tabs, and
+        the keyboard closes with Delete on the tab or ⌘W. The label still names it for anyone
+        reading the DOM, and the focused tab's card says "Unsaved changes".
+      */}
       <button
         type="button"
         className="chip-close"
         aria-label={closeLabel(doc.name, dirty)}
+        aria-hidden="true"
         tabIndex={-1}
         onClick={() => props.onRequestClose(doc.id)}
       >
@@ -104,6 +110,8 @@ function MenuRow(props: StripHandlers & { doc: OpenDoc; active: boolean; closabl
           type="button"
           className="chip-close overflow-close"
           aria-label={closeLabel(props.doc.name, dirty)}
+          aria-hidden="true"
+          tabIndex={-1}
           onClick={() => props.onRequestClose(props.doc.id)}
         >
           <IconClose size={11} />
@@ -224,8 +232,9 @@ export function TabStrip(props: StripHandlers & { workspace: Workspace; onCompac
           const doc = docs[id];
           return doc ? <Chip key={id} {...props} doc={doc} active={id === active} visible={visible} bind={hover.bind} /> : null;
         })}
-        {openButton}
       </div>
+      {/* Beside the list, not in it: a tablist may own only tabs. */}
+      {openButton}
       {hidden.length > 0 && (
         <div className="overflow">
           <button

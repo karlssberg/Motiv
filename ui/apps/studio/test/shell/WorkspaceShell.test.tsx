@@ -438,7 +438,7 @@ describe('WorkspaceShell', () => {
     const { navigate } = renderShell(stubClient(), 'customer.derived');
     await screen.findByRole('region', { name: 'Editor' });
 
-    await userEvent.click(screen.getByRole('button', { name: 'Close customer.derived' }));
+    await userEvent.click(screen.getByLabelText('Close customer.derived'));
 
     await waitFor(() => expect(navigate).toHaveBeenCalledWith({ page: 'propositions', name: null }));
     expect(screen.queryByRole('tab')).toBeNull();
@@ -451,7 +451,7 @@ describe('WorkspaceShell', () => {
     await waitFor(() => expect(client.getProposition).toHaveBeenCalled());
     act(() => storeOf('proposition', 'customer.derived').replaceNode('$.rule', { spec: 'customer.is-adult' }));
 
-    await userEvent.click(screen.getByRole('button', { name: 'Close customer.derived (unsaved changes)' }));
+    await userEvent.click(screen.getByLabelText('Close customer.derived (unsaved changes)'));
     const dialog = await screen.findByRole('dialog', { name: 'Unsaved changes' });
     expect(navigate).not.toHaveBeenCalled();
 
