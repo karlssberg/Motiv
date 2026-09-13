@@ -73,9 +73,19 @@ const PROPOSITIONS = CATALOG.specs.map((spec) => ({
   quarantine: [],
 }));
 
-/** A composite rule, so the builder under scan has a subtree, an operator badge and nested groups. */
+/**
+ * A composite rule, so the builder under scan has a subtree, an operator badge and nested groups —
+ * and, since #234, a document-local definition and a reference to it, so "the propositions page,
+ * with one selected" holds a local row and a populated definitions panel without any surface
+ * having to drive the extract flow itself first.
+ */
 const RULE_DOCUMENT = {
-  rule: { and: [{ spec: 'customer.is-active' }, { spec: 'customer.is-adult' }] },
+  definitions: {
+    'is-active-and-adult': {
+      rule: { andAlso: [{ spec: 'customer.is-active' }, { spec: 'customer.is-adult' }] },
+    },
+  },
+  rule: { and: [{ local: 'is-active-and-adult' }, { spec: 'customer.is-adult' }] },
 };
 
 const EVALUATION = {

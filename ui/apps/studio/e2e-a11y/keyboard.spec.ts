@@ -162,3 +162,21 @@ test.describe('the tab strip is a tablist', () => {
     await expect(tab).not.toHaveAttribute('aria-describedby', /.*/);
   });
 });
+
+test.describe("the definitions panel's row menu", () => {
+  // The fixture proposition (`stubs.ts`) already carries one definition, `is-active-and-adult` —
+  // no route override needed to put a row, and its menu, on screen.
+  test('opens a definition\'s row menu from the keyboard, and Escape returns focus to its trigger', async ({ page }) => {
+    await page.goto('/#/propositions/customer.is-verified');
+    const trigger = page.getByRole('button', { name: 'actions for definition is-active-and-adult' });
+    await expect(trigger).toBeVisible();
+
+    await trigger.focus();
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('menuitem', { name: 'Inline everywhere' })).toBeVisible();
+
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('menu', { name: 'actions for definition is-active-and-adult' })).toBeHidden();
+    await expect(trigger).toBeFocused();
+  });
+});

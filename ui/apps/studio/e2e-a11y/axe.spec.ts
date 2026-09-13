@@ -264,6 +264,68 @@ const HARD_SURFACES: readonly Surface[] = [
       await expect(page.getByLabel('name at $.rule')).toBeVisible();
     },
   },
+  {
+    name: 'the row menu on a nested node, offering Extract',
+    reach: async (page) => {
+      await visit(page, RULE_ROUTE);
+      await composeRule(page);
+      // `exact` matters here: "actions for $.rule.and[0]" is also a *prefix* of "actions for
+      // $.rule.and[0].andAlso[0]" on a deeper tree, and a substring match would find whichever
+      // row happened to render first.
+      await page.getByRole('button', { name: 'actions for $.rule.and[0]', exact: true }).click();
+      await expect(page.getByRole('menuitem', { name: 'Extract to definition' })).toBeVisible();
+    },
+  },
+  {
+    name: 'the extract-to-definition prompt',
+    reach: async (page) => {
+      await visit(page, RULE_ROUTE);
+      await composeRule(page);
+      await page.getByRole('button', { name: 'actions for $.rule.and[0]', exact: true }).click();
+      await page.getByRole('menuitem', { name: 'Extract to definition' }).click();
+      await expect(page.getByRole('dialog', { name: 'Extract to definition' })).toBeVisible();
+      await expect(page.getByLabel('local name for $.rule.and[0]')).toBeVisible();
+    },
+  },
+  {
+    name: 'the definitions panel, with a definition referenced twice',
+    reach: async (page) => {
+      // Registered after the fixture's catch-all (Playwright resolves most-recent-first), so this
+      // wins for the one proposition it targets. A second reference to the same definition rather
+      // than a second definition: the panel's own "N references" count is what this surface exists
+      // to put on screen with N > 1.
+      await page.route('**/api/rules/propositions/customer.is-verified', (route) => route.fulfill({
+        json: {
+          document: {
+            definitions: {
+              'is-active-and-adult': {
+                rule: { andAlso: [{ spec: 'customer.is-active' }, { spec: 'customer.is-adult' }] },
+              },
+            },
+            rule: { and: [{ local: 'is-active-and-adult' }, { local: 'is-active-and-adult' }] },
+          },
+          version: 2,
+          origin: 'Authored',
+          hasCompiledDefault: false,
+        },
+      }));
+      await visit(page, '/#/propositions/customer.is-verified');
+      await expect(page.getByRole('region', { name: 'Definitions' })).toBeVisible();
+      await expect(page.getByText('2 references')).toBeVisible();
+    },
+  },
+  {
+    name: "a local row's detail panel",
+    reach: async (page) => {
+      // The fixture's own rule (see `stubs.ts`) already opens with `{ local: … }` as its first
+      // operand, so no route override is needed here — just the standing proposition fixture.
+      await visit(page, '/#/propositions/customer.is-verified');
+      await page.getByRole('button', { name: 'actions for $.rule.and[0]', exact: true }).click();
+      await page.getByRole('menuitem', { name: 'Details' }).click();
+      await expect(page.getByRole('button', { name: 'inline $.rule.and[0]' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'go to definition $.rule.and[0]' })).toBeVisible();
+    },
+  },
 ];
 
 /**
@@ -343,6 +405,35 @@ const DANGER_SURFACES: readonly Surface[] = [
       await popover.getByLabel('When true').fill('{ not json');
       await popover.getByRole('button', { name: 'Save' }).click();
       await expect(popover.getByRole('alert')).toContainText('not valid JSON');
+    },
+  },
+  {
+    name: 'the definitions panel, refusing a taken name',
+    reach: async (page) => {
+      // A second definition purely so the first row's name field has another name to collide
+      // with — the fixture's standing document has only the one.
+      await page.route('**/api/rules/propositions/customer.is-verified', (route) => route.fulfill({
+        json: {
+          document: {
+            definitions: {
+              'is-active-and-adult': {
+                rule: { andAlso: [{ spec: 'customer.is-active' }, { spec: 'customer.is-adult' }] },
+              },
+              'is-large-order': { rule: { spec: 'orders.is-large' } },
+            },
+            rule: { and: [{ local: 'is-active-and-adult' }, { local: 'is-large-order' }] },
+          },
+          version: 2,
+          origin: 'Authored',
+          hasCompiledDefault: false,
+        },
+      }));
+      await visit(page, '/#/propositions/customer.is-verified');
+      // Filled, not blurred: committing the field reverts an unusable value rather than keeping
+      // it, so the rejection this surface exists to colour is only on screen between the keystroke
+      // that types it and the blur that would undo it.
+      await page.getByLabel('name of definition is-active-and-adult').fill('is-large-order');
+      await expect(page.getByText('That name is already in use.')).toBeVisible();
     },
   },
 ];
