@@ -12,6 +12,7 @@ import {
 import { useRuleEditor } from '@motiv-rules/react';
 import { createMotivCompletion } from './completion.js';
 import { diagnosticsFor } from './lint.js';
+import { localMarks } from './localMarks.js';
 import { motivHover } from './hover.js';
 import { motiv } from './motivLanguage.js';
 import { motivEditorTheme } from './theme.js';
@@ -106,8 +107,10 @@ export function DslEditor(props: {
   const [popover, setPopover] = useState<PayloadTarget | null>(null);
 
   const diagnostics = useMemo(
-    () => diagnosticsFor(sync.text, sync.parseResult, editorState.errors),
-    [sync.text, sync.parseResult, editorState.errors],
+    // `sync` doubles as the quick-fix's `reformatFromTree`, so the `PreferLet` hint's action is
+    // wired up here rather than needing a second parallel context of its own.
+    () => diagnosticsFor(sync.text, sync.parseResult, editorState.errors, { store, sync }),
+    [sync.text, sync.parseResult, editorState.errors, store, sync],
   );
 
   const live = useRef<LiveContext>({ sync, catalog, diagnostics, store });
@@ -169,6 +172,7 @@ export function DslEditor(props: {
           lineNumbers(),
           history(),
           motiv(),
+          localMarks,
           motivEditorTheme,
           autocompletion({ override: [createMotivCompletion(() => live.current.catalog)] }),
           motivHover(() => live.current.diagnostics),

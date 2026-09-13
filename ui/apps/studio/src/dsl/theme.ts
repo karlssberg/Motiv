@@ -33,6 +33,11 @@ export const motivEditorTheme = EditorView.theme({
   '.cm-activeLineGutter': {
     backgroundColor: 'transparent',
   },
+  // `localMarks.ts` marks references to declared `let` locals with this class — `motivHighlightStyle`
+  // can't, since it only ever sees one lexed token at a time and has no notion of "declared".
+  '.cm-local': {
+    color: 'var(--dsl-local)',
+  },
   '.cm-tooltip': {
     backgroundColor: 'var(--dsl-tooltip-bg)',
     color: 'var(--dsl-tooltip-fg)',

@@ -1069,6 +1069,7 @@ textarea.control {
 /* Read-state token colours, sharing the custom properties the CodeMirror highlight style binds
    to, so a row reads identically before and after it is focused for editing. */
 .tok-spec { color: var(--dsl-spec); }
+.tok-local { color: var(--dsl-local); }
 .tok-paramRef { color: var(--dsl-param); }
 .tok-keyword,
 .tok-quantifier { color: var(--dsl-keyword); }

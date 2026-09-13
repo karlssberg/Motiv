@@ -55,6 +55,20 @@ describe('DSL rows', () => {
     const row = await screen.findByRole('button', { name: 'edit expression at $.rule.not' });
     expect(row.querySelector('.tok-spec')).not.toBeNull();
   });
+
+  it('classifies a local reference distinctly from a catalog spec reference (#234)', async () => {
+    renderWith(new RuleEditorStore({
+      definitions: { 'my-def': { rule: { spec: 'is-active' } } },
+      rule: { and: [{ local: 'my-def' }, { spec: 'is-adult' }] },
+    }));
+    // The row itself is an `and`, not the local — a local node summarises as its own row
+    // (RuleNodeEditor's `inDslView`) rather than rendering through NodeDsl. Collapsing its parent
+    // is what puts the local's bare word inside a printed DSL line for `tokenSpans` to classify.
+    fireEvent.click(await screen.findByRole('button', { name: 'collapse $.rule' }));
+    const row = screen.getByRole('button', { name: 'edit expression at $.rule' });
+    expect(row.textContent).toBe('my-def & is-adult');
+    expect(row.querySelector('.tok-local')).not.toBeNull();
+  });
 });
 
 describe('DSL row editing', () => {

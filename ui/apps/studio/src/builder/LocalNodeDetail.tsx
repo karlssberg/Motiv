@@ -1,7 +1,7 @@
 import {
   definitionBodyPath, printInline, tokenSpans, type Catalog, type LocalNode,
 } from '@motiv-rules/core';
-import { useRuleEditorStore, useRuleNode } from '@motiv-rules/react';
+import { useRuleEditor, useRuleEditorStore, useRuleNode } from '@motiv-rules/react';
 
 /**
  * What a `let` row discloses: the definition it stands for, and the two ways out of it (#234).
@@ -18,13 +18,19 @@ export function LocalNodeDetail(props: { path: string; node: LocalNode; catalog:
   const { path, node, catalog } = props;
   const store = useRuleEditorStore();
   const { node: body } = useRuleNode(definitionBodyPath(node.local));
+  // A definition's body can itself reference another local (#234) — without telling `tokenSpans`
+  // the document's full set of definition names, that reference would colour as an ordinary spec.
+  // Named `ruleDocument` rather than `document`: the DOM global of that name is still needed below,
+  // for `getElementById`, and shadowing it silently broke that call once before.
+  const { document: ruleDocument } = useRuleEditor(store);
+  const locals = new Set(Object.keys(ruleDocument.definitions ?? {}));
 
   return (
     <div className="node-local-detail">
       <p className="caption">definition of {node.local}</p>
       <code className="node-local-body">
         {body
-          ? tokenSpans(printInline(body, { catalog })).map((span) => (
+          ? tokenSpans(printInline(body, { catalog }), locals).map((span) => (
             <span key={span.key} className={`tok-${span.kind}`}>{span.value}</span>
           ))
           // A reference with no definition behind it is a broken document rather than an empty
