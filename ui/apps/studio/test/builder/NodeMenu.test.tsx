@@ -97,3 +97,77 @@ describe('NodeMenu', () => {
     expect(screen.getAllByRole('menu')).toHaveLength(1);
   });
 });
+
+/** Ticket #234: the three scoping actions, and where each of them is offered. */
+describe('NodeMenu scoping actions (#234)', () => {
+  const WITH_LOCAL = {
+    definitions: { activity: { rule: { spec: 'is-active' } } },
+    rule: { and: [{ local: 'activity' }, { spec: 'is-adult' }] },
+  };
+
+  it('offers Extract to definition on a nested node', async () => {
+    renderWith(new RuleEditorStore(COMPOSITE));
+    await openMenu('$.rule.and[0]');
+    expect(screen.getByRole('menuitem', { name: 'Extract to definition' })).toBeDefined();
+  });
+
+  it('offers no extraction on the root, which is the rule itself', async () => {
+    renderWith(new RuleEditorStore(COMPOSITE));
+    await openMenu('$.rule');
+    expect(screen.queryByRole('menuitem', { name: 'Extract to definition' })).toBeNull();
+    expect(screen.queryByRole('menuitem', { name: 'Extract to catalog…' })).toBeNull();
+  });
+
+  it('omits Extract to catalog… while no host offers the dialog', async () => {
+    renderWith(new RuleEditorStore(COMPOSITE));
+    await openMenu('$.rule.and[0]');
+    expect(screen.queryByRole('menuitem', { name: 'Extract to catalog…' })).toBeNull();
+  });
+
+  it('offers Inline on a local, and nothing to extract', async () => {
+    renderWith(new RuleEditorStore(WITH_LOCAL));
+    await openMenu('$.rule.and[0]');
+    expect(screen.getByRole('menuitem', { name: 'Inline' })).toBeDefined();
+    expect(screen.queryByRole('menuitem', { name: 'Extract to definition' })).toBeNull();
+  });
+
+  it('offers no Inline on a node that is not a local', async () => {
+    renderWith(new RuleEditorStore(COMPOSITE));
+    await openMenu('$.rule.and[0]');
+    expect(screen.queryByRole('menuitem', { name: 'Inline' })).toBeNull();
+  });
+
+  it('Inline replaces the reference with its definition', async () => {
+    const store = new RuleEditorStore(WITH_LOCAL);
+    renderWith(store);
+    await openMenu('$.rule.and[0]');
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Inline' }));
+    expect((store.getState().document.rule as { and: unknown[] }).and[0])
+      .toEqual({ spec: 'is-active', name: 'activity' });
+  });
+
+  /**
+   * The menu closes on every item, including this one — so the prompt it opens has to survive
+   * that close, which it only does because the tree's single popover slot is set from the
+   * previous value rather than overwritten blind.
+   */
+  it('Extract to definition opens the naming prompt, seeded from the node', async () => {
+    renderWith(new RuleEditorStore(COMPOSITE));
+    await openMenu('$.rule.and[0]');
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Extract to definition' }));
+
+    expect(screen.getByRole('dialog', { name: 'Extract to definition' })).toBeDefined();
+    expect(screen.getByLabelText<HTMLInputElement>('local name for $.rule.and[0]').value)
+      .toBe('is-active');
+  });
+
+  it('seeds the prompt from a nested node\'s own name when it has one', async () => {
+    renderWith(new RuleEditorStore({
+      rule: { and: [{ spec: 'is-active', name: 'activity' }, { spec: 'is-adult' }] },
+    }));
+    await openMenu('$.rule.and[0]');
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Extract to definition' }));
+    expect(screen.getByLabelText<HTMLInputElement>('local name for $.rule.and[0]').value)
+      .toBe('activity');
+  });
+});

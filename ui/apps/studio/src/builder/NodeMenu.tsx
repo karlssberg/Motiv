@@ -1,3 +1,4 @@
+import type { MutableRefObject } from 'react';
 import { useRuleEditorStore } from '@motiv-rules/react';
 import { usePopoverCard } from './usePopoverCard.js';
 import { IconMore } from '../shell/icons.js';
@@ -36,21 +37,46 @@ export function NodeMenu(props: {
    * puts structural actions, so the item is self-labelling where a second glyph would not be.
    */
   onInsertFirst?: () => void;
+  /**
+   * Turns this node into a document-local definition, named by a prompt the host opens. Offered
+   * on every node but the root — which is the rule itself — and on no `local`, which already is
+   * one (#234).
+   */
+  onExtractLocal?: () => void;
+  /** Promotes this node into a catalog proposition. Present only where the host offers the dialog. */
+  onExtractCatalog?: () => void;
+  /** Dissolves a `local` reference back into the tree. Local rows only. */
+  onInline?: () => void;
+  /**
+   * Handed this menu's `⋯`, so a card the host opens from one of these items can anchor to it.
+   * The menu is gone by then — the item that opened the card closed it — so the trigger is the
+   * only thing left on the row that the card can be measured against.
+   */
+  triggerRef?: MutableRefObject<HTMLButtonElement | null>;
 }) {
-  const { path, canRemove, open, onDetails, setOpen, onInsertFirst } = props;
+  const {
+    path, canRemove, open, onDetails, setOpen, onInsertFirst,
+    onExtractLocal, onExtractCatalog, onInline, triggerRef,
+  } = props;
   const store = useRuleEditorStore();
   const { trigger, card, style, close } = usePopoverCard(open, setOpen);
 
   const actions: MenuAction[] = [
     { label: 'Details', run: onDetails },
     ...(onInsertFirst ? [{ label: 'Insert first operand', run: onInsertFirst }] : []),
+    ...(onExtractLocal ? [{ label: 'Extract to definition', run: onExtractLocal }] : []),
+    ...(onExtractCatalog ? [{ label: 'Extract to catalog…', run: onExtractCatalog }] : []),
+    ...(onInline ? [{ label: 'Inline', run: onInline }] : []),
     ...(canRemove ? [{ label: 'Remove', run: () => store.removeOperand(path) }] : []),
   ];
 
   return (
     <>
       <button
-        ref={trigger}
+        ref={(element) => {
+          trigger.current = element;
+          if (triggerRef) triggerRef.current = element;
+        }}
         type="button"
         className={open ? 'node-menu-trigger open' : 'node-menu-trigger'}
         aria-haspopup="menu"

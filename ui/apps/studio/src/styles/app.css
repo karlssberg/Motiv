@@ -911,6 +911,50 @@ textarea.control {
   border-radius: 8px;
 }
 
+/* Ticket #234: a nested node's decoration, stated rather than edited — it is read-only because
+   the way to keep it is to extract it, and the way to change it is to do that first. */
+.decoration-notice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 10px;
+  background: var(--sh-inset);
+  border-radius: 6px;
+}
+
+.decoration-notice-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+}
+
+.decoration-notice-payload {
+  margin: 0;
+  color: var(--faint);
+  font-size: 12px;
+}
+
+/* The definition a `let` row stands for, shown where its own panel would otherwise be. */
+.node-local-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.node-local-body {
+  padding: 8px 10px;
+  background: var(--sh-inset);
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+.node-local-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .node-toolbar {
   display: flex;
   flex-wrap: wrap;

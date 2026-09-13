@@ -4,6 +4,9 @@ import {
   type HighlightModel, type RuleNode, type SourceRange,
 } from '@motiv-rules/core';
 
+/** A document with no definitions — a stable identity, so it is not a fresh dep every render. */
+const NO_LOCALS: ReadonlySet<string> = new Set();
+
 /** One run of text that carries the same set of marks throughout. */
 interface Segment {
   key: string;
@@ -58,8 +61,9 @@ function segmentize(
  * exactly what the indented tree cannot express.
  *
  * Spans are obtained by printing the rule and reparsing it. That is sound rather than expedient:
- * the printer guarantees `parse(printInline(node))` deep-equals `node`, so the reparse recovers the
- * same tree, and Studio's DSL pane derives its own spans the same way. Memoised on rule identity,
+ * the printer guarantees `parse(printInline(node), { locals })` deep-equals `node` — given the
+ * document's definition names, without which a printed local reference reads back as a spec — so
+ * the reparse recovers the same tree, and Studio's DSL pane derives its own spans the same way. Memoised on rule identity,
  * so a hover costs no work at all.
  */
 export function RuleDslStrip(props: {
@@ -71,12 +75,18 @@ export function RuleDslStrip(props: {
    * duplicating the string into an `aria-description` that could then disagree with what is shown.
    */
   textId?: string;
+  /**
+   * The document's definition names. `printInline` renders `{ local: 'a' }` as the bare word `a`
+   * with no preamble declaring it, so the reparse below needs telling which bare words are locals
+   * — without it `a` reads back as `{ spec: 'a' }`, a different tree with different spans (#234).
+   */
+  locals?: ReadonlySet<string> | undefined;
 }) {
-  const { rule, highlight } = props;
+  const { rule, highlight, locals = NO_LOCALS } = props;
 
   const { text, spans } = useMemo(() => {
     const printed = printInline(rule);
-    const result = parse(printed);
+    const result = parse(printed, { locals });
     // The round-trip that licenses this reparse has a documented hole: the DSL has no string
     // escapes, so a `name` carrying a double quote prints text the parser cannot read back
     // (`printer.ts`). What comes out then is not *no* spans but *damaged* ones — for
@@ -84,7 +94,7 @@ export function RuleDslStrip(props: {
     // truncated `$.rule` survives, so both operands would resolve to the same wrong range.
     // Dropping the lot degrades honestly: the expression still renders, nothing is marked.
     return { text: printed, spans: result.errors.length > 0 ? [] : result.spans };
-  }, [rule]);
+  }, [rule, locals]);
 
   /**
    * The span recorded for exactly this path, or `null`.

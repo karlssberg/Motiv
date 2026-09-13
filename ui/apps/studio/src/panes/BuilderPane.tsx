@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import {
   EMPTY_ACCORDION, EMPTY_HIGHLIGHT, closeAll, setHovered, setSelected,
   toggleCollapsed, toggleOpen, togglePin,
@@ -9,7 +9,8 @@ import { BuilderTreeContext, RuleNodeEditor } from '../builder/RuleNodeEditor.js
 import { RuleDslStrip } from '../builder/RuleDslStrip.js';
 import { MODEL_TYPE } from '../App.js';
 
-const ROOT = '$.rule';
+/** The rule's own root path — the one node whose name is the rule's name (#234). */
+export const ROOT = '$.rule';
 /** What a pane renders against until (or unless) the real catalog arrives. */
 export const EMPTY_CATALOG: Catalog = { specs: [], collections: [] };
 
@@ -32,6 +33,15 @@ export function BuilderBody(props: { client: RulesApiClient }) {
   /** The open insertion slot, if any: a row path plus which of that row's two positions. */
   const [pending, setPending] = useState<{ path: string; where: 'after' | 'first' } | null>(null);
   const editorState = useRuleEditor(useRuleEditorStore());
+  /**
+   * The document's definition names, which every reparse of a printed row needs: `printInline`
+   * renders `{ local: 'a' }` as the bare word `a`, and without this the parser reads it back as a
+   * spec reference (#234).
+   */
+  const locals = useMemo(
+    () => new Set(Object.keys(editorState.document.definitions ?? {})),
+    [editorState.document],
+  );
   /** Names the strip's generated text, so the tree below can be described by it. */
   const expressionId = useId();
 
@@ -39,7 +49,12 @@ export function BuilderBody(props: { client: RulesApiClient }) {
     <>
       {catalogState.status === 'loading' && <p>Loading catalog…</p>}
       {catalogState.status === 'error' && <p role="alert">Failed to load catalog.</p>}
-      <RuleDslStrip rule={editorState.document.rule} highlight={highlight} textId={expressionId} />
+      <RuleDslStrip
+        rule={editorState.document.rule}
+        highlight={highlight}
+        textId={expressionId}
+        locals={locals}
+      />
       {/* Height is reserved rather than conditional, so the tree does not jump when the first
           node is pinned. */}
       <div className="accordion-strip">
@@ -69,6 +84,7 @@ export function BuilderBody(props: { client: RulesApiClient }) {
             openPopover,
             setOpenPopover,
             catalog,
+            locals,
             highlight,
             setHovered: (path) => setHighlight((prev) => setHovered(prev, path)),
             setSelected: (path) => setHighlight((prev) => setSelected(prev, path)),

@@ -4,6 +4,7 @@ import {
   type Catalog, type Payload, type RuleEditorStore,
 } from '@motiv-rules/core';
 import type { DecorationPatch } from '../decorationPatch.js';
+import { ROOT } from '../panes/BuilderPane.js';
 
 /** Metadata types whose payloads are plain text rather than JSON objects. */
 const STRING_METADATA_TYPES = new Set(['String', 'Explanation']);
@@ -76,6 +77,13 @@ export function PayloadPopover(props: {
 }) {
   const { store, catalog, path, spec, onClose, style, cardRef } = props;
 
+  /**
+   * Only the rule's own root still carries a name of its own. A name below it is a definition
+   * now, authored in the definitions panel and reached from the row's menu — so the field is not
+   * offered here, and a name a legacy document still holds is left exactly as it is (#234).
+   */
+  const namable = path === ROOT;
+
   const entry = catalog.specs.find((candidate) => candidate.name === spec);
   const objectMode = entry !== undefined && !STRING_METADATA_TYPES.has(entry.metadataType);
   const properties = Object.keys(
@@ -103,7 +111,7 @@ export function PayloadPopover(props: {
       return;
     }
 
-    store.setName(path, draft.name.trim() || undefined);
+    if (namable) store.setName(path, draft.name.trim() || undefined);
     store.setDecoration(path, { whenTrue: whenTrue.value, whenFalse: whenFalse.value } as DecorationPatch);
     onClose();
   };
@@ -131,15 +139,17 @@ export function PayloadPopover(props: {
       {entry?.description && <p className="dsl-popover-desc">{entry.description}</p>}
       {entry && <p className="dsl-popover-meta">{entry.modelType} → {entry.metadataType}</p>}
 
-      <label className="field">
-        <span>Name</span>
-        <input
-          className="control"
-          type="text"
-          value={draft.name}
-          onChange={(e) => patch({ name: e.target.value })}
-        />
-      </label>
+      {namable && (
+        <label className="field">
+          <span>Name</span>
+          <input
+            className="control"
+            type="text"
+            value={draft.name}
+            onChange={(e) => patch({ name: e.target.value })}
+          />
+        </label>
+      )}
       <PayloadField label="When true" value={draft.whenTrue} onChange={(whenTrue) => patch({ whenTrue })} />
       <PayloadField label="When false" value={draft.whenFalse} onChange={(whenFalse) => patch({ whenFalse })} />
 

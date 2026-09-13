@@ -129,3 +129,35 @@ describe('PayloadPopover', () => {
     expect(onClose).toHaveBeenCalled();
   });
 });
+
+/** Ticket #234: a name below the root is a definition, not an inline decoration. */
+describe('PayloadPopover naming (#234)', () => {
+  it('offers no Name field on a nested spec', () => {
+    const store = new RuleEditorStore({ rule: { and: [{ spec: 'is-active' }, { spec: 'is-adult' }] } });
+    render(
+      <PayloadPopover
+        store={store} catalog={CATALOG} path="$.rule.and[0]" spec="is-active" onClose={vi.fn()}
+      />,
+    );
+    expect(screen.queryByLabelText('Name')).toBeNull();
+    expect(screen.getByLabelText('When true')).toBeTruthy();
+  });
+
+  it('leaves a nested node\'s existing name alone on save', async () => {
+    const user = userEvent.setup();
+    const store = new RuleEditorStore({
+      rule: { and: [{ spec: 'is-active', name: 'activity' }, { spec: 'is-adult' }] },
+    });
+    render(
+      <PayloadPopover
+        store={store} catalog={CATALOG} path="$.rule.and[0]" spec="is-active" onClose={vi.fn()}
+      />,
+    );
+
+    await user.type(screen.getByLabelText('When true'), 'yes');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect((store.getState().document.rule as { and: unknown[] }).and[0])
+      .toEqual({ spec: 'is-active', name: 'activity', whenTrue: 'yes' });
+  });
+});

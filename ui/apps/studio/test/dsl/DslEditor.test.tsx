@@ -244,12 +244,13 @@ describe('DslEditor', () => {
     const { container, store } = renderEditor(BOTH_SPECS);
     expect(editorText(container)).toBe('is-active && is-verified');
 
-    // Start naming the first spec, then open the second without saving.
+    // Start a payload on the first spec, then open the second without saving. Driven through
+    // `When true` rather than `Name`: below the root there is no name to type any more (#234).
     await user.click(payloadChip('is-active'));
-    await user.type(screen.getByLabelText('Name'), 'activity');
+    await user.type(screen.getByLabelText('When true'), 'is active');
     await user.click(payloadChip('is-verified'));
 
-    expect(screen.getByLabelText<HTMLInputElement>('Name').value).toBe('');
+    expect(screen.getByLabelText<HTMLTextAreaElement>('When true').value).toBe('');
 
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
