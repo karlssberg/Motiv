@@ -119,6 +119,8 @@ public class LocalBindingTests
         // A definition's body always carries its key as the node's name, so this is the "named
         // explanation proposition" pattern: the strings are demoted to Values, and the name +
         // suffix becomes the assertion text — never the unnamed "strings-are-the-assertions" form.
+        // (The task-7 brief said "Reason is the text" for this case; that wording was wrong, and
+        // the controller has recorded the correction — a definition is always a named proposition.)
         var expected = Spec.Build(IsActive).WhenTrue("yes, active").WhenFalse("not active").Create("active");
 
         // Act
@@ -295,5 +297,116 @@ public class LocalBindingTests
         result.Assertions.ShouldBe(["verdict == true"]);
         result.Values.ShouldBe([new Verdict("OK")]);
         await ShouldBehaveIdenticallyAsync(loaded, expected, Models);
+    }
+
+    // The arm itself only forwards to the definition; decoration on the *reference* node runs
+    // afterwards, in the outer BindNode call, exactly as it does for any other node. The following
+    // cases pin that mechanism directly rather than trusting it "by inspection".
+
+    [Fact]
+    public void Should_decorate_a_local_reference_with_its_own_name()
+    {
+        // Arrange — the reference itself carries "name": "outer", on top of the definition's own
+        // "d"-named binding
+        const string json =
+            """
+            { "definitions": { "d": { "rule": { "spec": "customer.is-active" } } },
+              "rule": { "local": "d", "name": "outer" } }
+            """;
+        var expected = Spec.Build(Spec.Build(IsActive).Create("d")).Create("outer");
+
+        // Act
+        var loaded = new RuleSerializer(Registry()).Deserialize<Customer>(json);
+
+        // Assert
+        var result = loaded.Evaluate(new Customer(true));
+        result.Reason.ShouldBe("outer == true");
+        ShouldBehaveIdentically(loaded, expected, Models);
+    }
+
+    [Fact]
+    public void Should_decorate_a_local_reference_with_its_own_whenTrue_and_whenFalse()
+    {
+        // Arrange — the reference carries whenTrue/whenFalse but no name of its own
+        const string json =
+            """
+            { "definitions": { "d": { "rule": { "spec": "customer.is-active" } } },
+              "rule": { "local": "d", "whenTrue": "yes", "whenFalse": "no" } }
+            """;
+        var expected = Spec.Build(Spec.Build(IsActive).Create("d")).WhenTrue("yes").WhenFalse("no").Create();
+
+        // Act
+        var loaded = new RuleSerializer(Registry()).Deserialize<Customer>(json);
+
+        // Assert
+        var result = loaded.Evaluate(new Customer(true));
+        result.Reason.ShouldBe("yes");
+        ShouldBehaveIdentically(loaded, expected, Models);
+    }
+
+    [Fact]
+    public async Task Should_decorate_an_async_local_reference_with_its_own_name()
+    {
+        // Arrange
+        const string json =
+            """
+            { "definitions": { "d": { "rule": { "spec": "customer.is-active" } } },
+              "rule": { "local": "d", "name": "outer" } }
+            """;
+        var expected = Spec.Build(Spec.Build(IsActive).Create("d")).Create("outer").ToAsyncSpec();
+
+        // Act
+        var loaded = new RuleSerializer(Registry()).DeserializeAsyncSpec<Customer>(json);
+
+        // Assert
+        var result = await loaded.EvaluateAsync(new Customer(true));
+        result.Reason.ShouldBe("outer == true");
+        await ShouldBehaveIdenticallyAsync(loaded, expected, Models);
+    }
+
+    [Fact]
+    public async Task Should_decorate_an_async_local_reference_with_its_own_whenTrue_and_whenFalse()
+    {
+        // Arrange
+        const string json =
+            """
+            { "definitions": { "d": { "rule": { "spec": "customer.is-active" } } },
+              "rule": { "local": "d", "whenTrue": "yes", "whenFalse": "no" } }
+            """;
+        var expected = Spec.Build(Spec.Build(IsActive).Create("d")).WhenTrue("yes").WhenFalse("no").Create()
+            .ToAsyncSpec();
+
+        // Act
+        var loaded = new RuleSerializer(Registry()).DeserializeAsyncSpec<Customer>(json);
+
+        // Assert
+        var result = await loaded.EvaluateAsync(new Customer(true));
+        result.Reason.ShouldBe("yes");
+        await ShouldBehaveIdenticallyAsync(loaded, expected, Models);
+    }
+
+    [Fact]
+    public void Should_decorate_a_local_reference_with_an_object_payload_and_name_in_a_metadata_load()
+    {
+        // Arrange — the reference itself carries object payloads and a name, remetadatizing the
+        // definition's own string-payload binding on top of it (BindRemetadatized delegates to
+        // RuleBinder.BindOperator on the reference node, which the Local arm routes to the
+        // definition, exactly as the explanation load does)
+        const string json =
+            """
+            { "definitions": { "d": { "rule": { "spec": "customer.is-active" },
+                                       "whenTrue": "yes text", "whenFalse": "no text" } },
+              "rule": { "local": "d", "whenTrue": { "Code": "OK" }, "whenFalse": { "Code": "NO" },
+                        "name": "outer" } }
+            """;
+        var underlying = Spec.Build(IsActive).WhenTrue("yes text").WhenFalse("no text").Create("d");
+        var expected = Spec.Build(underlying)
+            .WhenTrue(new Verdict("OK")).WhenFalse(new Verdict("NO")).Create("outer");
+
+        // Act
+        var loaded = new RuleSerializer(Registry()).Deserialize<Customer, Verdict>(json);
+
+        // Assert
+        ShouldBehaveIdentically(loaded, expected, Models);
     }
 }
