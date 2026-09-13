@@ -31,41 +31,75 @@ export function definitionNameOf(path: string): string | undefined {
   return name || undefined;
 }
 
-function parseStepTokens(rest: string): Step[] {
-  if (rest === '') return [];
-  return rest.split('.').filter(Boolean).map((token) => {
+/** A parse that failed, carrying the message the throwing caller raises. */
+interface PathRefusal { message: string }
+
+function refused(result: { message: string } | object): result is PathRefusal {
+  return 'message' in result;
+}
+
+function readStepTokens(rest: string): { steps: Step[] } | PathRefusal {
+  const steps: Step[] = [];
+  if (rest === '') return { steps };
+  for (const token of rest.split('.').filter(Boolean)) {
     // Reject prototype-polluting keys before any dynamic property access.
     const keyCandidate = token.split('[')[0]!;
-    if (FORBIDDEN_KEYS.has(keyCandidate)) throw new Error(`Forbidden path key: ${keyCandidate}`);
+    if (FORBIDDEN_KEYS.has(keyCandidate)) return { message: `Forbidden path key: ${keyCandidate}` };
     const match = token.match(/^([A-Za-z]+)(?:\[(\d+)\])?$/);
-    if (!match) throw new Error(`Invalid path token: ${token}`);
-    return match[2] === undefined
+    if (!match) return { message: `Invalid path token: ${token}` };
+    steps.push(match[2] === undefined
       ? { key: match[1]! }
-      : { key: match[1]!, index: Number(match[2]) };
-  });
+      : { key: match[1]!, index: Number(match[2]) });
+  }
+  return { steps };
 }
 
 /**
  * The node path resolves from — `$.rule` or a definition's `$.definitions.<name>.rule` — and the
- * ordinary steps below it. A definition path without `.rule` (the definition itself, not its body)
- * is not a node and is rejected here, as is a name that fails {@link LOCAL_NAME_PATTERN}.
+ * ordinary steps below it, or why the path names no node. A definition path without `.rule` (the
+ * definition itself, not its body) is not a node and is refused here, as is a name that fails
+ * {@link LOCAL_NAME_PATTERN}.
+ *
+ * Answers rather than throws so {@link isNodePath} can ask the same question without a `try`, and
+ * so both agree by construction rather than by two copies of the rule kept in step.
  */
-function parsePath(path: string): { base: string; steps: Step[] } {
+function readPath(path: string): { base: string; steps: Step[] } | PathRefusal {
   if (path === RULE_ROOT || path.startsWith(`${RULE_ROOT}.`)) {
-    return { base: RULE_ROOT, steps: parseStepTokens(path.slice(RULE_ROOT.length)) };
+    const tokens = readStepTokens(path.slice(RULE_ROOT.length));
+    return refused(tokens) ? tokens : { base: RULE_ROOT, steps: tokens.steps };
   }
   if (path.startsWith(`${DEFINITIONS_ROOT}.`)) {
     const rest = path.slice(DEFINITIONS_ROOT.length + 1);
     const [name, ...afterParts] = rest.split('.');
-    if (!name || !LOCAL_NAME_PATTERN.test(name)) throw new Error(`Invalid path token: ${name ?? ''}`);
-    if (FORBIDDEN_KEYS.has(name)) throw new Error(`Forbidden path key: ${name}`);
+    if (!name || !LOCAL_NAME_PATTERN.test(name)) return { message: `Invalid path token: ${name ?? ''}` };
+    if (FORBIDDEN_KEYS.has(name)) return { message: `Forbidden path key: ${name}` };
     const after = afterParts.join('.');
     const base = definitionBodyPath(name);
     if (after === 'rule') return { base, steps: [] };
-    if (after.startsWith('rule.')) return { base, steps: parseStepTokens(after.slice('rule'.length)) };
-    throw new Error(`Invalid node path: ${path}`);
+    if (after.startsWith('rule.')) {
+      const tokens = readStepTokens(after.slice('rule'.length));
+      return refused(tokens) ? tokens : { base, steps: tokens.steps };
+    }
+    return { message: `Invalid node path: ${path}` };
   }
-  throw new Error(`Invalid node path: ${path}`);
+  return { message: `Invalid node path: ${path}` };
+}
+
+/**
+ * Whether a path names a node — `$.rule…`, or a definition's body `$.definitions.<name>.rule…`.
+ *
+ * False for a definition itself (`$.definitions.<name>`) and its non-`rule` fields, which are real,
+ * addressable places a span or an error can sit but hold no node. Anything that walks a collection
+ * of paths and resolves each one has to ask first: {@link getNode} throws for the rest.
+ */
+export function isNodePath(path: string): boolean {
+  return !refused(readPath(path));
+}
+
+function parsePath(path: string): { base: string; steps: Step[] } {
+  const result = readPath(path);
+  if (refused(result)) throw new Error(result.message);
+  return result;
 }
 
 /** Rebuilds a path string from steps (inverse of parsePath). */

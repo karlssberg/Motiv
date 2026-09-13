@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  childPaths, getNode, setNode, listPaths, localReferences,
+  childPaths, getNode, isNodePath, setNode, listPaths, localReferences,
   DEFINITIONS_ROOT, definitionPath, definitionBodyPath, definitionNameOf,
 } from '../src/paths.js';
 import type { RuleDocument } from '../src/document.js';
@@ -147,5 +147,29 @@ describe('localReferences', () => {
 
   it('returns an empty array when there are no references', () => {
     expect(localReferences({ rule: { spec: 'a' } }, 'quota-check')).toEqual([]);
+  });
+});
+
+describe('isNodePath', () => {
+  it('accepts the paths a node can actually stand at', () => {
+    for (const path of ['$.rule', '$.rule.and[0]', '$.definitions.a.rule', '$.definitions.a.rule.not']) {
+      expect(isNodePath(path)).toBe(true);
+    }
+  });
+
+  it('rejects a definition itself, its non-rule fields and anything outside the two roots', () => {
+    // `$.definitions.a` is where a `let` declaration's span sits: real, addressable, and not a
+    // node — so every consumer that resolves a span to a node has to be able to ask.
+    for (const path of ['$.definitions.a', '$.definitions.a.whenTrue', '$.x', '$.definitions', '']) {
+      expect(isNodePath(path)).toBe(false);
+    }
+  });
+
+  it('agrees with getNode, which throws for exactly the paths it rejects', () => {
+    const document = { rule: { spec: 'a' }, definitions: { a: { rule: { spec: 'b' } } } };
+    expect(() => getNode(document, '$.definitions.a')).toThrow();
+    expect(isNodePath('$.definitions.a')).toBe(false);
+    expect(getNode(document, '$.definitions.a.rule')).toEqual({ spec: 'b' });
+    expect(isNodePath('$.definitions.a.rule')).toBe(true);
   });
 });

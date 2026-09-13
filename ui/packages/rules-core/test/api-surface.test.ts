@@ -57,6 +57,7 @@ const APPROVED_API = [
   'isExpressionNode',
   'isHigherOrderNode',
   'isLocalNode',
+  'isNodePath',
   'isNotNode',
   'isOpen',
   'isPinned',

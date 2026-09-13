@@ -6,7 +6,7 @@ import { EditorState } from '@codemirror/state';
 import { EditorView, keymap, lineNumbers, type ViewUpdate } from '@codemirror/view';
 import type { Diagnostic } from '@codemirror/lint';
 import {
-  getNode, isSpecNode,
+  getNode, isNodePath, isSpecNode,
   type Catalog, type NodeSpan, type RuleDocument, type RuleEditorStore,
 } from '@motiv-rules/core';
 import { useRuleEditor } from '@motiv-rules/react';
@@ -44,10 +44,19 @@ interface LiveContext {
   store: RuleEditorStore;
 }
 
+/**
+ * The spans that name a node, which is not all of them: a `let` declaration records a span at
+ * `$.definitions.<name>`, a real place in the text where no node stands. Resolving one throws, so
+ * everything here that walks spans filters first (#234).
+ */
+function nodeSpans(spans: readonly NodeSpan[]): NodeSpan[] {
+  return spans.filter((span) => isNodePath(span.path));
+}
+
 /** The narrowest span covering `position` — the innermost node the caret sits inside. */
 function innermostSpanAt(spans: readonly NodeSpan[], position: number): NodeSpan | undefined {
   let best: NodeSpan | undefined;
-  for (const span of spans) {
+  for (const span of nodeSpans(spans)) {
     if (position < span.from || position > span.to) continue;
     if (!best || span.to - span.from < best.to - best.from) best = span;
   }
@@ -228,7 +237,8 @@ export function DslEditor(props: {
   // host's parse, which lands a render after the edit that provoked it, so the editor cannot
   // derive them for itself without parsing the text a second time.
   const targets = useMemo(
-    () => sync.parseResult.spans.flatMap((span) => targetForSpan(editorState.document, span) ?? []),
+    () => nodeSpans(sync.parseResult.spans)
+      .flatMap((span) => targetForSpan(editorState.document, span) ?? []),
     [sync.parseResult, editorState.document],
   );
   useEffect(() => {
