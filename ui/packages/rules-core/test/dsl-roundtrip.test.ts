@@ -153,7 +153,28 @@ const DOCUMENTS: Array<{ label: string; document: RuleDocument }> = [
       },
     },
   },
+  {
+    label: 'a definition referenced twice',
+    document: {
+      definitions: { 'is-eligible': { rule: { spec: 'customer.is-active' } } },
+      rule: { and: [{ local: 'is-eligible' }, { local: 'is-eligible' }] },
+    },
+  },
+  {
+    label: 'a definition referencing another',
+    document: {
+      definitions: {
+        a: { rule: { spec: 'x' } },
+        b: { rule: { local: 'a' } },
+      },
+      rule: { local: 'b' },
+    },
+  },
 ];
+
+/** Every document below whose rule can round-trip through `printInline` alone — one that has no
+ * `definitions`, since a local reference only resolves against its document's `let` preamble. */
+const WITHOUT_DEFINITIONS = DOCUMENTS.filter(({ document }) => document.definitions === undefined);
 
 /** Parses DSL text and reprints it, for asserting a composed rule's text survives unchanged. */
 function roundTrip(text: string): string {
@@ -182,7 +203,7 @@ describe('DSL round-trip', () => {
     expect(twice).toBe(once);
   });
 
-  it.each(DOCUMENTS)('parse(printInline(rule)) preserves $label', ({ document }) => {
+  it.each(WITHOUT_DEFINITIONS)('parse(printInline(rule)) preserves $label', ({ document }) => {
     const result = parse(printInline(document.rule));
     expect(result.errors).toEqual([]);
     expect(result.document?.rule).toEqual(document.rule);

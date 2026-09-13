@@ -372,3 +372,62 @@ describe('parse — negative parameter defaults', () => {
     });
   });
 });
+
+describe('parse — let declarations', () => {
+  it('declares a local and references it in the rule', () => {
+    const result = parse('let a = x && y\n\na & z');
+    expect(result.errors).toEqual([]);
+    expect(result.document).toEqual({
+      definitions: { a: { rule: { andAlso: [{ spec: 'x' }, { spec: 'y' }] } } },
+      rule: { and: [{ local: 'a' }, { spec: 'z' }] },
+    });
+  });
+
+  it('allows a let to reference a let declared after it', () => {
+    const result = parse('let a = b\n\nlet b = x\n\na');
+    expect(result.errors).toEqual([]);
+    expect(result.document).toEqual({
+      definitions: {
+        a: { rule: { local: 'b' } },
+        b: { rule: { spec: 'x' } },
+      },
+      rule: { local: 'a' },
+    });
+  });
+
+  it('allows param before let', () => {
+    const result = parse('param n: integer = 1\n\nlet a = x\n\na');
+    expect(result.errors).toEqual([]);
+    expect(result.document).toEqual({
+      parameters: { n: { type: 'integer', default: 1 } },
+      definitions: { a: { rule: { spec: 'x' } } },
+      rule: { local: 'a' },
+    });
+  });
+
+  it('reports param after let as an unexpected token at the param', () => {
+    const result = parse('let a = x\n\nparam n: integer = 1\n\na');
+    expect(result.document).toBeUndefined();
+    const paramIndex = 'let a = x\n\n'.length;
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ code: 'UnexpectedToken', from: paramIndex }),
+    );
+  });
+
+  it('leaves an undeclared bare word as a spec reference', () => {
+    const result = parse('let a = x\n\nb');
+    expect(result.errors).toEqual([]);
+    expect(result.document).toEqual({
+      definitions: { a: { rule: { spec: 'x' } } },
+      rule: { spec: 'b' },
+    });
+  });
+
+  it('records a span for a definition body under its definitionBodyPath', () => {
+    const result = parse('let a = x && y\n\na');
+    expect(result.errors).toEqual([]);
+    expect(result.spans).toContainEqual(
+      expect.objectContaining({ path: '$.definitions.a.rule' }),
+    );
+  });
+});

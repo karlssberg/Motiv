@@ -1,8 +1,9 @@
 import {
   binaryOperator, higherOrderBody, higherOrderKey, isBinaryNode, isExpressionNode,
   isHigherOrderNode, isLocalNode, isNotNode, isSpecNode, operandsOf,
-  type ArgValue, type BinaryNode, type BinaryOperator, type HigherOrderKey, type HigherOrderNode,
-  type NotNode, type ParameterDeclaration, type RuleDocument, type RuleNode, type SpecNode,
+  type ArgValue, type BinaryNode, type BinaryOperator, type Definition, type HigherOrderKey,
+  type HigherOrderNode, type NotNode, type ParameterDeclaration, type RuleDocument, type RuleNode,
+  type SpecNode,
 } from '../document.js';
 import type { Catalog } from '../contracts.js';
 
@@ -200,8 +201,7 @@ function printBody(
   if (isExpressionNode(node)) return `\`${node.expression}\``;
   if (isNotNode(node)) return printNegation(node, indent, layout, options);
   if (isHigherOrderNode(node)) return printQuantifier(node, indent, layout, options);
-  // The DSL does not yet have surface syntax for a local reference — that is a later task.
-  if (isLocalNode(node)) throw new Error(`Cannot print a local node to DSL text: ${node.local}`);
+  if (isLocalNode(node)) return node.local;
   return printBinary(node, indent, layout, options);
 }
 
@@ -234,9 +234,25 @@ function printParameters(parameters: RuleDocument['parameters']): string {
   return `${lines.join('\n')}\n\n`;
 }
 
+/**
+ * Renders the `let` declarations, including the blank line that closes the block. Mirrors
+ * {@link printParameters}: one declaration per line, in `Object.keys` order — the same order
+ * `parsePreamble` populates the map in, so declaration order round-trips.
+ */
+function printDefinitions(
+  definitions: RuleDocument['definitions'], options: PrintOptions | undefined,
+): string {
+  const entries = Object.entries(definitions ?? {}) as [string, Definition][];
+  if (entries.length === 0) return '';
+  const lines = entries.map(([name, definition]) =>
+    `let ${name} = ${printNode(definition.rule, '', 'block', options)}`);
+  return `${lines.join('\n')}\n\n`;
+}
+
 /** Reprints a rule document as canonical DSL text — the inverse of `parse`. */
 export function print(document: RuleDocument, options?: PrintOptions): string {
-  return `${printParameters(document.parameters)}${printNode(document.rule, '', 'block', options)}`;
+  return `${printParameters(document.parameters)}${printDefinitions(document.definitions, options)}`
+    + printNode(document.rule, '', 'block', options);
 }
 
 /**

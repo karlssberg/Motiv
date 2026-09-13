@@ -198,4 +198,10 @@ describe('tokenize', () => {
       ['number', '1'], ['spec', 'e'], ['error', '+'],
     ]);
   });
+
+  it('classifies let as a keyword', () => {
+    expect(tokenize('let a = x && y').map((t) => t.kind)).toEqual([
+      'keyword', 'spec', 'equals', 'spec', 'operator', 'spec',
+    ]);
+  });
 });

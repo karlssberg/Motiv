@@ -253,3 +253,45 @@ describe('parse — unterminated literals', () => {
     expect(parse('atLeast(2.5) in orders { a }').errors[0]).toMatchObject({ code: 'ExpectedCount' });
   });
 });
+
+describe('parse — let errors', () => {
+  it('reports a missing name after let', () => {
+    const result = parse('let = x\n\na');
+    expect(result.document).toBeUndefined();
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ code: 'ExpectedLocalName' }),
+    );
+  });
+
+  it('rejects a dotted local name', () => {
+    const result = parse('let a.b = x\n\na');
+    expect(result.document).toBeUndefined();
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ code: 'DottedLocalName' }),
+    );
+  });
+
+  it('rejects a duplicate local declaration', () => {
+    const result = parse('let a = x\n\nlet a = y\n\na');
+    expect(result.document).toBeUndefined();
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ code: 'DuplicateLocal' }),
+    );
+  });
+
+  it('reports a missing equals after the local name', () => {
+    const result = parse('let a x\n\na');
+    expect(result.document).toBeUndefined();
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ code: 'ExpectedEquals' }),
+    );
+  });
+
+  it('rejects arguments applied to a local reference', () => {
+    const result = parse('let a = x\n\na(n = 1)');
+    expect(result.document).toBeUndefined();
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ code: 'UnexpectedArguments' }),
+    );
+  });
+});

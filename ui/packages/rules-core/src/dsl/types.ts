@@ -3,7 +3,7 @@ import type { RuleDocument } from '../document.js';
 /** The lexical class of a DSL token. */
 export type TokenKind =
   | 'spec'        // is-active, and bare identifiers: param names, collection paths
-  | 'keyword'     // param, in, as
+  | 'keyword'     // param, let, in, as
   | 'type'        // integer, number, string, boolean
   | 'quantifier'  // all, any, exactly, atLeast, atMost
   | 'operator'    // && || & | ^ !

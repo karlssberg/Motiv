@@ -178,3 +178,46 @@ describe('print', () => {
     expect(print(document, { catalog: catalogWithPlainSpec })).toBe('is-active(b = 1, a = 2)');
   });
 });
+
+describe('print — let declarations', () => {
+  it('prints a local reference bare', () => {
+    expect(print({
+      definitions: { a: { rule: { spec: 'x' } } },
+      rule: { local: 'a' },
+    })).toBe('let a = x\n\na');
+  });
+
+  it('prints params, then lets, then the rule, blank-line separated', () => {
+    const document: RuleDocument = {
+      parameters: { minOrders: { type: 'integer', default: 3 } },
+      definitions: { 'is-eligible': { rule: { spec: 'customer.is-active' } } },
+      rule: { and: [{ local: 'is-eligible' }, { spec: 'z' }] },
+    };
+    expect(print(document)).toBe(
+      'param minOrders: integer = 3\n\nlet is-eligible = customer.is-active\n\nis-eligible & z',
+    );
+  });
+
+  it('prints several let declarations in declaration order, joined by newlines', () => {
+    const document: RuleDocument = {
+      definitions: {
+        a: { rule: { spec: 'x' } },
+        b: { rule: { local: 'a' } },
+      },
+      rule: { local: 'b' },
+    };
+    expect(print(document)).toBe('let a = x\nlet b = a\n\nb');
+  });
+
+  it('indents a multi-line let body as a block', () => {
+    const document: RuleDocument = {
+      definitions: {
+        a: { rule: { asAllSatisfied: { spec: 'is-positive' }, path: 'orders' } },
+      },
+      rule: { local: 'a' },
+    };
+    expect(print(document)).toBe(
+      'let a = all in orders {\n    is-positive\n}\n\na',
+    );
+  });
+});
