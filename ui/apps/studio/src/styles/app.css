@@ -890,11 +890,15 @@ textarea.control {
 
 /* The detail panel: the node's edit controls and decoration fields, a well inset to the row's
    text column, with the fields side by side where there is room. */
+/* The panel shares its row's left edge — the same edge the row's hover fill and selection bar
+   start from — so it reads as the row's own card. It used to sit at 32px, the row's text column,
+   which is 4px *right* of where a child row's box begins (`.node-kids` indents 28px): a filled box
+   starting inside the children's column read as the first child's, not the parent's. */
 .node-detail {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin: 2px 0 8px 32px;
+  margin: 2px 0 8px 0;
   padding: 12px;
   background: var(--sh-inset);
   border-radius: 8px;
