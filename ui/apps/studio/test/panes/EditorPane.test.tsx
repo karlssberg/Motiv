@@ -64,6 +64,17 @@ describe('EditorPane', () => {
     expect(screen.queryByLabelText('sync status')).toBeNull();
   });
 
+  it('lays the rule out above its definitions, the whole before its parts', async () => {
+    const { container } = renderPane();
+    await settleCatalog();
+
+    const panel = container.querySelector('.surface-panel')!;
+    const rule = screen.getByRole('button', { name: 'details for $.rule' });
+    const definitions = screen.getByRole('region', { name: 'Definitions' });
+    expect(panel.contains(rule) && panel.contains(definitions)).toBe(true);
+    expect(rule.compareDocumentPosition(definitions) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('switches to the DSL surface when its tab is clicked', async () => {
     renderPane();
     await settleCatalog();

@@ -48,6 +48,19 @@ describe('DefinitionsPane', () => {
     expect(document.getElementById('definition-a')?.getAttribute('tabindex')).toBe('-1');
   });
 
+  it('lists a definition above the definitions it references, whatever the key order', () => {
+    const store = new RuleEditorStore({
+      rule: { local: 'top' },
+      definitions: {
+        leaf: { rule: { spec: 'is-active' } },
+        top: { rule: { and: [{ local: 'leaf' }, { spec: 'is-adult' }] } },
+      },
+    });
+    renderWith(store);
+    const rows = screen.getByRole('region', { name: 'Definitions' }).querySelectorAll('[id^="definition-"]');
+    expect(Array.from(rows).map((row) => row.id)).toEqual(['definition-top', 'definition-leaf']);
+  });
+
   it('shows a reference count per definition, singular and plural', () => {
     const store = new RuleEditorStore(twoDefinitionsDocument());
     renderWith(store);

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Catalog } from '@motiv-rules/core';
+import { definitionOrder, type Catalog } from '@motiv-rules/core';
 import { useRuleEditor, useRuleEditorStore } from '@motiv-rules/react';
 import { DefinitionRow } from './DefinitionRow.js';
 
@@ -8,9 +8,10 @@ import { DefinitionRow } from './DefinitionRow.js';
  * see how many places reference it, edit its own decoration, or reach for the menu that inlines,
  * promotes or removes it.
  *
- * Always present above the builder (in {@link EditorPane}) rather than only once a definition
+ * Always present below the builder (in {@link EditorPane}) rather than only once a definition
  * exists — an author with no definitions yet still needs to be told where they will show up once
- * `Extract to definition` makes one (#234).
+ * `Extract to definition` makes one. Rows run whole-before-parts (`definitionOrder`), so the
+ * definitions the rule uses directly come first and what they are built from follows (#234).
  */
 export function DefinitionsPane(props: {
   /**
@@ -24,7 +25,7 @@ export function DefinitionsPane(props: {
   const store = useRuleEditorStore();
   const state = useRuleEditor(store);
   const definitions = state.document.definitions ?? {};
-  const names = Object.keys(definitions);
+  const names = definitionOrder(state.document);
   const locals = new Set(names);
 
   // One popover open at a time, tree-wide — the same rule `NodeMenu` enforces for the builder,

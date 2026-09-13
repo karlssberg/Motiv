@@ -371,3 +371,10 @@ rule in `CLAUDE.md`).
   falling through to the whole document. Unknown-local cannot arise in the DSL at all: an
   undeclared bare word is read as a catalog reference, not as a dangling local. Unused-definition
   warnings, which the original work list carried, did not ship.
+- **The rule sits above its definitions, and the definitions run whole-before-parts.** The builder
+  surface reads top-down from what the document decides to what it is built from: the rule first,
+  then the definitions panel, whose rows `definitionOrder` sorts in tiers — every definition
+  nothing references (the ones the rule uses directly), then everything only those use, and so on
+  down, key order within a tier. A cycle's members are appended in key order rather than dropped.
+  The panel is still mounted when there are no definitions, so the empty state says where one
+  will appear.

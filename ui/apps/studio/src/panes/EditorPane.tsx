@@ -99,10 +99,12 @@ export function EditorPane(props: {
         {surface === 'builder'
           ? (
             <>
-              {/* Above the builder rather than beside it, so a definition is one scroll away from
-                  every `local` reference that points at it, not off in a separate column (#234). */}
-              <DefinitionsPane catalog={catalog} onPromote={props.onPromote} />
+              {/* The rule first, its definitions below it, and those ordered whole-before-parts:
+                  the page reads top-down from what the document decides to what it is built from.
+                  Stacked rather than beside, so a definition is one scroll away from every `local`
+                  reference that points at it, not off in a separate column (#234). */}
               <BuilderBody client={props.client} onExtractToCatalog={props.onExtractToCatalog} />
+              <DefinitionsPane catalog={catalog} onPromote={props.onPromote} />
             </>
           )
           : <DslEditor store={store} catalog={catalog} sync={sync} documentName={props.documentName} />}

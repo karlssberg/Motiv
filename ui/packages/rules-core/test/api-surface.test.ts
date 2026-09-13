@@ -40,6 +40,7 @@ const APPROVED_API = [
   'declaredLocals',
   'definitionBodyPath',
   'definitionNameOf',
+  'definitionOrder',
   'definitionPath',
   'diagnosticsFor',
   'errorsForNode',

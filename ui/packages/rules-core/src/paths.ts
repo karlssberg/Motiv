@@ -213,6 +213,40 @@ export function localReferences(document: RuleDocument, name: string): string[] 
     .map(({ path }) => path);
 }
 
+/** Every local name referenced anywhere in `rule`, however deeply nested. */
+export function localsReferencedBy(rule: RuleNode): Set<string> {
+  const names = new Set<string>();
+  for (const { node } of listPaths({ rule })) {
+    if (isLocalNode(node)) names.add(node.local);
+  }
+  return names;
+}
+
+/**
+ * The definition names ordered whole-before-parts, in tiers: first every definition nothing
+ * references (the ones the rule itself uses), then everything only those use, and so on down, so a
+ * reader meets `top` before the `mid` and `leaf` it is built from. Within a tier key order is
+ * kept, so the order is stable under edits that add no reference. A cycle can never be ordered this way; its members are appended in key
+ * order rather than dropped, since a document with a cycle is still one the author has to see to
+ * fix (#234).
+ */
+export function definitionOrder(document: RuleDocument): string[] {
+  const definitions = document.definitions ?? {};
+  const remaining = Object.keys(definitions);
+  const referencedBy = new Map(
+    remaining.map((name) => [name, localsReferencedBy(definitions[name]!.rule)] as const),
+  );
+  const ordered: string[] = [];
+  while (remaining.length > 0) {
+    const referenced = new Set(remaining.flatMap((name) => [...referencedBy.get(name)!]));
+    const roots = remaining.filter((name) => !referenced.has(name));
+    if (roots.length === 0) return [...ordered, ...remaining];
+    ordered.push(...roots);
+    for (const root of roots) remaining.splice(remaining.indexOf(root), 1);
+  }
+  return ordered;
+}
+
 /** The child node paths of a rule node, in the same order the document walks them. */
 export function childPaths(node: RuleNode, path: string): string[] {
   if (isNotNode(node)) return [`${path}.not`];

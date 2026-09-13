@@ -45,7 +45,7 @@ export { RulesApiClient, RulesApiError, type RulesApiClientOptions, type StoreGe
 // Path arithmetic over a rule document.
 export {
   joinSteps, splitLast, getNode, setNode, listPaths, childPaths, localReferences, isNodePath,
-  DEFINITIONS_ROOT, definitionPath, definitionBodyPath, definitionNameOf,
+  DEFINITIONS_ROOT, definitionPath, definitionBodyPath, definitionNameOf, definitionOrder,
 } from './paths.js';
 
 // Document normalization.

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  childPaths, getNode, isNodePath, setNode, listPaths, localReferences,
+  childPaths, definitionOrder, getNode, isNodePath, setNode, listPaths, localReferences,
   DEFINITIONS_ROOT, definitionPath, definitionBodyPath, definitionNameOf,
 } from '../src/paths.js';
 import type { RuleDocument } from '../src/document.js';
@@ -147,6 +147,45 @@ describe('localReferences', () => {
 
   it('returns an empty array when there are no references', () => {
     expect(localReferences({ rule: { spec: 'a' } }, 'quota-check')).toEqual([]);
+  });
+});
+
+describe('definitionOrder', () => {
+  it('lists definitions by tier — unreferenced first, then what those use — key order within a tier', () => {
+    const document: RuleDocument = {
+      rule: { local: 'top' },
+      definitions: {
+        leaf: { rule: { spec: 'a' } },
+        mid: { rule: { and: [{ local: 'leaf' }, { spec: 'b' }] } },
+        top: { rule: { or: [{ local: 'mid' }, { local: 'leaf' }] } },
+        alone: { rule: { spec: 'c' } },
+      },
+    };
+    expect(definitionOrder(document)).toEqual(['top', 'alone', 'mid', 'leaf']);
+  });
+
+  it('is key order when nothing references anything', () => {
+    const document: RuleDocument = {
+      rule: { spec: 'x' },
+      definitions: { b: { rule: { spec: 'a' } }, a: { rule: { spec: 'a' } } },
+    };
+    expect(definitionOrder(document)).toEqual(['b', 'a']);
+  });
+
+  it('appends the members of a cycle in key order rather than dropping or looping on them', () => {
+    const document: RuleDocument = {
+      rule: { spec: 'x' },
+      definitions: {
+        y: { rule: { local: 'z' } },
+        z: { rule: { local: 'y' } },
+        w: { rule: { local: 'y' } },
+      },
+    };
+    expect(definitionOrder(document)).toEqual(['w', 'y', 'z']);
+  });
+
+  it('is empty without definitions', () => {
+    expect(definitionOrder({ rule: { spec: 'a' } })).toEqual([]);
   });
 });
 

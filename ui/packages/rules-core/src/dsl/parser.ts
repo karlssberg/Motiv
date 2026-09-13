@@ -1,8 +1,7 @@
-import { isLocalNode } from '../document.js';
 import type { ArgValue, Definition, ParameterDeclaration, RuleDocument, RuleNode } from '../document.js';
 import type { Catalog, CatalogEntry, CatalogParameter } from '../contracts.js';
 import { RESERVED_LOCAL_NAMES, isValidLocalName } from '../localNames.js';
-import { definitionBodyPath, definitionPath, listPaths } from '../paths.js';
+import { definitionBodyPath, definitionPath, localsReferencedBy } from '../paths.js';
 import { tokenize } from './lexer.js';
 import { collectLocalNames } from './locals.js';
 import type { DslError, NodeSpan, ParseResult, Token, TokenKind } from './types.js';
@@ -628,15 +627,6 @@ function parseLet(
 
   state.declaredDefinitions.add(nameToken.value);
   return { name: nameToken.value, definition: { rule }, nameToken };
-}
-
-/** Every local name referenced anywhere in `rule`, however deeply nested. */
-function localsReferencedBy(rule: RuleNode): Set<string> {
-  const names = new Set<string>();
-  for (const { node } of listPaths({ rule })) {
-    if (isLocalNode(node)) names.add(node.local);
-  }
-  return names;
 }
 
 /**

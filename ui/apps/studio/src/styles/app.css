@@ -391,7 +391,7 @@ kbd {
 }
 
 /*
-  Definitions pane (#234): stacked above the builder rather than beside it, so it never competes
+  Definitions pane (#234): stacked below the builder rather than beside it, so it never competes
   with the tree for the rail's width — it grows with its own content instead of sharing `.pane`'s
   default `flex: 1`.
 */
