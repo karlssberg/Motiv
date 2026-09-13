@@ -30,11 +30,16 @@ async function insideTree(page: Page): Promise<boolean> {
     document.querySelector('[role="tree"]')?.contains(document.activeElement) ?? false);
 }
 
-/** Open the propositions palette, which opens browsing its namespace tree. */
+/**
+ * Open the propositions explorer, which opens browsing its namespace tree. It sits one step in
+ * from the shell's Open palette, behind *Manage propositions*.
+ */
 async function openPalette(page: Page): Promise<void> {
   await page.goto('/#/propositions');
-  await expect(page.getByRole('link', { name: 'Rules' })).toBeVisible();
-  await page.getByRole('button', { name: 'Open' }).click();
+  await expect(page.getByRole('button', { name: 'Open', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Open', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Open' })).toBeVisible();
+  await page.getByRole('button', { name: 'Manage propositions' }).click();
   await expect(page.getByRole('dialog', { name: 'Propositions' })).toBeVisible();
 }
 
@@ -110,25 +115,50 @@ test.describe('the palette namespace tree honours role="tree"', () => {
   });
 });
 
-test.describe('the page switcher is navigation', () => {
-  test('offers links that say which page is current', async ({ page }) => {
-    await page.goto('/#/propositions');
+test.describe('the tab strip is a tablist', () => {
+  /** Two documents open: the proposition first, then the rule, which is the active one. */
+  async function openTwo(page: Page): Promise<void> {
+    await page.goto('/#/propositions/customer.is-active');
+    await expect(page.getByRole('tab', { name: 'Proposition customer.is-active' })).toBeVisible();
+    await page.goto('/#/rules/can-checkout');
+    await expect(page.getByRole('tab', { name: 'Rule can-checkout' })).toBeVisible();
+  }
 
-    const current = page.getByRole('link', { name: 'Propositions' });
-    await expect(current).toHaveAttribute('aria-current', 'page');
-    await expect(page.getByRole('link', { name: 'Rules' })).not.toHaveAttribute('aria-current', /.*/);
-    // A destination, not a handler: it is the href that navigates, which is what makes
-    // middle-click and open-in-new-tab work without anything arranging for them.
-    await expect(page.getByRole('link', { name: 'Rules' })).toHaveAttribute('href', '#/rules');
+  test('offers tabs that say which document is current', async ({ page }) => {
+    await openTwo(page);
+
+    const current = page.getByRole('tab', { name: 'Rule can-checkout' });
+    await expect(current).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('tab', { name: 'Proposition customer.is-active' })).toHaveAttribute('aria-selected', 'false');
+    // One stop in the tab sequence: the active tab, and the arrows move between the rest.
+    await expect(current).toHaveAttribute('tabindex', '0');
+    await expect(page.getByRole('tab', { name: 'Proposition customer.is-active' })).toHaveAttribute('tabindex', '-1');
   });
 
-  test('navigates on Enter, the key a link is operated with', async ({ page }) => {
-    await page.goto('/#/propositions');
+  test('moves between tabs on the arrow keys, activating as it goes', async ({ page }) => {
+    await openTwo(page);
 
-    await page.getByRole('link', { name: 'Rules' }).focus();
-    await page.keyboard.press('Enter');
+    await page.getByRole('tab', { name: 'Rule can-checkout' }).focus();
+    await page.keyboard.press('ArrowLeft');
 
-    await expect(page.getByRole('link', { name: 'Rules' })).toHaveAttribute('aria-current', 'page');
-    expect(page.url()).toContain('#/rules');
+    await expect(page.getByRole('tab', { name: 'Proposition customer.is-active' })).toBeFocused();
+    await expect(page.getByRole('tab', { name: 'Proposition customer.is-active' })).toHaveAttribute('aria-selected', 'true');
+    expect(page.url()).toContain('#/propositions/customer.is-active');
+  });
+
+  test('describes the focused tab with its card, and Escape dismisses it', async ({ page }) => {
+    await openTwo(page);
+
+    const tab = page.getByRole('tab', { name: 'Rule can-checkout' });
+    await tab.focus();
+    const card = page.getByRole('tooltip');
+    await expect(card).toBeVisible();
+    await expect(card).toContainText('can-checkout');
+    await expect(tab).toHaveAttribute('aria-describedby', await card.getAttribute('id') ?? '');
+
+    await page.keyboard.press('Escape');
+    await expect(card).toBeHidden();
+    // Dropped with the card: an IDREF to an absent element is invalid, not harmless.
+    await expect(tab).not.toHaveAttribute('aria-describedby', /.*/);
   });
 });

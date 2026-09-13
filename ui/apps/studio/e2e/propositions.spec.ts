@@ -3,6 +3,7 @@ import { openDsl, replaceBuffer } from './dsl-surface.js';
 import {
   chooseFromPalette, closePalette, expectDocument, expectInTree, openPalette, palette,
   paletteAction,
+  tab,
 } from './shell.js';
 
 const API = '/api/rules';
@@ -110,8 +111,7 @@ test('an authored proposition is a building block the live rule follows', async 
   // …and its body is the reference the picker chose.
   await expectDocument(page, '"customer.has-orders"');
 
-  // Reference it from the live rule. The rule is saved exactly once, here.
-  await page.getByRole('link', { name: 'Rules' }).click();
+  // Reference it from the live rule, opened in a second tab. The rule is saved exactly once, here.
   await chooseFromPalette(page, 'Rules', RULE);
   await replaceBuffer(await openDsl(page), ELIGIBLE);
   await expectDocument(page, `"${ELIGIBLE}"`);
@@ -125,9 +125,8 @@ test('an authored proposition is a building block the live rule follows', async 
   await page.getByRole('button', { name: 'Try checkout' }).click();
   await expect(screening).toContainText('customer has orders');
 
-  // Redefine the proposition. The rule is never opened again.
-  await page.getByRole('link', { name: 'Propositions' }).click();
-  await chooseFromPalette(page, 'Propositions', ELIGIBLE);
+  // Redefine the proposition, back in its own tab. The rule is never reloaded.
+  await tab(page, 'Proposition', ELIGIBLE).click();
   await expectDocument(page, '"customer.has-orders"');
 
   // The blast radius is on the page before the edit is saved, not sprung afterwards.
@@ -140,8 +139,11 @@ test('an authored proposition is a building block the live rule follows', async 
   await page.getByRole('button', { name: 'Save (1)', exact: true }).click();
   await expect(page.getByText(/^v2\b/)).toBeVisible();
 
+  // The rule's tab knows: the proposition it uses has moved since it last looked.
+  await tab(page, 'Rule', RULE).click();
+  await expect(page.getByRole('group', { name: 'Uses' })).toContainText('updated');
+
   // The verdict follows. Same rule document, same customer — a different answer.
-  await page.getByRole('link', { name: 'Rules' }).click();
   await page.getByRole('textbox', { name: 'customer', exact: true }).fill(INACTIVE_WITH_ORDERS);
   await page.getByRole('button', { name: 'Try checkout' }).click();
   await expect(screening).toContainText('customer is inactive');
@@ -252,11 +254,11 @@ test('⌘K still opens the palette when nothing else is showing', async ({ page 
   await page.goto('/#/propositions');
   // The chord is bound in an effect, so it exists only once the page has rendered: pressing it
   // straight after `goto` races React's first commit, and a press that lands first is simply lost.
-  await expect(page.getByRole('link', { name: 'Rules' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Open', exact: true })).toBeVisible();
 
   await page.keyboard.press('ControlOrMeta+k');
 
-  await expect(palette(page, 'Propositions')).toBeVisible();
+  await expect(palette(page, 'Rules')).toBeVisible();
 });
 
 test('the palette traps focus, closes on Escape, and makes the page behind it inert', async ({ page }) => {

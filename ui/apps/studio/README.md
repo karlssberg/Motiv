@@ -10,37 +10,65 @@ The host is `src/Motiv.Studio`; the authoring *logic* beneath this UI lives in
 ## Layout
 
 One surface, divided by hairlines: a top bar, the editor, and a rail beside it
-holding the two panes that *run* the rule. The top bar carries the brand, the
-page switch (Rules / Propositions, and Admin when the caller may administer
-grants) and the page's actions — Open (`⌘K`), JSON and a primary Save. The
-document being edited is named where it is edited: the editor pane's header
-shows the rule or proposition, its model type and version. Below 900px the
-rail stacks under the editor and the palette and dialogs fill the screen.
+holding the panes that *run* the document. The top bar carries the brand and
+the **tab strip** — one chip per open rule or proposition, any number of them —
+and Admin as a link when the caller may administer grants. The document being
+edited is named where it is edited: the editor pane's header shows the rule or
+proposition, its model type and version, and ends with its own actions, JSON
+and a primary Save. Below 900px the rail stacks under the editor and the palette
+and dialogs fill the screen; below 640px the strip becomes one dropdown naming
+the active document, and the actions move into the bar.
+
+## Tabs
+
+- **The workspace** (`src/shell/workspace.ts`) — the open documents, one
+  `RuleEditorStore` each, so every tab keeps its own draft, undo stack and
+  unsaved flag while another is edited. The hash route is the active document:
+  `#/rules/<name>` or `#/propositions/<name>` opens (or activates) that tab,
+  closing the active tab navigates to its neighbour, and the bare page means
+  nothing is in front. The tab *list* is remembered per browser session, so a
+  reload keeps the tabs; unsaved edits are not.
+- **The strip** (`src/shell/TabStrip.tsx`) — chips at a fixed width with the
+  kind as an outlined tile (`R` / `P`); whatever does not fit collapses into a
+  "+N" menu and the active tab is always kept visible. Hover or focus a chip for
+  its card: full name, kind and origin, model, version, unsaved state, and the
+  propositions a rule uses. Close from the ×, middle-click, Delete or ⌘W; a tab
+  with unsaved changes asks first (`DiscardDialog`): Keep editing, Save & close,
+  or Discard.
+- **Sync** (`src/shell/ReferencesStrip.tsx`) — a rule tab lists the
+  propositions it references with their versions: *editing* while another tab
+  holds one with unsaved changes, *updated* once one is saved after the rule
+  last looked. Saves go to the server as before; the workspace only learns the
+  version, and refreshes the listings on the back of it.
+- **Open** (`src/shell/OpenPalette.tsx`) — the strip's **+** and `⌘K` open one
+  palette listing rules and propositions together. Its footer's *Manage
+  propositions* opens the explorer: the namespace tree with New, Derive,
+  Override and Delete.
 
 ## Panes
 
-- **Rules page** (`src/panes/RulesPage.tsx`) — owns the rule workflow: the
-  rule in the route (`#/rules/<name>`) is loaded, document and version, into
-  the editor, and saved back with a versioned `PUT`. With no rule in the route
-  the page shows an empty state and a chooser — there is no local draft. A
-  stale save surfaces as a conflict banner with a "Reload latest" escape hatch
-  (open two tabs to watch the race protection work); a save the server rejects
-  as invalid lists its errors in the JSON modal. Rules on a compiled default
-  show a "code-defined default" note. Loading an async rule (e.g.
-  `fraud-screening`) switches live validation to the async path, so documents
-  may reference async specs without red herrings.
-- **Document actions** (`src/shell/DocumentActions.tsx`) — the toolbar both
-  document pages share: Open, JSON, Close, and Save as a split button whose
-  menu offers *Save* and *Save & close*; the variant chosen becomes the
-  button's default and is remembered per browser. Close on a document with
-  unsaved changes asks first (`DiscardDialog`): Keep editing, Save & close, or
-  Discard. "Unsaved" is the editor store's `dirty` flag, measured against the
-  document last loaded or saved.
+- **Rule** (`src/panes/RuleDocument.tsx`) — one open rule: its document and
+  version are loaded into the tab's store and saved back with a versioned
+  `PUT`. A stale save surfaces as a conflict banner with a "Reload latest"
+  escape hatch (open two browser tabs to watch the race protection work); a
+  save the server rejects as invalid lists its errors in the JSON modal. Rules
+  on a compiled default show a "code-defined default" note. An async rule (e.g.
+  `fraud-screening`) switches that tab's live validation to the async path, so
+  documents may reference async specs without red herrings.
+- **Proposition** (`src/panes/PropositionDocument.tsx`) — one open proposition,
+  the same editor and Evaluate panes, with the blast radius above them and on
+  the Save button. The listing and its authoring actions are the shell's
+  (`src/shell/WorkspaceShell.tsx`), because they act on the set of propositions
+  rather than on a tab.
+- **Document actions** (`src/shell/DocActions.tsx`) — JSON, and Save as a split
+  button whose menu offers *Save* and *Save & close*; the variant chosen becomes
+  the button's default and is remembered per browser.
 - **Editor** (`src/panes/EditorPane.tsx`) — the document under its title,
   edited either through the accordion builder (`BuilderPane.tsx`) or as DSL
-  text, switched by the Builder / DSL tabs in its header.
+  text, switched by the Builder / DSL tabs in its header; the document's
+  actions end the row.
 - **JSON** (`src/panes/DocumentModal.tsx`) — the live document with validation
-  errors, behind the toolbar's JSON action.
+  errors, behind the JSON action.
 - **Evaluate** (`src/panes/EvaluatePane.tsx`) — evaluates the draft document
   against a sample model via `POST /api/rules/evaluate`; the outcome is a
   verdict chip beside the button, with the de-noised justification beneath.

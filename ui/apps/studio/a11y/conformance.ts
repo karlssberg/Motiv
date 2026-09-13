@@ -244,7 +244,7 @@ export const CONFORMANCE: readonly ConformanceRow[] = [
           'moves between rows on the arrow keys, and into and out of a subtree',
           'jumps to a namespace by typing its first letters',
           'chooses the focused proposition on Enter, so the palette is crossable by keyboard alone',
-          'navigates on Enter, the key a link is operated with',
+          'moves between tabs on the arrow keys, activating as it goes',
         ],
       },
     ],
@@ -531,7 +531,8 @@ export const CONFORMANCE: readonly ConformanceRow[] = [
         tests: [
           'is one stop in the tab sequence, not one per proposition',
           'moves between rows on the arrow keys, and into and out of a subtree',
-          'offers links that say which page is current',
+          'offers tabs that say which document is current',
+          'moves between tabs on the arrow keys, activating as it goes',
         ],
       },
     ],
