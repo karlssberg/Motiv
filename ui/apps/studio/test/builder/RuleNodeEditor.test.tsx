@@ -243,7 +243,8 @@ describe('BuilderPane scoped propositions (#234)', () => {
     await openDetail('$.rule.and[0]');
     const notice = container.querySelector('.decoration-notice');
     expect(notice).not.toBeNull();
-    expect(notice!.textContent).toContain('as "activity"');
+    expect(notice!.textContent).toContain('"activity"');
+    expect(notice!.textContent).not.toContain('as "');
   });
 
   it('shows no notice for a nested node with nothing to migrate', async () => {
@@ -276,13 +277,12 @@ describe('BuilderPane scoped propositions (#234)', () => {
     expect(extract.getAttribute('title')).toContain('activity');
   });
 
-  it('renders a local reference as a let row', async () => {
+  it('renders a local reference as its name, coloured as a local, with no keyword', async () => {
     const { container } = renderWith(new RuleEditorStore(WITH_LOCAL));
     await screen.findByRole('button', { name: 'details for $.rule.and[0]' });
-    const badges = [...container.querySelectorAll('.node-badge')].map((b) => b.textContent);
-    expect(badges).toContain('let');
-    expect([...container.querySelectorAll('.node-desc')].map((d) => d.textContent))
-      .toContain('activity');
+    const badge = container.querySelector('.node-badge-local');
+    expect(badge?.textContent).toBe('activity');
+    expect([...container.querySelectorAll('.node-badge')].map((b) => b.textContent)).not.toContain('let');
   });
 
   it('shows the definition body read-only in a local row\'s panel', async () => {

@@ -36,7 +36,7 @@ export function InlineDecorationNotice(props: { path: string; node: RuleNode }) 
   return (
     <div className="decoration-notice">
       <p className="decoration-notice-head">
-        {node.name !== undefined && <span className="node-name">as &quot;{node.name}&quot;</span>}
+        {node.name !== undefined && <span className="node-name">&quot;{node.name}&quot;</span>}
         <span className="caption">named here, which definitions have replaced</span>
       </p>
       {node.whenTrue !== undefined && (

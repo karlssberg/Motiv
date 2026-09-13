@@ -50,13 +50,16 @@ export function LocalNodeDetail(props: { path: string; node: LocalNode; catalog:
           type="button"
           className="btn"
           aria-label={`go to definition ${path}`}
-          // The definitions panel is the other half of this (Task 11); until its rows are on
-          // screen there is nowhere to go, and a control that throws would be worse than one that
-          // quietly does nothing.
+          // Lands in the row's name field, not on the row: a focused row shows nothing (script
+          // focus after a click draws no ring), so the button read as inert, while a caret in the
+          // name is unmistakable and is the field an author most often came to edit. Centred, so
+          // the row is not left flush with the bottom edge. Without a definitions panel mounted
+          // there is nowhere to go, and doing nothing beats throwing.
           onClick={() => {
             const row = document.getElementById(`definition-${node.local}`);
-            row?.scrollIntoView({ block: 'nearest' });
-            row?.focus();
+            if (!row) return;
+            row.scrollIntoView({ block: 'center' });
+            (row.querySelector<HTMLElement>('input') ?? row).focus();
           }}
         >
           Go to definition

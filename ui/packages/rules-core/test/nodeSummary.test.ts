@@ -17,9 +17,9 @@ describe('summarize', () => {
       .toBe('all must hold');
   });
 
-  it('describes a local node with a let badge', () => {
+  it('summarises a local node as its name, coloured as a local, with no keyword', () => {
     expect(summarize({ local: 'is-active' })).toEqual({
-      badge: 'let', description: 'is-active', kind: 'spec',
+      badge: 'is-active', description: '', kind: 'local',
     });
   });
 });

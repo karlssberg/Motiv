@@ -1,6 +1,6 @@
-import { useId, useState, type ReactNode } from 'react';
+import { useId, useState, type KeyboardEvent, type ReactNode } from 'react';
 import type { RulesApiClient } from '@motiv-rules/core';
-import { useCatalog, useDslSync, useRuleEditorStore } from '@motiv-rules/react';
+import { useCatalog, useDslSync, useRuleEditor, useRuleEditorStore } from '@motiv-rules/react';
 import { DslEditor } from '../dsl/DslEditor.js';
 import { BuilderBody, EMPTY_CATALOG } from './BuilderPane.js';
 import { DefinitionsPane } from './DefinitionsPane.js';
@@ -49,6 +49,25 @@ export function EditorPane(props: {
   onPromote?: ((name: string) => void) | undefined;
 }) {
   const store = useRuleEditorStore();
+  const { canUndo, canRedo } = useRuleEditor(store);
+
+  /**
+   * ⌘Z / Ctrl+Z and ⇧⌘Z / Ctrl+Y over the whole pane, so an Inline — which dissolves a reference
+   * and loses its name — is one keystroke from undone (#234). Text fields keep their own history:
+   * the DSL surface's CodeMirror and every input handle the same keys themselves, and a stroke
+   * that already reached one of them is theirs.
+   */
+  const onKeyDown = (event: KeyboardEvent<HTMLElement>): void => {
+    if (!(event.metaKey || event.ctrlKey) || event.altKey) return;
+    const target = event.target as HTMLElement;
+    if (target.closest('input, textarea, [contenteditable="true"], .cm-editor')) return;
+    const key = event.key.toLowerCase();
+    const redo = (key === 'z' && event.shiftKey) || (key === 'y' && !event.shiftKey);
+    const undo = key === 'z' && !event.shiftKey;
+    if (!undo && !redo) return;
+    event.preventDefault();
+    if (undo) store.undo(); else store.redo();
+  };
   const catalogState = useCatalog(props.client);
   const catalog = catalogState.status === 'ready' ? catalogState.data : EMPTY_CATALOG;
   const sync = useDslSync(store);
@@ -64,12 +83,20 @@ export function EditorPane(props: {
   const tabId = (which: Surface): string => `${idBase}-tab-${which}`;
 
   return (
-    <section className="pane" aria-label="Editor">
+    <section className="pane" aria-label="Editor" onKeyDown={onKeyDown}>
       <div className="pane-header">
         {props.title !== undefined && <div className="pane-title truncate">{props.title}</div>}
         <div className="pane-header-fill" />
         {/* The header item that yields when the pane is too narrow for everything (see `.truncate`). */}
         {surface === 'dsl' && <span className="pane-hint truncate">text is the source of truth</span>}
+        <div className="history-actions" role="group" aria-label="History">
+          <button type="button" className="ghost ghost-labelled" disabled={!canUndo} onClick={() => store.undo()} title="Undo (⌘Z)">
+            Undo
+          </button>
+          <button type="button" className="ghost ghost-labelled" disabled={!canRedo} onClick={() => store.redo()} title="Redo (⇧⌘Z)">
+            Redo
+          </button>
+        </div>
         <div className="surface-tabs" role="tablist" aria-label="Editing surface">
           {SURFACES.map(({ id, label }) => (
             <button

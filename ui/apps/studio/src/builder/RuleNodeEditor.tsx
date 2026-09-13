@@ -291,7 +291,7 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
                 <span className={`node-badge node-badge-${summary.kind}`}>{summary.badge}</span>
               )}
               {summary.description && <span className="node-desc">{summary.description}</span>}
-              {node.name && <span className="node-name">as &quot;{node.name}&quot;</span>}
+              {node.name && <span className="node-name">&quot;{node.name}&quot;</span>}
             </>
           )}
         </span>

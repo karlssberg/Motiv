@@ -384,3 +384,11 @@ rule in `CLAUDE.md`).
   `as`; a stray `as "…"` is now a plain `UnexpectedToken` syntax error; the printer never emits a
   `name`; and `mergeDecorations` now carries `name` across a reparse exactly like `whenTrue` /
   `whenFalse`, since the text can no longer carry it at all.
+- **Inline is undoable from the surface, and a local row is its name.** The editor pane gained
+  Undo / Redo (buttons in the header, ⌘Z / ⇧⌘Z / Ctrl+Y over the pane, leaving text fields and the
+  DSL surface their own history), so dissolving a reference — which loses the name — is one
+  keystroke from restored; the other way to a name is *Extract to definition*, which exists.
+  A local row's badge is the definition's name coloured as a local, not a `let` keyword: the row
+  is a reference, not a declaration. *Go to definition* centres the definition's row and puts the
+  caret in its name field — script focus on the row itself drew no ring, so the button read as
+  inert. A nested node that still carries a legacy name shows it quoted, without `as`.
