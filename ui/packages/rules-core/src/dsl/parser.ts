@@ -1,7 +1,8 @@
+import { isLocalNode } from '../document.js';
 import type { ArgValue, Definition, ParameterDeclaration, RuleDocument, RuleNode } from '../document.js';
 import type { Catalog, CatalogEntry, CatalogParameter } from '../contracts.js';
 import { RESERVED_LOCAL_NAMES, isValidLocalName } from '../localNames.js';
-import { definitionBodyPath } from '../paths.js';
+import { definitionBodyPath, definitionPath, listPaths } from '../paths.js';
 import { tokenize } from './lexer.js';
 import { collectLocalNames } from './locals.js';
 import type { DslError, NodeSpan, ParseResult, Token, TokenKind } from './types.js';
@@ -578,7 +579,9 @@ function parseParameters(
  * `state.locals` from the whole token stream before parsing starts. Returns `undefined` on error,
  * having already reported it.
  */
-function parseLet(state: ParserState): { name: string; definition: Definition } | undefined {
+function parseLet(
+  state: ParserState,
+): { name: string; definition: Definition; nameToken: Token } | undefined {
   state.next(); // 'let'
   const nameToken = parseIdentifier(state, 'ExpectedLocalName', 'expected a name after `let`');
   if (!nameToken) return undefined;
@@ -617,8 +620,72 @@ function parseLet(state: ParserState): { name: string; definition: Definition } 
   const rule = parseExpression(state, definitionBodyPath(nameToken.value));
   if (!rule) return undefined;
 
+  // The declaration name is the definition's own span. Without it, `rangeOfPath` walks past
+  // `$.definitions.<name>` — and past its non-`rule` children, `.whenTrue` and `.whenFalse` —
+  // straight to the whole-document fallback, so a definition-level server error would highlight
+  // the entire text instead of the `let` it is about.
+  state.span(definitionPath(nameToken.value), nameToken.from, nameToken.to);
+
   state.declaredDefinitions.add(nameToken.value);
-  return { name: nameToken.value, definition: { rule } };
+  return { name: nameToken.value, definition: { rule }, nameToken };
+}
+
+/** Every local name referenced anywhere in `rule`, however deeply nested. */
+function localsReferencedBy(rule: RuleNode): Set<string> {
+  const names = new Set<string>();
+  for (const { node } of listPaths({ rule })) {
+    if (isLocalNode(node)) names.add(node.local);
+  }
+  return names;
+}
+
+/**
+ * Refuses a set of definitions whose references form a cycle, mirroring C#'s
+ * `RuleErrorCode.CycleDetected`. A cycle can only be written in text — the builder's `defineLocal`
+ * cannot produce one — so the DSL is the only surface that has to catch it, and catching it here
+ * means the editor says so rather than the server. Reported once, at the name token of the first
+ * member of the chain, with the chain spelled out: `a → b → a`.
+ */
+function reportCycles(
+  state: ParserState,
+  definitions: Record<string, Definition>,
+  nameTokens: Map<string, Token>,
+): void {
+  const edges = new Map<string, Set<string>>();
+  for (const [name, definition] of Object.entries(definitions)) {
+    edges.set(name, localsReferencedBy(definition.rule));
+  }
+
+  const settled = new Set<string>();
+  const onPath = new Set<string>();
+  const chain: string[] = [];
+
+  /** Depth-first from `name`; true once a cycle has been reported, which ends the whole walk. */
+  const visit = (name: string): boolean => {
+    if (settled.has(name)) return false;
+    if (onPath.has(name)) {
+      const members = [...chain.slice(chain.indexOf(name)), name];
+      state.error(
+        'CycleDetected',
+        `definitions form a cycle: ${members.join(' → ')}`,
+        nameTokens.get(members[0]!),
+      );
+      return true;
+    }
+    onPath.add(name);
+    chain.push(name);
+    for (const referenced of edges.get(name) ?? []) {
+      // Only a name this preamble declares can close a cycle; anything else is a catalog
+      // reference, or a local seeded by `ParseOptions.locals` whose body is not in view.
+      if (edges.has(referenced) && visit(referenced)) return true;
+    }
+    chain.pop();
+    onPath.delete(name);
+    settled.add(name);
+    return false;
+  };
+
+  for (const name of edges.keys()) if (visit(name)) return;
 }
 
 /**
@@ -627,11 +694,14 @@ function parseLet(state: ParserState): { name: string; definition: Definition } 
  * has been seen, a subsequent `param` is left for `parseExpression` to reject as an unexpected
  * token, rather than silently re-opening the parameter block.
  */
-function parsePreamble(
-  state: ParserState,
-): { parameters: RuleDocument['parameters']; definitions: Record<string, Definition> | undefined } {
+function parsePreamble(state: ParserState): {
+  parameters: RuleDocument['parameters'];
+  definitions: Record<string, Definition> | undefined;
+  nameTokens: Map<string, Token>;
+} {
   const parameters: NonNullable<RuleDocument['parameters']> = {};
   const definitions: Record<string, Definition> = {};
+  const nameTokens = new Map<string, Token>();
   let sawParameter = false;
   let sawDefinition = false;
 
@@ -655,6 +725,7 @@ function parsePreamble(
       Object.defineProperty(definitions, result.name, {
         value: result.definition, enumerable: true, writable: true, configurable: true,
       });
+      nameTokens.set(result.name, result.nameToken);
       sawDefinition = true;
     } else {
       break;
@@ -664,6 +735,7 @@ function parsePreamble(
   return {
     parameters: sawParameter ? parameters : undefined,
     definitions: sawDefinition ? definitions : undefined,
+    nameTokens,
   };
 }
 
@@ -680,7 +752,8 @@ export function parse(text: string, options?: ParseOptions): ParseResult {
       state.warn('ShadowsCatalog', `shadows catalog proposition '${name}'`, token.from, token.to);
     }
   }
-  const { parameters, definitions } = parsePreamble(state);
+  const { parameters, definitions, nameTokens } = parsePreamble(state);
+  if (definitions) reportCycles(state, definitions, nameTokens);
   const rule = parseExpression(state, ROOT);
 
   if (!state.atEnd) {

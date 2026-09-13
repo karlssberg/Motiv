@@ -303,3 +303,31 @@ describe('parse — let errors', () => {
     );
   });
 });
+
+describe('local cycles', () => {
+  it('reports a two-step cycle once, at the first member\'s name token', () => {
+    const result = parse('let a = b\nlet b = a\n\na');
+    expect(result.document).toBeUndefined();
+    const cycles = result.errors.filter((error) => error.code === 'CycleDetected');
+    expect(cycles).toHaveLength(1);
+    expect(cycles[0]).toMatchObject({ code: 'CycleDetected', from: 4, to: 5 });
+    expect(cycles[0]!.message).toBe('definitions form a cycle: a \u2192 b \u2192 a');
+  });
+
+  it('reports a self-reference', () => {
+    const result = parse('let a = a\n\na');
+    expect(result.document).toBeUndefined();
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({
+        code: 'CycleDetected',
+        message: 'definitions form a cycle: a \u2192 a',
+      }),
+    );
+  });
+
+  it('does not mistake a diamond for a cycle', () => {
+    const result = parse('let d = x\nlet b = d\nlet c = d\nlet a = b & c\n\na');
+    expect(result.errors).toEqual([]);
+    expect(result.document).toBeDefined();
+  });
+});

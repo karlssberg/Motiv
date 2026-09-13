@@ -360,3 +360,11 @@ rule in `CLAUDE.md`).
 - **A local name may start with `_`** — the shared name pattern allows it — but such a name cannot
   be promoted to the catalog, whose grammar requires a leading letter; Promote surfaces the
   server's refusal rather than the client silently blocking the action.
+- **The DSL parser refuses local cycles itself.** `let a = b` / `let b = a` reports
+  `CycleDetected` — the same code string as C#'s `RuleErrorCode.CycleDetected` — once, at the name
+  token of the chain's first member, with the chain spelled out (`a → b → a`). The parser also
+  records a span at each `let` declaration, so a definition-level server error (anchored on
+  `$.definitions.<name>` or its `whenTrue` / `whenFalse`) highlights the declaration rather than
+  falling through to the whole document. Unknown-local cannot arise in the DSL at all: an
+  undeclared bare word is read as a catalog reference, not as a dangling local. Unused-definition
+  warnings, which the original work list carried, did not ship.
