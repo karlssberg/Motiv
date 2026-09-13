@@ -336,6 +336,9 @@ rule in `CLAUDE.md`).
   reading and editing a local, sharing the parent tab's draft and undo rather than forking a
   document of its own. `PayloadPopover`'s Name field is retired below the root alongside
   `DecorationEditor`'s, since both were nested-name editors the design doc had not accounted for.
+  The DSL view's payload card is read-only below the root too — its `whenTrue`/`whenFalse` fields
+  show what a document already carries but cannot be written, and there is no Save — so no nested
+  decoration is authored anywhere in the app.
 - **Reserved DSL words cannot name a local.** `param`, `let`, `in`, `as`, `integer`, `number`,
   `string`, `boolean`, `all`, `any`, `exactly`, `atLeast` and `atMost` are rejected at every layer
   that names a local — `isValidLocalName`, `parseLet` (via `ReservedLocalName`), and the C#

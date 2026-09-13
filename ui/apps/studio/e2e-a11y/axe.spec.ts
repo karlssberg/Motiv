@@ -398,13 +398,30 @@ const DANGER_SURFACES: readonly Surface[] = [
     reach: async (page) => {
       await withObjectMetadata(page, 'customer.is-active');
       await visit(page, RULE_ROUTE);
-      await composeRule(page);
+      // A single-spec rule, so the spec the chip opens *is* the root: the card only writes there
+      // (#234), and this surface is about the state its validation failure colours.
+      await page.getByRole('button', { name: 'edit expression at $.rule' }).click();
+      await page.keyboard.press('ControlOrMeta+a');
+      await page.keyboard.type('customer.is-active');
+      await page.keyboard.press('Enter');
       await page.getByRole('tab', { name: 'DSL' }).click();
       await page.getByRole('button', { name: 'Edit customer.is-active payload' }).click();
       const popover = page.getByRole('dialog', { name: 'Payload for customer.is-active' });
       await popover.getByLabel('When true').fill('{ not json');
       await popover.getByRole('button', { name: 'Save' }).click();
       await expect(popover.getByRole('alert')).toContainText('not valid JSON');
+    },
+  },
+  {
+    name: 'the payload popover, read-only below the root',
+    reach: async (page) => {
+      await visit(page, RULE_ROUTE);
+      await composeRule(page);
+      await page.getByRole('tab', { name: 'DSL' }).click();
+      await page.getByRole('button', { name: 'Edit customer.is-active payload' }).click();
+      const popover = page.getByRole('dialog', { name: 'Payload for customer.is-active' });
+      await expect(popover.getByText('Extract this node to a definition to decorate it.'))
+        .toBeVisible();
     },
   },
   {
