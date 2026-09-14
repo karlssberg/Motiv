@@ -1,0 +1,85 @@
+/* PROTOTYPE — throwaway styles for PayloadDisclosure.prototype.tsx and PrototypeSwitcher.tsx. */
+
+/* A button that reads as a link: it performs an action, so it is a button, styled as prose. */
+.proto-link {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  cursor: pointer;
+}
+.proto-link:hover { text-decoration-color: var(--accent); }
+.proto-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+.proto-link-quiet { color: var(--muted); text-decoration-color: var(--border); }
+.proto-link-quiet:hover { color: var(--text); text-decoration-color: var(--muted); }
+
+.proto-hint { margin: 0; font-size: 12.5px; color: var(--muted); }
+.proto-span { grid-column: 1 / -1; }
+
+/* A */
+.proto-a { display: flex; flex-direction: column; gap: 8px; }
+.proto-a-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 900px) { .proto-a-fields { grid-template-columns: 1fr; } }
+
+/* B */
+.proto-b { display: flex; flex-direction: column; gap: 6px; }
+.proto-b-row { display: grid; grid-template-columns: 52px minmax(0, 1fr) 28px; align-items: center; gap: 8px; min-height: 28px; }
+.proto-outcome {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  padding: 2px 6px;
+  border-radius: var(--radius);
+  text-align: center;
+  border: 1px solid var(--border);
+}
+.proto-outcome-true { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); }
+.proto-outcome-false { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 40%, transparent); }
+.proto-b-empty { grid-column: 2 / -1; }
+
+/* C */
+.proto-c { display: flex; flex-direction: column; gap: 6px; }
+.proto-c-head { font-size: 11.5px; color: var(--muted); }
+.proto-c-grid { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 10px; row-gap: 6px; }
+.proto-c-label { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+.proto-c-default {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+  padding: 4px 8px;
+  min-height: 28px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  background: var(--sh-inset);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+}
+
+/* The switcher: black pill in both schemes, so it is obviously not the design being judged. */
+.proto-switcher {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  font: 500 12.5px/1 var(--sans);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 40%);
+}
+.proto-switcher b { font-family: var(--mono); }
+.proto-switcher button {
+  width: 24px; height: 24px; border: none; border-radius: 999px;
+  background: #333; color: #fff; font: inherit; cursor: pointer;
+}
+.proto-switcher button:hover { background: #555; }

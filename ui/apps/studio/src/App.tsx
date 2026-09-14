@@ -4,6 +4,7 @@ import { useHashRoute } from './routing/useHashRoute.js';
 import { useDocumentTitle } from './routing/useDocumentTitle.js';
 import { WorkspaceShell } from './shell/WorkspaceShell.js';
 import { AdminPage } from './panes/AdminPage.js';
+import { PrototypeSwitcher } from './prototype/PrototypeSwitcher.js';
 
 /** The model type Studio's rules are validated and evaluated against. */
 export const MODEL_TYPE = 'customer';
@@ -31,6 +32,8 @@ export function App(props: { client?: RulesApiClient }) {
       {route.page === 'admin'
         ? <AdminPage />
         : <WorkspaceShell client={client} route={route} navigate={navigate} />}
+      {/* PROTOTYPE: variant switcher for PayloadDisclosure.prototype.tsx — dev builds only. */}
+      {process.env.NODE_ENV !== 'production' && <PrototypeSwitcher />}
     </main>
   );
 }

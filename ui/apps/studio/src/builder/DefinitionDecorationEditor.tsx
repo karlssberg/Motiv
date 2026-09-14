@@ -1,4 +1,5 @@
 import { useRuleEditor, useRuleEditorStore } from '@motiv-rules/react';
+import { PayloadDisclosurePrototype } from './PayloadDisclosure.prototype.js';
 
 /**
  * A definition's `whenTrue` / `whenFalse`, shown in its body root's detail panel — the same place
@@ -16,26 +17,14 @@ export function DefinitionDecorationEditor(props: { name: string }) {
 
   return (
     <div className="decoration">
-      <label className="field">
-        <span>When true</span>
-        <input
-          aria-label={`whenTrue of definition ${name}`}
-          className="control"
-          type="text"
-          value={typeof definition.whenTrue === 'string' ? definition.whenTrue : ''}
-          onChange={(e) => store.setDefinitionDecoration(name, { whenTrue: e.target.value || undefined })}
-        />
-      </label>
-      <label className="field">
-        <span>When false</span>
-        <input
-          aria-label={`whenFalse of definition ${name}`}
-          className="control"
-          type="text"
-          value={typeof definition.whenFalse === 'string' ? definition.whenFalse : ''}
-          onChange={(e) => store.setDefinitionDecoration(name, { whenFalse: e.target.value || undefined })}
-        />
-      </label>
+      {/* PROTOTYPE: the whenTrue/whenFalse boxes behind a disclosure — see the .prototype file. */}
+      <PayloadDisclosurePrototype
+        statement={name}
+        whenTrue={typeof definition.whenTrue === 'string' ? definition.whenTrue : ''}
+        whenFalse={typeof definition.whenFalse === 'string' ? definition.whenFalse : ''}
+        scope={`of definition ${name}`}
+        onChange={(patch) => store.setDefinitionDecoration(name, patch)}
+      />
     </div>
   );
 }

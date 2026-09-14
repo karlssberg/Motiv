@@ -1,6 +1,7 @@
 import type { RuleNode } from '@motiv-rules/core';
 import { useRuleEditorStore } from '@motiv-rules/react';
 import type { DecorationPatch } from '../decorationPatch.js';
+import { PayloadDisclosurePrototype } from './PayloadDisclosure.prototype.js';
 
 /** Editable name/whenTrue/whenFalse decoration fields for the node at a path. */
 export function DecorationEditor(props: { path: string; node: RuleNode }) {
@@ -19,26 +20,14 @@ export function DecorationEditor(props: { path: string; node: RuleNode }) {
           onChange={(e) => store.setName(path, e.target.value || undefined)}
         />
       </label>
-      <label className="field">
-        <span>When true</span>
-        <input
-          aria-label={`whenTrue at ${path}`}
-          className="control"
-          type="text"
-          value={typeof node.whenTrue === 'string' ? node.whenTrue : ''}
-          onChange={(e) => store.setDecoration(path, { whenTrue: e.target.value || undefined } as DecorationPatch)}
-        />
-      </label>
-      <label className="field">
-        <span>When false</span>
-        <input
-          aria-label={`whenFalse at ${path}`}
-          className="control"
-          type="text"
-          value={typeof node.whenFalse === 'string' ? node.whenFalse : ''}
-          onChange={(e) => store.setDecoration(path, { whenFalse: e.target.value || undefined } as DecorationPatch)}
-        />
-      </label>
+      {/* PROTOTYPE: the whenTrue/whenFalse boxes behind a disclosure — see the .prototype file. */}
+      <PayloadDisclosurePrototype
+        statement={node.name}
+        whenTrue={typeof node.whenTrue === 'string' ? node.whenTrue : ''}
+        whenFalse={typeof node.whenFalse === 'string' ? node.whenFalse : ''}
+        scope={`at ${path}`}
+        onChange={(patch) => store.setDecoration(path, patch as DecorationPatch)}
+      />
     </div>
   );
 }
