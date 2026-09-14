@@ -392,3 +392,11 @@ rule in `CLAUDE.md`).
   is a reference, not a declaration. *Go to definition* centres the definition's row and puts the
   caret in its name field — script focus on the row itself drew no ring, so the button read as
   inert. A nested node that still carries a legacy name shows it quoted, without `as`.
+- **A definition looks and behaves like the rule.** Its row is a name field, a reference count
+  and a menu, then the same strip and tree the rule has, editable row for row at
+  `$.definitions.<name>.rule…` — collapse, select, insert, the actions menu, pin, and Extract to
+  definition on any node inside it (not on the body itself, which already is one). Its
+  `whenTrue` / `whenFalse` sit in the body root's detail panel where the rule keeps its own. The
+  Definitions panel is mounted by the builder inside its tree context, so one accordion,
+  highlight and popover slot span the rule and every definition, and a hover inside a
+  definition marks that definition's strip.

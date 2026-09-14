@@ -11,6 +11,31 @@ describe('RuleDslStrip', () => {
     expect(screen.getByLabelText('rule expression').textContent).toBe('a & (b | c)');
   });
 
+  it("marks a definition body's node when told which root its paths hang from", () => {
+    const { container } = render(
+      <RuleDslStrip
+        rule={rule}
+        rootPath="$.definitions.d.rule"
+        ariaLabel="definition d expression"
+        highlight={setHovered(EMPTY_HIGHLIGHT, '$.definitions.d.rule.and[1]')}
+      />,
+    );
+    expect(screen.getByLabelText('definition d expression').textContent).toBe('a & (b | c)');
+    const marked = [...container.querySelectorAll('.dsl-strip-hover')].map((el) => el.textContent).join('');
+    expect(marked).toBe('(b | c)');
+  });
+
+  it('marks nothing for a path that hangs from another root', () => {
+    const { container } = render(
+      <RuleDslStrip
+        rule={rule}
+        rootPath="$.definitions.d.rule"
+        highlight={setHovered(EMPTY_HIGHLIGHT, '$.rule.and[1]')}
+      />,
+    );
+    expect(container.querySelectorAll('.dsl-strip-hover')).toHaveLength(0);
+  });
+
   it('marks nothing when nothing is hovered or selected', () => {
     const { container } = render(<RuleDslStrip rule={rule} highlight={EMPTY_HIGHLIGHT} />);
     expect(container.querySelectorAll('.dsl-strip-hover, .dsl-strip-selected')).toHaveLength(0);

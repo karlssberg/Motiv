@@ -3,7 +3,8 @@ import {
   type Dispatch, type MouseEvent, type SetStateAction,
 } from 'react';
 import {
-  accessibleExpression, childPaths, firstOperandTarget, insertTargetForRow, isBinaryNode,
+  accessibleExpression, childPaths, definitionBodyPath, definitionNameOf, firstOperandTarget,
+  insertTargetForRow, isBinaryNode,
   isCollapsed, isHigherOrderNode, isLocalNode, isOpen, isPinned, planInsert, summarize,
   type AccordionModel, type Catalog, type HighlightModel,
 } from '@motiv-rules/core';
@@ -12,6 +13,7 @@ import { NodeToolbar } from './NodeToolbar.js';
 import { OperatorPicker } from './OperatorPicker.js';
 import { QuantifierNode } from './QuantifierNode.js';
 import { DecorationEditor } from './DecorationEditor.js';
+import { DefinitionDecorationEditor } from './DefinitionDecorationEditor.js';
 import { InlineDecorationNotice } from './InlineDecorationNotice.js';
 import { LocalNodeDetail } from './LocalNodeDetail.js';
 import { ExtractLocalPrompt } from './ExtractLocalPrompt.js';
@@ -152,7 +154,14 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
 
   if (!node) return null;
 
-  const isRoot = path === ROOT;
+  /**
+   * The root of a tree — the rule's, or a definition body's. Both decorate at the root and
+   * neither offers to extract itself: the rule is what the document is, and a definition body
+   * already is one (#234).
+   */
+  const definitionName = definitionNameOf(path);
+  const isDefinitionRoot = definitionName !== undefined && path === definitionBodyPath(definitionName);
+  const isRoot = path === ROOT || isDefinitionRoot;
   const local = isLocalNode(node);
   /**
    * Whether this node still carries decoration authored where it can no longer be authored
@@ -366,10 +375,13 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
               )}
               {/* The rule's own name is still the rule's own name; everything below it is a
                   definition now, and a node that predates that is offered the way out (#234). */}
-              {isRoot && <DecorationEditor path={path} node={node} />}
+              {path === ROOT && <DecorationEditor path={path} node={node} />}
               {hasInlineDecoration && <InlineDecorationNotice path={path} node={node} />}
             </>
           )}
+          {/* Outside the local/other split: a definition whose body is a bare reference to
+              another still has its own payloads, shown beside that reference's detail. */}
+          {isDefinitionRoot && <DefinitionDecorationEditor name={definitionName} />}
         </div>
       )}
       {kidsMounted && (

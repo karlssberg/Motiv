@@ -435,19 +435,9 @@ kbd {
   white-space: nowrap;
 }
 
-.definition-body {
-  font: 12px/1.5 var(--mono, monospace);
-  overflow-wrap: anywhere;
-}
-
-.definition-row-decoration {
-  display: flex;
-  gap: 10px;
-}
-
-.definition-row-decoration > .field {
-  flex: 1 1 0;
-  min-width: 0;
+/* A definition's strip sits inside the row's inset well, so it draws no second one. */
+.definition-row > .dsl-strip {
+  background: var(--bg);
 }
 
 /* Shared control styling for selects, inputs, textareas */

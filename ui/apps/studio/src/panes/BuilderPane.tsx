@@ -7,6 +7,7 @@ import {
 import { useCatalog, useRuleEditor, useRuleEditorStore } from '@motiv-rules/react';
 import { BuilderTreeContext, RuleNodeEditor } from '../builder/RuleNodeEditor.js';
 import { RuleDslStrip } from '../builder/RuleDslStrip.js';
+import { DefinitionsPane } from './DefinitionsPane.js';
 import { MODEL_TYPE } from '../App.js';
 
 /** The rule's own root path — the one node whose name is the rule's name (#234). */
@@ -26,6 +27,8 @@ export function BuilderBody(props: {
   client: RulesApiClient;
   /** Opens the host's *Extract to catalog* dialog for a row; absent, the row does not offer it (#234). */
   onExtractToCatalog?: ((path: string) => void) | undefined;
+  /** Opens the host's *Promote to catalog* dialog for a definition; absent, its menu does not offer it (#234). */
+  onPromote?: ((name: string) => void) | undefined;
 }) {
   const catalogState = useCatalog(props.client);
   const catalog = catalogState.status === 'ready' ? catalogState.data : EMPTY_CATALOG;
@@ -58,6 +61,7 @@ export function BuilderBody(props: {
         highlight={highlight}
         textId={expressionId}
         locals={locals}
+        catalog={catalog}
       />
       {/* Height is reserved rather than conditional, so the tree does not jump when the first
           node is pinned. */}
@@ -78,9 +82,8 @@ export function BuilderBody(props: {
         needs stated. Pointing at the strip rather than repeating the string into an `aria-label`
         keeps one source for it: what is announced is what is on screen, including its marks.
       */}
-      <div role="group" aria-label="rule composition" aria-describedby={expressionId}>
-        <BuilderTreeContext.Provider
-          value={{
+      <BuilderTreeContext.Provider
+        value={{
             model,
             toggleCollapsed: (path) => setModel((prev) => toggleCollapsed(prev, path)),
             toggleOpen: (path) => setModel((prev) => toggleOpen(prev, path)),
@@ -96,10 +99,15 @@ export function BuilderBody(props: {
             pending,
             setPending,
           }}
-        >
+      >
+        <div role="group" aria-label="rule composition" aria-describedby={expressionId}>
           <RuleNodeEditor path={ROOT} modelType={MODEL_TYPE} />
-        </BuilderTreeContext.Provider>
-      </div>
+        </div>
+        {/* The rule first, its definitions below it: the page reads top-down from what the
+            document decides to what it is built from. Inside the provider, because every
+            definition body is a tree of these same rows (#234). */}
+        <DefinitionsPane onPromote={props.onPromote} />
+      </BuilderTreeContext.Provider>
     </>
   );
 }

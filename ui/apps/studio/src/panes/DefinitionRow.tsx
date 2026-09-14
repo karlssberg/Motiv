@@ -1,12 +1,15 @@
-import { useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import {
-  isValidLocalName, localReferences, printInline, tokenSpans,
-  type Catalog, type Definition, type RuleDocument, type RuleEditorStore,
+  definitionBodyPath, isValidLocalName, localReferences,
+  type Definition, type RuleDocument, type RuleEditorStore,
 } from '@motiv-rules/core';
 import { useRuleEditorStore } from '@motiv-rules/react';
 import { LocalNameInput } from '../builder/LocalNameInput.js';
+import { RuleDslStrip } from '../builder/RuleDslStrip.js';
+import { RuleNodeEditor, useBuilderTree } from '../builder/RuleNodeEditor.js';
 import { usePopoverCard } from '../builder/usePopoverCard.js';
 import { IconMore } from '../shell/icons.js';
+import { MODEL_TYPE } from '../App.js';
 
 /** Repeats `inlineLocal` until no reference to `name` remains — see {@link DefinitionRow}'s menu. */
 function inlineEverywhere(store: RuleEditorStore, name: string): void {
@@ -25,9 +28,11 @@ function inlineEverywhere(store: RuleEditorStore, name: string): void {
 }
 
 /**
- * One row of the {@link DefinitionsPane}: a definition's name, its body as read-only DSL, how many
- * places reference it, its own `whenTrue`/`whenFalse`, and the menu that renames its shape
- * (inline or promote) or removes it.
+ * One row of the {@link DefinitionsPane}: a definition's name, how many places reference it, the
+ * menu that renames its shape (inline or promote) or removes it — and below that, its body as the
+ * same strip-and-tree the rule is, editable row for row, with its `whenTrue`/`whenFalse` in the
+ * body root's detail panel where the rule keeps its own (#234). A definition is a rule that the
+ * document names, so it looks and behaves like one.
  *
  * `id={definition-<name>}` and `tabIndex={-1}` are load-bearing, not decorative: the builder's
  * `Go to definition` button focuses this exact element by that id.
@@ -38,15 +43,16 @@ export function DefinitionRow(props: {
   document: RuleDocument;
   /** Every other definition's name — what this row's rename must not collide with. */
   taken: ReadonlySet<string>;
-  locals: ReadonlySet<string>;
-  /** Threaded down to `printInline` so a catalog spec's args print in its declared order. */
-  catalog?: Catalog | undefined;
   open: boolean;
   setOpen: (open: boolean) => void;
   onPromote?: ((name: string) => void) | undefined;
 }) {
-  const { name, definition, document, taken, locals, catalog, open, setOpen, onPromote } = props;
+  const { name, definition, document, taken, open, setOpen, onPromote } = props;
   const store = useRuleEditorStore();
+  const { highlight, locals, catalog } = useBuilderTree();
+  const bodyPath = definitionBodyPath(name);
+  /** Names the strip's generated text, so the tree below can be described by it. */
+  const expressionId = useId();
 
   // A draft the input edits freely; committed to the store only once, on blur, and only if it
   // actually names something usable. Held in a ref alongside the state because `LocalNameInput`
@@ -74,7 +80,6 @@ export function DefinitionRow(props: {
 
   const references = localReferences(document, name);
   const referenced = references.length > 0;
-  const bodyText = printInline(definition.rule, catalog ? { catalog } : undefined);
 
   const { trigger, card, style, close } = usePopoverCard(open, setOpen);
 
@@ -125,32 +130,18 @@ export function DefinitionRow(props: {
           </div>
         )}
       </div>
-      <div className="definition-body">
-        {tokenSpans(bodyText, locals).map((span) => (
-          <span key={span.key} className={`tok-${span.kind}`}>{span.value}</span>
-        ))}
-      </div>
-      <div className="definition-row-decoration">
-        <label className="field">
-          <span>When true</span>
-          <input
-            aria-label={`whenTrue of definition ${name}`}
-            className="control"
-            type="text"
-            value={typeof definition.whenTrue === 'string' ? definition.whenTrue : ''}
-            onChange={(e) => store.setDefinitionDecoration(name, { whenTrue: e.target.value || undefined })}
-          />
-        </label>
-        <label className="field">
-          <span>When false</span>
-          <input
-            aria-label={`whenFalse of definition ${name}`}
-            className="control"
-            type="text"
-            value={typeof definition.whenFalse === 'string' ? definition.whenFalse : ''}
-            onChange={(e) => store.setDefinitionDecoration(name, { whenFalse: e.target.value || undefined })}
-          />
-        </label>
+      <RuleDslStrip
+        rule={definition.rule}
+        rootPath={bodyPath}
+        ariaLabel={`definition ${name} expression`}
+        highlight={highlight}
+        textId={expressionId}
+        locals={locals}
+        catalog={catalog}
+      />
+      {/* Described by its own strip, exactly as the rule's composition is by the rule's. */}
+      <div role="group" aria-label={`definition ${name} composition`} aria-describedby={expressionId}>
+        <RuleNodeEditor path={bodyPath} modelType={MODEL_TYPE} />
       </div>
     </div>
   );

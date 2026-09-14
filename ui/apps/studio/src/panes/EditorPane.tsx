@@ -3,7 +3,6 @@ import type { RulesApiClient } from '@motiv-rules/core';
 import { useCatalog, useDslSync, useRuleEditor, useRuleEditorStore } from '@motiv-rules/react';
 import { DslEditor } from '../dsl/DslEditor.js';
 import { BuilderBody, EMPTY_CATALOG } from './BuilderPane.js';
-import { DefinitionsPane } from './DefinitionsPane.js';
 
 /** The two ways this pane lets you author the same rule document. */
 type Surface = 'builder' | 'dsl';
@@ -126,12 +125,13 @@ export function EditorPane(props: {
         {surface === 'builder'
           ? (
             <>
-              {/* The rule first, its definitions below it, and those ordered whole-before-parts:
-                  the page reads top-down from what the document decides to what it is built from.
-                  Stacked rather than beside, so a definition is one scroll away from every `local`
-                  reference that points at it, not off in a separate column (#234). */}
-              <BuilderBody client={props.client} onExtractToCatalog={props.onExtractToCatalog} />
-              <DefinitionsPane catalog={catalog} onPromote={props.onPromote} />
+              {/* The builder hosts the definitions panel below the rule's tree, since every
+                  definition is a tree of the same rows (#234). */}
+              <BuilderBody
+                client={props.client}
+                onExtractToCatalog={props.onExtractToCatalog}
+                onPromote={props.onPromote}
+              />
             </>
           )
           : <DslEditor store={store} catalog={catalog} sync={sync} documentName={props.documentName} />}
