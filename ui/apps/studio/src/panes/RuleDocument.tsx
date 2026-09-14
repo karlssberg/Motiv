@@ -7,8 +7,7 @@ import { MODEL_TYPE } from '../App.js';
 import { DocumentModal } from './DocumentModal.js';
 import { DocumentTitle } from './DocumentTitle.js';
 import { EditorPane } from './EditorPane.js';
-import { EvaluatePane } from './EvaluatePane.js';
-import { CheckoutPane } from './CheckoutPane.js';
+import { EvaluateRailPrototype } from './prototype/EvaluateRail.prototype.js';
 import { DocActions } from '../shell/DocActions.js';
 import { ReportBanner } from '../shell/ReportBanner.js';
 import { ReferencesStrip } from '../shell/ReferencesStrip.js';
@@ -126,10 +125,8 @@ export function RuleDocument(props: {
           One rail for both ways of running the rule: beside Evaluate, Checkout shares one result
           language — a verdict, then the assertions — and the editor keeps the height it needs.
         */}
-        <div className="rail">
-          <EvaluatePane client={client} />
-          <CheckoutPane client={client} />
-        </div>
+        {/* PROTOTYPE — throwaway: `?variant=` switches rail designs; see panes/prototype/. */}
+        <EvaluateRailPrototype client={client} ruleName={tab.name} version={loaded?.version} />
       </div>
 
       {documentOpen && <DocumentModal onClose={() => setDocumentOpen(false)} />}
