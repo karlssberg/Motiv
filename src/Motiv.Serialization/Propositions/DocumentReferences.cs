@@ -9,13 +9,20 @@ internal static class DocumentReferences
     /// <summary>The distinct spec names the document references, in document order.</summary>
     public static IReadOnlyList<string> From(RuleDocument document)
     {
-        if (document.Root is null)
-            return [];
-
         // Ordinal-ordered set: names are an ordinal contract, and callers compare graphs by content.
         var names = new List<string>();
         var seen = new HashSet<string>(StringComparer.Ordinal);
-        Collect(document.Root, names, seen);
+
+        if (document.Root is not null)
+            Collect(document.Root, names, seen);
+
+        // Definitions are walked in their own right rather than through the locals that reference
+        // them: an unreferenced definition still names specs, and a definition referenced twice must
+        // not be walked twice. A local name is never an edge — it resolves inside this document, so
+        // no republication anywhere can change what it means.
+        foreach (var definition in document.Definitions)
+            Collect(definition, names, seen);
+
         return names;
     }
 

@@ -51,6 +51,7 @@ internal static class AsyncRuleBinder
         node.Operator switch
         {
             RuleOperator.Spec => BindSpecLeaf<TModel>(node, source, errors),
+            RuleOperator.Local => BindNode<TModel>(node.Definition!, source, errors),
             RuleOperator.Expression => BindExpressionLeaf<TModel>(node, errors),
             RuleOperator.Not => BindNode<TModel>(node.Children[0], source, errors)?.Not(),
             _ when node.Operator.IsHigherOrder() => BindHigherOrder<TModel>(node, source, errors),

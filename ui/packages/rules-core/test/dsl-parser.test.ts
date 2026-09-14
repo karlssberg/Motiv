@@ -28,6 +28,18 @@ describe('parse — leaves and grouping', () => {
     expect(result.document).toEqual({ rule: { spec: 'is-active' } });
   });
 
+  it('reads `as` as a plain word, not a keyword — there is no inline naming clause', () => {
+    expect(parse('as').document).toEqual({ rule: { spec: 'as' } });
+  });
+
+  it('no longer parses a trailing `as "name"` clause — it is a stray, unexpected token', () => {
+    const result = parse('x as "y"');
+    expect(result.document).toBeUndefined();
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ code: 'UnexpectedToken' }),
+    );
+  });
+
   it('records a span for the root node covering the spec token', () => {
     expect(parse('is-active').spans).toEqual([{ path: '$.rule', from: 0, to: 9 }]);
   });
@@ -57,18 +69,6 @@ describe('parse — leaves and grouping', () => {
     expect(parse('(is-active)').document).toEqual({ rule: { spec: 'is-active' } });
   });
 
-  it('attaches a name from a trailing as-clause', () => {
-    expect(parse('is-active as "activity"').document).toEqual({
-      rule: { spec: 'is-active', name: 'activity' },
-    });
-  });
-
-  it('binds as to the group when applied to a parenthesised expression', () => {
-    expect(parse('(is-active) as "activity"').document).toEqual({
-      rule: { spec: 'is-active', name: 'activity' },
-    });
-  });
-
   it('parses a single named argument', () => {
     const result = parse('approver-count-at-least(n = 1)');
     expect(result.errors).toEqual([]);
@@ -82,12 +82,6 @@ describe('parse — leaves and grouping', () => {
       spec: 's',
       args: { count: -2, ratio: 2.5, label: 'high', strict: true, note: null },
     });
-  });
-
-  it('parses a spec with args and a name', () => {
-    const result = parse('s(n = 1) as "gate"');
-    expect(result.errors).toEqual([]);
-    expect(result.document?.rule).toEqual({ spec: 's', args: { n: 1 }, name: 'gate' });
   });
 
   it('parses args on a spec inside a composition', () => {
@@ -202,12 +196,6 @@ describe('parse — binary operators', () => {
     });
   });
 
-  it('names a compound node when the group carries the as-clause', () => {
-    expect(parse('(a && b) as "pair"').document).toEqual({
-      rule: { andAlso: [{ spec: 'a' }, { spec: 'b' }], name: 'pair' },
-    });
-  });
-
   it('paths operands by operator and index', () => {
     const spans = parse('a && b').spans;
     expect(spans.map((s) => s.path)).toEqual([
@@ -250,14 +238,6 @@ describe('parse — quantifiers', () => {
         asAtLeastNSatisfied: { andAlso: [{ spec: 'is-positive' }, { spec: 'is-recent' }] },
         n: 2,
         path: 'orders',
-      },
-    });
-  });
-
-  it('binds a trailing as-clause to the quantifier node', () => {
-    expect(parse('atLeast(2) in orders { is-positive } as "quota"').document).toEqual({
-      rule: {
-        asAtLeastNSatisfied: { spec: 'is-positive' }, n: 2, path: 'orders', name: 'quota',
       },
     });
   });
@@ -311,14 +291,6 @@ describe('parse — span uniqueness', () => {
     expect(parse('(is-active)').spans).toEqual([{ path: '$.rule', from: 0, to: 11 }]);
   });
 
-  it('spans a named group over the parens and the as-clause', () => {
-    expect(parse('(a && b) as "pair"').spans).toEqual([
-      { path: '$.rule', from: 0, to: 18 },
-      { path: '$.rule.andAlso[0]', from: 1, to: 2 },
-      { path: '$.rule.andAlso[1]', from: 6, to: 7 },
-    ]);
-  });
-
   it('collapses redundant nested groups to a single span', () => {
     expect(parse('((a))').spans).toEqual([{ path: '$.rule', from: 0, to: 5 }]);
   });
@@ -327,8 +299,8 @@ describe('parse — span uniqueness', () => {
 describe('parse — span invariants', () => {
   const sources = [
     'a', '!a', '!!a', '(a)', '((a))', 'a && b && c', 'a & b ^ c | d',
-    'a || b && c | d ^ e & !f', '(a && b) || c', '(a && b) as "pair"', 'a && (b | c)',
-    '`n > 0` && a', 'all in orders { is-positive }', 'atLeast(2) in orders { a && b } as "q"',
+    'a || b && c | d ^ e & !f', '(a && b) || c', 'a && (b | c)',
+    '`n > 0` && a', 'all in orders { is-positive }', 'atLeast(2) in orders { a && b }',
     'atLeast(@m) in o { a }', 'any in o { all in p { a || b } } && c', '!(a && b)',
     'param n: integer = 1\n\na && b',
   ];
@@ -371,4 +343,113 @@ describe('parse — negative parameter defaults', () => {
       b: { type: 'number', default: -2 },
     });
   });
+});
+
+describe('parse — let declarations', () => {
+  it('ends a let body at the line end, so a rule that opens with a group is not read as its arguments', () => {
+    const result = parse('let a = x\n\n(y & z) & a');
+    expect(result.errors).toEqual([]);
+    expect(result.document).toEqual({
+      definitions: { a: { rule: { spec: 'x' } } },
+      rule: { and: [{ and: [{ spec: 'y' }, { spec: 'z' }] }, { local: 'a' }] },
+    });
+  });
+
+  it('reads an argument list only when it opens on the spec\'s own line', () => {
+    expect(parse('s(n = 1)').document).toEqual({ rule: { spec: 's', args: { n: 1 } } });
+    expect(parse('s (n = 1)').document).toEqual({ rule: { spec: 's', args: { n: 1 } } });
+    const split = parse('s\n(n = 1)');
+    expect(split.document).toBeUndefined();
+    expect(split.errors[0]).toMatchObject({ code: 'UnexpectedToken' });
+  });
+
+  it('declares a local and references it in the rule', () => {
+    const result = parse('let a = x && y\n\na & z');
+    expect(result.errors).toEqual([]);
+    expect(result.document).toEqual({
+      definitions: { a: { rule: { andAlso: [{ spec: 'x' }, { spec: 'y' }] } } },
+      rule: { and: [{ local: 'a' }, { spec: 'z' }] },
+    });
+  });
+
+  it('allows a let to reference a let declared after it', () => {
+    const result = parse('let a = b\n\nlet b = x\n\na');
+    expect(result.errors).toEqual([]);
+    expect(result.document).toEqual({
+      definitions: {
+        a: { rule: { local: 'b' } },
+        b: { rule: { spec: 'x' } },
+      },
+      rule: { local: 'a' },
+    });
+  });
+
+  it('allows param before let', () => {
+    const result = parse('param n: integer = 1\n\nlet a = x\n\na');
+    expect(result.errors).toEqual([]);
+    expect(result.document).toEqual({
+      parameters: { n: { type: 'integer', default: 1 } },
+      definitions: { a: { rule: { spec: 'x' } } },
+      rule: { local: 'a' },
+    });
+  });
+
+  it('reports param after let as an unexpected token at the param', () => {
+    const result = parse('let a = x\n\nparam n: integer = 1\n\na');
+    expect(result.document).toBeUndefined();
+    const paramIndex = 'let a = x\n\n'.length;
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ code: 'UnexpectedToken', from: paramIndex }),
+    );
+  });
+
+  it('leaves an undeclared bare word as a spec reference', () => {
+    const result = parse('let a = x\n\nb');
+    expect(result.errors).toEqual([]);
+    expect(result.document).toEqual({
+      definitions: { a: { rule: { spec: 'x' } } },
+      rule: { spec: 'b' },
+    });
+  });
+
+  it('records a span for a definition body under its definitionBodyPath', () => {
+    const result = parse('let a = x && y\n\na');
+    expect(result.errors).toEqual([]);
+    expect(result.spans).toContainEqual(
+      expect.objectContaining({ path: '$.definitions.a.rule' }),
+    );
+  });
+});
+
+describe('parse — warnings', () => {
+  it('always carries a warnings array, empty for a plain document', () => {
+    const result = parse('is-active');
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('warns without suppressing the document — warnings are not errors', () => {
+    const text = 'let plain = x\n\nplain';
+    const result = parse(text, { catalog: CATALOG });
+    expect(result.errors).toEqual([]);
+    expect(result.document).toBeDefined();
+    expect(result.warnings.length).toBeGreaterThan(0);
+  });
+
+  it('reports ShadowsCatalog at the local declaration name when it names a catalog spec', () => {
+    const text = 'let plain = x\n\nplain';
+    const result = parse(text, { catalog: CATALOG });
+    const nameFrom = text.indexOf('plain');
+    expect(result.warnings).toContainEqual({
+      code: 'ShadowsCatalog',
+      message: "shadows catalog proposition 'plain'",
+      from: nameFrom,
+      to: nameFrom + 'plain'.length,
+    });
+  });
+
+  it('does not warn when a local name is not in the catalog', () => {
+    const result = parse('let a = x\n\na', { catalog: CATALOG });
+    expect(result.warnings).toEqual([]);
+  });
+
 });

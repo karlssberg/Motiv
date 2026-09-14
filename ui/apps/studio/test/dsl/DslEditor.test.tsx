@@ -244,16 +244,56 @@ describe('DslEditor', () => {
     const { container, store } = renderEditor(BOTH_SPECS);
     expect(editorText(container)).toBe('is-active && is-verified');
 
-    // Start naming the first spec, then open the second without saving.
+    // Open the first spec's card, then the second. Driven through `When true` rather than `Name`:
+    // below the root there is no name to type any more, and since Ruling 12 no payload to write
+    // either — the card is a reader there, so what must not carry over is the *displayed* draft
+    // (#234).
     await user.click(payloadChip('is-active'));
-    await user.type(screen.getByLabelText('Name'), 'activity');
+    await user.type(screen.getByLabelText('When true'), 'is active');
     await user.click(payloadChip('is-verified'));
 
-    expect(screen.getByLabelText<HTMLInputElement>('Name').value).toBe('');
+    expect(screen.getByLabelText<HTMLTextAreaElement>('When true').value).toBe('');
 
-    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await user.click(screen.getByRole('button', { name: 'Done' }));
 
     expect(store.getState().document).toEqual({ rule: BOTH_SPECS });
+  });
+
+  // A `let` declaration's span sits at `$.definitions.<name>`, which is not a node path: resolving
+  // it throws, and both the chip pass and the caret lookup walk every span. Rendering any buffer
+  // with a definition in it used to blow up the pane during render (#234).
+  it('renders a buffer that declares a local, skipping the declaration span', () => {
+    const store = new RuleEditorStore({
+      rule: { and: [{ local: 'a' }, { spec: 'is-adult' }] },
+      definitions: { a: { rule: { spec: 'is-active' } } },
+    });
+    const { container } = render(<Host store={store} />);
+
+    // Read from the document rather than `editorText`, which concatenates the rendered lines.
+    expect(editorView(container).state.doc.toString()).toBe('let a = is-active\n\na & is-adult');
+    // The node spans still resolve: the definition body is a spec, so its chip is there.
+    expect(payloadChip('is-active')).toBeTruthy();
+  });
+
+  it('survives the caret sitting on a `let` name, where no node stands', async () => {
+    const user = userEvent.setup();
+    const store = new RuleEditorStore({
+      rule: { and: [{ local: 'a' }, { spec: 'is-adult' }] },
+      definitions: { a: { rule: { spec: 'is-active' } } },
+    });
+    const { container } = render(<Host store={store} />);
+    const view = editorView(container);
+
+    // On the `a` of `let a = …` — covered by the declaration span and by nothing else.
+    act(() => view.dispatch({ selection: { anchor: 4 } }));
+    view.focus();
+    await user.keyboard('{Control>}.{/Control}');
+    expect(screen.queryByRole('dialog')).toBeNull();
+
+    // And on the reference in the rule, where a local — not a spec — stands.
+    act(() => view.dispatch({ selection: { anchor: 19 } }));
+    await user.keyboard('{Control>}.{/Control}');
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
   it('anchors the popover rather than pinning it to a corner', async () => {

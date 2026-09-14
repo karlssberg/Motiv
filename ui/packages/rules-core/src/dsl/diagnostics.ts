@@ -10,11 +10,14 @@ import type { DslError, NodeSpan, ParseResult } from './types.js';
 export interface RuleDiagnostic {
   from: number;
   to: number;
-  severity: 'error';
+  severity: 'error' | 'warning';
   /** Stable machine-readable code, e.g. `UnexpectedToken`, `UnknownSpec`. */
   code: string;
   message: string;
-  /** The node path a backend error was keyed by; absent for a parser error, which has no node yet. */
+  /**
+   * The node path this diagnostic is about. Set for a backend error (which is keyed by path);
+   * absent for every other parser diagnostic, which has no node yet.
+   */
   path?: string;
 }
 
@@ -23,11 +26,17 @@ function nonEmpty({ from, to }: SourceRange): SourceRange {
   return { from, to: Math.max(to, from + 1) };
 }
 
-/** A parser error already carries native source offsets. */
+/** The severity a parser-level code maps to. Warnings carry their own code; anything else is an error. */
+function severityOf(code: string): RuleDiagnostic['severity'] {
+  if (code === 'ShadowsCatalog') return 'warning';
+  return 'error';
+}
+
+/** A parser error or warning already carries native source offsets. */
 function fromParserError(error: DslError): RuleDiagnostic {
   return {
     ...nonEmpty(error),
-    severity: 'error',
+    severity: severityOf(error.code),
     code: error.code,
     message: error.message,
   };
@@ -48,7 +57,7 @@ function fromBackendError(
   };
 }
 
-/** Folds parser errors and path-keyed backend errors into one set of diagnostics. */
+/** Folds parser errors, parser warnings and path-keyed backend errors into one set of diagnostics. */
 export function diagnosticsFor(
   text: string,
   result: ParseResult,
@@ -56,6 +65,7 @@ export function diagnosticsFor(
 ): RuleDiagnostic[] {
   return [
     ...result.errors.map(fromParserError),
+    ...result.warnings.map(fromParserError),
     ...errors.map((error) => fromBackendError(error, result.spans, text.length)),
   ];
 }

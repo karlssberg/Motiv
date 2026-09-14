@@ -6,7 +6,6 @@ import type { RuleDocument } from '../src/document.js';
 /** One document per node kind in rule.v1.json, plus the reference composition. */
 const DOCUMENTS: Array<{ label: string; document: RuleDocument }> = [
   { label: 'spec', document: { rule: { spec: 'is-active' } } },
-  { label: 'named spec', document: { rule: { spec: 'is-active', name: 'activity' } } },
   { label: 'spec with args', document: { rule: { spec: 'gate', args: { n: 1 } } } },
   {
     label: 'spec with every arg literal kind',
@@ -64,20 +63,6 @@ const DOCUMENTS: Array<{ label: string; document: RuleDocument }> = [
     document: { rule: { asAtMostNSatisfied: { spec: 'is-positive' }, n: 1, path: 'orders' } },
   },
   {
-    label: 'named quantifier',
-    document: {
-      rule: { asAllSatisfied: { spec: 'is-positive' }, path: 'orders', name: 'quota' },
-    },
-  },
-  {
-    label: 'named compound',
-    document: { rule: { andAlso: [{ spec: 'a' }, { spec: 'b' }], name: 'pair' } },
-  },
-  {
-    label: 'named negation',
-    document: { rule: { not: { spec: 'is-flagged' }, name: 'unflagged' } },
-  },
-  {
     label: 'negated compound',
     document: { rule: { not: { or: [{ spec: 'a' }, { spec: 'b' }] } } },
   },
@@ -100,15 +85,6 @@ const DOCUMENTS: Array<{ label: string; document: RuleDocument }> = [
           ],
         },
         path: 'orders',
-      },
-    },
-  },
-  {
-    label: 'named compound wrapping a quantifier',
-    document: {
-      rule: {
-        andAlso: [{ spec: 'a' }, { asAllSatisfied: { spec: 'b' }, path: 'orders' }],
-        name: 'both',
       },
     },
   },
@@ -147,10 +123,26 @@ const DOCUMENTS: Array<{ label: string; document: RuleDocument }> = [
             asAtLeastNSatisfied: { andAlso: [{ spec: 'is-positive' }, { spec: 'is-recent' }] },
             n: '@minOrders',
             path: 'orders',
-            name: 'quota',
           },
         ],
       },
+    },
+  },
+  {
+    label: 'a definition referenced twice',
+    document: {
+      definitions: { 'is-eligible': { rule: { spec: 'customer.is-active' } } },
+      rule: { and: [{ local: 'is-eligible' }, { local: 'is-eligible' }] },
+    },
+  },
+  {
+    label: 'a definition referencing another',
+    document: {
+      definitions: {
+        a: { rule: { spec: 'x' } },
+        b: { rule: { local: 'a' } },
+      },
+      rule: { local: 'b' },
     },
   },
 ];
@@ -183,7 +175,11 @@ describe('DSL round-trip', () => {
   });
 
   it.each(DOCUMENTS)('parse(printInline(rule)) preserves $label', ({ document }) => {
-    const result = parse(printInline(document.rule));
+    // A local reference only resolves against its document's declared names, which printInline
+    // does not carry on its own — so the caller passes them via `locals`, exactly as a consumer
+    // holding both the rule and its document's `definitions` would.
+    const locals = document.definitions ? new Set(Object.keys(document.definitions)) : undefined;
+    const result = parse(printInline(document.rule), locals ? { locals } : undefined);
     expect(result.errors).toEqual([]);
     expect(result.document?.rule).toEqual(document.rule);
   });
@@ -193,5 +189,20 @@ describe('DSL round-trip', () => {
       const result = parse(print(document));
       expect(result.spans.some((span) => span.path === '$.rule')).toBe(true);
     }
+  });
+
+  it('fails cleanly, rather than round-tripping, for a definition key that is a reserved word', () => {
+    // `RuleDocument.definitions` is a plain record and does not itself validate its keys, so a
+    // document naming a definition `all` is constructible — but the DSL has no way to declare or
+    // reference it (a reserved word never lexes as `spec`), so parse(print(doc)) must fail rather
+    // than silently produce a different document.
+    const document: RuleDocument = {
+      definitions: { all: { rule: { spec: 'x' } } },
+      rule: { local: 'all' },
+    };
+    const text = print(document);
+    const result = parse(text);
+    expect(result.document).toBeUndefined();
+    expect(result.errors.length).toBeGreaterThan(0);
   });
 });

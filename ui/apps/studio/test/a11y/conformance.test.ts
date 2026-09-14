@@ -55,7 +55,11 @@ const keyboardTestTitles = ((): string[] => {
   // pattern into an asset URL, so the path arrives as something `readFileSync` cannot open.
   const here = dirname(fileURLToPath(import.meta.url));
   const source = readFileSync(join(here, '..', '..', 'e2e-a11y', 'keyboard.spec.ts'), 'utf8');
-  return [...source.matchAll(/^\s*test\(\s*'((?:[^'\\]|\\.)*)'/gm)].map((match) => match[1] as string);
+  // The capture keeps a matched `\'` as two raw characters, not the one it stands for — a title
+  // with a plain contraction like "a definition's" needs that escape in the source but not in the
+  // string it names, so it is undone here rather than left for every citation to match against.
+  return [...source.matchAll(/^\s*test\(\s*'((?:[^'\\]|\\.)*)'/gm)]
+    .map((match) => (match[1] as string).replace(/\\'/g, '\''));
 })();
 
 /** The rows claiming a given kind of evidence. */

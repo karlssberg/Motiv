@@ -340,8 +340,7 @@ public sealed class RuleSerializer
             return null;
 
         var values = RuleParameterResolver.Resolve(document.Parameters, parameters, errors);
-        if (document.Root is not null)
-            RuleParameterSubstituter.Apply(document.Root, values, errors);
+        Substitute(document, values, errors);
         return document;
     }
 
@@ -352,9 +351,25 @@ public sealed class RuleSerializer
             return null;
 
         var values = RuleParameterResolver.ResolveForValidation(document.Parameters);
+        Substitute(document, values, errors);
+        return document;
+    }
+
+    /// <summary>
+    /// Substitutes parameter values through the whole document. Definition bodies are walked
+    /// alongside the root rather than through the locals that reach them: a definition referenced
+    /// twice must be interpolated once, and an unreferenced one still has to report its own errors.
+    /// </summary>
+    private static void Substitute(
+        RuleDocument document,
+        IReadOnlyDictionary<string, object?> values,
+        List<RuleError> errors)
+    {
         if (document.Root is not null)
             RuleParameterSubstituter.Apply(document.Root, values, errors);
-        return document;
+
+        foreach (var definition in document.Definitions)
+            RuleParameterSubstituter.Apply(definition, values, errors);
     }
 
     private static void ThrowIfInvalid(List<RuleError> errors)

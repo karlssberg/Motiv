@@ -1,7 +1,11 @@
-import { createContext, useContext, useMemo, useRef, type MouseEvent } from 'react';
 import {
-  accessibleExpression, childPaths, firstOperandTarget, insertTargetForRow, isBinaryNode,
-  isCollapsed, isHigherOrderNode, isOpen, isPinned, planInsert, summarize,
+  createContext, useContext, useMemo, useRef,
+  type Dispatch, type MouseEvent, type SetStateAction,
+} from 'react';
+import {
+  accessibleExpression, childPaths, definitionBodyPath, definitionNameOf, firstOperandTarget,
+  insertTargetForRow, isBinaryNode,
+  isCollapsed, isHigherOrderNode, isLocalNode, isOpen, isPinned, planInsert, summarize,
   type AccordionModel, type Catalog, type HighlightModel,
 } from '@motiv-rules/core';
 import { useRuleEditorStore, useRuleNode } from '@motiv-rules/react';
@@ -9,11 +13,17 @@ import { NodeToolbar } from './NodeToolbar.js';
 import { OperatorPicker } from './OperatorPicker.js';
 import { QuantifierNode } from './QuantifierNode.js';
 import { DecorationEditor } from './DecorationEditor.js';
+import { DefinitionDecorationEditor } from './DefinitionDecorationEditor.js';
+import { InlineDecorationNotice } from './InlineDecorationNotice.js';
+import { LocalNodeDetail } from './LocalNodeDetail.js';
+import { ExtractLocalPrompt } from './ExtractLocalPrompt.js';
+import { extractionSeed } from './extractionSeed.js';
 import { NodeDsl } from './NodeDsl.js';
 import { NodeMenu } from './NodeMenu.js';
 import { NodeInsertButton } from './NodeInsertButton.js';
 import { PendingSlot } from './PendingSlot.js';
 import { Caret, IconPin, IconSelect } from '../shell/icons.js';
+import { ROOT } from '../panes/BuilderPane.js';
 
 /**
  * The tree-wide state shared by every {@link RuleNodeEditor} in the tree: accordion state (its
@@ -30,8 +40,23 @@ export interface BuilderTreeState {
    * opening one closes the last — two at once is otherwise reachable by keyboard alone.
    */
   openPopover: string | null;
-  setOpenPopover: (key: string | null) => void;
+  /**
+   * Takes an updater as well as a value, which is what lets one popup hand over to another: a
+   * menu item that opens a card sets the slot, and the menu's own close then runs *after* it and
+   * must leave a slot it no longer owns alone (#234).
+   */
+  setOpenPopover: Dispatch<SetStateAction<string | null>>;
   catalog: Catalog;
+  /**
+   * The document's definition names, so a printed row reparses a bare word as the local it was
+   * printed from rather than as a spec of the same name (#234).
+   */
+  locals: ReadonlySet<string>;
+  /**
+   * Opens the host's "extract to catalog" dialog for a node, when the host has one. Absent, the
+   * menu simply does not offer the action — it is the pane, not the tree, that owns that dialog.
+   */
+  onExtractToCatalog?: ((path: string) => void) | undefined;
   /** Which node the DSL strip marks, and which mark it scrolls to. */
   highlight: HighlightModel;
   setHovered: (path: string | null) => void;
@@ -42,7 +67,7 @@ export interface BuilderTreeState {
 }
 
 /** The popups a row can open. */
-type PopoverKind = 'menu' | 'operator';
+type PopoverKind = 'menu' | 'operator' | 'extract';
 
 /** The two controls the caret is, which follows from whether its node has children. */
 type CaretKind = 'children' | 'detail';
@@ -86,8 +111,8 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
   const { path, modelType } = props;
   const { node, errors } = useRuleNode(path);
   const {
-    model, toggleCollapsed, toggleOpen, togglePin, openPopover, setOpenPopover, catalog,
-    highlight, setHovered, setSelected, pending, setPending,
+    model, toggleCollapsed, toggleOpen, togglePin, openPopover, setOpenPopover, catalog, locals,
+    onExtractToCatalog, highlight, setHovered, setSelected, pending, setPending,
   } = useBuilderTree();
   const store = useRuleEditorStore();
 
@@ -98,6 +123,13 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
    * is a hook this component sometimes skips.
    */
   const pressedKind = useRef<CaretKind | null>(null);
+
+  /**
+   * The row's `⋯`, borrowed by the extraction prompt as its anchor. The prompt is opened from a
+   * menu item rather than from a control of its own, so it has nothing else to hang off — and the
+   * menu that opened it is gone by the time the card is placed.
+   */
+  const menuTrigger = useRef<HTMLButtonElement | null>(null);
 
   /**
    * The name of this row's operand group — see the group itself, below.
@@ -112,10 +144,32 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
   /** Binds one of this row's popups to the tree's single open slot. */
   const popover = (kind: PopoverKind): { open: boolean; setOpen: (next: boolean) => void } => ({
     open: openPopover === popoverKey(kind, path),
-    setOpen: (next: boolean) => setOpenPopover(next ? popoverKey(kind, path) : null),
+    // Closing releases the slot only while this popup still holds it. A menu item that opens a
+    // card claims the slot first, and the menu's own close arrives second — overwriting blind
+    // would shut the card in the same breath as the menu that asked for it.
+    setOpen: (next: boolean) => setOpenPopover((current) => (
+      next ? popoverKey(kind, path) : current === popoverKey(kind, path) ? null : current
+    )),
   });
 
   if (!node) return null;
+
+  /**
+   * The root of a tree — the rule's, or a definition body's. Both decorate at the root and
+   * neither offers to extract itself: the rule is what the document is, and a definition body
+   * already is one (#234).
+   */
+  const definitionName = definitionNameOf(path);
+  const isDefinitionRoot = definitionName !== undefined && path === definitionBodyPath(definitionName);
+  const isRoot = path === ROOT || isDefinitionRoot;
+  const local = isLocalNode(node);
+  /**
+   * Whether this node still carries decoration authored where it can no longer be authored
+   * (#234). Names below the root became definitions; a document written before that — or one
+   * arriving from the API — can still hold them, so they are shown rather than silently ignored.
+   */
+  const hasInlineDecoration = !isRoot && !local
+    && (node.name !== undefined || node.whenTrue !== undefined || node.whenFalse !== undefined);
 
   const kids = childPaths(node, path);
   const hasChildren = kids.length > 0;
@@ -133,7 +187,9 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
   const selected = highlight.selectedPath === path;
   // A leaf's tree form and its text form are the same string, so it has nothing to toggle
   // between and is always shown as DSL. Only the other case has a summary to render.
-  const inDslView = !hasChildren || collapsed;
+  // A local is the exception: it has no subtree, but its text form is a bare word that says
+  // nothing about what it stands for, so it is summarised as a `let` row instead (#234).
+  const inDslView = (!hasChildren || collapsed) && !local;
   const summary = inDslView ? null : summarize(node);
 
   /** Which of its two roles the caret is playing on this row, as one name rather than three. */
@@ -186,6 +242,7 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
     <PendingSlot
       modelType={where === 'first' ? childModelType : modelType}
       catalog={catalog}
+      locals={locals}
       onCommit={(inserted) => {
         const target = where === 'first' ? firstOperandTarget(path) : insertTargetForRow(path);
         store.applyPlan(planInsert(store.getState().document, target, inserted));
@@ -232,7 +289,9 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
         )}
         <span className="node-body">
           {summary === null ? (
-            <NodeDsl path={path} node={node} modelType={modelType} catalog={catalog} />
+            <NodeDsl
+              path={path} node={node} modelType={modelType} catalog={catalog} locals={locals}
+            />
           ) : (
             <>
               {isBinaryNode(node) ? (
@@ -241,7 +300,7 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
                 <span className={`node-badge node-badge-${summary.kind}`}>{summary.badge}</span>
               )}
               {summary.description && <span className="node-desc">{summary.description}</span>}
-              {node.name && <span className="node-name">as &quot;{node.name}&quot;</span>}
+              {node.name && <span className="node-name">&quot;{node.name}&quot;</span>}
             </>
           )}
         </span>
@@ -261,13 +320,31 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
         <NodeInsertButton path={path} onOpen={() => setPending({ path, where: 'after' })} />
         <NodeMenu
           path={path}
+          triggerRef={menuTrigger}
           // Only an operand of an n-ary operator can be removed; a NOT's child or a quantifier's
           // body is the node's whole content, so removing it would leave the parent malformed.
           canRemove={path.endsWith(']')}
           {...popover('menu')}
           onDetails={() => toggleOpen(path)}
           {...(isBinaryNode(node) ? { onInsertFirst: () => setPending({ path, where: 'first' }) } : {})}
+          {...(!isRoot && !local
+            ? { onExtractLocal: () => setOpenPopover(popoverKey('extract', path)) }
+            : {})}
+          {...(!isRoot && !local && onExtractToCatalog
+            ? { onExtractCatalog: () => onExtractToCatalog(path) }
+            : {})}
+          {...(local ? { onInline: () => store.inlineLocal(path) } : {})}
         />
+        {/* Rendered beside the menu that opens it, on the rows that can offer it — the card
+            places itself against the `⋯` and draws nothing until it is opened. */}
+        {!isRoot && !local && (
+          <ExtractLocalPrompt
+            path={path}
+            triggerRef={menuTrigger}
+            seed={node.name ?? extractionSeed(node)}
+            {...popover('extract')}
+          />
+        )}
         <button
           type="button"
           className={pinned ? 'node-pin pinned' : 'node-pin'}
@@ -287,12 +364,24 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
       {pending?.path === path && pending.where === 'first' && !kidsMounted && slotFor('first')}
       {open && (
         <div className="node-detail" id={panelId(path)}>
-          {isHigherOrderNode(node) ? (
-            <QuantifierNode path={path} node={node} catalog={catalog} modelType={modelType} />
+          {local ? (
+            <LocalNodeDetail path={path} node={node} catalog={catalog} />
           ) : (
-            <NodeToolbar path={path} node={node} />
+            <>
+              {isHigherOrderNode(node) ? (
+                <QuantifierNode path={path} node={node} catalog={catalog} modelType={modelType} />
+              ) : (
+                <NodeToolbar path={path} node={node} />
+              )}
+              {/* The rule's own name is still the rule's own name; everything below it is a
+                  definition now, and a node that predates that is offered the way out (#234). */}
+              {path === ROOT && <DecorationEditor path={path} node={node} />}
+              {hasInlineDecoration && <InlineDecorationNotice path={path} node={node} />}
+            </>
           )}
-          <DecorationEditor path={path} node={node} />
+          {/* Outside the local/other split: a definition whose body is a bare reference to
+              another still has its own payloads, shown beside that reference's detail. */}
+          {isDefinitionRoot && <DefinitionDecorationEditor name={definitionName} />}
         </div>
       )}
       {kidsMounted && (

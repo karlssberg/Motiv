@@ -70,7 +70,7 @@ export type RuleErrorCode =
   | 'MixedWhenTrueFalseKinds' | 'ExpressionsNotEnabled' | 'AsyncSpecInSyncLoad'
   | 'DocumentTooLarge' | 'MissingParameter' | 'SurplusParameter'
   | 'ParameterTypeMismatch' | 'UnknownParameterReference' | 'UnknownCollection'
-  | 'AsyncSpecInHigherOrder' | 'PolicyRequired';
+  | 'AsyncSpecInHigherOrder' | 'PolicyRequired' | 'UnknownLocal' | 'InvalidLocalName';
 
 /** A single validation or load error. */
 export interface RuleError {

@@ -12,6 +12,7 @@ const CM_TYPE: Record<CompletionItemKind, string> = {
   keyword: 'keyword',
   type: 'type',
   parameter: 'constant',
+  local: 'variable',
 };
 
 /**

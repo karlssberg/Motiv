@@ -36,7 +36,9 @@ public class RuleSchemaTests
         """{ "rule": { "asNSatisfied": { "spec": "a" }, "n": 3, "path": "orders", "name": "exactly three" } }""",
         """{ "rule": { "asAtLeastNSatisfied": { "spec": "a" }, "n": "@minOrders", "path": "account-orders", "name": "quota" } }""",
         """{ "rule": { "asAtMostNSatisfied": { "spec": "a" }, "n": 2, "path": "orders", "name": "at most two" } }""",
-        """{ "rule": { "asAllSatisfied": { "spec": "a" }, "path": "orders" } }"""
+        """{ "rule": { "asAllSatisfied": { "spec": "a" }, "path": "orders" } }""",
+        """{ "definitions": { "is-active-and-adult": { "rule": { "spec": "customer.is-active" } } }, "rule": { "local": "is-active-and-adult" } }""",
+        """{ "definitions": { "is-active-and-adult": { "rule": { "spec": "customer.is-active" }, "whenTrue": "active", "whenFalse": "inactive" } }, "rule": { "local": "is-active-and-adult" } }"""
     };
 
     [Theory]
@@ -69,7 +71,11 @@ public class RuleSchemaTests
         """{ "rule": { "spec": "a", "whenTrue": { "code": 1 }, "whenFalse": { "code": 2 } } }""",
         """{ "rule": { "asAllSatisfied": { "spec": "a" }, "name": "x" } }""",
         """{ "rule": { "spec": "a", "args": { "n": { "value": 2 } } } }""",
-        """{ "rule": { "not": { "spec": "a" }, "args": { "n": 2 } } }"""
+        """{ "rule": { "not": { "spec": "a" }, "args": { "n": 2 } } }""",
+        """{ "rule": { "local": "a.b" } }""",
+        """{ "definitions": { "x": { "whenTrue": "a", "whenFalse": "b" } }, "rule": { "spec": "a" } }""",
+        """{ "definitions": [ { "rule": { "spec": "a" } } ], "rule": { "spec": "a" } }""",
+        """{ "definitions": { "x": { "rule": { "spec": "a" }, "frobnicate": true } }, "rule": { "spec": "a" } }"""
     };
 
     [Theory]

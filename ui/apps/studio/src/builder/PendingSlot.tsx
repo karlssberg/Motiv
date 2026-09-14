@@ -3,6 +3,9 @@ import { parse, type Catalog, type RuleNode } from '@motiv-rules/core';
 import { useInlineDslEditor } from './useInlineDslEditor.js';
 import { IconNew } from '../shell/icons.js';
 
+/** A document with no definitions — a stable identity, so it is not a fresh dep every render. */
+const NO_LOCALS: ReadonlySet<string> = new Set();
+
 /**
  * A row that does not exist yet: an insertion point with a focused editor and nothing behind it.
  *
@@ -21,8 +24,10 @@ export function PendingSlot(props: {
   catalog: Catalog;
   onCommit: (node: RuleNode) => void;
   onCancel: () => void;
+  /** The document's definition names, so a typed bare word resolves to a local, not a spec (#234). */
+  locals?: ReadonlySet<string> | undefined;
 }) {
-  const { modelType, catalog, onCommit, onCancel } = props;
+  const { modelType, catalog, onCommit, onCancel, locals = NO_LOCALS } = props;
   const [error, setError] = useState<string | null>(null);
 
   const scope = useRef({ catalog, modelType });
@@ -37,7 +42,7 @@ export function PendingSlot(props: {
         onCancel();
         return true;
       }
-      const result = parse(buffer);
+      const result = parse(buffer, { locals });
       if (!result.document || result.errors.length > 0) {
         // Enter refuses and re-arms: the user is still mid-edit, and discarding what they typed
         // would be hostile. A blur means they have already clicked away — refusing there would

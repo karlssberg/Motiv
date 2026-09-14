@@ -245,6 +245,7 @@ export const CONFORMANCE: readonly ConformanceRow[] = [
           'jumps to a namespace by typing its first letters',
           'chooses the focused proposition on Enter, so the palette is crossable by keyboard alone',
           'moves between tabs on the arrow keys, activating as it goes',
+          "opens a definition's row menu from the keyboard, and Escape returns focus to its trigger",
         ],
       },
     ],
@@ -533,6 +534,7 @@ export const CONFORMANCE: readonly ConformanceRow[] = [
           'moves between rows on the arrow keys, and into and out of a subtree',
           'offers tabs that say which document is current',
           'moves between tabs on the arrow keys, activating as it goes',
+          "opens a definition's row menu from the keyboard, and Escape returns focus to its trigger",
         ],
       },
     ],
@@ -540,7 +542,9 @@ export const CONFORMANCE: readonly ConformanceRow[] = [
       'Names, roles and states are present throughout and checked by the largest group of rules in '
       + 'the sweep. Every declared role is also honoured rather than merely well-formed: the '
       + 'palette\'s tree implements the tree pattern, and the tab strip is a real `tablist`: each chip '
-      + 'a `tab` with `aria-selected`, one roving tab stop, arrows between them, a panel per document.',
+      + 'a `tab` with `aria-selected`, one roving tab stop, arrows between them, a panel per document. '
+      + 'A menu opened from the keyboard behaves like a `menu`, too: Escape closes it and returns '
+      + 'focus to the trigger that opened it, rather than dropping focus to the document body.',
   },
   {
     criterion: '4.1.3',

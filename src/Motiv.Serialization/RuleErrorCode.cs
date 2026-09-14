@@ -60,6 +60,12 @@ public enum RuleErrorCode
     /// <summary>Publishing the document would create a reference cycle.</summary>
     CycleDetected,
 
+    /// <summary>A <c>local</c> node names a definition the document does not declare.</summary>
+    UnknownLocal,
+
+    /// <summary>A definition key, or the name a <c>local</c> node references, is not a legal local name.</summary>
+    InvalidLocalName,
+
     /// <summary>
     /// The document is marked <c>audited</c>, but the host has decided nothing about how much of the
     /// rule's model its decision records may keep. Capture has no default by design — a whole-model

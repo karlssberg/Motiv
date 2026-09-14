@@ -33,11 +33,6 @@ const NODES: Array<{ label: string; node: RuleNode; text: string }> = [
     node: { and: [{ orElse: [{ spec: 'a' }, { spec: 'b' }] }, { spec: 'c' }] },
     text: '(a || b) & c',
   },
-  {
-    label: 'named compound',
-    node: { andAlso: [{ spec: 'a' }, { spec: 'b' }], name: 'pair' },
-    text: '(a && b) as "pair"',
-  },
 ];
 
 describe('printInline', () => {
@@ -53,9 +48,26 @@ describe('printInline', () => {
     expect(result.document?.rule).toEqual(node);
   });
 
-  it('preserves consecutive spaces inside a name', () => {
-    const node: RuleNode = { spec: 'is-active', name: 'order  total' };
-    expect(printInline(node)).toBe('is-active as "order  total"');
-    expect(parse(printInline(node)).document?.rule).toEqual(node);
+  it('never prints a name, even a compound one with a name attached', () => {
+    const node: RuleNode = { andAlso: [{ spec: 'a' }, { spec: 'b' }], name: 'pair' };
+    expect(printInline(node)).toBe('a && b');
+  });
+});
+
+describe('printInline — local references need the locals option to round-trip', () => {
+  it('reparses a local reference as itself when its name is passed as a known local', () => {
+    const node: RuleNode = { local: 'a' };
+    const text = printInline(node);
+    expect(text).toBe('a');
+    const result = parse(text, { locals: new Set(['a']) });
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({ local: 'a' });
+  });
+
+  it('demotes a local reference to a spec when its name is not known to the parser', () => {
+    const node: RuleNode = { local: 'a' };
+    const result = parse(printInline(node));
+    expect(result.errors).toEqual([]);
+    expect(result.document?.rule).toEqual({ spec: 'a' });
   });
 });

@@ -97,6 +97,10 @@ describe('normalizeAt', () => {
     expect(normalizeAt(doc({ spec: 'a' }), '$.rule').rule).toEqual({ spec: 'a' });
   });
 
+  it('leaves a local reference untouched — it is a leaf', () => {
+    expect(normalizeAt(doc({ local: 'quota-check' }), '$.rule').rule).toEqual({ local: 'quota-check' });
+  });
+
   it('returns the document unchanged for a path that does not resolve', () => {
     const document = doc({ spec: 'a' });
     expect(normalizeAt(document, '$.rule.and[3]').rule).toEqual({ spec: 'a' });

@@ -1,6 +1,9 @@
-import type { ArgValue, ParameterDeclaration, RuleDocument, RuleNode } from '../document.js';
+import type { ArgValue, Definition, ParameterDeclaration, RuleDocument, RuleNode } from '../document.js';
 import type { Catalog, CatalogEntry, CatalogParameter } from '../contracts.js';
+import { RESERVED_LOCAL_NAMES, isValidLocalName } from '../localNames.js';
+import { definitionBodyPath, definitionPath, localsReferencedBy } from '../paths.js';
 import { tokenize } from './lexer.js';
+import { collectLocalNames } from './locals.js';
 import type { DslError, NodeSpan, ParseResult, Token, TokenKind } from './types.js';
 
 const ROOT = '$.rule';
@@ -13,6 +16,15 @@ export interface ParseOptions {
    * function of the text for every document the printer can produce.
    */
   catalog?: Catalog;
+  /**
+   * Names to treat as declared locals in addition to whatever the text's own `let` preamble
+   * declares. A full document's text always carries its own preamble, so this is only needed
+   * when parsing a *fragment* — most notably `printInline`'s output, which renders a single node
+   * with no preamble at all. Pass the owning document's `definitions` keys to make a printed
+   * local reference (`{ local: 'a' }` → `'a'`) read back as itself rather than being demoted to a
+   * `{ spec: 'a' }` reference.
+   */
+  locals?: ReadonlySet<string>;
 }
 
 /**
@@ -33,10 +45,23 @@ class ParserState {
   readonly tokens: Token[];
   readonly spans: NodeSpan[] = [];
   readonly errors: DslError[] = [];
+  /** Non-fatal advice accumulated as the constructs that prompt it are seen — never suppresses parsing. */
+  readonly warnings: DslError[] = [];
+  /**
+   * Every declared local name: seeded from `ParseOptions.locals` (for a fragment parsed without
+   * its owning preamble, e.g. `printInline`'s output), then added to by {@link collectLocalNames}
+   * before parsing begins — so a bare word anywhere in the rule or a later `let` body can resolve
+   * against a `let` declared after it, not just before.
+   */
+  readonly locals: Set<string>;
+  /** Names already consumed by a `let` declaration during the actual parse — distinct from
+   * {@link locals}, which is the forward-looking pre-scan and never shrinks or reports duplicates. */
+  readonly declaredDefinitions = new Set<string>();
   index = 0;
 
-  constructor(readonly text: string, readonly catalog?: Catalog) {
+  constructor(readonly text: string, readonly catalog?: Catalog, locals?: ReadonlySet<string>) {
     this.tokens = tokenize(text);
+    this.locals = new Set(locals);
   }
 
   peek(offset = 0): Token | undefined { return this.tokens[this.index + offset]; }
@@ -50,6 +75,11 @@ class ParserState {
     const from = token?.from ?? this.lastEnd;
     const to = token?.to ?? this.text.length;
     this.errors.push({ from, to, code, message });
+  }
+
+  /** Records a warning spanning `[from, to)`. */
+  warn(code: string, message: string, from: number, to: number): void {
+    this.warnings.push({ from, to, code, message });
   }
 
   span(path: string, from: number, to: number): void {
@@ -102,20 +132,6 @@ function declaredParameters(
   state: ParserState, spec: string,
 ): readonly CatalogParameter[] | null | undefined {
   return catalogEntry(state, spec)?.parameters;
-}
-
-/** Consumes a trailing `as "name"` clause, returning the name when present. */
-function parseAsClause(state: ParserState): string | undefined {
-  const token = state.peek();
-  if (!token || token.kind !== 'keyword' || token.value !== 'as') return undefined;
-  state.next();
-  const nameToken = state.peek();
-  if (!nameToken || nameToken.kind !== 'string') {
-    state.error('ExpectedName', 'expected a quoted name after `as`', nameToken);
-    return undefined;
-  }
-  state.next();
-  return literalValue(state, nameToken, '"', 'UnterminatedString');
 }
 
 /** DSL quantifier keyword → higher-order node key. Counted forms take an `(n)` argument. */
@@ -327,12 +343,35 @@ function parseArgs(state: ParserState, spec: string): Record<string, ArgValue> |
   return args;
 }
 
+/**
+ * Whether `next` is an argument list opening for the spec at `name`: a `(` on the same line.
+ *
+ * Newlines are otherwise whitespace, and a `let` body has no terminator, so without this rule
+ * `let a = x\n\n(y & z)` reads as the call `x(y & z)` and the rule after the blank line vanishes
+ * into the declaration's arguments. The printer never splits a name from its `(`, so the rule
+ * costs nothing that round-trips (#234).
+ */
+function opensArgs(state: ParserState, name: Token, next: Token | undefined): next is Token {
+  return next?.value === '(' && !state.text.slice(name.to, next.from).includes('\n');
+}
+
 /** primary := SPEC | `expr` | '(' expr ')' | quantifier */
 function parsePrimary(state: ParserState, path: string): RuleNode | undefined {
   const token = state.peek();
   if (!token) {
     state.error('UnexpectedEnd', 'expected an expression');
     return undefined;
+  }
+
+  if (token.kind === 'spec' && state.locals.has(token.value)) {
+    state.next();
+    const openArgs = state.peek();
+    if (opensArgs(state, token, openArgs)) {
+      state.error('UnexpectedArguments', `\`${token.value}\` is a local reference and takes no arguments`, openArgs);
+      state.next();
+      return undefined;
+    }
+    return { local: token.value };
   }
 
   if (token.kind === 'spec') {
@@ -346,7 +385,8 @@ function parsePrimary(state: ParserState, path: string): RuleNode | undefined {
     const openArgs = state.peek();
     const declaresNoParameters = entry !== undefined
       && (entry.parameters == null || entry.parameters.length === 0);
-    if (openArgs?.value === '(' && declaresNoParameters) {
+    if (!opensArgs(state, token, openArgs)) return { spec: token.value };
+    if (declaresNoParameters) {
       state.error('UnexpectedArguments', `\`${token.value}\` takes no arguments`, openArgs);
       state.next();
       return undefined;
@@ -365,8 +405,8 @@ function parsePrimary(state: ParserState, path: string): RuleNode | undefined {
     const mark = state.spans.length;
     const inner = parseExpression(state, path);
     // The group is not a node of its own, so the inner node keeps `path`. Drop the span the
-    // inner node recorded — `parsePostfix` re-records a wider one covering the parens and any
-    // `as` clause — so each path keeps exactly one span.
+    // inner node recorded — `parsePostfix` re-records a wider one covering the parens —
+    // so each path keeps exactly one span.
     state.dropSpansAt(path, mark);
     const closing = state.peek();
     if (!closing || closing.value !== ')') {
@@ -386,17 +426,13 @@ function parsePrimary(state: ParserState, path: string): RuleNode | undefined {
   return undefined;
 }
 
-/** postfix := primary ('as' STRING)? */
+/** postfix := primary */
 function parsePostfix(state: ParserState, path: string): RuleNode | undefined {
   const start = state.peek()?.from ?? state.lastEnd;
   const node = parsePrimary(state, path);
   if (!node) return undefined;
-  const name = parseAsClause(state);
-  // A group produces no wrapper node, so `(a as "x") as "y"` has only one node to name:
-  // the outer name deliberately supersedes the inner one.
-  const decorated = name === undefined ? node : { ...node, name };
   state.span(path, start, state.lastEnd);
-  return decorated;
+  return node;
 }
 
 /** unary := '!' unary | postfix */
@@ -484,48 +520,200 @@ function parseDefault(state: ParserState): number | string | boolean | undefined
   return undefined;
 }
 
-/** Consumes the leading run of `param` declarations, if any. */
-function parseParameters(state: ParserState): RuleDocument['parameters'] {
-  const parameters: NonNullable<RuleDocument['parameters']> = {};
-  let found = false;
+/**
+ * Consumes one `param NAME: TYPE ('=' DEFAULT)?` declaration — one iteration of the preamble loop
+ * in {@link parsePreamble}, which owns repeating this and accumulating the results. Returns
+ * `undefined` on error, having already reported it.
+ */
+function parseParameters(
+  state: ParserState,
+): { name: string; declaration: ParameterDeclaration } | undefined {
+  state.next(); // 'param'
+  const nameToken = parseIdentifier(state, 'ExpectedParameterName', 'expected a parameter name');
+  if (!nameToken) return undefined;
 
-  while (state.peek()?.value === 'param') {
+  if (state.peek()?.kind !== 'colon') {
+    state.error('ExpectedParameterType', 'expected `:` and a type', state.peek());
+    return undefined;
+  }
+  state.next();
+
+  // The lexer already classifies the four type words as `type` tokens.
+  const typeToken = state.peek();
+  if (!typeToken || typeToken.kind !== 'type') {
+    state.error('ExpectedParameterType', 'expected integer, number, string or boolean', typeToken);
+    return undefined;
+  }
+  state.next();
+
+  const declaration: ParameterDeclaration = {
+    type: typeToken.value as ParameterDeclaration['type'],
+  };
+  if (state.peek()?.kind === 'equals') {
     state.next();
-    const nameToken = parseIdentifier(state, 'ExpectedParameterName', 'expected a parameter name');
-    if (!nameToken) break;
-
-    if (state.peek()?.kind !== 'colon') {
-      state.error('ExpectedParameterType', 'expected `:` and a type', state.peek());
-      break;
-    }
-    state.next();
-
-    // The lexer already classifies the four type words as `type` tokens.
-    const typeToken = state.peek();
-    if (!typeToken || typeToken.kind !== 'type') {
-      state.error('ExpectedParameterType', 'expected integer, number, string or boolean', typeToken);
-      break;
-    }
-    state.next();
-
-    const declaration: ParameterDeclaration = {
-      type: typeToken.value as ParameterDeclaration['type'],
-    };
-    if (state.peek()?.kind === 'equals') {
-      state.next();
-      const value = parseDefault(state);
-      if (value !== undefined) declaration.default = value;
-    }
-
-    // `defineProperty`, not assignment: a parameter named `__proto__` would otherwise hit the
-    // prototype setter, silently dropping the declaration and mutating the object.
-    Object.defineProperty(parameters, nameToken.value, {
-      value: declaration, enumerable: true, writable: true, configurable: true,
-    });
-    found = true;
+    const value = parseDefault(state);
+    if (value !== undefined) declaration.default = value;
   }
 
-  return found ? parameters : undefined;
+  return { name: nameToken.value, declaration };
+}
+
+/**
+ * Consumes one `let NAME '=' expr` declaration — one iteration of the preamble loop in
+ * {@link parsePreamble}. The body is parsed with `parseExpression`, so it may itself reference any
+ * declared local, including one declared later — {@link collectLocalNames} has already populated
+ * `state.locals` from the whole token stream before parsing starts. Returns `undefined` on error,
+ * having already reported it.
+ */
+function parseLet(
+  state: ParserState,
+): { name: string; definition: Definition; nameToken: Token } | undefined {
+  state.next(); // 'let'
+  const nameToken = parseIdentifier(state, 'ExpectedLocalName', 'expected a name after `let`');
+  if (!nameToken) return undefined;
+
+  if (nameToken.value.includes('.')) {
+    state.error('DottedLocalName', 'a local name cannot contain a dot', nameToken);
+    return undefined;
+  }
+  // Checked ahead of the generic InvalidLocalName case so a reserved word gets a message that
+  // names the actual problem: `all`/`param`/`integer` etc. are pattern-valid but can never be
+  // read back by parsePrimary's `spec`-kind local branch, since a reserved word never lexes
+  // as `spec`.
+  if (RESERVED_LOCAL_NAMES.has(nameToken.value)) {
+    state.error(
+      'ReservedLocalName',
+      `\`${nameToken.value}\` is a reserved word and cannot name a local`,
+      nameToken,
+    );
+    return undefined;
+  }
+  if (!isValidLocalName(nameToken.value)) {
+    state.error('InvalidLocalName', `\`${nameToken.value}\` is not a valid local name`, nameToken);
+    return undefined;
+  }
+  if (state.declaredDefinitions.has(nameToken.value)) {
+    state.error('DuplicateLocal', `\`${nameToken.value}\` is already declared`, nameToken);
+    return undefined;
+  }
+
+  if (state.peek()?.kind !== 'equals') {
+    state.error('ExpectedEquals', 'expected `=` after the local name', state.peek());
+    return undefined;
+  }
+  state.next();
+
+  const rule = parseExpression(state, definitionBodyPath(nameToken.value));
+  if (!rule) return undefined;
+
+  // The declaration name is the definition's own span. Without it, `rangeOfPath` walks past
+  // `$.definitions.<name>` — and past its non-`rule` children, `.whenTrue` and `.whenFalse` —
+  // straight to the whole-document fallback, so a definition-level server error would highlight
+  // the entire text instead of the `let` it is about.
+  state.span(definitionPath(nameToken.value), nameToken.from, nameToken.to);
+
+  state.declaredDefinitions.add(nameToken.value);
+  return { name: nameToken.value, definition: { rule }, nameToken };
+}
+
+/**
+ * Refuses a set of definitions whose references form a cycle, mirroring C#'s
+ * `RuleErrorCode.CycleDetected`. A cycle can only be written in text — the builder's `defineLocal`
+ * cannot produce one — so the DSL is the only surface that has to catch it, and catching it here
+ * means the editor says so rather than the server. Reported once, at the name token of the first
+ * member of the chain, with the chain spelled out: `a → b → a`.
+ */
+function reportCycles(
+  state: ParserState,
+  definitions: Record<string, Definition>,
+  nameTokens: Map<string, Token>,
+): void {
+  const edges = new Map<string, Set<string>>();
+  for (const [name, definition] of Object.entries(definitions)) {
+    edges.set(name, localsReferencedBy(definition.rule));
+  }
+
+  const settled = new Set<string>();
+  const onPath = new Set<string>();
+  const chain: string[] = [];
+
+  /** Depth-first from `name`; true once a cycle has been reported, which ends the whole walk. */
+  const visit = (name: string): boolean => {
+    if (settled.has(name)) return false;
+    if (onPath.has(name)) {
+      const members = [...chain.slice(chain.indexOf(name)), name];
+      state.error(
+        'CycleDetected',
+        `definitions form a cycle: ${members.join(' → ')}`,
+        nameTokens.get(members[0]!),
+      );
+      return true;
+    }
+    onPath.add(name);
+    chain.push(name);
+    for (const referenced of edges.get(name) ?? []) {
+      // Only a name this preamble declares can close a cycle; anything else is a catalog
+      // reference, or a local seeded by `ParseOptions.locals` whose body is not in view.
+      if (edges.has(referenced) && visit(referenced)) return true;
+    }
+    chain.pop();
+    onPath.delete(name);
+    settled.add(name);
+    return false;
+  };
+
+  for (const name of edges.keys()) if (visit(name)) return;
+}
+
+/**
+ * Consumes the leading run of `param` and `let` declarations, if any, one at a time via
+ * {@link parseParameters} and {@link parseLet}. A `param` may not follow a `let` — once a `let`
+ * has been seen, a subsequent `param` is left for `parseExpression` to reject as an unexpected
+ * token, rather than silently re-opening the parameter block.
+ */
+function parsePreamble(state: ParserState): {
+  parameters: RuleDocument['parameters'];
+  definitions: Record<string, Definition> | undefined;
+  nameTokens: Map<string, Token>;
+} {
+  const parameters: NonNullable<RuleDocument['parameters']> = {};
+  const definitions: Record<string, Definition> = {};
+  const nameTokens = new Map<string, Token>();
+  let sawParameter = false;
+  let sawDefinition = false;
+
+  for (;;) {
+    const token = state.peek();
+    if (!token) break;
+
+    if (token.value === 'param' && !sawDefinition) {
+      const result = parseParameters(state);
+      if (!result) break;
+      // `defineProperty`, not assignment: a parameter named `__proto__` would otherwise hit the
+      // prototype setter, silently dropping the declaration and mutating the object.
+      Object.defineProperty(parameters, result.name, {
+        value: result.declaration, enumerable: true, writable: true, configurable: true,
+      });
+      sawParameter = true;
+    } else if (token.value === 'let') {
+      const result = parseLet(state);
+      if (!result) break;
+      // `defineProperty`, not assignment: the same prototype-pollution hazard as `param` above.
+      Object.defineProperty(definitions, result.name, {
+        value: result.definition, enumerable: true, writable: true, configurable: true,
+      });
+      nameTokens.set(result.name, result.nameToken);
+      sawDefinition = true;
+    } else {
+      break;
+    }
+  }
+
+  return {
+    parameters: sawParameter ? parameters : undefined,
+    definitions: sawDefinition ? definitions : undefined,
+    nameTokens,
+  };
 }
 
 /**
@@ -533,8 +721,16 @@ function parseParameters(state: ParserState): RuleDocument['parameters'] {
  * any errors found. Never throws; a fatal error leaves `document` undefined.
  */
 export function parse(text: string, options?: ParseOptions): ParseResult {
-  const state = new ParserState(text, options?.catalog);
-  const parameters = parseParameters(state);
+  const state = new ParserState(text, options?.catalog, options?.locals);
+  const declarations = collectLocalNames(state.tokens);
+  for (const { name, token } of declarations) {
+    state.locals.add(name);
+    if (catalogEntry(state, name)) {
+      state.warn('ShadowsCatalog', `shadows catalog proposition '${name}'`, token.from, token.to);
+    }
+  }
+  const { parameters, definitions, nameTokens } = parsePreamble(state);
+  if (definitions) reportCycles(state, definitions, nameTokens);
   const rule = parseExpression(state, ROOT);
 
   if (!state.atEnd) {
@@ -546,8 +742,12 @@ export function parse(text: string, options?: ParseOptions): ParseResult {
   // descendant's path strictly extends its ancestor's, so path length orders them correctly.
   const spans = [...state.spans].sort((a, b) => a.from - b.from || a.path.length - b.path.length);
   if (!rule || state.errors.length > 0) {
-    return { errors: state.errors, spans };
+    return { errors: state.errors, spans, warnings: state.warnings };
   }
-  const document: RuleDocument = parameters ? { parameters, rule } : { rule };
-  return { document, errors: state.errors, spans };
+  const document: RuleDocument = {
+    ...(parameters ? { parameters } : {}),
+    ...(definitions ? { definitions } : {}),
+    rule,
+  };
+  return { document, errors: state.errors, spans, warnings: state.warnings };
 }

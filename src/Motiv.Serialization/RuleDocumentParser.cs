@@ -44,6 +44,7 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         var hasRule = false;
         var audited = false;
         var parameters = new List<RuleParameterDeclaration>();
+        var definitions = new List<RuleNode>();
 
         foreach (var property in root.EnumerateObject())
         {
@@ -63,10 +64,12 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
                 case "audited":
                     audited = ReadBoolean(property.Value, "$.audited", errors);
                     break;
+                case "definitions":
+                    definitions = ParseDefinitions(property.Value, errors);
+                    break;
                 case "rule":
                     hasRule = true;
                     rule = ParseNode(property.Value, "$.rule", depth: 1, errors);
-                    ReportIfComposesTooDeeply(rule, errors);
                     break;
                 default:
                     errors.Add(new RuleError($"$.{property.Name}", RuleErrorCode.InvalidNode,
@@ -78,7 +81,14 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         if (!hasRule)
             errors.Add(new RuleError("$", RuleErrorCode.InvalidNode, "missing required property 'rule'"));
 
-        return new RuleDocument(name, rule, parameters, audited);
+        var document = new RuleDocument(name, rule, parameters, audited, definitions);
+
+        // Locals resolve before the depth pre-filter, which measures a local as the definition it
+        // names: a graph that has not been proven acyclic cannot be walked.
+        if (LocalResolver.Resolve(document, errors))
+            ReportIfComposesTooDeeply(rule, errors);
+
+        return document;
     }
 
     private RuleNode? ParseNode(JsonElement element, string path, int depth, List<RuleError> errors)
@@ -104,7 +114,7 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         {
             switch (property.Name)
             {
-                case "spec" or "expression" or "not" or "and" or "or" or "xor" or "andAlso" or "orElse"
+                case "spec" or "expression" or "local" or "not" or "and" or "or" or "xor" or "andAlso" or "orElse"
                     or "asAllSatisfied" or "asAnySatisfied" or "asNSatisfied"
                     or "asAtLeastNSatisfied" or "asAtMostNSatisfied":
                     operators.Add(property);
@@ -137,7 +147,8 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         if (operators.Count != 1)
         {
             errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
-                "rule node must contain exactly one of 'spec', 'expression', 'not', 'and', 'or', 'xor', " +
+                "rule node must contain exactly one of 'spec', 'expression', 'local', 'not', 'and', 'or', " +
+                "'xor', " +
                 "'andAlso', 'orElse', 'asAllSatisfied', 'asAnySatisfied', 'asNSatisfied', " +
                 "'asAtLeastNSatisfied' or 'asAtMostNSatisfied'"));
             ParsePayloads(node: null, whenTrue, whenFalse, path, errors);
@@ -171,6 +182,18 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
             {
                 var specName = ReadNonEmptyString(property.Value, $"{path}.spec", errors);
                 return specName is null ? null : new RuleNode(RuleOperator.Spec, path) { SpecName = specName };
+            }
+            case "local":
+            {
+                var localName = ReadNonEmptyString(property.Value, $"{path}.local", errors);
+                if (localName is null)
+                    return null;
+
+                if (LocalNames.IsValid(localName))
+                    return new RuleNode(RuleOperator.Local, path) { LocalName = localName };
+
+                errors.Add(new RuleError(path, RuleErrorCode.InvalidLocalName, InvalidLocalNameMessage(localName)));
+                return null;
             }
             case "expression":
             {
@@ -307,6 +330,102 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
                 return null;
         }
     }
+
+    /// <summary>
+    /// Reads the <c>definitions</c> block: the document-local propositions a <c>local</c> node
+    /// references. Each definition's body carries its key as the node's <c>name</c> and the
+    /// definition's payloads, so it binds through the same decoration path an inline named node does.
+    /// </summary>
+    private List<RuleNode> ParseDefinitions(JsonElement element, List<RuleError> errors)
+    {
+        var definitions = new List<RuleNode>();
+        if (element.ValueKind != JsonValueKind.Object)
+        {
+            errors.Add(new RuleError("$.definitions", RuleErrorCode.InvalidNode,
+                "'definitions' must be a JSON object"));
+            return definitions;
+        }
+
+        var seenKeys = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var definition in element.EnumerateObject())
+        {
+            var path = $"$.definitions.{definition.Name}";
+
+            if (!LocalNames.IsValid(definition.Name))
+            {
+                errors.Add(new RuleError(path, RuleErrorCode.InvalidLocalName,
+                    InvalidLocalNameMessage(definition.Name)));
+                continue;
+            }
+
+            if (!seenKeys.Add(definition.Name))
+            {
+                errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
+                    $"duplicate definition '{definition.Name}'"));
+                continue;
+            }
+
+            var body = ParseDefinition(definition, path, errors);
+            if (body is not null)
+                definitions.Add(body);
+        }
+
+        return definitions;
+    }
+
+    private RuleNode? ParseDefinition(JsonProperty definition, string path, List<RuleError> errors)
+    {
+        if (definition.Value.ValueKind != JsonValueKind.Object)
+        {
+            errors.Add(new RuleError(path, RuleErrorCode.InvalidNode, "a definition must be a JSON object"));
+            return null;
+        }
+
+        JsonElement? ruleElement = null;
+        JsonElement? whenTrue = null;
+        JsonElement? whenFalse = null;
+        foreach (var property in definition.Value.EnumerateObject())
+        {
+            switch (property.Name)
+            {
+                case "rule":
+                    ruleElement = property.Value;
+                    break;
+                case "whenTrue":
+                    whenTrue = property.Value;
+                    break;
+                case "whenFalse":
+                    whenFalse = property.Value;
+                    break;
+                default:
+                    errors.Add(new RuleError($"{path}.{property.Name}", RuleErrorCode.InvalidNode,
+                        $"unknown property '{property.Name}'"));
+                    break;
+            }
+        }
+
+        if (ruleElement is null)
+        {
+            errors.Add(new RuleError(path, RuleErrorCode.InvalidNode,
+                "a definition must contain a 'rule'"));
+            ParsePayloads(node: null, whenTrue, whenFalse, path, errors);
+            return null;
+        }
+
+        var body = ParseNode(ruleElement.Value, $"{path}.rule", depth: 1, errors);
+        ParsePayloads(body, whenTrue, whenFalse, path, errors);
+        if (body is null)
+            return null;
+
+        // The key is the definition's propositional statement, so object payloads need no 'name' of
+        // their own — which is why this is set after ParseNode has checked for one.
+        body.Name = definition.Name;
+        return body;
+    }
+
+    private static string InvalidLocalNameMessage(string name) =>
+        $"'{name}' is not a valid local name: a local name starts with an ASCII letter or '_', " +
+        "continues with ASCII letters, digits, '-' or '_', and is not a word the rule DSL reserves";
 
     private static List<RuleParameterDeclaration> ParseParameterDeclarations(
         JsonElement element,
@@ -472,6 +591,15 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
         if (argsElement is not { } args)
             return;
 
+        if (node.Operator == RuleOperator.Local)
+        {
+            // Named separately from the 'spec'-only rule below: arguments belong to the parameterised
+            // spec the definition references, so the definition is where they would have to be given.
+            errors.Add(new RuleError($"{path}.args", RuleErrorCode.UnexpectedArguments,
+                "a 'local' reference takes no 'args'; supply them where the definition references the spec"));
+            return;
+        }
+
         if (node.Operator != RuleOperator.Spec)
         {
             errors.Add(new RuleError($"{path}.args", RuleErrorCode.InvalidNode,
@@ -566,7 +694,7 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
     /// </summary>
     private void ReportIfComposesTooDeeply(RuleNode? rule, List<RuleError> errors)
     {
-        if (rule is null || CompositionDepthOf(rule) <= options.MaxCompositionDepth)
+        if (rule is null || CompositionDepthOf(rule, new Dictionary<RuleNode, int>()) <= options.MaxCompositionDepth)
             return;
 
         ReportTooLarge("$.rule",
@@ -603,13 +731,30 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
     /// enforced during parsing.
     /// </para>
     /// </remarks>
-    private static int CompositionDepthOf(RuleNode node)
+    /// <param name="measured">
+    /// The depth already measured for a definition, so a document whose definitions reference one
+    /// another repeatedly is measured once per definition rather than once per path through them.
+    /// </param>
+    private static int CompositionDepthOf(RuleNode node, Dictionary<RuleNode, int> measured)
     {
+        // A local composes as the definition it names: the one reference this pre-filter can see
+        // through, because the definition is in the document rather than behind an ISpecSource.
+        if (node.Operator == RuleOperator.Local)
+        {
+            if (node.Definition is not { } definition)
+                return 0;
+
+            if (!measured.TryGetValue(definition, out var depthOfDefinition))
+                measured[definition] = depthOfDefinition = CompositionDepthOf(definition, measured);
+
+            return depthOfDefinition;
+        }
+
         // A leaf binds to a single spec, composing nothing.
         if (node.Children.Count == 0)
             return 0;
 
-        var depth = CompositionDepthOf(node.Children[0]);
+        var depth = CompositionDepthOf(node.Children[0], measured);
 
         // A single-operand node — 'not', and the higher-order quantifiers — still wraps its operand
         // in one composition level, which the fold below has no second operand to accumulate.
@@ -618,7 +763,7 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
 
         // The left-deep fold: every operand after the first adds a level over the deepest so far.
         for (var index = 1; index < node.Children.Count; index++)
-            depth = 1 + Math.Max(depth, CompositionDepthOf(node.Children[index]));
+            depth = 1 + Math.Max(depth, CompositionDepthOf(node.Children[index], measured));
 
         return depth;
     }

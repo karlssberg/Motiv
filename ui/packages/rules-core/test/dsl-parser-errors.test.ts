@@ -89,10 +89,6 @@ describe('parse — errors', () => {
     });
   });
 
-  it('reports a missing name after as', () => {
-    expect(parse('is-active as').errors[0]).toMatchObject({ code: 'ExpectedName' });
-  });
-
   it('reports an empty document', () => {
     expect(parse('').errors[0]).toMatchObject({ code: 'UnexpectedEnd' });
   });
@@ -215,15 +211,15 @@ describe('parse — errors', () => {
 });
 
 describe('parse — unterminated literals', () => {
-  it('reports an unterminated name string over the opening quote to end-of-input', () => {
-    const result = parse('is-active as "x');
+  it('reports an unterminated argument string over the opening quote to end-of-input', () => {
+    const result = parse('s(label = "x');
     expect(result.document).toBeUndefined();
-    expect(result.errors[0]).toMatchObject({ code: 'UnterminatedString', from: 13, to: 15 });
+    expect(result.errors[0]).toMatchObject({ code: 'UnterminatedString', from: 10, to: 12 });
   });
 
   it('reports a lone opening quote', () => {
-    expect(parse('is-active as "').errors[0]).toMatchObject({
-      code: 'UnterminatedString', from: 13, to: 14,
+    expect(parse('s(label = "').errors[0]).toMatchObject({
+      code: 'UnterminatedString', from: 10, to: 11,
     });
   });
 
@@ -251,5 +247,83 @@ describe('parse — unterminated literals', () => {
 
   it('rejects a fractional count, which the schema forbids', () => {
     expect(parse('atLeast(2.5) in orders { a }').errors[0]).toMatchObject({ code: 'ExpectedCount' });
+  });
+});
+
+describe('parse — let errors', () => {
+  it('reports a missing name after let', () => {
+    const result = parse('let = x\n\na');
+    expect(result.document).toBeUndefined();
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ code: 'ExpectedLocalName' }),
+    );
+  });
+
+  it('rejects a dotted local name', () => {
+    const result = parse('let a.b = x\n\na');
+    expect(result.document).toBeUndefined();
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ code: 'DottedLocalName' }),
+    );
+  });
+
+  it('rejects a duplicate local declaration', () => {
+    const result = parse('let a = x\n\nlet a = y\n\na');
+    expect(result.document).toBeUndefined();
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ code: 'DuplicateLocal' }),
+    );
+  });
+
+  it('reports a missing equals after the local name', () => {
+    const result = parse('let a x\n\na');
+    expect(result.document).toBeUndefined();
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ code: 'ExpectedEquals' }),
+    );
+  });
+
+  it('rejects arguments applied to a local reference', () => {
+    const result = parse('let a = x\n\na(n = 1)');
+    expect(result.document).toBeUndefined();
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ code: 'UnexpectedArguments' }),
+    );
+  });
+
+  it('rejects a reserved word as a local name', () => {
+    const result = parse('let all = x\n\nall');
+    expect(result.document).toBeUndefined();
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ code: 'ReservedLocalName' }),
+    );
+  });
+});
+
+describe('local cycles', () => {
+  it('reports a two-step cycle once, at the first member\'s name token', () => {
+    const result = parse('let a = b\nlet b = a\n\na');
+    expect(result.document).toBeUndefined();
+    const cycles = result.errors.filter((error) => error.code === 'CycleDetected');
+    expect(cycles).toHaveLength(1);
+    expect(cycles[0]).toMatchObject({ code: 'CycleDetected', from: 4, to: 5 });
+    expect(cycles[0]!.message).toBe('definitions form a cycle: a \u2192 b \u2192 a');
+  });
+
+  it('reports a self-reference', () => {
+    const result = parse('let a = a\n\na');
+    expect(result.document).toBeUndefined();
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({
+        code: 'CycleDetected',
+        message: 'definitions form a cycle: a \u2192 a',
+      }),
+    );
+  });
+
+  it('does not mistake a diamond for a cycle', () => {
+    const result = parse('let d = x\nlet b = d\nlet c = d\nlet a = b & c\n\na');
+    expect(result.errors).toEqual([]);
+    expect(result.document).toBeDefined();
   });
 });

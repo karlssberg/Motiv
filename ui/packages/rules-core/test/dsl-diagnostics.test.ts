@@ -67,4 +67,19 @@ describe('diagnosticsFor', () => {
       expect(diagnostic.to).toBeGreaterThan(diagnostic.from);
     }
   });
+
+  it('maps a ShadowsCatalog warning to warning severity', () => {
+    const text = 'let plain = x\n\nplain';
+    const catalog = {
+      specs: [{
+        name: 'plain', modelType: 'customer', metadataType: 'String', isAsync: false,
+        origin: 'Compiled' as const, parameters: null,
+      }],
+      collections: [],
+    };
+    const diagnostics = diagnosticsFor(text, parse(text, { catalog }), []);
+    expect(diagnostics).toContainEqual(
+      expect.objectContaining({ code: 'ShadowsCatalog', severity: 'warning' }),
+    );
+  });
 });

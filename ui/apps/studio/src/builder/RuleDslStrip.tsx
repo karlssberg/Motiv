@@ -1,8 +1,14 @@
 import { useEffect, useMemo, useRef } from 'react';
 import {
   focusedPath, parse, printInline,
-  type HighlightModel, type RuleNode, type SourceRange,
+  type Catalog, type HighlightModel, type RuleNode, type SourceRange,
 } from '@motiv-rules/core';
+
+/** Where a printed node's spans hang from: `printInline` prints a node as if it were the rule. */
+const PRINTED_ROOT = '$.rule';
+
+/** A document with no definitions — a stable identity, so it is not a fresh dep every render. */
+const NO_LOCALS: ReadonlySet<string> = new Set();
 
 /** One run of text that carries the same set of marks throughout. */
 interface Segment {
@@ -58,8 +64,9 @@ function segmentize(
  * exactly what the indented tree cannot express.
  *
  * Spans are obtained by printing the rule and reparsing it. That is sound rather than expedient:
- * the printer guarantees `parse(printInline(node))` deep-equals `node`, so the reparse recovers the
- * same tree, and Studio's DSL pane derives its own spans the same way. Memoised on rule identity,
+ * the printer guarantees `parse(printInline(node), { locals })` deep-equals `node` — given the
+ * document's definition names, without which a printed local reference reads back as a spec — so
+ * the reparse recovers the same tree, and Studio's DSL pane derives its own spans the same way. Memoised on rule identity,
  * so a hover costs no work at all.
  */
 export function RuleDslStrip(props: {
@@ -71,20 +78,42 @@ export function RuleDslStrip(props: {
    * duplicating the string into an `aria-description` that could then disagree with what is shown.
    */
   textId?: string;
+  /**
+   * The document's definition names. `printInline` renders `{ local: 'a' }` as the bare word `a`
+   * with no preamble declaring it, so the reparse below needs telling which bare words are locals
+   * — without it `a` reads back as `{ spec: 'a' }`, a different tree with different spans (#234).
+   */
+  locals?: ReadonlySet<string> | undefined;
+  /**
+   * The path the strip's rule sits at in the document — `$.rule` unless it is a definition's
+   * body, whose rows are addressed as `$.definitions.<name>.rule…`. The reparse below produces
+   * spans rooted at `$.rule` whatever it was handed, so a highlight path is rebased onto that
+   * before it is looked up, and a path under any other root marks nothing here (#234).
+   */
+  rootPath?: string;
+  /** The small caption at the left; `rule` unless the strip is a definition's. */
+  label?: string;
+  /** The accessible name of the generated text; `rule expression` unless the strip is a definition's. */
+  ariaLabel?: string;
+  /** Orders a spec's args by declaration, as the rows do — absent, they print as stored. */
+  catalog?: Catalog | undefined;
 }) {
-  const { rule, highlight } = props;
+  const {
+    rule, highlight, locals = NO_LOCALS, rootPath = PRINTED_ROOT, label = 'rule',
+    ariaLabel = 'rule expression', catalog,
+  } = props;
 
   const { text, spans } = useMemo(() => {
-    const printed = printInline(rule);
-    const result = parse(printed);
-    // The round-trip that licenses this reparse has a documented hole: the DSL has no string
-    // escapes, so a `name` carrying a double quote prints text the parser cannot read back
+    const printed = printInline(rule, catalog ? { catalog } : undefined);
+    const result = parse(printed, { locals });
+    // The round-trip that licenses this reparse has a documented hole: a non-word-shaped
+    // argument name has no escaped form, so it prints text the parser cannot read back
     // (`printer.ts`). What comes out then is not *no* spans but *damaged* ones — for
-    // `{and: [{spec: 'a', name: 'x"y'}, {spec: 'b'}]}` the two operand spans vanish and only a
-    // truncated `$.rule` survives, so both operands would resolve to the same wrong range.
-    // Dropping the lot degrades honestly: the expression still renders, nothing is marked.
+    // `{and: [{spec: 'a', args: {'not a name': 1}}, {spec: 'b'}]}` the two operand spans vanish
+    // and only a truncated `$.rule` survives, so both operands would resolve to the same wrong
+    // range. Dropping the lot degrades honestly: the expression still renders, nothing is marked.
     return { text: printed, spans: result.errors.length > 0 ? [] : result.spans };
-  }, [rule]);
+  }, [rule, locals, catalog]);
 
   /**
    * The span recorded for exactly this path, or `null`.
@@ -99,7 +128,9 @@ export function RuleDslStrip(props: {
    */
   const range = (path: string | null): SourceRange | null => {
     if (path === null) return null;
-    const span = spans.find((candidate) => candidate.path === path);
+    if (path !== rootPath && !path.startsWith(`${rootPath}.`)) return null;
+    const printedPath = PRINTED_ROOT + path.slice(rootPath.length);
+    const span = spans.find((candidate) => candidate.path === printedPath);
     return span ? { from: span.from, to: span.to } : null;
   };
 
@@ -122,13 +153,13 @@ export function RuleDslStrip(props: {
 
   return (
     <div className="dsl-strip">
-      <span className="dsl-strip-label">rule</span>
+      <span className="dsl-strip-label">{label}</span>
       {/* A bare `<span>` has no implicit ARIA role — it computes to `generic`, and `generic` is
           one of the roles ARIA prohibits from having an accessible name, so `aria-label` on a
           roleless span is silently dropped from the accessibility tree rather than exposed.
           `role="group"` gives the element a role that does support naming, so the label the
           existing `getByLabelText('rule expression')` queries actually resolves. */}
-      <span className="dsl-strip-text" id={props.textId} role="group" aria-label="rule expression">
+      <span className="dsl-strip-text" id={props.textId} role="group" aria-label={ariaLabel}>
         {segments.map((segment, index) => {
           const marks = [
             segment.selected ? 'dsl-strip-selected' : null,

@@ -68,11 +68,14 @@ describe('BuilderPane accordion (boolean)', () => {
   it('opening one panel closes the previously open one', async () => {
     const store = new RuleEditorStore({ rule: { and: [{ spec: 'is-active' }, { spec: 'is-adult' }] } });
     renderWith(store);
+    const expanded = (path: string) =>
+      screen.getByRole('button', { name: `details for ${path}` }).getAttribute('aria-expanded');
+
     await openDetail('$.rule.and[0]');
-    expect(screen.getByLabelText('name at $.rule.and[0]')).toBeDefined();
+    expect(expanded('$.rule.and[0]')).toBe('true');
     await openDetail('$.rule.and[1]');
-    expect(screen.queryByLabelText('name at $.rule.and[0]')).toBeNull();
-    expect(screen.getByLabelText('name at $.rule.and[1]')).toBeDefined();
+    expect(expanded('$.rule.and[0]')).toBe('false');
+    expect(expanded('$.rule.and[1]')).toBe('true');
   });
 
   it('collapsing a subtree hides its children but not its detail panel', async () => {
@@ -202,4 +205,113 @@ describe('BuilderPane accordion (boolean)', () => {
     expect(screen.getByRole('button', { name: 'expand $.rule' })).toBeDefined();
   });
 
+});
+
+/**
+ * Ticket #234: a name below the root is no longer authored in place. A nested node that still
+ * carries one is shown the migration affordance instead, and the definitions it becomes are
+ * referenced by `let` rows that can be read, inlined, and jumped to.
+ */
+describe('BuilderPane scoped propositions (#234)', () => {
+  const openDetail = async (path: string) => {
+    fireEvent.click(await screen.findByRole('button', { name: `actions for ${path}` }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Details' }));
+  };
+
+  const NESTED_NAME = {
+    rule: { and: [{ spec: 'is-active', name: 'activity' }, { spec: 'is-adult' }] },
+  };
+  const WITH_LOCAL = {
+    definitions: { activity: { rule: { spec: 'is-active' } } },
+    rule: { and: [{ local: 'activity' }, { spec: 'is-adult' }] },
+  };
+
+  it('offers no name field below the root', async () => {
+    renderWith(new RuleEditorStore({ rule: { and: [{ spec: 'is-active' }, { spec: 'is-adult' }] } }));
+    await openDetail('$.rule.and[0]');
+    expect(screen.queryByLabelText('name at $.rule.and[0]')).toBeNull();
+  });
+
+  it('keeps the name field on the root, which is the rule\'s own name', async () => {
+    renderWith(new RuleEditorStore({ rule: { spec: 'is-active' } }));
+    await openDetail('$.rule');
+    expect(screen.getByLabelText('name at $.rule')).toBeDefined();
+  });
+
+  it('shows the migration notice for a nested node that still carries a name', async () => {
+    const { container } = renderWith(new RuleEditorStore(NESTED_NAME));
+    await openDetail('$.rule.and[0]');
+    const notice = container.querySelector('.decoration-notice');
+    expect(notice).not.toBeNull();
+    expect(notice!.textContent).toContain('"activity"');
+    expect(notice!.textContent).not.toContain('as "');
+  });
+
+  it('shows no notice for a nested node with nothing to migrate', async () => {
+    const { container } = renderWith(
+      new RuleEditorStore({ rule: { and: [{ spec: 'is-active' }, { spec: 'is-adult' }] } }),
+    );
+    await openDetail('$.rule.and[0]');
+    expect(container.querySelector('.decoration-notice')).toBeNull();
+  });
+
+  it('extracts a named nested node into a definition carrying that name', async () => {
+    const store = new RuleEditorStore(NESTED_NAME);
+    renderWith(store);
+    await openDetail('$.rule.and[0]');
+    fireEvent.click(screen.getByRole('button', { name: 'extract $.rule.and[0]' }));
+
+    const document = store.getState().document;
+    expect((document.rule as { and: unknown[] }).and[0]).toEqual({ local: 'activity' });
+    expect(document.definitions?.activity).toEqual({ rule: { spec: 'is-active' } });
+  });
+
+  it('refuses to extract onto a name already taken', async () => {
+    renderWith(new RuleEditorStore({
+      definitions: { activity: { rule: { spec: 'is-adult' } } },
+      rule: { and: [{ spec: 'is-active', name: 'activity' }, { local: 'activity' }] },
+    }));
+    await openDetail('$.rule.and[0]');
+    const extract = screen.getByRole('button', { name: 'extract $.rule.and[0]' });
+    expect(extract.hasAttribute('disabled')).toBe(true);
+    expect(extract.getAttribute('title')).toContain('activity');
+  });
+
+  it('renders a local reference as its name, coloured as a local, with no keyword', async () => {
+    const { container } = renderWith(new RuleEditorStore(WITH_LOCAL));
+    await screen.findByRole('button', { name: 'details for $.rule.and[0]' });
+    const badge = container.querySelector('.node-badge-local');
+    expect(badge?.textContent).toBe('activity');
+    expect([...container.querySelectorAll('.node-badge')].map((b) => b.textContent)).not.toContain('let');
+  });
+
+  it('shows the definition body read-only in a local row\'s panel', async () => {
+    const { container } = renderWith(new RuleEditorStore(WITH_LOCAL));
+    await openDetail('$.rule.and[0]');
+    const detail = container.querySelector('.node-local-detail');
+    expect(detail).not.toBeNull();
+    expect(detail!.textContent).toContain('is-active');
+    // Read-only: there is no editor to focus, and no decoration fields to fill in.
+    expect(screen.queryByRole('button', { name: 'edit expression at $.rule.and[0]' })).toBeNull();
+    expect(screen.queryByLabelText('whenTrue at $.rule.and[0]')).toBeNull();
+  });
+
+  it('inlines a local back into the tree, restoring the name', async () => {
+    const store = new RuleEditorStore(WITH_LOCAL);
+    renderWith(store);
+    await openDetail('$.rule.and[0]');
+    fireEvent.click(screen.getByRole('button', { name: 'inline $.rule.and[0]' }));
+
+    const document = store.getState().document;
+    expect((document.rule as { and: unknown[] }).and[0]).toEqual({ spec: 'is-active', name: 'activity' });
+    expect(document.definitions?.activity).toBeUndefined();
+  });
+
+  it('offers Go to definition, which is inert while no definitions panel is mounted', async () => {
+    renderWith(new RuleEditorStore(WITH_LOCAL));
+    await openDetail('$.rule.and[0]');
+    expect(() => fireEvent.click(
+      screen.getByRole('button', { name: 'go to definition $.rule.and[0]' }),
+    )).not.toThrow();
+  });
 });

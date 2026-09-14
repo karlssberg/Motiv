@@ -4,7 +4,7 @@
  * that has not moved to ESM reaches this file, not the one beside it.
  */
 const assert = require('node:assert/strict');
-const { RuleEditorStore, parse, print, printInline } = require('@motiv-rules/core');
+const { RuleEditorStore, mergeDecorations, parse, print, printInline } = require('@motiv-rules/core');
 const workflow = require('@motiv-rules/core/workflow');
 
 /** The whole of `@motiv-rules/core/workflow`, both save loops and the failure-text projections. */
@@ -23,9 +23,15 @@ assert.throws(
 const store = new RuleEditorStore({ rule: { orElse: [{ spec: 'is-vip' }, { spec: 'is-active' }] } });
 store.setName('$.rule', 'eligible');
 
+// A name lives in the document, not the text: printing drops it, and a consumer syncing text
+// back gets it again from `mergeDecorations`, which is the round trip an editor host performs.
 const text = print(store.getState().document);
-assert.deepEqual(parse(text).document, store.getState().document);
-assert.equal(printInline(store.getState().document.rule), '(is-vip || is-active) as "eligible"');
+assert.equal(text, 'is-vip || is-active');
+assert.deepEqual(
+  mergeDecorations(parse(text).document, store.getState().document),
+  store.getState().document,
+);
+assert.equal(printInline(store.getState().document.rule), 'is-vip || is-active');
 
 // CommonJS resolves a missing export to `undefined` rather than failing to link, so the whole
 // surface has to be named here: this is the condition where a partial `/workflow` build would

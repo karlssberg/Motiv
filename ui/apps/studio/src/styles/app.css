@@ -383,6 +383,63 @@ kbd {
   color: var(--muted);
 }
 
+/* A field's inline validation message — same tint as .dialog-error, scoped to one control. */
+.field-error {
+  margin: 0;
+  font-size: 11px;
+  color: var(--danger);
+}
+
+/*
+  Definitions pane (#234): stacked below the builder rather than beside it, so it never competes
+  with the tree for the rail's width — it grows with its own content instead of sharing `.pane`'s
+  default `flex: 1`.
+*/
+.definitions-pane {
+  flex: none;
+  border-right: none;
+  border-bottom: 1px solid var(--border);
+}
+
+.definitions-empty {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.definition-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--sh-inset);
+}
+
+.definition-row-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.definition-row-head > .control {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.definition-count {
+  flex: none;
+  font-size: 11px;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+/* A definition's strip sits inside the row's inset well, so it draws no second one. */
+.definition-row > .dsl-strip {
+  background: var(--bg);
+}
+
 /* Shared control styling for selects, inputs, textareas */
 .control {
   width: 100%;
@@ -733,6 +790,7 @@ textarea.control {
 .node-badge-op { color: var(--accent); }
 .node-badge-quant { color: var(--muted); }
 .node-badge-spec { color: var(--text); }
+.node-badge-local { color: var(--dsl-local); }
 
 .node-desc {
   font-size: 12px;
@@ -888,16 +946,74 @@ textarea.control {
   outline: none;
 }
 
+.node-menu-item:disabled {
+  color: var(--faint);
+  cursor: default;
+}
+
+.node-menu-item:disabled:hover,
+.node-menu-item:disabled:focus-visible {
+  background: transparent;
+}
+
 /* The detail panel: the node's edit controls and decoration fields, a well inset to the row's
    text column, with the fields side by side where there is room. */
+/* The panel shares its row's left edge — the same edge the row's hover fill and selection bar
+   start from — so it reads as the row's own card. It used to sit at 32px, the row's text column,
+   which is 4px *right* of where a child row's box begins (`.node-kids` indents 28px): a filled box
+   starting inside the children's column read as the first child's, not the parent's. */
 .node-detail {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin: 2px 0 8px 32px;
+  margin: 2px 0 8px 0;
   padding: 12px;
   background: var(--sh-inset);
   border-radius: 8px;
+}
+
+/* Ticket #234: a nested node's decoration, stated rather than edited — it is read-only because
+   the way to keep it is to extract it, and the way to change it is to do that first. */
+.decoration-notice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 10px;
+  background: var(--sh-inset);
+  border-radius: 6px;
+}
+
+.decoration-notice-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+}
+
+.decoration-notice-payload {
+  margin: 0;
+  color: var(--faint);
+  font-size: 12px;
+}
+
+/* The definition a `let` row stands for, shown where its own panel would otherwise be. */
+.node-local-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.node-local-body {
+  padding: 8px 10px;
+  background: var(--sh-inset);
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+.node-local-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .node-toolbar {
@@ -944,6 +1060,7 @@ textarea.control {
 /* Read-state token colours, sharing the custom properties the CodeMirror highlight style binds
    to, so a row reads identically before and after it is focused for editing. */
 .tok-spec { color: var(--dsl-spec); }
+.tok-local { color: var(--dsl-local); }
 .tok-paramRef { color: var(--dsl-param); }
 .tok-keyword,
 .tok-quantifier { color: var(--dsl-keyword); }
@@ -2217,6 +2334,7 @@ button.node-dsl:focus-visible {
 
 /* The editor pane's action slot (EditorPane `actions`): between the title and the surface tabs. */
 .pane-actions { display: flex; align-items: center; flex: none; }
+.history-actions { display: flex; align-items: center; gap: 2px; flex: none; }
 
 .overflow-row { display: flex; align-items: center; gap: 2px; }
 .overflow-row .overflow-item { flex: 1; min-width: 0; }

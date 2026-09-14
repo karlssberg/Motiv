@@ -4,6 +4,9 @@ import { useRuleEditorStore } from '@motiv-rules/react';
 
 import { useInlineDslEditor, type OpeningPoint } from './useInlineDslEditor.js';
 
+/** A document with no definitions — a stable identity, so it is not a fresh dep every render. */
+const NO_LOCALS: ReadonlySet<string> = new Set();
+
 /**
  * A node rendered as one line of DSL — what a leaf always shows, and what a parent shows once
  * its subtree is collapsed — and, on focus, edited as text.
@@ -16,8 +19,19 @@ import { useInlineDslEditor, type OpeningPoint } from './useInlineDslEditor.js';
  * buffer is refused and the text is left as typed — the invalid state lives only in the editor,
  * never in the document, exactly as the DSL pane's uncommitted buffer does.
  */
-export function NodeDsl(props: { path: string; node: RuleNode; modelType: string; catalog: Catalog }) {
-  const { path, node, modelType, catalog } = props;
+export function NodeDsl(props: {
+  path: string;
+  node: RuleNode;
+  modelType: string;
+  catalog: Catalog;
+  /**
+   * The document's definition names. `printInline` renders `{ local: 'a' }` as the bare word `a`
+   * with no `let` preamble to declare it, so both the tokenizer and the reparse below need telling
+   * which bare words are locals — without it, `a` colours and commits as a spec reference (#234).
+   */
+  locals?: ReadonlySet<string> | undefined;
+}) {
+  const { path, node, modelType, catalog, locals = NO_LOCALS } = props;
   const store = useRuleEditorStore();
   const text = printInline(node);
 
@@ -65,7 +79,7 @@ export function NodeDsl(props: { path: string; node: RuleNode; modelType: string
     // editor open over text the document already has — there is no phantom row here that a stuck
     // blur could strand, and both triggers refuse alike.
     onCommit: (buffer) => {
-      const result = parse(buffer);
+      const result = parse(buffer, { locals });
       if (!result.document || result.errors.length > 0) {
         setError(result.errors[0]?.message ?? 'could not parse this expression');
         return false;
@@ -115,7 +129,7 @@ export function NodeDsl(props: { path: string; node: RuleNode; modelType: string
       }}
       onFocus={() => start(null)}
     >
-      {tokenSpans(text).map((span) => (
+      {tokenSpans(text, locals).map((span) => (
         <span key={span.key} className={`tok-${span.kind}`}>{span.value}</span>
       ))}
     </button>

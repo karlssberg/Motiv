@@ -299,4 +299,64 @@ public class RuleDocumentComparerTests
         // Assert
         classification.IsMetadataOnly.ShouldBeTrue();
     }
+
+    [Fact]
+    public void Should_treat_a_renamed_definition_key_as_a_structural_change()
+    {
+        // Arrange — the key is the local's address and the name its body binds under, so it is logic
+        var left = AParsedDocument(
+            """{ "definitions": { "a": { "rule": { "spec": "x" } } }, "rule": { "spec": "y" } }""");
+        var right = AParsedDocument(
+            """{ "definitions": { "b": { "rule": { "spec": "x" } } }, "rule": { "spec": "y" } }""");
+
+        // Act
+        var equal = RuleDocumentComparer.StructurallyEqual(left, right);
+
+        // Assert
+        equal.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Should_treat_reordered_definitions_as_structurally_equal()
+    {
+        // Arrange — definitions are name-keyed, so JSON property order carries no meaning
+        var left = AParsedDocument(
+            """
+            { "definitions": { "a": { "rule": { "spec": "x" } }, "b": { "rule": { "spec": "y" } } },
+              "rule": { "and": [ { "local": "a" }, { "local": "b" } ] } }
+            """);
+        var right = AParsedDocument(
+            """
+            { "definitions": { "b": { "rule": { "spec": "y" } }, "a": { "rule": { "spec": "x" } } },
+              "rule": { "and": [ { "local": "a" }, { "local": "b" } ] } }
+            """);
+
+        // Act
+        var equal = RuleDocumentComparer.StructurallyEqual(left, right);
+
+        // Assert
+        equal.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Should_treat_a_local_pointed_at_another_definition_as_a_structural_change()
+    {
+        // Arrange — same definitions, different reference: the rule binds something else
+        var left = AParsedDocument(
+            """
+            { "definitions": { "a": { "rule": { "spec": "x" } }, "b": { "rule": { "spec": "y" } } },
+              "rule": { "local": "a" } }
+            """);
+        var right = AParsedDocument(
+            """
+            { "definitions": { "a": { "rule": { "spec": "x" } }, "b": { "rule": { "spec": "y" } } },
+              "rule": { "local": "b" } }
+            """);
+
+        // Act
+        var equal = RuleDocumentComparer.StructurallyEqual(left, right);
+
+        // Assert
+        equal.ShouldBeFalse();
+    }
 }

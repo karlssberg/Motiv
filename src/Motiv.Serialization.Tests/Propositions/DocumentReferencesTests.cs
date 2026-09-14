@@ -78,4 +78,29 @@ public class DocumentReferencesTests
         // Assert
         references.ShouldBeEmpty();
     }
+
+    [Fact]
+    public void Should_find_a_catalog_reference_made_only_inside_a_definition()
+    {
+        // Act — a definition's body is part of this document's meaning, so its leaves are edges too
+        var references = ReferencesOf(
+            """
+            { "definitions": { "d": { "rule": { "spec": "customer.is-active" } } },
+              "rule": { "and": [ { "local": "d" }, { "spec": "customer.has-orders" } ] } }
+            """);
+
+        // Assert
+        references.ShouldBe(["customer.has-orders", "customer.is-active"]);
+    }
+
+    [Fact]
+    public void Should_not_report_a_local_name_as_a_reference()
+    {
+        // Act — a local resolves inside the document, so republishing nothing can change its meaning
+        var references = ReferencesOf(
+            """{ "definitions": { "d": { "rule": { "expression": "n > 0" } } }, "rule": { "local": "d" } }""");
+
+        // Assert
+        references.ShouldBeEmpty();
+    }
 }

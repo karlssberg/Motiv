@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { RuleEditorStore, type Catalog, type RulesApiClient } from '@motiv-rules/core';
+import { RuleEditorStore, type Catalog, type RuleDocument, type RulesApiClient } from '@motiv-rules/core';
 import { RuleEditorProvider } from '@motiv-rules/react';
 import { EditorPane } from '../../src/panes/EditorPane.js';
 import { editorText, replaceBuffer } from '../support/codemirror.js';
@@ -27,8 +27,8 @@ function client(): RulesApiClient {
   } as unknown as RulesApiClient;
 }
 
-function renderPane(title?: React.ReactNode) {
-  const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
+function renderPane(title?: React.ReactNode, document: RuleDocument = { rule: { spec: 'is-active' } }) {
+  const store = new RuleEditorStore(document);
   const { container } = render(
     <RuleEditorProvider store={store}>
       <EditorPane client={client()} {...(title !== undefined ? { title } : {})} />
@@ -62,6 +62,79 @@ describe('EditorPane', () => {
     expect(tab('DSL').getAttribute('aria-selected')).toBe('false');
     expect(screen.getByRole('button', { name: 'details for $.rule' })).toBeDefined();
     expect(screen.queryByLabelText('sync status')).toBeNull();
+  });
+
+  it('lays the rule out above its definitions, the whole before its parts', async () => {
+    const { container } = renderPane();
+    await settleCatalog();
+
+    const panel = container.querySelector('.surface-panel')!;
+    const rule = screen.getByRole('button', { name: 'details for $.rule' });
+    const definitions = screen.getByRole('region', { name: 'Definitions' });
+    expect(panel.contains(rule) && panel.contains(definitions)).toBe(true);
+    expect(rule.compareDocumentPosition(definitions) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  describe('history', () => {
+    const WITH_LOCAL: RuleDocument = {
+      definitions: { activity: { rule: { spec: 'is-active' } } },
+      rule: { and: [{ local: 'activity' }, { spec: 'is-adult' }] },
+    };
+
+    it('offers Undo and Redo, enabled only when there is something to undo or redo', async () => {
+      const { store } = renderPane(undefined, WITH_LOCAL);
+      await settleCatalog();
+      const undo = screen.getByRole('button', { name: 'Undo' });
+      const redo = screen.getByRole('button', { name: 'Redo' });
+      expect(undo.hasAttribute('disabled')).toBe(true);
+      expect(redo.hasAttribute('disabled')).toBe(true);
+
+      act(() => store.inlineLocal('$.rule.and[0]'));
+      expect(store.getState().document.definitions).toBeUndefined();
+      expect(undo.hasAttribute('disabled')).toBe(false);
+
+      fireEvent.click(undo);
+      expect(store.getState().document).toEqual(WITH_LOCAL);
+      expect(redo.hasAttribute('disabled')).toBe(false);
+      fireEvent.click(redo);
+      expect(store.getState().document.definitions).toBeUndefined();
+    });
+
+    it('undoes an Inline on ⌘Z anywhere in the pane, and redoes on ⇧⌘Z', async () => {
+      const { store } = renderPane(undefined, WITH_LOCAL);
+      await settleCatalog();
+      act(() => store.inlineLocal('$.rule.and[0]'));
+
+      const row = screen.getByRole('button', { name: 'actions for $.rule' });
+      fireEvent.keyDown(row, { key: 'z', metaKey: true });
+      expect(store.getState().document).toEqual(WITH_LOCAL);
+      fireEvent.keyDown(row, { key: 'z', metaKey: true, shiftKey: true });
+      expect(store.getState().document.definitions).toBeUndefined();
+    });
+
+    it('leaves ⌘Z to a text field that has focus', async () => {
+      const { store } = renderPane(undefined, WITH_LOCAL);
+      await settleCatalog();
+      act(() => store.inlineLocal('$.rule.and[0]'));
+      const before = store.getState().document;
+
+      const input = document.createElement('input');
+      screen.getByRole('region', { name: 'Editor' }).appendChild(input);
+      fireEvent.keyDown(input, { key: 'z', metaKey: true });
+      expect(store.getState().document).toBe(before);
+    });
+  });
+
+  it('takes Go to definition to the definition’s name field', async () => {
+    renderPane(undefined, {
+      definitions: { activity: { rule: { spec: 'is-active' } } },
+      rule: { and: [{ local: 'activity' }, { spec: 'is-adult' }] },
+    });
+    await settleCatalog();
+    fireEvent.click(screen.getByRole('button', { name: 'actions for $.rule.and[0]' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Details' }));
+    fireEvent.click(screen.getByRole('button', { name: 'go to definition $.rule.and[0]' }));
+    expect(document.activeElement).toBe(screen.getByLabelText('name of definition activity'));
   });
 
   it('switches to the DSL surface when its tab is clicked', async () => {

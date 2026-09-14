@@ -29,6 +29,24 @@ describe('rangeOfPath', () => {
     expect(rangeOfPath('$.rule.or[9]', spansOf(text), text.length)).toEqual({ from: 0, to: text.length });
   });
 
+  it('anchors a definition sub-field path on the `let` declaration name', () => {
+    const text = 'let a = x\n\na';
+    const range = rangeOfPath('$.definitions.a.whenTrue', spansOf(text), text.length);
+    expect(range).toEqual({ from: 4, to: 5 });
+    expect(text.slice(range.from, range.to)).toBe('a');
+  });
+
+  it('anchors the definition path itself on the declaration, not the whole document', () => {
+    const text = 'let a = x\n\na';
+    expect(rangeOfPath('$.definitions.a', spansOf(text), text.length)).toEqual({ from: 4, to: 5 });
+  });
+
+  it('keeps the definition body addressable separately from the declaration', () => {
+    const text = 'let a = x\n\na';
+    const range = rangeOfPath('$.definitions.a.rule', spansOf(text), text.length);
+    expect(text.slice(range.from, range.to)).toBe('x');
+  });
+
   it('round-trips a printed node so a builder document can be addressed by path', () => {
     const rule = { and: [{ spec: 'a' }, { or: [{ spec: 'b' }, { spec: 'c' }] }] };
     const text = printInline(rule);

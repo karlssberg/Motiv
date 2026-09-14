@@ -4,6 +4,7 @@ import {
   type Catalog, type Payload, type RuleEditorStore,
 } from '@motiv-rules/core';
 import type { DecorationPatch } from '../decorationPatch.js';
+import { ROOT } from '../panes/BuilderPane.js';
 
 /** Metadata types whose payloads are plain text rather than JSON objects. */
 const STRING_METADATA_TYPES = new Set(['String', 'Explanation']);
@@ -38,9 +39,17 @@ function readPayload(draft: string, objectMode: boolean, label: string): FieldRe
   }
 }
 
-/** A labelled multi-line payload field. */
-function PayloadField(props: { label: string; value: string; onChange: (next: string) => void }) {
-  const { label, value, onChange } = props;
+/**
+ * A labelled multi-line payload field. Read-only below the root: the value is still shown, so a
+ * decoration a document already carries stays readable, but it cannot be edited here.
+ */
+function PayloadField(props: {
+  label: string;
+  value: string;
+  onChange: (next: string) => void;
+  readOnly: boolean;
+}) {
+  const { label, value, onChange, readOnly } = props;
 
   return (
     <label className="field">
@@ -49,6 +58,8 @@ function PayloadField(props: { label: string; value: string; onChange: (next: st
         className="control"
         rows={3}
         value={value}
+        readOnly={readOnly}
+        aria-readonly={readOnly}
         onChange={(e) => onChange(e.target.value)}
       />
     </label>
@@ -56,9 +67,13 @@ function PayloadField(props: { label: string; value: string; onChange: (next: st
 }
 
 /**
- * Edits the `name` and `whenTrue`/`whenFalse` payloads of one spec node. Payloads are plain
- * strings when the catalog says the spec carries string metadata, and JSON objects otherwise —
- * in which case they are validated on save, so a malformed object never reaches the store.
+ * Edits the `name` and `whenTrue`/`whenFalse` payloads of the rule's **root** node. Payloads are
+ * plain strings when the catalog says the spec carries string metadata, and JSON objects otherwise
+ * — in which case they are validated on save, so a malformed object never reaches the store.
+ *
+ * Below the root the card writes nothing at all (#234): decoration there belongs to a definition,
+ * so the fields are shown read-only with the way out named, and there is no Save. Otherwise the
+ * DSL view would go on authoring the nested form the builder no longer offers.
  *
  * Where the card sits is the caller's business: it measures the token the card is anchored to and
  * passes in the resulting offsets (and takes the element ref it measured the card itself against).
@@ -75,6 +90,15 @@ export function PayloadPopover(props: {
   cardRef?: Ref<HTMLDivElement>;
 }) {
   const { store, catalog, path, spec, onClose, style, cardRef } = props;
+
+  /**
+   * Only the rule's own root still carries a name of its own. A name below it is a definition
+   * now, authored in the definitions panel and reached from the row's menu — so the field is not
+   * offered here, and a name a legacy document still holds is left exactly as it is (#234).
+   */
+  const namable = path === ROOT;
+  /** The whole card is a reader below the root — no name, no payloads, no Save. */
+  const writable = namable;
 
   const entry = catalog.specs.find((candidate) => candidate.name === spec);
   const objectMode = entry !== undefined && !STRING_METADATA_TYPES.has(entry.metadataType);
@@ -103,7 +127,7 @@ export function PayloadPopover(props: {
       return;
     }
 
-    store.setName(path, draft.name.trim() || undefined);
+    if (namable) store.setName(path, draft.name.trim() || undefined);
     store.setDecoration(path, { whenTrue: whenTrue.value, whenFalse: whenFalse.value } as DecorationPatch);
     onClose();
   };
@@ -131,19 +155,30 @@ export function PayloadPopover(props: {
       {entry?.description && <p className="dsl-popover-desc">{entry.description}</p>}
       {entry && <p className="dsl-popover-meta">{entry.modelType} → {entry.metadataType}</p>}
 
-      <label className="field">
-        <span>Name</span>
-        <input
-          className="control"
-          type="text"
-          value={draft.name}
-          onChange={(e) => patch({ name: e.target.value })}
-        />
-      </label>
-      <PayloadField label="When true" value={draft.whenTrue} onChange={(whenTrue) => patch({ whenTrue })} />
-      <PayloadField label="When false" value={draft.whenFalse} onChange={(whenFalse) => patch({ whenFalse })} />
+      {namable && (
+        <label className="field">
+          <span>Name</span>
+          <input
+            className="control"
+            type="text"
+            value={draft.name}
+            onChange={(e) => patch({ name: e.target.value })}
+          />
+        </label>
+      )}
+      <PayloadField
+        label="When true" value={draft.whenTrue} readOnly={!writable}
+        onChange={(whenTrue) => patch({ whenTrue })}
+      />
+      <PayloadField
+        label="When false" value={draft.whenFalse} readOnly={!writable}
+        onChange={(whenFalse) => patch({ whenFalse })}
+      />
 
-      {objectMode && (
+      {!writable && (
+        <p className="dsl-popover-hint">Extract this node to a definition to decorate it.</p>
+      )}
+      {writable && objectMode && (
         <p className="dsl-popover-hint">
           {properties.length > 0
             ? `JSON object · properties: ${properties.join(', ')}`
@@ -153,8 +188,9 @@ export function PayloadPopover(props: {
       {error && <p className="dsl-popover-error" role="alert">{error}</p>}
 
       <div className="dsl-popover-actions">
-        <button type="button" onClick={save}>Save</button>
-        <button type="button" onClick={onClose}>Cancel</button>
+        {writable && <button type="button" onClick={save}>Save</button>}
+        {/* Not "Close": the card head's × already carries that accessible name. */}
+        <button type="button" onClick={onClose}>{writable ? 'Cancel' : 'Done'}</button>
       </div>
     </div>
   );

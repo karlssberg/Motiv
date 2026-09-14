@@ -92,7 +92,9 @@ internal static class CompositionDepth
     /// </remarks>
     public static CompositionMeasure Of(RuleDocument document, ISpecSource source)
     {
-        var measure = Of(document.Root!, source);
+        // A definition is measured once and shared by every local that names it, so a document whose
+        // definitions reference one another repeatedly costs one measure each rather than one per path.
+        var measure = Of(document.Root!, source, new Dictionary<RuleNode, CompositionMeasure>());
 
         // RuleBinder.Bind wraps a named document's root, which is one more decorator level than the
         // root node's own name would account for.
@@ -106,9 +108,12 @@ internal static class CompositionDepth
     /// the <em>result</em>, not to this walk, because a referenced proposition's measure is read off
     /// its entry rather than re-walked.
     /// </remarks>
-    private static CompositionMeasure Of(RuleNode node, ISpecSource source)
+    private static CompositionMeasure Of(
+        RuleNode node,
+        ISpecSource source,
+        Dictionary<RuleNode, CompositionMeasure> measured)
     {
-        var measure = OfOperator(node, source);
+        var measure = OfOperator(node, source, measured);
 
         // Name and whenTrue are RuleBinder.Decorate's two triggers; an object payload is the
         // metadata binders' equivalent, which re-metadatizes through the same kind of wrapper.
@@ -117,15 +122,32 @@ internal static class CompositionDepth
         return decorated ? measure.Decorating() : measure;
     }
 
-    private static CompositionMeasure OfOperator(RuleNode node, ISpecSource source)
+    private static CompositionMeasure OfOperator(
+        RuleNode node,
+        ISpecSource source,
+        Dictionary<RuleNode, CompositionMeasure> measured)
     {
         if (node.Operator == RuleOperator.Spec)
             return source.Find(node.SpecName!)?.Depth ?? CompositionMeasure.Leaf;
 
+        // A local measures as the definition it names — including that definition's own decoration,
+        // since its body carries the definition key as its name. LocalResolver has already refused a
+        // cyclic definition graph, so this walk terminates.
+        if (node.Operator == RuleOperator.Local)
+        {
+            if (node.Definition is not { } definition)
+                return CompositionMeasure.Leaf;
+
+            if (!measured.TryGetValue(definition, out var measureOfDefinition))
+                measured[definition] = measureOfDefinition = Of(definition, source, measured);
+
+            return measureOfDefinition;
+        }
+
         if (node.Children.Count == 0)
             return CompositionMeasure.Leaf;
 
-        var measure = Of(node.Children[0], source);
+        var measure = Of(node.Children[0], source, measured);
 
         // 'not' and the higher-order quantifiers wrap their single operand in one composition level,
         // which the fold below has no second operand to accumulate.
@@ -135,7 +157,7 @@ internal static class CompositionDepth
         // The left-deep fold RuleBinder.BindComposition performs: every operand after the first adds a
         // level over the deepest so far, so a nested operand's depth compounds rather than adds.
         for (var index = 1; index < node.Children.Count; index++)
-            measure = CompositionMeasure.Max(measure, Of(node.Children[index], source)).Composing();
+            measure = CompositionMeasure.Max(measure, Of(node.Children[index], source, measured)).Composing();
 
         return measure;
     }

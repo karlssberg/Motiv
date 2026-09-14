@@ -25,6 +25,19 @@ describe('the CodeMirror lint adapter', () => {
     expect(parser[0]!.source).toBeUndefined();
   });
 
+  it('passes a warning through to CodeMirror as warning severity', () => {
+    const text = 'let plain = x\n\nplain';
+    const catalog = {
+      specs: [{
+        name: 'plain', modelType: 'customer', metadataType: 'String', isAsync: false,
+        origin: 'Compiled' as const, parameters: null,
+      }],
+      collections: [],
+    };
+    const [diagnostic] = diagnosticsFor(text, parse(text, { catalog }), []);
+    expect(diagnostic!.severity).toBe('warning');
+  });
+
   it('splitDiagnosticMessage inverts the join', () => {
     expect(splitDiagnosticMessage('UnknownSpec: not a registered spec'))
       .toEqual({ code: 'UnknownSpec', message: 'not a registered spec' });

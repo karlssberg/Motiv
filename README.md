@@ -246,6 +246,11 @@ concurrency (`409` on a stale `baseVersion`), and `DELETE` reverts to the
 default. Available via the `Motiv.Serialization` and
 `Motiv.Serialization.AspNetCore` packages.
 
+A rule document can name a subtree without publishing it to the catalog: a
+`definitions` block holds document-local propositions, referenced with a
+`local` node or, in the DSL, `let name = expr`. See
+`docs/live-rules/RuleDocuments.md` for authoring details.
+
 ### Runtime Propositions
 
 Propositions are the building blocks rules are made of. Register them in C#, or

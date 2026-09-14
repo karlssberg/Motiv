@@ -60,6 +60,12 @@ export function PropositionDocument(props: {
    * for a tab that is not the active one. Called with `null` on unmount.
    */
   onSaver?: SaverSink | undefined;
+  /**
+   * Opens the shell's *Extract to catalog* dialog for a builder row, and its *Promote to catalog*
+   * dialog for a definition — both act on the proposition *set*, so the shell owns them (#234).
+   */
+  onExtractToCatalog?: ((path: string) => void) | undefined;
+  onPromote?: ((name: string) => void) | undefined;
 }) {
   const { client, tab, workspace } = props;
   const { entries, loaded, dependents, failure, saving, refreshEntries, select, reload, save } =
@@ -118,6 +124,8 @@ export function PropositionDocument(props: {
         <EditorPane
           client={client}
           documentName={tab.name}
+          onExtractToCatalog={props.onExtractToCatalog}
+          onPromote={props.onPromote}
           title={
             <DocumentTitle
               name={<NameTrail name={tab.name} />}

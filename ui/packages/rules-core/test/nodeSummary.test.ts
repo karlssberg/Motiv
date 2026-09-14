@@ -16,4 +16,10 @@ describe('summarize', () => {
     expect(summarize({ and: [{ spec: 'a' }, { spec: 'b' }, { spec: 'c' }] }).description)
       .toBe('all must hold');
   });
+
+  it('summarises a local node as its name, coloured as a local, with no keyword', () => {
+    expect(summarize({ local: 'is-active' })).toEqual({
+      badge: 'is-active', description: '', kind: 'local',
+    });
+  });
 });

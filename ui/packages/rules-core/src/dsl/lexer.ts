@@ -6,7 +6,7 @@ import type { Token, TokenKind } from './types.js';
  * highlighting) — a hand-copied list is how the demo's copy silently drifted from this lexer's,
  * the same way the word character classes below once did.
  */
-export const DSL_KEYWORDS = ['param', 'in', 'as'] as const;
+export const DSL_KEYWORDS = ['param', 'let', 'in'] as const;
 export const DSL_TYPES = ['integer', 'number', 'string', 'boolean'] as const;
 export const DSL_QUANTIFIERS = ['all', 'any', 'exactly', 'atLeast', 'atMost'] as const;
 

@@ -129,3 +129,74 @@ describe('PayloadPopover', () => {
     expect(onClose).toHaveBeenCalled();
   });
 });
+
+/** Ticket #234: a name below the root is a definition, not an inline decoration. */
+describe('PayloadPopover naming (#234)', () => {
+  it('offers no Name field on a nested spec', () => {
+    const store = new RuleEditorStore({ rule: { and: [{ spec: 'is-active' }, { spec: 'is-adult' }] } });
+    render(
+      <PayloadPopover
+        store={store} catalog={CATALOG} path="$.rule.and[0]" spec="is-active" onClose={vi.fn()}
+      />,
+    );
+    expect(screen.queryByLabelText('Name')).toBeNull();
+    expect(screen.getByLabelText('When true')).toBeTruthy();
+  });
+
+  it('renders the payload fields read-only below the root', () => {
+    const store = new RuleEditorStore({ rule: { and: [{ spec: 'is-active' }, { spec: 'is-adult' }] } });
+    render(
+      <PayloadPopover
+        store={store} catalog={CATALOG} path="$.rule.and[0]" spec="is-active" onClose={vi.fn()}
+      />,
+    );
+
+    for (const label of ['When true', 'When false']) {
+      const field = screen.getByLabelText<HTMLTextAreaElement>(label);
+      expect(field.readOnly).toBe(true);
+      expect(field.getAttribute('aria-readonly')).toBe('true');
+    }
+    expect(screen.getByText('Extract this node to a definition to decorate it.')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Save' })).toBeNull();
+  });
+
+  it('cannot write a nested node decoration — typing never reaches the store', async () => {
+    const user = userEvent.setup();
+    const store = new RuleEditorStore({
+      rule: { and: [{ spec: 'is-active', name: 'activity' }, { spec: 'is-adult' }] },
+    });
+    render(
+      <PayloadPopover
+        store={store} catalog={CATALOG} path="$.rule.and[0]" spec="is-active" onClose={vi.fn()}
+      />,
+    );
+
+    await user.type(screen.getByLabelText('When true'), 'yes');
+
+    expect((store.getState().document.rule as { and: unknown[] }).and[0])
+      .toEqual({ spec: 'is-active', name: 'activity' });
+    expect(store.getState().canUndo).toBe(false);
+  });
+
+  it('shows an existing nested decoration, so what is there is still readable', () => {
+    const store = new RuleEditorStore({
+      rule: { and: [{ spec: 'is-active', whenTrue: 'yes' }, { spec: 'is-adult' }] },
+    });
+    render(
+      <PayloadPopover
+        store={store} catalog={CATALOG} path="$.rule.and[0]" spec="is-active" onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByLabelText<HTMLTextAreaElement>('When true').value).toBe('yes');
+  });
+
+  it('keeps Save, and no hint, at the root', () => {
+    const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
+    render(
+      <PayloadPopover store={store} catalog={CATALOG} path="$.rule" spec="is-active" onClose={vi.fn()} />,
+    );
+    expect(screen.getByRole('button', { name: 'Save' })).toBeTruthy();
+    expect(screen.getByLabelText<HTMLTextAreaElement>('When true').readOnly).toBe(false);
+    expect(screen.queryByText('Extract this node to a definition to decorate it.')).toBeNull();
+  });
+});

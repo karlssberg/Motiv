@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { childPaths, getNode, setNode, listPaths } from '../src/paths.js';
+import {
+  childPaths, definitionOrder, getNode, isNodePath, setNode, listPaths, localReferences,
+  DEFINITIONS_ROOT, definitionPath, definitionBodyPath, definitionNameOf,
+} from '../src/paths.js';
 import type { RuleDocument } from '../src/document.js';
 
 const doc: RuleDocument = {
@@ -52,6 +55,63 @@ describe('setNode', () => {
   });
 });
 
+describe('definition paths', () => {
+  const docWithDefinition: RuleDocument = {
+    rule: { spec: 'a' },
+    definitions: {
+      'quota-check': { rule: { and: [{ spec: 'x' }, { spec: 'y' }] } },
+    },
+  };
+
+  it('builds a definition path and its body path', () => {
+    expect(definitionPath('quota-check')).toBe(`${DEFINITIONS_ROOT}.quota-check`);
+    expect(definitionBodyPath('quota-check')).toBe(`${DEFINITIONS_ROOT}.quota-check.rule`);
+  });
+
+  it('getNode resolves nested nodes inside a definition body', () => {
+    expect(getNode(docWithDefinition, '$.definitions.quota-check.rule.and[1]')).toEqual({ spec: 'y' });
+  });
+
+  it('setNode inside a definition body returns a new document with the rule untouched', () => {
+    const next = setNode(docWithDefinition, '$.definitions.quota-check.rule.and[1]', { spec: 'z' });
+    expect(getNode(next, '$.definitions.quota-check.rule.and[1]')).toEqual({ spec: 'z' });
+    expect(getNode(docWithDefinition, '$.definitions.quota-check.rule.and[1]')).toEqual({ spec: 'y' });
+    expect(docWithDefinition.rule).toEqual({ spec: 'a' });
+    expect(next.rule).toEqual({ spec: 'a' });
+  });
+
+  it('listPaths includes every definition body after the rule', () => {
+    expect(listPaths(docWithDefinition).map((p) => p.path)).toEqual([
+      '$.rule',
+      '$.definitions.quota-check.rule',
+      '$.definitions.quota-check.rule.and[0]',
+      '$.definitions.quota-check.rule.and[1]',
+    ]);
+  });
+
+  it('rejects a definitions path with an extra segment before .rule', () => {
+    expect(() => getNode(docWithDefinition, '$.definitions.a.b.rule')).toThrow();
+  });
+
+  it('rejects a definitions path with an empty name', () => {
+    expect(() => getNode(docWithDefinition, '$.definitions..rule')).toThrow();
+  });
+
+  it('rejects a definition path without .rule — a definition is not a node', () => {
+    expect(() => getNode(docWithDefinition, '$.definitions.quota-check')).toThrow();
+  });
+
+  it('definitionNameOf extracts the name under a definition path', () => {
+    expect(definitionNameOf('$.definitions.quota-check.rule.and[0]')).toBe('quota-check');
+    expect(definitionNameOf('$.definitions.quota-check')).toBe('quota-check');
+  });
+
+  it('definitionNameOf is undefined for a plain rule path', () => {
+    expect(definitionNameOf('$.rule')).toBeUndefined();
+    expect(definitionNameOf('$.rule.and[0]')).toBeUndefined();
+  });
+});
+
 describe('childPaths', () => {
   it('lists binary operands under their operator key, in order', () => {
     expect(childPaths({ and: [{ spec: 'a' }, { spec: 'b' }] }, '$.rule'))
@@ -67,5 +127,88 @@ describe('childPaths', () => {
   it('gives a leaf no children', () => {
     expect(childPaths({ spec: 'a' }, '$.rule')).toEqual([]);
     expect(childPaths({ expression: 'n > 0' }, '$.rule')).toEqual([]);
+  });
+});
+
+describe('localReferences', () => {
+  it('finds references in the rule and in definitions, rule first then key order', () => {
+    const document: RuleDocument = {
+      rule: { and: [{ local: 'quota-check' }, { spec: 'b' }] },
+      definitions: {
+        'quota-check': { rule: { spec: 'a' } },
+        other: { rule: { local: 'quota-check' } },
+      },
+    };
+    expect(localReferences(document, 'quota-check')).toEqual([
+      '$.rule.and[0]',
+      '$.definitions.other.rule',
+    ]);
+  });
+
+  it('returns an empty array when there are no references', () => {
+    expect(localReferences({ rule: { spec: 'a' } }, 'quota-check')).toEqual([]);
+  });
+});
+
+describe('definitionOrder', () => {
+  it('lists definitions by tier — unreferenced first, then what those use — key order within a tier', () => {
+    const document: RuleDocument = {
+      rule: { local: 'top' },
+      definitions: {
+        leaf: { rule: { spec: 'a' } },
+        mid: { rule: { and: [{ local: 'leaf' }, { spec: 'b' }] } },
+        top: { rule: { or: [{ local: 'mid' }, { local: 'leaf' }] } },
+        alone: { rule: { spec: 'c' } },
+      },
+    };
+    expect(definitionOrder(document)).toEqual(['top', 'alone', 'mid', 'leaf']);
+  });
+
+  it('is key order when nothing references anything', () => {
+    const document: RuleDocument = {
+      rule: { spec: 'x' },
+      definitions: { b: { rule: { spec: 'a' } }, a: { rule: { spec: 'a' } } },
+    };
+    expect(definitionOrder(document)).toEqual(['b', 'a']);
+  });
+
+  it('appends the members of a cycle in key order rather than dropping or looping on them', () => {
+    const document: RuleDocument = {
+      rule: { spec: 'x' },
+      definitions: {
+        y: { rule: { local: 'z' } },
+        z: { rule: { local: 'y' } },
+        w: { rule: { local: 'y' } },
+      },
+    };
+    expect(definitionOrder(document)).toEqual(['w', 'y', 'z']);
+  });
+
+  it('is empty without definitions', () => {
+    expect(definitionOrder({ rule: { spec: 'a' } })).toEqual([]);
+  });
+});
+
+describe('isNodePath', () => {
+  it('accepts the paths a node can actually stand at', () => {
+    for (const path of ['$.rule', '$.rule.and[0]', '$.definitions.a.rule', '$.definitions.a.rule.not']) {
+      expect(isNodePath(path)).toBe(true);
+    }
+  });
+
+  it('rejects a definition itself, its non-rule fields and anything outside the two roots', () => {
+    // `$.definitions.a` is where a `let` declaration's span sits: real, addressable, and not a
+    // node — so every consumer that resolves a span to a node has to be able to ask.
+    for (const path of ['$.definitions.a', '$.definitions.a.whenTrue', '$.x', '$.definitions', '']) {
+      expect(isNodePath(path)).toBe(false);
+    }
+  });
+
+  it('agrees with getNode, which throws for exactly the paths it rejects', () => {
+    const document = { rule: { spec: 'a' }, definitions: { a: { rule: { spec: 'b' } } } };
+    expect(() => getNode(document, '$.definitions.a')).toThrow();
+    expect(isNodePath('$.definitions.a')).toBe(false);
+    expect(getNode(document, '$.definitions.a.rule')).toEqual({ spec: 'b' });
+    expect(isNodePath('$.definitions.a.rule')).toBe(true);
   });
 });

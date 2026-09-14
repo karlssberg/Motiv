@@ -1,11 +1,11 @@
 import {
-  binaryOperator, higherOrderKey, isBinaryNode, isExpressionNode, isHigherOrderNode, isNotNode,
-  isSpecNode, operandsOf,
+  binaryOperator, higherOrderKey, isBinaryNode, isExpressionNode, isHigherOrderNode, isLocalNode,
+  isNotNode, isSpecNode, operandsOf,
   type BinaryOperator, type Countable, type HigherOrderKey, type RuleNode,
 } from './document.js';
 
 /** What a node's badge is: the row renders it as a `.node-badge-{kind}` class, which colours it. */
-export type NodeBadgeKind = 'op' | 'quant' | 'spec';
+export type NodeBadgeKind = 'op' | 'quant' | 'spec' | 'local';
 
 /**
  * The one-line summary shown on a parent row while its subtree is expanded. A collapsed parent,
@@ -61,5 +61,8 @@ export function summarize(node: RuleNode): NodeSummary {
   }
   if (isExpressionNode(node)) return { badge: node.expression, description: '', kind: 'spec' };
   if (isSpecNode(node)) return { badge: node.spec, description: '', kind: 'spec' };
+  // The name is the badge, and its kind colours it as a local: no keyword, since the row is
+  // a reference to a definition, not the declaration of one (#234).
+  if (isLocalNode(node)) return { badge: node.local, description: '', kind: 'local' };
   return { badge: '?', description: '', kind: 'spec' };
 }

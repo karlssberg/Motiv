@@ -16,8 +16,8 @@ function parentPath(path: string): string | null {
  * The span recorded for `path`, or for its nearest ancestor that has one — so a sub-field path
  * like `$.rule.whenTrue` anchors on the node that owns it. Falls back to the whole document.
  *
- * The parser guarantees one span per path, widened to cover any parentheses and `as` clause, so a
- * grouped subtree resolves to a range including its parens rather than to the bare inner text.
+ * The parser guarantees one span per path, widened to cover any parentheses, so a grouped
+ * subtree resolves to a range including its parens rather than to the bare inner text.
  */
 export function rangeOfPath(
   path: string,

@@ -12,6 +12,11 @@
       "type": "object",
       "additionalProperties": { "$ref": "#/$defs/parameterDeclaration" }
     },
+    "definitions": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$" },
+      "additionalProperties": { "$ref": "#/$defs/definition" }
+    },
     "rule": { "$ref": "#/$defs/node" }
   },
   "required": ["rule"],
@@ -29,6 +34,16 @@
     },
     "payload": {
       "anyOf": [{ "$ref": "#/$defs/nonEmptyString" }, { "type": "object" }]
+    },
+    "definition": {
+      "type": "object",
+      "properties": {
+        "rule": { "$ref": "#/$defs/node" },
+        "whenTrue": { "$ref": "#/$defs/payload" },
+        "whenFalse": { "$ref": "#/$defs/payload" }
+      },
+      "required": ["rule"],
+      "additionalProperties": false
     },
     "args": {
       "type": "object",
@@ -83,8 +98,19 @@
         { "$ref": "#/$defs/asAnySatisfiedNode" },
         { "$ref": "#/$defs/asNSatisfiedNode" },
         { "$ref": "#/$defs/asAtLeastNSatisfiedNode" },
-        { "$ref": "#/$defs/asAtMostNSatisfiedNode" }
+        { "$ref": "#/$defs/asAtMostNSatisfiedNode" },
+        { "$ref": "#/$defs/localNode" }
       ]
+    },
+    "localNode": {
+      "properties": {
+        "local": { "$ref": "#/$defs/nonEmptyString", "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$" },
+        "whenTrue": { "$ref": "#/$defs/payload" },
+        "whenFalse": { "$ref": "#/$defs/payload" },
+        "name": { "$ref": "#/$defs/nonEmptyString" }
+      },
+      "required": ["local"],
+      "additionalProperties": false
     },
     "specNode": {
       "properties": {

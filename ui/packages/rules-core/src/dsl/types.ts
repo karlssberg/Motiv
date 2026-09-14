@@ -3,7 +3,7 @@ import type { RuleDocument } from '../document.js';
 /** The lexical class of a DSL token. */
 export type TokenKind =
   | 'spec'        // is-active, and bare identifiers: param names, collection paths
-  | 'keyword'     // param, in, as
+  | 'keyword'     // param, let, in
   | 'type'        // integer, number, string, boolean
   | 'quantifier'  // all, any, exactly, atLeast, atMost
   | 'operator'    // && || & | ^ !
@@ -49,4 +49,10 @@ export interface ParseResult {
   document?: RuleDocument;
   errors: DslError[];
   spans: NodeSpan[];
+  /**
+   * Non-fatal advice about the document — always present, possibly empty. A warning never
+   * suppresses `document`; it flags something worth a second look (a local shadowing a catalog
+   * spec, an `as` clause that could be a `let`), not something wrong.
+   */
+  warnings: DslError[];
 }

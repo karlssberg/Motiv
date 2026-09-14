@@ -1,4 +1,5 @@
 import type { Catalog } from '../contracts.js';
+import { declaredLocals } from './locals.js';
 import { DSL_KEYWORDS, DSL_QUANTIFIERS, DSL_TYPES, PARAM_REST_CHARS, WORD_REST_CHARS, WORD_START_CHARS } from './lexer.js';
 
 /**
@@ -6,7 +7,7 @@ import { DSL_KEYWORDS, DSL_QUANTIFIERS, DSL_TYPES, PARAM_REST_CHARS, WORD_REST_C
  * them onto its widget's types (`kind` onto its icon vocabulary, `boost` onto its ranking),
  * so the package takes no dependency on any editor, even at the type level.
  */
-export type CompletionItemKind = 'spec' | 'collection' | 'quantifier' | 'keyword' | 'type' | 'parameter';
+export type CompletionItemKind = 'spec' | 'collection' | 'quantifier' | 'keyword' | 'type' | 'parameter' | 'local';
 
 /** One completion option. */
 export interface CompletionItem {
@@ -95,6 +96,22 @@ function parameterOptions(text: string): CompletionItem[] {
   }));
 }
 
+/**
+ * The names declared by the document's own `let` statements — offered with a boost so a local
+ * ranks above the catalog specs it can shadow, since a reference to it is almost always what the
+ * author means once it exists. A local is only offered once its `let` line has actually been
+ * typed; there is no forward-looking pre-scan here the way the parser's `collectLocalNames` does
+ * one, because completion has no notion of "the rest of the preamble" — only the text so far.
+ */
+function localOptions(text: string): CompletionItem[] {
+  return [...declaredLocals(text)].map((name) => ({
+    label: name,
+    kind: 'local' as const,
+    detail: 'local',
+    boost: 1,
+  }));
+}
+
 /** The word touching the cursor, searched on the cursor's own line. */
 function wordBefore(text: string, cursor: number): { from: number; text: string } | null {
   const lineStart = text.lastIndexOf('\n', cursor - 1) + 1;
@@ -116,7 +133,7 @@ export function completeDsl(text: string, cursor: number, catalog: Catalog): Dsl
 
   const options = word.text.startsWith('@')
     ? parameterOptions(text)
-    : [...specOptions(catalog), ...collectionOptions(catalog), ...VOCABULARY_OPTIONS];
+    : [...localOptions(text), ...specOptions(catalog), ...collectionOptions(catalog), ...VOCABULARY_OPTIONS];
 
   const prefix = word.text.toLowerCase();
   const matching = options.filter((option) => option.label.toLowerCase().startsWith(prefix));

@@ -1,8 +1,9 @@
 import {
   binaryOperator, higherOrderBody, higherOrderKey, isBinaryNode, isExpressionNode,
-  isHigherOrderNode, isNotNode, isSpecNode, operandsOf,
-  type ArgValue, type BinaryNode, type BinaryOperator, type HigherOrderKey, type HigherOrderNode,
-  type NotNode, type ParameterDeclaration, type RuleDocument, type RuleNode, type SpecNode,
+  isHigherOrderNode, isLocalNode, isNotNode, isSpecNode, operandsOf,
+  type ArgValue, type BinaryNode, type BinaryOperator, type Definition, type HigherOrderKey,
+  type HigherOrderNode, type NotNode, type ParameterDeclaration, type RuleDocument, type RuleNode,
+  type SpecNode,
 } from '../document.js';
 import type { Catalog } from '../contracts.js';
 
@@ -51,18 +52,10 @@ const QUANTIFIER_WORDS: Record<HigherOrderKey, string> = {
   asAtLeastNSatisfied: 'atLeast', asAtMostNSatisfied: 'atMost',
 };
 
-/**
- * Binding tightness: higher binds tighter. A named node is either a postfix primary or is
- * parenthesised by its own `as` clause, so it always binds as an atom.
- */
+/** Binding tightness: higher binds tighter. */
 function precedenceOf(node: RuleNode): number {
-  if (node.name !== undefined || !isBinaryNode(node)) return ATOM;
+  if (!isBinaryNode(node)) return ATOM;
   return PRECEDENCE.indexOf(binaryOperator(node));
-}
-
-/** True when a trailing `as` clause would bind to something narrower than the whole node. */
-function nameNeedsParens(node: RuleNode): boolean {
-  return isBinaryNode(node) || isNotNode(node);
 }
 
 /**
@@ -134,7 +127,7 @@ function printNegation(
  */
 function operandNeedsParens(operand: RuleNode, operator: BinaryOperator): boolean {
   if (precedenceOf(operand) <= PRECEDENCE.indexOf(operator)) return true;
-  if (operand.name !== undefined || !isBinaryNode(operand)) return false;
+  if (!isBinaryNode(operand)) return false;
   return CONNECTIVE[binaryOperator(operand)] !== CONNECTIVE[operator];
 }
 
@@ -192,29 +185,16 @@ function printArgs(node: SpecNode, options: PrintOptions | undefined): string {
   return `(${rendered.join(', ')})`;
 }
 
-/** Renders a node without its `as` clause. */
-function printBody(
+/** Renders a node, at an indentation its continuation lines start from. */
+function printNode(
   node: RuleNode, indent: string, layout: Layout, options: PrintOptions | undefined,
 ): string {
   if (isSpecNode(node)) return `${node.spec}${printArgs(node, options)}`;
   if (isExpressionNode(node)) return `\`${node.expression}\``;
   if (isNotNode(node)) return printNegation(node, indent, layout, options);
   if (isHigherOrderNode(node)) return printQuantifier(node, indent, layout, options);
+  if (isLocalNode(node)) return node.local;
   return printBinary(node, indent, layout, options);
-}
-
-/** Renders a node and its `as` clause, at an indentation its continuation lines start from. */
-function printNode(
-  node: RuleNode, indent: string, layout: Layout, options: PrintOptions | undefined,
-): string {
-  const name = node.name;
-  if (name === undefined) return printBody(node, indent, layout, options);
-  if (!nameNeedsParens(node)) return `${printBody(node, indent, layout, options)} as ${quote(name)}`;
-
-  const group = parenthesise(
-    indent, isMultiline(node, layout), (inner) => printBody(node, inner, layout, options),
-  );
-  return `${group} as ${quote(name)}`;
 }
 
 function printDefault(value: NonNullable<ParameterDeclaration['default']>): string {
@@ -232,9 +212,25 @@ function printParameters(parameters: RuleDocument['parameters']): string {
   return `${lines.join('\n')}\n\n`;
 }
 
+/**
+ * Renders the `let` declarations, including the blank line that closes the block. Mirrors
+ * {@link printParameters}: one declaration per line, in `Object.keys` order — the same order
+ * `parsePreamble` populates the map in, so declaration order round-trips.
+ */
+function printDefinitions(
+  definitions: RuleDocument['definitions'], options: PrintOptions | undefined,
+): string {
+  const entries = Object.entries(definitions ?? {}) as [string, Definition][];
+  if (entries.length === 0) return '';
+  const lines = entries.map(([name, definition]) =>
+    `let ${name} = ${printNode(definition.rule, '', 'block', options)}`);
+  return `${lines.join('\n')}\n\n`;
+}
+
 /** Reprints a rule document as canonical DSL text — the inverse of `parse`. */
 export function print(document: RuleDocument, options?: PrintOptions): string {
-  return `${printParameters(document.parameters)}${printNode(document.rule, '', 'block', options)}`;
+  return `${printParameters(document.parameters)}${printDefinitions(document.definitions, options)}`
+    + printNode(document.rule, '', 'block', options);
 }
 
 /**
@@ -244,6 +240,13 @@ export function print(document: RuleDocument, options?: PrintOptions): string {
  * `parse(printInline(node)).document.rule` deep-equals `node`, which is what makes a rendered
  * row safe to hand back to the parser after editing — this holds regardless of `options`, since
  * `options` affects argument order only, never the named form the parser reads back.
+ *
+ * The one exception is a {@link LocalNode}: `printInline` renders `{ local: 'a' }` as the bare
+ * word `a`, with no `let` preamble to declare it, since it renders a single node in isolation.
+ * `parse` cannot tell that bare word apart from an ordinary spec reference unless the caller says
+ * so — pass the owning document's `definitions` keys as `parse`'s `locals` option
+ * (`parse(printInline(node), { locals: new Set(Object.keys(document.definitions ?? {})) })`) to
+ * get `{ local: 'a' }` back; without it, `a` reparses as `{ spec: 'a' }`.
  */
 export function printInline(node: RuleNode, options?: PrintOptions): string {
   return printNode(node, '', 'inline', options);

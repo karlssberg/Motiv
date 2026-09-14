@@ -20,6 +20,8 @@ export type ArgValue = string | number | boolean | null;
 
 export interface SpecNode extends Decoration { spec: string; args?: Record<string, ArgValue> }
 export interface ExpressionNode extends Decoration { expression: string }
+/** A reference to a document-local proposition declared in `RuleDocument.definitions`. */
+export interface LocalNode extends Decoration { local: string }
 export interface NotNode extends Decoration { not: RuleNode }
 export interface AndNode extends Decoration { and: RuleNode[] }
 export interface OrNode extends Decoration { or: RuleNode[] }
@@ -38,7 +40,7 @@ export type HigherOrderNode =
   | AsAtLeastNSatisfiedNode | AsAtMostNSatisfiedNode;
 
 export type RuleNode =
-  | SpecNode | ExpressionNode | NotNode | BinaryNode | HigherOrderNode;
+  | SpecNode | ExpressionNode | LocalNode | NotNode | BinaryNode | HigherOrderNode;
 
 /** A parameter declaration in a rule document. */
 export interface ParameterDeclaration {
@@ -46,11 +48,19 @@ export interface ParameterDeclaration {
   default?: number | string | boolean;
 }
 
+/** A document-local proposition, referenced from the rule tree via a {@link LocalNode}. */
+export interface Definition {
+  rule: RuleNode;
+  whenTrue?: Payload;
+  whenFalse?: Payload;
+}
+
 /** A complete externalized Motiv rule document. */
 export interface RuleDocument {
   $schema?: string;
   name?: string;
   parameters?: Record<string, ParameterDeclaration>;
+  definitions?: Record<string, Definition>;
   rule: RuleNode;
 }
 
@@ -64,10 +74,10 @@ export const HIGHER_ORDER_KEYS = [
 export type HigherOrderKey = (typeof HIGHER_ORDER_KEYS)[number];
 
 /** The discriminant of a node: which operator or leaf it is. */
-export type NodeKind = 'spec' | 'expression' | 'not' | BinaryOperator | HigherOrderKey;
+export type NodeKind = 'spec' | 'expression' | 'local' | 'not' | BinaryOperator | HigherOrderKey;
 
 const KIND_ORDER: readonly NodeKind[] = [
-  'spec', 'expression', 'not', ...BINARY_OPERATORS, ...HIGHER_ORDER_KEYS,
+  'spec', 'expression', 'local', 'not', ...BINARY_OPERATORS, ...HIGHER_ORDER_KEYS,
 ];
 
 /** Returns the discriminant key of a node. */
@@ -80,6 +90,7 @@ export function nodeKind(node: RuleNode): NodeKind {
 
 export function isSpecNode(node: RuleNode): node is SpecNode { return 'spec' in node; }
 export function isExpressionNode(node: RuleNode): node is ExpressionNode { return 'expression' in node; }
+export function isLocalNode(node: RuleNode): node is LocalNode { return 'local' in node; }
 export function isNotNode(node: RuleNode): node is NotNode { return 'not' in node; }
 
 export function isBinaryNode(node: RuleNode): node is BinaryNode {

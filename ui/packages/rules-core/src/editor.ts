@@ -1,9 +1,10 @@
 import {
-  binaryOperator, isBinaryNode, isNotNode, operandsOf,
-  type BinaryOperator, type Decoration, type RuleDocument, type RuleNode,
+  binaryOperator, isBinaryNode, isLocalNode, isNotNode, operandsOf,
+  type BinaryOperator, type Decoration, type Definition, type Payload, type RuleDocument, type RuleNode,
 } from './document.js';
 import type { RuleError } from './contracts.js';
-import { getNode, setNode, splitLast } from './paths.js';
+import { definitionBodyPath, definitionPath, getNode, localReferences, setNode, splitLast } from './paths.js';
+import { isValidLocalName } from './localNames.js';
 
 /** The observable state of a rule editor. */
 export interface EditorState {
@@ -176,6 +177,133 @@ export class RuleEditorStore {
     if (name === undefined) delete next.name;
     else next.name = name;
     this.#commit(setNode(this.#document, path, next));
+  }
+
+  /**
+   * Moves the subtree at `path` into `definitions[name]` and replaces it with `{ local: name }`.
+   * The subtree's own `name`/`whenTrue`/`whenFalse` become the definition's — a definition's key
+   * *is* its name, so a carried-over `name` would be redundant and is simply dropped. The
+   * replacement reference carries no decoration of its own.
+   */
+  defineLocal(path: string, name: string): void {
+    if (!isValidLocalName(name)) throw new Error(`Invalid definition name: ${name}.`);
+    if (this.#document.definitions?.[name]) throw new Error(`Definition "${name}" already exists.`);
+    // Defensive rather than reachable: `path` can only resolve under `$.definitions.<name>` if
+    // `definitions[name]` already exists, which the check above already rejects. Kept explicit
+    // per the brief (self-reference must never be possible) rather than relied on implicitly.
+    if (path === definitionBodyPath(name) || path.startsWith(`${definitionPath(name)}.`)) {
+      throw new Error(`Cannot define "${name}" from inside its own body.`);
+    }
+    const node = getNode(this.#document, path);
+    if (!node) throw new Error(`No node at ${path}.`);
+
+    const { name: _name, whenTrue, whenFalse, ...body } = node as RuleNode & Decoration;
+    const definition: Definition = { rule: body as RuleNode };
+    if (whenTrue !== undefined) definition.whenTrue = whenTrue;
+    if (whenFalse !== undefined) definition.whenFalse = whenFalse;
+
+    const withDefinition = structuredClone(this.#document);
+    withDefinition.definitions = { ...(withDefinition.definitions ?? {}), [name]: definition };
+    this.#commit(setNode(withDefinition, path, { local: name }));
+  }
+
+  /**
+   * Replaces the `local` reference at `path` with a structured clone of its definition body, the
+   * definition's `whenTrue`/`whenFalse` and its key reapplied as the body's `name` — reproducing
+   * the pre-#234 nested-name form exactly. When no reference to the definition remains anywhere
+   * (the rule or any definition body), the definition is removed.
+   */
+  inlineLocal(path: string): void {
+    const node = getNode(this.#document, path);
+    if (!node || !isLocalNode(node)) throw new Error(`No local reference at ${path}.`);
+    const name = node.local;
+    const definition = this.#document.definitions?.[name];
+    if (!definition) throw new Error(`No definition "${name}".`);
+
+    // `definition` is read from the pre-mutation document; every payload taken from it must be
+    // cloned before it is spliced into the document `setNode` builds, or the two documents share
+    // a mutable object and a later edit to one corrupts the other's undo-stack entry.
+    const inlined = { ...structuredClone(definition.rule), name } as RuleNode & Decoration;
+    // Only a payload the *definition* carries is copied down. An undecorated definition leaves the
+    // body's own payloads alone — deleting them would lose decoration the body itself authored,
+    // which was never the definition's to drop.
+    if (definition.whenTrue !== undefined) inlined.whenTrue = structuredClone(definition.whenTrue);
+    if (definition.whenFalse !== undefined) inlined.whenFalse = structuredClone(definition.whenFalse);
+
+    const next = setNode(this.#document, path, inlined as RuleNode);
+    if (localReferences(next, name).length === 0 && next.definitions) {
+      delete next.definitions[name];
+      if (Object.keys(next.definitions).length === 0) delete next.definitions;
+    }
+    this.#commit(next);
+  }
+
+  /** Renames a definition's key and every `local` reference to it, in the rule and every definition. */
+  renameLocal(from: string, to: string): void {
+    if (!isValidLocalName(to)) throw new Error(`Invalid definition name: ${to}.`);
+    if (!this.#document.definitions?.[from]) throw new Error(`No definition "${from}".`);
+    if (to !== from && this.#document.definitions?.[to]) throw new Error(`Definition "${to}" already exists.`);
+
+    let next = structuredClone(this.#document);
+    const renamed: Record<string, Definition> = {};
+    for (const [key, definition] of Object.entries(next.definitions ?? {})) {
+      renamed[key === from ? to : key] = definition;
+    }
+    next.definitions = renamed;
+
+    for (const path of localReferences(next, from)) {
+      const node = getNode(next, path);
+      next = setNode(next, path, { ...node, local: to } as RuleNode);
+    }
+    this.#commit(next);
+  }
+
+  /** Removes a definition; throws while any `local` reference to it remains. */
+  removeDefinition(name: string): void {
+    if (!this.#document.definitions?.[name]) throw new Error(`No definition "${name}".`);
+    if (localReferences(this.#document, name).length > 0) {
+      throw new Error(`Definition "${name}" is still referenced.`);
+    }
+    const next = structuredClone(this.#document);
+    delete next.definitions![name];
+    if (Object.keys(next.definitions!).length === 0) delete next.definitions;
+    this.#commit(next);
+  }
+
+  /** Replaces every `{ local: name }` reference with `{ spec }` and removes the definition. */
+  replaceLocalWithSpec(name: string, spec: string): void {
+    if (!this.#document.definitions?.[name]) throw new Error(`No definition "${name}".`);
+    let next = structuredClone(this.#document);
+    for (const path of localReferences(next, name)) {
+      next = setNode(next, path, { spec });
+    }
+    delete next.definitions![name];
+    if (Object.keys(next.definitions!).length === 0) delete next.definitions;
+    this.#commit(next);
+  }
+
+  /** Patches a definition's `whenTrue`/`whenFalse`; an explicit `undefined` clears that field. */
+  setDefinitionDecoration(
+    name: string,
+    decoration: { whenTrue?: Payload | undefined; whenFalse?: Payload | undefined },
+  ): void {
+    if (!this.#document.definitions?.[name]) throw new Error(`No definition "${name}".`);
+    const next = structuredClone(this.#document);
+    // Built from `next.definitions![name]` (the clone), not `this.#document.definitions![name]`
+    // (the pre-mutation object) — otherwise every field `decoration` leaves untouched (`rule`,
+    // and whichever of whenTrue/whenFalse isn't passed) is spliced in by reference and becomes
+    // shared mutable state between the committed document and the undo-stack entry.
+    const nextDefinition: Definition = { ...next.definitions![name]! };
+    if ('whenTrue' in decoration) {
+      if (decoration.whenTrue === undefined) delete nextDefinition.whenTrue;
+      else nextDefinition.whenTrue = decoration.whenTrue;
+    }
+    if ('whenFalse' in decoration) {
+      if (decoration.whenFalse === undefined) delete nextDefinition.whenFalse;
+      else nextDefinition.whenFalse = decoration.whenFalse;
+    }
+    next.definitions![name] = nextDefinition;
+    this.#commit(next);
   }
 
   setErrors(errors: RuleError[]): void {

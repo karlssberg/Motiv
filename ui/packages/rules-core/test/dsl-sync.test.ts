@@ -51,9 +51,14 @@ describe('DslSyncController', () => {
   });
 
   it('preserves payloads from the store across a text edit', () => {
-    const { store, sync } = syncOver({ spec: 'is-active', whenTrue: 'yes', whenFalse: 'no' });
+    const { store, sync } = syncOver({
+      spec: 'is-active', name: 'activity', whenTrue: 'yes', whenFalse: 'no',
+    });
 
-    sync.setText('is-active as "activity"');
+    // The text cannot carry `name` — the DSL has no inline naming clause — but the node at
+    // `$.rule` stays compatible (same kind, same spec), so `mergeDecorations` carries it, along
+    // with the other payloads, back onto the freshly parsed document.
+    sync.setText('is-active');
     vi.advanceTimersByTime(300);
 
     expect(store.getState().document.rule).toMatchObject({

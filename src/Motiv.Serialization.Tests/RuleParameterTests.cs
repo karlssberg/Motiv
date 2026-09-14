@@ -595,4 +595,48 @@ public class RuleParameterTests
         // Assert
         errors.ShouldBeEmpty();
     }
+
+    [Fact]
+    public void Should_substitute_parameters_into_a_definition_payload()
+    {
+        // Arrange — a default interpolating to whitespace is reportable only once the substituter has
+        // walked the definition body and applied the value, which is the fact under test
+        const string json =
+            """
+            {
+              "parameters": { "label": { "type": "string", "default": " " } },
+              "definitions": { "d": { "rule": { "spec": "is-positive" }, "whenTrue": "{label}", "whenFalse": "no" } },
+              "rule": { "local": "d" }
+            }
+            """;
+
+        // Act
+        var errors = CreateSerializer().Validate<int>(json);
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidNode);
+        error.Path.ShouldBe("$.definitions.d.rule.whenTrue");
+    }
+
+    [Fact]
+    public void Should_report_an_unknown_parameter_reference_inside_a_definition_payload()
+    {
+        // Arrange
+        const string json =
+            """
+            {
+              "definitions": { "d": { "rule": { "spec": "is-positive" }, "whenTrue": "at least {minAge}", "whenFalse": "no" } },
+              "rule": { "local": "d" }
+            }
+            """;
+
+        // Act
+        var errors = CreateSerializer().Validate<int>(json);
+
+        // Assert
+        var error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.UnknownParameterReference);
+        error.Path.ShouldBe("$.definitions.d.rule.whenTrue");
+    }
 }
