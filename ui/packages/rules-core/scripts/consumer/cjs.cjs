@@ -21,9 +21,9 @@ assert.throws(
 );
 
 const store = new RuleEditorStore({ rule: { orElse: [{ spec: 'is-vip' }, { spec: 'is-active' }] } });
-store.setName('$.rule', 'eligible');
+store.setDecoration('$.rule', { whenTrue: 'eligible' });
 
-// A name lives in the document, not the text: printing drops it, and a consumer syncing text
+// A payload lives in the document, not the text: printing drops it, and a consumer syncing text
 // back gets it again from `mergeDecorations`, which is the round trip an editor host performs.
 const text = print(store.getState().document);
 assert.equal(text, 'is-vip || is-active');
