@@ -16,6 +16,9 @@ const client = () => ({ getCatalog: vi.fn().mockResolvedValue(catalog) }) as unk
 const renderWith = (store: RuleEditorStore) =>
   render(<RuleEditorProvider store={store}><BuilderPane client={client()} /></RuleEditorProvider>);
 
+const DESCRIBE = 'Describe what it means for this to be true or false…';
+const REMOVE = 'Remove these descriptions';
+
 describe('BuilderPane accordion (boolean)', () => {
   /** Via the actions menu, which offers Details on every node kind. */
   const openDetail = async (path: string) => {
@@ -61,6 +64,7 @@ describe('BuilderPane accordion (boolean)', () => {
     const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
     renderWith(store);
     await openDetail('$.rule');
+    fireEvent.click(screen.getByRole('button', { name: DESCRIBE }));
     fireEvent.change(screen.getByLabelText('whenTrue at $.rule'), { target: { value: 'yes' } });
     expect((store.getState().document.rule as { whenTrue?: string }).whenTrue).toBe('yes');
   });
@@ -314,5 +318,80 @@ describe('BuilderPane scoped propositions (#234)', () => {
     expect(() => fireEvent.click(
       screen.getByRole('button', { name: 'go to definition $.rule.and[0]' }),
     )).not.toThrow();
+  });
+});
+
+describe('whenTrue / whenFalse disclosure', () => {
+  const openRoot = async () => {
+    fireEvent.click(await screen.findByRole('button', { name: 'actions for $.rule' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Details' }));
+  };
+
+  it('keeps the fields behind a link until asked for, then focuses the first', async () => {
+    const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
+    renderWith(store);
+    await openRoot();
+    expect(screen.queryByLabelText('whenTrue at $.rule')).toBeNull();
+    expect(screen.queryByLabelText('whenFalse at $.rule')).toBeNull();
+    expect(screen.queryByRole('button', { name: REMOVE })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: DESCRIBE }));
+    expect(screen.getByLabelText('whenTrue at $.rule')).toBe(document.activeElement);
+    expect(screen.getByLabelText('whenFalse at $.rule')).toBeDefined();
+    expect(screen.queryByRole('button', { name: DESCRIBE })).toBeNull();
+    expect(screen.getByRole('button', { name: REMOVE })).toBeDefined();
+  });
+
+  it('shows the fields at once when the node already carries a payload', async () => {
+    const store = new RuleEditorStore({ rule: { spec: 'is-active', whenTrue: 'yes', whenFalse: 'no' } });
+    renderWith(store);
+    await openRoot();
+    expect((screen.getByLabelText('whenTrue at $.rule') as HTMLInputElement).value).toBe('yes');
+    expect((screen.getByLabelText('whenFalse at $.rule') as HTMLInputElement).value).toBe('no');
+    expect(screen.queryByRole('button', { name: DESCRIBE })).toBeNull();
+    // Opening a panel that already holds text must not steal focus from wherever the user was.
+    expect(document.activeElement).not.toBe(screen.getByLabelText('whenTrue at $.rule'));
+  });
+
+  it('stays open once opened, even with both fields cleared again', async () => {
+    const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
+    renderWith(store);
+    await openRoot();
+    fireEvent.click(screen.getByRole('button', { name: DESCRIBE }));
+    fireEvent.change(screen.getByLabelText('whenTrue at $.rule'), { target: { value: 'yes' } });
+    fireEvent.change(screen.getByLabelText('whenTrue at $.rule'), { target: { value: '' } });
+    expect(screen.getByLabelText('whenTrue at $.rule')).toBeDefined();
+  });
+
+  it('placeholders show what Motiv will say for a named proposition — the name with its suffix', async () => {
+    const store = new RuleEditorStore({ rule: { spec: 'is-active', name: 'is active' } });
+    renderWith(store);
+    await openRoot();
+    fireEvent.click(screen.getByRole('button', { name: DESCRIBE }));
+    expect(screen.getByLabelText('whenTrue at $.rule').getAttribute('placeholder')).toBe('is active == true');
+    expect(screen.getByLabelText('whenFalse at $.rule').getAttribute('placeholder')).toBe('is active == false');
+  });
+
+  it('placeholders follow the name as it is typed', async () => {
+    const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
+    renderWith(store);
+    await openRoot();
+    fireEvent.click(screen.getByRole('button', { name: DESCRIBE }));
+    // Unnamed: the suffix rule has no name to apply to, so the placeholder is a prompt, not a guess.
+    expect(screen.getByLabelText('whenTrue at $.rule').getAttribute('placeholder')).toBe('what it means when true');
+    fireEvent.change(screen.getByLabelText('name at $.rule'), { target: { value: 'can checkout' } });
+    expect(screen.getByLabelText('whenFalse at $.rule').getAttribute('placeholder')).toBe('can checkout == false');
+  });
+
+  it('remove clears both payloads and puts the link back', async () => {
+    const store = new RuleEditorStore({ rule: { spec: 'is-active', whenTrue: 'yes', whenFalse: 'no' } });
+    renderWith(store);
+    await openRoot();
+    fireEvent.click(screen.getByRole('button', { name: REMOVE }));
+    const rule = store.getState().document.rule as { whenTrue?: string; whenFalse?: string };
+    expect(rule.whenTrue).toBeUndefined();
+    expect(rule.whenFalse).toBeUndefined();
+    expect(screen.queryByLabelText('whenTrue at $.rule')).toBeNull();
+    expect(screen.getByRole('button', { name: DESCRIBE })).toBeDefined();
   });
 });
