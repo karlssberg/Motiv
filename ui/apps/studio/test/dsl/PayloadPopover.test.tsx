@@ -16,6 +16,12 @@ const CATALOG: Catalog = {
   },
 };
 
+const DESCRIBE = 'Describe what it means for this to be true or false…';
+const REMOVE = 'Remove these descriptions';
+/** The writable card keeps its payload fields behind a link; this takes it up. */
+const openPayloadFields = (user: ReturnType<typeof userEvent.setup>) =>
+  user.click(screen.getByRole('button', { name: DESCRIBE }));
+
 function renderPopover() {
   const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
   const onClose = vi.fn();
@@ -35,13 +41,14 @@ describe('PayloadPopover', () => {
   it('offers no Name field on the root — the DSL has no inline name', () => {
     renderPopover();
     expect(screen.queryByLabelText('Name')).toBeNull();
-    expect(screen.getByLabelText('When true')).toBeTruthy();
+    expect(screen.getByRole('button', { name: DESCRIBE })).toBeTruthy();
   });
 
   it('saves string payloads for an Explanation spec', async () => {
     const user = userEvent.setup();
     const { store } = renderPopover();
 
+    await openPayloadFields(user);
     await user.type(screen.getByLabelText('When true'), 'is active');
     await user.type(screen.getByLabelText('When false'), 'not active');
     await user.click(screen.getByRole('button', { name: 'Save' }));
@@ -58,6 +65,7 @@ describe('PayloadPopover', () => {
       <PayloadPopover store={store} catalog={CATALOG} path="$.rule" spec="is-tiered" onClose={vi.fn()} />,
     );
 
+    await openPayloadFields(user);
     const whenTrue = screen.getByLabelText('When true');
     await user.clear(whenTrue);
     await user.type(whenTrue, '{{"tier": "gold"}');
@@ -73,6 +81,7 @@ describe('PayloadPopover', () => {
       <PayloadPopover store={store} catalog={CATALOG} path="$.rule" spec="is-tiered" onClose={vi.fn()} />,
     );
 
+    await openPayloadFields(user);
     await user.type(screen.getByLabelText('When true'), '{{not json');
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -84,6 +93,7 @@ describe('PayloadPopover', () => {
     const user = userEvent.setup();
     const { store, onClose } = renderPopover();
 
+    await openPayloadFields(user);
     await user.type(screen.getByLabelText('When true'), 'ignored');
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
@@ -119,6 +129,7 @@ describe('PayloadPopover', () => {
     const user = userEvent.setup();
     const { onClose } = renderPopover();
 
+    await openPayloadFields(user);
     await user.type(screen.getByLabelText('When true'), 'active');
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -136,6 +147,7 @@ describe('PayloadPopover naming (#234)', () => {
       />,
     );
     expect(screen.queryByLabelText('Name')).toBeNull();
+    // A reader, not a disclosure: what is there is shown, and there is no link.
     expect(screen.getByLabelText('When true')).toBeTruthy();
   });
 
@@ -192,7 +204,92 @@ describe('PayloadPopover naming (#234)', () => {
       <PayloadPopover store={store} catalog={CATALOG} path="$.rule" spec="is-active" onClose={vi.fn()} />,
     );
     expect(screen.getByRole('button', { name: 'Save' })).toBeTruthy();
-    expect(screen.getByLabelText<HTMLTextAreaElement>('When true').readOnly).toBe(false);
+    expect(screen.getByRole('button', { name: DESCRIBE })).toBeTruthy();
     expect(screen.queryByText('Extract this node to a definition to decorate it.')).toBeNull();
+  });
+
+  describe('payload disclosure at the root', () => {
+    it('keeps the fields, and the JSON hint, behind a link until asked for', async () => {
+      const user = userEvent.setup();
+      const store = new RuleEditorStore({ rule: { spec: 'is-tiered' } });
+      render(
+        <PayloadPopover store={store} catalog={CATALOG} path="$.rule" spec="is-tiered" onClose={vi.fn()} />,
+      );
+      expect(screen.queryByLabelText('When true')).toBeNull();
+      expect(screen.queryByText(/JSON object/)).toBeNull();
+
+      await openPayloadFields(user);
+      expect(screen.getByLabelText('When true')).toBe(document.activeElement);
+      expect(screen.getByLabelText('When false')).toBeTruthy();
+      expect(screen.getByText(/JSON object · properties: tier/)).toBeTruthy();
+      expect(screen.getByRole('button', { name: REMOVE })).toBeTruthy();
+      expect(screen.queryByRole('button', { name: DESCRIBE })).toBeNull();
+    });
+
+    it('shows the fields at once when the node already carries a payload', () => {
+      const store = new RuleEditorStore({ rule: { spec: 'is-active', whenTrue: 'yes' } });
+      render(
+        <PayloadPopover store={store} catalog={CATALOG} path="$.rule" spec="is-active" onClose={vi.fn()} />,
+      );
+      expect(screen.getByLabelText<HTMLTextAreaElement>('When true').value).toBe('yes');
+      expect(screen.queryByRole('button', { name: DESCRIBE })).toBeNull();
+    });
+
+    it('remove clears the draft, and Save then clears the store', async () => {
+      const user = userEvent.setup();
+      const store = new RuleEditorStore({ rule: { spec: 'is-active', whenTrue: 'yes', whenFalse: 'no' } });
+      render(
+        <PayloadPopover store={store} catalog={CATALOG} path="$.rule" spec="is-active" onClose={vi.fn()} />,
+      );
+      await user.click(screen.getByRole('button', { name: REMOVE }));
+      expect(screen.queryByLabelText('When true')).toBeNull();
+      // Nothing has reached the store yet — the card is a draft until Save.
+      expect(store.getState().document.rule).toMatchObject({ whenTrue: 'yes' });
+
+      await user.click(screen.getByRole('button', { name: 'Save' }));
+      const rule = store.getState().document.rule as { whenTrue?: string; whenFalse?: string };
+      expect(rule.whenTrue).toBeUndefined();
+      expect(rule.whenFalse).toBeUndefined();
+    });
+
+    it('string placeholders name the root by its document, with the suffix', async () => {
+      const user = userEvent.setup();
+      const store = new RuleEditorStore({ name: 'activity', rule: { spec: 'is-active' } });
+      render(
+        <PayloadPopover store={store} catalog={CATALOG} path="$.rule" spec="is-active" onClose={vi.fn()} />,
+      );
+      await openPayloadFields(user);
+      expect(screen.getByLabelText('When true').getAttribute('placeholder')).toBe('activity == true');
+      expect(screen.getByLabelText('When false').getAttribute('placeholder')).toBe('activity == false');
+    });
+
+    it('string placeholders prompt when nothing names the root', async () => {
+      const user = userEvent.setup();
+      renderPopover();
+      await openPayloadFields(user);
+      expect(screen.getByLabelText('When true').getAttribute('placeholder')).toBe('what it means when true');
+    });
+
+    it('offers no suffix placeholder for an object payload, which the text would misdescribe', async () => {
+      const user = userEvent.setup();
+      const store = new RuleEditorStore({ rule: { spec: 'is-tiered', name: 'tier' } });
+      render(
+        <PayloadPopover store={store} catalog={CATALOG} path="$.rule" spec="is-tiered" onClose={vi.fn()} />,
+      );
+      await openPayloadFields(user);
+      expect(screen.getByLabelText('When true').getAttribute('placeholder')).toBeNull();
+    });
+
+    it('stays a plain reader below the root — fields shown, no link', () => {
+      const store = new RuleEditorStore({ rule: { and: [{ spec: 'is-active' }, { spec: 'is-adult' }] } });
+      render(
+        <PayloadPopover store={store} catalog={CATALOG} path="$.rule.and[0]" spec="is-active" onClose={vi.fn()} />,
+      );
+      expect(screen.getByLabelText<HTMLTextAreaElement>('When true').readOnly).toBe(true);
+      // Nor a placeholder: a field that cannot be typed in must not invite typing.
+      expect(screen.getByLabelText('When true').getAttribute('placeholder')).toBeNull();
+      expect(screen.queryByRole('button', { name: DESCRIBE })).toBeNull();
+      expect(screen.queryByRole('button', { name: REMOVE })).toBeNull();
+    });
   });
 });

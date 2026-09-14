@@ -170,12 +170,18 @@ describe('DefinitionsPane', () => {
     expect(screen.queryByLabelText('whenTrue of definition a')).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'details for $.definitions.a.rule' }));
+    // The fields sit behind the same disclosure link the rule's root uses.
+    expect(screen.queryByLabelText('whenTrue of definition a')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Describe what it means for this to be true or false…' }));
+    // A definition is always named, so its placeholders always show the name with its suffix.
+    expect(screen.getByLabelText('whenTrue of definition a').getAttribute('placeholder')).toBe('a == true');
     fireEvent.change(screen.getByLabelText('whenTrue of definition a'), { target: { value: 'a holds' } });
     expect(store.getState().document.definitions?.['a']?.whenTrue).toBe('a holds');
     // No Name field: the name is the row's own input, and no Extract: the body already is one.
     expect(screen.queryByLabelText('name at $.definitions.a.rule')).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'details for $.definitions.b.rule' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Describe what it means for this to be true or false…' }));
     fireEvent.change(screen.getByLabelText('whenFalse of definition b'), { target: { value: 'b fails' } });
     expect(store.getState().document.definitions?.['b']?.whenFalse).toBe('b fails');
   });
