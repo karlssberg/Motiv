@@ -1052,6 +1052,8 @@ textarea.control {
   color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 3px;
+  /* A button centres its lines; a sentence that wraps in a narrow card must not. */
+  text-align: start;
   cursor: pointer;
 }
 .link:hover { text-decoration-thickness: 2px; }

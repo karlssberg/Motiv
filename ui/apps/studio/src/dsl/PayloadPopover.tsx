@@ -3,6 +3,7 @@ import {
   getNode,
   type Catalog, type Payload, type RuleEditorStore,
 } from '@motiv-rules/core';
+import { PayloadDisclosure, payloadPlaceholder } from '../builder/PayloadDisclosure.js';
 import type { DecorationPatch } from '../decorationPatch.js';
 import { ROOT } from '../panes/BuilderPane.js';
 
@@ -47,8 +48,10 @@ function PayloadField(props: {
   value: string;
   onChange: (next: string) => void;
   readOnly: boolean;
+  placeholder?: string | undefined;
+  autoFocus?: boolean | undefined;
 }) {
-  const { label, value, onChange, readOnly } = props;
+  const { label, value, onChange, readOnly, placeholder, autoFocus } = props;
 
   return (
     <label className="field">
@@ -59,6 +62,8 @@ function PayloadField(props: {
         value={value}
         readOnly={readOnly}
         aria-readonly={readOnly}
+        placeholder={placeholder}
+        autoFocus={autoFocus}
         onChange={(e) => onChange(e.target.value)}
       />
     </label>
@@ -127,6 +132,42 @@ export function PayloadPopover(props: {
     onClose();
   };
 
+  const hasPayload = draft.whenTrue !== '' || draft.whenFalse !== '';
+  /**
+   * What names the root: its document — or, in a document that still carries the legacy inline
+   * form, that name, which is what the bound `Reason` says. Nothing here can change either, so it
+   * is read once with the draft.
+   */
+  const [statement] = useState<string | undefined>(() => {
+    const { document } = store.getState();
+    return getNode(document, path)?.name ?? document.name;
+  });
+  /**
+   * A placeholder only where its text could be typed in verbatim: not in the reader, and not for
+   * an object payload, which is JSON that `name == true` would misdescribe — the hint under the
+   * fields says what goes there instead.
+   */
+  const placeholder = (outcome: 'true' | 'false'): string | undefined =>
+    writable && !objectMode ? payloadPlaceholder(statement, outcome) : undefined;
+  /**
+   * Shared by the writable card, where the disclosure decides whether they are shown, and the
+   * reader below the root, where they always are — an existing decoration stays readable there.
+   */
+  const payloadFields = (
+    <>
+      <PayloadField
+        label="When true" value={draft.whenTrue} readOnly={!writable}
+        placeholder={placeholder('true')} autoFocus={writable && !hasPayload}
+        onChange={(whenTrue) => patch({ whenTrue })}
+      />
+      <PayloadField
+        label="When false" value={draft.whenFalse} readOnly={!writable}
+        placeholder={placeholder('false')}
+        onChange={(whenFalse) => patch({ whenFalse })}
+      />
+    </>
+  );
+
   return (
     <div
       ref={cardRef}
@@ -150,24 +191,22 @@ export function PayloadPopover(props: {
       {entry?.description && <p className="dsl-popover-desc">{entry.description}</p>}
       {entry && <p className="dsl-popover-meta">{entry.modelType} → {entry.metadataType}</p>}
 
-      <PayloadField
-        label="When true" value={draft.whenTrue} readOnly={!writable}
-        onChange={(whenTrue) => patch({ whenTrue })}
-      />
-      <PayloadField
-        label="When false" value={draft.whenFalse} readOnly={!writable}
-        onChange={(whenFalse) => patch({ whenFalse })}
-      />
-
-      {!writable && (
-        <p className="dsl-popover-hint">Extract this node to a definition to decorate it.</p>
-      )}
-      {writable && objectMode && (
-        <p className="dsl-popover-hint">
-          {properties.length > 0
-            ? `JSON object · properties: ${properties.join(', ')}`
-            : 'JSON object'}
-        </p>
+      {writable ? (
+        <PayloadDisclosure hasPayload={hasPayload} onRemove={() => patch({ whenTrue: '', whenFalse: '' })}>
+          {payloadFields}
+          {objectMode && (
+            <p className="dsl-popover-hint">
+              {properties.length > 0
+                ? `JSON object · properties: ${properties.join(', ')}`
+                : 'JSON object'}
+            </p>
+          )}
+        </PayloadDisclosure>
+      ) : (
+        <>
+          {payloadFields}
+          <p className="dsl-popover-hint">Extract this node to a definition to decorate it.</p>
+        </>
       )}
       {error && <p className="dsl-popover-error" role="alert">{error}</p>}
 

@@ -407,6 +407,7 @@ const DANGER_SURFACES: readonly Surface[] = [
       await page.getByRole('tab', { name: 'DSL' }).click();
       await page.getByRole('button', { name: 'Edit customer.is-active payload' }).click();
       const popover = page.getByRole('dialog', { name: 'Payload for customer.is-active' });
+      await popover.getByRole('button', { name: 'Describe what it means for this to be true or false…' }).click();
       await popover.getByLabel('When true').fill('{ not json');
       await popover.getByRole('button', { name: 'Save' }).click();
       await expect(popover.getByRole('alert')).toContainText('not valid JSON');
