@@ -45,7 +45,7 @@ describe('NodeMenu', () => {
     renderWith(new RuleEditorStore(COMPOSITE));
     await openMenu('$.rule');
     fireEvent.click(screen.getByRole('menuitem', { name: 'Details' }));
-    expect(screen.getByLabelText('whenTrue at $.rule')).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Describe what it means for this to be true or false…' })).toBeDefined();
     // Acting closes the menu — it is transient, unlike the panel it opens.
     expect(screen.queryByRole('menuitem', { name: 'Details' })).toBeNull();
   });

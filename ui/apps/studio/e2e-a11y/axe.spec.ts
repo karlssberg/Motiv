@@ -261,6 +261,8 @@ const HARD_SURFACES: readonly Surface[] = [
       await visit(page, RULE_ROUTE);
       await page.getByRole('button', { name: 'actions for $.rule' }).click();
       await page.getByRole('menuitem', { name: 'Details' }).click();
+      // The payload fields sit behind a link; taken up, so the panel is scanned with them open.
+      await page.getByRole('button', { name: 'Describe what it means for this to be true or false…' }).click();
       await expect(page.getByLabel('whenTrue at $.rule')).toBeVisible();
     },
   },

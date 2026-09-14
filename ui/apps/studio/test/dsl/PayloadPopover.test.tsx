@@ -41,7 +41,7 @@ describe('PayloadPopover', () => {
   it('offers no Name field on the root — the DSL has no inline name', () => {
     renderPopover();
     expect(screen.queryByLabelText('Name')).toBeNull();
-    expect(screen.getByLabelText('When true')).toBeTruthy();
+    expect(screen.getByRole('button', { name: DESCRIBE })).toBeTruthy();
   });
 
   it('saves string payloads for an Explanation spec', async () => {
@@ -93,6 +93,7 @@ describe('PayloadPopover', () => {
     const user = userEvent.setup();
     const { store, onClose } = renderPopover();
 
+    await openPayloadFields(user);
     await user.type(screen.getByLabelText('When true'), 'ignored');
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
@@ -128,6 +129,7 @@ describe('PayloadPopover', () => {
     const user = userEvent.setup();
     const { onClose } = renderPopover();
 
+    await openPayloadFields(user);
     await user.type(screen.getByLabelText('When true'), 'active');
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -145,6 +147,7 @@ describe('PayloadPopover naming (#234)', () => {
       />,
     );
     expect(screen.queryByLabelText('Name')).toBeNull();
+    // A reader, not a disclosure: what is there is shown, and there is no link.
     expect(screen.getByLabelText('When true')).toBeTruthy();
   });
 
@@ -249,14 +252,22 @@ describe('PayloadPopover naming (#234)', () => {
       expect(rule.whenFalse).toBeUndefined();
     });
 
-    it('string placeholders show the name with its suffix, following the Name field', async () => {
+    it('string placeholders name the root by its document, with the suffix', async () => {
+      const user = userEvent.setup();
+      const store = new RuleEditorStore({ name: 'activity', rule: { spec: 'is-active' } });
+      render(
+        <PayloadPopover store={store} catalog={CATALOG} path="$.rule" spec="is-active" onClose={vi.fn()} />,
+      );
+      await openPayloadFields(user);
+      expect(screen.getByLabelText('When true').getAttribute('placeholder')).toBe('activity == true');
+      expect(screen.getByLabelText('When false').getAttribute('placeholder')).toBe('activity == false');
+    });
+
+    it('string placeholders prompt when nothing names the root', async () => {
       const user = userEvent.setup();
       renderPopover();
       await openPayloadFields(user);
       expect(screen.getByLabelText('When true').getAttribute('placeholder')).toBe('what it means when true');
-      await user.type(screen.getByLabelText('Name'), 'activity');
-      expect(screen.getByLabelText('When true').getAttribute('placeholder')).toBe('activity == true');
-      expect(screen.getByLabelText('When false').getAttribute('placeholder')).toBe('activity == false');
     });
 
     it('offers no suffix placeholder for an object payload, which the text would misdescribe', async () => {

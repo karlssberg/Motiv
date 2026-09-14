@@ -88,7 +88,7 @@ describe('BuilderPane accordion (boolean)', () => {
     await openDetail('$.rule');
     fireEvent.click(screen.getByRole('button', { name: 'collapse $.rule' }));
     expect(screen.queryByRole('button', { name: 'details for $.rule.and[1]' })).toBeNull();
-    expect(screen.getByLabelText('whenTrue at $.rule')).toBeDefined();
+    expect(screen.getByRole('button', { name: DESCRIBE })).toBeDefined();
   });
 
   it('re-expanding a child does not collapse the root subtree', async () => {
@@ -130,7 +130,7 @@ describe('BuilderPane accordion (boolean)', () => {
 
     fireEvent.click(caret);
     expect(caret.getAttribute('aria-expanded')).toBe('true');
-    expect(screen.getByLabelText('whenTrue at $.rule')).toBeDefined();
+    expect(screen.getByRole('button', { name: DESCRIBE })).toBeDefined();
   });
 
   it('keeps the caret structural on a parent, which reaches metadata through its menu', async () => {
@@ -141,7 +141,7 @@ describe('BuilderPane accordion (boolean)', () => {
     // A parent's caret is taken by its subtree, so it has no `details for` shortcut of its own.
     expect(screen.queryByRole('button', { name: 'details for $.rule' })).toBeNull();
     await openDetail('$.rule');
-    expect(screen.getByLabelText('whenTrue at $.rule')).toBeDefined();
+    expect(screen.getByRole('button', { name: DESCRIBE })).toBeDefined();
   });
 
   /**
@@ -239,7 +239,7 @@ describe('BuilderPane scoped propositions (#234)', () => {
   it('offers no name field on the root either — the DSL has no inline name', async () => {
     renderWith(new RuleEditorStore({ rule: { spec: 'is-active' } }));
     await openDetail('$.rule');
-    expect(screen.getByLabelText('whenTrue at $.rule')).toBeDefined();
+    expect(screen.getByRole('button', { name: DESCRIBE })).toBeDefined();
     expect(screen.queryByLabelText('name at $.rule')).toBeNull();
   });
 
@@ -363,8 +363,9 @@ describe('whenTrue / whenFalse disclosure', () => {
     expect(screen.getByLabelText('whenTrue at $.rule')).toBeDefined();
   });
 
-  it('placeholders show what Motiv will say for a named proposition — the name with its suffix', async () => {
-    const store = new RuleEditorStore({ rule: { spec: 'is-active', name: 'is active' } });
+  it('a legacy inline name, where a document still carries one, is what the placeholders show', async () => {
+    // It is what the bound `Reason` says (#237), so it outranks the document name.
+    const store = new RuleEditorStore({ name: 'can-checkout', rule: { spec: 'is-active', name: 'is active' } });
     renderWith(store);
     await openRoot();
     fireEvent.click(screen.getByRole('button', { name: DESCRIBE }));
@@ -372,15 +373,20 @@ describe('whenTrue / whenFalse disclosure', () => {
     expect(screen.getByLabelText('whenFalse at $.rule').getAttribute('placeholder')).toBe('is active == false');
   });
 
-  it('placeholders follow the name as it is typed', async () => {
-    const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
-    renderWith(store);
+  it('placeholders name the root by its document — there is no inline name to type', async () => {
+    renderWith(new RuleEditorStore({ name: 'can-checkout', rule: { spec: 'is-active' } }));
     await openRoot();
     fireEvent.click(screen.getByRole('button', { name: DESCRIBE }));
-    // Unnamed: the suffix rule has no name to apply to, so the placeholder is a prompt, not a guess.
+    expect(screen.getByLabelText('whenTrue at $.rule').getAttribute('placeholder')).toBe('can-checkout == true');
+    expect(screen.getByLabelText('whenFalse at $.rule').getAttribute('placeholder')).toBe('can-checkout == false');
+  });
+
+  it('placeholders prompt when nothing names the root', async () => {
+    renderWith(new RuleEditorStore({ rule: { spec: 'is-active' } }));
+    await openRoot();
+    fireEvent.click(screen.getByRole('button', { name: DESCRIBE }));
+    // The suffix rule has no name to apply to, so the placeholder is a prompt, not a guess.
     expect(screen.getByLabelText('whenTrue at $.rule').getAttribute('placeholder')).toBe('what it means when true');
-    fireEvent.change(screen.getByLabelText('name at $.rule'), { target: { value: 'can checkout' } });
-    expect(screen.getByLabelText('whenFalse at $.rule').getAttribute('placeholder')).toBe('can checkout == false');
   });
 
   it('remove clears both payloads and puts the link back', async () => {
