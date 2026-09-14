@@ -149,7 +149,7 @@ describe('DefinitionsPane', () => {
     expect(doc.definitions?.['a']).toBeUndefined();
     // `a`'s body (`{ local: 'b' }`) is copied into both call sites, so `b` — referenced from
     // inside `a` before this — ends up with two live references instead of losing its last one.
-    expect(doc.rule).toEqual({ and: [{ local: 'b', name: 'a' }, { local: 'b', name: 'a' }] });
+    expect(doc.rule).toEqual({ and: [{ local: 'b' }, { local: 'b' }] });
     expect(doc.definitions?.['b']).toEqual({ rule: { spec: 'is-active' } });
   });
 
@@ -161,7 +161,7 @@ describe('DefinitionsPane', () => {
 
     const doc = store.getState().document;
     expect(doc.definitions?.['b']).toBeUndefined();
-    expect(doc.definitions?.['a']).toEqual({ rule: { spec: 'is-active', name: 'b' } });
+    expect(doc.definitions?.['a']).toEqual({ rule: { spec: 'is-active' } });
   });
 
   it('edits a definition’s decoration from its body root’s detail panel, as the rule does', async () => {

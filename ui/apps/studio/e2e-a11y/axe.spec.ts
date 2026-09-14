@@ -261,7 +261,7 @@ const HARD_SURFACES: readonly Surface[] = [
       await visit(page, RULE_ROUTE);
       await page.getByRole('button', { name: 'actions for $.rule' }).click();
       await page.getByRole('menuitem', { name: 'Details' }).click();
-      await expect(page.getByLabel('name at $.rule')).toBeVisible();
+      await expect(page.getByLabel('whenTrue at $.rule')).toBeVisible();
     },
   },
   {

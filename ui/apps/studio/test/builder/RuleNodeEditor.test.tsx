@@ -27,7 +27,7 @@ describe('BuilderPane accordion (boolean)', () => {
     const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
     renderWith(store);
     await screen.findByRole('button', { name: 'details for $.rule' });
-    expect(screen.queryByLabelText('name at $.rule')).toBeNull();
+    expect(screen.queryByLabelText('whenTrue at $.rule')).toBeNull();
     expect(screen.queryByRole('button', { name: 'toggle NOT at $.rule' })).toBeNull();
   });
 
@@ -84,7 +84,7 @@ describe('BuilderPane accordion (boolean)', () => {
     await openDetail('$.rule');
     fireEvent.click(screen.getByRole('button', { name: 'collapse $.rule' }));
     expect(screen.queryByRole('button', { name: 'details for $.rule.and[1]' })).toBeNull();
-    expect(screen.getByLabelText('name at $.rule')).toBeDefined();
+    expect(screen.getByLabelText('whenTrue at $.rule')).toBeDefined();
   });
 
   it('re-expanding a child does not collapse the root subtree', async () => {
@@ -126,7 +126,7 @@ describe('BuilderPane accordion (boolean)', () => {
 
     fireEvent.click(caret);
     expect(caret.getAttribute('aria-expanded')).toBe('true');
-    expect(screen.getByLabelText('name at $.rule')).toBeDefined();
+    expect(screen.getByLabelText('whenTrue at $.rule')).toBeDefined();
   });
 
   it('keeps the caret structural on a parent, which reaches metadata through its menu', async () => {
@@ -137,7 +137,7 @@ describe('BuilderPane accordion (boolean)', () => {
     // A parent's caret is taken by its subtree, so it has no `details for` shortcut of its own.
     expect(screen.queryByRole('button', { name: 'details for $.rule' })).toBeNull();
     await openDetail('$.rule');
-    expect(screen.getByLabelText('name at $.rule')).toBeDefined();
+    expect(screen.getByLabelText('whenTrue at $.rule')).toBeDefined();
   });
 
   /**
@@ -232,10 +232,11 @@ describe('BuilderPane scoped propositions (#234)', () => {
     expect(screen.queryByLabelText('name at $.rule.and[0]')).toBeNull();
   });
 
-  it('keeps the name field on the root, which is the rule\'s own name', async () => {
+  it('offers no name field on the root either — the DSL has no inline name', async () => {
     renderWith(new RuleEditorStore({ rule: { spec: 'is-active' } }));
     await openDetail('$.rule');
-    expect(screen.getByLabelText('name at $.rule')).toBeDefined();
+    expect(screen.getByLabelText('whenTrue at $.rule')).toBeDefined();
+    expect(screen.queryByLabelText('name at $.rule')).toBeNull();
   });
 
   it('shows the migration notice for a nested node that still carries a name', async () => {
@@ -296,14 +297,14 @@ describe('BuilderPane scoped propositions (#234)', () => {
     expect(screen.queryByLabelText('whenTrue at $.rule.and[0]')).toBeNull();
   });
 
-  it('inlines a local back into the tree, restoring the name', async () => {
+  it('inlines a local back into the tree as its bare body — no name is written', async () => {
     const store = new RuleEditorStore(WITH_LOCAL);
     renderWith(store);
     await openDetail('$.rule.and[0]');
     fireEvent.click(screen.getByRole('button', { name: 'inline $.rule.and[0]' }));
 
     const document = store.getState().document;
-    expect((document.rule as { and: unknown[] }).and[0]).toEqual({ spec: 'is-active', name: 'activity' });
+    expect((document.rule as { and: unknown[] }).and[0]).toEqual({ spec: 'is-active' });
     expect(document.definitions?.activity).toBeUndefined();
   });
 

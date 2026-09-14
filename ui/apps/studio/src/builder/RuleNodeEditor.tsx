@@ -373,8 +373,9 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
               ) : (
                 <NodeToolbar path={path} node={node} />
               )}
-              {/* The rule's own name is still the rule's own name; everything below it is a
-                  definition now, and a node that predates that is offered the way out (#234). */}
+              {/* Payloads are authored at the root only; everything below it is a definition now,
+                  and a node that predates that is offered the way out (#234). No node is named in
+                  place at any level — the DSL has no inline name. */}
               {path === ROOT && <DecorationEditor path={path} node={node} />}
               {hasInlineDecoration && <InlineDecorationNotice path={path} node={node} />}
             </>

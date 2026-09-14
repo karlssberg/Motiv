@@ -170,15 +170,6 @@ export class RuleEditorStore {
     this.#commit(setNode(this.#document, path, { ...node, ...decoration }));
   }
 
-  setName(path: string, name: string | undefined): void {
-    const node = getNode(this.#document, path);
-    if (!node) throw new Error(`No node at ${path}.`);
-    const next = { ...node } as RuleNode & { name?: string };
-    if (name === undefined) delete next.name;
-    else next.name = name;
-    this.#commit(setNode(this.#document, path, next));
-  }
-
   /**
    * Moves the subtree at `path` into `definitions[name]` and replaces it with `{ local: name }`.
    * The subtree's own `name`/`whenTrue`/`whenFalse` become the definition's — a definition's key
@@ -208,10 +199,12 @@ export class RuleEditorStore {
   }
 
   /**
-   * Replaces the `local` reference at `path` with a structured clone of its definition body, the
-   * definition's `whenTrue`/`whenFalse` and its key reapplied as the body's `name` — reproducing
-   * the pre-#234 nested-name form exactly. When no reference to the definition remains anywhere
-   * (the rule or any definition body), the definition is removed.
+   * Replaces the `local` reference at `path` with a structured clone of its definition body plus
+   * the definition's `whenTrue`/`whenFalse`. The definition's key is *not* reapplied as the body's
+   * `name`: the DSL has no inline name, so inlining `x` must yield exactly what writing its body
+   * in its place would — a hidden `name` would change the bound `Reason` while the text view showed
+   * nothing of it. When no reference to the definition remains anywhere (the rule or any definition
+   * body), the definition is removed.
    */
   inlineLocal(path: string): void {
     const node = getNode(this.#document, path);
@@ -223,7 +216,7 @@ export class RuleEditorStore {
     // `definition` is read from the pre-mutation document; every payload taken from it must be
     // cloned before it is spliced into the document `setNode` builds, or the two documents share
     // a mutable object and a later edit to one corrupts the other's undo-stack entry.
-    const inlined = { ...structuredClone(definition.rule), name } as RuleNode & Decoration;
+    const inlined = structuredClone(definition.rule) as RuleNode & Decoration;
     // Only a payload the *definition* carries is copied down. An undecorated definition leaves the
     // body's own payloads alone — deleting them would lose decoration the body itself authored,
     // which was never the definition's to drop.

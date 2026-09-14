@@ -57,6 +57,14 @@ surface.** They remain in the schema and binder for existing documents; Studio s
 and offers a one-click migration (below). The root's decoration is untouched: `name` at the root is
 the rule's own name.
 
+> **Superseded, 2026-09-14.** The root's `name` field went too, along with `RuleEditorStore.setName`
+> and the `name` that *Inline* re-applied to an inlined body. The DSL cannot express a node `name`
+> at any level — `mergeDecorations` had to smuggle it across every reparse — so a name authored in
+> the tree was invisible in the text view while still changing the bound `Reason`. A rule is named
+> by its document (`$.name`, which the binder already wraps the root with) and a sub-proposition by
+> a definition. `whenTrue`/`whenFalse` at the root are unchanged; the read-only legacy notice and the
+> `Decoration.name` type remain, since documents arriving from the API can still carry the old form.
+
 ## Document shape
 
 ```json
