@@ -346,6 +346,23 @@ describe('parse — negative parameter defaults', () => {
 });
 
 describe('parse — let declarations', () => {
+  it('ends a let body at the line end, so a rule that opens with a group is not read as its arguments', () => {
+    const result = parse('let a = x\n\n(y & z) & a');
+    expect(result.errors).toEqual([]);
+    expect(result.document).toEqual({
+      definitions: { a: { rule: { spec: 'x' } } },
+      rule: { and: [{ and: [{ spec: 'y' }, { spec: 'z' }] }, { local: 'a' }] },
+    });
+  });
+
+  it('reads an argument list only when it opens on the spec\'s own line', () => {
+    expect(parse('s(n = 1)').document).toEqual({ rule: { spec: 's', args: { n: 1 } } });
+    expect(parse('s (n = 1)').document).toEqual({ rule: { spec: 's', args: { n: 1 } } });
+    const split = parse('s\n(n = 1)');
+    expect(split.document).toBeUndefined();
+    expect(split.errors[0]).toMatchObject({ code: 'UnexpectedToken' });
+  });
+
   it('declares a local and references it in the rule', () => {
     const result = parse('let a = x && y\n\na & z');
     expect(result.errors).toEqual([]);

@@ -166,3 +166,8 @@ inline.
 
 - Pass a document source to one of the [Rule Classes](Rules.md) constructors.
 - See [`RuleSet`](RuleSet.md) for when the document binds and how reverts behave.
+
+An argument list opens on the same line as its spec name: `s(n = 1)` or `s (n = 1)`, never with
+a line break before the `(`. Newlines are otherwise whitespace, and a `let` body has no
+terminator, so this is what stops `let a = x` from reading the rule on the next line — one that
+opens with a parenthesised group — as arguments to `x`.

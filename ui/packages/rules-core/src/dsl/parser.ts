@@ -343,6 +343,18 @@ function parseArgs(state: ParserState, spec: string): Record<string, ArgValue> |
   return args;
 }
 
+/**
+ * Whether `next` is an argument list opening for the spec at `name`: a `(` on the same line.
+ *
+ * Newlines are otherwise whitespace, and a `let` body has no terminator, so without this rule
+ * `let a = x\n\n(y & z)` reads as the call `x(y & z)` and the rule after the blank line vanishes
+ * into the declaration's arguments. The printer never splits a name from its `(`, so the rule
+ * costs nothing that round-trips (#234).
+ */
+function opensArgs(state: ParserState, name: Token, next: Token | undefined): next is Token {
+  return next?.value === '(' && !state.text.slice(name.to, next.from).includes('\n');
+}
+
 /** primary := SPEC | `expr` | '(' expr ')' | quantifier */
 function parsePrimary(state: ParserState, path: string): RuleNode | undefined {
   const token = state.peek();
@@ -354,7 +366,7 @@ function parsePrimary(state: ParserState, path: string): RuleNode | undefined {
   if (token.kind === 'spec' && state.locals.has(token.value)) {
     state.next();
     const openArgs = state.peek();
-    if (openArgs?.value === '(') {
+    if (opensArgs(state, token, openArgs)) {
       state.error('UnexpectedArguments', `\`${token.value}\` is a local reference and takes no arguments`, openArgs);
       state.next();
       return undefined;
@@ -373,7 +385,8 @@ function parsePrimary(state: ParserState, path: string): RuleNode | undefined {
     const openArgs = state.peek();
     const declaresNoParameters = entry !== undefined
       && (entry.parameters == null || entry.parameters.length === 0);
-    if (openArgs?.value === '(' && declaresNoParameters) {
+    if (!opensArgs(state, token, openArgs)) return { spec: token.value };
+    if (declaresNoParameters) {
       state.error('UnexpectedArguments', `\`${token.value}\` takes no arguments`, openArgs);
       state.next();
       return undefined;

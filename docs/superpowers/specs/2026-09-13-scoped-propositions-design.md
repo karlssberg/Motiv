@@ -400,3 +400,8 @@ rule in `CLAUDE.md`).
   Definitions panel is mounted by the builder inside its tree context, so one accordion,
   highlight and popover slot span the rule and every definition, and a hover inside a
   definition marks that definition's strip.
+- **An argument list opens on the spec's own line.** Found in the built editor: `let a = x`
+  followed by a blank line and `(y & z) & a` parsed as the call `x(y & z)`, since newlines were
+  whitespace and a `let` body has no terminator. The parser now reads a `(` as arguments only when
+  no line break separates it from the name; the printer never splits the two, so nothing that
+  round-trips changed.
