@@ -11,14 +11,15 @@ import { VariantC } from './VariantC.js';
 import { ScenarioTable } from './ScenarioTable.js';
 import './prototype.css';
 
+// `current` stays first: with no `?variant=` the rail is the shipped design, so tests see main.
 const VARIANTS = [
+  { key: 'current', name: 'as shipped: Evaluate + Checkout' },
   { key: 'C1', name: 'scenarios: reveal only once evaluated, name opens editor' },
   { key: 'C2', name: 'scenarios: always reveal, model editor over explanation' },
   { key: 'C3', name: 'scenarios: always reveal, Model | Why tabs' },
   { key: 'C', name: 'scenario table (round one)' },
   { key: 'A', name: 'compare mode, one diff list' },
   { key: 'B', name: 'live | draft side by side' },
-  { key: 'current', name: 'as shipped: Evaluate + Checkout' },
 ] as const;
 
 export function EvaluateRailPrototype(props: { client: RulesApiClient; ruleName: string; version?: number | undefined }) {
