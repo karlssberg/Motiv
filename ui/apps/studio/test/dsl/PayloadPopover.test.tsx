@@ -32,14 +32,10 @@ describe('PayloadPopover', () => {
     expect(screen.getByText(/Currently active/)).toBeTruthy();
   });
 
-  it('saves the node name to the store', async () => {
-    const user = userEvent.setup();
-    const { store } = renderPopover();
-
-    await user.type(screen.getByLabelText('Name'), 'activity');
-    await user.click(screen.getByRole('button', { name: 'Save' }));
-
-    expect(store.getState().document.rule).toMatchObject({ name: 'activity' });
+  it('offers no Name field on the root — the DSL has no inline name', () => {
+    renderPopover();
+    expect(screen.queryByLabelText('Name')).toBeNull();
+    expect(screen.getByLabelText('When true')).toBeTruthy();
   });
 
   it('saves string payloads for an Explanation spec', async () => {
@@ -57,7 +53,7 @@ describe('PayloadPopover', () => {
 
   it('saves object payloads for an object metadata spec', async () => {
     const user = userEvent.setup();
-    const store = new RuleEditorStore({ rule: { spec: 'is-tiered', name: 'tier' } });
+    const store = new RuleEditorStore({ rule: { spec: 'is-tiered' } });
     render(
       <PayloadPopover store={store} catalog={CATALOG} path="$.rule" spec="is-tiered" onClose={vi.fn()} />,
     );
@@ -72,7 +68,7 @@ describe('PayloadPopover', () => {
 
   it('reports invalid JSON instead of saving', async () => {
     const user = userEvent.setup();
-    const store = new RuleEditorStore({ rule: { spec: 'is-tiered', name: 'tier' } });
+    const store = new RuleEditorStore({ rule: { spec: 'is-tiered' } });
     render(
       <PayloadPopover store={store} catalog={CATALOG} path="$.rule" spec="is-tiered" onClose={vi.fn()} />,
     );
@@ -88,28 +84,28 @@ describe('PayloadPopover', () => {
     const user = userEvent.setup();
     const { store, onClose } = renderPopover();
 
-    await user.type(screen.getByLabelText('Name'), 'ignored');
+    await user.type(screen.getByLabelText('When true'), 'ignored');
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
     expect(onClose).toHaveBeenCalled();
-    expect(store.getState().document.rule).not.toHaveProperty('name');
+    expect(store.getState().document.rule).not.toHaveProperty('whenTrue');
   });
 
   it('pre-fills existing decorations', () => {
     const store = new RuleEditorStore({
-      rule: { spec: 'is-active', name: 'activity', whenTrue: 'yes', whenFalse: 'no' },
+      rule: { spec: 'is-active', whenTrue: 'yes', whenFalse: 'no' },
     });
     render(
       <PayloadPopover store={store} catalog={CATALOG} path="$.rule" spec="is-active" onClose={vi.fn()} />,
     );
 
-    expect(screen.getByLabelText<HTMLInputElement>('Name').value).toBe('activity');
     expect(screen.getByLabelText<HTMLTextAreaElement>('When true').value).toBe('yes');
+    expect(screen.getByLabelText<HTMLTextAreaElement>('When false').value).toBe('no');
   });
 
   it('pretty-prints an existing object payload for editing', () => {
     const store = new RuleEditorStore({
-      rule: { spec: 'is-tiered', name: 'tier', whenTrue: { tier: 'gold' } },
+      rule: { spec: 'is-tiered', whenTrue: { tier: 'gold' } },
     });
     render(
       <PayloadPopover store={store} catalog={CATALOG} path="$.rule" spec="is-tiered" onClose={vi.fn()} />,
@@ -123,7 +119,7 @@ describe('PayloadPopover', () => {
     const user = userEvent.setup();
     const { onClose } = renderPopover();
 
-    await user.type(screen.getByLabelText('Name'), 'activity');
+    await user.type(screen.getByLabelText('When true'), 'active');
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(onClose).toHaveBeenCalled();

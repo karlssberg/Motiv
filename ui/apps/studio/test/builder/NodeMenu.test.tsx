@@ -45,7 +45,7 @@ describe('NodeMenu', () => {
     renderWith(new RuleEditorStore(COMPOSITE));
     await openMenu('$.rule');
     fireEvent.click(screen.getByRole('menuitem', { name: 'Details' }));
-    expect(screen.getByLabelText('name at $.rule')).toBeDefined();
+    expect(screen.getByLabelText('whenTrue at $.rule')).toBeDefined();
     // Acting closes the menu — it is transient, unlike the panel it opens.
     expect(screen.queryByRole('menuitem', { name: 'Details' })).toBeNull();
   });
@@ -137,13 +137,13 @@ describe('NodeMenu scoping actions (#234)', () => {
     expect(screen.queryByRole('menuitem', { name: 'Inline' })).toBeNull();
   });
 
-  it('Inline replaces the reference with its definition', async () => {
+  it('Inline replaces the reference with its definition body, unnamed', async () => {
     const store = new RuleEditorStore(WITH_LOCAL);
     renderWith(store);
     await openMenu('$.rule.and[0]');
     fireEvent.click(screen.getByRole('menuitem', { name: 'Inline' }));
     expect((store.getState().document.rule as { and: unknown[] }).and[0])
-      .toEqual({ spec: 'is-active', name: 'activity' });
+      .toEqual({ spec: 'is-active' });
   });
 
   /**

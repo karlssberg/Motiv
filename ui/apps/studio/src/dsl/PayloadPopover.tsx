@@ -9,9 +9,8 @@ import { ROOT } from '../panes/BuilderPane.js';
 /** Metadata types whose payloads are plain text rather than JSON objects. */
 const STRING_METADATA_TYPES = new Set(['String', 'Explanation']);
 
-/** The editable draft of one node's decorations. */
+/** The editable draft of one node's payloads. */
 interface Draft {
-  name: string;
   whenTrue: string;
   whenFalse: string;
 }
@@ -67,9 +66,13 @@ function PayloadField(props: {
 }
 
 /**
- * Edits the `name` and `whenTrue`/`whenFalse` payloads of the rule's **root** node. Payloads are
- * plain strings when the catalog says the spec carries string metadata, and JSON objects otherwise
- * — in which case they are validated on save, so a malformed object never reaches the store.
+ * Edits the `whenTrue`/`whenFalse` payloads of the rule's **root** node. Payloads are plain
+ * strings when the catalog says the spec carries string metadata, and JSON objects otherwise — in
+ * which case they are validated on save, so a malformed object never reaches the store.
+ *
+ * There is no Name field at any path: the DSL has no inline name, so one authored here would be
+ * invisible in the text this card sits over while still changing the bound `Reason`. A rule is
+ * named by its document, and a sub-proposition by a definition.
  *
  * Below the root the card writes nothing at all (#234): decoration there belongs to a definition,
  * so the fields are shown read-only with the way out named, and there is no Save. Otherwise the
@@ -91,14 +94,8 @@ export function PayloadPopover(props: {
 }) {
   const { store, catalog, path, spec, onClose, style, cardRef } = props;
 
-  /**
-   * Only the rule's own root still carries a name of its own. A name below it is a definition
-   * now, authored in the definitions panel and reached from the row's menu — so the field is not
-   * offered here, and a name a legacy document still holds is left exactly as it is (#234).
-   */
-  const namable = path === ROOT;
-  /** The whole card is a reader below the root — no name, no payloads, no Save. */
-  const writable = namable;
+  /** The whole card is a reader below the root — no payloads, no Save (#234). */
+  const writable = path === ROOT;
 
   const entry = catalog.specs.find((candidate) => candidate.name === spec);
   const objectMode = entry !== undefined && !STRING_METADATA_TYPES.has(entry.metadataType);
@@ -109,7 +106,6 @@ export function PayloadPopover(props: {
   const [draft, setDraft] = useState<Draft>(() => {
     const node = getNode(store.getState().document, path);
     return {
-      name: node?.name ?? '',
       whenTrue: draftOf(node?.whenTrue),
       whenFalse: draftOf(node?.whenFalse),
     };
@@ -127,7 +123,6 @@ export function PayloadPopover(props: {
       return;
     }
 
-    if (namable) store.setName(path, draft.name.trim() || undefined);
     store.setDecoration(path, { whenTrue: whenTrue.value, whenFalse: whenFalse.value } as DecorationPatch);
     onClose();
   };
@@ -155,17 +150,6 @@ export function PayloadPopover(props: {
       {entry?.description && <p className="dsl-popover-desc">{entry.description}</p>}
       {entry && <p className="dsl-popover-meta">{entry.modelType} → {entry.metadataType}</p>}
 
-      {namable && (
-        <label className="field">
-          <span>Name</span>
-          <input
-            className="control"
-            type="text"
-            value={draft.name}
-            onChange={(e) => patch({ name: e.target.value })}
-          />
-        </label>
-      )}
       <PayloadField
         label="When true" value={draft.whenTrue} readOnly={!writable}
         onChange={(whenTrue) => patch({ whenTrue })}

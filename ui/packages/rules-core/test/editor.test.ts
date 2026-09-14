@@ -40,11 +40,15 @@ describe('RuleEditorStore edits', () => {
     expect(store.getState().document.rule).toEqual({ spec: 'a' });
   });
 
-  it('sets decoration and name', () => {
+  it('sets decoration', () => {
     const store = new RuleEditorStore(initial);
     store.setDecoration('$.rule', { whenTrue: 'yes', whenFalse: 'no' });
-    store.setName('$.rule', 'my check');
-    expect(store.getState().document.rule).toEqual({ spec: 'a', whenTrue: 'yes', whenFalse: 'no', name: 'my check' });
+    expect(store.getState().document.rule).toEqual({ spec: 'a', whenTrue: 'yes', whenFalse: 'no' });
+  });
+
+  it('has no way to name a node in place — the DSL has no inline name', () => {
+    const store = new RuleEditorStore(initial);
+    expect((store as unknown as Record<string, unknown>)['setName']).toBeUndefined();
   });
 
   it('applies a planned document and keeps it undoable', () => {
@@ -246,7 +250,9 @@ describe('RuleEditorStore local-definition mutations', () => {
 
     store.inlineLocal('$.rule');
 
-    expect(store.getState().document.rule).toEqual({ spec: 'a', whenTrue: 'yes', whenFalse: 'no', name: 'quota-check' });
+    // The definition's key is not reapplied as a nested `name`: the DSL cannot express one, so
+    // inlining `quota-check` yields exactly what typing its body in its place would.
+    expect(store.getState().document.rule).toEqual({ spec: 'a', whenTrue: 'yes', whenFalse: 'no' });
     expect(store.getState().document.definitions).toBeUndefined();
   });
 
@@ -276,7 +282,7 @@ describe('RuleEditorStore local-definition mutations', () => {
 
     store.inlineLocal('$.rule');
 
-    expect(store.getState().document.rule).toEqual({ spec: 'a', whenTrue: 'kept', name: 'quota-check' });
+    expect(store.getState().document.rule).toEqual({ spec: 'a', whenTrue: 'kept' });
   });
 
   it('defineLocal does not alias the prior document — the undo entry is unaffected by mutating the new one', () => {
@@ -301,7 +307,7 @@ describe('RuleEditorStore local-definition mutations', () => {
 
     store.inlineLocal('$.rule.and[0]');
 
-    expect(getNode(store.getState().document, '$.rule.and[0]')).toEqual({ spec: 'a', name: 'quota-check' });
+    expect(getNode(store.getState().document, '$.rule.and[0]')).toEqual({ spec: 'a' });
     expect(getNode(store.getState().document, '$.rule.and[1]')).toEqual({ local: 'quota-check' });
     expect(store.getState().document.definitions).toEqual({ 'quota-check': { rule: { spec: 'a' } } });
   });
