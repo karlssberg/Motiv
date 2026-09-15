@@ -153,8 +153,7 @@ public static class MotivRulesEndpoints
                 return EndpointResponses.MissingDocument(json);
 
             if (request.Model.ValueKind == JsonValueKind.Undefined)
-                return Results.Json(
-                    new ErrorResponse("The request must include a model."), json, statusCode: 400);
+                return EndpointResponses.MissingModel(json);
 
             if (!options.TryGetBinding(request.ModelType, out var binding))
                 return UnknownModelType(request.ModelType, json);
@@ -187,7 +186,7 @@ public static class MotivRulesEndpoints
         }
 
         if (rules is not null)
-            MapRuleEndpoints(group, rules, governance, options, json);
+            MapRuleEndpoints(group, rules, governance, options, resultSerializer, json);
 
         if (propositions is not null)
             MotivPropositionEndpoints.MapPropositionEndpoints(group, propositions, governance, json);
@@ -368,6 +367,7 @@ public static class MotivRulesEndpoints
         RuleSet rules,
         ChangeRequestSet? governance,
         MotivRulesOptions options,
+        ResultSerializer resultSerializer,
         JsonSerializerOptions json)
     {
         group.MapGet("/rules", () =>
@@ -393,6 +393,39 @@ public static class MotivRulesEndpoints
                 new RuleGetResponse(
                     EndpointResponses.DocumentElement(entry.DocumentJson), entry.Version, entry.Quarantine),
                 json);
+        });
+
+        // The live rule, by name, against a model — what POST /evaluate cannot do, since that
+        // rebuilds a spec from a posted document and a code-defined default has none. Gated as the
+        // sandbox is: evaluating the live rule reveals what it decides. Runs inside the group's
+        // generation pin like every other read here, and an audited rule records the decision, as it
+        // would for any caller.
+        group.MapPost("/rules/{name}/evaluate", async (
+            string name, RuleEvaluateRequest request, HttpContext http, CancellationToken cancellationToken) =>
+        {
+            if (GrantGate.RefuseUnlessAuthorAnywhere(http, json) is { } refusal)
+                return refusal;
+
+            if (rules.Find(name) is not { } rule)
+                return UnknownRule(name, json);
+
+            if (request.Model.ValueKind == JsonValueKind.Undefined)
+                return EndpointResponses.MissingModel(json);
+
+            var modelId = options.ResolveModelId(rule.ModelType);
+            if (!options.TryGetBinding(modelId, out var binding))
+                return UnknownModelType(modelId, json);
+
+            try
+            {
+                var model = binding.BindModel(json, request.Model);
+                var result = await rule.EvaluateBoxedAsync(model, resultSerializer, cancellationToken);
+                return Results.Json(result, json);
+            }
+            catch (InvalidModelException ex)
+            {
+                return Results.Json(new ErrorResponse(ex.Message), json, statusCode: 400);
+            }
         });
 
         group.MapPut("/rules/{name}", async (string name, RulePutRequest request, HttpContext http) =>

@@ -1,5 +1,5 @@
 import type {
-  BrokenDependent, Catalog, DependentEntry, ErrorResponse, EvaluateRequest, EvaluationResult,
+  BrokenDependent, Catalog, DependentEntry, ErrorResponse, EvaluateRequest, EvaluationResult, RuleEvaluateRequest,
   PropositionCreateRequest, PropositionGetResponse, PropositionListEntry, PropositionSaveResult,
   RuleError, RuleGetResponse, RuleListEntry, RuleSaveResult,
   ValidateRequest, ValidationResponse,
@@ -99,6 +99,17 @@ export class RulesApiClient {
   /** POST {baseUrl}/evaluate */
   async evaluate(request: EvaluateRequest): Promise<EvaluationResult> {
     const response = await this.#post('/evaluate', request);
+    return this.#read<EvaluationResult>(response);
+  }
+
+  /**
+   * POST {baseUrl}/rules/{name}/evaluate — the *live* rule by name, against a model. Unlike
+   * {@link evaluate}, which rebuilds a spec from a posted document, this reaches the rule the
+   * application is running, a code-defined default included.
+   */
+  async evaluateRule(name: string, model: unknown): Promise<EvaluationResult> {
+    const request: RuleEvaluateRequest = { model };
+    const response = await this.#post(`/rules/${encodeURIComponent(name)}/evaluate`, request);
     return this.#read<EvaluationResult>(response);
   }
 

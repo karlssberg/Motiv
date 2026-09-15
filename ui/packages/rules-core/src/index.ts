@@ -30,7 +30,7 @@ export {
 export type {
   Catalog, CatalogEntry, CatalogCollection, CatalogParameter, JsonSchema,
   RuleError, RuleErrorCode, ValidationResponse, ErrorResponse,
-  ExplanationNode, EvaluationResult, ValidateRequest, EvaluateRequest,
+  ExplanationNode, EvaluationResult, ValidateRequest, EvaluateRequest, RuleEvaluateRequest,
   RuleListEntry, RuleGetResponse, RuleSaveResult,
   PropositionOrigin, PropositionListEntry, PropositionGetResponse, PropositionCreateRequest,
   DependentEntry, PropositionSaveResult, BrokenDependent,

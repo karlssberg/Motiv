@@ -122,11 +122,15 @@ test('an authored proposition is a building block the live rule follows', async 
   await expect(front.locator('.doc-title').getByText(new RegExp(`^v${ruleBaseline + 1}\\b`))).toBeVisible();
 
   // The running rule now decides through the proposition, and says so in the proposition's own
-  // terms — the assertion text is the compiled spec's, which is what pins *which* spec it resolved to.
-  const screening = page.locator('.tab-panel:not([hidden]) .rule-verdict', { hasText: 'Screening' });
-  await page.getByRole('textbox', { name: 'customer', exact: true }).fill(INACTIVE_WITH_ORDERS);
-  await page.getByRole('button', { name: 'Try checkout' }).click();
-  await expect(screening).toContainText('customer has orders');
+  // terms — the assertion text is the compiled spec's, which is what pins *which* spec it resolved
+  // to. Read from the scenario table's Live side: the first seeded scenario, re-modelled to the
+  // customer the two specs disagree about, with its detail open so the explanation is on the page.
+  const scenario = front.getByRole('row', { name: 'Active adult, 3 orders', exact: true });
+  await scenario.getByRole('button', { name: 'details of Active adult, 3 orders' }).click();
+  await front.getByRole('textbox', { name: 'scenario model' }).fill(INACTIVE_WITH_ORDERS);
+  const liveWhy = front.getByRole('group', { name: /^why the live rule/ });
+  await front.getByRole('button', { name: 'Run all' }).click();
+  await expect(liveWhy).toContainText('customer has orders');
 
   // Redefine the proposition, back in its own tab. The rule is never reloaded.
   await tab(page, 'Proposition', ELIGIBLE).click();
@@ -146,11 +150,11 @@ test('an authored proposition is a building block the live rule follows', async 
   await tab(page, 'Rule', RULE).click();
   await expect(page.getByRole('group', { name: 'Uses' })).toContainText('updated');
 
-  // The verdict follows. Same rule document, same customer — a different answer.
-  await page.getByRole('textbox', { name: 'customer', exact: true }).fill(INACTIVE_WITH_ORDERS);
-  await page.getByRole('button', { name: 'Try checkout' }).click();
-  await expect(screening).toContainText('customer is inactive');
-  await expect(screening).not.toContainText('customer has orders');
+  // The verdict follows. Same rule document, same scenario — a different answer. The scenario and
+  // its open detail survived the tab switch, so only the run is repeated.
+  await front.getByRole('button', { name: 'Run all' }).click();
+  await expect(liveWhy).toContainText('customer is inactive');
+  await expect(liveWhy).not.toContainText('customer has orders');
 
   // And the rule really was untouched: still on the one version the UI saved.
   expect(await ruleVersion(request, RULE)).toBe(ruleBaseline + 1);

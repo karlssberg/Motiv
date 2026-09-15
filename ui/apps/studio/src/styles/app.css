@@ -1229,36 +1229,128 @@ button.node-dsl:focus-visible {
   gap: 6px;
 }
 
-/* Checkout outcome: the three rule verdicts, each a heading and its assertions */
-.checkout-outcome {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+/*
+  Scenarios: the Evaluate pane's table. Rows are the rule's samples; the two verdict columns are the
+  live rule and the draft. A row whose answers differ is tinted, and its detail row — the editor
+  over the two explanations — sits on the inset ground so it reads as belonging to the row above.
+*/
+.scenarios {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
 }
 
-.rule-verdict h3 {
+.scenarios th {
+  text-align: left;
+  font: 600 10px/16px var(--sans);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--faint);
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.scenarios td {
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.scenarios td[aria-label] {
+  white-space: nowrap;
+}
+
+.scenario-name {
+  margin-right: 6px;
+}
+
+.scenario-changed td {
+  background: color-mix(in srgb, var(--warn) 8%, var(--bg));
+}
+
+.badge-changed {
+  color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 14%, var(--bg));
+}
+
+.change-count {
+  font: 600 11.5px var(--sans);
+  color: var(--muted);
+  background: var(--sh-inset);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.change-count-changed {
+  color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 14%, var(--bg));
+}
+
+/* Row actions read on hover or focus; they are always in the tab order. */
+.scenario-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.row-action {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font: 11px var(--sans);
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0;
+}
+
+.scenario:hover .row-action,
+.row-action:focus-visible {
+  opacity: 1;
+}
+
+.row-action:hover {
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.row-action-danger:hover {
+  color: var(--danger);
+}
+
+.scenario-detail td {
+  background: var(--sh-inset);
+}
+
+.scenario-editor {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.scenario-sides {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  border-top: 1px dashed var(--border);
+  padding-top: 8px;
+}
+
+.scenario-side {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scenario-side h3 {
   margin: 0;
-  font-size: 12.5px;
-  font-weight: 600;
+  font: 600 12px var(--sans);
 }
 
-.assertions {
-  list-style: none;
-  margin: 2px 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.assertions li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 24px;
-  font-size: 12.5px;
+.scenario-side-draft {
+  border-left: 1px dashed var(--border);
+  padding-left: 12px;
 }
 
 .tick {

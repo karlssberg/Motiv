@@ -21,6 +21,11 @@ async function revertToDefault(request: APIRequestContext): Promise<number> {
   return ((await response.json()) as { version: number }).version;
 }
 
+/** The scenario table's Live cell for one named scenario: the running rule's verdict for it. */
+function liveVerdict(page: Page, scenario: string) {
+  return page.getByRole('row', { name: scenario, exact: true }).getByRole('cell', { name: 'live' });
+}
+
 /** The rule-version badge in the header, e.g. "v3" or "v2 — code-defined default …". */
 function versionBadge(page: Page, version: number) {
   return page.getByText(new RegExp(`^v${version}\\b`));
@@ -41,9 +46,10 @@ test('editing and saving a rule changes the next checkout, and stale saves confl
   await expect(versionBadge(page, loadedVersion)).toBeVisible();
   await expect(page.getByText(/code-defined default/)).toBeVisible();
 
-  // Baseline: the compiled default (active AND adult) approves the sample customer.
-  await page.getByRole('button', { name: 'Try checkout' }).click();
-  await expect(page.getByText('Approved', { exact: true })).toBeVisible();
+  // Baseline: the compiled default (active AND adult) approves the seeded active adult — read off
+  // the scenario table's Live column, which is what the server decides for this rule right now.
+  await page.getByRole('button', { name: 'Run all' }).click();
+  await expect(liveVerdict(page, 'Active adult, 3 orders')).toHaveText(/yes/);
 
   // Make the rule impossible for the sample customer: negate it by typing into its row.
   await page.getByRole('button', { name: 'edit expression at $.rule' }).click();
@@ -55,9 +61,9 @@ test('editing and saving a rule changes the next checkout, and stale saves confl
   const savedVersion = loadedVersion + 1;
   await expect(versionBadge(page, savedVersion)).toBeVisible();
 
-  // The very next checkout reflects the swap — no restart happened.
-  await page.getByRole('button', { name: 'Try checkout' }).click();
-  await expect(page.getByText('Rejected', { exact: true })).toBeVisible();
+  // The very next live evaluation reflects the swap — no restart happened.
+  await page.getByRole('button', { name: 'Run all' }).click();
+  await expect(liveVerdict(page, 'Active adult, 3 orders')).toHaveText(/no/);
 
   // A writer holding a stale version gets a 409 (simulated second tab via the API).
   const stale = await request.put(RULE_URL, {

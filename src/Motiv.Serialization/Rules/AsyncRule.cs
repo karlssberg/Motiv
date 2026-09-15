@@ -112,6 +112,11 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
             : ObserveAsync(activity, log, state, generation, model, evaluation);
     }
 
+    /// <inheritdoc />
+    internal override async ValueTask<object> EvaluateBoxedAsync(
+        object model, ResultSerializer resultSerializer, CancellationToken cancellationToken) =>
+        resultSerializer.ToEvaluationResult(await EvaluateAsync((TModel)model, cancellationToken));
+
     /// <summary>
     /// The log this binding records to, or null when it records nothing. One decision point, asked
     /// before the wrapper is allocated — so an unaudited rule pays for neither, and the recording path

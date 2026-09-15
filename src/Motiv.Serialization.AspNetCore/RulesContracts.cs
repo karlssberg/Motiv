@@ -60,6 +60,10 @@ public sealed record ValidateRequest(string ModelType, JsonElement Document, boo
 /// <param name="Model">A sample model instance to evaluate against.</param>
 public sealed record EvaluateRequest(string ModelType, JsonElement Document, JsonElement Model);
 
+/// <summary>A request to evaluate a <em>live</em> rule, addressed by name, against a sample model.</summary>
+/// <param name="Model">A sample model instance to evaluate against; its type is the rule's own.</param>
+public sealed record RuleEvaluateRequest(JsonElement Model);
+
 /// <summary>The outcome of a validation request.</summary>
 /// <param name="Errors">All errors found; empty when the document is valid.</param>
 public sealed record ValidationResponse(IReadOnlyList<RuleError> Errors);

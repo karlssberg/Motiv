@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
  * source can be administered at all (an immutable source, e.g. the dev identity's built-in grant,
  * answers false), whether the caller is themselves an administrator, and whether they are running
  * under the dev identity. An app endpoint, not part of `@motiv-rules/core`'s SDK client — talked to
- * with plain `fetch`, the same seam `CheckoutPane` uses for `/api/checkout`.
+ * with plain `fetch` — the consuming side, which has no SDK client.
  */
 export interface AdminCapabilities {
   grantAdministration: boolean;
@@ -24,7 +24,7 @@ const HIDDEN: AdminCapabilities = { grantAdministration: false, administrator: f
  *
  * Called independently by `AppBar` and `AdminPage`, each fetching its own copy on mount rather than
  * sharing one in a context — the same duplicate-fetch shape every other pane in Studio uses (see
- * `CheckoutPane`'s comment on `getCatalog`), kept deliberately rather than DRYed into a shared
+ * the admin page's own), kept deliberately rather than DRYed into a shared
  * cache.
  */
 export function useAdminCapabilities(): AdminCapabilities {

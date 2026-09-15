@@ -7,8 +7,7 @@ import { MODEL_TYPE } from '../App.js';
 import { DocumentModal } from './DocumentModal.js';
 import { DocumentTitle } from './DocumentTitle.js';
 import { EditorPane } from './EditorPane.js';
-import { EvaluatePane } from './EvaluatePane.js';
-import { CheckoutPane } from './CheckoutPane.js';
+import { ScenarioPane } from './ScenarioPane.js';
 import { DocActions } from '../shell/DocActions.js';
 import { ReportBanner } from '../shell/ReportBanner.js';
 import { ReferencesStrip } from '../shell/ReferencesStrip.js';
@@ -16,8 +15,8 @@ import { placeActions, useNoteSaves, useSaverRegistration, type SaverSink } from
 import type { OpenDoc, Workspace } from '../shell/workspace.js';
 
 /**
- * One open rule: the editor beside a rail of the two panes that *run* it — Evaluate against a
- * sample, and the live checkout the server decides — over the tab's own store. The save loop is
+ * One open rule: the editor beside the pane that *runs* it — every scenario against the live rule
+ * and against this tab's draft — over the tab's own store. The save loop is
  * `RuleWorkflowController`'s, bound to that store; this renders it, and tells the workspace when a
  * save produced a version so every other tab that references this rule can see it move.
  *
@@ -93,9 +92,9 @@ export function RuleDocument(props: {
       <ReferencesStrip workspace={workspace} doc={tab} onOpen={props.onOpenProposition} />
 
       {/*
-        Each pane below fetches GET /catalog on mount (EditorPane and EvaluatePane via useCatalog,
-        CheckoutPane directly) — and EditorPane's builder surface fetches once more of its own, so
-        up to four requests for the same static payload. Deduping would mean lifting the catalog
+        Each pane below fetches GET /catalog on mount (EditorPane and ScenarioPane via useCatalog)
+        — and EditorPane's builder surface fetches once more of its own, so up to three requests
+        for the same static payload. Deduping would mean lifting the catalog
         here and passing it down, but each pane's self-contained wiring is a deliberate seam Studio
         exists to show, so the duplicate requests are accepted.
       */}
@@ -122,13 +121,9 @@ export function RuleDocument(props: {
             />,
           )}
         />
-        {/*
-          One rail for both ways of running the rule: beside Evaluate, Checkout shares one result
-          language — a verdict, then the assertions — and the editor keeps the height it needs.
-        */}
+        {/* One rail: the rule's scenarios, each run against the live rule and this tab's draft. */}
         <div className="rail">
-          <EvaluatePane client={client} />
-          <CheckoutPane client={client} />
+          <ScenarioPane client={client} ruleName={tab.name} version={loaded?.version} />
         </div>
       </div>
 
