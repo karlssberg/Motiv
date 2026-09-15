@@ -7,10 +7,19 @@ import {
 /** The two kinds of document a tab can hold. */
 export type DocKind = 'rule' | 'proposition';
 
-/** A tab's identity: its kind and name, joined. */
+/**
+ * A tab's identity: its kind and name, joined — or, for a tab holding nothing, `empty:<n>`. A tab
+ * is a slot: it can be empty, can take a document, and can be emptied again, keeping its place in
+ * the strip each time. Its id changes with its content; its position does not.
+ */
 export type TabId = string;
 
 export const tabIdOf = (kind: DocKind, name: string): TabId => `${kind}:${name}`;
+
+const EMPTY_PREFIX = 'empty:';
+
+/** An empty tab: one with no document, showing the catalog. */
+export const isEmptyTab = (id: TabId): boolean => id.startsWith(EMPTY_PREFIX);
 
 /** Where the open-tab list is remembered. Session-scoped: two browser tabs are two workspaces. */
 export const TABS_KEY = 'motiv.studio.tabs';
@@ -58,7 +67,7 @@ export interface Latest {
 }
 
 export interface WorkspaceState {
-  /** Open tabs, in strip order. */
+  /** Open tabs, in strip order. An empty tab has no entry in `docs`. */
   tabs: TabId[];
   active: TabId | null;
   docs: Record<TabId, OpenDoc>;
@@ -134,6 +143,7 @@ export function referencesOf(document: RuleDocument): string[] {
 export class Workspace {
   #state: WorkspaceState = { tabs: [], active: null, docs: {}, latest: {}, revision: 0 };
   readonly #listeners = new Set<() => void>();
+  #emptyCount = 0;
 
   getState = (): WorkspaceState => this.#state;
 
@@ -160,16 +170,21 @@ export class Workspace {
     }));
   }
 
-  /** Reopens the tabs a previous page load left open. Activates none: the route says which. */
+  /**
+   * Reopens the tabs a previous page load left open. Activates none: the route says which — and
+   * empty tabs are not remembered, since a bare route makes one.
+   */
   restore(): void {
     for (const tab of readRemembered()) this.open(tab.kind, tab.name, { activate: false });
   }
 
   /**
-   * Opens a document in a new tab, or activates the tab it is already open in, and returns it.
-   * The store starts on the builder's seed; the tab's workflow loads the real document into it.
+   * Opens a document, or activates the tab it is already open in, and returns it. Where it lands:
+   * in `into`, replacing whatever that tab held; else in the active tab while that tab is empty;
+   * else in a new tab at the end. The store starts on the builder's seed; the tab's workflow loads
+   * the real document into it.
    */
-  open(kind: DocKind, name: string, options: { activate?: boolean } = {}): OpenDoc {
+  open(kind: DocKind, name: string, options: { activate?: boolean; into?: TabId } = {}): OpenDoc {
     const activate = options.activate ?? true;
     const id = tabIdOf(kind, name);
     const existing = this.#state.docs[id];
@@ -184,19 +199,64 @@ export class Workspace {
       seenAt: Date.now(),
       reloads: 0,
     };
+    const { active } = this.#state;
+    const target = options.into ?? (activate && active !== null && isEmptyTab(active) ? active : null);
+    const replaced = target !== null && this.#state.tabs.includes(target) ? target : null;
+    const { [replaced ?? '']: _gone, ...docs } = this.#state.docs;
     this.#set({
-      docs: { ...this.#state.docs, [id]: doc },
-      tabs: [...this.#state.tabs, id],
-      active: activate ? id : this.#state.active,
+      docs: { ...docs, [id]: doc },
+      tabs: replaced === null ? [...this.#state.tabs, id] : this.#state.tabs.map((tab) => (tab === replaced ? id : tab)),
+      active: activate || (replaced !== null && active === replaced) ? id : active,
     });
     this.#remember();
     return doc;
   }
 
-  /** Makes a tab the active one, or — for `null`, a bare route — none of them. */
-  activate(id: TabId | null): void {
-    if (id !== null && !this.#state.docs[id]) return;
+  /** A fresh id for a tab holding nothing. Counted, so no two empty tabs ever share an id. */
+  #mintEmptyId(): TabId {
+    return `${EMPTY_PREFIX}${++this.#emptyCount}`;
+  }
+
+  /** Appends an empty tab and makes it the active one — the strip's "+". */
+  newTab(): TabId {
+    const id = this.#mintEmptyId();
+    this.#set({ tabs: [...this.#state.tabs, id], active: id });
+    return id;
+  }
+
+  /** Makes a tab the active one. */
+  activate(id: TabId): void {
+    if (!this.#state.tabs.includes(id)) return;
     if (this.#state.active !== id) this.#set({ active: id });
+  }
+
+  /**
+   * A bare route: the front tab is an empty one — the first there is, or a new one when every tab
+   * holds a document. What the route says is "the catalog", and there is always a tab for it.
+   */
+  activateEmpty(): void {
+    const { active, tabs } = this.#state;
+    if (active !== null && isEmptyTab(active)) return;
+    const empty = tabs.find(isEmptyTab);
+    if (empty !== undefined) this.activate(empty);
+    else this.newTab();
+  }
+
+  /**
+   * Empties a tab in place: the document goes, and an empty tab stands where it stood — so a
+   * tab returns to the catalog without losing its place in the strip. Does not ask about unsaved
+   * changes: that is the shell's question.
+   */
+  unload(id: TabId): void {
+    if (!this.#state.docs[id]) return;
+    const empty = this.#mintEmptyId();
+    const { [id]: _closed, ...docs } = this.#state.docs;
+    this.#set({
+      docs,
+      tabs: this.#state.tabs.map((tab) => (tab === id ? empty : tab)),
+      active: this.#state.active === id ? empty : this.#state.active,
+    });
+    this.#remember();
   }
 
   /** Asks a tab to reload its document from the server. */
@@ -207,8 +267,9 @@ export class Workspace {
 
   /**
    * Closes a tab. When it was the active one, the neighbour to its right — else its left — takes
-   * over, which is how every browser does it. Does not ask about unsaved changes: that is the
-   * shell's question, asked before it gets here.
+   * over, which is how every browser does it; and closing the last tab leaves one empty tab, as a
+   * browser window keeps one. Does not ask about unsaved changes: that is the shell's question,
+   * asked before it gets here.
    */
   close(id: TabId): void {
     const index = this.#state.tabs.indexOf(id);
@@ -220,11 +281,12 @@ export class Workspace {
       : this.#state.active;
     this.#set({ tabs, docs, active });
     this.#remember();
+    if (tabs.length === 0) this.newTab();
   }
 
   /** Moves a tab to a new position in the strip. */
   move(id: TabId, to: number): void {
-    if (!this.#state.docs[id]) return;
+    if (!this.#state.tabs.includes(id)) return;
     const tabs = this.#state.tabs.filter((tab) => tab !== id);
     tabs.splice(Math.max(0, Math.min(to, tabs.length)), 0, id);
     this.#set({ tabs });

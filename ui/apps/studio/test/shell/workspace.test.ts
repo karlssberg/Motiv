@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-  Workspace, referencesOf, referenceStatuses, tabIdOf, TABS_KEY,
+  Workspace, isEmptyTab, referencesOf, referenceStatuses, tabIdOf, TABS_KEY,
 } from '../../src/shell/workspace.js';
 
 describe('Workspace', () => {
@@ -44,17 +44,82 @@ describe('Workspace', () => {
     expect(workspace.getState().active).toBe(tabIdOf('rule', 'c'));
     workspace.close(tabIdOf('rule', 'c'));
     expect(workspace.getState().active).toBe(tabIdOf('rule', 'a'));
+    // Closing the last tab leaves one empty tab, as a browser window keeps one: there is always a
+    // tab in front, and it is the catalog.
     workspace.close(tabIdOf('rule', 'a'));
-    expect(workspace.getState().active).toBeNull();
-    expect(workspace.getState().tabs).toEqual([]);
+    const { active, tabs } = workspace.getState();
+    expect(tabs).toHaveLength(1);
+    expect(active).toBe(tabs[0]);
+    expect(isEmptyTab(active!)).toBe(true);
   });
 
-  it('deactivates for a bare route, keeping the tabs', () => {
+  it('a new tab is empty, appended, and made active', () => {
     const workspace = new Workspace();
     workspace.open('rule', 'a');
-    workspace.activate(null);
-    expect(workspace.getState().active).toBeNull();
-    expect(workspace.getState().tabs).toEqual([tabIdOf('rule', 'a')]);
+    const id = workspace.newTab();
+    expect(isEmptyTab(id)).toBe(true);
+    expect(workspace.getState().tabs).toEqual([tabIdOf('rule', 'a'), id]);
+    expect(workspace.getState().active).toBe(id);
+    expect(workspace.getState().docs[id]).toBeUndefined();
+    // Two new tabs are two tabs.
+    expect(workspace.newTab()).not.toBe(id);
+    expect(workspace.getState().tabs).toHaveLength(3);
+  });
+
+  it('opening a document lands in the active tab while that tab is empty', () => {
+    const workspace = new Workspace();
+    workspace.open('rule', 'a');
+    const empty = workspace.newTab();
+    workspace.open('rule', 'b');
+    expect(workspace.getState().tabs).toEqual([tabIdOf('rule', 'a'), tabIdOf('rule', 'b')]);
+    expect(workspace.getState().active).toBe(tabIdOf('rule', 'b'));
+    expect(workspace.getState().tabs).not.toContain(empty);
+    // A loaded active tab is left alone: the next document is a new tab beside it.
+    workspace.open('rule', 'c');
+    expect(workspace.getState().tabs).toEqual([tabIdOf('rule', 'a'), tabIdOf('rule', 'b'), tabIdOf('rule', 'c')]);
+  });
+
+  it('opens into a given tab, replacing what it held in place', () => {
+    const workspace = new Workspace();
+    workspace.open('rule', 'a');
+    workspace.open('rule', 'b');
+    workspace.open('rule', 'c');
+    workspace.open('proposition', 'customer.p', { into: tabIdOf('rule', 'b') });
+    expect(workspace.getState().tabs).toEqual([tabIdOf('rule', 'a'), tabIdOf('proposition', 'customer.p'), tabIdOf('rule', 'c')]);
+    expect(workspace.getState().active).toBe(tabIdOf('proposition', 'customer.p'));
+    expect(workspace.getState().docs[tabIdOf('rule', 'b')]).toBeUndefined();
+    // A document already open elsewhere is activated there rather than opened twice.
+    workspace.open('rule', 'a', { into: tabIdOf('rule', 'c') });
+    expect(workspace.getState().tabs).toEqual([tabIdOf('rule', 'a'), tabIdOf('proposition', 'customer.p'), tabIdOf('rule', 'c')]);
+    expect(workspace.getState().active).toBe(tabIdOf('rule', 'a'));
+  });
+
+  it('unloads a tab in place: the tab stays where it was, empty, and its document goes', () => {
+    const workspace = new Workspace();
+    workspace.open('rule', 'a');
+    workspace.open('rule', 'b');
+    workspace.open('rule', 'c');
+    workspace.activate(tabIdOf('rule', 'b'));
+    workspace.unload(tabIdOf('rule', 'b'));
+    const { tabs, active, docs } = workspace.getState();
+    expect(tabs).toHaveLength(3);
+    expect(isEmptyTab(tabs[1]!)).toBe(true);
+    expect(docs[tabIdOf('rule', 'b')]).toBeUndefined();
+    // The unloaded tab was the active one, so the empty tab in its place is.
+    expect(active).toBe(tabs[1]);
+  });
+
+  it('activates an empty tab for a bare route, making one only when there is none', () => {
+    const workspace = new Workspace();
+    workspace.open('rule', 'a');
+    workspace.activateEmpty();
+    const first = workspace.getState().active!;
+    expect(isEmptyTab(first)).toBe(true);
+    expect(workspace.getState().tabs).toEqual([tabIdOf('rule', 'a'), first]);
+    workspace.activate(tabIdOf('rule', 'a'));
+    workspace.activateEmpty();
+    expect(workspace.getState().active).toBe(first);
+    expect(workspace.getState().tabs).toHaveLength(2);
   });
 
   it('revises on every save, create or delete, so listings can be refreshed on the back of one', () => {
@@ -146,6 +211,8 @@ describe('Workspace', () => {
     const workspace = new Workspace();
     workspace.open('rule', 'a');
     workspace.open('proposition', 'customer.p');
+    // An empty tab is not worth remembering: a bare route makes one on the next visit.
+    workspace.newTab();
     expect(JSON.parse(window.sessionStorage.getItem(TABS_KEY)!)).toEqual([
       { kind: 'rule', name: 'a' }, { kind: 'proposition', name: 'customer.p' },
     ]);

@@ -4,6 +4,7 @@ import { useRuleEditor } from '@motiv-rules/react';
 import { usePropositionWorkflow } from '@motiv-rules/react/workflow';
 import type { Route } from '../routing/useHashRoute.js';
 import { AppBar } from '../panes/AppBar.js';
+import { CatalogPane } from '../panes/CatalogPane.js';
 import { RuleDocument } from '../panes/RuleDocument.js';
 import { PropositionDocument } from '../panes/PropositionDocument.js';
 import type { SaverSink } from '../panes/documentTab.js';
@@ -13,10 +14,10 @@ import { catalogSeedFor, promotionSeedFor } from './catalogSeeds.js';
 import { DiscardDialog } from './DiscardDialog.js';
 import { OpenPalette } from './OpenPalette.js';
 import { ReportBanner } from './ReportBanner.js';
+import { TabCrumbs } from './TabCrumbs.js';
 import { TabStrip } from './TabStrip.js';
 import { useCommandKey } from './useCommandKey.js';
-import { IconNew, IconOpen } from './icons.js';
-import { Workspace, tabIdOf, type DocKind, type OpenDoc, type TabId } from './workspace.js';
+import { Workspace, isEmptyTab, tabIdOf, type DocKind, type OpenDoc, type TabId } from './workspace.js';
 
 /** The page a kind of document is routed under, and back. */
 const PAGE_OF: Record<DocKind, 'rules' | 'propositions'> = { rule: 'rules', proposition: 'propositions' };
@@ -31,18 +32,27 @@ function namespacePrefixOf(name: string): string {
   return cut < 0 ? '' : name.slice(0, cut + 1);
 }
 
-/** The unsaved-changes question, asked of the tab's own store; closes outright when it is clean. */
-function CloseQuestion(props: { doc: OpenDoc; onKeep: () => void; onClose: () => void; onSaveAndClose: () => void }) {
+/** What the shell is about to do to a tab, once its unsaved changes are settled. */
+type TabAct = 'close' | 'unload';
+interface Pending { id: TabId; act: TabAct }
+
+/**
+ * The unsaved-changes question, asked of the tab's own store; proceeds outright when it is clean.
+ * The same question whether the tab is closing or emptying back to the catalog — either loses
+ * the draft.
+ */
+function CloseQuestion(props: { doc: OpenDoc; act: TabAct; onKeep: () => void; onProceed: () => void; onSaveAndProceed: () => void }) {
   const { dirty } = useRuleEditor(props.doc.store);
-  const { onClose } = props;
-  useEffect(() => { if (!dirty) onClose(); }, [dirty, onClose]);
+  const { onProceed } = props;
+  useEffect(() => { if (!dirty) onProceed(); }, [dirty, onProceed]);
   if (!dirty) return null;
   return (
     <DiscardDialog
       name={props.doc.name}
+      verb={props.act}
       onKeep={props.onKeep}
-      onSaveAndClose={props.onSaveAndClose}
-      onDiscard={() => { props.doc.store.revert(); props.onClose(); }}
+      onSaveAndClose={props.onSaveAndProceed}
+      onDiscard={() => { props.doc.store.revert(); props.onProceed(); }}
     />
   );
 }
@@ -66,7 +76,8 @@ function useCloseTabKey(active: TabId | null, onRequestClose: (id: TabId) => voi
 
 /**
  * One open document, in a panel that stays mounted while its tab is hidden — which is what lets a
- * draft, an undo stack and a surface choice survive a switch.
+ * draft, an undo stack and a surface choice survive a switch. Its breadcrumb says where the tab
+ * is and offers the two ways to change that without leaving it.
  */
 function TabPanel(props: {
   client: RulesApiClient;
@@ -74,7 +85,11 @@ function TabPanel(props: {
   doc: OpenDoc;
   active: boolean;
   actionsHost: HTMLElement | null;
+  /** The other documents of this tab's kind, for the breadcrumb to offer. */
+  siblings: readonly string[];
   onClose: () => void;
+  onUnload: () => void;
+  onReplace: (name: string) => void;
   onOpenProposition: (name: string) => void;
   onSaver: SaverSink;
   /** The two widening flows, already bound to this document — see the shell's handlers (#234). */
@@ -88,27 +103,10 @@ function TabPanel(props: {
   };
   return (
     <section className="tab-panel" role="tabpanel" aria-label={doc.name} hidden={!props.active}>
+      <TabCrumbs kind={doc.kind} name={doc.name} siblings={props.siblings} onUnload={props.onUnload} onReplace={props.onReplace} />
       {doc.kind === 'rule'
         ? <RuleDocument {...common} onOpenProposition={props.onOpenProposition} />
         : <PropositionDocument {...common} />}
-    </section>
-  );
-}
-
-/** What the shell shows with no tab in front: the two ways to get one. */
-function EmptyState(props: { onOpen: () => void; onNew: () => void }) {
-  return (
-    <section className="empty-state" aria-label="Nothing open">
-      <h2>Nothing open</h2>
-      <p>Open a rule or a proposition in a tab. Several can be open at once, and each keeps its own draft.</p>
-      <div className="run-row">
-        <button type="button" className="btn" onClick={props.onOpen}>
-          <IconOpen size={14} />Open a rule or proposition<kbd aria-hidden="true">⌘K</kbd>
-        </button>
-        <button type="button" className="btn btn-secondary" onClick={props.onNew}>
-          <IconNew size={14} />New proposition
-        </button>
-      </div>
     </section>
   );
 }
@@ -119,9 +117,10 @@ function EmptyState(props: { onOpen: () => void; onNew: () => void }) {
  * explorer and its authoring dialog, the close question, ⌘K and ⌘W.
  *
  * The hash route is the truth for which tab is active. A named route opens (or activates) that
- * tab; activating a tab writes its route; closing the active tab navigates to the neighbour the
- * workspace picked, or to the bare page. So a deep link, a chip, the back button and a hand-edited
- * URL all take the same path.
+ * tab — landing in the active tab while that one is empty; activating a tab writes its route;
+ * closing the active tab navigates to the neighbour the workspace picked; and the bare page is an
+ * empty tab, showing the catalog, of which there is always one when nothing else is. So a deep
+ * link, a chip, the back button and a hand-edited URL all take the same path.
  *
  * The propositions *listing* and its authoring actions run through a workflow bound to a scratch
  * store that never loads a document: create and delete are acts on the listing, and each tab's
@@ -150,7 +149,7 @@ export function WorkspaceShell(props: {
   // exactly such a commit, and a route-writing effect there deactivated the tab it had just opened).
   useEffect(() => {
     if (route.page === 'admin') return;
-    if (route.name === null) workspace.activate(null);
+    if (route.name === null) workspace.activateEmpty();
     else workspace.open(KIND_OF[route.page], route.name);
   }, [workspace, route.page, route.name]);
 
@@ -166,10 +165,29 @@ export function WorkspaceShell(props: {
     navigate({ page: PAGE_OF[kind], name });
   }, [workspace, navigate]);
 
+  /** The bare route for the page in force: what an empty tab is addressed by. */
+  const bare = useMemo((): Route => ({ page: route.page === 'admin' ? 'rules' : route.page, name: null }), [route.page]);
+
   const activateTab = useCallback((id: TabId): void => {
     const doc = workspace.getState().docs[id];
-    if (doc) openTab(doc.kind, doc.name);
-  }, [workspace, openTab]);
+    if (doc) { openTab(doc.kind, doc.name); return; }
+    // An empty tab: in front now, and addressed by the bare route — which the route effect maps
+    // back onto "an empty tab is active", finding this one already is.
+    workspace.activate(id);
+    navigate(bare);
+  }, [workspace, openTab, navigate, bare]);
+
+  /** "+": a new empty tab, in front, at the bare route. */
+  const newTab = useCallback((): void => {
+    workspace.newTab();
+    navigate(bare);
+  }, [workspace, navigate, bare]);
+
+  /** The breadcrumb's kind menu: another document of the same kind takes this tab's place. */
+  const replaceTab = useCallback((id: TabId, kind: DocKind, name: string): void => {
+    workspace.open(kind, name, { into: id });
+    navigate({ page: PAGE_OF[kind], name });
+  }, [workspace, navigate]);
 
   // --- the listings, and the propositions workflow that authors against them ----------------
   const [scratch] = useState(() => new RuleEditorStore({ rule: { spec: 'customer.is-active' } }));
@@ -218,12 +236,11 @@ export function WorkspaceShell(props: {
   const [palette, setPalette] = useState<'open' | 'explorer' | null>(null);
   const [dialog, setDialog] = useState<DialogSeed | null>(null);
   const [dialogError, setDialogError] = useState<string | null>(null);
-  const [closing, setClosing] = useState<TabId | null>(null);
+  const [pending, setPending] = useState<Pending | null>(null);
   const [compact, setCompact] = useState(false);
   const [actionsHost, setActionsHost] = useState<HTMLElement | null>(null);
 
   useCommandKey(() => setPalette('open'));
-  useCloseTabKey(state.active, setClosing);
 
   const defaultModelType = entries.map((entry) => entry.modelType).sort()[0] ?? 'customer';
   const modelTypeOf = (name: string): string =>
@@ -301,22 +318,38 @@ export function WorkspaceShell(props: {
     );
   };
 
-  const closingDoc = closing === null ? null : state.docs[closing] ?? null;
+  const pendingDoc = pending === null ? null : state.docs[pending.id] ?? null;
   /**
-   * Closes a tab. When it was the active one the workspace has picked its neighbour, and the
-   * route goes there — or to the bare page when nothing is left; an inactive tab's close leaves
-   * the route alone.
+   * Carries out a settled act on a tab — closed, or emptied back to the catalog — and dismisses
+   * the question that may have been asked about it. When the tab was the active one the workspace
+   * has already picked what stands in front now — its neighbour on a close, the empty tab left in
+   * its place on an unload — and the route goes there, to the bare route when that is an empty
+   * tab. An inactive tab's act leaves the route alone.
    */
-  const closeTab = useCallback((id: TabId): void => {
+  const proceed = useCallback(({ id, act }: Pending): void => {
     const wasActive = workspace.getState().active === id;
-    workspace.close(id);
-    setClosing(null);
+    if (act === 'close') workspace.close(id);
+    else workspace.unload(id);
+    setPending(null);
     if (!wasActive || route.page === 'admin') return;
     const next = workspace.getState().active;
     const doc = next === null ? null : workspace.getState().docs[next] ?? null;
-    navigate(doc ? { page: PAGE_OF[doc.kind], name: doc.name } : { page: route.page, name: null });
-  }, [workspace, navigate, route.page]);
+    navigate(doc ? { page: PAGE_OF[doc.kind], name: doc.name } : bare);
+  }, [workspace, navigate, route.page, bare]);
+
+  const closeTab = useCallback((id: TabId): void => proceed({ id, act: 'close' }), [proceed]);
   closeTabRef.current = closeTab;
+
+  /**
+   * Asks before a tab loses its draft — the close question, for closing and for unloading alike.
+   * An empty tab has nothing to lose, so it closes outright.
+   */
+  const requestClose = useCallback((id: TabId): void => {
+    if (isEmptyTab(id)) closeTab(id);
+    else setPending({ id, act: 'close' });
+  }, [closeTab]);
+  const requestUnload = useCallback((id: TabId): void => setPending({ id, act: 'unload' }), []);
+  useCloseTabKey(state.active, requestClose);
 
   // Each tab's save, registered by its document: what the close question's Save & close runs. The
   // sinks are cached per tab so a document is handed the same one on every render — a fresh one
@@ -329,11 +362,14 @@ export function WorkspaceShell(props: {
       else delete savers.current[id];
     });
   }, []);
-  const saveAndClose = async (id: TabId): Promise<void> => {
-    setClosing(null);
-    if (await savers.current[id]?.()) closeTab(id);
+  const saveAndProceed = async (target: Pending): Promise<void> => {
+    setPending(null);
+    if (await savers.current[target.id]?.()) proceed(target);
   };
-  const openIds = useMemo(() => new Set(state.tabs), [state.tabs]);
+  const openIds = useMemo(() => new Set(state.tabs.filter((id) => !isEmptyTab(id))), [state.tabs]);
+  const siblingsOf = (doc: OpenDoc): string[] => (doc.kind === 'rule' ? rules : entries)
+    .map((listed) => listed.name)
+    .filter((name) => name !== doc.name);
 
   return (
     <>
@@ -343,7 +379,8 @@ export function WorkspaceShell(props: {
         <TabStrip
           workspace={workspace}
           onActivate={activateTab}
-          onRequestClose={setClosing}
+          onRequestClose={requestClose}
+          onNewTab={newTab}
           onOpen={() => setPalette('open')}
           onCompactChange={setCompact}
         />
@@ -353,8 +390,23 @@ export function WorkspaceShell(props: {
 
       {state.tabs.map((id) => {
         const doc = state.docs[id];
-        if (!doc) return null;
         const active = id === state.active;
+        if (!doc) {
+          // An empty tab: the catalog, in a panel of its own so its filter survives a switch.
+          return (
+            <section key={id} className="tab-panel" role="tabpanel" aria-label="Catalog" hidden={!active}>
+              <CatalogPane
+                rules={rules}
+                propositions={entries}
+                open={openIds}
+                // Lands in this tab: it is the active one, and empty, which is where `open` goes.
+                onOpen={openTab}
+                onNew={() => openDialog(newPropositionSeed)}
+                onManage={() => setPalette('explorer')}
+              />
+            </section>
+          );
+        }
         return (
           <TabPanel
             key={id}
@@ -365,7 +417,10 @@ export function WorkspaceShell(props: {
             // The actions move into the bar only for the tab in front, and only while the strip
             // is a dropdown; every other panel keeps them in its own editor header.
             actionsHost={active && compact ? actionsHost : null}
+            siblings={siblingsOf(doc)}
             onClose={() => closeTab(id)}
+            onUnload={() => requestUnload(id)}
+            onReplace={(name) => replaceTab(id, doc.kind, name)}
             onOpenProposition={(name) => openTab('proposition', name)}
             onSaver={saverFor(id)}
             onExtractToCatalog={(path) => extractToCatalog(doc, path)}
@@ -373,10 +428,6 @@ export function WorkspaceShell(props: {
           />
         );
       })}
-
-      {activeDoc === null && (
-        <EmptyState onOpen={() => setPalette('open')} onNew={() => openDialog(newPropositionSeed)} />
-      )}
 
       {palette === 'open' && (
         <OpenPalette
@@ -423,14 +474,15 @@ export function WorkspaceShell(props: {
           onCreate={(values) => void createFromDialog(values)}
         />
       )}
-      {closingDoc && (
+      {pending && pendingDoc && (
         <CloseQuestion
-          key={closingDoc.id}
-          doc={closingDoc}
-          onKeep={() => setClosing(null)}
-          onClose={() => closeTab(closingDoc.id)}
+          key={`${pending.act}:${pendingDoc.id}`}
+          doc={pendingDoc}
+          act={pending.act}
+          onKeep={() => setPending(null)}
+          onProceed={() => proceed(pending)}
           // The tab's own save, and the close only once it landed — as the split button does it.
-          onSaveAndClose={() => void saveAndClose(closingDoc.id)}
+          onSaveAndProceed={() => void saveAndProceed(pending)}
         />
       )}
     </>

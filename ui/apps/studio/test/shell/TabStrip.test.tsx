@@ -20,7 +20,7 @@ function renderStrip(tabs: Array<['rule' | 'proposition', string]>, width = 1200
     [{ name: 'customer.is-active', modelType: 'customer', metadataType: 'String', isAsync: false, origin: 'Overridden', version: 2, description: null, quarantine: [] }],
   );
   for (const [kind, name] of tabs) workspace.open(kind, name);
-  const handlers = { onActivate: vi.fn(), onRequestClose: vi.fn(), onOpen: vi.fn() };
+  const handlers = { onActivate: vi.fn(), onRequestClose: vi.fn(), onNewTab: vi.fn(), onOpen: vi.fn() };
   render(<TabStrip workspace={workspace} {...handlers} />);
   return { workspace, ...handlers };
 }
@@ -115,10 +115,39 @@ describe('TabStrip', () => {
     expect(names()).toEqual(['Rule c']);
   });
 
-  it('offers + to open another', async () => {
-    const { onOpen } = renderStrip([['rule', 'a']]);
+  it('offers + for a new, empty tab, and Open for the palette', async () => {
+    const { onNewTab, onOpen } = renderStrip([['rule', 'a']]);
+    await userEvent.click(screen.getByRole('button', { name: 'New tab' }));
+    expect(onNewTab).toHaveBeenCalledTimes(1);
     await userEvent.click(screen.getByRole('button', { name: 'Open' }));
     expect(onOpen).toHaveBeenCalledTimes(1);
+  });
+
+  it('draws an empty tab as the catalog, closable, with no card to show', async () => {
+    const { workspace } = renderStrip([['rule', 'a']]);
+    act(() => { workspace.newTab(); });
+    const empty = screen.getByRole('tab', { name: 'Catalog' });
+    expect(empty.getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByLabelText('Close empty tab')).toBeTruthy();
+    // No document, nothing to describe: focusing it must not reference a card that never mounts.
+    act(() => empty.focus());
+    await act(() => new Promise((resolve) => setTimeout(resolve, 400)));
+    expect(empty.getAttribute('aria-describedby')).toBeNull();
+    expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+
+  it('lists an empty tab in the narrow dropdown, and offers a new tab from it', async () => {
+    const { workspace, onNewTab } = renderStrip([['rule', 'a']], 500);
+    act(() => { workspace.newTab(); });
+    const button = screen.getByRole('button', { name: /^Open documents/ });
+    expect(button.getAttribute('aria-label')).toContain('Catalog');
+    await userEvent.click(button);
+    const menu = screen.getByRole('menu', { name: 'Open documents' });
+    expect(within(menu).getByRole('menuitem', { name: 'Catalog' })).toBeTruthy();
+    await userEvent.click(within(menu).getByRole('menuitem', { name: 'New tab' }));
+    expect(onNewTab).toHaveBeenCalledTimes(1);
+    // The palette stays one click away beside the dropdown: a phone never sees the chips.
+    expect(screen.getByRole('button', { name: 'Open' })).toBeTruthy();
   });
 
   it('becomes a dropdown on a narrow window, listing every tab with a close each', async () => {
@@ -131,7 +160,7 @@ describe('TabStrip', () => {
 
     await userEvent.click(button);
     const menu = screen.getByRole('menu', { name: 'Open documents' });
-    await userEvent.click(within(menu).getByRole('menuitem', { name: /b/ }));
+    await userEvent.click(within(menu).getByRole('menuitem', { name: 'b' }));
     expect(onActivate).toHaveBeenLastCalledWith(tabIdOf('rule', 'b'));
 
     await userEvent.click(button);

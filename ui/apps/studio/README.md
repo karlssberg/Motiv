@@ -11,30 +11,48 @@ The host is `src/Motiv.Studio`; the authoring *logic* beneath this UI lives in
 
 One surface, divided by hairlines: a top bar, the editor, and a rail beside it
 holding the panes that *run* the document. The top bar carries the brand and
-the **tab strip** — one chip per open rule or proposition, any number of them —
-and Admin as a link when the caller may administer grants. The document being
-edited is named where it is edited: the editor pane's header shows the rule or
-proposition, its model type and version, and ends with its own actions, JSON
-and a primary Save. Below 900px the rail stacks under the editor and the palette
-and dialogs fill the screen; below 640px the strip becomes one dropdown naming
-the active document, and the actions move into the bar.
+the **tab strip** — one chip per tab, any number of them, each holding a rule,
+a proposition or nothing yet — and Admin as a link when the caller may
+administer grants. The document being edited is named where it is edited: a
+breadcrumb above it says where the tab is (*Catalog › Rules › name*), and the
+editor pane's header shows the rule or proposition, its model type and version,
+and ends with its own actions, JSON and a primary Save. Below 900px the rail
+stacks under the editor and the palette and dialogs fill the screen; below
+640px the strip becomes one dropdown naming the active tab, and the actions
+move into the bar.
 
 ## Tabs
 
-- **The workspace** (`src/shell/workspace.ts`) — the open documents, one
-  `RuleEditorStore` each, so every tab keeps its own draft, undo stack and
-  unsaved flag while another is edited. The hash route is the active document:
-  `#/rules/<name>` or `#/propositions/<name>` opens (or activates) that tab,
-  closing the active tab navigates to its neighbour, and the bare page means
-  nothing is in front. The tab *list* is remembered per browser session, so a
-  reload keeps the tabs; unsaved edits are not.
+Tabs behave as a browser's: a tab is a slot, not a document. It can be empty,
+can take a document, and can be emptied again, keeping its place each time.
+
+- **The workspace** (`src/shell/workspace.ts`) — the tabs, and the open
+  documents with one `RuleEditorStore` each, so every tab keeps its own draft,
+  undo stack and unsaved flag while another is edited. The hash route is the
+  active tab: `#/rules/<name>` or `#/propositions/<name>` opens (or activates)
+  that document — landing in the active tab while that one is empty — closing
+  the active tab navigates to its neighbour, and the bare page is an empty tab,
+  of which there is always one when nothing else is: a fresh visit lands on it,
+  and closing the last tab leaves it. The *documents* are remembered per
+  browser session, so a reload keeps the tabs; empty tabs and unsaved edits are
+  not.
+- **An empty tab** (`src/panes/CatalogPane.tsx`) shows the catalog — every
+  rule and proposition with its model type, version and description, filterable
+  — and choosing one opens it *in that tab*. New proposition and Manage (the
+  explorer) are offered there too.
+- **The breadcrumb** (`src/shell/TabCrumbs.tsx`) — above a loaded document,
+  *Catalog › Rules › name*: the first segment empties the tab back to the
+  catalog, and the kind segment drops the other documents of that kind to swap
+  one in, in place. Both ask first when the draft has unsaved changes.
 - **The strip** (`src/shell/TabStrip.tsx`) — chips at a fixed width with the
-  kind as an outlined tile (`R` / `P`); whatever does not fit collapses into a
-  "+N" menu and the active tab is always kept visible. Hover or focus a chip for
-  its card: full name, kind and origin, model, version, unsaved state, and the
-  propositions a rule uses. Close from the ×, middle-click, Delete or ⌘W; a tab
-  with unsaved changes asks first (`DiscardDialog`): Keep editing, Save & close,
-  or Discard.
+  kind as an outlined tile (`R` / `P`), and a dashed, hollow one for an empty
+  tab; whatever does not fit collapses into a "+N" menu and the active tab is
+  always kept visible. "+" opens a new empty tab; the search beside it (also
+  ⌘K) opens the palette. Hover or focus a chip for its card: full name, kind
+  and origin, model, version, unsaved state, and the propositions a rule uses.
+  Close from the ×, middle-click, Delete or ⌘W; a tab with unsaved changes asks
+  first (`DiscardDialog`): Keep editing, Save & close (or Save & unload), or
+  Discard.
 - **Sync** (`src/shell/ReferencesStrip.tsx`) — a rule tab lists the
   propositions it references with their versions: *editing* while another tab
   holds one with unsaved changes, *updated* once one is saved after the rule

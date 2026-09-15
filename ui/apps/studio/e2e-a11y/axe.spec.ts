@@ -81,10 +81,10 @@ const RULE_ROUTE = '/#/rules/checkout.eligibility';
 
 const VIEWS: readonly Surface[] = [
   {
-    name: 'the shell, with nothing open',
+    name: 'the shell, on an empty tab showing the catalog',
     reach: async (page) => {
       await visit(page, '/#/rules');
-      await expect(page.getByRole('region', { name: 'Nothing open' })).toBeVisible();
+      await expect(page.getByRole('tabpanel', { name: 'Catalog' })).toBeVisible();
     },
   },
   {
@@ -178,6 +178,14 @@ const HARD_SURFACES: readonly Surface[] = [
       await expect(tab).toBeVisible();
       await tab.focus();
       await expect(page.getByRole('tooltip')).toBeVisible();
+    },
+  },
+  {
+    name: "the breadcrumb's kind menu, open over a document",
+    reach: async (page) => {
+      await visit(page, '/#/rules/can-checkout');
+      await page.getByRole('navigation', { name: 'Where this tab is' }).getByRole('button', { name: 'Rules' }).click();
+      await expect(page.getByRole('menu', { name: 'Other rules' })).toBeVisible();
     },
   },
   {
