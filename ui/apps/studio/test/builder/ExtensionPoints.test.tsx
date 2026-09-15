@@ -1,3 +1,4 @@
+import { tooltipOf } from '../support/tooltip.js';
 import { describe, it, expect, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { RuleEditorStore, type RulesApiClient } from '@motiv-rules/core';
@@ -23,7 +24,11 @@ describe('extension points', () => {
     // The node's own extension point lives in its detail panel, which starts closed.
     fireEvent.click(await screen.findByRole('button', { name: 'details for $.rule' }));
 
-    const expr = screen.getByRole('button', { name: /expression .*coming/i }) as HTMLButtonElement;
-    expect(expr.disabled).toBe(true);
+    // `aria-disabled`, not `disabled`: a disabled button gets no pointer events, so the tooltip
+    // that says why it is off could never appear.
+    const expr = screen.getByRole('button', { name: /expression .*coming/i });
+    expect(expr.getAttribute('aria-disabled')).toBe('true');
+    expect(expr.hasAttribute('disabled')).toBe(false);
+    expect((await tooltipOf(expr)).textContent).toMatch(/backend/);
   });
 });

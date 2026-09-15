@@ -224,13 +224,26 @@ export const CONFORMANCE: readonly ConformanceRow[] = [
   },
   {
     criterion: '1.4.13',
-    conformance: 'Not Evaluated',
+    conformance: 'Supports',
     evidence: [
-      MANUAL('that the hover cards are dismissible, hoverable and persistent — the DSL payload popover and the node hover card'),
+      {
+        kind: 'keyboard',
+        tests: [
+          'appears on keyboard focus, and Escape dismisses it without moving anything',
+          'stays while the pointer is moved onto it, and goes when the pointer leaves',
+          'describes a worded control only while shown, so no IDREF outlives its target',
+          'describes the focused tab with its card, and Escape dismisses it',
+          'keeps the card while the pointer moves onto it (WCAG 1.4.13)',
+        ],
+      },
     ],
     remark:
-      'Studio has additional content on hover and on focus: the DSL strip\'s payload popover and the '
-      + 'builder\'s anchored cards. All three sub-requirements need driving by hand.',
+      'Two things appear on hover and on focus: every control\'s tooltip, which is one mechanism '
+      + '(`shell/Tooltip.tsx`), and the tab strip\'s hover card. Both are dismissible (Escape), '
+      + 'hoverable (the pointer can move onto them) and persistent (they stay until hover or focus '
+      + 'leaves), each driven in a real browser. Native `title` is used nowhere, so no hint is shown '
+      + 'to the pointer alone. The full text of an ellipsised name or expression is also revealed on '
+      + 'hover, but it repeats what is already in the DOM and adds nothing a reader could lose.',
   },
   {
     criterion: '2.1.1',

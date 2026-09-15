@@ -3,6 +3,7 @@ import { finishLocalName, isValidLocalName } from '@motiv-rules/core';
 import { useRuleEditorStore } from '@motiv-rules/react';
 import { usePopoverCard } from './usePopoverCard.js';
 import { LocalNameInput } from './LocalNameInput.js';
+import { Tooltip } from '../shell/Tooltip.js';
 
 /**
  * The "extract this subtree into a reusable definition" prompt: a small card seeded from the
@@ -70,8 +71,8 @@ export function ExtractLocalPrompt(props: {
         />
       </label>
       <div className="dsl-popover-actions">
-        <button type="button" onClick={create} disabled={invalid}>Create</button>
-        <button type="button" onClick={close}>Cancel</button>
+        <Tooltip text="Create the definition and refer to it here"><button type="button" onClick={create} disabled={invalid}>Create</button></Tooltip>
+        <Tooltip text="Close without extracting"><button type="button" onClick={close}>Cancel</button></Tooltip>
       </div>
     </div>
   );

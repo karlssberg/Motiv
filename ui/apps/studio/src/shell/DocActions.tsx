@@ -66,7 +66,7 @@ export function DocActions(props: {
   const variants = SAVE_VARIANTS.map((variant) => ({ ...variant, label: `${variant.label}${detail}` }));
 
   return (
-    <Toolbar actions={[{ id: 'json', label: 'JSON', icon: IconJson, onActivate: props.onJson }]}>
+    <Toolbar actions={[{ id: 'json', label: 'JSON', hint: 'Show the document as JSON', icon: IconJson, onActivate: props.onJson }]}>
       <SplitButton
         id="save"
         icon={IconSave}

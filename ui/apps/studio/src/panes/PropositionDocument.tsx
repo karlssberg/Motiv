@@ -129,6 +129,7 @@ export function PropositionDocument(props: {
           title={
             <DocumentTitle
               name={<NameTrail name={tab.name} />}
+              fullName={tab.name}
               modelType={modelType}
               version={loaded?.version}
             />

@@ -25,10 +25,19 @@ const CARD_ID = 'tab-card';
 
 export interface HoverTarget { id: TabId; rect: DOMRect }
 
+/** Whether a pointer's destination is the card itself — leaving the tab for the card is not leaving. */
+function intoCard(target: EventTarget | null): boolean {
+  return target instanceof Node && document.getElementById(CARD_ID)?.contains(target) === true;
+}
+
 /**
  * A delayed hover / focus card. Returns spread-able handlers for each tab, and the target the
  * strip draws the card for. The delay keeps a pass of the pointer across the strip from flashing
  * a card per chip; focus shows it after the same delay, so keyboard users get the same card.
+ *
+ * The card stays while the pointer is over it and goes when the pointer leaves it — content that
+ * appears on hover must be hoverable (WCAG 1.4.13), and the card sits close enough under its tab
+ * that a pointer drifting down onto it would otherwise dismiss the thing it was reaching for.
  */
 export function useHoverCard(delayMs = 350) {
   const [shown, setShown] = useState<HoverTarget | null>(null);
@@ -45,14 +54,14 @@ export function useHoverCard(delayMs = 350) {
 
   const bind = (id: TabId) => ({
     onMouseEnter: (event: MouseEvent<HTMLElement>) => show(id, event.currentTarget),
-    onMouseLeave: hide,
+    onMouseLeave: (event: MouseEvent<HTMLElement>) => { if (!intoCard(event.relatedTarget)) hide(); },
     onFocus: (event: FocusEvent<HTMLElement>) => show(id, event.currentTarget),
     onBlur: hide,
     onKeyDown: (event: KeyboardEvent<HTMLElement>) => { if (event.key === 'Escape') hide(); },
     // Dropped while the card is unmounted: an IDREF to an absent element is invalid, not harmless.
     'aria-describedby': shown?.id === id ? CARD_ID : undefined,
   });
-  return { shown, bind };
+  return { shown, bind, hide };
 }
 
 function CardBody(props: { workspace: Workspace; doc: OpenDoc }) {
@@ -104,7 +113,7 @@ function CardBody(props: { workspace: Workspace; doc: OpenDoc }) {
 }
 
 /** The card, fixed to the viewport beneath its anchor and kept inside the window's right edge. */
-export function TabHoverCard(props: { workspace: Workspace; shown: HoverTarget | null }) {
+export function TabHoverCard(props: { workspace: Workspace; shown: HoverTarget | null; onLeave: () => void }) {
   const state = useSyncExternalStore(props.workspace.subscribe, props.workspace.getState);
   if (!props.shown) return null;
   const doc = state.docs[props.shown.id];
@@ -112,7 +121,7 @@ export function TabHoverCard(props: { workspace: Workspace; shown: HoverTarget |
   const { rect } = props.shown;
   const style = { top: rect.bottom + 6, left: Math.max(8, Math.min(rect.left, window.innerWidth - 336)) };
   return (
-    <div id={CARD_ID} role="tooltip" className="tab-card" style={style}>
+    <div id={CARD_ID} role="tooltip" className="tab-card" style={style} onMouseLeave={props.onLeave}>
       <CardBody workspace={props.workspace} doc={doc} />
     </div>
   );

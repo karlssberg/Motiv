@@ -1,4 +1,5 @@
 import { Modal } from './Modal.js';
+import { Tooltip } from './Tooltip.js';
 
 /**
  * The question asked before a document with unsaved changes is closed.
@@ -24,9 +25,15 @@ export function DiscardDialog(props: {
         <h2 className="dialog-title">Discard changes to “{props.name}”?</h2>
         <p className="dialog-text">What you changed since it was opened will be lost.</p>
         <div className="dialog-actions">
-          <button type="button" className="btn btn-secondary" onClick={props.onKeep}>Keep editing</button>
-          <button type="button" className="btn btn-secondary" onClick={props.onSaveAndClose}>Save & {verb}</button>
-          <button type="button" className="btn btn-danger" onClick={props.onDiscard}>Discard changes</button>
+          <Tooltip text="Go back to the draft as it is">
+            <button type="button" className="btn btn-secondary" onClick={props.onKeep}>Keep editing</button>
+          </Tooltip>
+          <Tooltip text={`Save the draft, then ${verb}`}>
+            <button type="button" className="btn btn-secondary" onClick={props.onSaveAndClose}>Save & {verb}</button>
+          </Tooltip>
+          <Tooltip text={`${verb === 'close' ? 'Close' : 'Unload'} without saving — the changes are lost`}>
+            <button type="button" className="btn btn-danger" onClick={props.onDiscard}>Discard changes</button>
+          </Tooltip>
         </div>
       </div>
     </Modal>

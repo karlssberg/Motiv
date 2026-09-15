@@ -1,6 +1,7 @@
 import { finishLocalName, isValidLocalName, type RuleNode } from '@motiv-rules/core';
 import { useRuleEditorStore } from '@motiv-rules/react';
 import { extractionSeed } from './extractionSeed.js';
+import { Tooltip } from '../shell/Tooltip.js';
 
 /** Renders a payload for display: a string as itself, anything else as compact JSON. */
 function show(payload: unknown): string {
@@ -45,16 +46,19 @@ export function InlineDecorationNotice(props: { path: string; node: RuleNode }) 
       {node.whenFalse !== undefined && (
         <p className="decoration-notice-payload">when false — {show(node.whenFalse)}</p>
       )}
-      <button
-        type="button"
-        className="btn"
-        aria-label={`extract ${path}`}
-        disabled={refusal !== undefined}
-        {...(refusal ? { title: refusal } : {})}
-        onClick={() => store.defineLocal(path, name)}
-      >
-        Extract to definition
-      </button>
+      {/* `aria-disabled`, not `disabled`: the refusal is the tooltip, and a disabled button gets
+          no pointer events to show one — nor a place in the tab order to be read from. */}
+      <Tooltip text={refusal ?? `Make this a definition named "${name}" and refer to it here`}>
+        <button
+          type="button"
+          className="btn"
+          aria-label={`extract ${path}`}
+          aria-disabled={refusal !== undefined ? true : undefined}
+          onClick={() => { if (refusal === undefined) store.defineLocal(path, name); }}
+        >
+          Extract to definition
+        </button>
+      </Tooltip>
     </div>
   );
 }

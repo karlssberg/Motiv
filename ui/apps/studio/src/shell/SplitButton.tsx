@@ -1,6 +1,7 @@
 import { useEffect, useId, useState, type KeyboardEvent } from 'react';
 import { usePopoverCard } from '../builder/usePopoverCard.js';
 import { IconCheck, IconChevronDown, type IconProps } from './icons.js';
+import { Tooltip } from './Tooltip.js';
 
 /** One way of doing the split button's action: a word, and the consequence it carries. */
 export interface SplitVariant {
@@ -82,7 +83,7 @@ export function SplitButton(props: {
 
   return (
     <span className="split">
-      <button
+      <Tooltip text={unavailable ? `${current.label} — ${unavailable}` : current.description}><button
         type="button"
         className="btn split-main"
         aria-disabled={unavailable ? true : undefined}
@@ -91,8 +92,8 @@ export function SplitButton(props: {
       >
         <Icon size={14} />
         {current.label}
-      </button>
-      <button
+      </button></Tooltip>
+      <Tooltip text={optionsLabel}><button
         ref={trigger}
         type="button"
         className="btn split-toggle"
@@ -104,7 +105,7 @@ export function SplitButton(props: {
         onClick={() => { if (!unavailable) setOpen(!open); }}
       >
         <IconChevronDown size={14} />
-      </button>
+      </button></Tooltip>
       {unavailable && <span id={reasonId} className="sr-only">{props.unavailable}</span>}
       {open && (
         <div

@@ -1,5 +1,6 @@
 import { useEffect, useId, type KeyboardEvent } from 'react';
 import { usePopoverCard } from './usePopoverCard.js';
+import { Tooltip } from '../shell/Tooltip.js';
 
 /** One entry on offer: the value it stands for, and the text that names it. */
 export interface PickerOption<T extends string> {
@@ -49,6 +50,8 @@ export function ListboxPicker<T extends string>(props: {
   triggerClassName: string;
   /** Modifier on the popup card, on top of the shared `node-menu`. */
   listClassName: string;
+  /** What choosing does, for the trigger's tooltip. */
+  hint: string;
 }) {
   const { options, value, onChoose, open, setOpen } = props;
   const { trigger, card, style, placed, close } = usePopoverCard(open, setOpen);
@@ -79,7 +82,7 @@ export function ListboxPicker<T extends string>(props: {
 
   return (
     <>
-      <button
+      <Tooltip text={props.hint}><button
         ref={trigger}
         type="button"
         role="combobox"
@@ -97,7 +100,7 @@ export function ListboxPicker<T extends string>(props: {
         onClick={() => setOpen(!open)}
       >
         {label}
-      </button>
+      </button></Tooltip>
       {open && (
         <div
           ref={card}

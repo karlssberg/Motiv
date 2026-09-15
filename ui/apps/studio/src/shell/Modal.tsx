@@ -1,5 +1,6 @@
 import { useEffect, useRef, type MouseEvent, type ReactNode } from 'react';
 import { IconClose } from './icons.js';
+import { Tooltip } from './Tooltip.js';
 
 /**
  * A modal built on the native `<dialog>` element.
@@ -82,9 +83,9 @@ export function Modal(props: {
         whatever their own markup asked for. jsdom's `showModal` shim sets `open` and nothing else,
         so no unit test could see it.
       */}
-      <button type="button" className="ghost modal-close" aria-label="Close" title="Close" onClick={onClose}>
+      <Tooltip text="Close" shortcut="Esc"><button type="button" className="ghost modal-close" aria-label="Close" onClick={onClose}>
         <IconClose size={15} />
-      </button>
+      </button></Tooltip>
     </dialog>
   );
 }

@@ -2,6 +2,7 @@ import { IconChevronDown } from './icons.js';
 import { KIND_LABEL, KindGlyph } from './TabCard.js';
 import { MenuList, useMenu } from './Menu.js';
 import type { DocKind } from './workspace.js';
+import { Tooltip } from './Tooltip.js';
 
 /**
  * Where a loaded tab is, as a browser's address would say it: *Catalog › Rules › name*. Each
@@ -22,10 +23,10 @@ export function TabCrumbs(props: {
   const kinds = `${KIND_LABEL[props.kind]}s`;
   return (
     <nav className="crumbs" aria-label="Where this tab is">
-      <button type="button" className="crumb" onClick={props.onUnload} title="Back to the catalog, in this tab">Catalog</button>
+      <Tooltip text="Back to the catalog, in this tab"><button type="button" className="crumb" onClick={props.onUnload}>Catalog</button></Tooltip>
       <span className="crumb-sep" aria-hidden="true">›</span>
       <span className="overflow">
-        <button
+        <Tooltip text={`Open another of the ${kinds.toLowerCase()} in this tab`}><button
           type="button"
           className="crumb"
           aria-haspopup="menu"
@@ -33,7 +34,7 @@ export function TabCrumbs(props: {
           onClick={menu.toggle}
         >
           {kinds}<IconChevronDown size={11} />
-        </button>
+        </button></Tooltip>
         {menu.open && (
           <MenuList label={`Other ${kinds.toLowerCase()}`} className="crumb-menu">
             {props.siblings.length === 0 && <li role="none" className="overflow-none">No other {kinds.toLowerCase()}</li>}

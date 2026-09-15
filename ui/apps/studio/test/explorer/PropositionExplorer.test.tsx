@@ -1,3 +1,4 @@
+import { tooltipOf } from '../support/tooltip.js';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -156,7 +157,7 @@ describe('PropositionExplorer', () => {
     expect(screen.getByRole('treeitem', { name: /is-large/ }).textContent).toContain('order');
   });
 
-  it('marks a quarantined proposition and shows why', () => {
+  it('marks a quarantined proposition and shows why', async () => {
     renderExplorer({
       entries: [entry({
         name: 'customer.broken',
@@ -166,7 +167,8 @@ describe('PropositionExplorer', () => {
 
     const leaf = screen.getByRole('treeitem', { name: /broken/ });
     expect(leaf.textContent).toContain('quarantined');
-    expect(leaf.getAttribute('title')).toContain('unknown spec');
+    // The reasons are on the row — the tab stop — so the keyboard reaches them as the pointer does.
+    expect((await tooltipOf(leaf)).textContent).toContain('unknown spec');
   });
 
   it('keeps quarantine distinct from origin', () => {

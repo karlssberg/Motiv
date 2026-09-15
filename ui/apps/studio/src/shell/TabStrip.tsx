@@ -5,6 +5,7 @@ import { MenuList, useMenu, type MenuState } from './Menu.js';
 import { KIND_LABEL, KindTile, TabHoverCard, splitName, useHoverCard } from './TabCard.js';
 import { tabInteractions } from './tabEvents.js';
 import { isEmptyTab, type OpenDoc, type TabId, type Workspace } from './workspace.js';
+import { Tooltip } from './Tooltip.js';
 
 /** A chip's width including its gap, so how many fit is arithmetic on the strip's width. */
 const CHIP_WIDTH = 176;
@@ -71,7 +72,7 @@ function EmptyChip(props: StripHandlers & { id: TabId; active: boolean; visible:
         <EmptyTile />
         <span className="chip-title chip-title-empty">{EMPTY_LABEL}</span>
       </button>
-      <button
+      <Tooltip text="Close this tab"><button
         type="button"
         className="chip-close"
         aria-label="Close empty tab"
@@ -80,7 +81,7 @@ function EmptyChip(props: StripHandlers & { id: TabId; active: boolean; visible:
         onClick={() => props.onRequestClose(props.id)}
       >
         <IconClose size={11} />
-      </button>
+      </button></Tooltip>
     </div>
   );
 }
@@ -121,7 +122,7 @@ function Chip(props: StripHandlers & { doc: OpenDoc; active: boolean; visible: r
         the keyboard closes with Delete on the tab or ⌘W. The label still names it for anyone
         reading the DOM, and the focused tab's card says "Unsaved changes".
       */}
-      <button
+      <Tooltip text={dirty ? 'Close this tab — it has unsaved changes' : 'Close this tab'} shortcut="⌘W"><button
         type="button"
         className="chip-close"
         aria-label={closeLabel(doc.name, dirty)}
@@ -131,7 +132,7 @@ function Chip(props: StripHandlers & { doc: OpenDoc; active: boolean; visible: r
       >
         <span className="chip-dot" aria-hidden="true" />
         <IconClose size={11} />
-      </button>
+      </button></Tooltip>
     </div>
   );
 }
@@ -234,12 +235,12 @@ function frontTabName(strip: StripTabs): string {
 function StripButtons(props: Pick<StripHandlers, 'onNewTab' | 'onOpen'>) {
   return (
     <>
-      <button type="button" className="ghost chip-new" aria-label="New tab" title="New tab" onClick={props.onNewTab}>
+      <Tooltip text="New tab"><button type="button" className="ghost chip-new" aria-label="New tab" onClick={props.onNewTab}>
         <IconNew size={14} />
-      </button>
-      <button type="button" className="ghost chip-new" aria-label="Open" title="Open (⌘K)" onClick={props.onOpen}>
+      </button></Tooltip>
+      <Tooltip text="Open a rule or proposition" shortcut="⌘K"><button type="button" className="ghost chip-new" aria-label="Open" onClick={props.onOpen}>
         <IconSearch size={14} />
-      </button>
+      </button></Tooltip>
     </>
   );
 }
@@ -249,7 +250,7 @@ function TabDropdown(props: StripHandlers & StripTabs & { menu: MenuState }) {
   const activeDoc = active === null ? undefined : docs[active];
   return (
     <div className="overflow tab-dropdown">
-      <button
+      <Tooltip text="Switch between the open documents"><button
         type="button"
         className={`chip active tab-dropdown-button${activeDoc && activeDoc.store.getState().dirty ? ' dirty' : ''}`}
         aria-haspopup="menu"
@@ -262,7 +263,7 @@ function TabDropdown(props: StripHandlers & StripTabs & { menu: MenuState }) {
         <span className="chip-dot" aria-hidden="true" />
         <span className="tab-dropdown-count" aria-hidden="true">{tabs.length}</span>
         <IconChevronDown size={12} />
-      </button>
+      </button></Tooltip>
       {menu.open && (
         <MenuList label="Open documents">
           {tabs.map((id) => (
@@ -364,7 +365,7 @@ export function TabStrip(props: StripHandlers & { workspace: Workspace; onCompac
       <StripButtons {...props} />
       {hidden.length > 0 && (
         <div className="overflow">
-          <button
+          <Tooltip text={`${hidden.length} more open ${hidden.length === 1 ? 'document' : 'documents'}`}><button
             type="button"
             className="ghost ghost-labelled overflow-button"
             aria-haspopup="menu"
@@ -373,7 +374,7 @@ export function TabStrip(props: StripHandlers & { workspace: Workspace; onCompac
             onClick={menu.toggle}
           >
             <span aria-hidden="true">+{hidden.length}</span><IconChevronDown size={12} />
-          </button>
+          </button></Tooltip>
           {menu.open && (
             <MenuList label="More open documents">
               {hidden.map((id) => (
@@ -383,7 +384,7 @@ export function TabStrip(props: StripHandlers & { workspace: Workspace; onCompac
           )}
         </div>
       )}
-      <TabHoverCard workspace={props.workspace} shown={hover.shown} />
+      <TabHoverCard workspace={props.workspace} shown={hover.shown} onLeave={hover.hide} />
     </div>
   );
 }

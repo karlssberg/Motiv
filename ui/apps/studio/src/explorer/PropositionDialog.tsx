@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { PropositionListEntry, RuleDocument } from '@motiv-rules/core';
 import { Modal } from '../shell/Modal.js';
+import { Tooltip } from '../shell/Tooltip.js';
 
 /** What the New / Derive / Override flows start from. */
 export interface DialogSeed {
@@ -210,12 +211,12 @@ export function PropositionDialog(props: {
         {props.error !== null && <p className="dialog-error" role="alert">{props.error}</p>}
 
         <div className="dialog-actions">
-          <button type="button" className="btn" onClick={props.onCancel}>Cancel</button>
+          <Tooltip text="Close without creating anything"><button type="button" className="btn" onClick={props.onCancel}>Cancel</button></Tooltip>
           {/* `aria-disabled`, not `disabled`: `disabled` removes the button from the tab order in
               every major browser, which would leave a keyboard screen-reader user unable to reach it
               and so unable to hear the `aria-describedby` explanation. Matches `Toolbar`'s pattern —
               an unavailable control that stays focusable, and a handler that returns early. */}
-          <button
+          <Tooltip text="Create this proposition in the catalog"><button
             type="button"
             className="btn"
             aria-disabled={canCreate ? undefined : true}
@@ -223,7 +224,7 @@ export function PropositionDialog(props: {
             onClick={submit}
           >
             Create
-          </button>
+          </button></Tooltip>
         </div>
       </div>
     </Modal>

@@ -896,6 +896,50 @@ textarea.control {
   outline-offset: 1px;
 }
 
+/* Tooltip: what a control does, once the pointer or focus has rested on it (see `Tooltip.tsx`).
+   The same dark chrome in both schemes as the CodeMirror diagnostic hover, so the two kinds of
+   hint read as one. Fixed and placed by `placeTooltip`, above the trigger by default; `.tooltip-
+   below` is the flipped case. Pointer events stay on so the pointer can move onto the tip without
+   dismissing it (WCAG 1.4.13). */
+.tooltip {
+  z-index: 40;
+  max-width: 320px;
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: var(--dsl-tooltip-bg);
+  color: var(--dsl-tooltip-fg);
+  font: 12px/1.35 var(--sans);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 30%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.tooltip-kbd {
+  font: 10.5px var(--mono);
+  opacity: 0.7;
+}
+
+/* Peek: an ellipsised element's full text, extending the element's own box to the right in its
+   own font and colours (see `Truncated.tsx`). It is the element finished, not a second thing near
+   it, so it carries the page's surface rather than tooltip chrome — and only a shadow on the side
+   it grew from, so the join is invisible. It is a decoration for the eye: `aria-hidden`, and it
+   never takes the pointer. */
+.peek {
+  z-index: 40;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  white-space: nowrap;
+  background: var(--surface);
+  outline: 1px solid var(--border);
+  box-shadow: 6px 0 16px -6px rgb(0 0 0 / 35%);
+  pointer-events: none;
+}
+
 /* A popup card, positioned in viewport coordinates by `placePopover` — the same flip-and-clamp
    the DSL pane's payload card uses. Fixed rather than absolute so an ancestor's `overflow` cannot
    clip it, since rows sit inside a scrolling pane. Worn by both the row actions menu and the
@@ -2350,7 +2394,9 @@ button.node-dsl:focus-visible {
 .tab-card {
   position: fixed; z-index: 60; width: 320px; padding: 10px 12px;
   background: var(--sh-panel); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow);
-  font: 12px/1.45 var(--sans); color: var(--text); pointer-events: none;
+  /* Takes the pointer: content that appears on hover must be hoverable (WCAG 1.4.13), and the
+     card is where the pointer lands when it drifts down from the tab. */
+  font: 12px/1.45 var(--sans); color: var(--text);
 }
 .card-kind { display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--faint); }
 .card-name { font: 600 13px/1.3 var(--mono); margin: 4px 0 6px; word-break: break-all; }

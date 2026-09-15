@@ -1,5 +1,6 @@
 import { useId, type ReactNode } from 'react';
 import type { IconProps } from './icons.js';
+import { Tooltip } from './Tooltip.js';
 
 /**
  * One toolbar action.
@@ -25,6 +26,11 @@ export interface ToolbarAction {
    * reading the tooltips.
    */
   emphasis?: 'primary';
+  /**
+   * What the action does, for its tooltip, where the label alone would not say — "JSON" names a
+   * glyph; "Show the document as JSON" explains it. Absent, the label is the tooltip.
+   */
+  hint?: string | undefined;
 }
 
 /**
@@ -47,7 +53,9 @@ function buttonClass(emphasis: 'primary' | undefined, worded: boolean): string {
  *
  * A labelled button carries its word as visible text and no `aria-label`: the name is stated once,
  * where it is seen, so it cannot drift from what is read out (WCAG 2.5.3, Label in Name). A bare
- * glyph has no visible word, so it carries the `aria-label` and a `title` instead.
+ * glyph has no visible word, so it carries the `aria-label` instead. Every button has a tooltip —
+ * the hint, or the label — and an unavailable one says why in it, so a sighted pointer user
+ * learns what a screen reader is told by the description.
  */
 export function Toolbar(props: {
   actions: ToolbarAction[];
@@ -68,20 +76,22 @@ export function Toolbar(props: {
         const unavailable = action.unavailable !== undefined;
         const reasonId = `${idBase}-${action.id}-reason`;
         const worded = action.emphasis === 'primary' || props.labelled === true;
+        const hint = action.hint ?? action.label;
         return (
           <span key={action.id} className="toolbar-slot">
-            <button
-              type="button"
-              className={buttonClass(action.emphasis, worded)}
-              aria-label={worded ? undefined : action.label}
-              title={worded ? undefined : action.label}
-              aria-disabled={unavailable ? true : undefined}
-              aria-describedby={unavailable ? reasonId : undefined}
-              onClick={() => { if (!unavailable) action.onActivate(); }}
-            >
-              <Icon {...(worded ? { size: 14 } : {})} />
-              {worded && action.label}
-            </button>
+            <Tooltip text={unavailable ? `${hint} — ${action.unavailable}` : hint}>
+              <button
+                type="button"
+                className={buttonClass(action.emphasis, worded)}
+                aria-label={worded ? undefined : action.label}
+                aria-disabled={unavailable ? true : undefined}
+                aria-describedby={unavailable ? reasonId : undefined}
+                onClick={() => { if (!unavailable) action.onActivate(); }}
+              >
+                <Icon {...(worded ? { size: 14 } : {})} />
+                {worded && action.label}
+              </button>
+            </Tooltip>
             {unavailable && <span id={reasonId} className="sr-only">{action.unavailable}</span>}
           </span>
         );

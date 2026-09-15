@@ -5,6 +5,7 @@ import { MODEL_TYPE } from '../App.js';
 import { SchemaViolations } from './SchemaViolations.js';
 import { Tick, Verdict } from './Verdict.js';
 import { Caret, IconPlay } from '../shell/icons.js';
+import { Tooltip } from '../shell/Tooltip.js';
 
 const SAMPLE_MODEL = '{\n  "age": 30,\n  "isActive": true,\n  "orderCount": 2\n}';
 
@@ -56,7 +57,7 @@ export function EvaluatePane(props: { client: RulesApiClient }) {
           />
         </label>
         <div className="run-row">
-          <button type="button" className="btn" onClick={run}><IconPlay size={14} />Evaluate</button>
+          <Tooltip text="Evaluate the draft against this sample"><button type="button" className="btn" onClick={run}><IconPlay size={14} />Evaluate</button></Tooltip>
           {evaluation.status === 'ready' && (
             <Verdict
               label="outcome"
@@ -90,7 +91,7 @@ export function EvaluatePane(props: { client: RulesApiClient }) {
                     instead, since what it asserts is unpacked by the rows beneath it.
                   */}
                   {row.hasChildren ? (
-                    <button
+                    <Tooltip text={row.collapsed ? 'Show what this depends on' : 'Hide what this depends on'}><button
                       type="button"
                       aria-expanded={!row.collapsed}
                       aria-controls={groupId ?? undefined}
@@ -99,7 +100,7 @@ export function EvaluatePane(props: { client: RulesApiClient }) {
                       onClick={() => toggle(row.id)}
                     >
                       <Caret open={!row.collapsed} size={12} />
-                    </button>
+                    </button></Tooltip>
                   ) : <Tick satisfied={evaluation.result.satisfied} />}
                   <span>{causes}</span>
                 </div>

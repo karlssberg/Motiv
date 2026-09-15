@@ -1,4 +1,5 @@
 import { isSpecNode, type RuleNode } from '@motiv-rules/core';
+import { Tooltip } from '../shell/Tooltip.js';
 
 /**
  * The extension points offered beside a node's decoration fields. Currently only the disabled
@@ -16,14 +17,15 @@ export function NodeToolbar(props: { path: string; node: RuleNode }) {
 
   return (
     <div className="node-toolbar">
-      <button
-        type="button"
-        className="btn ext-point"
-        disabled
-        title="requires backend (coming)"
-      >
-        expression — coming
-      </button>
+      <Tooltip text="Not available yet — expressions need the backend">
+        <button
+          type="button"
+          className="btn ext-point"
+          aria-disabled="true"
+        >
+          expression — coming
+        </button>
+      </Tooltip>
     </div>
   );
 }

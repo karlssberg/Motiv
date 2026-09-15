@@ -3,6 +3,7 @@ import { parse, printInline, tokenSpans, type Catalog, type RuleNode } from '@mo
 import { useRuleEditorStore } from '@motiv-rules/react';
 
 import { useInlineDslEditor, type OpeningPoint } from './useInlineDslEditor.js';
+import { Truncated } from '../shell/Truncated.js';
 
 /** A document with no definitions — a stable identity, so it is not a fresh dep every render. */
 const NO_LOCALS: ReadonlySet<string> = new Set();
@@ -98,9 +99,9 @@ export function NodeDsl(props: {
         <span ref={host} className="node-dsl-host" />
         {/* Below the field rather than beside it: a message long enough to name what is missing
             is long enough to crowd out the expression you are typing. Truncated to one line,
-            with the full text on the title so nothing is lost. */}
+            and revealed in full on hover so nothing is lost. */}
         {error && (
-          <span role="alert" className="error node-dsl-error" title={error}>{error}</span>
+          <Truncated text={error}><span role="alert" className="error node-dsl-error">{error}</span></Truncated>
         )}
       </span>
     );
@@ -116,6 +117,7 @@ export function NodeDsl(props: {
   // never had. The editor takes focus itself once mounted, so nothing is lost by not focusing the
   // button we are about to replace.
   return (
+    <Truncated text={text}>
     <button
       type="button"
       className="node-dsl"
@@ -133,5 +135,6 @@ export function NodeDsl(props: {
         <span key={span.key} className={`tok-${span.kind}`}>{span.value}</span>
       ))}
     </button>
+    </Truncated>
   );
 }

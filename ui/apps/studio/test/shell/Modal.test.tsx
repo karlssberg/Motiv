@@ -1,3 +1,4 @@
+import { tooltipOf } from '../support/tooltip.js';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -14,15 +15,16 @@ describe('Modal', () => {
     expect(screen.getByRole('dialog', { name: 'Propositions' })).toBeTruthy();
   });
 
-  it('reports the close control, and titles it like every other icon button', async () => {
+  it('reports the close control, with a tooltip like every other icon button', async () => {
     const onClose = vi.fn();
     render(<Modal label="Propositions" onClose={onClose}>body</Modal>);
     const close = screen.getByRole('button', { name: /close/i });
 
     // A bare glyph teaches nothing on first sight, so an icon-only button carries both — the
-    // `aria-label` for assistive technology and the `title` for the pointer. `Toolbar` states the
-    // same rule for the three shell actions; this was the one button departing from it.
-    expect(close.getAttribute('title')).toBe('Close');
+    // `aria-label` for assistive technology and a tooltip for the pointer. Never a `title`: the
+    // browser would show both, and `title` shows for no keyboard user.
+    expect(close.hasAttribute('title')).toBe(false);
+    expect((await tooltipOf(close)).textContent).toContain('Close');
 
     await userEvent.click(close);
     expect(onClose).toHaveBeenCalledTimes(1);

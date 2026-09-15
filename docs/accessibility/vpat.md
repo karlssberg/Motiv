@@ -53,9 +53,9 @@ The **Evidence** column names what the verdict rests on:
 
 | Verdict | Criteria |
 |---|---|
-| Supports | 27 |
+| Supports | 28 |
 | Not Applicable | 8 |
-| Not Evaluated | 15 |
+| Not Evaluated | 14 |
 
 ## Level A
 
@@ -106,7 +106,7 @@ The **Evidence** column names what the verdict rests on:
 | 1.4.10 Reflow | Not Evaluated | **manual pass owed** | The layout has a single `max-width: 900px` breakpoint, which is coarser than this criterion asks about. The DSL strip and the builder rows are where two-dimensional scrolling would appear first. |
 | 1.4.11 Non-text Contrast | Not Evaluated | **manual pass owed** | axe has no rule for this criterion at any version — `color-contrast` is text contrast only — so the sweep passing says nothing about it. This row previously read "Enforced by axe", which was the one false claim in the report and is what the record's gate now prevents. |
 | 1.4.12 Text Spacing | Supports | axe (1) | No inline style overrides line height, letter spacing or word spacing. |
-| 1.4.13 Content on Hover or Focus | Not Evaluated | **manual pass owed** | Studio has additional content on hover and on focus: the DSL strip's payload popover and the builder's anchored cards. All three sub-requirements need driving by hand. |
+| 1.4.13 Content on Hover or Focus | Supports | keyboard suite | Two things appear on hover and on focus: every control's tooltip, which is one mechanism (`shell/Tooltip.tsx`), and the tab strip's hover card. Both are dismissible (Escape), hoverable (the pointer can move onto them) and persistent (they stay until hover or focus leaves), each driven in a real browser. Native `title` is used nowhere, so no hint is shown to the pointer alone. The full text of an ellipsised name or expression is also revealed on hover, but it repeats what is already in the DOM and adds nothing a reader could lose. |
 | 2.4.5 Multiple Ways | Supports | structural | A proposition is reachable two ways that do not depend on each other: browsing the namespace tree, and searching the command palette. Every view is additionally addressable by its hash route. Studio is a single-page application; the routes are its pages and each is directly linkable. |
 | 2.4.6 Headings and Labels | Not Evaluated | **manual pass owed** | Presence is checked mechanically under 4.1.2 and 3.3.2. Descriptiveness is a judgement about wording, which is what the manual pass reads for. |
 | 2.4.7 Focus Visible | Not Evaluated | **manual pass owed** | `:focus-visible` outlines are defined for the builder controls, the pickers, the DSL chips and the explorer rows. Whether *every* focusable control is covered — and whether the indicator is visible against both palettes — is not something the stylesheet can be read to prove. |
@@ -129,7 +129,6 @@ before the criterion above it can be answered.
 - **1.4.4 Resize Text** — establish that content and function survive 200% text zoom without loss or clipping.
 - **1.4.10 Reflow** — establish that no view scrolls in two dimensions at a 320px-equivalent width.
 - **1.4.11 Non-text Contrast** — establish that control boundaries, focus indicators and the builder's state marks meet 3:1 against their surrounds.
-- **1.4.13 Content on Hover or Focus** — establish that the hover cards are dismissible, hoverable and persistent — the DSL payload popover and the node hover card.
 - **2.4.3 Focus Order** — establish that focus order preserves meaning across the builder, the inline editors and the palette.
 - **2.4.6 Headings and Labels** — establish that headings and labels describe topic or purpose, rather than merely existing.
 - **2.4.7 Focus Visible** — establish that every focusable control shows a visible indicator, in both colour schemes.

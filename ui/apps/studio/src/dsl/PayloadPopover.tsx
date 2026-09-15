@@ -6,6 +6,7 @@ import {
 import { PayloadDisclosure, payloadPlaceholder } from '../builder/PayloadDisclosure.js';
 import type { DecorationPatch } from '../decorationPatch.js';
 import { ROOT } from '../panes/BuilderPane.js';
+import { Tooltip } from '../shell/Tooltip.js';
 
 /** Metadata types whose payloads are plain text rather than JSON objects. */
 const STRING_METADATA_TYPES = new Set(['String', 'Explanation']);
@@ -185,7 +186,7 @@ export function PayloadPopover(props: {
       <div className="dsl-popover-head">
         <span className="dsl-popover-spec">{spec}</span>
         {entry?.isAsync && <span className="dsl-badge">async</span>}
-        <button type="button" className="dsl-popover-close" aria-label="Close" onClick={onClose}>×</button>
+        <Tooltip text="Close" shortcut="Esc"><button type="button" className="dsl-popover-close" aria-label="Close" onClick={onClose}>×</button></Tooltip>
       </div>
 
       {entry?.description && <p className="dsl-popover-desc">{entry.description}</p>}
@@ -211,9 +212,11 @@ export function PayloadPopover(props: {
       {error && <p className="dsl-popover-error" role="alert">{error}</p>}
 
       <div className="dsl-popover-actions">
-        {writable && <button type="button" onClick={save}>Save</button>}
+        {writable && <Tooltip text="Write these descriptions into the rule"><button type="button" onClick={save}>Save</button></Tooltip>}
         {/* Not "Close": the card head's × already carries that accessible name. */}
-        <button type="button" onClick={onClose}>{writable ? 'Cancel' : 'Done'}</button>
+        <Tooltip text={writable ? 'Close without saving' : 'Close'}>
+          <button type="button" onClick={onClose}>{writable ? 'Cancel' : 'Done'}</button>
+        </Tooltip>
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+import { tooltipOf } from '../support/tooltip.js';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { EditorView } from '@codemirror/view';
@@ -278,8 +279,9 @@ describe('BuilderPane scoped propositions (#234)', () => {
     }));
     await openDetail('$.rule.and[0]');
     const extract = screen.getByRole('button', { name: 'extract $.rule.and[0]' });
-    expect(extract.hasAttribute('disabled')).toBe(true);
-    expect(extract.getAttribute('title')).toContain('activity');
+    // Reachable and explained rather than `disabled`: the refusal is the tooltip.
+    expect(extract.getAttribute('aria-disabled')).toBe('true');
+    expect((await tooltipOf(extract)).textContent).toContain('activity');
   });
 
   it('renders a local reference as its name, coloured as a local, with no keyword', async () => {
