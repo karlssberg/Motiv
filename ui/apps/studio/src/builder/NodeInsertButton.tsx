@@ -10,16 +10,17 @@
  * Joins the hover-revealed cluster `⋯` and `📌` already form, inheriting their reveal and spacing.
  */
 import { IconNew } from '../shell/icons.js';
+import { Tooltip } from '../shell/Tooltip.js';
 
 export function NodeInsertButton(props: { path: string; onOpen: () => void }) {
   return (
-    <button
+    <Tooltip text="Insert a node after this one"><button
       type="button"
       className="node-insert"
       aria-label={`insert after ${props.path}`}
       onClick={props.onOpen}
     >
       <IconNew size={14} />
-    </button>
+    </button></Tooltip>
   );
 }

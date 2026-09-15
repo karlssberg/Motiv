@@ -107,6 +107,7 @@ export function RuleDocument(props: {
           title={
             <DocumentTitle
               name={tab.name}
+              fullName={tab.name}
               modelType={MODEL_TYPE}
               version={loaded?.version}
               note={loaded?.isCodeDefault ? 'code-defined default (builder starts fresh)' : undefined}

@@ -86,16 +86,21 @@ describe('EditorPane', () => {
       await settleCatalog();
       const undo = screen.getByRole('button', { name: 'Undo' });
       const redo = screen.getByRole('button', { name: 'Redo' });
-      expect(undo.hasAttribute('disabled')).toBe(true);
-      expect(redo.hasAttribute('disabled')).toBe(true);
+      // `aria-disabled`, never `disabled`: both stay in the tab order and keep their tooltip,
+      // which is where "nothing to undo" is said.
+      const off = (button: HTMLElement) => button.getAttribute('aria-disabled') === 'true';
+      expect(off(undo)).toBe(true);
+      expect(off(redo)).toBe(true);
+      fireEvent.click(undo);
+      expect(store.getState().document).toEqual(WITH_LOCAL);
 
       act(() => store.inlineLocal('$.rule.and[0]'));
       expect(store.getState().document.definitions).toBeUndefined();
-      expect(undo.hasAttribute('disabled')).toBe(false);
+      expect(off(undo)).toBe(false);
 
       fireEvent.click(undo);
       expect(store.getState().document).toEqual(WITH_LOCAL);
-      expect(redo.hasAttribute('disabled')).toBe(false);
+      expect(off(redo)).toBe(false);
       fireEvent.click(redo);
       expect(store.getState().document.definitions).toBeUndefined();
     });

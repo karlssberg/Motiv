@@ -9,6 +9,7 @@ import { BuilderTreeContext, RuleNodeEditor } from '../builder/RuleNodeEditor.js
 import { RuleDslStrip } from '../builder/RuleDslStrip.js';
 import { DefinitionsPane } from './DefinitionsPane.js';
 import { MODEL_TYPE } from '../App.js';
+import { Tooltip } from '../shell/Tooltip.js';
 
 /** The rule's own root path — the one node whose name is the rule's name (#234). */
 export const ROOT = '$.rule';
@@ -69,9 +70,9 @@ export function BuilderBody(props: {
         {model.pinned.size > 0 && (
           <>
             <span className="caption">{model.pinned.size} pinned</span>
-            <button type="button" className="btn" onClick={() => setModel(closeAll)}>
+            <Tooltip text="Collapse every pinned node"><button type="button" className="btn" onClick={() => setModel(closeAll)}>
               close all
-            </button>
+            </button></Tooltip>
           </>
         )}
       </div>

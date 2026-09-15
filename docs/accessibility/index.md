@@ -103,7 +103,9 @@ is one stop in the tab sequence rather than one per proposition, that the arrow 
 and type-ahead move between its rows, that a proposition can be chosen without a pointer at any
 point, and that the tab strip is a tablist: the active document's chip is the one tab stop and
 says so with `aria-selected`, the arrow keys move between chips and activate as they go, and the
-focused chip's card describes it and goes with `Escape`.
+focused chip's card describes it and goes with `Escape`. It also drives the three things WCAG
+**1.4.13 Content on Hover or Focus** asks of a tooltip — dismissible without moving the pointer,
+hoverable, persistent — against the tooltip every control carries and against the tab card.
 
 It is a real browser on purpose. jsdom has no tab sequence of its own, so a unit test can assert
 which row *would* be reached and only this can assert that `Tab` reaches it.
@@ -113,6 +115,27 @@ serves the built bundle and answers the API from fixtures, so findings are facts
 and its behaviour rather than about whatever a live store happens to hold.
 
 Between them these still catch roughly half of AA. What they cannot see is the other half.
+
+#### Tooltips — one mechanism, and it is never `title`
+
+Every button in Studio has a tooltip saying what it does (`ui/apps/studio/src/shell/Tooltip.tsx`),
+and an ellipsised name or expression reveals its full text in place (`Truncated.tsx`). Three
+conventions follow from that, each enforced by a test:
+
+- **Never the native `title` attribute.** A browser shows it beside any other tooltip, so the two
+  double up; it appears after a delay nobody can tune; and it appears for no keyboard user at all.
+  The one mechanism opens on focus as well as on hover, after the same delay, and once one tooltip
+  has shown its neighbours open at once — so a toolbar can be read glyph by glyph without a wait
+  per glyph, while a pointer merely crossing the page triggers nothing.
+- **`aria-disabled`, never `disabled`, on a control that is off for a reason.** A `disabled`
+  button receives no pointer events, so no tooltip mechanism can ever say why it is off — and it
+  leaves the tab order, so a keyboard user cannot reach the explanation either. Undo, Redo, the
+  extract-to-definition button and the toolbar's unavailable actions all stay reachable, and their
+  tooltip carries the reason.
+- **The tooltip describes its control only while it is mounted.** It is linked with
+  `aria-describedby` for exactly as long as it exists — the same rule the palette's
+  `aria-controls` and the builder caret follow — and not at all when it would only repeat the
+  control's accessible name or a description the control already carries.
 
 ### Manual — the screen-reader pass
 

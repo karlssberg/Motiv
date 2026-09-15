@@ -10,6 +10,7 @@ import { RuleNodeEditor, useBuilderTree } from '../builder/RuleNodeEditor.js';
 import { usePopoverCard } from '../builder/usePopoverCard.js';
 import { IconMore } from '../shell/icons.js';
 import { MODEL_TYPE } from '../App.js';
+import { Tooltip } from '../shell/Tooltip.js';
 
 /** Repeats `inlineLocal` until no reference to `name` remains — see {@link DefinitionRow}'s menu. */
 function inlineEverywhere(store: RuleEditorStore, name: string): void {
@@ -102,7 +103,7 @@ export function DefinitionRow(props: {
         <span className="definition-count">
           {references.length} {references.length === 1 ? 'reference' : 'references'}
         </span>
-        <button
+        <Tooltip text="Inline everywhere, promote to the catalog, or remove"><button
           ref={trigger}
           type="button"
           className={open ? 'node-menu-trigger open' : 'node-menu-trigger'}
@@ -112,7 +113,7 @@ export function DefinitionRow(props: {
           onClick={() => setOpen(!open)}
         >
           <IconMore size={14} />
-        </button>
+        </button></Tooltip>
         {open && (
           <div ref={card} role="menu" className="node-menu" style={style} aria-label={`actions for definition ${name}`}>
             {menuItems.map((item) => (

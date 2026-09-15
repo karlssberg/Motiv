@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import { Tooltip } from '../shell/Tooltip.js';
+import { Truncated } from '../shell/Truncated.js';
 
 /**
  * The document, named where it is edited: the editor pane's header rather than the top bar.
@@ -14,6 +16,8 @@ import type { ReactNode } from 'react';
 export function DocumentTitle(props: {
   /** The name, already shaped: a plain string, or a breadcrumb of segments for a dotted name. */
   name: ReactNode;
+  /** The plain name, for the full-text reveal when `name` is a breadcrumb and has been ellipsised. */
+  fullName: string;
   /** The model type the document is validated and evaluated against. */
   modelType: string;
   /** The loaded version, or absent for a document that has none yet. */
@@ -23,11 +27,11 @@ export function DocumentTitle(props: {
 }) {
   return (
     <div className="doc-title">
-      <span className="doc-name">{props.name}</span>
+      <Truncated text={props.fullName}><span className="doc-name">{props.name}</span></Truncated>
       <span className="kbd" aria-hidden="true">⌘K</span>
-      <span className="model-pill" title="Model type the rule is validated and evaluated against">
+      <Tooltip text="The model type the rule is validated and evaluated against"><span className="model-pill">
         {props.modelType}
-      </span>
+      </span></Tooltip>
       {props.version !== undefined && <span className="rule-version">v{props.version}</span>}
       {props.note !== undefined && <span className="doc-note">{props.note}</span>}
     </div>

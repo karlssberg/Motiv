@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { IconRefresh, IconWarn } from './icons.js';
+import { Tooltip } from './Tooltip.js';
 
 /**
  * A report raised against whatever the page currently holds: a conflicting version, or a failure
@@ -20,9 +21,9 @@ export function ReportBanner(props: {
       <span className="report-icon"><IconWarn size={15} /></span>
       <span className="report-text">{props.children}</span>
       {props.onReload && (
-        <button type="button" className="btn btn-secondary" onClick={props.onReload}>
+        <Tooltip text="Load the latest saved version into this tab"><button type="button" className="btn btn-secondary" onClick={props.onReload}>
           <IconRefresh size={14} />Reload latest
-        </button>
+        </button></Tooltip>
       )}
     </div>
   );

@@ -2,6 +2,7 @@ import {
   definitionBodyPath, printInline, tokenSpans, type Catalog, type LocalNode,
 } from '@motiv-rules/core';
 import { useRuleEditor, useRuleEditorStore, useRuleNode } from '@motiv-rules/react';
+import { Tooltip } from '../shell/Tooltip.js';
 
 /**
  * What a `let` row discloses: the definition it stands for, and the two ways out of it (#234).
@@ -38,15 +39,15 @@ export function LocalNodeDetail(props: { path: string; node: LocalNode; catalog:
           : <span className="error">no definition named {node.local}</span>}
       </code>
       <div className="node-local-actions">
-        <button
+        <Tooltip text="Replace this reference with the definition's own expression"><button
           type="button"
           className="btn"
           aria-label={`inline ${path}`}
           onClick={() => store.inlineLocal(path)}
         >
           Inline
-        </button>
-        <button
+        </button></Tooltip>
+        <Tooltip text="Jump to the definition"><button
           type="button"
           className="btn"
           aria-label={`go to definition ${path}`}
@@ -63,7 +64,7 @@ export function LocalNodeDetail(props: { path: string; node: LocalNode; catalog:
           }}
         >
           Go to definition
-        </button>
+        </button></Tooltip>
       </div>
     </div>
   );

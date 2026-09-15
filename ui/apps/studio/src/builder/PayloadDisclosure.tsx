@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { Tooltip } from '../shell/Tooltip.js';
 
 /**
  * The disclosure around a `whenTrue` / `whenFalse` pair, wherever it is edited.
@@ -24,9 +25,9 @@ export function PayloadDisclosure(props: {
   if (!hasPayload && !opened) {
     return (
       <p className="payload-hint">
-        <button type="button" className="link" onClick={() => setOpened(true)}>
+        <Tooltip text="Add whenTrue and whenFalse text to this node"><button type="button" className="link" onClick={() => setOpened(true)}>
           Describe what it means for this to be true or false…
-        </button>
+        </button></Tooltip>
       </p>
     );
   }
@@ -40,9 +41,9 @@ export function PayloadDisclosure(props: {
     <>
       {children}
       <p className="payload-hint">
-        <button type="button" className="link link-quiet" onClick={remove}>
+        <Tooltip text="Clear whenTrue and whenFalse from this node"><button type="button" className="link link-quiet" onClick={remove}>
           Remove these descriptions
-        </button>
+        </button></Tooltip>
       </p>
     </>
   );

@@ -3,14 +3,15 @@ import type { RulesApiClient } from '@motiv-rules/core';
 import { useCatalog, useDslSync, useRuleEditor, useRuleEditorStore } from '@motiv-rules/react';
 import { DslEditor } from '../dsl/DslEditor.js';
 import { BuilderBody, EMPTY_CATALOG } from './BuilderPane.js';
+import { Tooltip } from '../shell/Tooltip.js';
 
 /** The two ways this pane lets you author the same rule document. */
 type Surface = 'builder' | 'dsl';
 
 /** The tabs, in the order they are offered. */
-const SURFACES: ReadonlyArray<{ id: Surface; label: string }> = [
-  { id: 'builder', label: 'Builder' },
-  { id: 'dsl', label: 'DSL' },
+const SURFACES: ReadonlyArray<{ id: Surface; label: string; hint: string }> = [
+  { id: 'builder', label: 'Builder', hint: 'Edit the rule as a tree of nodes' },
+  { id: 'dsl', label: 'DSL', hint: 'Edit the rule as text' },
 ];
 
 
@@ -89,17 +90,22 @@ export function EditorPane(props: {
         {/* The header item that yields when the pane is too narrow for everything (see `.truncate`). */}
         {surface === 'dsl' && <span className="pane-hint truncate">text is the source of truth</span>}
         <div className="history-actions" role="group" aria-label="History">
-          <button type="button" className="ghost ghost-labelled" disabled={!canUndo} onClick={() => store.undo()} title="Undo (⌘Z)">
-            Undo
-          </button>
-          <button type="button" className="ghost ghost-labelled" disabled={!canRedo} onClick={() => store.redo()} title="Redo (⇧⌘Z)">
-            Redo
-          </button>
+          {/* `aria-disabled`, not `disabled`: a disabled button receives no pointer events, so
+              its tooltip could never say why it is off — and it leaves the tab order. */}
+          <Tooltip text={canUndo ? 'Step the draft back one change' : 'Nothing to undo'} shortcut="⌘Z">
+            <button type="button" className="ghost ghost-labelled" aria-disabled={canUndo ? undefined : true} onClick={() => { if (canUndo) store.undo(); }}>
+              Undo
+            </button>
+          </Tooltip>
+          <Tooltip text={canRedo ? 'Reapply the change you undid' : 'Nothing to redo'} shortcut="⇧⌘Z">
+            <button type="button" className="ghost ghost-labelled" aria-disabled={canRedo ? undefined : true} onClick={() => { if (canRedo) store.redo(); }}>
+              Redo
+            </button>
+          </Tooltip>
         </div>
         <div className="surface-tabs" role="tablist" aria-label="Editing surface">
-          {SURFACES.map(({ id, label }) => (
-            <button
-              key={id}
+          {SURFACES.map(({ id, label, hint }) => (
+            <Tooltip key={id} text={hint}><button
               id={tabId(id)}
               type="button"
               role="tab"
@@ -109,7 +115,7 @@ export function EditorPane(props: {
               onClick={() => setSurface(id)}
             >
               {label}
-            </button>
+            </button></Tooltip>
           ))}
         </div>
         {/* Last in the row, so Save — the action the document is for — ends it. */}

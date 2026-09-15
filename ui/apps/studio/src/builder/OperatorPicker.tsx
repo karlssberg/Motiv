@@ -38,6 +38,7 @@ export function OperatorPicker(props: {
       triggerName={`operator at ${path}`}
       listLabel={`operators for ${path}`}
       triggerClassName="node-badge node-badge-op"
+      hint="Change the operator"
       listClassName="node-operator-menu"
     />
   );

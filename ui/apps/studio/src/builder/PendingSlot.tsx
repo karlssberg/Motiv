@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { parse, type Catalog, type RuleNode } from '@motiv-rules/core';
 import { useInlineDslEditor } from './useInlineDslEditor.js';
 import { IconNew } from '../shell/icons.js';
+import { Truncated } from '../shell/Truncated.js';
 
 /** A document with no definitions — a stable identity, so it is not a fresh dep every render. */
 const NO_LOCALS: ReadonlySet<string> = new Set();
@@ -73,7 +74,7 @@ export function PendingSlot(props: {
         <span className="node-chev node-chev-pending"><IconNew size={12} /></span>
         <span className="node-dsl node-dsl-editing">
           <span ref={host} className="node-dsl-host" />
-          {error && <span role="alert" className="error node-dsl-error" title={error}>{error}</span>}
+          {error && <Truncated text={error}><span role="alert" className="error node-dsl-error">{error}</span></Truncated>}
         </span>
       </div>
     </div>

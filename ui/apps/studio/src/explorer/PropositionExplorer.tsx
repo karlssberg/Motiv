@@ -9,6 +9,7 @@ import {
 import { CommandPalette } from '../shell/CommandPalette.js';
 import { Toolbar, type ToolbarAction } from '../shell/Toolbar.js';
 import { IconDelete, IconDerive, IconNew, IconOverride } from '../shell/icons.js';
+import { Tooltip } from '../shell/Tooltip.js';
 
 /** What the explorer can ask the page to do. */
 export interface ExplorerActions {
@@ -146,8 +147,7 @@ function NamespaceBrowse(props: {
     <>
       <div className="explorer-chips">
         {modelTypes.map((model) => (
-          <button
-            key={model}
+          <Tooltip key={model} text={`${models.includes(model) ? 'Hide' : 'Show'} propositions for the ${model} model`}><button
             type="button"
             className="model-pill"
             // `aria-pressed` is the single source of truth for the toggled state — the stylesheet
@@ -157,7 +157,7 @@ function NamespaceBrowse(props: {
             onClick={() => onToggleModel(model)}
           >
             {model}
-          </button>
+          </button></Tooltip>
         ))}
         <span className="explorer-count">{shown} of {entries.length}</span>
       </div>
@@ -217,16 +217,20 @@ function ExplorerFooter(props: {
     id: 'delete',
     // Read off the entry rather than the response: a revert and an outright delete are the same call.
     label: entry?.origin === 'Overridden' ? 'Revert to compiled' : 'Delete',
+    hint: entry?.origin === 'Overridden'
+      ? 'Remove the authored override so the compiled proposition serves again'
+      : 'Delete this authored proposition',
     icon: IconDelete,
     onActivate: () => { if (entry !== null) actions.onDelete(entry); },
     unavailable: noTarget,
   };
 
   const toolbar: ToolbarAction[] = [
-    { id: 'new', label: 'New', icon: IconNew, onActivate: actions.onNew },
+    { id: 'new', label: 'New', hint: 'Create a new proposition', icon: IconNew, onActivate: actions.onNew },
     {
       id: 'derive',
       label: 'Derive',
+      hint: 'Create a new proposition that starts from this one',
       icon: IconDerive,
       onActivate: () => { if (entry !== null) actions.onDerive(entry.name); },
       unavailable: noTarget,
@@ -234,6 +238,7 @@ function ExplorerFooter(props: {
     {
       id: 'override',
       label: 'Override',
+      hint: 'Author a proposition under this name, replacing the compiled one',
       icon: IconOverride,
       // Only the null check is made here, as with Derive and Delete: `unavailable` is what stops
       // an activation, and Toolbar returns early on it. Restating the reason here as well would
@@ -486,7 +491,7 @@ function TreeNode(props: {
         .join(' ')
     : node.segment;
 
-  return (
+  const row = (
     <li
       id={rowId(node.path)}
       data-path={node.path}
@@ -504,7 +509,6 @@ function TreeNode(props: {
       tabIndex={node.path === stop ? 0 : -1}
       className="explorer-node"
       style={{ '--depth': depth } as CSSProperties}
-      title={quarantined ? quarantine.map((error) => error.message).join('\n') : undefined}
       onClick={handleClick}
     >
       <span className={entry ? 'explorer-leaf' : 'explorer-namespace'}>
@@ -535,4 +539,10 @@ function TreeNode(props: {
       )}
     </li>
   );
+
+  // Why a row is quarantined, on the row rather than on its badge: the row is the tab stop, so
+  // the keyboard reaches the reasons as the pointer does.
+  return quarantined
+    ? <Tooltip text={quarantine.map((error) => error.message).join('\n')}>{row}</Tooltip>
+    : row;
 }

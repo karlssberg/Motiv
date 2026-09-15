@@ -9,6 +9,7 @@ import {
   addScenario, cloneScenario, editScenario, outcomeChanged, removeScenario, runScenario, seedScenarios,
   toggleScenario, withComparison, withViolations, type Comparison, type Scenario, type Side,
 } from './scenarios.js';
+import { Tooltip } from '../shell/Tooltip.js';
 
 /**
  * Evaluate, as a table of scenarios: named sample models as rows, and for each what the *live*
@@ -66,13 +67,19 @@ export function ScenarioPane(props: { client: RulesApiClient; ruleName: string; 
       </div>
       <div className="pane-body">
         <div className="run-row">
-          <button type="button" className="btn" onClick={() => void runAll()}><IconPlay size={14} />Run all</button>
-          <button type="button" className="btn btn-secondary" onClick={() => setRows(addScenario)}>
-            <IconNew size={14} />Add
-          </button>
-          <button type="button" className="btn btn-secondary" title="Restore the seeded scenarios" onClick={() => setRows(seedScenarios())}>
-            <IconRefresh size={14} />Reset
-          </button>
+          <Tooltip text="Evaluate every scenario against the live rule and the draft">
+            <button type="button" className="btn" onClick={() => void runAll()}><IconPlay size={14} />Run all</button>
+          </Tooltip>
+          <Tooltip text="Add a blank scenario">
+            <button type="button" className="btn btn-secondary" onClick={() => setRows(addScenario)}>
+              <IconNew size={14} />Add
+            </button>
+          </Tooltip>
+          <Tooltip text="Throw away these scenarios and restore the seeded set">
+            <button type="button" className="btn btn-secondary" onClick={() => setRows(seedScenarios())}>
+              <IconRefresh size={14} />Reset
+            </button>
+          </Tooltip>
           {ran && (
             <span className={flipped > 0 ? 'change-count change-count-changed' : 'change-count'}>
               {flipped === 0 ? 'No scenario changes' : `${flipped} of ${rows.length} scenarios change`}
@@ -124,7 +131,7 @@ function ScenarioRow(props: {
       <tr aria-label={row.name} className={changed ? 'scenario scenario-changed' : 'scenario'}>
         <td>
           {/* `aria-controls` is dropped while the detail row is unmounted, the rule every caret here follows. */}
-          <button
+          <Tooltip text={open ? 'Hide the name and model' : 'Edit the name and model'}><button
             type="button"
             className="node-chev"
             aria-expanded={open}
@@ -133,7 +140,7 @@ function ScenarioRow(props: {
             onClick={props.onToggle}
           >
             <Caret open={open} size={12} />
-          </button>
+          </button></Tooltip>
         </td>
         <td>
           <span className="scenario-name">{row.name}</span>
@@ -142,10 +149,10 @@ function ScenarioRow(props: {
         <td aria-label="live"><Cell side={row.comparison.live} /></td>
         <td aria-label="draft"><Cell side={row.comparison.draft} /></td>
         <td className="scenario-actions">
-          <button type="button" className="row-action" aria-label={`clone ${row.name}`} onClick={props.onClone}>Clone</button>
-          <button type="button" className="row-action row-action-danger" aria-label={`delete ${row.name}`} onClick={props.onDelete}>
+          <Tooltip text="Copy this scenario into a new row"><button type="button" className="row-action" aria-label={`clone ${row.name}`} onClick={props.onClone}>Clone</button></Tooltip>
+          <Tooltip text="Remove this scenario"><button type="button" className="row-action row-action-danger" aria-label={`delete ${row.name}`} onClick={props.onDelete}>
             <IconDelete size={12} />
-          </button>
+          </button></Tooltip>
         </td>
       </tr>
       {open && (
@@ -183,7 +190,7 @@ function Cell(props: { side: Side }) {
     return <><Tick satisfied={side.result.satisfied} />{side.result.satisfied ? 'yes' : 'no'}</>;
   }
   if (side.status === 'loading') return <span className="pane-hint">…</span>;
-  if (side.status === 'error') return <span className="pane-hint" title={side.message}>n/a</span>;
+  if (side.status === 'error') return <Tooltip text={side.message}><span className="pane-hint" tabIndex={0}>n/a</span></Tooltip>;
   return <span className="pane-hint">–</span>;
 }
 
@@ -207,7 +214,7 @@ function Explanation(props: { result: EvaluationResult; who: string }) {
         return (
           <div className="assertion" style={{ '--depth': row.depth } as CSSProperties}>
             {row.hasChildren ? (
-              <button
+              <Tooltip text={row.collapsed ? 'Show what this depends on' : 'Hide what this depends on'}><button
                 type="button"
                 aria-expanded={!row.collapsed}
                 aria-controls={groupId ?? undefined}
@@ -216,7 +223,7 @@ function Explanation(props: { result: EvaluationResult; who: string }) {
                 onClick={() => toggle(row.id)}
               >
                 <Caret open={!row.collapsed} size={12} />
-              </button>
+              </button></Tooltip>
             ) : <Tick satisfied={result.satisfied} />}
             <span>{causes}</span>
           </div>

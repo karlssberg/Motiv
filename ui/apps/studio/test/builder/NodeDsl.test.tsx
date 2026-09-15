@@ -1,3 +1,4 @@
+import { peekOf } from '../support/tooltip.js';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { RuleEditorStore, type RulesApiClient } from '@motiv-rules/core';
@@ -154,7 +155,10 @@ describe('DSL row editing', () => {
     fireEvent.keyDown(content(container), { key: 'Enter' });
 
     const alert = screen.getByRole('alert');
-    expect(alert.getAttribute('title')).toBe(alert.textContent);
+    // No `title`: the full message is revealed in place once the pointer rests on the truncated
+    // one, and it is the same text, so nothing is lost.
+    expect(alert.hasAttribute('title')).toBe(false);
+    expect((await peekOf(alert)).textContent).toBe(alert.textContent);
   });
 
   it('escape reverts to the node as it stands', async () => {

@@ -24,6 +24,7 @@ import { NodeInsertButton } from './NodeInsertButton.js';
 import { PendingSlot } from './PendingSlot.js';
 import { Caret, IconPin, IconSelect } from '../shell/icons.js';
 import { ROOT } from '../panes/BuilderPane.js';
+import { Tooltip } from '../shell/Tooltip.js';
 
 /**
  * The tree-wide state shared by every {@link RuleNodeEditor} in the tree: accordion state (its
@@ -260,7 +261,7 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
         onMouseLeave={() => setHovered(null)}
       >
         {caretKind === 'children' ? (
-          <button
+          <Tooltip text={collapsed ? 'Expand this group' : 'Collapse this group'}><button
             type="button"
             className="node-chev"
             aria-expanded={!collapsed}
@@ -273,9 +274,9 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
             onClick={(event) => { if (releaseMatchesPress(event)) toggleCollapsed(path); }}
           >
             <Caret open={!collapsed} size={12} />
-          </button>
+          </button></Tooltip>
         ) : (
-          <button
+          <Tooltip text={open ? 'Hide whenTrue / whenFalse' : 'Show whenTrue / whenFalse'}><button
             type="button"
             className="node-chev"
             aria-expanded={open}
@@ -285,7 +286,7 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
             onClick={(event) => { if (releaseMatchesPress(event)) toggleOpen(path); }}
           >
             <Caret open={open} size={12} />
-          </button>
+          </button></Tooltip>
         )}
         <span className="node-body">
           {summary === null ? (
@@ -308,7 +309,7 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
             editor that takes focus, and `.node-dsl` already claims click to start editing. A
             separate button also gives selection a tab stop and an accessible name, which is what
             the armed-move in Milestone 2 will need. */}
-        <button
+        <Tooltip text={selected ? 'Deselect this node' : 'Select this node'}><button
           type="button"
           className="node-select"
           aria-pressed={selected}
@@ -316,7 +317,7 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
           onClick={() => setSelected(selected ? null : path)}
         >
           <IconSelect size={14} />
-        </button>
+        </button></Tooltip>
         <NodeInsertButton path={path} onOpen={() => setPending({ path, where: 'after' })} />
         <NodeMenu
           path={path}
@@ -345,7 +346,7 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
             {...popover('extract')}
           />
         )}
-        <button
+        <Tooltip text={pinned ? 'Unpin — let this node collapse with the others' : 'Pin — keep this node open while others collapse'}><button
           type="button"
           className={pinned ? 'node-pin pinned' : 'node-pin'}
           aria-pressed={pinned}
@@ -353,7 +354,7 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
           onClick={() => togglePin(path)}
         >
           <IconPin size={14} />
-        </button>
+        </button></Tooltip>
       </div>
       {errors.length > 0 && (
         <span role="alert" className="error">{errors.map((e) => e.message).join('; ')}</span>

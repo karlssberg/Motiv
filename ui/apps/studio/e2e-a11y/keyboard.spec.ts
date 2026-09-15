@@ -161,6 +161,75 @@ test.describe('the tab strip is a tablist', () => {
     // Dropped with the card: an IDREF to an absent element is invalid, not harmless.
     await expect(tab).not.toHaveAttribute('aria-describedby', /.*/);
   });
+
+  test('keeps the card while the pointer moves onto it (WCAG 1.4.13)', async ({ page }) => {
+    await openTwo(page);
+
+    await page.getByRole('tab', { name: 'Rule can-checkout' }).hover();
+    const card = page.getByRole('tooltip');
+    await expect(card).toBeVisible();
+
+    await card.hover();
+    await page.waitForTimeout(250);
+    await expect(card).toBeVisible();
+
+    await page.mouse.move(10, 500);
+    await expect(card).toBeHidden();
+  });
+});
+
+test.describe("a control's tooltip (WCAG 1.4.13)", () => {
+  /** The strip's New-tab glyph: an icon-only button, so its tooltip is its only visible word. */
+  async function newTab(page: Page) {
+    await page.goto('/#/rules');
+    const button = page.getByRole('button', { name: 'New tab' });
+    await expect(button).toBeVisible();
+    return button;
+  }
+
+  test('appears on keyboard focus, and Escape dismisses it without moving anything', async ({ page }) => {
+    const button = await newTab(page);
+    await button.focus();
+    const tip = page.getByRole('tooltip');
+    await expect(tip).toBeVisible();
+    await expect(tip).toHaveText('New tab');
+
+    await page.keyboard.press('Escape');
+    await expect(tip).toBeHidden();
+    await expect(button).toBeFocused();
+  });
+
+  test('stays while the pointer is moved onto it, and goes when the pointer leaves', async ({ page }) => {
+    const button = await newTab(page);
+    await button.hover();
+    const tip = page.getByRole('tooltip');
+    await expect(tip).toBeVisible();
+
+    // Hoverable: onto the tip itself, without it vanishing under the pointer.
+    await tip.hover();
+    await page.waitForTimeout(250);
+    await expect(tip).toBeVisible();
+
+    // Persistent until the pointer has left both.
+    await page.mouse.move(10, 400);
+    await expect(tip).toBeHidden();
+  });
+
+  test('describes a worded control only while shown, so no IDREF outlives its target', async ({ page }) => {
+    await page.goto('/#/rules/can-checkout');
+    const undo = page.getByRole('button', { name: 'Undo' });
+    await expect(undo).toBeVisible();
+    await expect(undo).not.toHaveAttribute('aria-describedby', /.*/);
+
+    await undo.focus();
+    const tip = page.getByRole('tooltip');
+    await expect(tip).toBeVisible();
+    await expect(undo).toHaveAttribute('aria-describedby', await tip.getAttribute('id') ?? '');
+
+    await page.keyboard.press('Escape');
+    await expect(tip).toBeHidden();
+    await expect(undo).not.toHaveAttribute('aria-describedby', /.*/);
+  });
 });
 
 test.describe("the definitions panel's row menu", () => {

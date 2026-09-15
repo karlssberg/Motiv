@@ -99,6 +99,18 @@ describe('TabStrip', () => {
     expect(screen.queryByRole('tooltip')).toBeNull();
   });
 
+  it('keeps the card while the pointer moves onto it, and drops it when the pointer leaves the card (WCAG 1.4.13)', async () => {
+    renderStrip([['rule', 'can-checkout']]);
+    const tab = screen.getByRole('tab');
+    fireEvent.mouseEnter(tab);
+    const card = await screen.findByRole('tooltip', undefined, { timeout: 1500 });
+    // Hoverable: leaving the tab *for the card* is not leaving.
+    fireEvent.mouseLeave(tab, { relatedTarget: card });
+    expect(screen.queryByRole('tooltip')).not.toBeNull();
+    fireEvent.mouseLeave(card, { relatedTarget: document.body });
+    expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+
   it('reserves room for the two strip buttons before counting chips', () => {
     // 416px: two chips would fit beside the "+N" menu alone, but not beside it *and* the New tab
     // and Open buttons that are always drawn — so only one chip may show, or the strip overflows.

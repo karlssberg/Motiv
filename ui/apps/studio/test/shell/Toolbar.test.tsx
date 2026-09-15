@@ -1,3 +1,4 @@
+import { tooltipOf } from '../support/tooltip.js';
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -5,14 +6,28 @@ import { Toolbar } from '../../src/shell/Toolbar.js';
 import { IconSave } from '../../src/shell/icons.js';
 
 describe('Toolbar', () => {
-  it('names each icon button, since a glyph alone announces nothing', () => {
+  it('names each icon button, since a glyph alone announces nothing', async () => {
     render(<Toolbar actions={[{ id: 'save', label: 'Save', icon: IconSave, onActivate: () => {} }]} />);
     const button = screen.getByRole('button', { name: 'Save' });
     expect(button).toBeTruthy();
     expect(button.getAttribute('aria-label')).toBe('Save');
-    // Both, and for different people: `aria-label` is what assistive technology reads, `title` is
-    // the tooltip a sighted pointer user gets. Neither substitutes for the other.
-    expect(button.getAttribute('title')).toBe('Save');
+    // Both, and for different people: `aria-label` is what assistive technology reads, the tooltip
+    // is what a sighted pointer user gets. Never a native `title`, which would double the tooltip.
+    expect(button.hasAttribute('title')).toBe(false);
+    expect((await tooltipOf(button)).textContent).toBe('Save');
+  });
+
+  it('prefers the hint to the label in the tooltip, where a label names a glyph without explaining it', async () => {
+    render(<Toolbar actions={[{ id: 'json', label: 'JSON', hint: 'Show the document as JSON', icon: IconSave, onActivate: () => {} }]} />);
+    expect((await tooltipOf(screen.getByRole('button', { name: 'JSON' }))).textContent).toBe('Show the document as JSON');
+  });
+
+  it('says in the tooltip why an unavailable action is unavailable', async () => {
+    render(<Toolbar actions={[{
+      id: 'save', label: 'Save', icon: IconSave, onActivate: () => {},
+      unavailable: 'Nothing to save.',
+    }]} />);
+    expect((await tooltipOf(screen.getByRole('button', { name: 'Save' }))).textContent).toBe('Save — Nothing to save.');
   });
 
   it('activates on click', async () => {

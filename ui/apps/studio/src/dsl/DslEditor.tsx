@@ -21,6 +21,7 @@ import { payloadChips, setPayloadTargets, type PayloadTarget } from './payloadCh
 import { useAnchoredCard } from './useAnchoredCard.js';
 import type { SyncStatus } from '@motiv-rules/core';
 import type { DslSync } from '@motiv-rules/react';
+import { Tooltip } from '../shell/Tooltip.js';
 
 /** The keystroke that opens the payload card for the spec node under the caret. */
 const OPEN_PAYLOAD_KEY = 'Mod-.';
@@ -258,14 +259,14 @@ export function DslEditor(props: {
         <span aria-label="sync status" className={`dsl-pill dsl-pill-${sync.status}`}>
           {PILL_TEXT[sync.status]}
         </span>
-        <button type="button" onClick={sync.format}>Format</button>
+        <Tooltip text="Reformat the text without changing what it means"><button type="button" onClick={sync.format}>Format</button></Tooltip>
       </div>
 
       {sync.conflict && (
         <div className="dsl-conflict" role="alert">
           <span>The Builder changed this rule while you were editing the text.</span>
-          <button type="button" onClick={sync.reformatFromTree}>Reformat from tree</button>
-          <button type="button" onClick={sync.keepEditing}>Keep editing</button>
+          <Tooltip text="Take the Builder's version, replacing your text"><button type="button" onClick={sync.reformatFromTree}>Reformat from tree</button></Tooltip>
+          <Tooltip text="Keep your text — the Builder will follow it"><button type="button" onClick={sync.keepEditing}>Keep editing</button></Tooltip>
         </div>
       )}
 

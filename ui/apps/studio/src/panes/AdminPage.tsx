@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAdminCapabilities } from '../shell/useAdminCapabilities.js';
 import { IconDelete } from '../shell/icons.js';
 import { AppBar } from './AppBar.js';
+import { Tooltip } from '../shell/Tooltip.js';
 
 type Verb = 'read' | 'author' | 'publish' | 'administer';
 
@@ -135,7 +136,7 @@ export function AdminPage() {
                     <td>{grant.prefix}</td>
                     <td>{grant.verb}</td>
                     <td>
-                      <button
+                      <Tooltip text="Remove this grant"><button
                         type="button"
                         className="btn btn-danger"
                         aria-label={`Delete grant: ${grant.subject} ${grant.prefix} ${grant.verb}`}
@@ -143,7 +144,7 @@ export function AdminPage() {
                       >
                         <IconDelete size={13} />
                         Delete
-                      </button>
+                      </button></Tooltip>
                     </td>
                   </tr>
                 ))}
@@ -179,14 +180,14 @@ export function AdminPage() {
                   {VERBS.map((verb) => <option key={verb} value={verb}>{verb}</option>)}
                 </select>
               </label>
-              <button
+              <Tooltip text={canAdd ? 'Grant the subject this verb on the prefix' : 'Fill in a subject and a prefix first'}><button
                 type="button"
                 className="btn"
                 aria-disabled={canAdd ? undefined : true}
                 onClick={() => void addGrant()}
               >
                 Add grant
-              </button>
+              </button></Tooltip>
             </div>
           </div>
         </section>

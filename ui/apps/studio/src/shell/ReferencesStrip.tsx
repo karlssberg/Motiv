@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { useRuleEditor } from '@motiv-rules/react';
 import { IconCheck, IconPropositions } from './icons.js';
 import { referenceStatuses, referencesOf, type OpenDoc, type Workspace } from './workspace.js';
+import { Tooltip } from './Tooltip.js';
 
 /**
  * The propositions a rule references, each with the version the workspace knows — and how tabs
@@ -35,12 +36,11 @@ export function ReferencesStrip(props: {
       <ul>
         {statuses.map((status) => (
           <li key={status.name}>
-            <button
+            <Tooltip text={status.openIn ? 'Go to the tab this proposition is open in' : 'Open this proposition in a new tab'}><button
               type="button"
               className={
                 'ref-tag' + (status.changedSinceSeen ? ' ref-changed' : '') + (status.editingElsewhere ? ' ref-editing' : '')
               }
-              title={status.openIn ? 'Open in its tab' : 'Open in a new tab'}
               onClick={() => props.onOpen(status.name)}
             >
               <span className="kind-glyph kind-proposition"><IconPropositions size={12} /></span>
@@ -48,14 +48,14 @@ export function ReferencesStrip(props: {
               {status.version !== null && <span className="ref-version">v{status.version}</span>}
               {status.changedSinceSeen && <span className="ref-badge">updated</span>}
               {status.editingElsewhere && <span className="ref-badge ref-badge-editing">editing</span>}
-            </button>
+            </button></Tooltip>
           </li>
         ))}
       </ul>
       {changed > 0 && (
-        <button type="button" className="ghost ghost-labelled refs-ack" onClick={() => props.workspace.acknowledge(doc.id)}>
+        <Tooltip text="Dismiss the update badges — you have seen these changes"><button type="button" className="ghost ghost-labelled refs-ack" onClick={() => props.workspace.acknowledge(doc.id)}>
           <IconCheck size={13} />Got it
-        </button>
+        </button></Tooltip>
       )}
     </div>
   );

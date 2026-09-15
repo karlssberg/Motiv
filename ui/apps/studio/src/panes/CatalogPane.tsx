@@ -3,6 +3,8 @@ import type { PropositionListEntry, RuleListEntry } from '@motiv-rules/core';
 import { IconNew, IconPropositions } from '../shell/icons.js';
 import { KIND_LABEL, KindGlyph } from '../shell/TabCard.js';
 import { tabIdOf, type DocKind, type TabId } from '../shell/workspace.js';
+import { Truncated } from '../shell/Truncated.js';
+import { Tooltip } from '../shell/Tooltip.js';
 
 /** One row of the catalog: enough to say what a document is before it is opened. */
 interface Row { id: TabId; kind: DocKind; name: string; modelType: string; version: number; description: string | null }
@@ -56,7 +58,7 @@ export function CatalogPane(props: {
                 <li key={row.id}>
                   <button type="button" className="catalog-row" onClick={() => props.onOpen(row.kind, row.name)}>
                     <span className="catalog-row-head">
-                      <span className="catalog-row-name">{row.name}</span>
+                      <Truncated text={row.name}><span className="catalog-row-name">{row.name}</span></Truncated>
                       <span className="model-pill">{row.modelType}</span>
                       <span className="rule-version">v{row.version}</span>
                       {props.open.has(row.id) && <span className="origin-badge">open</span>}
@@ -89,8 +91,12 @@ export function CatalogPane(props: {
         {column('rule')}
         {column('proposition', (
           <span className="catalog-actions">
-            <button type="button" className="ghost ghost-labelled" onClick={props.onNew}><IconNew size={12} />New proposition</button>
-            <button type="button" className="ghost ghost-labelled" onClick={props.onManage}><IconPropositions size={12} />Manage</button>
+            <Tooltip text="Create a new proposition">
+              <button type="button" className="ghost ghost-labelled" onClick={props.onNew}><IconNew size={12} />New proposition</button>
+            </Tooltip>
+            <Tooltip text="Browse, derive, override and delete propositions">
+              <button type="button" className="ghost ghost-labelled" onClick={props.onManage}><IconPropositions size={12} />Manage</button>
+            </Tooltip>
           </span>
         ))}
       </div>
