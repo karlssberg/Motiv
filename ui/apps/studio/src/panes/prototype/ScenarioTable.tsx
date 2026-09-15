@@ -5,7 +5,7 @@
 //                     reveals the explanations and Edit shows the editor above them.
 //   'stacked'         chevron always; the detail is the model editor on top, explanations beneath.
 //   'tabs'            chevron always; the detail is tabbed Model | Why, Why disabled until a run.
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { RulesApiClient } from '@motiv-rules/core';
 import { useRuleEditor, useRuleEditorStore } from '@motiv-rules/react';
 import { Caret, IconDelete, IconNew, IconPlay, IconRefresh } from '../../shell/icons.js';
@@ -139,7 +139,7 @@ function RowView(props: {
     </div>
   );
 
-  let detail: React.ReactNode = null;
+  let detail: ReactNode = null;
   if (reveal === 'evaluated-only') detail = <>{row.editing && editor}{why}</>;
   if (reveal === 'stacked') detail = <>{editor}{why}</>;
   if (reveal === 'tabs') {

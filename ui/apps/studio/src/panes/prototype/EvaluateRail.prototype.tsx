@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 // PROTOTYPE — throwaway. Four variants of the rule rail, switchable via `?variant=`, on the
 // existing rule route: "current" (Evaluate + Checkout as shipped), then A/B/C which fold the
 // before/after comparison INTO Evaluate and scope it to the open rule.
@@ -23,7 +24,10 @@ const VARIANTS = [
 ] as const;
 
 export function EvaluateRailPrototype(props: { client: RulesApiClient; ruleName: string; version?: number | undefined }) {
-  const [variant, setVariant] = useVariant(VARIANTS.map((v) => v.key));
+  const [chosen, setVariant] = useVariant(VARIANTS.map((v) => v.key));
+  // Outside a dev build the shipped design is the only design: no query parameter or key selects
+  // a prototype, and no switcher is drawn.
+  const variant = import.meta.env.DEV ? chosen : 'current';
   return (
     <div className="rail">
       {variant === 'current' && <><EvaluatePane client={props.client} /><CheckoutPane client={props.client} /></>}
@@ -33,7 +37,7 @@ export function EvaluateRailPrototype(props: { client: RulesApiClient; ruleName:
       {variant === 'C1' && <ScenarioTable {...props} reveal="evaluated-only" />}
       {variant === 'C2' && <ScenarioTable {...props} reveal="stacked" />}
       {variant === 'C3' && <ScenarioTable {...props} reveal="tabs" />}
-      <PrototypeSwitcher variants={VARIANTS} current={variant} onChange={setVariant} />
+      {import.meta.env.DEV && <PrototypeSwitcher variants={VARIANTS} current={variant} onChange={setVariant} />}
     </div>
   );
 }

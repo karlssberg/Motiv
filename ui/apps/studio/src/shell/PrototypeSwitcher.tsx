@@ -40,15 +40,19 @@ export function PrototypeSwitcher(props: {
     onChange(next.key);
   };
   useEffect(() => {
+    if (!import.meta.env.DEV) return undefined;
     const onKey = (event: KeyboardEvent): void => {
       const target = event.target as HTMLElement | null;
       if (target && (target.closest('input, textarea, [contenteditable]') || target.closest('.cm-editor'))) return;
-      if (event.key === 'ArrowLeft') step(-1);
-      if (event.key === 'ArrowRight') step(1);
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      event.preventDefault();
+      const delta = event.key === 'ArrowLeft' ? -1 : 1;
+      const next = variants[(index + delta + variants.length) % variants.length]!;
+      onChange(next.key);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  });
+  }, [variants, index, onChange]);
   if (!import.meta.env.DEV) return null;
   return (
     <div className="proto-switcher" role="group" aria-label="prototype variant">
