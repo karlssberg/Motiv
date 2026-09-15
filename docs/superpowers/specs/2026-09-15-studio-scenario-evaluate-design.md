@@ -2,8 +2,8 @@
 
 **Date:** 2026-09-15
 **Status:** Implemented
-**Primary source:** the prototype in PR #245 (`ui/apps/studio/src/panes/prototype/` on
-`claude/checkout-section-redesign-9e673b`), seven variants switchable via `?variant=`; verdict
+**Primary source:** the prototype in PR #245 (`ui/apps/studio/src/panes/prototype/` at commit
+`0b2a7a40`, removed from `main` by this change), seven variants switchable via `?variant=`; verdict
 **C** in the first session (the scenario table) and **C2** in the second (what a row reveals).
 
 ## Problem
