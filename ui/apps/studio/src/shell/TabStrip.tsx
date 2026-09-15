@@ -10,6 +10,8 @@ import { isEmptyTab, type OpenDoc, type TabId, type Workspace } from './workspac
 const CHIP_WIDTH = 176;
 /** Room kept for the "+N" button. */
 const MENU_WIDTH = 64;
+/** Room the New tab and Open buttons always take beside the chips: two 28px ghosts and their gaps. */
+const BUTTONS_WIDTH = 64;
 /** Below this window width the strip is a dropdown: a phone, or a narrow split. */
 export const COMPACT_BELOW = 640;
 
@@ -320,7 +322,7 @@ export function TabStrip(props: StripHandlers & { workspace: Workspace; onCompac
     if (!el) return;
     const measure = (): void => {
       setCompact(isCompact());
-      setCapacity(Math.max(1, Math.floor((el.clientWidth - MENU_WIDTH) / CHIP_WIDTH)));
+      setCapacity(Math.max(1, Math.floor((el.clientWidth - BUTTONS_WIDTH - MENU_WIDTH) / CHIP_WIDTH)));
     };
     measure();
     window.addEventListener('resize', measure);

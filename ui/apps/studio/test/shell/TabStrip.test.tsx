@@ -6,7 +6,8 @@ import { Workspace, tabIdOf } from '../../src/shell/workspace.js';
 
 /**
  * jsdom lays nothing out, so the strip's measured width is stubbed: `stripWidth` decides how many
- * chips fit (176px each plus 64px for the menu), and `innerWidth` decides compact or not.
+ * chips fit (176px each, after 64px for the New tab and Open buttons and 64px for the "+N" menu),
+ * and `innerWidth` decides compact or not.
  */
 let stripWidth = 800;
 Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => stripWidth });
@@ -98,9 +99,17 @@ describe('TabStrip', () => {
     expect(screen.queryByRole('tooltip')).toBeNull();
   });
 
+  it('reserves room for the two strip buttons before counting chips', () => {
+    // 416px: two chips would fit beside the "+N" menu alone, but not beside it *and* the New tab
+    // and Open buttons that are always drawn — so only one chip may show, or the strip overflows.
+    renderStrip([['rule', 'a'], ['rule', 'b'], ['rule', 'c']], 1200, 416);
+    expect(screen.getAllByRole('tab')).toHaveLength(1);
+    expect(screen.getByRole('button', { name: '+2 more open documents' })).toBeTruthy();
+  });
+
   it('spills the tabs that do not fit into a menu, keeping the active one visible', async () => {
-    // Room for one chip and the menu.
-    const { workspace, onActivate } = renderStrip([['rule', 'a'], ['rule', 'b'], ['rule', 'c']], 1200, 240);
+    // Room for one chip, the two strip buttons and the menu.
+    const { workspace, onActivate } = renderStrip([['rule', 'a'], ['rule', 'b'], ['rule', 'c']], 1200, 304);
     act(() => workspace.activate(tabIdOf('rule', 'a')));
     const names = () => screen.getAllByRole('tab').map((tab) => tab.getAttribute('aria-label'));
     expect(names()).toEqual(['Rule a']);
