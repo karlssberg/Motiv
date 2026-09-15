@@ -160,3 +160,23 @@ export async function openScratchRule(page: Page): Promise<void> {
   await page.keyboard.press('Enter');
   await expect(root).toHaveText('customer.is-active');
 }
+
+/** The seeded scenario every builder spec runs against; the first row of the Evaluate table. */
+export const FIRST_SCENARIO = 'Active adult, 3 orders';
+
+/** The Evaluate table's row for one named scenario. */
+export function scenarioRow(page: Page, name: string = FIRST_SCENARIO): Locator {
+  return page.getByRole('row', { name, exact: true });
+}
+
+/**
+ * Re-models a seeded scenario and runs the table, then returns the row's Draft cell — what the
+ * tab's document decides for that model. Opens the row's detail to reach its editor.
+ */
+export async function evaluateDraft(page: Page, model: string, name: string = FIRST_SCENARIO): Promise<Locator> {
+  const row = scenarioRow(page, name);
+  await row.getByRole('button', { name: `details of ${name}` }).click();
+  await page.getByRole('textbox', { name: 'scenario model' }).fill(model);
+  await page.getByRole('button', { name: 'Run all' }).click();
+  return row.getByRole('cell', { name: 'draft' });
+}

@@ -58,6 +58,20 @@ public class GrantEnforcementTests
     }
 
     [Fact]
+    public async Task Should_refuse_evaluating_a_live_rule_to_read_only_principals()
+    {
+        // Arrange — the same gate as the sandbox: evaluating the live rule reveals what it decides.
+        await using var app = await StartWithGrants(new NamespaceGrant("", GrantVerb.Read));
+
+        // Act
+        var response = await app.GetTestClient().PostAsJsonAsync(
+            "/api/rules/rules/checkout.can-checkout/evaluate", new { model = new { isActive = true } });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
     public async Task Should_leave_reads_unfiltered()
     {
         // Arrange — no grants at all, still authenticated

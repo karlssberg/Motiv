@@ -88,7 +88,7 @@ const VIEWS: readonly Surface[] = [
     },
   },
   {
-    name: 'the rules page — builder, evaluate and checkout',
+    name: 'the rules page — builder and scenarios',
     reach: async (page) => {
       await visit(page, RULE_ROUTE);
       await expect(page.getByRole('group', { name: 'rule composition' })).toBeVisible();
@@ -105,8 +105,9 @@ const VIEWS: readonly Surface[] = [
     name: 'an evaluation, with its justification on screen',
     reach: async (page) => {
       await visit(page, RULE_ROUTE);
-      await page.getByRole('button', { name: 'Evaluate' }).click();
-      await expect(page.getByRole('group', { name: /^why this rule was/ })).toBeVisible();
+      await page.getByRole('button', { name: 'Run all' }).click();
+      await page.getByRole('button', { name: 'details of Active adult, 3 orders' }).click();
+      await expect(page.getByRole('group', { name: /^why the draft was/ })).toBeVisible();
     },
   },
   {
@@ -346,8 +347,9 @@ const DANGER_SURFACES: readonly Surface[] = [
     name: 'the evaluate pane, rejecting the sample model against the catalog schema',
     reach: async (page) => {
       await visit(page, RULE_ROUTE);
-      await page.getByLabel('sample model').fill('{ "age": "thirty", "isActive": "yes" }');
-      await page.getByRole('button', { name: 'Evaluate' }).click();
+      await page.getByRole('button', { name: 'details of Active adult, 3 orders' }).click();
+      await page.getByLabel('scenario model').fill('{ "age": "thirty", "isActive": "yes" }');
+      await page.getByRole('button', { name: 'Run all' }).click();
       await expect(page.getByRole('list', { name: 'schema violations' })).toBeVisible();
     },
   },

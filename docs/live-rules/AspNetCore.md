@@ -151,6 +151,7 @@ The rule-management endpoints:
 |----------------------------------------|-------------------------------------|--------------------------------------------------------------------------------|
 | `GET {basePath}/rules`                 | &mdash;                             | `200` &mdash; array of `{ name, modelType, metadataType, isAsync, isPolicy, version, description }` |
 | `GET {basePath}/rules/{name}`          | &mdash;                             | `200 { document, version }` (document is `null` on a compiled default); `404`  |
+| `POST {basePath}/rules/{name}/evaluate` | `{ model }`                        | `200` &mdash; the same result shape as `evaluate`, from the **live** rule (a code-defined default included); `400 { error }` on a missing or unbindable model; `404` |
 | `PUT {basePath}/rules/{name}`          | `{ document, baseVersion }`         | `200 { version }`; `409 { currentVersion }`; `400 { errors }`; `404`           |
 | `DELETE {basePath}/rules/{name}`       | `?baseVersion=n`                    | `200 { version }` (reverted to the default); `409 { currentVersion }`; `400 { errors }`; `404` |
 

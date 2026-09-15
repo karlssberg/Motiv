@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { expectDocument, openScratchRule } from './shell.js';
+import { expectDocument, openScratchRule, scenarioRow } from './shell.js';
 
 test('build a rule, then evaluate it end to end', async ({ page }) => {
   // A rule has to be open for there to be a builder: the page starts empty otherwise.
@@ -14,9 +14,9 @@ test('build a rule, then evaluate it end to end', async ({ page }) => {
   // The document modal reflects the composite document.
   await expectDocument(page, '"and"');
 
-  // Evaluate against the prefilled sample model.
-  await page.getByRole('button', { name: 'Evaluate' }).click();
+  // Run the seeded scenarios: the Draft column is this document's verdict for each.
+  await page.getByRole('button', { name: 'Run all' }).click();
 
-  // An outcome is rendered (Satisfied / Not satisfied).
-  await expect(page.getByLabel('outcome')).toContainText(/Satisfied|Not satisfied/);
+  // An outcome is rendered (yes / no).
+  await expect(scenarioRow(page).getByRole('cell', { name: 'draft' })).toHaveText(/yes|no/);
 });

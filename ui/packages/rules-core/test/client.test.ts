@@ -52,6 +52,23 @@ describe('RulesApiClient', () => {
     expect(result.satisfied).toBe(true);
   });
 
+  it('evaluates a live rule by name against a model', async () => {
+    const body: EvaluationResult = {
+      satisfied: true, reason: 'ok', assertions: ['ok'], values: ['ok'], justification: 'ok',
+      explanation: { assertions: ['ok'], underlying: [] },
+    };
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(body));
+    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock });
+
+    const result = await client.evaluateRule('checkout.can-checkout', { isActive: true });
+
+    expect(result.satisfied).toBe(true);
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('/api/rules/rules/checkout.can-checkout/evaluate');
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body as string)).toEqual({ model: { isActive: true } });
+  });
+
   it('throws RulesApiError carrying validation errors on a 400', async () => {
     const body: ValidationResponse = { errors: [{ path: '$.rule', code: 'UnknownSpec', message: 'nope' }] };
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse(body, 400));

@@ -103,17 +103,12 @@ const EVALUATION = {
   },
 };
 
-const CHECKOUT = {
-  approved: true,
-  eligibility: { satisfied: true, reason: 'customer is active', assertions: ['customer is active'] },
-  screening: { satisfied: true, reason: 'not on any list', assertions: ['not on any list'] },
-  loyalty: null,
-};
-
 /** Every route, matched longest-first so `/rules/{name}` is not swallowed by `/rules`. */
 const ROUTES: ReadonlyArray<readonly [RegExp, unknown]> = [
   [/\/api\/rules\/catalog$/, CATALOG],
   [/\/api\/rules\/validate$/, { errors: [] }],
+  // The live rule by name, and the draft: the scenario table asks both for every row.
+  [/\/api\/rules\/rules\/[^/]+\/evaluate$/, EVALUATION],
   [/\/api\/rules\/evaluate$/, EVALUATION],
   [/\/api\/rules\/propositions\/[^/]+\/dependents$/, []],
   [/\/api\/rules\/propositions\/[^/]+$/, { document: RULE_DOCUMENT, version: 2, origin: 'Authored', hasCompiledDefault: false }],
@@ -128,7 +123,6 @@ const ROUTES: ReadonlyArray<readonly [RegExp, unknown]> = [
     { subject: 'analyst@example.test', prefix: 'pricing.eu.', verb: 'publish' },
     { subject: 'ops@example.test', prefix: '', verb: 'read' },
   ]],
-  [/\/api\/checkout$/, CHECKOUT],
   [/\/api\/decisions$/, []],
 ];
 

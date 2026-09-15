@@ -25,7 +25,7 @@ function describeThrown(error: unknown): string {
 /**
  * The grant administration surface: who can read/author/publish/administer which name prefixes.
  * Talks to `/api/admin/*` with plain `fetch` — these are app endpoints, not part of
- * `@motiv-rules/core`'s SDK client, the same seam `CheckoutPane` uses for `/api/checkout`.
+ * `@motiv-rules/core`'s SDK client — the consuming side, which talks raw HTTP.
  *
  * The table and add form render only when the fetched capabilities allow it: `grantAdministration`
  * (the active grant source can be administered at all — an immutable source, e.g. the dev
