@@ -53,10 +53,12 @@ describe('App', () => {
     expect(screen.getByRole('dialog', { name: /document/i })).toBeDefined();
   });
 
-  it('shows the empty state with no document in the route', async () => {
+  it('lands on one empty tab, showing the catalog, with no document in the route', async () => {
     renderApp();
-    expect(await screen.findByRole('region', { name: 'Nothing open' })).toBeTruthy();
-    expect(screen.queryByRole('tab')).toBeNull();
+    expect(await screen.findByRole('tabpanel', { name: 'Catalog' })).toBeTruthy();
+    const list = screen.getByRole('tablist', { name: 'Open documents' });
+    expect(within(list).getAllByRole('tab').map((tab) => tab.getAttribute('aria-label'))).toEqual(['Catalog']);
+    expect(within(list).getByRole('tab', { name: 'Catalog' }).getAttribute('aria-selected')).toBe('true');
   });
 
   it('opens a proposition from a deep link, and a second route is a second tab', async () => {
@@ -91,7 +93,7 @@ describe('App', () => {
     await screen.findByRole('tab', { name: 'Rule can-checkout' });
     await userEvent.click(screen.getByLabelText('Close can-checkout'));
     await waitFor(() => expect(window.location.hash).toBe('#/rules'));
-    expect(await screen.findByRole('region', { name: 'Nothing open' })).toBeTruthy();
+    expect(await screen.findByRole('tabpanel', { name: 'Catalog' })).toBeTruthy();
   });
 
   it('keeps the tabs across a reload, with the route saying which is in front', async () => {

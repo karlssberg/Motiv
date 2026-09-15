@@ -11,10 +11,13 @@ import { Modal } from './Modal.js';
 export function DiscardDialog(props: {
   /** The document the changes belong to, named so the question is about something. */
   name: string;
+  /** What is about to happen to the tab: closed, or emptied back to the catalog. */
+  verb?: 'close' | 'unload';
   onKeep: () => void;
   onSaveAndClose: () => void;
   onDiscard: () => void;
 }) {
+  const verb = props.verb ?? 'close';
   return (
     <Modal label="Unsaved changes" className="dialog" onClose={props.onKeep}>
       <div className="dialog-form">
@@ -22,7 +25,7 @@ export function DiscardDialog(props: {
         <p className="dialog-text">What you changed since it was opened will be lost.</p>
         <div className="dialog-actions">
           <button type="button" className="btn btn-secondary" onClick={props.onKeep}>Keep editing</button>
-          <button type="button" className="btn btn-secondary" onClick={props.onSaveAndClose}>Save & close</button>
+          <button type="button" className="btn btn-secondary" onClick={props.onSaveAndClose}>Save & {verb}</button>
           <button type="button" className="btn btn-danger" onClick={props.onDiscard}>Discard changes</button>
         </div>
       </div>

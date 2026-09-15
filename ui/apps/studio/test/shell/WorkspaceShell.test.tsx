@@ -50,9 +50,23 @@ function stubClient(overrides: Record<string, unknown> = {}) {
   };
 }
 
+/** The strip's tabs, by label — scoped to its tablist, since the editor's surface switch is a tablist too. */
+const openTabs = (): string[] =>
+  within(screen.getByRole('tablist', { name: 'Open documents' })).getAllByRole('tab').map((tab) => tab.getAttribute('aria-label') ?? '');
+
+/** A tab's panel by name — hidden panels stay mounted, so queries are scoped to the one meant. */
+const findPanel = (name: string): Promise<HTMLElement> => screen.findByRole('tabpanel', { name });
+const getPanel = (name: string): HTMLElement => screen.getByRole('tabpanel', { name });
+
 /** The values a `<select>` currently offers, in the order it offers them. */
 function optionsOf(label: string | RegExp): string[] {
   return [...(screen.getByLabelText(label) as HTMLSelectElement).options].map((option) => option.value);
+}
+
+/** Opens the Open palette the way the shell offers it everywhere: ⌘K. The strip's "+" is a new tab. */
+async function openPalette(): Promise<void> {
+  await userEvent.keyboard('{Meta>}k{/Meta}');
+  await screen.findByRole('dialog', { name: 'Open' });
 }
 
 /**
@@ -61,7 +75,7 @@ function optionsOf(label: string | RegExp): string[] {
  * goes through both.
  */
 async function openExplorer(): Promise<void> {
-  await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+  await openPalette();
   await userEvent.click(await screen.findByRole('button', { name: 'Manage propositions' }));
   await screen.findByRole('dialog', { name: 'Propositions' });
 }
@@ -101,8 +115,8 @@ function renderShell(
 describe('WorkspaceShell', () => {
   it('lists the propositions in the explorer, and the rules and propositions in the Open palette', async () => {
     renderShell();
-    await userEvent.click(screen.getByRole('button', { name: 'Open' }));
-    const open = await screen.findByRole('dialog', { name: 'Open' });
+    await openPalette();
+    const open = screen.getByRole('dialog', { name: 'Open' });
     await waitFor(() => expect(within(open).getAllByRole('option').length).toBe(4));
     expect(within(open).getByRole('option', { name: /can-checkout/ })).toBeTruthy();
 
@@ -111,21 +125,99 @@ describe('WorkspaceShell', () => {
     expect(await within(explorer).findByRole('treeitem', { name: /derived/ })).toBeTruthy();
   });
 
-  it('shows the empty state while nothing is in the route, and the tab while something is', async () => {
+  it('shows the catalog in one empty tab while nothing is in the route, and the document in that tab once something is', async () => {
     const { select } = renderShell();
-    expect(await screen.findByRole('region', { name: 'Nothing open' })).toBeTruthy();
+    expect(await screen.findByRole('tabpanel', { name: 'Catalog' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Catalog', selected: true })).toBeTruthy();
     expect(screen.queryByRole('region', { name: 'Editor' })).toBeNull();
 
+    // The route's document lands in the empty tab, not beside it.
     select({ page: 'propositions', name: 'customer.derived' });
     expect(await screen.findByRole('tab', { name: 'Proposition customer.derived', selected: true })).toBeTruthy();
     expect(await screen.findByRole('region', { name: 'Editor' })).toBeTruthy();
-    expect(screen.queryByRole('region', { name: 'Nothing open' })).toBeNull();
+    expect(openTabs()).toEqual(['Proposition customer.derived']);
+  });
+
+  it('lists the rules and propositions in the catalog, and choosing one opens it in this tab', async () => {
+    const { navigate } = renderShell();
+    const catalog = await findPanel('Catalog');
+    expect(await within(catalog).findByRole('button', { name: /can-checkout/ })).toBeTruthy();
+    expect(within(catalog).getByRole('button', { name: /customer\.overridden/ })).toBeTruthy();
+
+    await userEvent.type(within(catalog).getByRole('searchbox', { name: 'Filter the catalog' }), 'derived');
+    expect(within(catalog).queryByRole('button', { name: /can-checkout/ })).toBeNull();
+    await userEvent.click(within(catalog).getByRole('button', { name: /customer\.derived/ }));
+
+    expect(navigate).toHaveBeenCalledWith({ page: 'propositions', name: 'customer.derived' });
+    expect(await screen.findByRole('tab', { name: 'Proposition customer.derived', selected: true })).toBeTruthy();
+    expect(openTabs()).toEqual(['Proposition customer.derived']);
+  });
+
+  it('starts a new proposition from the catalog', async () => {
+    renderShell();
+    const catalog = await findPanel('Catalog');
+    await userEvent.click(within(catalog).getByRole('button', { name: 'New proposition' }));
+    expect(await screen.findByRole('dialog', { name: 'New proposition' })).toBeTruthy();
+  });
+
+  it('+ opens a second, empty tab, and its catalog opens documents beside the first', async () => {
+    const { navigate } = renderShell(stubClient(), 'customer.derived');
+    await screen.findByRole('region', { name: 'Editor' });
+
+    await userEvent.click(screen.getByRole('button', { name: 'New tab' }));
+    expect(navigate).toHaveBeenLastCalledWith({ page: 'propositions', name: null });
+    expect(screen.getByRole('tab', { name: 'Catalog', selected: true })).toBeTruthy();
+    const catalog = getPanel('Catalog');
+    await userEvent.click(await within(catalog).findByRole('button', { name: /can-checkout/ }));
+
+    expect(await screen.findByRole('tab', { name: 'Rule can-checkout', selected: true })).toBeTruthy();
+    expect(openTabs()).toEqual(['Proposition customer.derived', 'Rule can-checkout']);
+  });
+
+  it('a tab\'s breadcrumb: Catalog unloads it in place, and the kind menu swaps in a sibling', async () => {
+    const { navigate } = renderShell(stubClient(), 'customer.derived');
+    const panel = await findPanel('customer.derived');
+    const crumbs = within(panel).getByRole('navigation', { name: 'Where this tab is' });
+
+    await userEvent.click(within(crumbs).getByRole('button', { name: 'Propositions' }));
+    const menu = await screen.findByRole('menu', { name: 'Other propositions' });
+    expect(within(menu).queryByRole('menuitem', { name: /derived/ })).toBeNull();
+    await userEvent.click(within(menu).getByRole('menuitem', { name: /overridden/ }));
+    expect(navigate).toHaveBeenLastCalledWith({ page: 'propositions', name: 'customer.overridden' });
+    expect(await screen.findByRole('tab', { name: 'Proposition customer.overridden', selected: true })).toBeTruthy();
+    expect(openTabs()).toEqual(['Proposition customer.overridden']);
+
+    const replaced = await findPanel('customer.overridden');
+    await userEvent.click(within(replaced).getByRole('button', { name: 'Catalog' }));
+    expect(navigate).toHaveBeenLastCalledWith({ page: 'propositions', name: null });
+    expect(await screen.findByRole('tab', { name: 'Catalog', selected: true })).toBeTruthy();
+    expect(openTabs()).toEqual(['Catalog']);
+  });
+
+  it('asks before unloading a tab with unsaved changes', async () => {
+    const client = stubClient();
+    const { navigate, storeOf } = renderShell(client, 'customer.derived');
+    const panel = await findPanel('customer.derived');
+    await waitFor(() => expect(client.getProposition).toHaveBeenCalled());
+    act(() => storeOf('proposition', 'customer.derived').replaceNode('$.rule', { spec: 'customer.is-adult' }));
+
+    await userEvent.click(within(panel).getByRole('button', { name: 'Catalog' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Unsaved changes' });
+    expect(navigate).not.toHaveBeenCalled();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Keep editing' }));
+    expect(screen.getByRole('tab', { name: 'Proposition customer.derived' })).toBeTruthy();
+
+    await userEvent.click(within(panel).getByRole('button', { name: 'Catalog' }));
+    await userEvent.click(within(await screen.findByRole('dialog', { name: 'Unsaved changes' })).getByRole('button', { name: 'Save & unload' }));
+    await waitFor(() => expect(client.putProposition).toHaveBeenCalledTimes(1));
+    expect(await screen.findByRole('tab', { name: 'Catalog', selected: true })).toBeTruthy();
+    expect(screen.queryByRole('tab', { name: 'Proposition customer.derived' })).toBeNull();
   });
 
   it('choosing from the Open palette navigates to the document, which opens its tab', async () => {
     const { navigate } = renderShell();
-    await userEvent.click(screen.getByRole('button', { name: 'Open' }));
-    const open = await screen.findByRole('dialog', { name: 'Open' });
+    await openPalette();
+    const open = screen.getByRole('dialog', { name: 'Open' });
     await userEvent.type(within(open).getByRole('combobox'), 'can-checkout');
     await userEvent.keyboard('{Enter}');
     expect(navigate).toHaveBeenCalledWith({ page: 'rules', name: 'can-checkout' });
@@ -402,7 +494,7 @@ describe('WorkspaceShell', () => {
     await userEvent.click(await screen.findByRole('button', { name: /^delete$/i }));
 
     await waitFor(() => expect(screen.queryByRole('tab', { name: 'Proposition customer.derived' })).toBeNull());
-    expect(await screen.findByRole('region', { name: 'Nothing open' })).toBeTruthy();
+    expect(await findPanel('Catalog')).toBeTruthy();
   });
 
   it('reloads the now-compiled proposition in its tab when a delete reverted an override', async () => {
@@ -441,7 +533,8 @@ describe('WorkspaceShell', () => {
     await userEvent.click(screen.getByLabelText('Close customer.derived'));
 
     await waitFor(() => expect(navigate).toHaveBeenCalledWith({ page: 'propositions', name: null }));
-    expect(screen.queryByRole('tab')).toBeNull();
+    // The last tab closed leaves one empty tab, as a browser window keeps one.
+    expect(openTabs()).toEqual(['Catalog']);
   });
 
   it('asks before closing a tab with unsaved changes, and Save & close saves it first', async () => {
@@ -457,7 +550,7 @@ describe('WorkspaceShell', () => {
 
     await userEvent.click(within(dialog).getByRole('button', { name: 'Save & close' }));
     await waitFor(() => expect(client.putProposition).toHaveBeenCalledTimes(1));
-    await waitFor(() => expect(screen.queryByRole('tab')).toBeNull());
+    await waitFor(() => expect(screen.queryByRole('tab', { name: 'Proposition customer.derived' })).toBeNull());
   });
 
   it('discards on request: the changes go, then the tab closes', async () => {
@@ -471,7 +564,7 @@ describe('WorkspaceShell', () => {
     await userEvent.keyboard('{Meta>}w{/Meta}');
     const dialog = await screen.findByRole('dialog', { name: 'Unsaved changes' });
     await userEvent.click(within(dialog).getByRole('button', { name: 'Discard changes' }));
-    await waitFor(() => expect(screen.queryByRole('tab')).toBeNull());
+    await waitFor(() => expect(screen.queryByRole('tab', { name: 'Proposition customer.derived' })).toBeNull());
     expect(store.getState().dirty).toBe(false);
   });
 

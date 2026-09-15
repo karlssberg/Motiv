@@ -6,7 +6,8 @@ import { Workspace, tabIdOf } from '../../src/shell/workspace.js';
 
 /**
  * jsdom lays nothing out, so the strip's measured width is stubbed: `stripWidth` decides how many
- * chips fit (176px each plus 64px for the menu), and `innerWidth` decides compact or not.
+ * chips fit (176px each, after 64px for the New tab and Open buttons and 64px for the "+N" menu),
+ * and `innerWidth` decides compact or not.
  */
 let stripWidth = 800;
 Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => stripWidth });
@@ -20,7 +21,7 @@ function renderStrip(tabs: Array<['rule' | 'proposition', string]>, width = 1200
     [{ name: 'customer.is-active', modelType: 'customer', metadataType: 'String', isAsync: false, origin: 'Overridden', version: 2, description: null, quarantine: [] }],
   );
   for (const [kind, name] of tabs) workspace.open(kind, name);
-  const handlers = { onActivate: vi.fn(), onRequestClose: vi.fn(), onOpen: vi.fn() };
+  const handlers = { onActivate: vi.fn(), onRequestClose: vi.fn(), onNewTab: vi.fn(), onOpen: vi.fn() };
   render(<TabStrip workspace={workspace} {...handlers} />);
   return { workspace, ...handlers };
 }
@@ -98,9 +99,17 @@ describe('TabStrip', () => {
     expect(screen.queryByRole('tooltip')).toBeNull();
   });
 
+  it('reserves room for the two strip buttons before counting chips', () => {
+    // 416px: two chips would fit beside the "+N" menu alone, but not beside it *and* the New tab
+    // and Open buttons that are always drawn — so only one chip may show, or the strip overflows.
+    renderStrip([['rule', 'a'], ['rule', 'b'], ['rule', 'c']], 1200, 416);
+    expect(screen.getAllByRole('tab')).toHaveLength(1);
+    expect(screen.getByRole('button', { name: '+2 more open documents' })).toBeTruthy();
+  });
+
   it('spills the tabs that do not fit into a menu, keeping the active one visible', async () => {
-    // Room for one chip and the menu.
-    const { workspace, onActivate } = renderStrip([['rule', 'a'], ['rule', 'b'], ['rule', 'c']], 1200, 240);
+    // Room for one chip, the two strip buttons and the menu.
+    const { workspace, onActivate } = renderStrip([['rule', 'a'], ['rule', 'b'], ['rule', 'c']], 1200, 304);
     act(() => workspace.activate(tabIdOf('rule', 'a')));
     const names = () => screen.getAllByRole('tab').map((tab) => tab.getAttribute('aria-label'));
     expect(names()).toEqual(['Rule a']);
@@ -115,10 +124,39 @@ describe('TabStrip', () => {
     expect(names()).toEqual(['Rule c']);
   });
 
-  it('offers + to open another', async () => {
-    const { onOpen } = renderStrip([['rule', 'a']]);
+  it('offers + for a new, empty tab, and Open for the palette', async () => {
+    const { onNewTab, onOpen } = renderStrip([['rule', 'a']]);
+    await userEvent.click(screen.getByRole('button', { name: 'New tab' }));
+    expect(onNewTab).toHaveBeenCalledTimes(1);
     await userEvent.click(screen.getByRole('button', { name: 'Open' }));
     expect(onOpen).toHaveBeenCalledTimes(1);
+  });
+
+  it('draws an empty tab as the catalog, closable, with no card to show', async () => {
+    const { workspace } = renderStrip([['rule', 'a']]);
+    act(() => { workspace.newTab(); });
+    const empty = screen.getByRole('tab', { name: 'Catalog' });
+    expect(empty.getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByLabelText('Close empty tab')).toBeTruthy();
+    // No document, nothing to describe: focusing it must not reference a card that never mounts.
+    act(() => empty.focus());
+    await act(() => new Promise((resolve) => setTimeout(resolve, 400)));
+    expect(empty.getAttribute('aria-describedby')).toBeNull();
+    expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+
+  it('lists an empty tab in the narrow dropdown, and offers a new tab from it', async () => {
+    const { workspace, onNewTab } = renderStrip([['rule', 'a']], 500);
+    act(() => { workspace.newTab(); });
+    const button = screen.getByRole('button', { name: /^Open documents/ });
+    expect(button.getAttribute('aria-label')).toContain('Catalog');
+    await userEvent.click(button);
+    const menu = screen.getByRole('menu', { name: 'Open documents' });
+    expect(within(menu).getByRole('menuitem', { name: 'Catalog' })).toBeTruthy();
+    await userEvent.click(within(menu).getByRole('menuitem', { name: 'New tab' }));
+    expect(onNewTab).toHaveBeenCalledTimes(1);
+    // The palette stays one click away beside the dropdown: a phone never sees the chips.
+    expect(screen.getByRole('button', { name: 'Open' })).toBeTruthy();
   });
 
   it('becomes a dropdown on a narrow window, listing every tab with a close each', async () => {
@@ -131,7 +169,7 @@ describe('TabStrip', () => {
 
     await userEvent.click(button);
     const menu = screen.getByRole('menu', { name: 'Open documents' });
-    await userEvent.click(within(menu).getByRole('menuitem', { name: /b/ }));
+    await userEvent.click(within(menu).getByRole('menuitem', { name: 'b' }));
     expect(onActivate).toHaveBeenLastCalledWith(tabIdOf('rule', 'b'));
 
     await userEvent.click(button);
