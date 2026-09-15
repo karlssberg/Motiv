@@ -65,21 +65,11 @@ public sealed class MotivRulesOptions
                     return ex.Errors;
                 }
             },
+            BindModel = static (jsonOptions, modelElement) => Bind<TModel>(jsonOptions, modelElement)!,
             Evaluate = static (serializer, resultSerializer, jsonOptions, documentJson, modelElement) =>
             {
                 var spec = serializer.Deserialize<TModel>(documentJson);
-                TModel? model;
-                try
-                {
-                    model = modelElement.Deserialize<TModel>(jsonOptions);
-                }
-                catch (JsonException)
-                {
-                    // A shape mismatch is a caller error, not a server fault.
-                    throw new InvalidModelException(typeof(TModel).Name);
-                }
-                if (model is null) throw new InvalidModelException(typeof(TModel).Name);
-                var result = spec.Evaluate(model);
+                var result = spec.Evaluate(Bind<TModel>(jsonOptions, modelElement));
                 return resultSerializer.ToEvaluationResult(result);
             }
         };
@@ -89,6 +79,23 @@ public sealed class MotivRulesOptions
         // the alternative would be reflecting over the Type, which this codebase avoids on principle.
         _propositionModels.Add(propositions => propositions.AddModel<TModel>(id));
         return this;
+    }
+
+    /// <summary>Binds a sample model element to <typeparamref name="TModel"/>, or throws <see cref="InvalidModelException"/>.</summary>
+    private static TModel Bind<TModel>(JsonSerializerOptions jsonOptions, JsonElement modelElement)
+    {
+        TModel? model;
+        try
+        {
+            model = modelElement.Deserialize<TModel>(jsonOptions);
+        }
+        catch (JsonException)
+        {
+            // A shape mismatch is a caller error, not a server fault.
+            throw new InvalidModelException(typeof(TModel).Name);
+        }
+        if (model is null) throw new InvalidModelException(typeof(TModel).Name);
+        return model;
     }
 
     internal bool TryGetBinding(string id, out ModelBinding binding) =>

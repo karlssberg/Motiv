@@ -120,6 +120,11 @@ export interface EvaluateRequest {
   model: unknown;
 }
 
+/** Request body for the live-rule evaluate endpoint, POST /rules/{name}/evaluate. */
+export interface RuleEvaluateRequest {
+  model: unknown;
+}
+
 /** One live-rule listing from GET /rules. */
 export interface RuleListEntry {
   name: string;

@@ -50,6 +50,18 @@ public abstract class RuleBase
     public abstract string? DocumentJson { get; }
 
     /// <summary>
+    /// Evaluates the live rule against a model held as <see cref="object"/>, projecting the result
+    /// through <paramref name="resultSerializer"/>. This is how a caller holding only a
+    /// <see cref="RuleBase"/> — a rule found by name — evaluates it without its generic arguments:
+    /// the caller binds the model to <see cref="ModelType"/> (a registered model binding does so
+    /// without reflection), and the rule casts it back to its own <c>TModel</c>.
+    /// </summary>
+    /// <returns>A <c>RuleEvaluationResult&lt;TMetadata&gt;</c>, boxed.</returns>
+    /// <exception cref="InvalidCastException">The model is not a <see cref="ModelType"/>.</exception>
+    internal abstract ValueTask<object> EvaluateBoxedAsync(
+        object model, ResultSerializer resultSerializer, CancellationToken cancellationToken);
+
+    /// <summary>
     /// The document this rule will carry once <paramref name="builder"/> is published. Read from the
     /// builder rather than the live world because <see cref="RuleSet"/> re-tracks graph edges from the
     /// document a publish is *about to* make live.

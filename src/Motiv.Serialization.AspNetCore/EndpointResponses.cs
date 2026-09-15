@@ -14,6 +14,9 @@ internal static class EndpointResponses
     internal static IResult MissingDocument(JsonSerializerOptions json) =>
         Results.Json(new ErrorResponse("The request must include a document."), json, statusCode: 400);
 
+    internal static IResult MissingModel(JsonSerializerOptions json) =>
+        Results.Json(new ErrorResponse("The request must include a model."), json, statusCode: 400);
+
     internal static IResult NonPositiveBaseVersion(JsonSerializerOptions json) =>
         Results.Json(
             new ErrorResponse("baseVersion must be a positive integer; versions start at 1."),

@@ -101,6 +101,11 @@ public class Rule<TModel, TMetadata> : RuleBase
         return result;
     }
 
+    /// <inheritdoc />
+    internal override ValueTask<object> EvaluateBoxedAsync(
+        object model, ResultSerializer resultSerializer, CancellationToken cancellationToken) =>
+        new(resultSerializer.ToEvaluationResult(Evaluate((TModel)model)));
+
     /// <summary>
     /// The log this binding records to, or null when it records nothing. One decision point, so the
     /// recording path carries no second check and an unaudited rule does no work at all.

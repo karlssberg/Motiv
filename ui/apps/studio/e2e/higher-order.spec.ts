@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { expectDocument, openScratchRule } from './shell.js';
+import { evaluateDraft, expectDocument, openScratchRule } from './shell.js';
 
 /** Replaces a row's expression by typing DSL into it, the way authoring now works. */
 async function typeExpression(page: Page, path: string, dsl: string): Promise<void> {
@@ -27,21 +27,17 @@ test('builds and evaluates a higher-order rule end to end', async ({ page }) => 
   await buildHigherOrderRule(page);
 
   // a model whose orders are all large → asAllSatisfied is true → whole AND satisfied
-  await page.getByLabel('sample model').fill(
-    '{ "age": 30, "isActive": true, "orderCount": 2, "orders": [ { "total": 150 }, { "total": 200 } ] }',
-  );
-  await page.getByRole('button', { name: 'Evaluate' }).click();
+  const draft = await evaluateDraft(page,
+    '{ "age": 30, "isActive": true, "orderCount": 2, "orders": [ { "total": 150 }, { "total": 200 } ] }');
 
-  await expect(page.getByLabel('outcome')).toHaveText('Satisfied');
+  await expect(draft).toHaveText(/yes/);
 });
 
 test('a mixed order set makes the quantifier — and the rule — not satisfied', async ({ page }) => {
   await buildHigherOrderRule(page);
 
-  await page.getByLabel('sample model').fill(
-    '{ "age": 30, "isActive": true, "orderCount": 2, "orders": [ { "total": 150 }, { "total": 40 } ] }',
-  );
-  await page.getByRole('button', { name: 'Evaluate' }).click();
+  const draft = await evaluateDraft(page,
+    '{ "age": 30, "isActive": true, "orderCount": 2, "orders": [ { "total": 150 }, { "total": 40 } ] }');
 
-  await expect(page.getByLabel('outcome')).toHaveText('Not satisfied');
+  await expect(draft).toHaveText(/no/);
 });

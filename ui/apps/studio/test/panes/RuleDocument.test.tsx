@@ -49,14 +49,14 @@ describe('RuleDocument', () => {
     expect(store.getState().dirty).toBe(false);
     const editor = screen.getByRole('region', { name: 'Editor' });
     expect(editor.textContent).toContain('can-checkout');
-    expect(await screen.findByText(/v3/)).toBeTruthy();
+    expect(await screen.findByText(/^v3\b/)).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Evaluate' })).toBeTruthy();
-    expect(screen.getByRole('region', { name: 'Checkout' })).toBeTruthy();
+    expect(screen.queryByRole('region', { name: 'Checkout' })).toBeNull();
   });
 
   it('draws JSON and Save in the editor’s header, after the surface tabs', async () => {
     renderDocument();
-    await screen.findByText(/v3/);
+    await screen.findByText(/^v3\b/);
     const editor = screen.getByRole('region', { name: 'Editor' });
     const header = editor.querySelector('.pane-header')!;
     const order = [...header.querySelectorAll('[role="tab"], button')].map((el) => el.textContent || el.getAttribute('aria-label'));
@@ -74,25 +74,25 @@ describe('RuleDocument', () => {
 
   it('saves with the loaded version, shows the new one, and tells the workspace', async () => {
     const { workspace, client } = renderDocument();
-    await screen.findByText(/v3/);
+    await screen.findByText(/^v3\b/);
 
     await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     await waitFor(() =>
       expect(client.putRule).toHaveBeenCalledWith('can-checkout', { rule: { spec: 'is-adult' } }, 3));
-    expect(await screen.findByText(/v4/)).toBeDefined();
+    expect(await screen.findByText(/^v4\b/)).toBeDefined();
     await waitFor(() => expect(workspace.getState().latest['can-checkout']).toMatchObject({ version: 4, kind: 'rule' }));
   });
 
   it('does not report the initial load as a save', async () => {
     const { workspace } = renderDocument();
-    await screen.findByText(/v3/);
+    await screen.findByText(/^v3\b/);
     expect(workspace.getState().latest['can-checkout']).toBeUndefined();
   });
 
   it('saves and closes in one step from the split button, only after the save landed', async () => {
     const { onClose, client } = renderDocument();
-    await screen.findByText(/v3/);
+    await screen.findByText(/^v3\b/);
 
     await userEvent.click(screen.getByRole('button', { name: 'Save options' }));
     await userEvent.click(screen.getByRole('menuitemradio', { name: /Save & close/ }));
@@ -124,7 +124,7 @@ describe('RuleDocument', () => {
     const errors = [{ path: '$.rule', code: 'PolicyRequired', message: 'the rule must be a policy' }];
     const client = makeClient({ putRule: vi.fn().mockResolvedValue({ outcome: 'invalid', errors }) });
     const { store } = renderDocument('can-checkout', client);
-    await screen.findByText(/v3/);
+    await screen.findByText(/^v3\b/);
 
     await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -134,7 +134,7 @@ describe('RuleDocument', () => {
   it('shows a conflict banner with a reload action on version conflicts', async () => {
     const client = makeClient({ putRule: vi.fn().mockResolvedValue({ outcome: 'conflict', currentVersion: 9 }) });
     renderDocument('can-checkout', client);
-    await screen.findByText(/v3/);
+    await screen.findByText(/^v3\b/);
 
     await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -156,7 +156,7 @@ describe('RuleDocument', () => {
   it('reports a thrown save, and offers the loaded rule as the way back', async () => {
     const client = makeClient({ putRule: vi.fn().mockRejectedValue(new Error('Rules service unavailable (503)')) });
     renderDocument('can-checkout', client);
-    await screen.findByText(/v3/);
+    await screen.findByText(/^v3\b/);
 
     await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -168,14 +168,14 @@ describe('RuleDocument', () => {
 
   it('opens the document viewer from the header', async () => {
     renderDocument();
-    await screen.findByText(/v3/);
+    await screen.findByText(/^v3\b/);
     await userEvent.click(screen.getByRole('button', { name: 'JSON' }));
     expect(screen.getByRole('dialog', { name: /document/i })).toBeTruthy();
   });
 
   it('lists the propositions the rule uses, and opens one on request', async () => {
     const { onOpenProposition } = renderDocument();
-    await screen.findByText(/v3/);
+    await screen.findByText(/^v3\b/);
     const uses = screen.getByRole('group', { name: 'Uses' });
     await userEvent.click(screen.getByRole('button', { name: /is-adult/ }));
     expect(uses).toBeTruthy();
@@ -184,7 +184,7 @@ describe('RuleDocument', () => {
 
   it('marks a used proposition as editing while another tab holds it dirty, and updated once saved', async () => {
     const { workspace, tab } = renderDocument();
-    await screen.findByText(/v3/);
+    await screen.findByText(/^v3\b/);
     const other = workspace.open('proposition', 'is-adult', { activate: false });
     expect(screen.queryByText('editing')).toBeNull();
 
