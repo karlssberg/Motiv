@@ -138,6 +138,34 @@ describe('ScenarioPane', () => {
     expect(screen.getByLabelText('scenario name')).toBeDefined();
   });
 
+  it('adds two scenarios from two quick clicks', async () => {
+    renderPane();
+    await settleCatalog();
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+    expect(row('Scenario 5')).toBeDefined();
+    expect(row('Scenario 6')).toBeDefined();
+  });
+
+  it('clears a row’s violations when its model is edited, and drops them with a deleted row', async () => {
+    renderPane();
+    await settleCatalog();
+    fireEvent.click(within(row('Minor')).getByRole('button', { name: 'details of Minor' }));
+    const model = () => within(row('Minor: details')).getByLabelText('scenario model');
+    fireEvent.change(model(), { target: { value: '{ "age": "sixteen", "isActive": true }' } });
+    await runAll();
+    expect(screen.getByText('$.age: expected integer, got string')).toBeDefined();
+
+    fireEvent.change(model(), { target: { value: '{ "age": 16, "isActive": true }' } });
+    expect(screen.queryByText('$.age: expected integer, got string')).toBeNull();
+
+    fireEvent.change(model(), { target: { value: '{ "age": "sixteen", "isActive": true }' } });
+    await runAll();
+    expect(screen.getByText('$.age: expected integer, got string')).toBeDefined();
+    fireEvent.click(within(row('Minor')).getByRole('button', { name: 'delete Minor' }));
+    expect(screen.queryByText('$.age: expected integer, got string')).toBeNull();
+  });
+
   it('blocks a scenario that breaks the model schema, shows its violations, and still runs the others', async () => {
     const api = client();
     renderPane(api);

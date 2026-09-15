@@ -1,4 +1,4 @@
-import type { EvaluationResult, RuleDocument, RulesApiClient } from '@motiv-rules/core';
+import type { EvaluationResult, RuleDocument, RulesApiClient, SchemaViolation } from '@motiv-rules/core';
 
 /**
  * One side of a scenario's comparison: what the live rule decided, or what the draft would. Each
@@ -15,13 +15,20 @@ export interface Comparison {
   draft: Side;
 }
 
-/** A named sample model, and the last comparison it ran — or none, once its model has changed. */
+/**
+ * A named sample model, and the last comparison it ran — or none, once its model has changed.
+ * Everything a row shows lives on the row: whether its detail is open, and the schema violations
+ * its last run found. Deleting a row therefore takes its state with it, and editing its model
+ * clears what no longer describes the text.
+ */
 export interface Scenario {
   id: number;
   name: string;
   /** The model as typed: JSON text, kept verbatim so an edit in progress survives a re-render. */
   model: string;
   comparison: Comparison;
+  open: boolean;
+  violations: SchemaViolation[];
 }
 
 /** What a run needs to know about the rule: its live name and the tab's draft. */
@@ -43,34 +50,52 @@ const SEED: readonly { name: string; model: string }[] = [
   { name: 'New, no orders', model: '{\n  "customerId": "cust-1",\n  "age": 25,\n  "isActive": true,\n  "orderCount": 0\n}' },
 ];
 
-let nextId = 1;
-const fresh = (name: string, model: string): Scenario => ({ id: nextId++, name, model, comparison: UNEVALUATED });
+// Ids come from the list rather than a counter, so every operation here is a pure function of
+// its input — safe inside a functional state update, StrictMode's double invocation included.
+const nextIdIn = (rows: Scenario[]): number => rows.reduce((max, r) => Math.max(max, r.id), 0) + 1;
 
-export const seedScenarios = (): Scenario[] => SEED.map((s) => fresh(s.name, s.model));
+const fresh = (id: number, name: string, model: string, open = false): Scenario =>
+  ({ id, name, model, comparison: UNEVALUATED, open, violations: [] });
 
+export const seedScenarios = (): Scenario[] => SEED.map((s, i) => fresh(i + 1, s.name, s.model));
+
+/** A new scenario, opened straight away: an empty row is nothing to look at until it is edited. */
 export const addScenario = (rows: Scenario[]): Scenario[] =>
-  [...rows, fresh(`Scenario ${rows.length + 1}`, SEED[0]!.model)];
+  [...rows, fresh(nextIdIn(rows), `Scenario ${rows.length + 1}`, SEED[0]!.model, true)];
 
-/** A copy directly beneath its source, unevaluated: the same input, awaiting its own run. */
+/** A copy directly beneath its source, unevaluated and open: the same input, awaiting its own run. */
 export function cloneScenario(rows: Scenario[], id: number): Scenario[] {
   const index = rows.findIndex((r) => r.id === id);
   if (index < 0) return rows;
   const source = rows[index]!;
-  return [...rows.slice(0, index + 1), fresh(`${source.name} (copy)`, source.model), ...rows.slice(index + 1)];
+  const copy = fresh(nextIdIn(rows), `${source.name} (copy)`, source.model, true);
+  return [...rows.slice(0, index + 1), copy, ...rows.slice(index + 1)];
 }
+
+export const toggleScenario = (rows: Scenario[], id: number): Scenario[] =>
+  rows.map((r) => (r.id === id ? { ...r, open: !r.open } : r));
+
+/** The violations a run found for one row; the row is unevaluated, since it did not run. */
+export const withViolations = (rows: Scenario[], id: number, violations: SchemaViolation[]): Scenario[] =>
+  rows.map((r) => (r.id === id ? { ...r, violations, comparison: UNEVALUATED } : r));
 
 export const removeScenario = (rows: Scenario[], id: number): Scenario[] => rows.filter((r) => r.id !== id);
 
 /**
- * Renames or re-models one scenario. A new model drops the row back to unevaluated: the last
- * verdict described the old input, and showing it beside the new one would be a lie.
+ * Renames or re-models one scenario. A new model drops the row back to unevaluated and clears its
+ * violations: both described the old input, and showing either beside the new one would be a lie.
  */
 export const editScenario = (rows: Scenario[], id: number, change: { name?: string; model?: string }): Scenario[] =>
-  rows.map((r) => (r.id !== id ? r : {
-    ...r,
-    ...change,
-    comparison: change.model !== undefined && change.model !== r.model ? UNEVALUATED : r.comparison,
-  }));
+  rows.map((r) => {
+    if (r.id !== id) return r;
+    const remodelled = change.model !== undefined && change.model !== r.model;
+    return {
+      ...r,
+      ...change,
+      comparison: remodelled ? UNEVALUATED : r.comparison,
+      violations: remodelled ? [] : r.violations,
+    };
+  });
 
 export const withComparison = (rows: Scenario[], id: number, comparison: Comparison): Scenario[] =>
   rows.map((r) => (r.id === id ? { ...r, comparison } : r));

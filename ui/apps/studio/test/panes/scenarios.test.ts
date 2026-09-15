@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import type { EvaluationResult, RulesApiClient } from '@motiv-rules/core';
 import {
   addScenario, cloneScenario, diffAssertions, editScenario, outcomeChanged, removeScenario,
-  runScenario, seedScenarios, type Scenario,
+  runScenario, seedScenarios, toggleScenario, withViolations, type Scenario,
 } from '../../src/panes/scenarios.js';
 
 const result = (satisfied: boolean, ...assertions: string[]): EvaluationResult => ({
@@ -101,5 +101,33 @@ describe('scenarios', () => {
     expect(added.at(-1)!.name).toBe(`Scenario ${rows.length + 1}`);
 
     expect(removeScenario(rows, first!.id).map((r) => r.id)).not.toContain(first!.id);
+  });
+
+  it('derives ids from the list, so adding is a pure function of its input', () => {
+    const rows = seedScenarios();
+    const once = addScenario(rows);
+    const twice = addScenario(rows);
+    expect(once.at(-1)!.id).toBe(twice.at(-1)!.id);
+    expect(new Set(addScenario(once).map((r) => r.id)).size).toBe(rows.length + 2);
+  });
+
+  it('opens a new or cloned row, toggles a row, and a deleted row takes its state with it', () => {
+    const rows = seedScenarios();
+    expect(rows.every((r) => !r.open)).toBe(true);
+    expect(addScenario(rows).at(-1)!.open).toBe(true);
+    expect(cloneScenario(rows, rows[0]!.id)[1]!.open).toBe(true);
+    const toggled = toggleScenario(rows, rows[1]!.id);
+    expect(toggled[1]!.open).toBe(true);
+    expect(toggleScenario(toggled, rows[1]!.id)[1]!.open).toBe(false);
+    expect(removeScenario(toggled, rows[1]!.id).some((r) => r.open)).toBe(false);
+  });
+
+  it('records violations against a row, and editing its model clears them', () => {
+    const rows = seedScenarios();
+    const violation = { path: '$.age', message: 'expected integer, got string' };
+    const flagged = withViolations(rows, rows[0]!.id, [violation]);
+    expect(flagged[0]!.violations).toEqual([violation]);
+    expect(editScenario(flagged, rows[0]!.id, { name: 'Renamed' })[0]!.violations).toEqual([violation]);
+    expect(editScenario(flagged, rows[0]!.id, { model: '{}' })[0]!.violations).toEqual([]);
   });
 });

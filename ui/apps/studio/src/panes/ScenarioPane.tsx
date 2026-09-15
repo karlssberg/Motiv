@@ -7,7 +7,7 @@ import { Tick } from './Verdict.js';
 import { Caret, IconDelete, IconNew, IconPlay, IconRefresh } from '../shell/icons.js';
 import {
   addScenario, cloneScenario, editScenario, outcomeChanged, removeScenario, runScenario, seedScenarios,
-  withComparison, type Comparison, type Scenario, type Side,
+  toggleScenario, withComparison, withViolations, type Comparison, type Scenario, type Side,
 } from './scenarios.js';
 
 /**
@@ -23,47 +23,30 @@ export function ScenarioPane(props: { client: RulesApiClient; ruleName: string; 
   const state = useRuleEditor(store);
   const catalogState = useCatalog(props.client);
   const [rows, setRows] = useState<Scenario[]>(seedScenarios);
-  const [open, setOpen] = useState<Set<number>>(() => new Set());
-  const [violations, setViolations] = useState<Map<number, SchemaViolation[]>>(() => new Map());
 
   // Absent while loading or on older backends without modelTypes — then enforcement simply doesn't run.
   const modelSchema = catalogState.status === 'ready' ? catalogState.data.modelTypes?.[MODEL_TYPE] : undefined;
 
-  const toggle = (id: number): void =>
-    setOpen((current) => {
-      const next = new Set(current);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-
-  /** A new scenario, opened straight away: an empty row is nothing to look at until it is edited. */
-  const add = (): void => {
-    const next = addScenario(rows);
-    setRows(next);
-    setOpen((current) => new Set(current).add(next.at(-1)!.id));
-  };
-
-  const reset = (): void => {
-    setRows(seedScenarios());
-    setOpen(new Set());
-    setViolations(new Map());
-  };
-
+  // Every change to the table is a pure function of the committed rows, so two clicks before a
+  // re-render compose rather than the second overwriting the first.
   const runAll = async (): Promise<void> => {
     // Enforce the catalog's model schema per scenario when we have one and the text parses; a row
     // that breaks it is held back with its violations, the rest run. Unparseable text is the run's
     // problem to report, not the schema's.
-    const found = new Map<number, SchemaViolation[]>();
+    const held = new Map<number, SchemaViolation[]>();
     const runnable: Scenario[] = [];
     for (const row of rows) {
       let model: unknown;
       try { model = JSON.parse(row.model); } catch { runnable.push(row); continue; }
       const broken = modelSchema ? validateAgainstSchema(model, modelSchema) : [];
-      if (broken.length > 0) found.set(row.id, broken); else runnable.push(row);
+      if (broken.length > 0) held.set(row.id, broken); else runnable.push(row);
     }
-    setViolations(found);
     const loading: Comparison = { live: { status: 'loading' }, draft: { status: 'loading' } };
-    setRows((current) => current.map((r) => (found.has(r.id) ? r : { ...r, comparison: loading })));
+    setRows((current) => {
+      let next = current;
+      for (const [id, violations] of held) next = withViolations(next, id, violations);
+      return next.map((r) => (runnable.some((x) => x.id === r.id) ? { ...r, violations: [], comparison: loading } : r));
+    });
     const rule = { ruleName: props.ruleName, modelType: MODEL_TYPE, document: state.document };
     await Promise.all(runnable.map(async (row) => {
       const comparison = await runScenario(props.client, rule, row);
@@ -84,10 +67,10 @@ export function ScenarioPane(props: { client: RulesApiClient; ruleName: string; 
       <div className="pane-body">
         <div className="run-row">
           <button type="button" className="btn" onClick={() => void runAll()}><IconPlay size={14} />Run all</button>
-          <button type="button" className="btn btn-secondary" onClick={add}>
+          <button type="button" className="btn btn-secondary" onClick={() => setRows(addScenario)}>
             <IconNew size={14} />Add
           </button>
-          <button type="button" className="btn btn-secondary" title="Restore the seeded scenarios" onClick={reset}>
+          <button type="button" className="btn btn-secondary" title="Restore the seeded scenarios" onClick={() => setRows(seedScenarios())}>
             <IconRefresh size={14} />Reset
           </button>
           {ran && (
@@ -111,9 +94,7 @@ export function ScenarioPane(props: { client: RulesApiClient; ruleName: string; 
               <ScenarioRow
                 key={row.id}
                 row={row}
-                open={open.has(row.id)}
-                violations={violations.get(row.id) ?? []}
-                onToggle={() => toggle(row.id)}
+                onToggle={() => setRows((current) => toggleScenario(current, row.id))}
                 onEdit={(change) => setRows((current) => editScenario(current, row.id, change))}
                 onClone={() => setRows((current) => cloneScenario(current, row.id))}
                 onDelete={() => setRows((current) => removeScenario(current, row.id))}
@@ -129,14 +110,13 @@ export function ScenarioPane(props: { client: RulesApiClient; ruleName: string; 
 
 function ScenarioRow(props: {
   row: Scenario;
-  open: boolean;
-  violations: SchemaViolation[];
   onToggle: () => void;
   onEdit: (change: { name?: string; model?: string }) => void;
   onClone: () => void;
   onDelete: () => void;
 }) {
-  const { row, open } = props;
+  const { row } = props;
+  const { open } = row;
   const detailId = useId();
   const changed = outcomeChanged(row.comparison);
   return (
@@ -176,7 +156,7 @@ function ScenarioRow(props: {
               <input aria-label="scenario name" className="control" value={row.name} onChange={(e) => props.onEdit({ name: e.target.value })} />
               <textarea aria-label="scenario model" className="control" rows={5} value={row.model} onChange={(e) => props.onEdit({ model: e.target.value })} />
             </div>
-            <SchemaViolations violations={props.violations} />
+            <SchemaViolations violations={row.violations} />
             {row.comparison.draft.status !== 'idle' && (
               <div className="scenario-sides">
                 <div className="scenario-side">
