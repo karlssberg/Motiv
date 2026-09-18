@@ -29,15 +29,15 @@ public class LeafTokenizerTests
     }
 
     [Theory]
-    [InlineData("null", LeafTokenKind.Keyword)]
-    [InlineData("true", LeafTokenKind.Keyword)]
-    [InlineData("1.5", LeafTokenKind.Number)]
-    [InlineData("=>", LeafTokenKind.Operator)]
-    [InlineData("!=", LeafTokenKind.Operator)]
-    public void Should_classify_single_tokens(string text, LeafTokenKind kind)
+    [InlineData("null", "Keyword")]
+    [InlineData("true", "Keyword")]
+    [InlineData("1.5", "Number")]
+    [InlineData("=>", "Operator")]
+    [InlineData("!=", "Operator")]
+    public void Should_classify_single_tokens(string text, string kind)
     {
         var (tokens, _) = Tokenize(text);
-        tokens[0].Kind.ShouldBe(kind);
+        tokens[0].Kind.ShouldBe(Enum.Parse<LeafTokenKind>(kind));
         tokens[0].Text.ShouldBe(text);
     }
 
