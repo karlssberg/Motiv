@@ -37,7 +37,7 @@ public class LeafTokenizerTests
     public void Should_classify_single_tokens(string text, string kind)
     {
         var (tokens, _) = Tokenize(text);
-        tokens[0].Kind.ShouldBe(Enum.Parse<LeafTokenKind>(kind));
+        tokens[0].Kind.ShouldBe((LeafTokenKind)Enum.Parse(typeof(LeafTokenKind), kind));
         tokens[0].Text.ShouldBe(text);
     }
 
