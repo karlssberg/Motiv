@@ -90,7 +90,7 @@ public class LeafTokenizerTests
             LeafTokenKind.Punctuation, LeafTokenKind.Operator, LeafTokenKind.Parameter, LeafTokenKind.End]);
         tokens[10].Text.ShouldBe("\"paid\"");
         tokens[22].Text.ShouldBe("@vip");
-        tokens[22].Start.ShouldBe(60);
+        tokens[22].Start.ShouldBe(58);
     }
 
     [Theory]
@@ -331,7 +331,7 @@ public class LeafParserTests
         var cmp = node.ShouldBeOfType<Binary>();
         var sum = cmp.Left.ShouldBeOfType<MethodCall>();
         sum.Method.ShouldBe("sum");
-        sum.MethodStart.ShouldBe(39);
+        sum.MethodStart.ShouldBe(38);
         var lambda = sum.Arguments.ShouldHaveSingleItem().ShouldBeOfType<Lambda>();
         lambda.Parameter.ShouldBe("o");
         lambda.Body.ShouldBeOfType<MemberAccess>().Name.ShouldBe("total");
@@ -2611,7 +2611,7 @@ describe('tokenizeLeaf', () => {
       'ident', 'punct', 'ident', 'punct', 'ident', 'op', 'ident', 'punct', 'ident', 'op', 'string', 'punct',
       'punct', 'ident', 'punct', 'ident', 'op', 'ident', 'punct', 'ident', 'punct', 'op', 'param', 'end',
     ]);
-    expect(tokens[22]).toEqual({ kind: 'param', value: '@vip', from: 60, to: 64 });
+    expect(tokens[22]).toEqual({ kind: 'param', value: '@vip', from: 58, to: 62 });
   });
 
   it('reports an unterminated string and an unknown character', () => {
@@ -2635,7 +2635,7 @@ describe('parseLeaf', () => {
     const { ast } = parseLeaf('orders.where(o => o.status == "paid").sum(o => o.total) > 1000');
     expect(ast).toMatchObject({
       kind: 'binary', op: '>',
-      left: { kind: 'call', method: 'sum', methodFrom: 39, methodTo: 42, args: [{ kind: 'lambda', param: 'o', body: { kind: 'member', name: 'total' } }],
+      left: { kind: 'call', method: 'sum', methodFrom: 38, methodTo: 41, args: [{ kind: 'lambda', param: 'o', body: { kind: 'member', name: 'total' } }],
         target: { kind: 'call', method: 'where', target: { kind: 'ident', name: 'orders' } } },
       right: { kind: 'num', text: '1000' },
     });
