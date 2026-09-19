@@ -37,6 +37,7 @@
 
     <ItemGroup>
         <Content Include="..\..\schemas\rule.v1.json" Link="schemas\rule.v1.json" CopyToOutputDirectory="PreserveNewest" />
+        <Content Include="..\..\ui\packages\rules-core\test\expression\corpus.json" Link="expression\corpus.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
     <ItemGroup>

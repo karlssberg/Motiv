@@ -326,6 +326,11 @@ internal sealed class LeafChecker
         if ((l is not null && NumericLattice.KindOf(l) is null) || (r is not null && NumericLattice.KindOf(r) is null))
         {
             var (nonNumeric, node) = l is not null && NumericLattice.KindOf(l) is null ? (l, b.Left) : (r!, b.Right);
+            // The other side may still be an unresolved var (e.g. a bare numeric literal) — it has
+            // no genuine anchor to blame for this mismatch, so mark it errored like Unify() does,
+            // or DefaultUnresolved() would also pile a spurious default warning on top.
+            if (left.Var is not null) _errored.Add(left.Var.Root);
+            if (right.Var is not null) _errored.Add(right.Var.Root);
             Report(b, RuleErrorCode.ExpressionTypeMismatch, $"comparing {Describe(nonNumeric)} with a number");
             return LeafType.Of(typeof(bool));
         }

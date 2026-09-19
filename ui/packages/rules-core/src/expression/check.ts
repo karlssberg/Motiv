@@ -207,6 +207,11 @@ class Checker {
       }
       if ((l && l.kind !== 'numeric') || (r && r.kind !== 'numeric')) {
         const nonNumeric = l && l.kind !== 'numeric' ? l : r!;
+        // The other side may still be an unresolved var (e.g. a bare numeric literal) — it has no
+        // genuine anchor to blame for this mismatch, so mark it errored like unify() does, or
+        // finish() would also pile a spurious "no model field fixes this" default warning on top.
+        if ('var' in left) this.errored.add(root(left.var));
+        if ('var' in right) this.errored.add(root(right.var));
         this.report(node, 'ExpressionTypeMismatch', `comparing ${describe(nonNumeric)} with a number`);
         return this.set(node, bool);
       }

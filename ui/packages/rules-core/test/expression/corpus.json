@@ -1,0 +1,347 @@
+{
+  "$comment": "Run by ui/packages/rules-core/test/expression-corpus.test.ts and src/Motiv.Serialization.Tests/Expressions/LeafCorpusTests.cs. A case passes on both sides or CI fails.",
+  "parameters": {
+    "minAge": "integer",
+    "vip": "number",
+    "region": "string"
+  },
+  "cases": [
+    {
+      "name": "literal typed by field",
+      "scope": "customer",
+      "leaf": "creditLimit > 1000",
+      "facts": [
+        {
+          "text": "1000",
+          "type": "decimal",
+          "from": "creditLimit"
+        }
+      ],
+      "result": "bool"
+    },
+    {
+      "name": "subtree typed from the other side",
+      "scope": "customer",
+      "leaf": "@vip * 2 > orders.sum(o => o.total)",
+      "facts": [
+        {
+          "text": "@vip",
+          "type": "decimal"
+        },
+        {
+          "text": "2",
+          "type": "decimal",
+          "from": "orders.sum(o => o.total)"
+        }
+      ],
+      "result": "bool"
+    },
+    {
+      "name": "fractional literal widens int",
+      "scope": "customer",
+      "leaf": "age * 1.5 > 40",
+      "facts": [
+        {
+          "text": "1.5",
+          "type": "decimal"
+        },
+        {
+          "text": "40",
+          "type": "decimal"
+        }
+      ],
+      "result": "bool"
+    },
+    {
+      "name": "decimal vs double refused",
+      "scope": "customer",
+      "leaf": "creditLimit > score",
+      "problems": [
+        {
+          "code": "ExpressionTypeMismatch",
+          "contains": [
+            "decimal",
+            "double"
+          ],
+          "range": [
+            0,
+            19
+          ]
+        }
+      ]
+    },
+    {
+      "name": "number param vs int anchor refused",
+      "scope": "customer",
+      "leaf": "orders.count() >= @vip",
+      "problems": [
+        {
+          "code": "ExpressionTypeMismatch"
+        }
+      ]
+    },
+    {
+      "name": "unanchored defaults with warning",
+      "scope": "customer",
+      "leaf": "1 + 1 > 1",
+      "facts": [
+        {
+          "text": "1",
+          "type": "int"
+        }
+      ],
+      "warnings": 1,
+      "result": "bool"
+    },
+    {
+      "name": "integer division warns",
+      "scope": "customer",
+      "leaf": "age / 2 > 10",
+      "warnings": 1,
+      "result": "bool"
+    },
+    {
+      "name": "unknown field",
+      "scope": "customer",
+      "leaf": "nope > 1",
+      "problems": [
+        {
+          "code": "UnknownField",
+          "contains": [
+            "nope"
+          ],
+          "range": [
+            0,
+            4
+          ]
+        }
+      ]
+    },
+    {
+      "name": "member on collection",
+      "scope": "customer",
+      "leaf": "orders.total > 1",
+      "problems": [
+        {
+          "code": "UnknownMethod",
+          "contains": [
+            "collection"
+          ],
+          "range": [
+            7,
+            12
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unknown lambda field",
+      "scope": "customer",
+      "leaf": "orders.sum(o => o.nope) > 1",
+      "problems": [
+        {
+          "code": "UnknownField",
+          "range": [
+            18,
+            22
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unknown method",
+      "scope": "customer",
+      "leaf": "orders.first() != null",
+      "problems": [
+        {
+          "code": "UnknownMethod",
+          "contains": [
+            "first"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "where needs a condition",
+      "scope": "customer",
+      "leaf": "orders.where(o => o.total) > 1",
+      "problems": [
+        {
+          "code": "ExpressionTypeMismatch",
+          "contains": [
+            "condition"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "sum needs a number",
+      "scope": "customer",
+      "leaf": "orders.sum(o => o.status) > 1",
+      "problems": [
+        {
+          "code": "ExpressionTypeMismatch",
+          "contains": [
+            "number"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "string vs number",
+      "scope": "customer",
+      "leaf": "country == 3",
+      "problems": [
+        {
+          "code": "ExpressionTypeMismatch",
+          "contains": [
+            "string"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "leaf must be a condition",
+      "scope": "customer",
+      "leaf": "age + 1",
+      "problems": [
+        {
+          "code": "ExpressionTypeMismatch",
+          "contains": [
+            "condition"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unknown parameter",
+      "scope": "customer",
+      "leaf": "@nope > 1",
+      "problems": [
+        {
+          "code": "UnknownField",
+          "contains": [
+            "parameter"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "null check on nullable",
+      "scope": "customer",
+      "leaf": "country != null",
+      "result": "bool"
+    },
+    {
+      "name": "null check on non-nullable warns",
+      "scope": "customer",
+      "leaf": "age == null",
+      "warnings": 1,
+      "result": "bool"
+    },
+    {
+      "name": "equalsIgnoreCase",
+      "scope": "customer",
+      "leaf": "country.equalsIgnoreCase(\"se\")",
+      "result": "bool"
+    },
+    {
+      "name": "equalsIgnoreCase on a number",
+      "scope": "customer",
+      "leaf": "age.equalsIgnoreCase(\"1\")",
+      "problems": [
+        {
+          "code": "UnknownMethod"
+        }
+      ]
+    },
+    {
+      "name": "parent reachable in lambda",
+      "scope": "customer",
+      "leaf": "orders.all(o => o.total <= creditLimit)",
+      "result": "bool?"
+    },
+    {
+      "name": "element scope",
+      "scope": "order",
+      "leaf": "daysSinceShipped < 30",
+      "facts": [
+        {
+          "text": "30",
+          "type": "int",
+          "from": "daysSinceShipped"
+        }
+      ],
+      "result": "bool"
+    },
+    {
+      "name": "long vs int literal",
+      "scope": "customer",
+      "leaf": "points > 1000",
+      "facts": [
+        {
+          "text": "1000",
+          "type": "long"
+        }
+      ],
+      "result": "bool"
+    },
+    {
+      "name": "long vs double refused",
+      "scope": "customer",
+      "leaf": "points > score",
+      "problems": [
+        {
+          "code": "ExpressionTypeMismatch"
+        }
+      ]
+    },
+    {
+      "name": "syntax error",
+      "scope": "customer",
+      "leaf": "age >",
+      "problems": [
+        {
+          "code": "InvalidExpression",
+          "range": [
+            5,
+            5
+          ]
+        }
+      ]
+    },
+    {
+      "name": "boolean connectives",
+      "scope": "customer",
+      "leaf": "!isActive || age >= @minAge",
+      "result": "bool"
+    },
+    {
+      "name": "string parameter",
+      "scope": "customer",
+      "leaf": "country == @region",
+      "result": "bool"
+    },
+    {
+      "name": "non-ascii identifier is a syntax error",
+      "scope": "customer",
+      "leaf": "ålder > 1",
+      "problems": [
+        {
+          "code": "InvalidExpression",
+          "range": [
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "name": "mixed integer and number parameters",
+      "scope": "customer",
+      "leaf": "@minAge / @vip > 1",
+      "warnings": 1,
+      "result": "bool"
+    }
+  ]
+}
