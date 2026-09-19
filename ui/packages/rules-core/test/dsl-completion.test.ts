@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { completeDsl } from '../src/dsl/completion.js';
+import { completeDsl, healUnterminated } from '../src/dsl/completion.js';
 import { parse } from '../src/dsl/parser.js';
 import { scopeAt } from '../src/expression/index.js';
 import type { Catalog, CatalogEntry } from '../src/contracts.js';
@@ -121,22 +121,11 @@ describe('completeDsl inside a backtick', () => {
   // an open quantifier brace — which the parser rightly refuses to turn into a document (see
   // `dsl-parser-errors.test.ts`, which pins `document` staying undefined for exactly that). So
   // this fixture heals the same trailing constructs `completeDsl`'s own `leafAt` heals internally
-  // before it re-parses, rather than asserting on `parse(text).document` directly.
-  function heal(text: string): string {
-    let inLeaf = false;
-    let braceDepth = 0;
-    for (const char of text) {
-      if (char === '`') { inLeaf = !inLeaf; continue; }
-      if (inLeaf) continue;
-      if (char === '{') braceDepth++;
-      else if (char === '}') braceDepth = Math.max(0, braceDepth - 1);
-    }
-    return text + (inLeaf ? '`' : '') + '}'.repeat(braceDepth);
-  }
-
+  // before it re-parses, rather than asserting on `parse(text).document` directly — using the
+  // product's own `healUnterminated`, not a copy, so this exercises the real healer.
   const scopeFor = (text: string, cursor: number) =>
     completeDsl(text, cursor, leafCatalog, (path) => {
-      const document = parse(heal(text)).document;
+      const document = parse(healUnterminated(text)).document;
       return document ? scopeAt(document, path, 'customer', leafCatalog) : null;
     });
 

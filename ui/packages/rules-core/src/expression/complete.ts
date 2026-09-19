@@ -4,10 +4,18 @@ import { elementOf, fieldsOf, isCollection, typeName, withVar, type LeafScope } 
 
 const METHODS = ['where', 'any', 'all', 'count', 'sum', 'min', 'max'] as const;
 
-/** `orders` → `o`: the variable name a template introduces for elements of a collection. */
+/**
+ * `orders` → `o`: the variable name a template introduces for elements of a collection. A chain
+ * with a method call (`orders.where(o => o.total > 1)`) names its *leading* collection — the text
+ * up to the first `.` or `(` — since everything after that is calls on `orders`, not a deeper
+ * field path. A plain member chain with no call (`customer.orders`) has no such leading root to
+ * single out, so it instead names its *last* segment, the collection actually being iterated.
+ */
 export function elementVar(receiver: string): string {
-  const last = receiver.split('.').pop() ?? 'x';
-  return last[0]?.toLowerCase() ?? 'x';
+  const base = receiver.includes('(')
+    ? receiver.replace(/[.(].*$/s, '')
+    : (receiver.split('.').pop() ?? receiver);
+  return base[0]?.toLowerCase() ?? 'x';
 }
 
 /** Types `a.b.where(...).sum(...)`-shaped text; undefined when any step is unknown. */
@@ -91,7 +99,9 @@ export function completeLeaf(text: string, cursor: number, scope: LeafScope): Ds
       const options = METHODS.map((m): CompletionItem => {
         const insert = m === 'count' ? 'count()' : `${m}(${v} => ${v}.)`;
         const detail = m === 'where' ? 'collection' : m === 'any' || m === 'all' ? 'bool' : m === 'count' ? 'int' : 'number';
-        return { label: m, kind: 'method', detail, insert, caretOffset: insert.length - 1 };
+        // `count()` takes no lambda, so the caret belongs after the closing paren, not inside it.
+        const caretOffset = m === 'count' ? insert.length : insert.length - 1;
+        return { label: m, kind: 'method', detail, insert, caretOffset };
       });
       return prefixed(options, member[1] ?? '', dot + 1);
     }

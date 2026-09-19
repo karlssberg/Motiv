@@ -238,8 +238,11 @@ function matchLeaf(
  * heal a leaf or quantifier body an in-progress edit has left open, so the surrounding document
  * can still be parsed for scope purposes. Backtick-delimited leaf text is opaque to this scan, so
  * a brace inside one is never mistaken for a quantifier body's.
+ *
+ * Exported so a `leafScope` implementation (and its tests) can heal the same way `leafAt` does
+ * internally before it re-parses — a real caller of `completeDsl` needs the same healing.
  */
-function healUnterminated(text: string): string {
+export function healUnterminated(text: string): string {
   let inLeaf = false;
   let braceDepth = 0;
   for (const char of text) {

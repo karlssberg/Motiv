@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { completeLeaf, type LeafScope } from '../src/expression/index.js';
+import { completeLeaf, elementVar, type LeafScope } from '../src/expression/index.js';
 import type { JsonSchema } from '../src/index.js';
 
 const order: JsonSchema = { type: 'object', properties: { status: { type: 'string' }, total: { type: 'number', format: 'decimal' } } };
@@ -18,6 +18,8 @@ describe('completeLeaf', () => {
     expect(result.from).toBe(7);
     expect(result.options.map((o) => o.label)).toEqual(['where', 'any', 'all', 'count', 'sum', 'min', 'max']);
     expect(result.options[0]).toMatchObject({ kind: 'method', insert: 'where(o => o.)', caretOffset: 13 });
+    const count = result.options.find((o) => o.label === 'count')!;
+    expect(count).toMatchObject({ insert: 'count()', caretOffset: 7 });
   });
 
   it('offers element fields after a lambda variable', () => {
@@ -32,7 +34,9 @@ describe('completeLeaf', () => {
   });
 
   it('types the receiver through a where', () => {
-    expect(atEnd('orders.where(o => o.total > 1).')!.options.map((o) => o.label)).toContain('sum');
+    const result = atEnd('orders.where(o => o.total > 1).')!;
+    expect(result.options.map((o) => o.label)).toContain('sum');
+    expect(result.options.find((o) => o.label === 'sum')).toMatchObject({ insert: 'sum(o => o.)' });
   });
 
   it('offers parameters after @', () => {
@@ -41,5 +45,16 @@ describe('completeLeaf', () => {
 
   it('returns null with nothing to offer', () => {
     expect(atEnd('age.')).toBeNull();
+  });
+});
+
+describe('elementVar', () => {
+  it('names the leading collection, not a segment inside a lambda or method chain', () => {
+    expect(elementVar('orders')).toBe('o');
+    expect(elementVar('orders.where(o => o.total > 1)')).toBe('o');
+  });
+
+  it('falls back to the last segment of a plain member chain with no call', () => {
+    expect(elementVar('customer.orders')).toBe('o');
   });
 });

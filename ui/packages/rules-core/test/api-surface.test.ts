@@ -57,6 +57,7 @@ const APPROVED_API = [
   'flattenExplanation',
   'focusedPath',
   'getNode',
+  'healUnterminated',
   'higherOrderBody',
   'higherOrderKey',
   'insertTargetForRow',

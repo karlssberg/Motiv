@@ -104,7 +104,7 @@ export { rangeOfPath, type SourceRange } from './dsl/spans.js';
 export { declaredLocals } from './dsl/locals.js';
 export { tokenSpans, type TokenSpan } from './dsl/tokenRuns.js';
 export {
-  completeDsl, type CompletionItem, type CompletionItemKind, type DslCompletion,
+  completeDsl, healUnterminated, type CompletionItem, type CompletionItemKind, type DslCompletion,
 } from './dsl/completion.js';
 export { diagnosticsFor, type RuleDiagnostic } from './dsl/diagnostics.js';
 export { DslSyncController, type DslSyncState, type SyncStatus } from './dslSync.js';
