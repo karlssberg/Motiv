@@ -1,4 +1,6 @@
 #if NET8_0_OR_GREATER
+using System.Globalization;
+
 namespace Motiv.Serialization.Expressions;
 
 internal sealed class LeafAnalysis(IReadOnlyList<LeafProblem> problems, IReadOnlyDictionary<LeafNode, Type> types, IReadOnlyList<LeafFact> facts, IReadOnlyDictionary<LeafNode, LeafScope> lambdaScopes)
@@ -96,7 +98,7 @@ internal sealed class LeafChecker
         if (underlying == typeof(bool)) return "a condition";
         if (underlying == typeof(string)) return "string";
         if (LeafScope.ElementType(underlying) is { } element) return $"a collection of {Describe(element)}";
-        return underlying.Name;
+        return "object";
     }
 
     private LeafType Set(LeafNode node, LeafType type) { _types[node] = type; return type; }
@@ -152,7 +154,7 @@ internal sealed class LeafChecker
         var member = LeafScope.FindMember(scope.ModelType, i.Name);
         if (member is null)
             return Fail(i, RuleErrorCode.UnknownField, $"'{i.Name}' is not a field of {scope.ModelType.Name}");
-        return Set(i, LeafType.Of(LeafScope.MemberType(member)));
+        return Set(i, LeafType.Of(LeafScope.LeafMemberType(member), LeafScope.NamedEnumType(member)));
     }
 
     private LeafType VisitMember(MemberAccess m, LeafScope scope)
@@ -176,7 +178,7 @@ internal sealed class LeafChecker
             Report(m.NameStart, m.NameEnd, RuleErrorCode.UnknownField, $"'{m.Name}' is not a field of {targetType.Name}");
             return Set(m, LeafType.Unknown);
         }
-        return Set(m, LeafType.Of(Lift(LeafScope.MemberType(member), target.IsNullable)));
+        return Set(m, LeafType.Of(Lift(LeafScope.LeafMemberType(member), target.IsNullable), LeafScope.NamedEnumType(member)));
     }
 
     /// <summary>A value reached through a nullable path is itself nullable.</summary>
@@ -296,7 +298,12 @@ internal sealed class LeafChecker
             default:
             {
                 var result = Unify(b, left, right, arithmetic: true);
-                if (b.Operator == "/" && result.Concrete is { } rt && NumericLattice.KindOf(rt) is { } rk && NumericLattice.IsIntegral(rk))
+                // A literal zero divisor is always a DivideByZeroException at evaluation time, so it
+                // is an error here rather than a warning — and it supersedes the truncation warning,
+                // which has nothing to say about a division that can never produce a value.
+                if (b.Operator == "/" && IsZeroLiteral(b.Right))
+                    Report(b.Right, RuleErrorCode.ExpressionTypeMismatch, "division by zero");
+                else if (b.Operator == "/" && result.Concrete is { } rt && NumericLattice.KindOf(rt) is { } rk && NumericLattice.IsIntegral(rk))
                     Report(b, RuleErrorCode.ExpressionTypeMismatch, "integer division truncates; compare against a fractional value to keep the remainder", warning: true);
                 else if (b.Operator == "/" && result.Var?.Root is { Resolved: null, Fractional: false })
                     Report(b, RuleErrorCode.ExpressionTypeMismatch, "integer division truncates; compare against a fractional value to keep the remainder", warning: true);
@@ -304,6 +311,12 @@ internal sealed class LeafChecker
             }
         }
     }
+
+    /// <summary>Whether a node is a numeric literal whose value is zero, in any spelling.</summary>
+    private static bool IsZeroLiteral(LeafNode node) =>
+        node is NumberLiteral n
+        && decimal.TryParse(n.Text, NumberStyles.Number, CultureInfo.InvariantCulture, out var value)
+        && value == 0m;
 
     private LeafType VisitEquality(Binary b, LeafType left, LeafType right)
     {
@@ -321,6 +334,9 @@ internal sealed class LeafChecker
         {
             if (l != r)
                 Report(b, RuleErrorCode.ExpressionTypeMismatch, $"comparing {Describe(l)} with {Describe(r)}");
+            else if (left.NamedEnum is { } named && b.Right is StringLiteral literal && Array.IndexOf(Enum.GetNames(named), literal.Value) < 0)
+                Report(b.Right, RuleErrorCode.ExpressionTypeMismatch,
+                    $"not one of {string.Join(", ", Enum.GetNames(named).Select(name => $"\"{name}\""))}");
             return LeafType.Of(typeof(bool));
         }
         if ((l is not null && NumericLattice.KindOf(l) is null) || (r is not null && NumericLattice.KindOf(r) is null))

@@ -69,7 +69,8 @@ internal static class LeafBinding
         var underlying = Nullable.GetUnderlyingType(type) ?? type;
         var name = underlying == typeof(int) ? "int" : underlying == typeof(long) ? "long" : underlying == typeof(decimal) ? "decimal"
             : underlying == typeof(double) ? "double" : underlying == typeof(float) ? "float" : underlying == typeof(bool) ? "bool"
-            : underlying == typeof(string) ? "string" : underlying.Name;
+            : underlying == typeof(string) ? "string"
+            : LeafScope.ElementType(underlying) is not null ? "collection" : "object";
         return underlying == type ? name : $"{name}?";
     }
 #else

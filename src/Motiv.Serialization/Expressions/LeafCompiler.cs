@@ -78,7 +78,7 @@ internal sealed class LeafCompiler
         if (_variables.TryGetValue(i.Name, out var variable))
             return variable;
         var member = LeafScope.FindMember(_model.Type, i.Name)!;
-        return Expression.MakeMemberAccess(_model, member);
+        return Present(member, Expression.MakeMemberAccess(_model, member));
     }
 
     private Expression Member(MemberAccess m)
@@ -86,8 +86,26 @@ internal sealed class LeafCompiler
         var target = Visit(m.Target);
         var member = LeafScope.FindMember(Nullable.GetUnderlyingType(target.Type) ?? target.Type, m.Name)!;
         return IsNullable(target.Type)
-            ? NullConditionalExpression.Create(target, t => Expression.MakeMemberAccess(Unwrap(t), member))
-            : Expression.MakeMemberAccess(target, member);
+            ? NullConditionalExpression.Create(target, t => Present(member, Expression.MakeMemberAccess(Unwrap(t), member)))
+            : Present(member, Expression.MakeMemberAccess(target, member));
+    }
+
+    /// <summary>
+    /// Presents a member as the leaf language typed it: an enum serialized by name compares as its
+    /// <c>ToString()</c>, any other enum as the integral kind behind it. Everything else is already
+    /// the type the checker gave it.
+    /// </summary>
+    private static Expression Present(MemberInfo member, Expression access)
+    {
+        if (LeafScope.EnumType(LeafScope.MemberType(member)) is null) return access;
+        var presented = LeafScope.LeafMemberType(member);
+        var target = Nullable.GetUnderlyingType(presented) ?? presented;
+        Func<Expression, Expression> convert = target == typeof(string)
+            ? value => Expression.Call(value, nameof(ToString), Type.EmptyTypes)
+            : value => Expression.Convert(value, target);
+        return Nullable.GetUnderlyingType(access.Type) is null
+            ? convert(access)
+            : NullConditionalExpression.Create(access, t => convert(Unwrap(t)));
     }
 
     private Expression Call(MethodCall c)
@@ -171,6 +189,11 @@ internal sealed class LeafCompiler
         if (b.Left is NullLiteral || b.Right is NullLiteral)
         {
             var side = b.Left is NullLiteral ? right : left;
+            // A non-nullable value type is never null — the checker already warned as much, so fold
+            // the comparison to its constant answer rather than building a null constant of a type
+            // that cannot hold one (which throws, escaping Validate/Deserialize as a 500).
+            if (side.Type.IsValueType && Nullable.GetUnderlyingType(side.Type) is null)
+                return Expression.Constant(b.Operator == "!=");
             var comparison = Expression.Equal(side, Expression.Constant(null, side.Type));
             return b.Operator == "==" ? comparison : Expression.Not(comparison);
         }

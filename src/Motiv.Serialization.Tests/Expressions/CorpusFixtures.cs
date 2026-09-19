@@ -1,4 +1,5 @@
 #if NET8_0_OR_GREATER
+using System.Text.Json.Serialization;
 using Motiv.Serialization.Expressions;
 
 namespace Motiv.Serialization.Tests.Expressions;
@@ -12,11 +13,24 @@ namespace Motiv.Serialization.Tests.Expressions;
 /// </summary>
 public static class CorpusFixtures
 {
-    public sealed record Order(string Status, decimal Total, int DaysSinceShipped);
+    /// <summary>Serialized by name, so a leaf compares it as a string — mirrors the fixture schema's
+    /// <c>kind: { type: 'string', enum: [...] }</c>.</summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum OrderKind { Retail, Wholesale }
+
+    public sealed record Order(string Status, decimal Total, int DaysSinceShipped, OrderKind Kind);
 
     public sealed record Customer(
         int Age, long Points, double Score, bool IsActive, decimal CreditLimit,
         string? Country, IReadOnlyList<Order>? Orders, DateTime? ShippedAt);
+
+    /// <summary>The order a corpus case with <c>"scope": "order"</c> is evaluated against.</summary>
+    public static readonly Order SampleOrder = new("paid", 620m, 12, OrderKind.Retail);
+
+    /// <summary>The customer a corpus case with <c>"scope": "customer"</c> is evaluated against.</summary>
+    public static readonly Customer SampleCustomer = new(
+        34, 5_000L, 12.5d, true, 800m, "SE",
+        [SampleOrder, new("pending", 950m, 0, OrderKind.Wholesale)], new DateTime(2026, 1, 1));
 
     /// <summary>
     /// The type string a corpus case's `type`/`result` expects: `int`, `long`, `decimal`, `bool`,
@@ -34,7 +48,7 @@ public static class CorpusFixtures
             : underlying == typeof(float) ? "float"
             : underlying == typeof(bool) ? "bool"
             : underlying == typeof(string) ? "string"
-            : underlying.Name;
+            : LeafScope.ElementType(underlying) is not null ? "collection" : "object";
         return underlying == type ? name : $"{name}?";
     }
 }

@@ -7,8 +7,9 @@ namespace Motiv.Serialization.Expressions;
 
 /// <summary>
 /// The widening rules of the leaf language: C#'s implicit numeric conversions minus the lossy
-/// ones. Generic math does the conversions; the *policy* — which conversions are allowed — is this
-/// table, because <c>T.CreateChecked</c> refuses overflow, not precision loss.
+/// ones. Generic math parses literals (<c>T.Parse</c>) and <c>ConvertChecked</c>
+/// performs the conversions; the *policy* — which conversions are allowed — is this table, because
+/// a checked conversion refuses overflow, not precision loss.
 /// </summary>
 internal static class NumericLattice
 {

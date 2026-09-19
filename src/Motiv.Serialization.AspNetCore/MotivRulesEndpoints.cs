@@ -140,7 +140,7 @@ public static class MotivRulesEndpoints
 
             var documentJson = request.Document.GetRawText();
             if (request.IsAsync)
-                return Results.Json(new ValidationResponse(binding.ValidateAsyncSpec(serializer, documentJson), []), json);
+                return Results.Json(new ValidationResponse(binding.ValidateAsyncSpec(serializer, documentJson)), json);
 
             var inspection = binding.Inspect(serializer, documentJson);
             return Results.Json(new ValidationResponse(inspection.Errors, inspection.Facts), json);
@@ -168,7 +168,7 @@ public static class MotivRulesEndpoints
             }
             catch (RuleSerializationException ex)
             {
-                return Results.Json(new ValidationResponse(ex.Errors, []), json, statusCode: 400);
+                return Results.Json(new ValidationResponse(ex.Errors), json, statusCode: 400);
             }
             catch (InvalidModelException ex)
             {
@@ -493,7 +493,7 @@ public static class MotivRulesEndpoints
         {
             RuleUpdateOutcome.Updated => Results.Json(new RulePutResponse(outcome.Version), json),
             RuleUpdateOutcome.VersionConflict => Results.Json(new RuleConflictResponse(outcome.Version), json, statusCode: 409),
-            RuleUpdateOutcome.Invalid => Results.Json(new ValidationResponse(outcome.Errors, []), json, statusCode: 400),
+            RuleUpdateOutcome.Invalid => Results.Json(new ValidationResponse(outcome.Errors), json, statusCode: 400),
             _ => UnknownRule(name, json)
         };
 

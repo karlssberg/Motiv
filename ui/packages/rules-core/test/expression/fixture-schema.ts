@@ -11,8 +11,9 @@ export const ORDER: JsonSchema = {
     status: { type: 'string', enum: ['paid', 'pending', 'refunded'] },
     total: { type: 'number', format: 'decimal' },
     daysSinceShipped: { type: 'integer', format: 'int32' },
+    kind: { type: 'string', enum: ['Retail', 'Wholesale'] },
   },
-  required: ['status', 'total', 'daysSinceShipped'],
+  required: ['status', 'total', 'daysSinceShipped', 'kind'],
 };
 
 export const CUSTOMER: JsonSchema = {

@@ -54,6 +54,14 @@ describe('analyseLeaf', () => {
     expect(check('age / 2 > 10').problems[0]!.message).toContain('truncates');
   });
 
+  it('refuses division by a literal zero, at the literal, without also warning about truncation', () => {
+    const analysis = check('age / 0 > 1');
+    expect(analysis.problems).toHaveLength(1);
+    expect(analysis.problems[0]).toMatchObject({ code: 'ExpressionTypeMismatch', message: 'division by zero', from: 6, to: 7 });
+    expect(analysis.problems[0]!.warning).toBeUndefined();
+    expect(check('creditLimit / 0.0 > 1').problems[0]!.message).toBe('division by zero');
+  });
+
   it.each([
     ['nope > 1', 'UnknownField', 'nope'],
     ['orders.total > 1', 'UnknownMethod', 'collection'],

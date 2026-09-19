@@ -66,8 +66,29 @@ export function ancestors(path: string): string[] {
 }
 
 /**
+ * A collection path as the registry and a quantifier node each spell it, with the JSONPath root
+ * removed — registrations are published as `$.orders` or `orders` depending on the host.
+ */
+function collectionKey(path: string): string {
+  return path.startsWith('$.') ? path.slice(2) : path;
+}
+
+/**
+ * The element schema a quantifier's `path` names. The server resolves that path as a *registry*
+ * collection key, so the registration is consulted first; a path that is also a plain property of
+ * the parent model falls back to walking the schema, which is how an unregistered fixture resolves.
+ */
+function elementAt(path: string, model: JsonSchema, catalog: Catalog): JsonSchema | undefined {
+  const key = collectionKey(path);
+  const registered = catalog.collections.find((c) => collectionKey(c.path) === key);
+  const fromRegistry = registered ? catalog.modelTypes?.[registered.elementModelType] : undefined;
+  if (fromRegistry) return fromRegistry;
+  return elementOf(key.split('.').reduce<JsonSchema | undefined>((s, segment) => s?.properties?.[segment], model));
+}
+
+/**
  * The model a leaf at `path` sees: the rule's model, or — inside a quantifier body — the element
- * of the collection the quantifier walks, resolved through the schema by the node's `path`.
+ * of the collection the quantifier walks, resolved through the catalog by the node's `path`.
  */
 export function scopeAt(document: RuleDocument, path: string, modelType: string, catalog: Catalog): LeafScope | null {
   const root = catalog.modelTypes?.[modelType];
@@ -83,11 +104,10 @@ export function scopeAt(document: RuleDocument, path: string, modelType: string,
     if (ancestor === path) continue; // the quantifier itself is not inside its own body
     const node = getNode(document, ancestor);
     if (!node || !isHigherOrderNode(node)) continue;
-    const collection = node.path.split('.').reduce<JsonSchema | undefined>((s, segment) => s?.properties?.[segment], model);
-    const element = elementOf(collection);
+    const element = elementAt(node.path, model, catalog);
     if (!element) return null;
     model = element;
-    modelName = `each of ${node.path}`;
+    modelName = `each of ${collectionKey(node.path)}`;
   }
   return { modelName, model, parameters, vars: {} };
 }

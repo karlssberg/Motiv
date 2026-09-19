@@ -25,6 +25,11 @@ function allows(v: TypeVar, kind: NumericKind): boolean {
   return true;
 }
 
+/** Whether a node is a numeric literal whose value is zero, in any spelling. */
+function isZeroLiteral(node: LeafAst): boolean {
+  return node.kind === 'num' && Number(node.text) === 0;
+}
+
 function describe(t: Known): string {
   const base = t.kind === 'numeric' ? kindName(t.numeric)
     : t.kind === 'bool' ? 'a condition'
@@ -225,6 +230,13 @@ class Checker {
     }
 
     const result = this.unify(node, left, right, true);
+    // A literal zero divisor is always a DivideByZeroException at evaluation time, so it is an
+    // error rather than a warning — and it supersedes the truncation warning, which has nothing
+    // to say about a division that can never produce a value.
+    if (node.op === '/' && isZeroLiteral(node.right)) {
+      this.report(node.right, 'ExpressionTypeMismatch', 'division by zero');
+      return this.set(node, result);
+    }
     const k = this.known(result);
     const integral = (k && k.kind === 'numeric' && isIntegral(k.numeric)) || ('var' in result && !root(result.var).resolved && !root(result.var).fractional);
     if (node.op === '/' && integral) this.report(node, 'ExpressionTypeMismatch', 'integer division truncates; compare against a fractional value to keep the remainder', true);

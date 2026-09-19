@@ -27,6 +27,10 @@ public class LeafCorpusTests
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, "unknown parameter type"),
     };
 
+    /// <summary>The values the compiled cases substitute for the corpus' declared parameters.</summary>
+    private static readonly Dictionary<string, object?> ParameterValues =
+        new() { ["minAge"] = 18, ["vip"] = 1000d, ["region"] = "SE" };
+
     private static RuleParameterDeclaration[] Parameters() =>
         Corpus.RootElement.GetProperty("parameters").EnumerateObject()
             .Select(p => new RuleParameterDeclaration(p.Name, ParseParameterType(p.Value.GetString()!), false, null))
@@ -77,5 +81,32 @@ public class LeafCorpusTests
         if (c.TryGetProperty("result", out var result))
             CorpusFixtures.TypeName(analysis!.Types[root!]).ShouldBe(result.GetString()!);
     }
+
+    /// <summary>
+    /// The corpus pins the checker on both sides; this pins the other half of the C# contract —
+    /// that every case the checker accepts also compiles and evaluates. A warning-only case (a
+    /// null check against a non-nullable field, an unanchored default) must bind too: the checker
+    /// calling it valid is a promise the compiler has to keep.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(Cases))]
+    public void Should_compile_and_evaluate_every_case_the_checker_accepts(string name)
+    {
+        var c = Corpus.RootElement.GetProperty("cases").EnumerateArray().Single(x => x.GetProperty("name").GetString() == name);
+        if (!c.TryGetProperty("facts", out _) && !c.TryGetProperty("result", out _)) return;
+
+        var text = c.GetProperty("leaf").GetString()!;
+        var isOrder = c.GetProperty("scope").GetString() == "order";
+        var modelType = isOrder ? typeof(CorpusFixtures.Order) : typeof(CorpusFixtures.Customer);
+        var root = LeafParser.Parse(text, [])!;
+        var analysis = LeafChecker.Check(root, LeafScope.For(modelType, Parameters()));
+        analysis.IsValid.ShouldBeTrue(string.Join("; ", analysis.Problems.Select(p => p.Message)));
+
+        if (isOrder) Evaluate(root, analysis, text, CorpusFixtures.SampleOrder);
+        else Evaluate(root, analysis, text, CorpusFixtures.SampleCustomer);
+    }
+
+    private static void Evaluate<TModel>(LeafNode root, LeafAnalysis analysis, string text, TModel model) =>
+        LeafCompiler.Compile<TModel>(root, analysis, ParameterValues, text).Evaluate(model).Satisfied.ShouldBeOneOf(true, false);
 }
 #endif

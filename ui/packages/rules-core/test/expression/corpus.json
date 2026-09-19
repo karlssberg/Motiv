@@ -101,6 +101,19 @@
       "result": "bool"
     },
     {
+      "name": "division by literal zero",
+      "scope": "customer",
+      "leaf": "age / 0 > 1",
+      "problems": [
+        {
+          "code": "ExpressionTypeMismatch",
+          "contains": [
+            "division by zero"
+          ]
+        }
+      ]
+    },
+    {
       "name": "unknown field",
       "scope": "customer",
       "leaf": "nope > 1",
@@ -273,6 +286,25 @@
         }
       ],
       "result": "bool"
+    },
+    {
+      "name": "string enum equality",
+      "scope": "order",
+      "leaf": "kind == \"Retail\"",
+      "result": "bool"
+    },
+    {
+      "name": "string enum not a member",
+      "scope": "order",
+      "leaf": "kind == \"Nope\"",
+      "problems": [
+        {
+          "code": "ExpressionTypeMismatch",
+          "contains": [
+            "\"Retail\""
+          ]
+        }
+      ]
     },
     {
       "name": "long vs int literal",

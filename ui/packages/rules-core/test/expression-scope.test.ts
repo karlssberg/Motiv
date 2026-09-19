@@ -28,6 +28,29 @@ describe('scopeAt', () => {
     expect(scope.model).toBe(order);
   });
 
+  it('resolves a quantifier path the server registered but the schema has no property for', () => {
+    // The server resolves a quantifier's `path` as a registry collection key, not as a property
+    // walk — a projection like `paidOrders` need not exist on the parent model's schema at all.
+    const paidOrder: JsonSchema = { type: 'object', properties: { total: { type: 'number', format: 'decimal' } } };
+    const registryCatalog: Catalog = {
+      specs: [],
+      collections: [{ path: '$.paidOrders', parentModelType: 'customer', elementModelType: 'paidOrder' }],
+      modelTypes: { customer, paidOrder },
+    };
+    const projected: RuleDocument = {
+      rule: { asAllSatisfied: { expression: 'total > 1' }, path: 'paidOrders' },
+    };
+
+    const scope = scopeAt(projected, '$.rule.asAllSatisfied', 'customer', registryCatalog)!;
+    expect(scope.model).toBe(paidOrder);
+    expect(scope.modelName).toBe('each of paidOrders');
+  });
+
+  it('still walks the schema when no collection is registered for the path', () => {
+    const scope = scopeAt(document, '$.rule.and[1].asAllSatisfied', 'customer', catalog)!;
+    expect(scope.model).toBe(order);
+  });
+
   it('returns null without a schema', () => {
     expect(scopeAt(document, '$.rule.and[0]', 'customer', { specs: [], collections: [] })).toBeNull();
   });

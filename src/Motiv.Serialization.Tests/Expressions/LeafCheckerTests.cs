@@ -1,12 +1,18 @@
 #if NET8_0_OR_GREATER
+using System.Text.Json.Serialization;
 using Motiv.Serialization.Expressions;
 
 namespace Motiv.Serialization.Tests.Expressions;
 
 public class LeafCheckerTests
 {
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    private enum Kind { Retail, Wholesale }
+
+    private enum Tier { Bronze, Silver }
+
     private sealed record Order(string Status, decimal Total, int DaysSinceShipped);
-    private sealed record Customer(int Age, long Points, double Score, bool IsActive, decimal CreditLimit, string? Country, IReadOnlyList<Order>? Orders, DateTime? ShippedAt);
+    private sealed record Customer(int Age, long Points, double Score, bool IsActive, decimal CreditLimit, string? Country, IReadOnlyList<Order>? Orders, DateTime? ShippedAt, [property: JsonIgnore] int Hidden, Kind Kind, Tier Tier, Kind? MaybeKind);
 
     private static readonly RuleParameterDeclaration[] Parameters =
     [
@@ -99,6 +105,11 @@ public class LeafCheckerTests
     [InlineData("age && isActive", RuleErrorCode.ExpressionTypeMismatch, "condition")]
     [InlineData("age + 1", RuleErrorCode.ExpressionTypeMismatch, "leaf must be a condition")]
     [InlineData("@nope > 1", RuleErrorCode.UnknownField, "parameter")]
+    [InlineData("hidden > 1", RuleErrorCode.UnknownField, "hidden")]
+    [InlineData("age / 0 > 1", RuleErrorCode.ExpressionTypeMismatch, "division by zero")]
+    [InlineData("kind == \"Nope\"", RuleErrorCode.ExpressionTypeMismatch, "\"Retail\"")]
+    [InlineData("tier == \"Bronze\"", RuleErrorCode.ExpressionTypeMismatch, "number")]
+    [InlineData("creditLimit / 0.0 > 1", RuleErrorCode.ExpressionTypeMismatch, "division by zero")]
     public void Should_report_type_and_name_problems(string text, RuleErrorCode code, string fragment)
     {
         var analysis = Check(text);
@@ -106,6 +117,15 @@ public class LeafCheckerTests
         var problem = analysis.Problems.First(p => !p.IsWarning);
         problem.Code.ShouldBe(code);
         problem.Message.ShouldContain(fragment);
+    }
+
+    [Fact]
+    public void Should_range_a_division_by_zero_at_the_literal_and_not_also_warn_about_truncation()
+    {
+        var analysis = Check("age / 0 > 1");
+        var problem = analysis.Problems.ShouldHaveSingleItem();
+        problem.IsWarning.ShouldBeFalse();
+        (problem.Start, problem.End).ShouldBe((6, 7));
     }
 
     [Fact]
@@ -122,6 +142,9 @@ public class LeafCheckerTests
     [InlineData("orders.any(o => o.status == \"paid\")")]
     [InlineData("country.equalsIgnoreCase(\"se\")")]
     [InlineData("!isActive || points > age")]
+    [InlineData("kind == \"Retail\"")]
+    [InlineData("maybeKind == null")]
+    [InlineData("tier > 0")]
     public void Should_accept_null_checks_and_string_and_boolean_forms(string text)
     {
         Check(text).IsValid.ShouldBeTrue();
@@ -132,6 +155,29 @@ public class LeafCheckerTests
     {
         var analysis = Check("age == null");
         analysis.Problems.ShouldHaveSingleItem().IsWarning.ShouldBeTrue();
+    }
+
+    private static Type TypeOfIdentifier(string text, string name)
+    {
+        var analysis = Check(text);
+        analysis.IsValid.ShouldBeTrue(string.Join("; ", analysis.Problems.Select(p => p.Message)));
+        return analysis.Types.Single(kvp => kvp.Key is Identifier i && i.Name == name).Value;
+    }
+
+    [Fact]
+    public void Should_read_a_string_converted_enum_as_a_string_and_any_other_as_its_number()
+    {
+        TypeOfIdentifier("kind == \"Retail\"", "kind").ShouldBe(typeof(string));
+        TypeOfIdentifier("tier > 0", "tier").ShouldBe(typeof(int));
+        TypeOfIdentifier("maybeKind == null", "maybeKind").ShouldBe(typeof(string));
+    }
+
+    [Fact]
+    public void Should_name_every_member_when_a_string_enum_literal_is_not_one_of_them()
+    {
+        var problem = Check("kind == \"Nope\"").Problems.ShouldHaveSingleItem();
+        problem.Message.ShouldBe("not one of \"Retail\", \"Wholesale\"");
+        (problem.Start, problem.End).ShouldBe((8, 14));
     }
 
     [Fact]

@@ -78,6 +78,12 @@ assertion.
   a method on a null collection yields null, and any other operator with a null operand yields
   `false`. A leaf never throws on a shape the schema already said was possible, which a
   hand-written `Spec.From` lambda would.
+- **Enums** read as the catalog publishes them, not as the CLR declares them. An enum whose member
+  or whose type carries `[JsonConverter(typeof(JsonStringEnumConverter))]` serializes by name, so a
+  leaf compares it as a `string` &mdash; ordinally, against the member names; a string literal that
+  is not one of them is an `ExpressionTypeMismatch` naming the ones that are, e.g.
+  `not one of "Retail", "Wholesale"`. Every other enum compares **by number**, as the integral kind
+  behind it, so `` `tier > 1` `` is the way to write a comparison against one.
 - **Numerics** align with C# where C# is exact, and refuse where C# would be lossy. Literals and
   parameters are untyped until solved; model fields and fixed-type methods (`count()` is always
   `int`; `sum(o => o.total)` is whatever `total` is) are anchors. An untyped subtree takes the join
@@ -137,8 +143,13 @@ assertion.
 
 A syntax or type problem reports as a diagnostic at its range, exactly like any other lint
 finding. A document that lints clean but still fails to bind shows the server's error the same way
-an unknown spec reference does today. Arithmetic is checked, so overflow at evaluation time throws
-`OverflowException`; a null operand never throws.
+an unknown spec reference does today.
+
+Two failures are left to evaluation time. Arithmetic is checked, so an overflow throws
+`OverflowException`, and dividing by a value that turns out to be zero throws
+`DivideByZeroException`. A **literal** zero divisor is refused at check time instead &mdash;
+`ExpressionTypeMismatch`, "division by zero", ranged at the literal &mdash; since it could never
+produce a value. A null operand never throws.
 
 ## Limits
 
@@ -154,6 +165,10 @@ an unknown spec reference does today. Arithmetic is checked, so overflow at eval
 
 ## Remarks
 
+- **An evaluation-time exception carries no leaf context.** `OverflowException` and
+  `DivideByZeroException` reach the caller exactly as the runtime throws them, without the rule's
+  name or the leaf's path attached &mdash; the design's contextualised exception was traded away
+  and is not part of what shipped.
 - **`decimal` is the default fractional type**, not `double`, because C#'s own implicit
   conversions never let `double` and `decimal` mix without a cast &mdash; there was never a lossless
   default to prefer instead.

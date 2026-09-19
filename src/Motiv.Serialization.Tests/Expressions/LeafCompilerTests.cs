@@ -1,13 +1,21 @@
 #if NET8_0_OR_GREATER
+using System.Text.Json.Serialization;
 using Motiv.Serialization.Expressions;
 
 namespace Motiv.Serialization.Tests.Expressions;
 
 public class LeafCompilerTests
 {
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    private enum Kind { Retail, Wholesale }
+
+    private enum Tier { Bronze, Silver }
+
     private sealed record Item(int Qty);
     private sealed record Order(string Status, decimal Total, int DaysSinceShipped, IReadOnlyList<Item>? Items = null);
-    private sealed record Customer(int Age, bool IsActive, decimal CreditLimit, string? Country, IReadOnlyList<Order>? Orders);
+    private sealed record Customer(
+        int Age, bool IsActive, decimal CreditLimit, string? Country, IReadOnlyList<Order>? Orders,
+        Kind Kind = Kind.Retail, Tier Tier = Tier.Silver);
 
     private static readonly RuleParameterDeclaration[] Declarations =
     [
@@ -71,6 +79,25 @@ public class LeafCompilerTests
         Compile("country != null").Evaluate(noOrders).Satisfied.ShouldBeFalse();
         Compile("country.equalsIgnoreCase(\"se\")").Evaluate(noOrders).Satisfied.ShouldBeFalse();
         Compile("orders.all(o => o.total <= creditLimit)").Evaluate(noOrders).Satisfied.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Should_fold_a_null_comparison_against_a_non_nullable_value_type()
+    {
+        // The checker only warns here ("age is never null"), so the compiler must still produce a
+        // tree: `Expression.Constant(null, typeof(int))` would throw and escape Validate/Deserialize.
+        Compile("age == null").Evaluate(Sample).Satisfied.ShouldBeFalse();
+        Compile("age != null").Evaluate(Sample).Satisfied.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Should_compile_a_string_converted_enum_by_name_and_any_other_by_number()
+    {
+        Compile("kind == \"Retail\"").Evaluate(Sample).Satisfied.ShouldBeTrue();
+        Compile("kind == \"Wholesale\"").Evaluate(Sample).Satisfied.ShouldBeFalse();
+        Compile("kind != \"Retail\"").Evaluate(Sample).Satisfied.ShouldBeFalse();
+        Compile("tier == 1").Evaluate(Sample).Satisfied.ShouldBeTrue();
+        Compile("tier > 1").Evaluate(Sample).Satisfied.ShouldBeFalse();
     }
 
     [Fact]
