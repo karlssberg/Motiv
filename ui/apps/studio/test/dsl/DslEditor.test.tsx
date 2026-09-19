@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { startCompletion, currentCompletions } from '@codemirror/autocomplete';
 import { RuleEditorStore } from '@motiv-rules/core';
-import type { Catalog, RuleNode } from '@motiv-rules/core';
+import type { Catalog, JsonSchema, RuleNode } from '@motiv-rules/core';
 import { DslEditor } from '../../src/dsl/DslEditor.js';
 import { useDslSync } from '@motiv-rules/react';
 import { editorText, editorView, replaceBuffer } from '../support/codemirror.js';
@@ -16,9 +17,9 @@ const CATALOG: Catalog = {
 };
 
 /** Stands in for the pane that owns the buffer, which the editor takes as a prop. */
-function Host(props: { store: RuleEditorStore }) {
+function Host(props: { store: RuleEditorStore; catalog?: Catalog }) {
   const sync = useDslSync(props.store);
-  return <DslEditor store={props.store} catalog={CATALOG} sync={sync} modelType="customer" />;
+  return <DslEditor store={props.store} catalog={props.catalog ?? CATALOG} sync={sync} modelType="customer" />;
 }
 
 const BOTH_SPECS = { andAlso: [{ spec: 'is-active' }, { spec: 'is-verified' }] };
@@ -49,6 +50,41 @@ describe('DslEditor', () => {
     const { container } = renderEditor();
     replaceBuffer(container, 'is-verified');
     expect(screen.getByLabelText('sync status').textContent).toBe('unsynced');
+  });
+
+  it('resolves leaf completion against the live buffer, not the last-committed document', async () => {
+    const order: JsonSchema = { type: 'object', properties: { total: { type: 'number', format: 'decimal' } } };
+    const customer: JsonSchema = {
+      type: 'object',
+      properties: { age: { type: 'integer' }, orders: { type: 'array', items: order } },
+    };
+    const leafCatalog: Catalog = {
+      specs: [],
+      collections: [{ path: 'orders', parentModelType: 'customer', elementModelType: 'Order' }],
+      modelTypes: { customer },
+    };
+
+    // A fresh store, never edited: the committed document has no quantifier at all, so scope
+    // resolved against it (the bug this test pins) would fall back to the root model's own
+    // fields (age, orders) instead of the element the quantifier body is actually typed in.
+    const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
+    const { container } = render(<Host store={store} catalog={leafCatalog} />);
+
+    // Left deliberately uncommitted — the DSL sync's debounce (~300ms) never fires here, so the
+    // store's document still disagrees with the buffer when completion is triggered.
+    const text = 'all in orders { `tot';
+    const view = editorView(container);
+    act(() => {
+      view.dispatch({
+        changes: { from: 0, to: view.state.doc.length, insert: text },
+        selection: { anchor: text.length },
+      });
+    });
+
+    act(() => { startCompletion(view); });
+    await waitFor(() => {
+      expect(currentCompletions(view.state).map((option) => option.label)).toEqual(['total']);
+    });
   });
 
   it('exposes a Format button', () => {

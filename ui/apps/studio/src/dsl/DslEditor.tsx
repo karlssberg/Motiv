@@ -6,7 +6,7 @@ import { EditorState } from '@codemirror/state';
 import { EditorView, keymap, lineNumbers, type ViewUpdate } from '@codemirror/view';
 import type { Diagnostic } from '@codemirror/lint';
 import {
-  getNode, isNodePath, isSpecNode, scopeAt,
+  getNode, healUnterminated, isNodePath, isSpecNode, parse, scopeAt,
   type Catalog, type LeafScope, type NodeSpan, type RuleDocument, type RuleEditorStore,
 } from '@motiv-rules/core';
 import { useRuleEditor } from '@motiv-rules/react';
@@ -120,13 +120,39 @@ export function DslEditor(props: {
   const editorState = useRuleEditor(store);
   const [popover, setPopover] = useState<PayloadTarget | null>(null);
 
-  /** Resolves the expression scope at a leaf's path, against the store's current document. */
-  const leafScope = (path: string): LeafScope | null =>
-    scopeAt(store.getState().document, path, modelType, catalog);
+  // Declared ahead of `leafScope` (with a throwaway initial value) so `leafScope` can close over
+  // `live.current` rather than this render's `sync`/`store` — see the doc comment below.
+  const live = useRef<LiveContext>({
+    sync, catalog, diagnostics: [], placedFacts: [], store, leafScope: () => null,
+  });
+
+  /**
+   * Resolves the expression scope at a leaf's path — against the *live* buffer, not the store's
+   * committed document. The store only commits after the DSL sync's debounce (~300ms), so while
+   * a user is mid-edit (typing `orders.where(o => o.` for the first time, say) the committed
+   * document does not yet contain the node the leaf's path names, and resolving against it would
+   * silently answer for the wrong scope — the outer model's fields instead of the collection
+   * element's. `live.current.sync.text`/`.parseResult` are read (not this render's `sync`)
+   * because this closure is handed to a once-built CodeMirror extension and must see whichever
+   * render was most recent when the extension calls it, not the render that created it.
+   *
+   * Preference order: the live buffer's own parse when it resolved to a document; failing that
+   * (an open backtick or brace mid-type, which the parser refuses to turn into a document) a
+   * healed reparse of the same text, the same recovery `completeDsl` does internally; and only
+   * as a last resort — both parses failing outright — the store's last-committed document.
+   */
+  const leafScope = (path: string): LeafScope | null => {
+    const { sync: liveSync, store: liveStore } = live.current;
+    const document = liveSync.parseResult.document
+      ?? parse(healUnterminated(liveSync.text)).document
+      ?? liveStore.getState().document;
+    return scopeAt(document, path, modelType, catalog);
+  };
 
   const diagnostics = useMemo(
-    // `leafScope` is rebuilt every render from `store`/`catalog`/`modelType`, already listed below.
     () => diagnosticsFor(sync.text, sync.parseResult, editorState.errors, leafScope),
+    // `leafScope` itself is stable in shape (it always reads through `live.current`); what it
+    // resolves to varies with the buffer and catalog, which are already listed below.
     [sync.text, sync.parseResult, editorState.errors, store, catalog, modelType],
   );
 
@@ -135,7 +161,6 @@ export function DslEditor(props: {
     [editorState.facts, sync.parseResult],
   );
 
-  const live = useRef<LiveContext>({ sync, catalog, diagnostics, placedFacts, store, leafScope });
   live.current = { sync, catalog, diagnostics, placedFacts, store, leafScope };
 
   const toolbar = useRef<HTMLDivElement | null>(null);
