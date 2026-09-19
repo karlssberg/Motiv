@@ -102,6 +102,7 @@ export function RuleDocument(props: {
         <EditorPane
           client={client}
           documentName={tab.name}
+          ruleName={tab.name}
           modelType={MODEL_TYPE}
           onExtractToCatalog={props.onExtractToCatalog}
           onPromote={props.onPromote}

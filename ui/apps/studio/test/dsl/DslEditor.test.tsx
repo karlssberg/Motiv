@@ -5,7 +5,7 @@ import { startCompletion, currentCompletions } from '@codemirror/autocomplete';
 import { forEachDiagnostic } from '@codemirror/lint';
 import { DslSyncController, RuleEditorStore } from '@motiv-rules/core';
 import * as core from '@motiv-rules/core';
-import type { Catalog, JsonSchema, RuleNode } from '@motiv-rules/core';
+import type { Catalog, JsonSchema, RuleNode, RulesApiClient } from '@motiv-rules/core';
 import type { DslSync } from '@motiv-rules/react';
 import { DslEditor, makeLeafScope } from '../../src/dsl/DslEditor.js';
 import { useDslSync } from '@motiv-rules/react';
@@ -31,10 +31,14 @@ const LEAF_CATALOG: Catalog = {
   modelTypes: { customer: CUSTOMER_SCHEMA },
 };
 
+/** Stands in for the API client the inspector strip reads a leaf's scope against; unused by any
+ *  test here, since none puts the caret inside a backtick with a scenario selected. */
+const STUB_CLIENT = { evaluate: () => new Promise<never>(() => {}) } as unknown as RulesApiClient;
+
 /** Stands in for the pane that owns the buffer, which the editor takes as a prop. */
 function Host(props: { store: RuleEditorStore; catalog?: Catalog }) {
   const sync = useDslSync(props.store);
-  return <DslEditor store={props.store} catalog={props.catalog ?? CATALOG} sync={sync} modelType="customer" />;
+  return <DslEditor store={props.store} catalog={props.catalog ?? CATALOG} sync={sync} modelType="customer" client={STUB_CLIENT} />;
 }
 
 const BOTH_SPECS = { andAlso: [{ spec: 'is-active' }, { spec: 'is-verified' }] };

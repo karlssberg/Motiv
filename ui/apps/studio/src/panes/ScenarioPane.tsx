@@ -1,7 +1,8 @@
-import { useId, useState, type CSSProperties } from 'react';
+import { useEffect, useId, useState, type CSSProperties } from 'react';
 import { validateAgainstSchema, type EvaluationResult, type RulesApiClient, type SchemaViolation } from '@motiv-rules/core';
 import { JustificationTree, useCatalog, useRuleEditor, useRuleEditorStore } from '@motiv-rules/react';
 import { MODEL_TYPE } from '../App.js';
+import { selectScenario } from './scenarioSelection.js';
 import { SchemaViolations } from './SchemaViolations.js';
 import { Tick } from './Verdict.js';
 import { Caret, IconDelete, IconNew, IconPlay, IconRefresh } from '../shell/icons.js';
@@ -24,6 +25,12 @@ export function ScenarioPane(props: { client: RulesApiClient; ruleName: string; 
   const state = useRuleEditor(store);
   const catalogState = useCatalog(props.client);
   const [rows, setRows] = useState<Scenario[]>(seedScenarios);
+
+  // The inspector strip under the DSL pane reads a leaf against whichever scenario's details are
+  // open here — published to the tiny external store, keyed by rule, so it survives this pane
+  // being on a different rail than the editor it feeds. Cleared on unmount: a closed tab is not
+  // "the open scenario" for a rule the pane no longer represents.
+  useEffect(() => () => selectScenario(props.ruleName, null), [props.ruleName]);
 
   // Absent while loading or on older backends without modelTypes — then enforcement simply doesn't run.
   const modelSchema = catalogState.status === 'ready' ? catalogState.data.modelTypes?.[MODEL_TYPE] : undefined;
@@ -101,8 +108,17 @@ export function ScenarioPane(props: { client: RulesApiClient; ruleName: string; 
               <ScenarioRow
                 key={row.id}
                 row={row}
-                onToggle={() => setRows((current) => toggleScenario(current, row.id))}
-                onEdit={(change) => setRows((current) => editScenario(current, row.id, change))}
+                onToggle={() => {
+                  const willOpen = !row.open;
+                  selectScenario(props.ruleName, willOpen ? { name: row.name, model: row.model } : null);
+                  setRows((current) => toggleScenario(current, row.id));
+                }}
+                onEdit={(change) => {
+                  setRows((current) => editScenario(current, row.id, change));
+                  // Only the open row is what the inspector is reading against — an edit to a
+                  // closed row's stale model would never be seen, so it publishes nothing.
+                  if (row.open) selectScenario(props.ruleName, { name: change.name ?? row.name, model: change.model ?? row.model });
+                }}
                 onClone={() => setRows((current) => cloneScenario(current, row.id))}
                 onDelete={() => setRows((current) => removeScenario(current, row.id))}
               />

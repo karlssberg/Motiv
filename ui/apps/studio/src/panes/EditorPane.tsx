@@ -35,6 +35,9 @@ export function EditorPane(props: {
   documentName?: string | undefined;
   /** The document's model type, passed through to the DSL surface for expression-leaf scope. */
   modelType: string;
+  /** The rule this pane edits, so the DSL surface's inspector strip reads a leaf against *this*
+   *  rule's open scenario; absent for a document with no name yet (nothing to key a reading on). */
+  ruleName?: string | undefined;
   /**
    * The document's own actions (JSON, Save), drawn at the end of the header after the surface tabs — on the
    * pane that holds the document, so they read as belonging to it. Optional: the pages still
@@ -149,6 +152,8 @@ export function EditorPane(props: {
               sync={sync}
               modelType={props.modelType}
               documentName={props.documentName}
+              client={props.client}
+              ruleName={props.ruleName}
             />
           )}
       </div>

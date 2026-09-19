@@ -7,11 +7,12 @@ import { EditorView, keymap, lineNumbers, type ViewUpdate } from '@codemirror/vi
 import type { Diagnostic } from '@codemirror/lint';
 import {
   getNode, healUnterminated, isNodePath, isSpecNode, parse, scopeAt,
-  type Catalog, type LeafScope, type NodeSpan, type RuleDocument, type RuleEditorStore,
+  type Catalog, type LeafScope, type NodeSpan, type RuleDocument, type RuleEditorStore, type RulesApiClient,
 } from '@motiv-rules/core';
 import { useRuleEditor } from '@motiv-rules/react';
 import { createMotivCompletion } from './completion.js';
 import { diagnosticsFor, placeFacts, type PlacedFact } from './lint.js';
+import { LeafInspector } from './LeafInspector.js';
 import { localMarks } from './localMarks.js';
 import { motivHover } from './hover.js';
 import { motiv } from './motivLanguage.js';
@@ -155,11 +156,18 @@ export function DslEditor(props: {
   modelType: string;
   /** The document's name, shown as the buffer's filename; absent for a nameless draft. */
   documentName?: string | undefined;
+  /** Runs the inspector strip's reading; absent hides no UI, but the strip stays scope-only. */
+  client: RulesApiClient;
+  /** The tab this buffer belongs to, so the inspector reads against *this* rule's open scenario. */
+  ruleName?: string | undefined;
 }) {
   const { store, catalog, sync, modelType } = props;
   const filename = props.documentName !== undefined ? `${props.documentName}.motiv` : DRAFT_FILENAME;
   const editorState = useRuleEditor(store);
   const [popover, setPopover] = useState<PayloadTarget | null>(null);
+  /** The caret's offset in the live buffer, tracked from every selection change so the inspector
+   *  strip follows it without polling the view. */
+  const [caret, setCaret] = useState(0);
 
   const live = useRef<LiveContext>({
     sync, catalog, diagnostics: [], placedFacts: [], store, leafScope: () => null,
@@ -217,6 +225,7 @@ export function DslEditor(props: {
     if (!parent) return;
 
     const onUpdate = (update: ViewUpdate) => {
+      if (update.selectionSet) setCaret(update.state.selection.main.head);
       if (!update.docChanged) return;
       if (!applyingHookText.current) live.current.sync.setText(update.state.doc.toString());
       // The card is anchored to a token and edits the node behind it — an edit can move the one
@@ -331,6 +340,21 @@ export function DslEditor(props: {
       )}
 
       <div className="dsl-surface" ref={host} />
+
+      <LeafInspector
+        text={sync.text}
+        caret={caret}
+        parseResult={sync.parseResult}
+        // The leaf the inspector found (if any) came from `sync.parseResult`, so it must resolve
+        // paths against *that* parse's document — not the store's last-committed one, which can
+        // disagree with the live buffer for as long as an edit is uncommitted (same reasoning as
+        // `makeLeafScope` above).
+        document={sync.parseResult.document ?? editorState.document}
+        leafScope={live.current.leafScope}
+        client={props.client}
+        modelType={modelType}
+        ruleName={props.ruleName}
+      />
 
       {popover && (
         <PayloadPopover
