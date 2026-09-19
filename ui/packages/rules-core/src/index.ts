@@ -112,5 +112,6 @@ export { DslSyncController, type DslSyncState, type SyncStatus } from './dslSync
 // The expression-leaf language.
 export {
   tokenizeLeaf, parseLeaf, printLeaf,
-  type LeafTokenKind, type LeafToken, type LeafProblem, type LeafAst,
+  scopeAt, withVar, fieldsOf, isCollection, elementOf, typeName, isNullable,
+  type LeafTokenKind, type LeafToken, type LeafProblem, type LeafAst, type LeafScope,
 } from './expression/index.js';
