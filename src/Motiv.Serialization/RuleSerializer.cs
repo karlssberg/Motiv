@@ -279,16 +279,25 @@ public sealed class RuleSerializer
         if (document is null)
             return new RuleValidation(errors, []);
 
-        // Binding reports leaf errors; facts are gathered by a second, analysis-only pass over the
-        // leaves so a document with errors still surfaces whatever the checker could learn.
+        // Unlike Validate<TModel>, binding here is not gated on errors.Count == 0: a document with
+        // parameter-supply errors still binds and analyses as far as it can, so facts surface
+        // alongside those errors instead of being withheld by them.
         if (document.Root is not null)
             RuleBinder.Bind<TModel>(document, _source, _options, errors);
 
+        // One shared visited set across both walks: a Local node's body is the very same RuleNode
+        // instance LocalResolver.Link assigned to document.Definitions, so a root walk that recurses
+        // into it and the definitions loop below would otherwise gather every fact in that body
+        // twice (once per reference, for a definition referenced more than once).
+        // RuleNode is a plain class with no Equals/GetHashCode override, so a bare HashSet<RuleNode>
+        // already compares by reference — exactly what's needed to de-duplicate the shared instance
+        // LocalResolver.Link assigns to every "local" node naming the same definition.
         var facts = new List<RuleLeafFact>();
+        var visited = new HashSet<RuleNode>();
         if (document.Root is not null)
-            CollectFacts<TModel>(document.Root, facts);
+            CollectFacts<TModel>(document.Root, facts, visited);
         foreach (var definition in document.Definitions)
-            CollectFacts<TModel>(definition, facts);
+            CollectFacts<TModel>(definition, facts, visited);
         return new RuleValidation(errors, facts);
     }
 
@@ -299,9 +308,15 @@ public sealed class RuleSerializer
     /// Walks a rule subtree gathering leaf facts, switching to a collection's element type when it
     /// descends into a higher-order node's body — mirroring how <see cref="RuleBinder.BindHigherOrder{TModel}" />
     /// (via <c>CollectionBinding</c>) rebinds a quantifier body against the element rather than the parent.
+    /// <paramref name="visited"/> is shared across the whole document so a definition's body — reached
+    /// both by recursing into a <see cref="RuleOperator.Local" /> node and by <see cref="Inspect{TModel}"/>'s
+    /// own pass over <c>document.Definitions</c> — contributes its facts only once.
     /// </summary>
-    private void CollectFacts<TModel>(RuleNode node, List<RuleLeafFact> facts)
+    private void CollectFacts<TModel>(RuleNode node, List<RuleLeafFact> facts, HashSet<RuleNode> visited)
     {
+        if (!visited.Add(node))
+            return;
+
         switch (node.Operator)
         {
             case RuleOperator.Expression:
@@ -311,7 +326,7 @@ public sealed class RuleSerializer
                 return;
             case RuleOperator.Local:
                 if (node.Definition is not null)
-                    CollectFacts<TModel>(node.Definition, facts);
+                    CollectFacts<TModel>(node.Definition, facts, visited);
                 return;
         }
 
@@ -323,12 +338,12 @@ public sealed class RuleSerializer
             if (binding is null)
                 return;
             CollectFactsMethod.MakeGenericMethod(binding.ElementType)
-                .Invoke(this, [node.Children[0], facts]);
+                .Invoke(this, [node.Children[0], facts, visited]);
             return;
         }
 
         foreach (var child in node.Children)
-            CollectFacts<TModel>(child, facts);
+            CollectFacts<TModel>(child, facts, visited);
     }
 
     /// <summary>

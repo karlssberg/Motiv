@@ -76,6 +76,19 @@ public class LeafBindingTests
     }
 
     [Fact]
+    public void Should_gather_a_referenced_definitions_facts_only_once()
+    {
+        const string json = """
+            { "definitions": { "is-big": { "rule": { "expression": "creditLimit > 500" } } },
+              "rule": { "and": [ { "local": "is-big" }, { "local": "is-big" } ] } }
+            """;
+        var inspection = Serializer().Inspect<Customer>(json);
+        inspection.Errors.ShouldBeEmpty();
+        inspection.Facts.Count(f => f.Text == "500").ShouldBe(1);
+        inspection.Facts.Count(f => f.Text == "creditLimit > 500").ShouldBe(1);
+    }
+
+    [Fact]
     public async Task Should_bind_in_an_async_load()
     {
         const string json = """{ "rule": { "expression": "age >= 18" } }""";
