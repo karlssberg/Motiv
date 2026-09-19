@@ -68,7 +68,9 @@ public class LeafCorpusTests
             {
                 // Mirrors the TS runner's `.find` (first match, not a uniqueness assertion) — a case
                 // like "1 + 1 > 1" has two literal `1` facts sharing the same printed text.
-                var fact = analysis!.Facts.First(x => x.Node is not Binary && LeafChecker.Print(x.Node) == f.GetProperty("text").GetString());
+                var text = f.GetProperty("text").GetString();
+                var fact = analysis!.Facts.FirstOrDefault(x => x.Node is not Binary && LeafChecker.Print(x.Node) == text)
+                    .ShouldNotBeNull($"fact for {text}");
                 CorpusFixtures.TypeName(fact.Type).ShouldBe(f.GetProperty("type").GetString()!);
                 if (f.TryGetProperty("from", out var from)) fact.From.ShouldNotBeNull().ShouldBe(from.GetString()!);
             }

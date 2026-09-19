@@ -341,6 +341,10 @@
       "scope": "customer",
       "leaf": "@minAge / @vip > 1",
       "warnings": 1,
+      "facts": [
+        { "text": "@minAge", "type": "decimal" },
+        { "text": "@vip", "type": "decimal" }
+      ],
       "result": "bool"
     }
   ]
