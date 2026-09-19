@@ -63,6 +63,19 @@ public class LeafBindingTests
     }
 
     [Fact]
+    public void Should_gather_facts_for_a_leaf_inside_a_quantifier_body_against_the_element()
+    {
+        const string json = """
+            { "rule": { "asAllSatisfied": { "expression": "total > 10" }, "path": "orders" } }
+            """;
+        var serializer = new RuleSerializer(new SpecRegistry().RegisterCollection<Customer, Order>("orders", c => c.Orders ?? []));
+        var inspection = serializer.Inspect<Customer>(json);
+        inspection.Errors.ShouldBeEmpty();
+        var literal = inspection.Facts.Single(f => f.Text == "10");
+        literal.Type.ShouldBe("decimal");
+    }
+
+    [Fact]
     public async Task Should_bind_in_an_async_load()
     {
         const string json = """{ "rule": { "expression": "age >= 18" } }""";

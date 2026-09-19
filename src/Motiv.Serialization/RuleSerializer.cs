@@ -1,3 +1,6 @@
+using System.Reflection;
+using Motiv.Serialization.Expressions;
+
 namespace Motiv.Serialization;
 
 /// <summary>
@@ -255,6 +258,77 @@ public sealed class RuleSerializer
         if (document?.Root is not null && errors.Count == 0)
             RuleBinder.Bind<TModel>(document, _source, _options, errors);
         return errors;
+    }
+
+    /// <summary>
+    /// Checks a rule document as <see cref="Deserialize{TModel}(string)" /> does — so, unlike
+    /// <see cref="Validate{TModel}(string)" />, an unsupplied required parameter is reported as
+    /// <see cref="RuleErrorCode.MissingParameter" /> rather than stood in by a placeholder — and
+    /// also reports what the checker learned about every expression leaf reached while checking the
+    /// document: the types it solved for literals and parameters, each leaf's result type, and its
+    /// warnings. A leaf inside a quantifier body is analysed against the collection's element type,
+    /// not <typeparamref name="TModel"/>.
+    /// </summary>
+    /// <typeparam name="TModel">The model type the document's spec references were registered for.</typeparam>
+    /// <param name="json">The rule document to inspect.</param>
+    /// <returns>The document's errors and the facts gathered about its expression leaves.</returns>
+    public RuleValidation Inspect<TModel>(string json)
+    {
+        var errors = new List<RuleError>();
+        var document = Prepare(json, null, errors);
+        if (document is null)
+            return new RuleValidation(errors, []);
+
+        // Binding reports leaf errors; facts are gathered by a second, analysis-only pass over the
+        // leaves so a document with errors still surfaces whatever the checker could learn.
+        if (document.Root is not null)
+            RuleBinder.Bind<TModel>(document, _source, _options, errors);
+
+        var facts = new List<RuleLeafFact>();
+        if (document.Root is not null)
+            CollectFacts<TModel>(document.Root, facts);
+        foreach (var definition in document.Definitions)
+            CollectFacts<TModel>(definition, facts);
+        return new RuleValidation(errors, facts);
+    }
+
+    private static readonly MethodInfo CollectFactsMethod = typeof(RuleSerializer)
+        .GetMethod(nameof(CollectFacts), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+    /// <summary>
+    /// Walks a rule subtree gathering leaf facts, switching to a collection's element type when it
+    /// descends into a higher-order node's body — mirroring how <see cref="RuleBinder.BindHigherOrder{TModel}" />
+    /// (via <c>CollectionBinding</c>) rebinds a quantifier body against the element rather than the parent.
+    /// </summary>
+    private void CollectFacts<TModel>(RuleNode node, List<RuleLeafFact> facts)
+    {
+        switch (node.Operator)
+        {
+            case RuleOperator.Expression:
+                var analysis = LeafBinding.Analyse<TModel>(node, []);
+                if (analysis is not null)
+                    facts.AddRange(LeafBinding.FactsOf(node, analysis));
+                return;
+            case RuleOperator.Local:
+                if (node.Definition is not null)
+                    CollectFacts<TModel>(node.Definition, facts);
+                return;
+        }
+
+        if (node.Operator.IsHigherOrder())
+        {
+            if (node.Children.Count == 0)
+                return;
+            var binding = _source.FindCollection<TModel>(node.PathText!);
+            if (binding is null)
+                return;
+            CollectFactsMethod.MakeGenericMethod(binding.ElementType)
+                .Invoke(this, [node.Children[0], facts]);
+            return;
+        }
+
+        foreach (var child in node.Children)
+            CollectFacts<TModel>(child, facts);
     }
 
     /// <summary>

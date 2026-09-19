@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Schema;
 using System.Text.Json.Serialization.Metadata;
 using Microsoft.AspNetCore.Builder;
@@ -138,10 +139,11 @@ public static class MotivRulesEndpoints
                 return UnknownModelType(request.ModelType, json);
 
             var documentJson = request.Document.GetRawText();
-            var errors = request.IsAsync
-                ? binding.ValidateAsyncSpec(serializer, documentJson)
-                : binding.Validate(serializer, documentJson);
-            return Results.Json(new ValidationResponse(errors), json);
+            if (request.IsAsync)
+                return Results.Json(new ValidationResponse(binding.ValidateAsyncSpec(serializer, documentJson), []), json);
+
+            var inspection = binding.Inspect(serializer, documentJson);
+            return Results.Json(new ValidationResponse(inspection.Errors, inspection.Facts), json);
         });
 
         group.MapPost("/evaluate", (EvaluateRequest request, HttpContext http) =>
@@ -166,7 +168,7 @@ public static class MotivRulesEndpoints
             }
             catch (RuleSerializationException ex)
             {
-                return Results.Json(new ValidationResponse(ex.Errors), json, statusCode: 400);
+                return Results.Json(new ValidationResponse(ex.Errors, []), json, statusCode: 400);
             }
             catch (InvalidModelException ex)
             {
@@ -491,9 +493,27 @@ public static class MotivRulesEndpoints
         {
             RuleUpdateOutcome.Updated => Results.Json(new RulePutResponse(outcome.Version), json),
             RuleUpdateOutcome.VersionConflict => Results.Json(new RuleConflictResponse(outcome.Version), json, statusCode: 409),
-            RuleUpdateOutcome.Invalid => Results.Json(new ValidationResponse(outcome.Errors), json, statusCode: 400),
+            RuleUpdateOutcome.Invalid => Results.Json(new ValidationResponse(outcome.Errors, []), json, statusCode: 400),
             _ => UnknownRule(name, json)
         };
+
+    /// <summary>
+    /// Stamps a numeric <c>format</c> onto every schema node for a fixed-width or decimal CLR
+    /// numeric type, so a client can tell a <c>decimal</c> property from a <c>double</c> one without
+    /// guessing from JSON Schema's bare <c>"number"</c> type — both otherwise export identically.
+    /// </summary>
+    private static readonly JsonSchemaExporterOptions SchemaExporterOptions = new()
+    {
+        TransformSchemaNode = static (context, node) =>
+        {
+            var type = Nullable.GetUnderlyingType(context.TypeInfo.Type) ?? context.TypeInfo.Type;
+            var format = type == typeof(int) ? "int32" : type == typeof(long) ? "int64" : type == typeof(float) ? "single"
+                : type == typeof(double) ? "double" : type == typeof(decimal) ? "decimal" : null;
+            if (format is not null && node is JsonObject schema && !schema.ContainsKey("format"))
+                schema["format"] = format;
+            return node;
+        },
+    };
 
     private static JsonElement ToSchema(JsonSerializerOptions options, Type type)
     {
@@ -503,7 +523,7 @@ public static class MotivRulesEndpoints
         var schemaOptions = options.TypeInfoResolver is null
             ? new JsonSerializerOptions(options) { TypeInfoResolver = new DefaultJsonTypeInfoResolver() }
             : options;
-        return JsonSerializer.SerializeToElement(schemaOptions.GetJsonSchemaAsNode(type));
+        return JsonSerializer.SerializeToElement(schemaOptions.GetJsonSchemaAsNode(type, SchemaExporterOptions));
     }
 
     private static IResult UnknownModelType(string modelType, JsonSerializerOptions json) =>

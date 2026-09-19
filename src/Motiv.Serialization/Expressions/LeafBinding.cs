@@ -49,6 +49,29 @@ internal static class LeafBinding
         foreach (var problem in problems.Where(p => !p.IsWarning))
             errors.Add(new RuleError(node.Path, problem.Code, problem.Message, new RuleTextRange(problem.Start, problem.End)));
     }
+
+    /// <summary>Facts for the inspector and hover: literal/parameter types, the leaf's result type, warnings.</summary>
+    public static IReadOnlyList<RuleLeafFact> FactsOf(RuleNode node, LeafAnalysis analysis)
+    {
+        var text = node.ExpressionText!;
+        var facts = new List<RuleLeafFact>();
+        foreach (var fact in analysis.Facts)
+            facts.Add(new RuleLeafFact(node.Path, new RuleTextRange(fact.Node.Start, fact.Node.End),
+                text.Substring(fact.Node.Start, fact.Node.End - fact.Node.Start), DescribeType(fact.Type), fact.From, false, null));
+        foreach (var warning in analysis.Problems.Where(p => p.IsWarning))
+            facts.Add(new RuleLeafFact(node.Path, new RuleTextRange(warning.Start, warning.End),
+                text.Substring(warning.Start, warning.End - warning.Start), string.Empty, null, true, warning.Message));
+        return facts;
+    }
+
+    private static string DescribeType(Type type)
+    {
+        var underlying = Nullable.GetUnderlyingType(type) ?? type;
+        var name = underlying == typeof(int) ? "int" : underlying == typeof(long) ? "long" : underlying == typeof(decimal) ? "decimal"
+            : underlying == typeof(double) ? "double" : underlying == typeof(float) ? "float" : underlying == typeof(bool) ? "bool"
+            : underlying == typeof(string) ? "string" : underlying.Name;
+        return underlying == type ? name : $"{name}?";
+    }
 #else
     /// <summary>Reports that expression nodes are not available on this target framework.</summary>
     /// <typeparam name="TModel">The model type the leaf would have been bound against.</typeparam>
@@ -61,5 +84,18 @@ internal static class LeafBinding
             "expression nodes are supported on .NET 8 or later"));
         return null;
     }
+
+    /// <summary>Expression nodes are not available on this target framework.</summary>
+    /// <typeparam name="TModel">The model type the leaf would have been checked against.</typeparam>
+    /// <param name="node">The expression node that cannot be analysed.</param>
+    /// <param name="errors">Unused on this target framework.</param>
+    /// <returns>Always <c>null</c>.</returns>
+    public static object? Analyse<TModel>(RuleNode node, List<RuleError> errors) => null;
+
+    /// <summary>Expression nodes are not available on this target framework.</summary>
+    /// <param name="node">The expression node that cannot be analysed.</param>
+    /// <param name="analysis">Unused on this target framework.</param>
+    /// <returns>Always an empty list.</returns>
+    public static IReadOnlyList<RuleLeafFact> FactsOf(RuleNode node, object analysis) => [];
 #endif
 }
