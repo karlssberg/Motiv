@@ -105,6 +105,51 @@ public class LeafBindingTests
 
         const string decorated = """{ "rule": { "expression": "age >= 18", "whenTrue": { "code": 1 }, "whenFalse": { "code": 2 }, "name": "adult" } }""";
         Serializer().Deserialize<Customer, Code>(decorated).Evaluate(Sample).Values.ShouldHaveSingleItem().code.ShouldBe(1);
+        Serializer().Deserialize<Customer, Code>(decorated, new { }).Evaluate(Sample).Values.ShouldHaveSingleItem().code.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Should_require_metadata_on_a_leaf_in_an_async_metadata_load()
+    {
+        const string bare = """{ "rule": { "expression": "age >= 18" } }""";
+        var errors = Serializer().ValidateAsyncSpec<Customer, int>(bare);
+        errors.ShouldHaveSingleItem().Code.ShouldBe(RuleErrorCode.ExpressionRequiresMetadata);
+
+        const string decorated = """{ "rule": { "expression": "age >= 18", "whenTrue": { "code": 1 }, "whenFalse": { "code": 2 }, "name": "adult" } }""";
+        var result = await Serializer().DeserializeAsyncSpec<Customer, Code>(decorated).EvaluateAsync(Sample);
+        result.Values.ShouldHaveSingleItem().code.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Should_inspect_a_leaf_that_does_not_parse_as_a_ranged_error_with_no_facts()
+    {
+        const string json = """{ "rule": { "expression": "age >" } }""";
+        var inspection = Serializer().Inspect<Customer>(json);
+        var error = inspection.Errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe(RuleErrorCode.InvalidExpression);
+        error.Range.ShouldNotBeNull();
+        error.Range.Start.ShouldBe(5);
+        inspection.Facts.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Should_inspect_a_warning_as_a_fact_that_carries_its_message()
+    {
+        const string json = """{ "rule": { "expression": "age / 2 > 10" } }""";
+        var inspection = Serializer().Inspect<Customer>(json);
+        inspection.Errors.ShouldBeEmpty();
+        var warning = inspection.Facts.Single(f => f.IsWarning);
+        warning.Text.ShouldBe("age / 2");
+        warning.Message.ShouldNotBeNull();
+        warning.Message.ShouldContain("truncates");
+    }
+
+    [Fact]
+    public void Should_inspect_a_document_that_does_not_load_as_errors_alone()
+    {
+        var inspection = Serializer().Inspect<Customer>("""{ "rule": { "spec": "no-such-spec" } }""");
+        inspection.Errors.ShouldNotBeEmpty();
+        inspection.Facts.ShouldBeEmpty();
     }
 }
 #endif

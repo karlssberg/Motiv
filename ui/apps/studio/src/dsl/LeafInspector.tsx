@@ -54,9 +54,9 @@ function leafDocument(document: RuleDocument, path: string, expression: string):
  * differs from the document's model type whenever it sits inside a quantifier body — `scope`
  * carries that (`each of orders`, say) so the reading is legible without re-deriving it here.
  *
- * The reading is debounced 300ms after the caret or the leaf's text changes, and a response for a
- * since-superseded request is dropped: `latest` tracks the most recently *issued* key, and only a
- * response whose key still matches it is applied.
+ * The reading is debounced 300ms after the caret, the leaf's text, the document or the scenario
+ * changes, and a response for a since-superseded request is dropped: `latest` numbers requests as
+ * they are scheduled, and only a response for the latest number is applied.
  */
 export function LeafInspector(props: {
   text: string; caret: number; parseResult: ParseResult; document: RuleDocument;
@@ -66,26 +66,26 @@ export function LeafInspector(props: {
   const leaf = useMemo(() => leafAtCaret(text, caret, parseResult), [text, caret, parseResult]);
   const scope = leaf ? leafScope(leaf.path) : null;
   const scenario = useSelectedScenario(props.ruleName ?? '');
-  const [reading, setReading] = useState<{ key: string; result?: EvaluationResult; error?: string } | null>(null);
+  const [reading, setReading] = useState<{ result?: EvaluationResult; error?: string } | null>(null);
 
   const analysis = useMemo(() => (leaf && scope ? analyseLeaf(leaf.text, scope) : null), [leaf, scope]);
   const resultType = analysis?.ast ? analysis.types.get(analysis.ast) : undefined;
 
-  /** The key of the most recently *issued* request, so a stale response — one whose request was
-   *  superseded by a later caret/text/scenario change before it returned — is dropped rather than
-   *  overwriting a newer (possibly still-pending) reading. */
-  const latest = useRef<string | null>(null);
+  /** The number of the most recently *issued* request. It is taken synchronously, before the
+   *  debounce, so a response is accepted only if nothing about the leaf, its document or the
+   *  scenario changed after its request was scheduled — a change during the debounce window, or
+   *  one outside the leaf text (a parameter default, a quantifier setting), both retire it. */
+  const latest = useRef(0);
 
   useEffect(() => {
+    const request = ++latest.current;
     if (!leaf || !scenario || !analysis?.valid) { setReading(null); return; }
-    const key = `${leaf.path}|${leaf.text}|${scenario.model}`;
     const timer = setTimeout(() => {
-      latest.current = key;
       let model: unknown;
-      try { model = JSON.parse(scenario.model); } catch { setReading({ key, error: 'the selected scenario is not valid JSON' }); return; }
+      try { model = JSON.parse(scenario.model); } catch { setReading({ error: 'the selected scenario is not valid JSON' }); return; }
       client.evaluate({ modelType, document: leafDocument(document, leaf.path, leaf.text), model })
-        .then((result) => { if (latest.current === key) setReading({ key, result }); })
-        .catch((error: unknown) => { if (latest.current === key) setReading({ key, error: error instanceof Error ? error.message : String(error) }); });
+        .then((result) => { if (latest.current === request) setReading({ result }); })
+        .catch((error: unknown) => { if (latest.current === request) setReading({ error: error instanceof Error ? error.message : String(error) }); });
     }, 300);
     return () => clearTimeout(timer);
   }, [leaf?.path, leaf?.text, scenario?.model, analysis?.valid, client, modelType, document]);

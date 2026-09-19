@@ -18,6 +18,7 @@ public class LeafCheckerTests
     [
         new("minAge", RuleParameterType.Integer, true, 18),
         new("vip", RuleParameterType.Number, true, 1000d),
+        new("flag", RuleParameterType.Boolean, true, true),
     ];
 
     private static LeafAnalysis Check(string text)
@@ -110,6 +111,18 @@ public class LeafCheckerTests
     [InlineData("kind == \"Nope\"", RuleErrorCode.ExpressionTypeMismatch, "\"Retail\"")]
     [InlineData("tier == \"Bronze\"", RuleErrorCode.ExpressionTypeMismatch, "number")]
     [InlineData("creditLimit / 0.0 > 1", RuleErrorCode.ExpressionTypeMismatch, "division by zero")]
+    [InlineData("orders > 1", RuleErrorCode.ExpressionTypeMismatch, "a collection of object")]
+    [InlineData("age.foo > 1", RuleErrorCode.UnknownField, "'foo' is not a field of int")]
+    [InlineData("country.equalsIgnoreCase()", RuleErrorCode.UnknownMethod, "one string argument")]
+    [InlineData("country.equalsIgnoreCase(3)", RuleErrorCode.ExpressionTypeMismatch, "expects a string")]
+    [InlineData("orders.count(1) > 1", RuleErrorCode.UnknownMethod, "takes no arguments")]
+    [InlineData("orders.sum(1) > 1", RuleErrorCode.UnknownMethod, "takes a lambda")]
+    [InlineData("!age", RuleErrorCode.ExpressionTypeMismatch, "'!' needs a condition")]
+    [InlineData("-country == \"x\"", RuleErrorCode.ExpressionTypeMismatch, "'-' needs a number")]
+    [InlineData("1 && isActive", RuleErrorCode.ExpressionTypeMismatch, "this is a number")]
+    [InlineData("country == isActive", RuleErrorCode.ExpressionTypeMismatch, "comparing string with a condition")]
+    [InlineData("country > 1", RuleErrorCode.ExpressionTypeMismatch, "compares numbers; this is string")]
+    [InlineData("country.equalsIgnoreCase(isActive)", RuleErrorCode.ExpressionTypeMismatch, "expects a string; this is a condition")]
     public void Should_report_type_and_name_problems(string text, RuleErrorCode code, string fragment)
     {
         var analysis = Check(text);
@@ -145,9 +158,29 @@ public class LeafCheckerTests
     [InlineData("kind == \"Retail\"")]
     [InlineData("maybeKind == null")]
     [InlineData("tier > 0")]
+    [InlineData("isActive == true")]
+    [InlineData("@flag && isActive")]
+    [InlineData("-age < 0")]
+    [InlineData("(@minAge + age) + (@vip + creditLimit) > 1")]
     public void Should_accept_null_checks_and_string_and_boolean_forms(string text)
     {
         Check(text).IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Should_warn_on_integer_division_between_two_integral_fields()
+    {
+        var analysis = Check("age / points > 1");
+        analysis.IsValid.ShouldBeTrue();
+        analysis.Problems.ShouldHaveSingleItem().Message.ShouldContain("truncates");
+    }
+
+    [Fact]
+    public void Should_print_every_node_kind_as_its_canonical_text()
+    {
+        var problems = new List<LeafProblem>();
+        var node = LeafParser.Parse("!isActive == true && country == null || -age < @minAge", problems)!;
+        LeafChecker.Print(node).ShouldBe("!isActive == true && country == null || -age < @minAge");
     }
 
     [Fact]

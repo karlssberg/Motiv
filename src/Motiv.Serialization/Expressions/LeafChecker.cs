@@ -203,6 +203,12 @@ internal sealed class LeafChecker
             var argument = Visit(c.Arguments[0], scope);
             if (argument.Underlying is { } at && at != typeof(string))
                 Report(c.Arguments[0], RuleErrorCode.ExpressionTypeMismatch, $"'equalsIgnoreCase' expects a string; this is {Describe(at)}");
+            else if (argument.Var is { } numeric)
+            {
+                // A numeric literal or parameter has no anchor here; it is wrong, not merely unresolved.
+                Report(c.Arguments[0], RuleErrorCode.ExpressionTypeMismatch, "'equalsIgnoreCase' expects a string; this is a number");
+                _errored.Add(numeric.Root);
+            }
             return Set(c, LeafType.Of(typeof(bool)));
         }
 

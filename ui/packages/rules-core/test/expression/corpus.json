@@ -269,6 +269,20 @@
       ]
     },
     {
+      "name": "equalsIgnoreCase with a number argument",
+      "scope": "customer",
+      "leaf": "country.equalsIgnoreCase(3)",
+      "problems": [
+        {
+          "code": "ExpressionTypeMismatch",
+          "range": [
+            25,
+            26
+          ]
+        }
+      ]
+    },
+    {
       "name": "parent reachable in lambda",
       "scope": "customer",
       "leaf": "orders.all(o => o.total <= creditLimit)",

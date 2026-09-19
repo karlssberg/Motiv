@@ -63,6 +63,8 @@ public class LeafParserTests
     [InlineData("age > > 1", "unexpected '>'", 6, 7)]
     [InlineData("orders.", "expected a field or method name after '.'", 7, 7)]
     [InlineData("a == b == c", "unexpected '=='", 7, 9)]
+    [InlineData("orders.where(o => o.total > 1", "unexpected end of expression", 29, 29)]
+    [InlineData("(age > 1 age", "expected ')'", 9, 12)]
     public void Should_report_syntax_errors_at_their_range(string text, string message, int start, int end)
     {
         var (node, problems) = Parse(text);

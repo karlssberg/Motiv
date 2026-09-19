@@ -52,6 +52,15 @@ public class LeafTokenizerTests
     }
 
     [Fact]
+    public void Should_report_a_bare_at_sign()
+    {
+        var (_, problems) = Tokenize("@ > 1");
+        var problem = problems.ShouldHaveSingleItem();
+        problem.Message.ShouldContain("parameter name after '@'");
+        (problem.Start, problem.End).ShouldBe((0, 1));
+    }
+
+    [Fact]
     public void Should_report_an_unrecognised_character()
     {
         var (_, problems) = Tokenize("age # 3");

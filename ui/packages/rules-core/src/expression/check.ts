@@ -144,8 +144,14 @@ class Checker {
       if (target.kind !== 'string') return this.fail(node, 'UnknownMethod', `'equalsIgnoreCase' needs a string; this is ${describe(target)}`, at);
       const arg = node.args[0];
       if (node.args.length !== 1 || !arg || arg.kind === 'lambda') return this.fail(node, 'UnknownMethod', "'equalsIgnoreCase' takes one string argument", at);
-      const argType = this.known(this.visit(arg, scope));
+      const argument = this.visit(arg, scope);
+      const argType = this.known(argument);
       if (argType && argType.kind !== 'string') this.report(arg, 'ExpressionTypeMismatch', `'equalsIgnoreCase' expects a string; this is ${describe(argType)}`);
+      else if ('var' in argument) {
+        // A numeric literal or parameter has no anchor here; it is wrong, not merely unresolved.
+        this.report(arg, 'ExpressionTypeMismatch', "'equalsIgnoreCase' expects a string; this is a number");
+        this.errored.add(root(argument.var));
+      }
       return this.set(node, { known: { kind: 'bool', nullable: false } });
     }
 

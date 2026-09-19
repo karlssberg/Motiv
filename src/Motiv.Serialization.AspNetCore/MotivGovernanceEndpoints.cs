@@ -198,7 +198,7 @@ internal static class MotivGovernanceEndpoints
             {
                 GateUpdateOutcome.Updated => Results.Json(ToGetResponse(gate.DocumentJson), json),
                 GateUpdateOutcome.Invalid =>
-                    Results.Json(new ValidationResponse(result.Errors, []), json, statusCode: 400),
+                    Results.Json(new ValidationResponse(result.Errors), json, statusCode: 400),
 
                 GateUpdateOutcome.WouldLockOut => Results.Json(
                     new GateRefusalResponse(

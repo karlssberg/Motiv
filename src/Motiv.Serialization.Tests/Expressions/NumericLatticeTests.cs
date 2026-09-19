@@ -58,6 +58,18 @@ public class NumericLatticeTests
         constant.Type.ShouldBe(typeof(decimal));
         NumericLattice.Constant("42", NumericKind.Int64).ShouldBeOfType<ConstantExpression>().Value.ShouldBe(42L);
         Should.Throw<FormatException>(() => NumericLattice.Constant("1.5", NumericKind.Int32));
+        NumericLattice.Constant("1.5", NumericKind.Single).ShouldBeOfType<ConstantExpression>().Value.ShouldBe(1.5f);
+        NumericLattice.Constant("1.5", NumericKind.Double).ShouldBeOfType<ConstantExpression>().Value.ShouldBe(1.5d);
+    }
+
+    [Fact]
+    public void Should_name_the_clr_type_of_every_kind()
+    {
+        NumericLattice.ClrType(NumericKind.Int32).ShouldBe(typeof(int));
+        NumericLattice.ClrType(NumericKind.Int64).ShouldBe(typeof(long));
+        NumericLattice.ClrType(NumericKind.Single).ShouldBe(typeof(float));
+        NumericLattice.ClrType(NumericKind.Double).ShouldBe(typeof(double));
+        NumericLattice.ClrType(NumericKind.Decimal).ShouldBe(typeof(decimal));
     }
 
     [Fact]

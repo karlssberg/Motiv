@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { parse, type Catalog, type JsonSchema, type RulesApiClient } from '@motiv-rules/core';
 import { scopeAt } from '@motiv-rules/core';
 import { LeafInspector } from '../../src/dsl/LeafInspector.js';
@@ -47,5 +47,55 @@ describe('LeafInspector', () => {
       document: { rule: { asAllSatisfied: { expression: 'total > 1' }, path: 'orders' } },
       model: { orders: [{ total: 50 }] },
     }));
+  });
+});
+
+describe('LeafInspector stale responses', () => {
+  it('drops a response whose request was superseded while the next request was still debouncing', async () => {
+    vi.useFakeTimers();
+    try {
+      selectScenario('r', { name: 'Sample', model: '{"age": 34, "orders": []}' });
+      let resolveFirst!: (value: unknown) => void;
+      const evaluate = vi.fn()
+        .mockImplementationOnce(() => new Promise((resolve) => { resolveFirst = resolve; }))
+        .mockResolvedValue({ satisfied: false, assertions: ['age > 100 == false'], explanation: { assertions: [], causes: [] } });
+      const first = parse('is-active & `age > 1`');
+      const client = { evaluate } as unknown as RulesApiClient;
+      const props = (result: ReturnType<typeof parse>, text: string) => ({
+        text, caret: 16, parseResult: result, document: result.document!, client, modelType: 'customer', ruleName: 'r',
+        leafScope: (path: string) => scopeAt(result.document!, path, 'customer', catalog),
+      });
+      const view = render(<LeafInspector {...props(first, 'is-active & `age > 1`')} />);
+      await act(async () => { vi.advanceTimersByTime(300); });
+      expect(evaluate).toHaveBeenCalledTimes(1);
+
+      // The leaf changes while the first request is in flight and before the second debounce fires.
+      const second = parse('is-active & `age > 100`');
+      view.rerender(<LeafInspector {...props(second, 'is-active & `age > 100`')} />);
+      await act(async () => { resolveFirst({ satisfied: true, assertions: ['age > 1 == true'], explanation: { assertions: [], causes: [] } }); });
+      expect(screen.queryByText('age > 1 == true')).toBeNull();
+
+      await act(async () => { vi.advanceTimersByTime(300); });
+      expect(screen.getByText('age > 100 == false')).toBeDefined();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('re-reads when the document changes outside the leaf', async () => {
+    selectScenario('r', { name: 'Sample', model: '{"age": 34, "orders": []}' });
+    const evaluate = vi.fn().mockResolvedValue({ satisfied: true, assertions: ['age > 1 == true'], explanation: { assertions: [], causes: [] } });
+    const client = { evaluate } as unknown as RulesApiClient;
+    const props = (text: string) => {
+      const result = parse(text);
+      return {
+        text, caret: text.indexOf('age'), parseResult: result, document: result.document!, client, modelType: 'customer', ruleName: 'r',
+        leafScope: (path: string) => scopeAt(result.document!, path, 'customer', catalog),
+      };
+    };
+    const view = render(<LeafInspector {...props('is-active & `age > 1`')} />);
+    await waitFor(() => expect(evaluate).toHaveBeenCalledTimes(1));
+    view.rerender(<LeafInspector {...props('!is-active & `age > 1`')} />);
+    await waitFor(() => expect(evaluate).toHaveBeenCalledTimes(2));
   });
 });

@@ -115,6 +115,14 @@ public class LeafCompilerTests
     }
 
     [Fact]
+    public void Should_compile_subtraction_and_boolean_literals()
+    {
+        Compile("age - 4 == 30").Evaluate(Sample).Satisfied.ShouldBeTrue();
+        Compile("isActive == true").Evaluate(Sample).Satisfied.ShouldBeTrue();
+        Compile("isActive == false").Evaluate(Sample).Satisfied.ShouldBeFalse();
+    }
+
+    [Fact]
     public void Should_use_checked_arithmetic()
     {
         var spec = Compile("age * 2000000000 > 1");

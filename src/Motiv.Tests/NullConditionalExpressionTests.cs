@@ -96,6 +96,27 @@ public class NullConditionalExpressionTests
         Counter.Count.ShouldBe(1);
     }
 
+    private sealed class AlwaysTrue : Expression
+    {
+        public override ExpressionType NodeType => ExpressionType.Extension;
+        public override Type Type => typeof(bool);
+        public override bool CanReduce => true;
+        public override Expression Reduce() => Constant(true);
+    }
+
+    [Fact]
+    public void Should_leave_any_other_extension_node_to_the_base_visitor()
+    {
+        var c = Expression.Parameter(typeof(Customer), "c");
+        var body = Expression.AndAlso(new AlwaysTrue(), Expression.NotEqual(Expression.Property(c, nameof(Customer.Country)), Expression.Constant(null, typeof(string))));
+
+        var spec = Spec.From(Expression.Lambda<Func<Customer, bool>>(body, c)).Create("named");
+        var result = spec.Evaluate(new Customer(null, "SE"));
+
+        result.Satisfied.ShouldBeTrue();
+        result.Assertions.ShouldContain("c.Country != null");
+    }
+
     [Fact]
     public void Should_print_a_multi_hop_null_conditional_chain()
     {
