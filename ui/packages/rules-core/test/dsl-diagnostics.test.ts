@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { parse } from '../src/dsl/parser.js';
 import { diagnosticsFor } from '../src/dsl/diagnostics.js';
-import type { RuleError } from '../src/contracts.js';
+import { scopeAt } from '../src/expression/scope.js';
+import type { RuleError, Catalog, JsonSchema } from '../src/contracts.js';
 
 describe('diagnosticsFor', () => {
   it('maps a parser error onto its source range, keeping code and message apart', () => {
@@ -81,5 +82,31 @@ describe('diagnosticsFor', () => {
     expect(diagnostics).toContainEqual(
       expect.objectContaining({ code: 'ShadowsCatalog', severity: 'warning' }),
     );
+  });
+});
+
+describe('diagnosticsFor with leaves', () => {
+  const order: JsonSchema = { type: 'object', properties: { total: { type: 'number', format: 'decimal' } } };
+  const customer: JsonSchema = { type: 'object', properties: { age: { type: 'integer', format: 'int32' }, orders: { type: 'array', items: order } } };
+  const catalog: Catalog = { specs: [], collections: [], modelTypes: { customer } };
+  const scopeFor = (text: string) => (path: string) => scopeAt(parse(text).document!, path, 'customer', catalog);
+
+  it('reports a leaf problem at its offset in the document', () => {
+    const text = 'is-active & `orders.sum(o => o.nope) > 1`';
+    const diagnostics = diagnosticsFor(text, parse(text), [], scopeFor(text));
+    expect(diagnostics).toEqual([expect.objectContaining({ code: 'UnknownField', from: 13 + 18, to: 13 + 22, severity: 'error' })]);
+  });
+
+  it('reports a warning as a warning', () => {
+    const text = '`1 + 1 > 1`';
+    expect(diagnosticsFor(text, parse(text), [], scopeFor(text))[0]).toMatchObject({ severity: 'warning' });
+  });
+
+  it('places a ranged backend error inside the leaf and drops the matching client one', () => {
+    const text = '`orders.sum(o => o.nope) > 1`';
+    const backend: RuleError = { path: '$.rule', code: 'UnknownField', message: "server says 'nope' is not a field of Order", range: { start: 18, end: 22 } };
+    const diagnostics = diagnosticsFor(text, parse(text), [backend], scopeFor(text));
+    expect(diagnostics).toHaveLength(1);
+    expect(diagnostics[0]).toMatchObject({ from: 19, to: 23, message: backend.message, path: '$.rule' });
   });
 });
