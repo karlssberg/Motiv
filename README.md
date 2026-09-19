@@ -251,6 +251,20 @@ A rule document can name a subtree without publishing it to the catalog: a
 `local` node or, in the DSL, `let name = expr`. See
 `docs/live-rules/RuleDocuments.md` for authoring details.
 
+A leaf can also be a small owned expression, bound with no registered spec at
+all, on .NET 8 and later:
+
+```jsonc
+{
+  "rule": { "and": [
+    { "expression": "age >= 18" },
+    { "spec": "customer.is-active" }
+  ] }
+}
+```
+
+See `docs/live-rules/expressions.md` for the grammar, its numeric semantics, and what Studio shows.
+
 ### Runtime Propositions
 
 Propositions are the building blocks rules are made of. Register them in C#, or

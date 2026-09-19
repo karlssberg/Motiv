@@ -13,6 +13,11 @@ public static RuleDocumentSource Embedded(string resourceName);
 public static RuleDocumentSource Embedded(string resourceName, Assembly assembly);
 ```
 
+A leaf of the `rule` tree is a `{ "spec": "<name>" }` reference to a registered proposition, a
+`{ "local": "<name>" }` reference to one of the document's own [definitions](#definitions) below,
+or &mdash; on .NET 8 and later &mdash; an `{ "expression": "…" }` node in its own small owned
+language; see [Expression Leaves](expressions.md).
+
 ## FromJson()
 
 Wraps raw rule-document JSON:

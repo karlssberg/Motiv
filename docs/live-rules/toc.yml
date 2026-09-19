@@ -10,6 +10,8 @@ items:
     href: entity-framework-store.md
   - name: RuleDocuments
     href: RuleDocuments.md
+  - name: Expression Leaves
+    href: expressions.md
   - name: ASP.NET Core Integration
     href: AspNetCore.md
   - name: DeserializeAsyncSpec()

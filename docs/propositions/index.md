@@ -22,23 +22,26 @@ ship in `Motiv.Serialization.AspNetCore`.
 fact: its document is a composition of specs that already exist. It cannot introduce a new
 *primitive* fact, because primitive facts come from predicates, and a predicate is C#.
 
-Every leaf of a rule document is either a `spec` reference or an `expression`, and expression leaves
-do not bind &mdash; they are rejected with `ExpressionsNotEnabled`, because the package that would
-evaluate them does not exist. So every runtime proposition necessarily bottoms out in something
-already registered:
+Every leaf of a rule document is either a `spec` reference or an `expression`. On .NET 8 and later
+an expression leaf binds &mdash; to the equivalent of `Spec.From(model => expression)` &mdash; in
+its own small owned language of fields, parameters, literals and a closed set of collection and
+string methods; see [Expression Leaves](../live-rules/expressions.md) for the grammar. A
+`netstandard2.0` load still rejects a leaf, with `ExpressionsNotEnabled`, since that target has no
+generic math to solve the language's numerics with.
 
 ```jsonc
-// Valid: composes two registered specs.
+// Composes two registered specs.
 { "rule": { "andAlso": [{ "spec": "customer.is-active" }, { "spec": "customer.is-adult" }] } }
 
-// Invalid: an expression leaf never binds.
-{ "rule": { "expression": "Age >= 18" } }
+// Binds directly, on .NET 8 and later, with no registered spec involved.
+{ "rule": { "expression": "age >= 18" } }
 ```
 
-There is consequently **no such thing as an empty proposition** to start from &mdash; the smallest
-thing that can be authored is a reference to one existing spec. A builder UI has to reflect this: it
-must ask what a new proposition starts *from* before it can offer to create one, and it must not
-offer to override a compiled spec whose model has nothing else to compose from.
+A builder UI still has to ask what a new proposition starts *from* before it can offer to create
+one &mdash; there is no such thing as an empty proposition. What changed is the answer: a
+proposition now starts from either a reference to an existing spec, or an expression leaf over the
+model already in scope. It must still not offer to override a compiled spec whose model has
+nothing else to compose from.
 
 New primitive facts continue to come only from C#. What runtime propositions add is the ability to
 name and reuse combinations of them.
