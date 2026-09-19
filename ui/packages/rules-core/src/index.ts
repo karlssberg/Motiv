@@ -29,7 +29,7 @@ export {
 // The wire contracts shared with the ASP.NET Core endpoints.
 export type {
   Catalog, CatalogEntry, CatalogCollection, CatalogParameter, JsonSchema,
-  RuleError, RuleErrorCode, ValidationResponse, ErrorResponse,
+  RuleError, RuleErrorCode, RuleTextRange, RuleLeafFact, ValidationResponse, ErrorResponse,
   ExplanationNode, EvaluationResult, ValidateRequest, EvaluateRequest, RuleEvaluateRequest,
   RuleListEntry, RuleGetResponse, RuleSaveResult,
   PropositionOrigin, PropositionListEntry, PropositionGetResponse, PropositionCreateRequest,
@@ -108,3 +108,9 @@ export {
 } from './dsl/completion.js';
 export { diagnosticsFor, type RuleDiagnostic } from './dsl/diagnostics.js';
 export { DslSyncController, type DslSyncState, type SyncStatus } from './dslSync.js';
+
+// The expression-leaf language.
+export {
+  tokenizeLeaf, parseLeaf, printLeaf,
+  type LeafTokenKind, type LeafToken, type LeafProblem, type LeafAst,
+} from './expression/index.js';

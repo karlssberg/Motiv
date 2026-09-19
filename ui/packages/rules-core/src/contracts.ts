@@ -47,6 +47,8 @@ export interface JsonSchema {
   enum?: unknown[];
   /** ECMAScript regex applied to string values (unanchored, per JSON Schema). */
   pattern?: string;
+  /** The CLR numeric kind the host stamps on numeric fields: int32, int64, single, double, decimal. */
+  format?: string;
   [keyword: string]: unknown;
 }
 
@@ -70,18 +72,35 @@ export type RuleErrorCode =
   | 'MixedWhenTrueFalseKinds' | 'ExpressionsNotEnabled' | 'AsyncSpecInSyncLoad'
   | 'DocumentTooLarge' | 'MissingParameter' | 'SurplusParameter'
   | 'ParameterTypeMismatch' | 'UnknownParameterReference' | 'UnknownCollection'
-  | 'AsyncSpecInHigherOrder' | 'PolicyRequired' | 'UnknownLocal' | 'InvalidLocalName';
+  | 'AsyncSpecInHigherOrder' | 'PolicyRequired' | 'UnknownLocal' | 'InvalidLocalName'
+  | 'InvalidExpression' | 'UnknownField' | 'UnknownMethod' | 'ExpressionTypeMismatch' | 'ExpressionRequiresMetadata';
+
+/** A half-open character range `[start, end)` inside an expression leaf's text. */
+export interface RuleTextRange { start: number; end: number }
+
+/** What the server's checker learned about one place in a leaf: a literal's solved type, the leaf's result type, or a warning. */
+export interface RuleLeafFact {
+  path: string;
+  range: RuleTextRange;
+  text: string;
+  type: string;
+  from: string | null;
+  isWarning: boolean;
+  message: string | null;
+}
 
 /** A single validation or load error. */
 export interface RuleError {
   path: string;
   code: RuleErrorCode;
   message: string;
+  range?: RuleTextRange | null;
 }
 
 /** The body returned by the validate endpoint (and by evaluate on an invalid document). */
 export interface ValidationResponse {
   errors: RuleError[];
+  facts?: RuleLeafFact[];
 }
 
 /** A request-level error envelope (e.g. unknown model type). */

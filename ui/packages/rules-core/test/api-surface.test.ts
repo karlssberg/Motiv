@@ -74,9 +74,11 @@ const APPROVED_API = [
   'normalizeLocalName',
   'operandsOf',
   'parse',
+  'parseLeaf',
   'planInsert',
   'print',
   'printInline',
+  'printLeaf',
   'rangeOfPath',
   'setBinaryOperator',
   'setHovered',
@@ -93,6 +95,7 @@ const APPROVED_API = [
   'togglePin',
   'tokenSpans',
   'tokenize',
+  'tokenizeLeaf',
   'validateAgainstSchema',
 ];
 
