@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  analyseLeaf, getNode, isExpressionNode, isHigherOrderNode, isNodePath,
+  analyseLeaf, getNode, higherOrderKey, isExpressionNode, isHigherOrderNode, isNodePath,
   type EvaluationResult, type LeafScope, type ParseResult, type RuleDocument, type RuleNode, type RulesApiClient,
 } from '@motiv-rules/core';
 import { Verdict } from '../panes/Verdict.js';
@@ -20,12 +20,44 @@ function leafAtCaret(text: string, caret: number, result: ParseResult): { path: 
   return null;
 }
 
-/** A document that evaluates just this leaf: bare at the root, or under its enclosing quantifier. */
+/**
+ * Every ancestor path of a node path, nearest first, including the path itself — the same
+ * segment-cut walk `scopeAt` performs internally (`ancestors` in `expression/scope.ts`),
+ * duplicated here because it is not exported by `@motiv-rules/core`. A single cut can land on an
+ * operand *array* rather than a node (e.g. `$.rule.asAllSatisfied.and[0]` cuts first to
+ * `$.rule.asAllSatisfied.and`), which is why the caller re-checks each ancestor with
+ * `getNode`/`isHigherOrderNode` rather than trusting the first cut to be a node at all.
+ */
+function ancestorPaths(path: string): string[] {
+  const out: string[] = [];
+  for (let current = path; current.length > 1; ) {
+    out.push(current);
+    const cut = Math.max(current.lastIndexOf('.'), current.lastIndexOf('['));
+    if (cut <= 0) break;
+    current = current.slice(0, cut);
+  }
+  return out;
+}
+
+/**
+ * A document that evaluates just this leaf: bare at the root, or — when the leaf sits inside a
+ * quantifier body — wrapped back under the *nearest* enclosing quantifier, so the reading sees the
+ * same collection-element scope the leaf is authored against.
+ *
+ * Only the nearest quantifier wraps the leaf. A leaf nested under two (`all in orders { all in
+ * items { ... } }`) has no single-quantifier document that reproduces the outer one's scope too —
+ * evaluating it in isolation can only ever mean "as read within the innermost body", against the
+ * innermost element on its own.
+ */
 function leafDocument(document: RuleDocument, path: string, expression: string): RuleDocument {
-  const parentPath = path.slice(0, Math.max(path.lastIndexOf('.'), path.lastIndexOf('[')));
-  const parent = parentPath.length > 1 ? getNode(document, parentPath) : undefined;
-  const rule: RuleNode = parent && isHigherOrderNode(parent)
-    ? ({ ...parent, [Object.keys(parent).find((k) => k.startsWith('as'))!]: { expression } } as RuleNode)
+  let quantifier: RuleNode | undefined;
+  for (const ancestor of ancestorPaths(path)) {
+    if (ancestor === path) continue; // the leaf itself is not its own enclosing quantifier
+    const node = getNode(document, ancestor);
+    if (node && isHigherOrderNode(node)) { quantifier = node; break; }
+  }
+  const rule: RuleNode = quantifier && isHigherOrderNode(quantifier)
+    ? ({ ...quantifier, [higherOrderKey(quantifier)]: { expression } } as RuleNode)
     : { expression };
   return { ...(document.parameters ? { parameters: document.parameters } : {}), rule };
 }
@@ -70,7 +102,7 @@ export function LeafInspector(props: {
         .catch((error: unknown) => { if (latest.current === key) setReading({ key, error: error instanceof Error ? error.message : String(error) }); });
     }, 300);
     return () => clearTimeout(timer);
-  }, [leaf?.path, leaf?.text, scenario?.model, analysis?.valid, client, modelType]);
+  }, [leaf?.path, leaf?.text, scenario?.model, analysis?.valid, client, modelType, document]);
 
   return (
     <section className="leaf-inspector" role="region" aria-label="expression inspector">

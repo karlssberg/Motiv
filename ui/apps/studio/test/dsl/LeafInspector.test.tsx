@@ -37,4 +37,15 @@ describe('LeafInspector', () => {
     renderAt('all in orders { `total > 1` }', 18);
     expect(screen.getByText(/model:/).textContent).toContain('each of orders');
   });
+
+  it('wraps a leaf in its nearest enclosing quantifier, not the operand array it sits in', async () => {
+    selectScenario('r', { name: 'Sample', model: '{"orders":[{"total":50}]}' });
+    const evaluate = vi.fn().mockResolvedValue({ satisfied: true, assertions: ['total > 1 == true'], explanation: { assertions: ['total > 1 == true'], causes: [] } });
+    renderAt('all in orders { `total > 1` & `total < 100` }', 18, evaluate);
+    await waitFor(() => expect(evaluate).toHaveBeenCalledWith({
+      modelType: 'customer',
+      document: { rule: { asAllSatisfied: { expression: 'total > 1' }, path: 'orders' } },
+      model: { orders: [{ total: 50 }] },
+    }));
+  });
 });
