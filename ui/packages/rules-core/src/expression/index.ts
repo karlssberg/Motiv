@@ -10,3 +10,4 @@ export {
 export {
   checkLeaf, analyseLeaf, type LeafFactLocal, type LeafAnalysis,
 } from './check.js';
+export { completeLeaf, elementVar } from './complete.js';
