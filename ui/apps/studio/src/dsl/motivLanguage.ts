@@ -42,14 +42,57 @@ function wordTag(word: string): string {
   return 'variableName';
 }
 
+/** Parser state: whether we're inside a backtick-delimited leaf, its lambda parameters, and
+ * whether the previous token was a `.` (distinguishes a field from a root name). */
+export interface MotivState { inLeaf: boolean; vars: Set<string>; prevDot: boolean }
+
+/** Collection methods recognised as such only directly after a dot, e.g. `orders.where(`. */
+const LEAF_METHODS = new Set(['where', 'any', 'all', 'count', 'sum', 'min', 'max', 'equalsIgnoreCase']);
+const LEAF_ATOMS = new Set(['null', 'true', 'false']);
+
+/** Colours one token of a leaf. `prevDot` tells a field from a root name; `vars` remembers lambda parameters. */
+function leafToken(stream: StringStream, state: MotivState): string | null {
+  if (stream.eatSpace()) return null;
+  if (stream.match(/^(=>|==|!=|<=|>=|&&|\|\|)/)) { state.prevDot = false; return 'operator'; }
+  const char = stream.next();
+  if (!char) return null;
+  if ('<>!+-*/'.includes(char)) { state.prevDot = false; return 'operator'; }
+  if (char === '.') { state.prevDot = true; return 'punctuation'; }
+  if ('(),'.includes(char)) { state.prevDot = false; return 'bracket'; }
+  if (char === '"') { skipDelimited(stream, '"'); state.prevDot = false; return 'string'; }
+  if (char === '@') { stream.eatWhile(/\w/); state.prevDot = false; return 'variableName.special'; }
+  if (DIGIT.test(char)) { stream.eatWhile(/[0-9.]/); state.prevDot = false; return 'number'; }
+  if (/[A-Za-z_]/.test(char)) {
+    stream.eatWhile(/\w/);
+    const word = stream.current();
+    const afterDot = state.prevDot;
+    state.prevDot = false;
+    if (LEAF_ATOMS.has(word)) return 'atom';
+    if (stream.match(/^\s*=>/, false)) { state.vars.add(word); return 'variableName.local'; }
+    if (afterDot && LEAF_METHODS.has(word) && stream.match(/^\s*\(/, false)) return 'variableName.function';
+    if (!afterDot && state.vars.has(word)) return 'variableName.local';
+    return 'propertyName';
+  }
+  return 'invalid';
+}
+
 /**
- * A stateless CodeMirror stream parser mirroring the core lexer's classification.
- * Returns `@lezer/highlight` tag names; unrecognised characters are tagged `invalid`.
+ * A CodeMirror stream parser mirroring the core lexer's classification, with a nested mode for
+ * the expression-leaf language found inside backticks. Returns `@lezer/highlight` tag names;
+ * unrecognised characters are tagged `invalid`.
  */
-export const motivStreamParser: StreamParser<unknown> = {
+export const motivStreamParser: StreamParser<MotivState> = {
   name: 'motiv',
 
-  token(stream) {
+  startState: () => ({ inLeaf: false, vars: new Set(), prevDot: false }),
+  copyState: (s) => ({ inLeaf: s.inLeaf, vars: new Set(s.vars), prevDot: s.prevDot }),
+
+  token(stream, state) {
+    if (state.inLeaf) {
+      if (stream.peek() === '`') { stream.next(); state.inLeaf = false; state.vars.clear(); return 'string.special'; }
+      return leafToken(stream, state);
+    }
+
     if (stream.eatSpace()) return null;
 
     if (stream.match('&&') || stream.match('||')) return 'operator';
@@ -61,7 +104,7 @@ export const motivStreamParser: StreamParser<unknown> = {
     if ('(){}'.includes(char)) return 'bracket';
     if (char === ':' || char === '=' || char === ',') return 'punctuation';
     if (char === '"') { skipDelimited(stream, '"'); return 'string'; }
-    if (char === '`') { skipDelimited(stream, '`'); return 'string.special'; }
+    if (char === '`') { state.inLeaf = true; state.prevDot = false; return 'string.special'; }
     if (char === '@') { stream.eatWhile(PARAM_REST); return 'variableName.special'; }
 
     // A `-` starts a number only when a digit follows; elsewhere it is part of a spec word
@@ -89,6 +132,10 @@ export const motivStreamParser: StreamParser<unknown> = {
 export const motivHighlightStyle = HighlightStyle.define([
   { tag: tags.variableName, color: 'var(--dsl-spec)' },
   { tag: tags.special(tags.variableName), color: 'var(--dsl-param)' },
+  { tag: tags.propertyName, color: 'var(--dsl-type)' },
+  { tag: tags.function(tags.variableName), color: 'var(--dsl-keyword)' },
+  { tag: tags.local(tags.variableName), color: 'var(--dsl-param)', fontStyle: 'italic' },
+  { tag: tags.atom, color: 'var(--dsl-keyword)' },
   { tag: tags.keyword, color: 'var(--dsl-keyword)' },
   { tag: tags.typeName, color: 'var(--dsl-type)' },
   { tag: tags.operator, color: 'var(--dsl-operator)' },

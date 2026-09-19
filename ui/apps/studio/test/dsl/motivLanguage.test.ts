@@ -6,7 +6,7 @@ import { motiv, motivStreamParser } from '../../src/dsl/motivLanguage.js';
 /** Drives the stream parser over one line, returning each token's text and highlight tag. */
 function classify(line: string): Array<{ text: string; tag: string }> {
   const stream = new StringStream(line, 4, 4, 0);
-  const state = motivStreamParser.startState?.(4);
+  const state = motivStreamParser.startState!(4);
   const tokens: Array<{ text: string; tag: string }> = [];
 
   while (!stream.eol()) {
@@ -73,8 +73,14 @@ describe('motivStreamParser', () => {
     expect(classify('"quota')).toEqual([{ text: '"quota', tag: 'string' }]);
   });
 
-  it('tags backtick expressions as special strings', () => {
-    expect(tagOf('`n > 0`')).toBe('string.special');
+  it('tags the backticks delimiting an expression as special strings', () => {
+    expect(classify('`n > 0`')).toEqual([
+      { text: '`', tag: 'string.special' },
+      { text: 'n', tag: 'propertyName' },
+      { text: '>', tag: 'operator' },
+      { text: '0', tag: 'number' },
+      { text: '`', tag: 'string.special' },
+    ]);
   });
 
   it('tags parameter references as special variable names', () => {
@@ -167,6 +173,33 @@ describe('motivStreamParser', () => {
       { text: 'is-large', tag: 'variableName' },
       { text: '}', tag: 'bracket' },
     ]);
+  });
+});
+
+describe('motivStreamParser inside a backtick', () => {
+  it('colours fields, methods, lambda variables and literals', () => {
+    expect(classify('`orders.where(o => o.status == "paid").sum(o => o.total) > @vip`')).toEqual([
+      { text: '`', tag: 'string.special' },
+      { text: 'orders', tag: 'propertyName' }, { text: '.', tag: 'punctuation' }, { text: 'where', tag: 'variableName.function' },
+      { text: '(', tag: 'bracket' }, { text: 'o', tag: 'variableName.local' }, { text: '=>', tag: 'operator' },
+      { text: 'o', tag: 'variableName.local' }, { text: '.', tag: 'punctuation' }, { text: 'status', tag: 'propertyName' },
+      { text: '==', tag: 'operator' }, { text: '"paid"', tag: 'string' }, { text: ')', tag: 'bracket' },
+      { text: '.', tag: 'punctuation' }, { text: 'sum', tag: 'variableName.function' }, { text: '(', tag: 'bracket' },
+      { text: 'o', tag: 'variableName.local' }, { text: '=>', tag: 'operator' }, { text: 'o', tag: 'variableName.local' },
+      { text: '.', tag: 'punctuation' }, { text: 'total', tag: 'propertyName' }, { text: ')', tag: 'bracket' },
+      { text: '>', tag: 'operator' }, { text: '@vip', tag: 'variableName.special' }, { text: '`', tag: 'string.special' },
+    ]);
+  });
+
+  it('tags null as an atom and leaves DSL tokens alone outside the backtick', () => {
+    expect(classify('a & `x != null`').map((t) => t.tag)).toEqual([
+      'variableName', 'operator', 'string.special', 'propertyName', 'operator', 'atom', 'string.special',
+    ]);
+  });
+
+  it('forgets a lambda variable once its leaf closes', () => {
+    const tokens = classify('`orders.any(o => o.total > 1)` & `o`');
+    expect(tokens.at(-2)).toEqual({ text: 'o', tag: 'propertyName' });
   });
 });
 
