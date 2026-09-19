@@ -33,10 +33,15 @@ function describe(t: Known): string {
   return base;
 }
 
-/** The type string the corpus compares: `decimal`, `bool`, `string?`, `collection`… */
+/**
+ * The type string the corpus compares: `decimal`, `bool`, `string`, `collection`… Mirrors C#'s
+ * `DescribeType`, which only lifts value types to nullable form (`Nullable<T>`) — a reference
+ * type (string, object, collection) is always nullable and never carries a `?` suffix.
+ */
 function typeString(t: Known): string {
   const base = t.kind === 'numeric' ? kindName(t.numeric) : t.kind;
-  return t.nullable && t.kind !== 'null' ? `${base}?` : base;
+  const isValueKind = t.kind === 'numeric' || t.kind === 'bool';
+  return isValueKind && t.nullable ? `${base}?` : base;
 }
 
 function fromSchema(schema: JsonSchema, throughNullable = false): Known {
@@ -54,6 +59,13 @@ class Checker {
   readonly problems: LeafProblem[] = [];
   readonly types = new Map<LeafAst, LeafType>();
   readonly vars: TypeVar[] = [];
+  /**
+   * Vars whose type was never pinned down because an *unrelated* error already fired on this
+   * expression — mirrors C#'s `_errored`. `finish` skips these when defaulting unresolved vars,
+   * so a var with no genuine anchor to blame doesn't also draw a second "no model field fixes
+   * this" warning on top of the real problem.
+   */
+  readonly errored = new Set<TypeVar>();
 
   constructor(private readonly scope: LeafScope) {}
 
@@ -215,7 +227,13 @@ class Checker {
   }
 
   private unify(node: Extract<LeafAst, { kind: 'binary' }>, left: LeafType, right: LeafType, arithmetic: boolean): LeafType {
-    if ('unknown' in left || 'unknown' in right) return { unknown: true };
+    if ('unknown' in left || 'unknown' in right) {
+      // The other side's var has no genuine anchor to blame — an unrelated error already fired
+      // on this expression, so don't also pile on a "no model field fixes this" default.
+      if ('var' in left) this.errored.add(root(left.var));
+      if ('var' in right) this.errored.add(root(right.var));
+      return { unknown: true };
+    }
     const what = arithmetic ? `'${node.op}' needs numbers` : `'${node.op}' compares numbers`;
     for (const [side, type] of [[node.left, left], [node.right, right]] as const) {
       const k = 'known' in type ? type.known : undefined;
@@ -235,7 +253,11 @@ class Checker {
       if (a !== c) {
         if (a.resolved && c.resolved) {
           const joined = join(a.resolved, c.resolved);
-          if (!joined) { this.report(node, 'ExpressionTypeMismatch', `cannot combine ${kindName(a.resolved)} with ${kindName(c.resolved)}`); return { unknown: true }; }
+          if (!joined) {
+            this.report(node, 'ExpressionTypeMismatch', `cannot combine ${kindName(a.resolved)} with ${kindName(c.resolved)}`);
+            this.errored.add(a); this.errored.add(c);
+            return { unknown: true };
+          }
           a.resolved = joined;
         } else {
           if (a.resolved === undefined && c.resolved !== undefined) a.resolved = c.resolved;
@@ -261,6 +283,7 @@ class Checker {
     if (!allows(v, target) || (v.resolved && !join(v.resolved, target))) {
       const have = v.resolved ? kindName(v.resolved) : v.paramKind === 'number' ? 'a number parameter' : 'this literal';
       this.report(node, 'ExpressionTypeMismatch', `cannot use ${have} with ${kindName(concrete)} without losing precision`);
+      this.errored.add(v);
       return { unknown: true };
     }
     v.resolved = v.resolved ? join(v.resolved, target)! : target;
@@ -271,6 +294,7 @@ class Checker {
   finish(ast: LeafAst): LeafAnalysis {
     for (const v of new Set(this.vars.map(root))) {
       if (v.resolved) continue;
+      if (this.errored.has(v)) continue;
       v.resolved = v.fractional || v.paramKind === 'number' ? 'decimal' : 'int32';
       const first = v.members[0]!;
       this.report(first, 'ExpressionTypeMismatch', `no model field fixes the type of this expression; assuming ${kindName(v.resolved)}`, true);

@@ -108,4 +108,46 @@ describe('analyseLeaf', () => {
     expect(nonWarning).toHaveLength(1);
     expect(nonWarning[0]!.code).toBe('ExpressionTypeMismatch');
   });
+
+  // Fix round 1: parity with C#'s `_errored` — an unrelated failure on one side of a comparison
+  // must not also draw a "no model field fixes this" default warning on the other side's var.
+
+  it('does not pile a default warning on top of an unknown field', () => {
+    const analysis = check('nope > 1');
+    expect(analysis.problems).toHaveLength(1);
+    expect(analysis.problems[0]!.code).toBe('UnknownField');
+    expect(analysis.problems[0]!.warning).toBeUndefined();
+    expect(analysis.problems.some((p) => p.warning)).toBe(false);
+  });
+
+  it('does not pile a default warning on top of an unknown parameter', () => {
+    const analysis = check('@nope > 1');
+    expect(analysis.problems).toHaveLength(1);
+    expect(analysis.problems[0]!.code).toBe('UnknownField');
+    expect(analysis.problems[0]!.warning).toBeUndefined();
+    expect(analysis.problems.some((p) => p.warning)).toBe(false);
+  });
+
+  it('is unaffected for comparisons that never reach unify (equality/null paths)', () => {
+    // These paths never call `unify`, so the errored-var bookkeeping cannot touch them — the
+    // literal's own var still goes unresolved and still draws its own default warning, exactly
+    // as before this fix.
+    const nonNumeric = check('country == 3');
+    const nonNumericErrors = nonNumeric.problems.filter((p) => !p.warning);
+    expect(nonNumericErrors).toHaveLength(1);
+    expect(nonNumericErrors[0]).toMatchObject({ code: 'ExpressionTypeMismatch' });
+
+    const nullCheck = check('orders.first() != null');
+    expect(nullCheck.problems).toHaveLength(1);
+    expect(nullCheck.problems[0]).toMatchObject({ code: 'UnknownMethod' });
+  });
+
+  // Fix round 1: parity with C#'s `DescribeType` — only value types (numeric, bool) are ever
+  // shown with a `?` suffix; reference types (string, object, collection) are always nullable.
+
+  it('never suffixes a nullable reference type with `?`', () => {
+    const analysis = check('country == "SE"');
+    const root = analysis.ast!;
+    expect(analysis.types.get((root as unknown as { left: LeafAst }).left)).toBe('string');
+  });
 });
