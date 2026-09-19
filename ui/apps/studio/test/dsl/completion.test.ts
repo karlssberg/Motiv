@@ -1,8 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { EditorState } from '@codemirror/state';
 import { CompletionContext } from '@codemirror/autocomplete';
 import { createMotivCompletion } from '../../src/dsl/completion.js';
-import type { Catalog } from '@motiv-rules/core';
+import { parse, scopeAt, healUnterminated } from '@motiv-rules/core';
+import type { Catalog, JsonSchema } from '@motiv-rules/core';
 
 const CATALOG: Catalog = {
   specs: [
@@ -85,5 +86,32 @@ describe('createMotivCompletion', () => {
     // matches no spec. The outcome is right either way, but only by way of that second branch, so
     // it is pinned rather than left to alternation order.
     expect(complete('param minOrders: integer = 3\n\natLeast(@minOrders.')).toBeNull();
+  });
+
+  it('maps a method completion with insert/caretOffset to an apply that places the caret inside the template', () => {
+    const order: JsonSchema = { type: 'object', properties: { total: { type: 'number', format: 'decimal' } } };
+    const customer: JsonSchema = { type: 'object', properties: { orders: { type: 'array', items: order } } };
+    const leafCatalog: Catalog = { ...CATALOG, modelTypes: { customer } };
+    const getLeafScope = () => (path: string) => {
+      const document = parse(healUnterminated(text)).document;
+      return document ? scopeAt(document, path, 'customer', leafCatalog) : null;
+    };
+
+    const text = 'is-active & `orders.w';
+    const state = EditorState.create({ doc: text, selection: { anchor: text.length } });
+    const context = new CompletionContext(state, text.length, true);
+    const result = createMotivCompletion(() => leafCatalog, getLeafScope)(context);
+
+    const option = result?.options.find((o) => o.label === 'where');
+    expect(typeof option?.apply).toBe('function');
+    const apply = option!.apply as (view: unknown, completion: unknown, from: number, to: number) => void;
+
+    const dispatch = vi.fn();
+    apply({ dispatch }, option, result!.from, text.length);
+
+    expect(dispatch).toHaveBeenCalledWith({
+      changes: { from: result!.from, to: text.length, insert: 'where(o => o.)' },
+      selection: { anchor: result!.from + 13 },
+    });
   });
 });

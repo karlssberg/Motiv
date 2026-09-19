@@ -11,7 +11,7 @@ const catalog = {
 };
 const client = () => ({ getCatalog: vi.fn().mockResolvedValue(catalog) }) as unknown as RulesApiClient;
 const renderWith = (store: RuleEditorStore) =>
-  render(<RuleEditorProvider store={store}><EditorPane client={client()} /></RuleEditorProvider>);
+  render(<RuleEditorProvider store={store}><EditorPane client={client()} modelType="customer" /></RuleEditorProvider>);
 
 describe('extension points', () => {
   it('shows expression as a disabled affordance inside the detail panel, and nothing in the chrome', async () => {

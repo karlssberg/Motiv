@@ -31,7 +31,7 @@ function renderPane(title?: React.ReactNode, document: RuleDocument = { rule: { 
   const store = new RuleEditorStore(document);
   const { container } = render(
     <RuleEditorProvider store={store}>
-      <EditorPane client={client()} {...(title !== undefined ? { title } : {})} />
+      <EditorPane client={client()} modelType="customer" {...(title !== undefined ? { title } : {})} />
     </RuleEditorProvider>,
   );
   return { store, container };

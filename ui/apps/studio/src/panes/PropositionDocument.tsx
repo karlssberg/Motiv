@@ -124,6 +124,7 @@ export function PropositionDocument(props: {
         <EditorPane
           client={client}
           documentName={tab.name}
+          modelType={modelType}
           onExtractToCatalog={props.onExtractToCatalog}
           onPromote={props.onPromote}
           title={

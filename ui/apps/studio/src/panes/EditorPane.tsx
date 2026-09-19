@@ -33,6 +33,8 @@ export function EditorPane(props: {
   title?: ReactNode;
   /** The document's name as the DSL surface files it; absent for a nameless draft. */
   documentName?: string | undefined;
+  /** The document's model type, passed through to the DSL surface for expression-leaf scope. */
+  modelType: string;
   /**
    * The document's own actions (JSON, Save), drawn at the end of the header after the surface tabs — on the
    * pane that holds the document, so they read as belonging to it. Optional: the pages still
@@ -140,7 +142,15 @@ export function EditorPane(props: {
               />
             </>
           )
-          : <DslEditor store={store} catalog={catalog} sync={sync} documentName={props.documentName} />}
+          : (
+            <DslEditor
+              store={store}
+              catalog={catalog}
+              sync={sync}
+              modelType={props.modelType}
+              documentName={props.documentName}
+            />
+          )}
       </div>
     </section>
   );

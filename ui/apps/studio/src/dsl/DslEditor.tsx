@@ -6,12 +6,12 @@ import { EditorState } from '@codemirror/state';
 import { EditorView, keymap, lineNumbers, type ViewUpdate } from '@codemirror/view';
 import type { Diagnostic } from '@codemirror/lint';
 import {
-  getNode, isNodePath, isSpecNode,
-  type Catalog, type NodeSpan, type RuleDocument, type RuleEditorStore,
+  getNode, isNodePath, isSpecNode, scopeAt,
+  type Catalog, type LeafScope, type NodeSpan, type RuleDocument, type RuleEditorStore,
 } from '@motiv-rules/core';
 import { useRuleEditor } from '@motiv-rules/react';
 import { createMotivCompletion } from './completion.js';
-import { diagnosticsFor } from './lint.js';
+import { diagnosticsFor, placeFacts, type PlacedFact } from './lint.js';
 import { localMarks } from './localMarks.js';
 import { motivHover } from './hover.js';
 import { motiv } from './motivLanguage.js';
@@ -42,7 +42,9 @@ interface LiveContext {
   sync: DslSync;
   catalog: Catalog;
   diagnostics: Diagnostic[];
+  placedFacts: PlacedFact[];
   store: RuleEditorStore;
+  leafScope: (path: string) => LeafScope | null;
 }
 
 /**
@@ -108,21 +110,33 @@ export function DslEditor(props: {
   store: RuleEditorStore;
   catalog: Catalog;
   sync: DslSync;
+  /** The document's model type, used to resolve an expression leaf's field/method scope. */
+  modelType: string;
   /** The document's name, shown as the buffer's filename; absent for a nameless draft. */
   documentName?: string | undefined;
 }) {
-  const { store, catalog, sync } = props;
+  const { store, catalog, sync, modelType } = props;
   const filename = props.documentName !== undefined ? `${props.documentName}.motiv` : DRAFT_FILENAME;
   const editorState = useRuleEditor(store);
   const [popover, setPopover] = useState<PayloadTarget | null>(null);
 
+  /** Resolves the expression scope at a leaf's path, against the store's current document. */
+  const leafScope = (path: string): LeafScope | null =>
+    scopeAt(store.getState().document, path, modelType, catalog);
+
   const diagnostics = useMemo(
-    () => diagnosticsFor(sync.text, sync.parseResult, editorState.errors),
-    [sync.text, sync.parseResult, editorState.errors],
+    // `leafScope` is rebuilt every render from `store`/`catalog`/`modelType`, already listed below.
+    () => diagnosticsFor(sync.text, sync.parseResult, editorState.errors, leafScope),
+    [sync.text, sync.parseResult, editorState.errors, store, catalog, modelType],
   );
 
-  const live = useRef<LiveContext>({ sync, catalog, diagnostics, store });
-  live.current = { sync, catalog, diagnostics, store };
+  const placedFacts = useMemo(
+    () => placeFacts(editorState.facts, sync.parseResult.spans),
+    [editorState.facts, sync.parseResult],
+  );
+
+  const live = useRef<LiveContext>({ sync, catalog, diagnostics, placedFacts, store, leafScope });
+  live.current = { sync, catalog, diagnostics, placedFacts, store, leafScope };
 
   const toolbar = useRef<HTMLDivElement | null>(null);
   const host = useRef<HTMLDivElement | null>(null);
@@ -182,8 +196,10 @@ export function DslEditor(props: {
           motiv(),
           localMarks,
           motivEditorTheme,
-          autocompletion({ override: [createMotivCompletion(() => live.current.catalog)] }),
-          motivHover(() => live.current.diagnostics),
+          autocompletion({
+            override: [createMotivCompletion(() => live.current.catalog, () => live.current.leafScope)],
+          }),
+          motivHover(() => live.current.diagnostics, () => live.current.placedFacts),
           // Reads `openPath` rather than closing over `popover`, since the extensions are built
           // once and would otherwise go on toggling against the state of the first render.
           payloadChips((target) => toggleCard(target)),

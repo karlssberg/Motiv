@@ -18,7 +18,7 @@ const CATALOG: Catalog = {
 /** Stands in for the pane that owns the buffer, which the editor takes as a prop. */
 function Host(props: { store: RuleEditorStore }) {
   const sync = useDslSync(props.store);
-  return <DslEditor store={props.store} catalog={CATALOG} sync={sync} />;
+  return <DslEditor store={props.store} catalog={CATALOG} sync={sync} modelType="customer" />;
 }
 
 const BOTH_SPECS = { andAlso: [{ spec: 'is-active' }, { spec: 'is-verified' }] };
