@@ -2,9 +2,7 @@
 title: Expression Leaves
 ---
 
-## What an expression leaf is
-
-A rule document leaf is either a `{ "spec": "…" }` reference to a registered proposition or an
+Besides a `{ "spec": "…" }` or `{ "local": "…" }` reference, a rule document leaf can be an
 `{ "expression": "…" }` node: one condition, written in a small owned language, over the model in
 scope at that position. In the DSL a leaf is a backtick literal &mdash; `` `age >= 18` `` &mdash;
 and everything around it (composition, quantification, naming) stays ordinary DSL. A leaf binds to
@@ -63,13 +61,13 @@ Scope is positional, not lexical in the general sense:
   total against the customer-level `creditLimit`.
 
 The one shape with no spelling is the reverse: a DSL quantifier's body cannot see its parent, so
-`atLeast(2) in orders { `total > creditLimit` }` has no way to reach `creditLimit` without an
-explicit lambda inside the leaf itself. That asymmetry is why lambdas in the leaf language are
+`` `atLeast(2) in orders { `total > creditLimit` }` `` has no way to reach `creditLimit` without
+an explicit lambda inside the leaf itself. That asymmetry is why lambdas in the leaf language are
 explicit rather than implicit.
 
-`&&`, `||` and `!` are permitted at any level inside a leaf, but the editor warns when a top-level
-connective could be DSL instead &mdash; DSL gives each side its own row, its own `whenTrue`/
-`whenFalse`, and its own assertion.
+`&&`, `||` and `!` are permitted at any level inside a leaf, but a top-level connective is better
+written as DSL &mdash; DSL gives each side its own row, its own `whenTrue`/`whenFalse`, and its own
+assertion.
 
 ## Semantics
 
@@ -94,11 +92,11 @@ connective could be DSL instead &mdash; DSL gives each side its own row, its own
   | `float → double` | |
 
   A refused pair is `ExpressionTypeMismatch`, naming both types. A fractional literal prefers
-  `decimal`. **Mixed `integer`/`number` parameters in one untyped subtree solve to `decimal`** —
-  a `number` parameter's constraint always wins the join, since only `decimal` honors both an
-  integral and a fractional declared kind at once. An unanchored subtree defaults to `int` (or
-  `decimal`, if anything in it is fractional) with a warning, not an error. Integer `/` truncates,
-  with a warning.
+  `decimal`, and **mixed `integer`/`number` parameters in one untyped subtree solve to `decimal`**
+  &mdash; only `decimal` honors both an integral and a fractional declared kind at once. An
+  unanchored subtree defaults to `int`, or to `decimal` if anything in it is fractional or is a
+  `number` parameter, with a warning rather than an error. Integer `/` truncates, also with a
+  warning.
 - **A parameter's declared kind is a constraint**: `integer` may solve to any integral or exact
   type; `number` to any fractional one.
 - **The result is boolean.** A `where`/`any`/`all` whose lambda body is not boolean reports one
@@ -115,10 +113,10 @@ connective could be DSL instead &mdash; DSL gives each side its own row, its own
 ## What Studio shows
 
 - **Completion** in the DSL pane's backtick sub-language, scoped to the position: model fields,
-  parameters, the two closed method sets, and (inside a lambda) the lambda parameter alongside
+  parameters, the collection methods, and (inside a lambda) the lambda parameter alongside
   everything from the enclosing scope.
 - **Lint**, from both sides: the client parses and checks on the keystroke; the server checks again
-  after the debounce and its message wins where both report, at the same range.
+  after the debounce, and its message wins where both report the same code at the same range.
 - **Hover facts**, e.g. `` `1000` as `decimal`, from `orders.sum(o => o.total)` `` &mdash; what a
   literal or parameter solved to, and which anchor decided it.
 - **The inspector**: a `region` named "expression inspector" under the DSL pane, showing the scope
@@ -139,8 +137,8 @@ connective could be DSL instead &mdash; DSL gives each side its own row, its own
 
 A syntax or type problem reports as a diagnostic at its range, exactly like any other lint
 finding. A document that lints clean but still fails to bind shows the server's error the same way
-an unknown spec reference does today. Arithmetic overflow at evaluation time throws a checked
-exception carrying the rule name and leaf path; a null operand never throws.
+an unknown spec reference does today. Arithmetic is checked, so overflow at evaluation time throws
+`OverflowException`; a null operand never throws.
 
 ## Limits
 
@@ -148,22 +146,17 @@ exception carrying the rule name and leaf path; a null operand never throws.
   `ExpressionsNotEnabled` &mdash; "expression nodes are supported on .NET 8 or later." The target
   exists for Framework consumers of documents authored elsewhere; a second numeric implementation
   without generic math is exactly the drift the conformance corpus exists to prevent.
-- **No casts.** A value's type is whatever its anchor gives it; there is no `(decimal)` or
-  `(int)` syntax to force one.
-- **The method sets are closed**, by name, on purpose &mdash; growing them is a language change,
-  not a per-call opt-in.
+- **No casts, and the method sets are closed.** A value's type is whatever its anchor gives it
+  &mdash; there is no `(decimal)` or `(int)` syntax to force one &mdash; and growing a method set
+  is a language change, not a per-call opt-in.
 - **In a metadata document**, a bare leaf carries no `TMetadata` of its own: it, or an enclosing
   node, must supply `whenTrue`/`whenFalse`, or binding reports `ExpressionRequiresMetadata`.
 
 ## Remarks
 
-- **`decimal` is the default fractional type**, not `double`, because it is the join that honors
-  both an `integer` and a `number` parameter declaration at once, and because C#'s own implicit
+- **`decimal` is the default fractional type**, not `double`, because C#'s own implicit
   conversions never let `double` and `decimal` mix without a cast &mdash; there was never a lossless
   default to prefer instead.
-- **Null never throws.** Every model already carries nullable members the schema exporter marks as
-  such; a leaf that panicked on a null the schema said was possible would be less honest than the
-  registered specs it composes with.
 - **The conformance corpus is the contract.** `ui/packages/rules-core/test/expression/corpus.json`
   pins the same cases &mdash; the same leaf text, scope, and expected problems or facts &mdash; run
   by both the TypeScript checker and the C# binder. A case that passes on one side and fails on the
