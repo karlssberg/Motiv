@@ -60,7 +60,7 @@ internal static class LeafTokenizer
                 {
                     problems.Add(new LeafProblem(RuleErrorCode.InvalidExpression, "unterminated string", start, text.Length));
                     tokens.Add(new LeafToken(LeafTokenKind.String, text.Substring(start), start, text.Length));
-                    break;
+                    continue;
                 }
                 i++;
                 tokens.Add(new LeafToken(LeafTokenKind.String, text.Substring(start, i - start), start, i));

@@ -31,6 +31,7 @@ const APPROVED_API = [
   'WORD_START_CHARS',
   'accessibleExpression',
   'analyseLeaf',
+  'ancestors',
   'binaryOperator',
   'buildNamespaceTree',
   'canWiden',

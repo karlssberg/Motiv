@@ -45,18 +45,18 @@ internal sealed class LeafScope
             .Where(p => p.GetIndexParameters().Length == 0)
             .Cast<MemberInfo>()
             .Concat(type.GetFields(BindingFlags.Public | BindingFlags.Instance))
+            .Select(member => (member, jsonPropertyName: member.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name))
             .ToList();
 
-        foreach (var member in members)
-            if (member.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name == jsonName)
+        foreach (var (member, jsonPropertyName) in members)
+            if (jsonPropertyName == jsonName)
                 return member;
 
-        foreach (var member in members)
-            if (member.GetCustomAttribute<JsonPropertyNameAttribute>() is null
-                && JsonNamingPolicy.CamelCase.ConvertName(member.Name) == jsonName)
+        foreach (var (member, jsonPropertyName) in members)
+            if (jsonPropertyName is null && JsonNamingPolicy.CamelCase.ConvertName(member.Name) == jsonName)
                 return member;
 
-        return members.FirstOrDefault(m => m.GetCustomAttribute<JsonPropertyNameAttribute>() is null && m.Name == jsonName);
+        return members.FirstOrDefault(m => m.jsonPropertyName is null && m.member.Name == jsonName).member;
     }
 
     public static Type MemberType(MemberInfo member) =>

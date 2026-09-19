@@ -112,7 +112,7 @@ export { DslSyncController, type DslSyncState, type SyncStatus } from './dslSync
 // The expression-leaf language.
 export {
   tokenizeLeaf, parseLeaf, printLeaf,
-  scopeAt, withVar, fieldsOf, isCollection, elementOf, typeName, isNullable,
+  scopeAt, withVar, fieldsOf, isCollection, elementOf, typeName, isNullable, ancestors,
   kindOf, canWiden, join, isIntegral, kindName,
   checkLeaf, analyseLeaf,
   completeLeaf, elementVar,

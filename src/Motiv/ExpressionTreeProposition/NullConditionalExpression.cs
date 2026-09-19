@@ -55,7 +55,7 @@ public sealed class NullConditionalExpression : Expression
     public override Expression Reduce()
     {
         var target = Parameter(Target.Type, "target");
-        var access = new ReceiverSubstitution(Receiver, target).Visit(Access);
+        var access = ParameterReplacementVisitor.Replace(Access, Receiver, target);
 
         return Block(
             Type,
@@ -75,12 +75,5 @@ public sealed class NullConditionalExpression : Expression
         return ReferenceEquals(target, Target) && ReferenceEquals(access, Access)
             ? this
             : new NullConditionalExpression(target, access, Receiver, Type);
-    }
-
-    /// <summary>Replaces every occurrence of a placeholder parameter with another expression.</summary>
-    private sealed class ReceiverSubstitution(ParameterExpression receiver, Expression replacement) : ExpressionVisitor
-    {
-        protected override Expression VisitParameter(ParameterExpression node) =>
-            node == receiver ? replacement : base.VisitParameter(node);
     }
 }

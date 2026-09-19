@@ -54,7 +54,7 @@ export function withVar(scope: LeafScope, name: string, schema: JsonSchema, of: 
 }
 
 /** Every ancestor path of `path`, nearest first, including `path` itself. */
-function ancestors(path: string): string[] {
+export function ancestors(path: string): string[] {
   const out: string[] = [];
   for (let current = path; current.length > 1; ) {
     out.push(current);

@@ -8,13 +8,11 @@ namespace Motiv.Serialization.Expressions;
 internal sealed class LeafParser
 {
     private readonly IReadOnlyList<LeafToken> _tokens;
-    private readonly int _length;
     private int _index;
 
-    private LeafParser(IReadOnlyList<LeafToken> tokens, int length)
+    private LeafParser(IReadOnlyList<LeafToken> tokens)
     {
         _tokens = tokens;
-        _length = length;
     }
 
     public static LeafNode? Parse(string text, List<LeafProblem> problems)
@@ -28,7 +26,7 @@ internal sealed class LeafParser
             return null;
         }
 
-        var parser = new LeafParser(tokens, text.Length);
+        var parser = new LeafParser(tokens);
         try
         {
             var node = parser.Or();

@@ -3,7 +3,7 @@ import { autocompletion, completionKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { EditorState } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
-import { healUnterminated, parse, scopeAt, type Catalog, type LeafScope } from '@motiv-rules/core';
+import { healUnterminated, parse, scopeAt, type Catalog, type LeafScope, type RuleDocument } from '@motiv-rules/core';
 import { createMotivCompletion } from '../dsl/completion.js';
 import { motiv } from '../dsl/motivLanguage.js';
 import { motivEditorTheme } from '../dsl/theme.js';
@@ -142,12 +142,21 @@ export function useInlineDslEditor(options: {
     // underneath. This closure is declared above `const view` below it — safe only because
     // nothing calls `leafScope` until a completion actually runs, well after `view` is assigned;
     // it must stay a function (not evaluated eagerly) for that ordering to hold.
+    //
+    // A single completion request can call `leafScope` more than once for the same buffer text
+    // (`completeDsl` re-resolves the leaf after healing, and again for the row scope itself), so
+    // the parse is cached by text rather than redone on every call.
+    let parsedText: string | undefined;
+    let parsedDocument: RuleDocument | undefined;
     const leafScope = (path: string): LeafScope | null => {
       const { catalog, modelType } = options.scope();
       const text = view.state.doc.toString();
-      const document = parse(text).document ?? parse(healUnterminated(text)).document;
-      if (!document) return null;
-      return scopeAt(document, path, modelType, catalog);
+      if (text !== parsedText) {
+        parsedText = text;
+        parsedDocument = parse(text).document ?? parse(healUnterminated(text)).document;
+      }
+      if (!parsedDocument) return null;
+      return scopeAt(parsedDocument, path, modelType, catalog);
     };
 
     const view = new EditorView({

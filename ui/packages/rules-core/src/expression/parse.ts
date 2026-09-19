@@ -17,7 +17,7 @@ export type LeafAst = Span & (
   | { kind: 'unary'; op: string; operand: LeafAst }
 );
 
-class SyntaxError extends Error {
+class LeafSyntaxError extends Error {
   constructor(message: string, public readonly token: LeafToken) { super(message); }
 }
 
@@ -28,20 +28,20 @@ class Parser {
   private at(value: string): boolean { const t = this.peek(); return t.kind !== 'string' && t.value === value; }
   private next(): LeafToken {
     const t = this.peek();
-    if (t.kind === 'end') throw new SyntaxError('unexpected end of expression', t);
+    if (t.kind === 'end') throw new LeafSyntaxError('unexpected end of expression', t);
     this.index++;
     return t;
   }
   private expect(value: string): LeafToken {
     const t = this.peek();
-    if (t.kind === 'end') throw new SyntaxError('unexpected end of expression', t);
-    if (t.value !== value) throw new SyntaxError(`expected '${value}'`, t);
+    if (t.kind === 'end') throw new LeafSyntaxError('unexpected end of expression', t);
+    if (t.value !== value) throw new LeafSyntaxError(`expected '${value}'`, t);
     return this.next();
   }
   parse(): LeafAst {
     const ast = this.or();
     const rest = this.peek();
-    if (rest.kind !== 'end') throw new SyntaxError(`unexpected '${rest.value}'`, rest);
+    if (rest.kind !== 'end') throw new LeafSyntaxError(`unexpected '${rest.value}'`, rest);
     return ast;
   }
   private level(ops: string[], below: () => LeafAst, once = false): LeafAst {
@@ -73,7 +73,7 @@ class Parser {
     while (this.at('.')) {
       this.next();
       const name = this.peek();
-      if (name.kind !== 'ident') throw new SyntaxError("expected a field or method name after '.'", name);
+      if (name.kind !== 'ident') throw new LeafSyntaxError("expected a field or method name after '.'", name);
       this.next();
       if (this.at('(')) {
         this.next();
@@ -116,7 +116,7 @@ class Parser {
         break;
       default: break;
     }
-    throw new SyntaxError(`unexpected '${t.value}'`, t);
+    throw new LeafSyntaxError(`unexpected '${t.value}'`, t);
   }
 }
 
@@ -128,7 +128,7 @@ export function parseLeaf(text: string): { ast?: LeafAst; problems: LeafProblem[
   try {
     return { ast: new Parser(tokens).parse(), problems: [] };
   } catch (error) {
-    if (error instanceof SyntaxError) return { problems: [{ code: 'InvalidExpression', message: error.message, from: error.token.from, to: error.token.to }] };
+    if (error instanceof LeafSyntaxError) return { problems: [{ code: 'InvalidExpression', message: error.message, from: error.token.from, to: error.token.to }] };
     throw error;
   }
 }
