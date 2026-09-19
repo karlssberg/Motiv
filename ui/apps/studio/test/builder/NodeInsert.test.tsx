@@ -11,7 +11,7 @@ const client = () => ({ getCatalog: vi.fn().mockResolvedValue(catalog) }) as unk
 function renderBuilder(rule: unknown) {
   const store = new RuleEditorStore({ rule } as never);
   const view = render(
-    <RuleEditorProvider store={store}><BuilderPane client={client()} /></RuleEditorProvider>,
+    <RuleEditorProvider store={store}><BuilderPane client={client()} modelType="customer" /></RuleEditorProvider>,
   );
   return { store, ...view };
 }

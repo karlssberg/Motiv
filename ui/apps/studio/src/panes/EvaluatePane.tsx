@@ -1,27 +1,31 @@
 import { useState, type CSSProperties } from 'react';
 import { validateAgainstSchema, type RulesApiClient, type SchemaViolation } from '@motiv-rules/core';
 import { JustificationTree, useCatalog, useEvaluation, useRuleEditor, useRuleEditorStore } from '@motiv-rules/react';
-import { MODEL_TYPE } from '../App.js';
+import { sampleModelFor } from './sampleModel.js';
 import { SchemaViolations } from './SchemaViolations.js';
 import { Tick, Verdict } from './Verdict.js';
 import { Caret, IconPlay } from '../shell/icons.js';
 import { Tooltip } from '../shell/Tooltip.js';
 
-const SAMPLE_MODEL = '{\n  "age": 30,\n  "isActive": true,\n  "orderCount": 2\n}';
-
 /** Evaluates the current document against a sample model and renders the explanation tree. */
-export function EvaluatePane(props: { client: RulesApiClient }) {
+export function EvaluatePane(props: {
+  client: RulesApiClient;
+  /** The model type the document is evaluated against: which schema shapes and holds the sample, and what the run is sent as. */
+  modelType: string;
+}) {
   const store = useRuleEditorStore();
   const state = useRuleEditor(store);
   const evaluation = useEvaluation(props.client);
   const catalogState = useCatalog(props.client);
-  const [modelText, setModelText] = useState(SAMPLE_MODEL);
+  /** The author's sample once edited; until then the sample is derived from the model's schema. */
+  const [edited, setEdited] = useState<string | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
   const [violations, setViolations] = useState<SchemaViolation[]>([]);
 
   // Absent while loading or on older backends without modelTypes — then enforcement simply doesn't run.
   const modelSchema =
-    catalogState.status === 'ready' ? catalogState.data.modelTypes?.[MODEL_TYPE] : undefined;
+    catalogState.status === 'ready' ? catalogState.data.modelTypes?.[props.modelType] : undefined;
+  const modelText = edited ?? sampleModelFor(modelSchema);
 
   const run = (): void => {
     let model: unknown;
@@ -36,7 +40,7 @@ export function EvaluatePane(props: { client: RulesApiClient }) {
     const found = modelSchema ? validateAgainstSchema(model, modelSchema) : [];
     setViolations(found);
     if (found.length > 0) return;
-    void evaluation.evaluate({ modelType: MODEL_TYPE, document: state.document, model });
+    void evaluation.evaluate({ modelType: props.modelType, document: state.document, model });
   };
 
   return (
@@ -52,7 +56,7 @@ export function EvaluatePane(props: { client: RulesApiClient }) {
             aria-label="sample model"
             className="control"
             value={modelText}
-            onChange={(e) => setModelText(e.target.value)}
+            onChange={(e) => setEdited(e.target.value)}
             rows={5}
           />
         </label>

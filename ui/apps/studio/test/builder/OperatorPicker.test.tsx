@@ -13,7 +13,7 @@ const catalog = {
 };
 const client = () => ({ getCatalog: vi.fn().mockResolvedValue(catalog) }) as unknown as RulesApiClient;
 const renderWith = (store: RuleEditorStore) =>
-  render(<RuleEditorProvider store={store}><BuilderPane client={client()} /></RuleEditorProvider>);
+  render(<RuleEditorProvider store={store}><BuilderPane client={client()} modelType="customer" /></RuleEditorProvider>);
 
 const AND = { rule: { and: [{ spec: 'is-active' }, { spec: 'is-adult' }] } };
 

@@ -148,7 +148,7 @@ export function PropositionDocument(props: {
           )}
         />
         <div className="rail">
-          <EvaluatePane client={client} />
+          <EvaluatePane client={client} modelType={modelType} />
         </div>
       </div>
 

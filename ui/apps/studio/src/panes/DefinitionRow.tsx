@@ -9,7 +9,6 @@ import { RuleDslStrip } from '../builder/RuleDslStrip.js';
 import { RuleNodeEditor, useBuilderTree } from '../builder/RuleNodeEditor.js';
 import { usePopoverCard } from '../builder/usePopoverCard.js';
 import { IconMore } from '../shell/icons.js';
-import { MODEL_TYPE } from '../App.js';
 import { Tooltip } from '../shell/Tooltip.js';
 
 /** Repeats `inlineLocal` until no reference to `name` remains — see {@link DefinitionRow}'s menu. */
@@ -50,7 +49,7 @@ export function DefinitionRow(props: {
 }) {
   const { name, definition, document, taken, open, setOpen, onPromote } = props;
   const store = useRuleEditorStore();
-  const { highlight, locals, catalog } = useBuilderTree();
+  const { highlight, locals, catalog, modelType } = useBuilderTree();
   const bodyPath = definitionBodyPath(name);
   /** Names the strip's generated text, so the tree below can be described by it. */
   const expressionId = useId();
@@ -142,7 +141,7 @@ export function DefinitionRow(props: {
       />
       {/* Described by its own strip, exactly as the rule's composition is by the rule's. */}
       <div role="group" aria-label={`definition ${name} composition`} aria-describedby={expressionId}>
-        <RuleNodeEditor path={bodyPath} modelType={MODEL_TYPE} />
+        <RuleNodeEditor path={bodyPath} modelType={modelType} />
       </div>
     </div>
   );

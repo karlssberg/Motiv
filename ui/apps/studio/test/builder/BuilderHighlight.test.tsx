@@ -7,7 +7,7 @@ import { BuilderPane } from '../../src/panes/BuilderPane.js';
 const catalog = { specs: [], collections: [] };
 const client = () => ({ getCatalog: vi.fn().mockResolvedValue(catalog) }) as unknown as RulesApiClient;
 const renderWith = (store: RuleEditorStore) =>
-  render(<RuleEditorProvider store={store}><BuilderPane client={client()} /></RuleEditorProvider>);
+  render(<RuleEditorProvider store={store}><BuilderPane client={client()} modelType="customer" /></RuleEditorProvider>);
 
 const twoOperands = () => new RuleEditorStore({ rule: { and: [{ spec: 'a' }, { spec: 'b' }] } });
 /** The `.node-row` owning a given path, found via the row's own DSL button. */

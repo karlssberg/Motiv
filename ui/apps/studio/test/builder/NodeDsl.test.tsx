@@ -17,7 +17,7 @@ const catalog: Catalog = {
 const client = (forCatalog: Catalog = catalog) =>
   ({ getCatalog: vi.fn().mockResolvedValue(forCatalog) }) as unknown as RulesApiClient;
 const renderWith = (store: RuleEditorStore, forCatalog?: Catalog) =>
-  render(<RuleEditorProvider store={store}><BuilderPane client={client(forCatalog)} /></RuleEditorProvider>);
+  render(<RuleEditorProvider store={store}><BuilderPane client={client(forCatalog)} modelType="customer" /></RuleEditorProvider>);
 
 describe('DSL rows', () => {
   it('renders a leaf as its bare spec name', async () => {

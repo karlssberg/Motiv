@@ -126,7 +126,7 @@ export function RuleDocument(props: {
         />
         {/* One rail: the rule's scenarios, each run against the live rule and this tab's draft. */}
         <div className="rail">
-          <ScenarioPane client={client} ruleName={tab.name} version={loaded?.version} />
+          <ScenarioPane client={client} ruleName={tab.name} modelType={MODEL_TYPE} version={loaded?.version} />
         </div>
       </div>
 

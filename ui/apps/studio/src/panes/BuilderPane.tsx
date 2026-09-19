@@ -8,7 +8,6 @@ import { useCatalog, useRuleEditor, useRuleEditorStore } from '@motiv-rules/reac
 import { BuilderTreeContext, RuleNodeEditor } from '../builder/RuleNodeEditor.js';
 import { RuleDslStrip } from '../builder/RuleDslStrip.js';
 import { DefinitionsPane } from './DefinitionsPane.js';
-import { MODEL_TYPE } from '../App.js';
 import { Tooltip } from '../shell/Tooltip.js';
 
 /** The rule's own root path — the one node whose name is the rule's name (#234). */
@@ -26,6 +25,8 @@ export const EMPTY_CATALOG: Catalog = { specs: [], collections: [] };
  */
 export function BuilderBody(props: {
   client: RulesApiClient;
+  /** The document's model type, which the rule's root row and every definition body are scoped to. */
+  modelType: string;
   /** Opens the host's *Extract to catalog* dialog for a row; absent, the row does not offer it (#234). */
   onExtractToCatalog?: ((path: string) => void) | undefined;
   /** Opens the host's *Promote to catalog* dialog for a definition; absent, its menu does not offer it (#234). */
@@ -92,6 +93,7 @@ export function BuilderBody(props: {
             openPopover,
             setOpenPopover,
             catalog,
+            modelType: props.modelType,
             locals,
             onExtractToCatalog: props.onExtractToCatalog,
             highlight,
@@ -102,7 +104,7 @@ export function BuilderBody(props: {
           }}
       >
         <div role="group" aria-label="rule composition" aria-describedby={expressionId}>
-          <RuleNodeEditor path={ROOT} modelType={MODEL_TYPE} />
+          <RuleNodeEditor path={ROOT} modelType={props.modelType} />
         </div>
         {/* The rule first, its definitions below it: the page reads top-down from what the
             document decides to what it is built from. Inside the provider, because every
@@ -114,13 +116,13 @@ export function BuilderBody(props: {
 }
 
 /** The builder as a standalone pane, for hosts that show it without the DSL surface. */
-export function BuilderPane(props: { client: RulesApiClient }) {
+export function BuilderPane(props: { client: RulesApiClient; modelType: string }) {
   return (
     <section className="pane" aria-label="Builder">
       <div className="pane-header">
         <h2>Builder</h2>
       </div>
-      <BuilderBody client={props.client} />
+      <BuilderBody client={props.client} modelType={props.modelType} />
     </section>
   );
 }

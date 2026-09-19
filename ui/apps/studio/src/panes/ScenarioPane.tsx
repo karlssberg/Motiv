@@ -1,7 +1,6 @@
 import { useEffect, useId, useState, type CSSProperties } from 'react';
 import { validateAgainstSchema, type EvaluationResult, type RulesApiClient, type SchemaViolation } from '@motiv-rules/core';
 import { JustificationTree, useCatalog, useRuleEditor, useRuleEditorStore } from '@motiv-rules/react';
-import { MODEL_TYPE } from '../App.js';
 import { selectScenario } from './scenarioSelection.js';
 import { SchemaViolations } from './SchemaViolations.js';
 import { Tick } from './Verdict.js';
@@ -20,7 +19,13 @@ import { Tooltip } from '../shell/Tooltip.js';
  * Scenarios are tab state, like the single sample model this pane replaced. Editing a model drops
  * its row back to unevaluated: the last verdict described the old input.
  */
-export function ScenarioPane(props: { client: RulesApiClient; ruleName: string; version?: number | undefined }) {
+export function ScenarioPane(props: {
+  client: RulesApiClient;
+  ruleName: string;
+  /** The model type the rule is evaluated against: which schema holds a scenario to, and what the runs are sent as. */
+  modelType: string;
+  version?: number | undefined;
+}) {
   const store = useRuleEditorStore();
   const state = useRuleEditor(store);
   const catalogState = useCatalog(props.client);
@@ -33,7 +38,7 @@ export function ScenarioPane(props: { client: RulesApiClient; ruleName: string; 
   useEffect(() => () => selectScenario(props.ruleName, null), [props.ruleName]);
 
   // Absent while loading or on older backends without modelTypes — then enforcement simply doesn't run.
-  const modelSchema = catalogState.status === 'ready' ? catalogState.data.modelTypes?.[MODEL_TYPE] : undefined;
+  const modelSchema = catalogState.status === 'ready' ? catalogState.data.modelTypes?.[props.modelType] : undefined;
 
   // Every change to the table is a pure function of the committed rows, so two clicks before a
   // re-render compose rather than the second overwriting the first.
@@ -55,7 +60,7 @@ export function ScenarioPane(props: { client: RulesApiClient; ruleName: string; 
       for (const [id, violations] of held) next = withViolations(next, id, violations);
       return next.map((r) => (runnable.some((x) => x.id === r.id) ? { ...r, violations: [], comparison: loading } : r));
     });
-    const rule = { ruleName: props.ruleName, modelType: MODEL_TYPE, document: state.document };
+    const rule = { ruleName: props.ruleName, modelType: props.modelType, document: state.document };
     await Promise.all(runnable.map(async (row) => {
       const comparison = await runScenario(props.client, rule, row);
       setRows((current) => withComparison(current, row.id, comparison));

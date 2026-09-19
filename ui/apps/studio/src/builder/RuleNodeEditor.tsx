@@ -48,6 +48,12 @@ export interface BuilderTreeState {
   setOpenPopover: Dispatch<SetStateAction<string | null>>;
   catalog: Catalog;
   /**
+   * The document's model type — what the rule's root row and every definition body are scoped
+   * to. A row inside a quantifier body narrows it to the element type as it recurses; this is
+   * the root those walks start from, and it is the document's, never a fixed one.
+   */
+  modelType: string;
+  /**
    * The document's definition names, so a printed row reparses a bare word as the local it was
    * printed from rather than as a spec of the same name (#234).
    */

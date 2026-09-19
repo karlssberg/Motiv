@@ -3,7 +3,8 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { RuleEditorStore, type Catalog, type RuleDocument, type RulesApiClient } from '@motiv-rules/core';
 import { RuleEditorProvider } from '@motiv-rules/react';
 import { EditorPane } from '../../src/panes/EditorPane.js';
-import { editorText, replaceBuffer } from '../support/codemirror.js';
+import { startCompletion, currentCompletions } from '@codemirror/autocomplete';
+import { editorText, replaceBuffer, typeBuffer } from '../support/codemirror.js';
 
 const catalog: Catalog = {
   specs: [
@@ -230,5 +231,54 @@ describe('EditorPane', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Edit is-active payload' }));
 
     expect(screen.getByText('Whether the customer account is active')).toBeDefined();
+  });
+});
+
+/**
+ * The builder's rows must scope an expression leaf to the document's model — an `order`
+ * proposition offers `total`, not the customer's fields — exactly as the DSL surface does. Studio
+ * once fixed the builder to `customer`, so an order proposition's builder completed customer
+ * fields while its DSL pane completed the order's.
+ */
+describe('EditorPane model type', () => {
+  const twoModels: Catalog = {
+    ...catalog,
+    modelTypes: {
+      customer: { type: 'object', properties: { age: { type: 'integer' } } },
+      order: { type: 'object', properties: { total: { type: 'number' } } },
+    },
+  };
+
+  const renderOrderPane = (document: RuleDocument) => {
+    const store = new RuleEditorStore(document);
+    const apiClient = { ...client(), getCatalog: vi.fn().mockResolvedValue(twoModels) } as unknown as RulesApiClient;
+    const { container } = render(
+      <RuleEditorProvider store={store}>
+        <EditorPane client={apiClient} modelType="order" />
+      </RuleEditorProvider>,
+    );
+    return container;
+  };
+
+  const completionsAt = async (container: HTMLElement, rowName: string) => {
+    await settleCatalog();
+    fireEvent.focus(await screen.findByRole('button', { name: rowName }));
+    const view = typeBuffer(container, '`t');
+    act(() => { startCompletion(view); });
+    await waitFor(() => expect(currentCompletions(view.state).length).toBeGreaterThan(0));
+    return currentCompletions(view.state).map((option) => option.label);
+  };
+
+  it('completes a leaf in the root row against the pane\'s model, not a fixed one', async () => {
+    const container = renderOrderPane({ rule: { spec: 'is-active' } });
+    expect(await completionsAt(container, 'edit expression at $.rule')).toEqual(['total']);
+  });
+
+  it('completes a leaf in a definition body against the pane\'s model too', async () => {
+    const container = renderOrderPane({
+      rule: { local: 'big' },
+      definitions: { big: { rule: { spec: 'is-active' } } },
+    });
+    expect(await completionsAt(container, 'edit expression at $.definitions.big.rule')).toEqual(['total']);
   });
 });
