@@ -113,5 +113,8 @@ export { DslSyncController, type DslSyncState, type SyncStatus } from './dslSync
 export {
   tokenizeLeaf, parseLeaf, printLeaf,
   scopeAt, withVar, fieldsOf, isCollection, elementOf, typeName, isNullable,
+  kindOf, canWiden, join, isIntegral, kindName,
+  checkLeaf, analyseLeaf,
   type LeafTokenKind, type LeafToken, type LeafProblem, type LeafAst, type LeafScope,
+  type NumericKind, type LeafFactLocal, type LeafAnalysis,
 } from './expression/index.js';
