@@ -5,7 +5,8 @@ namespace Motiv.Serialization.Tests.Expressions;
 
 public class LeafCompilerTests
 {
-    private sealed record Order(string Status, decimal Total, int DaysSinceShipped);
+    private sealed record Item(int Qty);
+    private sealed record Order(string Status, decimal Total, int DaysSinceShipped, IReadOnlyList<Item>? Items = null);
     private sealed record Customer(int Age, bool IsActive, decimal CreditLimit, string? Country, IReadOnlyList<Order>? Orders);
 
     private static readonly RuleParameterDeclaration[] Declarations =
@@ -26,7 +27,7 @@ public class LeafCompilerTests
     }
 
     private static readonly Customer Sample = new(34, true, 800m, "SE",
-        [new("paid", 620m, 12), new("paid", 410m, 40), new("pending", 950m, 0), new("refunded", 75m, 90)]);
+        [new("paid", 620m, 12, [new(2)]), new("paid", 410m, 40), new("pending", 950m, 0), new("refunded", 75m, 90)]);
 
     [Fact]
     public void Should_compile_a_filtered_aggregate_and_explain_it_like_a_compiled_expression()
@@ -98,6 +99,19 @@ public class LeafCompilerTests
     {
         Compile("!isActive || age >= @minAge").Evaluate(Sample).Satisfied.ShouldBeTrue();
         Compile("isActive && age < @minAge").Evaluate(Sample).Satisfied.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Should_compile_min_and_max_aggregates()
+    {
+        Compile("orders.min(o => o.total) >= 75").Evaluate(Sample).Satisfied.ShouldBeTrue();
+        Compile("orders.max(o => o.total) <= creditLimit").Evaluate(Sample).Satisfied.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Should_restore_the_outer_lambda_binding_after_a_nested_lambda_shadows_it()
+    {
+        Compile("orders.any(o => o.items.any(o => o.qty > 0) || o.total > 100)").Evaluate(Sample).Satisfied.ShouldBeTrue();
     }
 }
 #endif

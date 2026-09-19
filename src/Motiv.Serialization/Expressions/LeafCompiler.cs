@@ -114,9 +114,9 @@ internal sealed class LeafCompiler
     private LambdaExpression Predicate(Lambda lambda, Type element)
     {
         var parameter = Expression.Parameter(element, lambda.Parameter);
-        _variables[lambda.Parameter] = parameter;
+        var previous = BindVariable(lambda.Parameter, parameter);
         var body = AsBool(Visit(lambda.Body));
-        _variables.Remove(lambda.Parameter);
+        RestoreVariable(lambda.Parameter, previous);
         return Expression.Lambda(body, parameter);
     }
 
@@ -126,17 +126,35 @@ internal sealed class LeafCompiler
         var resultType = Nullable.GetUnderlyingType(TypeOf(c)) ?? TypeOf(c);
         var kind = NumericLattice.KindOf(resultType)!.Value;
         var parameter = Expression.Parameter(element, lambda.Parameter);
-        _variables[lambda.Parameter] = parameter;
+        var previous = BindVariable(lambda.Parameter, parameter);
         var body = Visit(lambda.Body);
-        _variables.Remove(lambda.Parameter);
+        RestoreVariable(lambda.Parameter, previous);
         body = NumericLattice.Widen(body, kind);
         var selector = Expression.Lambda(body, parameter);
         var name = c.Method switch { "sum" => nameof(Enumerable.Sum), "min" => nameof(Enumerable.Min), _ => nameof(Enumerable.Max) };
         var method = typeof(Enumerable).GetMethods(BindingFlags.Public | BindingFlags.Static)
             .Single(m => m.Name == name && m.IsGenericMethodDefinition && m.GetParameters().Length == 2
+                         && m.GetParameters()[1].ParameterType.IsGenericType
+                         && m.GetParameters()[1].ParameterType.GetGenericTypeDefinition() == typeof(Func<,>)
                          && m.GetParameters()[1].ParameterType.GetGenericArguments()[1] == body.Type)
             .MakeGenericMethod(element);
         return Expression.Call(method, target, selector);
+    }
+
+    /// <summary>Binds a lambda variable, returning whatever it previously shadowed (if any) so a
+    /// nested lambda that reuses the same parameter name does not permanently clobber the outer
+    /// binding once its own body has been visited.</summary>
+    private ParameterExpression? BindVariable(string name, ParameterExpression parameter)
+    {
+        _variables.TryGetValue(name, out var previous);
+        _variables[name] = parameter;
+        return previous;
+    }
+
+    private void RestoreVariable(string name, ParameterExpression? previous)
+    {
+        if (previous is not null) _variables[name] = previous;
+        else _variables.Remove(name);
     }
 
     private Expression Binary(Binary b)
