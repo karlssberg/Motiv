@@ -507,6 +507,22 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
         return node;
     }
 
+    protected override Expression VisitExtension(Expression node)
+    {
+        if (node is not NullConditionalExpression nullConditional)
+            return base.VisitExtension(node);
+
+        // Print the receiver, then the access with its receiver elided: `c.Orders?.Count()`.
+        VisitAndMaybeApplyParentheses(nullConditional, nullConditional.Target);
+        OutputText.Append("?.");
+        var receiverText = new CSharpExpressionSerializer().Serialize(nullConditional.Target);
+        var accessText = new CSharpExpressionSerializer().Serialize(nullConditional.Access);
+        OutputText.Append(accessText.StartsWith(receiverText + ".", StringComparison.Ordinal)
+            ? accessText.Substring(receiverText.Length + 1)
+            : accessText);
+        return node;
+    }
+
     private void VisitSpreadOfExpressions(IEnumerable<Expression> arguments)
     {
         var isFirst = true;
