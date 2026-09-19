@@ -67,6 +67,47 @@ function innermostSpanAt(spans: readonly NodeSpan[], position: number): NodeSpan
 }
 
 /**
+ * Builds a resolver for an expression leaf's scope, resolving the document to scope against
+ * *lazily* and *at most once*, on the first path actually asked for — not eagerly when the
+ * resolver is built, and not again on every further path. Two things depend on this:
+ *
+ * - A diagnostics pass asks this once per expression node (`fromLeafProblems`), so a naive
+ *   per-call resolution would re-parse the whole buffer once per leaf.
+ * - `fromLeafProblems` skips the whole leaf pass outright when the buffer's own parse produced no
+ *   document at all — the common case while healing would even be needed — so resolving eagerly
+ *   would burn a heal-and-reparse on a resolver nothing ends up calling.
+ *
+ * Resolved against the *live* buffer, not the store's committed document: the store only commits
+ * after the DSL sync's debounce (~300ms), so while a user is mid-edit (typing
+ * `orders.where(o => o.` for the first time, say) the committed document does not yet contain the
+ * node a leaf's path names, and resolving against it would silently answer for the wrong scope —
+ * the outer model's fields instead of the collection element's.
+ *
+ * Preference order: the live buffer's own parse when it resolved to a document; failing that (an
+ * open backtick or brace mid-type, which the parser refuses to turn into a document) a healed
+ * reparse of the same text — the same recovery `completeDsl` performs internally; and only as a
+ * last resort, both parses having failed outright, the store's last-committed document.
+ *
+ * Callers build this fresh from the render's own `sync`/`store` (never from `live.current`): it is
+ * itself what feeds `live.current.leafScope`, so reading the ref back here would see the *previous*
+ * render's buffer — one render behind the one this resolver is being built for.
+ */
+export function makeLeafScope(
+  sync: DslSync,
+  store: RuleEditorStore,
+  modelType: string,
+  catalog: Catalog,
+): (path: string) => LeafScope | null {
+  let document: RuleDocument | undefined;
+  return (path) => {
+    document ??= sync.parseResult.document
+      ?? parse(healUnterminated(sync.text)).document
+      ?? store.getState().document;
+    return scopeAt(document, path, modelType, catalog);
+  };
+}
+
+/**
  * The spec node `span` covers, or null when it covers something else.
  *
  * The span comes from the parse of the buffer, but the node behind it is read from `document` —
@@ -120,39 +161,12 @@ export function DslEditor(props: {
   const editorState = useRuleEditor(store);
   const [popover, setPopover] = useState<PayloadTarget | null>(null);
 
-  // Declared ahead of `leafScope` (with a throwaway initial value) so `leafScope` can close over
-  // `live.current` rather than this render's `sync`/`store` — see the doc comment below.
   const live = useRef<LiveContext>({
     sync, catalog, diagnostics: [], placedFacts: [], store, leafScope: () => null,
   });
 
-  /**
-   * Resolves the expression scope at a leaf's path — against the *live* buffer, not the store's
-   * committed document. The store only commits after the DSL sync's debounce (~300ms), so while
-   * a user is mid-edit (typing `orders.where(o => o.` for the first time, say) the committed
-   * document does not yet contain the node the leaf's path names, and resolving against it would
-   * silently answer for the wrong scope — the outer model's fields instead of the collection
-   * element's. `live.current.sync.text`/`.parseResult` are read (not this render's `sync`)
-   * because this closure is handed to a once-built CodeMirror extension and must see whichever
-   * render was most recent when the extension calls it, not the render that created it.
-   *
-   * Preference order: the live buffer's own parse when it resolved to a document; failing that
-   * (an open backtick or brace mid-type, which the parser refuses to turn into a document) a
-   * healed reparse of the same text, the same recovery `completeDsl` does internally; and only
-   * as a last resort — both parses failing outright — the store's last-committed document.
-   */
-  const leafScope = (path: string): LeafScope | null => {
-    const { sync: liveSync, store: liveStore } = live.current;
-    const document = liveSync.parseResult.document
-      ?? parse(healUnterminated(liveSync.text)).document
-      ?? liveStore.getState().document;
-    return scopeAt(document, path, modelType, catalog);
-  };
-
   const diagnostics = useMemo(
-    () => diagnosticsFor(sync.text, sync.parseResult, editorState.errors, leafScope),
-    // `leafScope` itself is stable in shape (it always reads through `live.current`); what it
-    // resolves to varies with the buffer and catalog, which are already listed below.
+    () => diagnosticsFor(sync.text, sync.parseResult, editorState.errors, makeLeafScope(sync, store, modelType, catalog)),
     [sync.text, sync.parseResult, editorState.errors, store, catalog, modelType],
   );
 
@@ -161,7 +175,12 @@ export function DslEditor(props: {
     [editorState.facts, sync.parseResult],
   );
 
-  live.current = { sync, catalog, diagnostics, placedFacts, store, leafScope };
+  // `leafScope` is rebuilt from this render's own `sync`/`store` — not read off `live.current` —
+  // for the same reason `diagnostics` above builds its own: `live.current` still holds the
+  // *previous* render's values until this assignment runs, so resolving through it here would be
+  // one render behind the buffer this resolver is meant to answer for. The once-built completion
+  // extension reads it back out through `() => live.current.leafScope`, which by then is current.
+  live.current = { sync, catalog, diagnostics, placedFacts, store, leafScope: makeLeafScope(sync, store, modelType, catalog) };
 
   const toolbar = useRef<HTMLDivElement | null>(null);
   const host = useRef<HTMLDivElement | null>(null);

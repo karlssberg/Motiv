@@ -1,10 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { startCompletion, currentCompletions } from '@codemirror/autocomplete';
-import { RuleEditorStore } from '@motiv-rules/core';
+import { forEachDiagnostic } from '@codemirror/lint';
+import { DslSyncController, RuleEditorStore } from '@motiv-rules/core';
+import * as core from '@motiv-rules/core';
 import type { Catalog, JsonSchema, RuleNode } from '@motiv-rules/core';
-import { DslEditor } from '../../src/dsl/DslEditor.js';
+import type { DslSync } from '@motiv-rules/react';
+import { DslEditor, makeLeafScope } from '../../src/dsl/DslEditor.js';
 import { useDslSync } from '@motiv-rules/react';
 import { editorText, editorView, replaceBuffer } from '../support/codemirror.js';
 
@@ -14,6 +17,18 @@ const CATALOG: Catalog = {
     { name: 'is-verified', modelType: 'customer', metadataType: 'String', isAsync: false, origin: 'Compiled' },
   ],
   collections: [],
+};
+
+/** A `customer` model with a collection field, for tests that resolve an expression leaf's scope. */
+const ORDER_SCHEMA: JsonSchema = { type: 'object', properties: { total: { type: 'number', format: 'decimal' } } };
+const CUSTOMER_SCHEMA: JsonSchema = {
+  type: 'object',
+  properties: { age: { type: 'integer' }, orders: { type: 'array', items: ORDER_SCHEMA } },
+};
+const LEAF_CATALOG: Catalog = {
+  specs: [],
+  collections: [{ path: 'orders', parentModelType: 'customer', elementModelType: 'Order' }],
+  modelTypes: { customer: CUSTOMER_SCHEMA },
 };
 
 /** Stands in for the pane that owns the buffer, which the editor takes as a prop. */
@@ -87,6 +102,96 @@ describe('DslEditor', () => {
     });
   });
 
+  it('resolves diagnostics scope from the render that produced them, not a stale one', () => {
+    // A fresh store, never edited: the committed document has no quantifier at all. If leaf
+    // scope for diagnostics were still resolved off a stale ref (one render behind, as it was
+    // before this fix), the ancestor walk would never find the quantifier in that stale
+    // document and would silently fall back to the *root* model — so `nope`'s complaint would
+    // name `customer` instead of the collection element it is actually typed inside.
+    const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
+    const { container } = render(<Host store={store} catalog={LEAF_CATALOG} />);
+    const view = editorView(container);
+
+    // Fully closed DSL — both leaves and the quantifier body — so the parse succeeds outright
+    // and `fromLeafProblems` actually walks both expression nodes.
+    const text = 'all in orders { `total > 1` & `nope > 1` }';
+    act(() => {
+      view.dispatch({
+        changes: { from: 0, to: view.state.doc.length, insert: text },
+        selection: { anchor: text.length },
+      });
+    });
+
+    const messages: string[] = [];
+    forEachDiagnostic(view.state, (d) => messages.push(d.message));
+    const unknownField = messages.find((m) => m.includes('UnknownField') && m.includes('nope'));
+    expect(unknownField).toContain('each of orders');
+    expect(unknownField).not.toContain('customer');
+  });
+
+});
+
+describe('makeLeafScope', () => {
+  /** A `DslSync`-shaped binding over a real controller, so the resolver sees a real parse. */
+  function syncFor(store: RuleEditorStore, text: string): DslSync {
+    const controller = new DslSyncController(store);
+    controller.setText(text);
+    return {
+      ...controller.getState(),
+      setText: (next) => controller.setText(next),
+      format: () => controller.format(),
+      reformatFromTree: () => controller.reformatFromTree(),
+      keepEditing: () => controller.keepEditing(),
+    };
+  }
+
+  it('resolves against the live buffer’s own parse when it succeeds, without healing', () => {
+    const spy = vi.spyOn(core, 'healUnterminated');
+    spy.mockClear();
+    const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
+    const sync = syncFor(store, 'all in orders { `total > 1` & `nope > 1` }');
+
+    const leafScope = makeLeafScope(sync, store, 'customer', LEAF_CATALOG);
+    // Both leaves' paths are asked for, as `fromLeafProblems` would for each expression node.
+    const totalScope = leafScope('$.rule.andAlso[0]');
+    const nopeScope = leafScope('$.rule.andAlso[1]');
+
+    expect(totalScope?.modelName).toBe('each of orders');
+    expect(nopeScope?.modelName).toBe('each of orders');
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('heals an unparseable buffer at most once, however many paths are asked for', () => {
+    const spy = vi.spyOn(core, 'healUnterminated');
+    spy.mockClear();
+    const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
+    // Unterminated: the leaf's backtick and the quantifier's brace are both left open, so the
+    // buffer's own parse produces no document and the resolver must heal to find one.
+    const sync = syncFor(store, 'all in orders { `total > 1');
+
+    const leafScope = makeLeafScope(sync, store, 'customer', LEAF_CATALOG);
+    leafScope('$.rule');
+    leafScope('$.rule.andAlso[0]');
+    leafScope('$.rule.body');
+
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it('never heals when nothing ends up asking the resolver for a path', () => {
+    const spy = vi.spyOn(core, 'healUnterminated');
+    spy.mockClear();
+    const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
+    const sync = syncFor(store, 'all in orders { `total > 1');
+
+    // Built, but never called — mirrors `fromLeafProblems` bailing before ever asking for a
+    // path when the buffer's own (unhealed) parse produced no document at all.
+    makeLeafScope(sync, store, 'customer', LEAF_CATALOG);
+
+    expect(spy).not.toHaveBeenCalled();
+  });
+});
+
+describe('DslEditor formatting and popover', () => {
   it('exposes a Format button', () => {
     renderEditor();
     expect(screen.getByRole('button', { name: 'Format' })).toBeTruthy();
