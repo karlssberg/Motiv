@@ -142,5 +142,22 @@ public class LeafCheckerTests
         root.Type.ShouldBe(typeof(bool));
         analysis.Types[((Binary)root.Node).Left].ShouldBe(typeof(decimal?));
     }
+
+    [Fact]
+    public void Should_resolve_mixed_integer_and_number_parameters_to_decimal()
+    {
+        var analysis = Check("@minAge / @vip > 1");
+        analysis.IsValid.ShouldBeTrue();
+        analysis.Problems.ShouldHaveSingleItem().IsWarning.ShouldBeTrue();
+        analysis.Facts.Single(f => f.Node is ParameterRef p && p.Name == "vip").Type.ShouldBe(typeof(decimal));
+        analysis.Facts.Single(f => f.Node is ParameterRef p && p.Name == "minAge").Type.ShouldBe(typeof(decimal));
+    }
+
+    [Fact]
+    public void Should_not_cascade_a_second_problem_from_a_bad_where_body()
+    {
+        var analysis = Check("orders.where(o => o.total) > 1");
+        analysis.Problems.Count(p => !p.IsWarning).ShouldBe(1);
+    }
 }
 #endif

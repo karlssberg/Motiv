@@ -231,7 +231,10 @@ internal sealed class LeafChecker
         if (wantsCondition)
         {
             if (bodyType is not null && (Nullable.GetUnderlyingType(bodyType) ?? bodyType) != typeof(bool))
+            {
                 Report(lambda.Body, RuleErrorCode.ExpressionTypeMismatch, $"'{c.Method}' expects a condition; this is {Describe(bodyType)}");
+                return Set(c, LeafType.Unknown);
+            }
             return Set(c, LeafType.Of(c.Method == "where" ? targetType! : Lift(typeof(bool), nullable)));
         }
 
@@ -385,6 +388,11 @@ internal sealed class LeafChecker
                     a.ResolvedBy ??= c.ResolvedBy;
                 }
                 a.Fractional |= c.Fractional;
+                // Two parameters of different declared kinds (integer vs number) have no common
+                // integral type that honors both constraints — the merged var must allow only
+                // decimal, so force it fractional rather than silently keeping just one side's kind.
+                if (a.ParamKind is not null && c.ParamKind is not null && a.ParamKind != c.ParamKind)
+                    a.Fractional = true;
                 a.ParamKind ??= c.ParamKind;
                 a.Members.AddRange(c.Members);
                 c.Parent = a;
