@@ -215,6 +215,22 @@ public class RuleSerializerDeserializeTests
         error.Message.ShouldContain("is-ready");
     }
 
+#if NET8_0_OR_GREATER
+    [Fact]
+    public void Should_bind_an_expression_node_now_that_expressions_are_enabled()
+    {
+        // Arrange
+        const string json = """{ "rule": { "expression": "total >= 100" } }""";
+        var serializer = new RuleSerializer(new SpecRegistry());
+
+        // Act
+        var loaded = serializer.Deserialize<Order>(json);
+
+        // Assert
+        loaded.Evaluate(new Order(150m)).Satisfied.ShouldBeTrue();
+        loaded.Evaluate(new Order(50m)).Satisfied.ShouldBeFalse();
+    }
+#else
     [Fact]
     public void Should_throw_for_an_expression_node_when_expressions_are_not_enabled()
     {
@@ -228,8 +244,9 @@ public class RuleSerializerDeserializeTests
         var exception = act.ShouldThrow<RuleSerializationException>();
         var error = exception.Errors.ShouldHaveSingleItem();
         error.Code.ShouldBe(RuleErrorCode.ExpressionsNotEnabled);
-        error.Message.ShouldContain("Motiv.Serialization.Expressions");
+        error.Message.ShouldContain("supported on .NET 8 or later");
     }
+#endif
 
     [Fact]
     public void Should_throw_for_object_payloads_in_an_explanation_load()

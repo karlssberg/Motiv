@@ -364,7 +364,7 @@ public class RuleMetadataTests
     }
 
     [Fact]
-    public void Should_throw_for_an_expression_node_in_a_metadata_load_when_expressions_are_not_enabled()
+    public void Should_require_metadata_for_a_bare_expression_node_in_a_metadata_load()
     {
         // Arrange
         const string json = """{ "rule": { "expression": "Age >= 18" } }""";
@@ -375,7 +375,7 @@ public class RuleMetadataTests
         // Assert
         var exception = act.ShouldThrow<RuleSerializationException>();
         var error = exception.Errors.ShouldHaveSingleItem();
-        error.Code.ShouldBe(RuleErrorCode.ExpressionsNotEnabled);
+        error.Code.ShouldBe(RuleErrorCode.ExpressionRequiresMetadata);
     }
 
     [Fact]

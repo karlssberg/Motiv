@@ -366,10 +366,10 @@ public sealed class RuleSerializer
         List<RuleError> errors)
     {
         if (document.Root is not null)
-            RuleParameterSubstituter.Apply(document.Root, values, errors);
+            RuleParameterSubstituter.Apply(document.Root, values, errors, document.Parameters);
 
         foreach (var definition in document.Definitions)
-            RuleParameterSubstituter.Apply(definition, values, errors);
+            RuleParameterSubstituter.Apply(definition, values, errors, document.Parameters);
     }
 
     private static void ThrowIfInvalid(List<RuleError> errors)

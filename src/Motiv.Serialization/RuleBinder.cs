@@ -1,3 +1,5 @@
+using Motiv.Serialization.Expressions;
+
 namespace Motiv.Serialization;
 
 internal static class RuleBinder
@@ -104,12 +106,8 @@ internal static class RuleBinder
             : spec.ToExplanationSpec();
     }
 
-    private static SpecBase<TModel, string>? BindExpressionLeaf<TModel>(RuleNode node, List<RuleError> errors)
-    {
-        errors.Add(new RuleError(node.Path, RuleErrorCode.ExpressionsNotEnabled,
-            "expression nodes require the Motiv.Serialization.Expressions package"));
-        return null;
-    }
+    private static SpecBase<TModel, string>? BindExpressionLeaf<TModel>(RuleNode node, List<RuleError> errors) =>
+        LeafBinding.Bind<TModel>(node, errors);
 
     private static SpecBase<TModel, string>? Decorate<TModel>(
         RuleNode node,
