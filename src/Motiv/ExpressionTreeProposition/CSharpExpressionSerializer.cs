@@ -13,6 +13,14 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
 
     protected readonly StringBuilder OutputText = new();
 
+    /// <summary>
+    /// The <see cref="NullConditionalExpression.Receiver" /> currently being printed as an elided
+    /// null-conditional receiver, or <c>null</c> when not inside one. Set around visiting a
+    /// <see cref="NullConditionalExpression.Access" /> and restored afterwards, so nested
+    /// null-conditional accesses elide correctly.
+    /// </summary>
+    private Expression? _elidedReceiver;
+
     public string Serialize(Expression expression)
     {
         OutputText.Clear();
@@ -225,7 +233,7 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
 
     protected override Expression VisitMember(MemberExpression node)
     {
-        if (node.Expression is not ConstantExpression)
+        if (node.Expression is not ConstantExpression && !ReferenceEquals(node.Expression, _elidedReceiver))
         {
             if (node.Expression is null)
                 OutputText.Append(node.Member.DeclaringType?.Name);
@@ -399,16 +407,21 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
         var instanceObject = isExtensionMethod ? node.Arguments[0] : node.Object;
         var arguments = isExtensionMethod ? node.Arguments.Skip(1) : node.Arguments;
 
-        if (node.Method.IsStatic && !isExtensionMethod)
+        if (instanceObject is not null && ReferenceEquals(instanceObject, _elidedReceiver))
+        {
+            // elided null-conditional receiver: print neither the instance nor the separator dot
+        }
+        else if (node.Method.IsStatic && !isExtensionMethod)
         {
             OutputText.Append(node.Method.DeclaringType!.ToCSharpName());
+            OutputText.Append('.');
         }
         else
         {
             Visit(instanceObject);
+            OutputText.Append('.');
         }
 
-        OutputText.Append('.');
         OutputText.Append(node.ToCSharpName());
         OutputText.Append('(');
         VisitSpreadOfExpressions(arguments.ToArray());
@@ -492,6 +505,9 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
 
     protected override Expression VisitParameter(ParameterExpression node)
     {
+        if (ReferenceEquals(node, _elidedReceiver))
+            return node;
+
         OutputText.Append(node.Name);
         return node;
     }
@@ -512,14 +528,21 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
         if (node is not NullConditionalExpression nullConditional)
             return base.VisitExtension(node);
 
-        // Print the receiver, then the access with its receiver elided: `c.Orders?.Count()`.
+        // Print the receiver, then the access with its placeholder receiver elided: `c.Orders?.Count()`.
         VisitAndMaybeApplyParentheses(nullConditional, nullConditional.Target);
         OutputText.Append("?.");
-        var receiverText = new CSharpExpressionSerializer().Serialize(nullConditional.Target);
-        var accessText = new CSharpExpressionSerializer().Serialize(nullConditional.Access);
-        OutputText.Append(accessText.StartsWith(receiverText + ".", StringComparison.Ordinal)
-            ? accessText.Substring(receiverText.Length + 1)
-            : accessText);
+
+        var previousElidedReceiver = _elidedReceiver;
+        _elidedReceiver = nullConditional.Receiver;
+        try
+        {
+            Visit(nullConditional.Access);
+        }
+        finally
+        {
+            _elidedReceiver = previousElidedReceiver;
+        }
+
         return node;
     }
 

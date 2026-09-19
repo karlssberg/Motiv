@@ -6,7 +6,19 @@ namespace Motiv.Tests;
 public class NullConditionalExpressionTests
 {
     private sealed record Order(decimal Total);
-    private sealed record Customer(IReadOnlyList<Order>? Orders, string? Country);
+    private sealed record Address(string? Country);
+    private sealed record Customer(IReadOnlyList<Order>? Orders, string? Country, Address? Address = null);
+
+    private static class Counter
+    {
+        public static int Count;
+
+        public static Customer? Next()
+        {
+            Count++;
+            return new Customer([], "SE");
+        }
+    }
 
     [Fact]
     public void Should_evaluate_to_null_when_the_receiver_is_null_and_to_the_value_otherwise()
@@ -48,5 +60,35 @@ public class NullConditionalExpressionTests
 
         spec.Evaluate(new Customer(null, null)).Satisfied.ShouldBeFalse();
         spec.Evaluate(new Customer(null, "SE")).Satisfied.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Should_evaluate_the_target_exactly_once()
+    {
+        Counter.Count = 0;
+        var call = Expression.Call(typeof(Counter).GetMethod(nameof(Counter.Next))!);
+        var countryAccess = NullConditionalExpression.Create(call, target =>
+            Expression.Property(target, nameof(Customer.Country)));
+
+        var lambda = Expression.Lambda<Func<string?>>(countryAccess).Compile();
+        var result = lambda();
+
+        result.ShouldBe<string?>("SE");
+        Counter.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Should_print_a_multi_hop_null_conditional_chain()
+    {
+        var c = Expression.Parameter(typeof(Customer), "c");
+        var addressCountry = Expression.Property(Expression.Property(c, nameof(Customer.Address)), nameof(Address.Country));
+        var length = NullConditionalExpression.Create(addressCountry, target =>
+            Expression.Property(target, nameof(string.Length)));
+        var body = Expression.GreaterThan(length, Expression.Constant(1, typeof(int?)));
+
+        var spec = Spec.From(Expression.Lambda<Func<Customer, bool>>(body, c)).Create("long address country");
+        var result = spec.Evaluate(new Customer(null, null, new Address("SE")));
+
+        result.Assertions.ShouldBe(["c.Address.Country?.Length > 1"]);
     }
 }
