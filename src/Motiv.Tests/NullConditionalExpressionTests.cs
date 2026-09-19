@@ -5,9 +5,28 @@ namespace Motiv.Tests;
 
 public class NullConditionalExpressionTests
 {
-    private sealed record Order(decimal Total);
-    private sealed record Address(string? Country);
-    private sealed record Customer(IReadOnlyList<Order>? Orders, string? Country, Address? Address = null);
+    private sealed record Order(decimal Total)
+    {
+        // net472 cannot compile the positional init-only property (CS0518: IsExternalInit missing);
+        // the get-only override mirrors AsyncDecoratorMetadataTests.Verdict.
+        public decimal Total { get; } = Total;
+    }
+
+    private sealed record Address(string? Country)
+    {
+        // net472 cannot compile the positional init-only property (CS0518: IsExternalInit missing);
+        // the get-only override mirrors AsyncDecoratorMetadataTests.Verdict.
+        public string? Country { get; } = Country;
+    }
+
+    private sealed record Customer(IReadOnlyList<Order>? Orders, string? Country, Address? Address = null)
+    {
+        // net472 cannot compile the positional init-only properties (CS0518: IsExternalInit missing);
+        // the get-only overrides mirror AsyncDecoratorMetadataTests.Verdict.
+        public IReadOnlyList<Order>? Orders { get; } = Orders;
+        public string? Country { get; } = Country;
+        public Address? Address { get; } = Address;
+    }
 
     private static class Counter
     {
