@@ -9,7 +9,6 @@ import {
   type AccordionModel, type Catalog, type HighlightModel,
 } from '@motiv-rules/core';
 import { useRuleEditorStore, useRuleNode } from '@motiv-rules/react';
-import { NodeToolbar } from './NodeToolbar.js';
 import { OperatorPicker } from './OperatorPicker.js';
 import { QuantifierNode } from './QuantifierNode.js';
 import { DecorationEditor } from './DecorationEditor.js';
@@ -369,10 +368,8 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
             <LocalNodeDetail path={path} node={node} catalog={catalog} />
           ) : (
             <>
-              {isHigherOrderNode(node) ? (
+              {isHigherOrderNode(node) && (
                 <QuantifierNode path={path} node={node} catalog={catalog} modelType={modelType} />
-              ) : (
-                <NodeToolbar path={path} node={node} />
               )}
               {/* Payloads are authored at the root only; everything below it is a definition now,
                   and a node that predates that is offered the way out (#234). No node is named in

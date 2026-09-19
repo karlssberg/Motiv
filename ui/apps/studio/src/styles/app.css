@@ -652,18 +652,6 @@ textarea.control {
   flex-wrap: wrap;
 }
 
-/* Extension points: inert affordances for not-yet-evaluable node kinds */
-.ext-point {
-  background: transparent;
-  color: var(--muted);
-  border: 1px dashed var(--border);
-  cursor: not-allowed;
-}
-
-.ext-point:hover {
-  background: transparent;
-}
-
 /* Document JSON pane */
 .json {
   font-family: var(--mono);

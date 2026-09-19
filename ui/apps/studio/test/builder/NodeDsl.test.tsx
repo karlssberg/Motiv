@@ -1,21 +1,23 @@
 import { peekOf } from '../support/tooltip.js';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { RuleEditorStore, type RulesApiClient } from '@motiv-rules/core';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { startCompletion, currentCompletions } from '@codemirror/autocomplete';
+import { RuleEditorStore, type Catalog, type RulesApiClient } from '@motiv-rules/core';
 import { RuleEditorProvider } from '@motiv-rules/react';
 import { BuilderPane } from '../../src/panes/BuilderPane.js';
-import { editorView, replaceBuffer } from '../support/codemirror.js';
+import { editorView, replaceBuffer, typeBuffer } from '../support/codemirror.js';
 
-const catalog = {
+const catalog: Catalog = {
   specs: [
-    { name: 'is-active', modelType: 'customer', metadataType: 'String', isAsync: false, description: null },
-    { name: 'is-adult', modelType: 'customer', metadataType: 'String', isAsync: false, description: null },
+    { name: 'is-active', modelType: 'customer', metadataType: 'String', isAsync: false, description: null, origin: 'Compiled' },
+    { name: 'is-adult', modelType: 'customer', metadataType: 'String', isAsync: false, description: null, origin: 'Compiled' },
   ],
   collections: [{ path: 'orders', parentModelType: 'customer', elementModelType: 'order' }],
 };
-const client = () => ({ getCatalog: vi.fn().mockResolvedValue(catalog) }) as unknown as RulesApiClient;
-const renderWith = (store: RuleEditorStore) =>
-  render(<RuleEditorProvider store={store}><BuilderPane client={client()} /></RuleEditorProvider>);
+const client = (forCatalog: Catalog = catalog) =>
+  ({ getCatalog: vi.fn().mockResolvedValue(forCatalog) }) as unknown as RulesApiClient;
+const renderWith = (store: RuleEditorStore, forCatalog?: Catalog) =>
+  render(<RuleEditorProvider store={store}><BuilderPane client={client(forCatalog)} /></RuleEditorProvider>);
 
 describe('DSL rows', () => {
   it('renders a leaf as its bare spec name', async () => {
@@ -191,5 +193,21 @@ describe('DSL row editing', () => {
     replaceBuffer(container, 'is-adult');
     unmount();
     expect(store.getState().document.rule).toEqual({ spec: 'is-active' });
+  });
+
+  it('offers a leaf field from the row\'s own model scope inside a backtick expression', async () => {
+    const leafCatalog: Catalog = {
+      ...catalog,
+      modelTypes: { customer: { type: 'object', properties: { age: { type: 'integer' } } } },
+    };
+    const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
+    const { container } = renderWith(store, leafCatalog);
+    await focusRow('$.rule');
+
+    const view = typeBuffer(container, '`ag');
+    act(() => { startCompletion(view); });
+    await waitFor(() => {
+      expect(currentCompletions(view.state).map((option) => option.label)).toEqual(['age']);
+    });
   });
 });
