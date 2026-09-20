@@ -58,8 +58,8 @@ Mounted under `{basePath}/propositions`:
 |---|---|---|---|---|
 | `GET` | `{basePath}/propositions` | &mdash; | `200` the effective listing | &mdash; |
 | `GET` | `{basePath}/propositions/{name}` | &mdash; | `200 { document, version, origin, hasCompiledDefault }` | `404` |
-| `POST` | `{basePath}/propositions` | `{ name, modelType, document, description? }` | `201 { version }` | `400`, `409` name taken |
-| `PUT` | `{basePath}/propositions/{name}` | `{ document, baseVersion }` | `200 { version }` | `400`, `409 { currentVersion }`, `404` |
+| `POST` | `{basePath}/propositions` | `{ name, modelType, document, description?, changeNote? }` | `201 { version }` | `400`, `409` name taken |
+| `PUT` | `{basePath}/propositions/{name}` | `{ document, baseVersion, changeNote? }` | `200 { version }` | `400`, `409 { currentVersion }`, `404` |
 | `DELETE` | `{basePath}/propositions/{name}` | `?baseVersion=n` | `200 { version: 0 }` | `400`, `409 { currentVersion }`, `409 { referrers }`, `404` |
 | `GET` | `{basePath}/propositions/{name}/dependents` | &mdash; | `200 { dependents }` transitive closure | `404` |
 

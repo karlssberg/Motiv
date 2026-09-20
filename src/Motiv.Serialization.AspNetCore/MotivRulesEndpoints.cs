@@ -450,7 +450,7 @@ public static class MotivRulesEndpoints
             return governance is null
                 ? ToResult(
                     await rules.UpdateAsync(
-                        name, documentJson, request.BaseVersion, ProvenanceOf(http, request.ChangeNote),
+                        name, documentJson, request.BaseVersion, Provenance.Of(http, request.ChangeNote),
                         http.RequestAborted),
                     name, json)
                 : await MotivGovernanceEndpoints.GovernedRuleWrite(
@@ -471,7 +471,7 @@ public static class MotivRulesEndpoints
             // null document, the same shape a proposition withdrawal takes.
             return governance is null
                 ? ToResult(
-                    await rules.RevertAsync(name, baseVersion, ProvenanceOf(http), http.RequestAborted),
+                    await rules.RevertAsync(name, baseVersion, Provenance.Of(http), http.RequestAborted),
                     name, json)
                 : await MotivGovernanceEndpoints.GovernedRuleWrite(
                     governance, http, json, DirectWriteOperation.RuleRevert,
@@ -486,9 +486,6 @@ public static class MotivRulesEndpoints
     /// governed path reads its author, so one request is attributed identically whether or not
     /// governance is mounted.
     /// </summary>
-    private static RuleChangeProvenance ProvenanceOf(HttpContext http, string? changeNote = null) =>
-        new(PrincipalIdentity.Subject(http.User), changeNote);
-
     private static IResult ToResult(RuleUpdateResult outcome, string name, JsonSerializerOptions json) =>
         outcome.Outcome switch
         {

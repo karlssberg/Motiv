@@ -62,12 +62,13 @@ internal static class MotivPropositionEndpoints
             return governance is null
                 ? ToResult(
                     await propositions.CreateAsync(
-                        request.Name, request.ModelType, documentJson, request.Description, http.RequestAborted),
+                        request.Name, request.ModelType, documentJson, request.Description,
+                        Provenance.Of(http, request.ChangeNote), http.RequestAborted),
                     request.Name, json)
                 : await MotivGovernanceEndpoints.GovernedPropositionWrite(
                     governance, http, json, DirectWriteOperation.PropositionCreate, request.Name,
                     documentJson, baseVersion: 0, request.ModelType, request.Description,
-                    written => ToResult(written, request.Name, json));
+                    written => ToResult(written, request.Name, json), request.ChangeNote);
         });
 
         group.MapPut("/propositions/{name}", async (string name, PropositionPutRequest request, HttpContext http) =>
@@ -84,12 +85,13 @@ internal static class MotivPropositionEndpoints
 
             return governance is null
                 ? ToResult(
-                    await propositions.UpdateAsync(name, documentJson, request.BaseVersion, http.RequestAborted),
+                    await propositions.UpdateAsync(
+                        name, documentJson, request.BaseVersion, Provenance.Of(http, request.ChangeNote), http.RequestAborted),
                     name, json)
                 : await MotivGovernanceEndpoints.GovernedPropositionWrite(
                     governance, http, json, DirectWriteOperation.PropositionUpdate, name,
                     documentJson, request.BaseVersion, modelTypeId: null, description: null,
-                    written => ToResult(written, name, json));
+                    written => ToResult(written, name, json), request.ChangeNote);
         });
 
         group.MapDelete("/propositions/{name}", async (string name, int baseVersion, HttpContext http) =>
@@ -101,7 +103,7 @@ internal static class MotivPropositionEndpoints
                 return EndpointResponses.NonPositiveBaseVersion(json);
 
             return governance is null
-                ? ToResult(await propositions.WithdrawAsync(name, baseVersion, http.RequestAborted), name, json)
+                ? ToResult(await propositions.WithdrawAsync(name, baseVersion, Provenance.Of(http), http.RequestAborted), name, json)
                 : await MotivGovernanceEndpoints.GovernedPropositionWrite(
                     governance, http, json, DirectWriteOperation.PropositionWithdraw, name,
                     documentJson: null, baseVersion, modelTypeId: null, description: null,

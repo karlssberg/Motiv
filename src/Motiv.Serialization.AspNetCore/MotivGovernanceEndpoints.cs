@@ -307,7 +307,8 @@ internal static class MotivGovernanceEndpoints
         int baseVersion,
         string? modelTypeId,
         string? description,
-        Func<PropositionUpdateResult, IResult> written)
+        Func<PropositionUpdateResult, IResult> written,
+        string? changeNote = null)
     {
         var author = PrincipalIdentity.Subject(http.User);
         var breakGlassActive = ResolveBreakGlass(http).Active(DateTimeOffset.UtcNow);
@@ -315,7 +316,7 @@ internal static class MotivGovernanceEndpoints
             author, operation,
             new NewProposedChange(
                 ChangeTargetKind.Proposition, name, documentJson, baseVersion, null,
-                modelTypeId, description),
+                modelTypeId, description, ChangeNote: changeNote),
             breakGlassActive, http.RequestAborted);
 
         if (result.Blocked is { } decision)

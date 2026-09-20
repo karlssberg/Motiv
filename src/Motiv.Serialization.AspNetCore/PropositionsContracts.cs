@@ -34,12 +34,12 @@ public sealed record PropositionGetResponse(
 /// <param name="Document">The rule document defining the proposition.</param>
 /// <param name="Description">An optional description.</param>
 public sealed record PropositionCreateRequest(
-    string Name, string ModelType, JsonElement Document, string? Description);
+    string Name, string ModelType, JsonElement Document, string? Description, string? ChangeNote = null);
 
 /// <summary>A request to replace an authored proposition's document.</summary>
 /// <param name="Document">The replacement document.</param>
 /// <param name="BaseVersion">The version the caller last observed; a stale value yields 409.</param>
-public sealed record PropositionPutRequest(JsonElement Document, int BaseVersion);
+public sealed record PropositionPutRequest(JsonElement Document, int BaseVersion, string? ChangeNote = null);
 
 /// <summary>A successful create, update, or withdrawal.</summary>
 /// <param name="Version">The new version, or 0 after a withdrawal.</param>
