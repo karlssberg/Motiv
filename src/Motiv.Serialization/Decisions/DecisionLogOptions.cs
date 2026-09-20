@@ -50,6 +50,13 @@ public sealed class DecisionLogOptions
     /// </summary>
     public DecisionCaptureRegistry Capture { get; } = new();
 
+    /// <summary>
+    /// How a reference-only capture gets its model back for a reproduction, per model type. The
+    /// mirror of <see cref="Capture"/>: that says what the log keeps, this says how what it kept is
+    /// turned back into a model. Empty by default; see <see cref="DecisionModelResolvers"/>.
+    /// </summary>
+    public DecisionModelResolvers Resolve { get; } = new();
+
     /// <summary>The clock records are stamped from. Injected so tests need not wait for real time.</summary>
     internal Func<DateTimeOffset> Clock { get; set; } = () => DateTimeOffset.UtcNow;
 }
