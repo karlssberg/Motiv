@@ -48,12 +48,11 @@ public sealed class MotivMcpTools(
         [Description("The most decisions to return; 20 by default, 200 at most.")] int? limit = null,
         CancellationToken cancellationToken = default)
     {
-        var source = decisions ?? throw new McpException("this host does not read its decision log back; register a decision source with AddDecisionSource");
         var query = new DecisionQuery
         {
             RuleName = ruleName, Satisfied = satisfied, FromUtc = fromUtc, ToUtc = toUtc, Limit = Math.Clamp(limit ?? 20, 1, 200),
         };
-        var records = await source.QueryAsync(query, cancellationToken);
+        var records = await Decisions.QueryAsync(query, cancellationToken);
         return Json(records
             .Where(record => Granted(GrantVerb.Read, record.RuleName))
             .Select(record => DecisionsContracts.Entry(record, options.JsonSerializerOptions))
@@ -105,20 +104,20 @@ public sealed class MotivMcpTools(
         RequireReadable(name);
         if (rules.FindEntry(name) is { } rule)
         {
-            if (ruleStore is not null && await RuleRowAsync(name, version ?? rule.Version, cancellationToken) is { } row)
+            if (await RuleRowAsync(name, version ?? rule.Version, cancellationToken) is { } row)
                 return Json(DecisionsContracts.Entry(row));
             if (version is null || version == rule.Version || version == 1)
                 return Json(new { name, version = version ?? rule.Version, document = EndpointResponses.DocumentElement(version == 1 ? null : rule.DocumentJson) });
-            throw new McpException($"rule '{name}' has no version {version}");
+            throw NoSuchVersion("rule", name, version);
         }
 
         if (propositions?.Find(name) is { } proposition)
         {
-            if (propositionStore is not null && await PropositionRowAsync(name, version ?? proposition.Version, cancellationToken) is { } row)
+            if (await PropositionRowAsync(name, version ?? proposition.Version, cancellationToken) is { } row)
                 return Json(DecisionsContracts.Entry(row));
             if (version is null || version == proposition.Version)
                 return Json(new { name, version = proposition.Version, modelType = proposition.ModelType, document = EndpointResponses.DocumentElement(propositions.DocumentJsonOf(name)) });
-            throw new McpException($"proposition '{name}' has no version {version}");
+            throw NoSuchVersion("proposition", name, version);
         }
 
         throw NotKnown(name);
@@ -130,8 +129,7 @@ public sealed class MotivMcpTools(
         [Description("The rule name.")] string rule, CancellationToken cancellationToken)
     {
         RequireReadable(rule);
-        var store = scenarios ?? throw new McpException("this host stores no scenarios; call AddScenarios()");
-        var rows = await store.ForRuleAsync(rule, cancellationToken);
+        var rows = await Scenarios.ForRuleAsync(rule, cancellationToken);
         return Json(rows.Where(row => !row.Id.StartsWith("__", StringComparison.Ordinal)).Select(Entry).ToArray());
     }
 
@@ -148,7 +146,7 @@ public sealed class MotivMcpTools(
         RequireReadable(rule);
         if (!Granted(GrantVerb.Author, rule))
             throw new McpException($"saving a scenario for '{rule}' requires the 'author' grant on its namespace");
-        var store = scenarios ?? throw new McpException("this host stores no scenarios; call AddScenarios()");
+        var store = Scenarios;
         if (string.IsNullOrWhiteSpace(name))
             throw new McpException("a scenario needs a name");
         if (model is null)
@@ -159,12 +157,18 @@ public sealed class MotivMcpTools(
             Version: 0, PrincipalIdentity.Subject(Context.User), DateTimeOffset.MinValue);
         var written = await store.PutAsync(scenario, baseVersion: 0, cancellationToken);
         if (written.IsConflict)
-            throw new McpException($"the scenario id collided; try again");
+            throw new McpException("the scenario id collided; try again");
         var saved = (await store.ForRuleAsync(rule, cancellationToken)).First(row => row.Id == scenario.Id);
         return Json(Entry(saved));
     }
 
     private HttpContext Context => http.HttpContext ?? throw new McpException("the tool was called outside an HTTP request");
+
+    private IDecisionSource Decisions => decisions
+        ?? throw new McpException("this host does not read its decision log back; register a decision source with AddDecisionSource");
+
+    private IScenarioStore Scenarios => scenarios
+        ?? throw new McpException("this host stores no scenarios; call AddScenarios()");
 
     private bool Granted(GrantVerb verb, string name) => GrantGate.IsGranted(Context, verb, name);
 
@@ -177,10 +181,12 @@ public sealed class MotivMcpTools(
 
     private static McpException NotKnown(string name) => new($"no rule or proposition '{name}' is known to this host");
 
+    private static McpException NoSuchVersion(string kind, string name, int? version) =>
+        new($"{kind} '{name}' has no version {version}");
+
     private async Task<DecisionRecord> ReadableDecisionAsync(Guid id, CancellationToken cancellationToken)
     {
-        var source = decisions ?? throw new McpException("this host does not read its decision log back; register a decision source with AddDecisionSource");
-        var record = await source.FindAsync(id, cancellationToken);
+        var record = await Decisions.FindAsync(id, cancellationToken);
         if (record is null || !Granted(GrantVerb.Read, record.RuleName))
             throw new McpException($"no decision '{id}' is in the log; retention may have purged it");
         return record;
@@ -193,10 +199,9 @@ public sealed class MotivMcpTools(
         var serializerOptions = propositions?.Options ?? rules.Options;
         if (rules.Find(name) is { } rule && rules.FindEntry(name) is { } live)
         {
-            var documentJson = version is null || version == live.Version ? live.DocumentJson
-                : ruleStore is not null && await RuleRowAsync(name, version.Value, cancellationToken) is { } row ? row.DocumentJson
-                : version == 1 ? null
-                : throw new McpException($"rule '{name}' has no version {version}");
+            var documentJson = version is null || version == live.Version
+                ? live.DocumentJson
+                : await StoredRuleDocumentAsync(name, version.Value, cancellationToken);
             return (documentJson, RulePrintOptions.For(rule, rules.Scope.Registry, serializerOptions));
         }
 
@@ -205,20 +210,49 @@ public sealed class MotivMcpTools(
             var errors = new List<RuleError>();
             var modelType = propositions.ResolveModel(proposition.ModelType, errors)?.ModelType
                 ?? throw new McpException($"proposition '{name}' is over '{proposition.ModelType}', which this host does not register");
-            var documentJson = version is null || version == proposition.Version ? propositions.DocumentJsonOf(name)
-                : propositionStore is not null && await PropositionRowAsync(name, version.Value, cancellationToken) is { } row ? row.DocumentJson
-                : throw new McpException($"proposition '{name}' has no version {version}");
+            var documentJson = version is null || version == proposition.Version
+                ? propositions.DocumentJsonOf(name)
+                : await StoredPropositionDocumentAsync(name, version.Value, cancellationToken);
             return (documentJson, RulePrintOptions.For(name, modelType, rules.Scope.Registry, serializerOptions, "Proposition"));
         }
 
         throw NotKnown(name);
     }
 
-    private async Task<StoredRuleVersion?> RuleRowAsync(string name, int version, CancellationToken cancellationToken) =>
-        (await ruleStore!.HistoryAsync(name, cancellationToken)).FirstOrDefault(row => row.Version == version);
+    /// <summary>
+    /// The document behind a version of a rule other than its live one. Version 1 is the compiled
+    /// default, which the log never holds a row for — it is bound at startup, not published — so it
+    /// resolves to no document at all; any other version the log lacks does not exist.
+    /// </summary>
+    private async Task<string?> StoredRuleDocumentAsync(string name, int version, CancellationToken cancellationToken)
+    {
+        if (await RuleRowAsync(name, version, cancellationToken) is { } row)
+            return row.DocumentJson;
+        if (version == 1)
+            return null;
+        throw NoSuchVersion("rule", name, version);
+    }
 
+    /// <summary>
+    /// The document behind a version of a proposition other than its live one. A proposition has no
+    /// compiled default, so a version the log lacks does not exist.
+    /// </summary>
+    private async Task<string?> StoredPropositionDocumentAsync(string name, int version, CancellationToken cancellationToken) =>
+        await PropositionRowAsync(name, version, cancellationToken) is { } row
+            ? row.DocumentJson
+            : throw NoSuchVersion("proposition", name, version);
+
+    /// <summary>A rule's version-log row, or null when the host keeps no rule history.</summary>
+    private async Task<StoredRuleVersion?> RuleRowAsync(string name, int version, CancellationToken cancellationToken) =>
+        ruleStore is null
+            ? null
+            : (await ruleStore.HistoryAsync(name, cancellationToken)).FirstOrDefault(row => row.Version == version);
+
+    /// <summary>A proposition's version-log row, or null when the host keeps no proposition history.</summary>
     private async Task<StoredPropositionVersion?> PropositionRowAsync(string name, int version, CancellationToken cancellationToken) =>
-        (await propositionStore!.HistoryAsync(name, cancellationToken)).FirstOrDefault(row => row.Version == version && !row.IsTombstone);
+        propositionStore is null
+            ? null
+            : (await propositionStore.HistoryAsync(name, cancellationToken)).FirstOrDefault(row => row.Version == version && !row.IsTombstone);
 
     private static ScenarioEntry Entry(StoredScenario row) =>
         new(row.Id, row.Name, row.ModelJson, row.ExpectedSatisfied, row.SourceDecisionId, row.Version, row.Author, row.TimestampUtc);

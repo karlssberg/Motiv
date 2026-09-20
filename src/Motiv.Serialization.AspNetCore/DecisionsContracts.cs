@@ -100,6 +100,10 @@ internal static class DecisionsContracts
         _ => new ReproducedModelEntry(model.Kind.ToString(), Element(model.Value, json), model.Key),
     };
 
-    private static JsonElement? Element(object? value, JsonSerializerOptions json) =>
-        value is null ? null : value is JsonElement element ? element : JsonSerializer.SerializeToElement(value, json);
+    private static JsonElement? Element(object? value, JsonSerializerOptions json) => value switch
+    {
+        null => null,
+        JsonElement element => element,
+        _ => JsonSerializer.SerializeToElement(value, json),
+    };
 }

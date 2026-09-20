@@ -28,7 +28,7 @@ public sealed class RuleSnapshot
     /// <c>get_rule</c> serialises it: <c>name</c>, <c>version</c>, <c>modelType</c>, <c>document</c>
     /// (an object, or the document as a string) and an optional <c>description</c>.
     /// </summary>
-    /// <exception cref="ArgumentException">A row lacks a name or a document.</exception>
+    /// <exception cref="ArgumentException">A row is not an object with a <c>name</c>.</exception>
     public static RuleSnapshot FromJson(string rule, IEnumerable<string> propositions)
     {
         if (rule is null) throw new ArgumentNullException(nameof(rule));
@@ -84,16 +84,31 @@ public sealed class RuleSnapshot
     {
         using var parsed = JsonDocument.Parse(json);
         var root = parsed.RootElement;
-        if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty("name", out var name) || name.ValueKind != JsonValueKind.String)
+        if (root.ValueKind != JsonValueKind.Object || Text(root, "name") is not { } name)
             throw new ArgumentException("A proposition row must be an object with a 'name'.", nameof(json));
 
-        var version = root.TryGetProperty("version", out var v) && v.ValueKind == JsonValueKind.Number ? v.GetInt32() : 0;
-        var modelType = root.TryGetProperty("modelType", out var m) && m.ValueKind == JsonValueKind.String ? m.GetString() : null;
-        var description = root.TryGetProperty("description", out var d) && d.ValueKind == JsonValueKind.String ? d.GetString() : null;
-        string? document = null;
-        if (root.TryGetProperty("document", out var doc))
-            document = doc.ValueKind == JsonValueKind.String ? doc.GetString() : doc.ValueKind == JsonValueKind.Null ? null : doc.GetRawText();
+        var version = root.TryGetProperty("version", out var number) && number.ValueKind == JsonValueKind.Number ? number.GetInt32() : 0;
+        return new PinnedDocument(name, version, Text(root, "modelType"), Document(root), Text(root, "description"));
+    }
 
-        return new PinnedDocument(name.GetString()!, version, modelType, document, description);
+    /// <summary>A row's string property, or null when it is absent or is not a string.</summary>
+    private static string? Text(JsonElement row, string property) =>
+        row.TryGetProperty(property, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
+
+    /// <summary>A row's document, which the serialisers write as an object and a hand-written row may write as text.</summary>
+    private static string? Document(JsonElement row)
+    {
+        if (!row.TryGetProperty("document", out var document))
+            return null;
+
+        switch (document.ValueKind)
+        {
+            case JsonValueKind.String:
+                return document.GetString();
+            case JsonValueKind.Null:
+                return null;
+            default:
+                return document.GetRawText();
+        }
     }
 }

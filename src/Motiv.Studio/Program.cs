@@ -242,6 +242,9 @@ builder.Services.AddMotivRules(registry, options)
     // Seam: the log read back. The SQL sink keeps its records, so it is also the source a
     // reproduction reads a decision from.
     .AddDecisionSource(provider => provider.GetRequiredService<SqlDecisionSink>())
+    // Seam: the agent's door. The MCP server a coding agent reaches the decision log, the
+    // reproducer, the printer and the scenarios through — the same services, the same grants.
+    .AddMcp()
     .AddPropositions(provider => new EfPropositionStore(
         provider.GetRequiredService<IDbContextFactory<MotivStoreDbContext>>()))
     // Seam: scenarios. Each rule's sample models live in the same database as the rules, so a
@@ -332,6 +335,7 @@ app.UseStaticFiles(staticFiles);
 // Seam: the endpoints. Mounts GET /catalog, POST /validate, POST /evaluate — plus the rule
 // endpoints under /api/rules/rules — backed by the registry, options, and RuleSet from DI.
 app.MapMotivRules("/api/rules");
+app.MapMotivMcp("/mcp");
 
 // Seam: readiness. AddMotivRules registers a "ready"-tagged check that asks each store for its
 // generation — the cheapest question that still proves the connection works. Filtered to that tag on
