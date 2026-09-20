@@ -23,6 +23,13 @@ public class DecisionModelResolverTests
     }
 
     [Fact]
+    public void Should_refuse_a_null_resolver()
+    {
+        Should.Throw<ArgumentNullException>(() => new DecisionModelResolvers().Reference<Customer>(null!))
+            .ParamName!.ShouldBe("resolver");
+    }
+
+    [Fact]
     public async Task Should_answer_null_when_nothing_is_registered_or_the_subject_is_gone()
     {
         var empty = new DecisionModelResolvers();

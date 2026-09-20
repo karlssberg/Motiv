@@ -60,4 +60,24 @@ public abstract class DecisionSourceConformance : IAsyncLifetime
 
         rows.ShouldHaveSingleItem().TimestampUtc.ShouldBe(t.AddSeconds(-1), TimeSpan.FromMilliseconds(1));
     }
+
+    [Fact]
+    public async Task Should_query_by_correlation_verdict_and_window()
+    {
+        var t = DateTimeOffset.UtcNow;
+        var checkout = Record("a", satisfied: true, correlation: "checkout-1", at: t.AddSeconds(-2));
+        await Sink.WriteAsync(
+            [
+                checkout,
+                Record("a", satisfied: false, correlation: "checkout-1", at: t.AddSeconds(-1)),
+                Record("a", satisfied: true, correlation: "checkout-2", at: t),
+                Record("a", satisfied: true, correlation: "checkout-1", at: t.AddSeconds(-10)),
+            ],
+            default);
+
+        var rows = await Source.QueryAsync(
+            new DecisionQuery { CorrelationId = "checkout-1", Satisfied = true, FromUtc = t.AddSeconds(-5), ToUtc = t.AddSeconds(-1.5) }, default);
+
+        rows.ShouldHaveSingleItem().Id.ShouldBe(checkout.Id);
+    }
 }

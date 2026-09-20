@@ -41,6 +41,15 @@ public class DecisionSourceDiTests
     }
 
     [Fact]
+    public void Should_refuse_a_null_source_and_a_null_factory()
+    {
+        var rules = new ServiceCollection().AddMotivRules(new SpecRegistry(), new MotivRulesOptions());
+
+        Should.Throw<ArgumentNullException>(() => rules.AddDecisionSource((IDecisionSource)null!)).ParamName!.ShouldBe("source");
+        Should.Throw<ArgumentNullException>(() => rules.AddDecisionSource((Func<IServiceProvider, IDecisionSource>)null!)).ParamName!.ShouldBe("sourceFactory");
+    }
+
+    [Fact]
     public async Task Should_name_the_missing_store_when_the_reproducer_cannot_be_built()
     {
         var sink = new InMemoryDecisionSink();

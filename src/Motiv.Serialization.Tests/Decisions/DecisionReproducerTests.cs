@@ -390,6 +390,156 @@ public class DecisionReproducerTests
     }
 
     [Fact]
+    public async Task Should_report_a_rule_the_host_no_longer_registers_and_produce_no_model()
+    {
+        await using var host = await AHostAsync();
+        var decision = await host.DecideAsync(new Customer("cust-42", true, 30));
+        var forged = decision with { Id = Guid.NewGuid(), RuleName = "retired-rule" };
+        await host.Sink.WriteAsync([forged], default);
+
+        var reproduction = await host.Reproducer().ReproduceAsync(forged.Id, default);
+
+        reproduction.Rule.ShouldBeNull();
+        reproduction.Model.Kind.ShouldBe(ReproducedModelKind.Absent);
+        reproduction.Replayed.ShouldBeNull();
+        reproduction.Fidelity.Notes.ShouldContain(n => n.Reason == FidelityReason.RuleVersionMissing && n.Detail.Contains("no rule 'retired-rule'"));
+    }
+
+    [Fact]
+    public async Task Should_report_a_rule_document_that_does_not_bind_at_replay()
+    {
+        // Arrange — a stored version whose document references a spec no source knows
+        await using var host = await AHostAsync();
+        var decision = await host.DecideAsync(new Customer("cust-42", true, 30));
+        (await host.RuleStore.AppendAsync(
+            [new StoredRuleVersion("can-checkout", 9, """{ "audited": true, "rule": { "spec": "customer.vanished" } }""", "alice", DateTimeOffset.MinValue, null, null, "test")],
+            default)).IsConflict.ShouldBeFalse();
+        var forged = decision with { Id = Guid.NewGuid(), RuleVersion = 9, ReferencedPropositionVersions = [] };
+        await host.Sink.WriteAsync([forged], default);
+
+        var reproduction = await host.Reproducer().ReproduceAsync(forged.Id, default);
+
+        reproduction.Rule!.Version.ShouldBe(9);
+        reproduction.Replayed.ShouldBeNull();
+        reproduction.Fidelity.Notes.ShouldContain(n => n.Reason == FidelityReason.PropositionBindFailed && n.Detail.Contains("v9 did not bind"));
+    }
+
+    [Fact]
+    public async Task Should_report_a_pinned_document_that_does_not_parse()
+    {
+        await using var host = await AHostAsync();
+        var decision = await host.DecideAsync(new Customer("cust-42", true, 30));
+        (await host.PropositionStore.WriteAsync(
+            new PropositionBatch([new StoredProposition("customer.broken", "customer", "{ not json", 1, null)], []), default))
+            .IsConflict.ShouldBeFalse();
+        var forged = decision with { Id = Guid.NewGuid(), ReferencedPropositionVersions = [new PropositionVersion("customer.broken", 1)] };
+        await host.Sink.WriteAsync([forged], default);
+
+        var reproduction = await host.Reproducer().ReproduceAsync(forged.Id, default);
+
+        reproduction.Fidelity.Notes.ShouldContain(n => n.Reason == FidelityReason.PropositionBindFailed && n.Detail.Contains("'customer.broken' v1 does not parse"));
+        reproduction.Replayed.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Should_report_a_pin_whose_name_has_no_head_to_stand_in()
+    {
+        await using var host = await AHostAsync();
+        var decision = await host.DecideAsync(new Customer("cust-42", true, 30));
+        var forged = decision with { Id = Guid.NewGuid(), ReferencedPropositionVersions = [new PropositionVersion("customer.never-existed", 3)] };
+        await host.Sink.WriteAsync([forged], default);
+
+        var reproduction = await host.Reproducer().ReproduceAsync(forged.Id, default);
+
+        reproduction.Propositions.ShouldBeEmpty();
+        reproduction.Fidelity.Notes.ShouldContain(n => n.Reason == FidelityReason.PropositionVersionMissing && n.Detail.Contains("no live head to stand in"));
+    }
+
+    [Fact]
+    public async Task Should_report_nothing_captured_when_the_record_has_no_input()
+    {
+        await using var host = await AHostAsync();
+        var decision = await host.DecideAsync(new Customer("cust-42", true, 30));
+        var forged = decision with { Id = Guid.NewGuid(), Input = null };
+        await host.Sink.WriteAsync([forged], default);
+
+        var reproduction = await host.Reproducer().ReproduceAsync(forged.Id, default);
+
+        reproduction.Model.Kind.ShouldBe(ReproducedModelKind.Absent);
+        reproduction.Replayed.ShouldBeNull();
+        reproduction.Fidelity.Notes.ShouldContain(n => n.Reason == FidelityReason.ModelUnresolved && n.Detail == "nothing was captured for this decision");
+    }
+
+    [Fact]
+    public async Task Should_report_a_captured_model_that_was_null()
+    {
+        await using var host = await AHostAsync();
+        var decision = await host.DecideAsync(new Customer("cust-42", true, 30));
+        var forged = decision with { Id = Guid.NewGuid(), Input = DecisionInput.Whole(null) };
+        await host.Sink.WriteAsync([forged], default);
+
+        var reproduction = await host.Reproducer().ReproduceAsync(forged.Id, default);
+
+        reproduction.Model.Kind.ShouldBe(ReproducedModelKind.Whole);
+        reproduction.Model.Value.ShouldBeNull();
+        reproduction.Replayed.ShouldBeNull();
+        reproduction.Fidelity.Notes.ShouldContain(n => n.Reason == FidelityReason.ModelUnresolved && n.Detail == "the captured model was null");
+    }
+
+    [Fact]
+    public async Task Should_report_a_capture_that_does_not_read_as_the_model()
+    {
+        // Arrange — a durable sink hands back a JsonElement; this one is a string, not a customer
+        await using var host = await AHostAsync();
+        var decision = await host.DecideAsync(new Customer("cust-42", true, 30));
+        var forged = decision with { Id = Guid.NewGuid(), Input = DecisionInput.Whole(JsonDocument.Parse("\"not a customer\"").RootElement) };
+        await host.Sink.WriteAsync([forged], default);
+
+        var reproduction = await host.Reproducer().ReproduceAsync(forged.Id, default);
+
+        reproduction.Model.Value.ShouldBeNull();
+        reproduction.Replayed.ShouldBeNull();
+        reproduction.Fidelity.Notes.ShouldContain(n => n.Reason == FidelityReason.ModelUnresolved && n.Detail.Contains("could not be read as Customer"));
+    }
+
+    [Fact]
+    public async Task Should_replay_without_a_proposition_set_when_nothing_is_pinned()
+    {
+        // Arrange — the policy rule's document references only compiled specs, so the replay binds with the rule set's own options
+        await using var host = await AHostAsync();
+        var decision = await host.DecideAsync(new Customer("cust-42", true, 30), "can-checkout-policy");
+        var withoutPropositions = new DecisionReproducer(
+            host.Sink, host.RuleStore, host.PropositionStore, host.Rules, propositions: null, host.Options.Resolve, Web);
+
+        var reproduction = await withoutPropositions.ReproduceAsync(decision.Id, default);
+
+        reproduction.Fidelity.IsExact.ShouldBeTrue(string.Join("; ", reproduction.Fidelity.Notes));
+        reproduction.Replayed!.Satisfied.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Should_replay_an_async_rule_reverted_to_its_compiled_default()
+    {
+        await using var host = await AHostAsync();
+        var decision = await host.DecideAsync(new Customer("cust-42", true, 30), "can-checkout-async");
+        (await host.Rules.RevertAsync("can-checkout-async", 2, new RuleChangeProvenance("alice"))).Outcome.ShouldBe(RuleUpdateOutcome.Updated);
+        var forged = decision with { Id = Guid.NewGuid(), RuleVersion = 3, ReferencedPropositionVersions = [] };
+        await host.Sink.WriteAsync([forged], default);
+
+        var reproduction = await host.Reproducer().ReproduceAsync(forged.Id, default);
+
+        reproduction.Rule!.DocumentJson.ShouldBeNull();
+        reproduction.Replayed!.Satisfied.ShouldBeTrue();
+        reproduction.Fidelity.IsExact.ShouldBeTrue(string.Join("; ", reproduction.Fidelity.Notes));
+    }
+
+    [Fact]
+    public void Should_print_a_fidelity_note_as_its_reason_and_detail()
+    {
+        new FidelityNote(FidelityReason.BuildMismatch, "decided on build 'a'").ToString().ShouldBe("BuildMismatch: decided on build 'a'");
+    }
+
+    [Fact]
     public async Task Should_throw_for_an_unknown_decision()
     {
         await using var host = await AHostAsync();
