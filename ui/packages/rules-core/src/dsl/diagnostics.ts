@@ -47,7 +47,7 @@ function fromParserError(error: DslError): RuleDiagnostic {
 }
 
 /** Leaf text starts one past the opening backtick; a closed leaf ends one before the closing one. */
-function leafOffset(span: NodeSpan): number {
+export function leafOffset(span: NodeSpan): number {
   return span.from + 1;
 }
 

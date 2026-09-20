@@ -80,6 +80,7 @@ const APPROVED_API = [
   'joinSteps',
   'kindName',
   'kindOf',
+  'leafOffset',
   'listPaths',
   'literalCountOf',
   'localReferences',

@@ -90,11 +90,7 @@ internal sealed class LeafChecker
     private static string Describe(Type type)
     {
         var underlying = Nullable.GetUnderlyingType(type) ?? type;
-        if (underlying == typeof(int)) return "int";
-        if (underlying == typeof(long)) return "long";
-        if (underlying == typeof(decimal)) return "decimal";
-        if (underlying == typeof(double)) return "double";
-        if (underlying == typeof(float)) return "float";
+        if (NumericLattice.KindOf(underlying) is { } kind) return NumericLattice.Name(kind);
         if (underlying == typeof(bool)) return "a condition";
         if (underlying == typeof(string)) return "string";
         if (LeafScope.ElementType(underlying) is { } element) return $"a collection of {Describe(element)}";

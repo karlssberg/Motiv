@@ -173,9 +173,17 @@ export function DslEditor(props: {
     sync, catalog, diagnostics: [], placedFacts: [], store, leafScope: () => null,
   });
 
+  // Built once per render and shared by the diagnostics below and the completion source: each
+  // resolver caches one healed parse of the buffer, so sharing it halves that work mid-edit.
+  const leafScope = useMemo(
+    () => makeLeafScope(sync, store, modelType, catalog),
+    // Keyed on the two parts of `sync` the resolver reads, so a render that changes neither reuses it.
+    [sync.text, sync.parseResult, store, modelType, catalog],
+  );
+
   const diagnostics = useMemo(
-    () => diagnosticsFor(sync.text, sync.parseResult, editorState.errors, makeLeafScope(sync, store, modelType, catalog)),
-    [sync.text, sync.parseResult, editorState.errors, store, catalog, modelType],
+    () => diagnosticsFor(sync.text, sync.parseResult, editorState.errors, leafScope),
+    [sync.text, sync.parseResult, editorState.errors, leafScope],
   );
 
   const placedFacts = useMemo(
@@ -188,7 +196,7 @@ export function DslEditor(props: {
   // *previous* render's values until this assignment runs, so resolving through it here would be
   // one render behind the buffer this resolver is meant to answer for. The once-built completion
   // extension reads it back out through `() => live.current.leafScope`, which by then is current.
-  live.current = { sync, catalog, diagnostics, placedFacts, store, leafScope: makeLeafScope(sync, store, modelType, catalog) };
+  live.current = { sync, catalog, diagnostics, placedFacts, store, leafScope };
 
   const toolbar = useRef<HTMLDivElement | null>(null);
   const host = useRef<HTMLDivElement | null>(null);

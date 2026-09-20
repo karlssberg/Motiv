@@ -106,7 +106,7 @@ export { tokenSpans, type TokenSpan } from './dsl/tokenRuns.js';
 export {
   completeDsl, healUnterminated, type CompletionItem, type CompletionItemKind, type DslCompletion,
 } from './dsl/completion.js';
-export { diagnosticsFor, type RuleDiagnostic } from './dsl/diagnostics.js';
+export { diagnosticsFor, leafOffset, type RuleDiagnostic } from './dsl/diagnostics.js';
 export { DslSyncController, type DslSyncState, type SyncStatus } from './dslSync.js';
 
 // The expression-leaf language.

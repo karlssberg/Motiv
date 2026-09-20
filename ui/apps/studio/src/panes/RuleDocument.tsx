@@ -64,9 +64,11 @@ export function RuleDocument(props: {
   // Live validation for this tab's store. When the loaded rule is async, validation allows async
   // spec references too, so the document may reference them without red herrings.
   const isAsync = loadedEntry?.isAsync ?? false;
+  // The listing's model type for this rule; Studio's default stands in until the listing has it.
+  const modelType = loadedEntry?.modelType ?? MODEL_TYPE;
   useEffect(
-    () => createValidationController(tab.store, client, { modelType: MODEL_TYPE, debounceMs: 300, isAsync }),
-    [tab.store, client, isAsync],
+    () => createValidationController(tab.store, client, { modelType, debounceMs: 300, isAsync }),
+    [tab.store, client, modelType, isAsync],
   );
 
   useNoteSaves(workspace, 'rule', loaded);
@@ -103,14 +105,14 @@ export function RuleDocument(props: {
           client={client}
           documentName={tab.name}
           ruleName={tab.name}
-          modelType={MODEL_TYPE}
+          modelType={modelType}
           onExtractToCatalog={props.onExtractToCatalog}
           onPromote={props.onPromote}
           title={
             <DocumentTitle
               name={tab.name}
               fullName={tab.name}
-              modelType={MODEL_TYPE}
+              modelType={modelType}
               version={loaded?.version}
               note={loaded?.isCodeDefault ? 'code-defined default (builder starts fresh)' : undefined}
             />
@@ -126,7 +128,7 @@ export function RuleDocument(props: {
         />
         {/* One rail: the rule's scenarios, each run against the live rule and this tab's draft. */}
         <div className="rail">
-          <ScenarioPane client={client} ruleName={tab.name} modelType={MODEL_TYPE} version={loaded?.version} />
+          <ScenarioPane client={client} ruleName={tab.name} modelType={modelType} version={loaded?.version} />
         </div>
       </div>
 

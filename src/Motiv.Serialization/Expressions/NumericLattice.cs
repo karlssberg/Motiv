@@ -42,6 +42,27 @@ internal static class NumericLattice
         _ => typeof(decimal),
     };
 
+    /// <summary>The name authors see for a kind — the same five the client's lattice shows.</summary>
+    public static string Name(NumericKind kind) => kind switch
+    {
+        NumericKind.Int32 => "int",
+        NumericKind.Int64 => "long",
+        NumericKind.Single => "float",
+        NumericKind.Double => "double",
+        _ => "decimal",
+    };
+
+    /// <summary>The JSON-schema <c>format</c> stamp the catalog publishes for a kind, which is how
+    /// the client tells <c>int</c> from <c>long</c> when both are JSON integers.</summary>
+    public static string Format(NumericKind kind) => kind switch
+    {
+        NumericKind.Int32 => "int32",
+        NumericKind.Int64 => "int64",
+        NumericKind.Single => "single",
+        NumericKind.Double => "double",
+        _ => "decimal",
+    };
+
     public static bool IsIntegral(NumericKind kind) => kind is NumericKind.Int32 or NumericKind.Int64;
 
     public static bool CanWiden(NumericKind from, NumericKind to) =>

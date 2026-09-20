@@ -1,6 +1,7 @@
 import type { Diagnostic } from '@codemirror/lint';
 import {
   diagnosticsFor as ruleDiagnosticsFor,
+  leafOffset,
   type LeafScope,
   type NodeSpan,
   type ParseResult,
@@ -58,6 +59,7 @@ export function placeFacts(facts: readonly RuleLeafFact[], spans: readonly NodeS
     const span = spans.find((s) => s.path === fact.path);
     if (!span) return [];
     const { from: anchor, ...rest } = fact;
-    return [{ ...rest, anchor, from: span.from + 1 + fact.range.start, to: span.from + 1 + fact.range.end }];
+    const offset = leafOffset(span);
+    return [{ ...rest, anchor, from: offset + fact.range.start, to: offset + fact.range.end }];
   });
 }

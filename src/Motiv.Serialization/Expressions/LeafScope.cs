@@ -27,9 +27,8 @@ internal sealed class LeafScope
 
     public LeafScope WithVariable(string name, Type type)
     {
-        var variables = new Dictionary<string, Type>(StringComparer.Ordinal);
-        foreach (var kvp in Variables)
-            variables[kvp.Key] = kvp.Value;
+        // No IEnumerable<KeyValuePair<,>> constructor on netstandard2.0, so copy through LINQ.
+        var variables = Variables.ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.Ordinal);
         variables[name] = type;
         return new LeafScope(ModelType, Parameters, variables);
     }

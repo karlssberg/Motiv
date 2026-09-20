@@ -131,11 +131,8 @@ internal sealed class LeafCompiler
 
     private LambdaExpression Predicate(Lambda lambda, Type element)
     {
-        var parameter = Expression.Parameter(element, lambda.Parameter);
-        var previous = BindVariable(lambda.Parameter, parameter);
-        var body = AsBool(Visit(lambda.Body));
-        RestoreVariable(lambda.Parameter, previous);
-        return Expression.Lambda(body, parameter);
+        var (parameter, body) = VisitLambda(lambda, element);
+        return Expression.Lambda(AsBool(body), parameter);
     }
 
     private Expression Aggregate(MethodCall c, Expression target, Type element)
@@ -143,10 +140,7 @@ internal sealed class LeafCompiler
         var lambda = (Lambda)c.Arguments[0];
         var resultType = Nullable.GetUnderlyingType(TypeOf(c)) ?? TypeOf(c);
         var kind = NumericLattice.KindOf(resultType)!.Value;
-        var parameter = Expression.Parameter(element, lambda.Parameter);
-        var previous = BindVariable(lambda.Parameter, parameter);
-        var body = Visit(lambda.Body);
-        RestoreVariable(lambda.Parameter, previous);
+        var (parameter, body) = VisitLambda(lambda, element);
         body = NumericLattice.Widen(body, kind);
         var selector = Expression.Lambda(body, parameter);
         var name = c.Method switch { "sum" => nameof(Enumerable.Sum), "min" => nameof(Enumerable.Min), _ => nameof(Enumerable.Max) };
@@ -159,20 +153,23 @@ internal sealed class LeafCompiler
         return Expression.Call(method, target, selector);
     }
 
-    /// <summary>Binds a lambda variable, returning whatever it previously shadowed (if any) so a
-    /// nested lambda that reuses the same parameter name does not permanently clobber the outer
-    /// binding once its own body has been visited.</summary>
-    private ParameterExpression? BindVariable(string name, ParameterExpression parameter)
+    /// <summary>Visits a lambda's body with its parameter bound over <paramref name="element" />.
+    /// The binding is restored afterwards to whatever it shadowed (if anything), so a nested lambda
+    /// that reuses the same parameter name does not permanently clobber the outer binding.</summary>
+    private (ParameterExpression Parameter, Expression Body) VisitLambda(Lambda lambda, Type element)
     {
-        _variables.TryGetValue(name, out var previous);
-        _variables[name] = parameter;
-        return previous;
-    }
-
-    private void RestoreVariable(string name, ParameterExpression? previous)
-    {
-        if (previous is not null) _variables[name] = previous;
-        else _variables.Remove(name);
+        var parameter = Expression.Parameter(element, lambda.Parameter);
+        _variables.TryGetValue(lambda.Parameter, out var previous);
+        _variables[lambda.Parameter] = parameter;
+        try
+        {
+            return (parameter, Visit(lambda.Body));
+        }
+        finally
+        {
+            if (previous is not null) _variables[lambda.Parameter] = previous;
+            else _variables.Remove(lambda.Parameter);
+        }
     }
 
     private Expression Binary(Binary b)

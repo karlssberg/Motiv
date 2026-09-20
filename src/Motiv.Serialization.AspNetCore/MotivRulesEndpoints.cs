@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Motiv.Serialization.Expressions;
 
 namespace Motiv.Serialization.AspNetCore;
 
@@ -506,11 +507,8 @@ public static class MotivRulesEndpoints
     {
         TransformSchemaNode = static (context, node) =>
         {
-            var type = Nullable.GetUnderlyingType(context.TypeInfo.Type) ?? context.TypeInfo.Type;
-            var format = type == typeof(int) ? "int32" : type == typeof(long) ? "int64" : type == typeof(float) ? "single"
-                : type == typeof(double) ? "double" : type == typeof(decimal) ? "decimal" : null;
-            if (format is not null && node is JsonObject schema && !schema.ContainsKey("format"))
-                schema["format"] = format;
+            if (NumericLattice.KindOf(context.TypeInfo.Type) is { } kind && node is JsonObject schema && !schema.ContainsKey("format"))
+                schema["format"] = NumericLattice.Format(kind);
             return node;
         },
     };
