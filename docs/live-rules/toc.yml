@@ -16,3 +16,5 @@ items:
     href: AspNetCore.md
   - name: DeserializeAsyncSpec()
     href: DeserializeAsyncSpec.md
+  - name: C# Printer
+    href: csharp-printer.md
