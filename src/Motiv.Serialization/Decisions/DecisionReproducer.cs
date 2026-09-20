@@ -51,7 +51,42 @@ public sealed class DecisionReproducer(
             ? await ReplayAsync(rule, ruleVersion, source, model.Value, decision, notes, cancellationToken).ConfigureAwait(false)
             : null;
 
-        return new Reproduction(decision, ruleVersion, pinned, model, replayed, new ReproductionFidelity(notes));
+        var (csharp, csharpWarnings) = Print(rule, ruleVersion);
+        return new Reproduction(decision, ruleVersion, pinned, model, replayed, new ReproductionFidelity(notes), csharp, csharpWarnings);
+    }
+
+    /// <summary>
+    /// The pinned document as C#, with every compiled reference through the registry and every
+    /// registered collection of the model named by its element type. A revert has no document and
+    /// prints nothing; a document that will not print — it parsed for binding, so this is defensive —
+    /// prints nothing and says why.
+    /// </summary>
+    private (string? Source, IReadOnlyList<string> Warnings) Print(RuleBase? rule, StoredRuleVersion? ruleVersion)
+    {
+        if (rule is null || ruleVersion?.DocumentJson is null)
+            return (null, []);
+
+        var registry = rules.Scope.Registry;
+        var options = new CSharpPrintOptions
+        {
+            ModelType = rule.ModelType,
+            AsyncSpecs = new HashSet<string>(registry.Entries.Where(entry => entry.IsAsync).Select(entry => entry.Name), StringComparer.Ordinal),
+            Collections = registry.Collections
+                .Where(collection => collection.ParentType == rule.ModelType)
+                .ToDictionary(collection => collection.Path, collection => new CSharpCollectionHandle(collection.ElementType.Name, Selector: null), StringComparer.Ordinal),
+            ClassName = CSharpIdentifiers.PascalCase(rule.Name) + "Rule",
+            SerializerOptions = propositions?.Options ?? rules.Options,
+        };
+
+        try
+        {
+            var printed = CSharpPrinter.Print(ruleVersion.DocumentJson, options);
+            return (printed.Source, printed.Warnings);
+        }
+        catch (RuleSerializationException exception)
+        {
+            return (null, [$"the pinned document did not print: {Describe(exception.Errors)}"]);
+        }
     }
 
     private async Task<StoredRuleVersion?> PinnedRuleVersionAsync(

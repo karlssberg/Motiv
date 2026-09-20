@@ -390,6 +390,35 @@ public class DecisionReproducerTests
     }
 
     [Fact]
+    public async Task Should_print_the_pinned_document_as_c_sharp()
+    {
+        await using var host = await AHostAsync();
+        var decision = await host.DecideAsync(new Customer("cust-42", true, 30));
+
+        var reproduction = await host.Reproducer().ReproduceAsync(decision.Id, default);
+
+        reproduction.CSharp.ShouldNotBeNull();
+        reproduction.CSharp.ShouldContain("public static class CanCheckoutRule");
+        reproduction.CSharp.ShouldContain("""return registry.Get<Customer>("customer.eligible");""");
+        reproduction.CSharpWarnings.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Should_print_nothing_for_a_reverted_version()
+    {
+        await using var host = await AHostAsync();
+        var decision = await host.DecideAsync(new Customer("cust-42", true, 30));
+        (await host.Rules.RevertAsync("can-checkout", 2, new RuleChangeProvenance("alice"))).Outcome.ShouldBe(RuleUpdateOutcome.Updated);
+        var forged = decision with { Id = Guid.NewGuid(), RuleVersion = 3, ReferencedPropositionVersions = [] };
+        await host.Sink.WriteAsync([forged], default);
+
+        var reproduction = await host.Reproducer().ReproduceAsync(forged.Id, default);
+
+        reproduction.CSharp.ShouldBeNull();
+        reproduction.CSharpWarnings.ShouldBeEmpty();
+    }
+
+    [Fact]
     public async Task Should_report_a_rule_the_host_no_longer_registers_and_produce_no_model()
     {
         await using var host = await AHostAsync();
