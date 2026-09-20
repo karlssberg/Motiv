@@ -33,7 +33,7 @@ public class ProviderSchemaTests
 
         // Assert
         script.ShouldContain("MotivRuleVersion", customMessage: provider);
-        script.ShouldContain("MotivProposition", customMessage: provider);
+        script.ShouldContain("MotivPropositionVersion", customMessage: provider);
         script.ShouldContain("MotivStoreGeneration", customMessage: provider);
     }
 
@@ -54,5 +54,24 @@ public class ProviderSchemaTests
         // Assert — the superseded rows are excluded in SQL, not client-side
         sql.ShouldContain("NOT EXISTS", customMessage: provider);
         sql.ShouldContain("MotivRuleVersion", customMessage: provider);
+    }
+
+    [Theory]
+    [MemberData(nameof(Providers))]
+    public void Should_translate_the_proposition_head_projection_for_every_provider(
+        string provider, Action<DbContextOptionsBuilder> configure)
+    {
+        // Arrange — heads are computed by the database, never by materialising the log
+        var builder = new DbContextOptionsBuilder<MotivStoreDbContext>();
+        configure(builder);
+        using var context = new MotivStoreDbContext(builder.Options);
+
+        // Act
+        var sql = EfPropositionStore.HeadQuery(context).ToQueryString();
+
+        // Assert — superseded rows and tombstones are excluded in SQL
+        sql.ShouldContain("NOT EXISTS", customMessage: provider);
+        sql.ShouldContain("MotivPropositionVersion", customMessage: provider);
+        sql.ShouldContain("IS NOT NULL", customMessage: provider);
     }
 }

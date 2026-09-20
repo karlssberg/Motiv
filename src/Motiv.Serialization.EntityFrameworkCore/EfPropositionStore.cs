@@ -4,53 +4,25 @@ using Motiv.Serialization;
 namespace Motiv.Serialization.EntityFrameworkCore;
 
 /// <summary>
-/// The proposition store over a relational database — the twin of <see cref="EfRuleStore"/>, and
-/// never written in the same transaction as it.
+/// The proposition store over an append-only version log, the twin of <see cref="EfRuleStore"/>.
+/// A save inserts a row; a deletion inserts a tombstone; the <c>(Name, Version)</c> primary key is
+/// the compare-and-set, so the read-then-catch shape below is sound without a concurrency token.
 /// </summary>
-/// <remarks>
-/// <para>
-/// A proposition row is replaced in place rather than appended, so the <c>(Name, Version)</c> primary
-/// key <see cref="EfRuleStore"/> uses as its compare-and-set has no equivalent here. The equivalent
-/// is <c>Version</c> mapped as EF's own concurrency token (see
-/// <see cref="MotivStoreDbContext.OnModelCreating"/>): every generated UPDATE and DELETE carries
-/// <c>AND Version = @original</c>, so a replica that committed first leaves this one matching no rows.
-/// A create is guarded by the <c>Name</c> primary key, exactly as a rule append is.
-/// </para>
-/// <para>
-/// Conflicts are detected without inspecting any provider error code, as
-/// <see cref="EfRuleStore.AppendAsync"/> does. The common path reads the rows the batch names inside
-/// the transaction — which is also the only way to obtain the <c>currentVersion</c> a conflict must
-/// carry, since an exception cannot supply it. The race path, where another replica commits between
-/// that read and this write, catches <see cref="DbUpdateException"/> — the base type, so the
-/// concurrency subclass and a primary-key violation arrive at one handler — and re-reads to decide
-/// whether it was a conflict or something else entirely.
-/// </para>
-/// <para>
-/// The append-only version log the rule side has is still a deliberate asymmetry: it buys history and
-/// rollback, which propositions do not offer, and is a separate question from concurrency. What is no
-/// longer asymmetric is the <em>enforcement</em> — see <see cref="IPropositionStore.WriteAsync"/>.
-/// </para>
-/// </remarks>
 public sealed class EfPropositionStore(IDbContextFactory<MotivStoreDbContext> contextFactory)
     : IPropositionStore
 {
-    /// <inheritdoc />
     public IReadOnlyList<StoredProposition> Load()
     {
         using var context = contextFactory.CreateDbContext();
-        var rows = context.Propositions.AsNoTracking().ToList();
-        return [.. rows.Select(row => row.ToRecord())];
+        return HeadQuery(context).ToList();
     }
 
-    /// <inheritdoc />
     public async Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken cancellationToken)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-        var rows = await context.Propositions.AsNoTracking().ToListAsync(cancellationToken);
-        return [.. rows.Select(row => row.ToRecord())];
+        return await HeadQuery(context).ToListAsync(cancellationToken);
     }
 
-    /// <inheritdoc />
     public async Task<long> GetGenerationAsync(CancellationToken cancellationToken)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
@@ -58,7 +30,6 @@ public sealed class EfPropositionStore(IDbContextFactory<MotivStoreDbContext> co
             context, GenerationTracking.PropositionsScope, cancellationToken);
     }
 
-    /// <inheritdoc />
     public async Task<PropositionWriteResult> WriteAsync(
         PropositionBatch batch, CancellationToken cancellationToken)
     {
@@ -69,34 +40,21 @@ public sealed class EfPropositionStore(IDbContextFactory<MotivStoreDbContext> co
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
 
-        // Tracked, not AsNoTracking: these entities carry the original Version the concurrency token
-        // is compared against, and they are the ones mutated or removed below.
-        var rows = await RowsNamedByAsync(context, batch, cancellationToken);
-
-        // Rows already claimed by this batch join the claimed set as FindConflict walks, so a batch
-        // that names one proposition twice is refused as the conflict it is. Without that, a
-        // duplicate save would reach the change tracker and surface as an InvalidOperationException
-        // from an Add outside the try — a third answer to a question the other stores answer two
-        // other ways.
-        if (batch.FindConflict(StoredVersion(rows)) is { } conflict)
+        var positions = await PositionsNamedByAsync(context, batch, cancellationToken);
+        if (batch.FindConflict(PositionIn(positions)) is { } conflict)
             return conflict;
 
-        foreach (var save in batch.Saves)
-        {
-            if (!rows.TryGetValue(save.Name, out var existing))
-            {
-                context.Propositions.Add(save.ToRow());
-                continue;
-            }
+        var now = DateTimeOffset.UtcNow;
 
-            existing.ModelType = save.ModelType;
-            existing.DocumentJson = save.DocumentJson;
-            existing.Version = save.Version;
-            existing.Description = save.Description;
-        }
+        foreach (var save in batch.Saves)
+            context.PropositionVersions.Add(StoredPropositionVersion.Saved(save, batch.Provenance, now).ToRow());
 
         foreach (var deletion in batch.Deletes)
-            context.Propositions.Remove(rows[deletion.Name]);
+        {
+            positions.TryGetValue(deletion.Name, out var retired);
+            context.PropositionVersions.Add(
+                StoredPropositionVersion.Tombstone(deletion, retired?.ModelType, batch.Provenance, now).ToRow());
+        }
 
         await GenerationTracking.BumpAsync(
             context, GenerationTracking.PropositionsScope, cancellationToken);
@@ -109,15 +67,15 @@ public sealed class EfPropositionStore(IDbContextFactory<MotivStoreDbContext> co
         }
         catch (DbUpdateException)
         {
-            // Another replica committed between the read above and this write. Roll back and ask the
-            // store what happened: a version that has moved past ours means we lost the race;
+            // Another replica committed between the read above and this insert. Roll back and ask
+            // the store what happened: a position that has moved past ours means we lost the race;
             // anything else — a full disk, a dropped connection — is not a version conflict and must
             // not be reported as one.
             await transaction.RollbackAsync(cancellationToken);
 
             await using var fresh = await contextFactory.CreateDbContextAsync(cancellationToken);
             var raced = batch.FindConflict(
-                StoredVersion(await RowsNamedByAsync(fresh, batch, cancellationToken)));
+                PositionIn(await PositionsNamedByAsync(fresh, batch, cancellationToken)));
             if (raced is not null)
                 return raced;
 
@@ -125,8 +83,32 @@ public sealed class EfPropositionStore(IDbContextFactory<MotivStoreDbContext> co
         }
     }
 
-    /// <summary>Every stored row the batch names, by name. One round trip decides the whole batch.</summary>
-    private static async Task<Dictionary<string, PropositionRow>> RowsNamedByAsync(
+    public async Task<IReadOnlyList<StoredPropositionVersion>> HistoryAsync(
+        string name, CancellationToken cancellationToken)
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+        var rows = await context.PropositionVersions.AsNoTracking()
+            .Where(row => row.Name == name)
+            .OrderBy(row => row.Version)
+            .ToListAsync(cancellationToken);
+
+        return [.. rows.Select(row => row.ToRecord())];
+    }
+
+    /// <summary>
+    /// The live heads: the highest-versioned row of each name, when that row carries a document.
+    /// Computed by the database — superseded rows and tombstones never leave it.
+    /// </summary>
+    internal static IQueryable<StoredProposition> HeadQuery(MotivStoreDbContext context) =>
+        context.PropositionVersions.AsNoTracking()
+            .Where(row => row.DocumentJson != null
+                && !context.PropositionVersions
+                    .Any(other => other.Name == row.Name && other.Version > row.Version))
+            .Select(row => new StoredProposition(
+                row.Name, row.ModelType!, row.DocumentJson!, row.Version, row.Description));
+
+    /// <summary>The highest row of every name the batch speaks for — enough to place and to tombstone.</summary>
+    private static async Task<Dictionary<string, HighestRow>> PositionsNamedByAsync(
         MotivStoreDbContext context, PropositionBatch batch, CancellationToken cancellationToken)
     {
         var names = batch.Saves.Select(save => save.Name)
@@ -134,18 +116,25 @@ public sealed class EfPropositionStore(IDbContextFactory<MotivStoreDbContext> co
             .Distinct(StringComparer.Ordinal)
             .ToList();
 
-        var rows = await context.Propositions
+        var rows = await context.PropositionVersions.AsNoTracking()
             .Where(row => names.Contains(row.Name))
+            .Select(row => new { row.Name, row.Version, row.ModelType, Live = row.DocumentJson != null })
             .ToListAsync(cancellationToken);
 
-        return rows.ToDictionary(row => row.Name, StringComparer.Ordinal);
+        return rows
+            .GroupBy(row => row.Name, StringComparer.Ordinal)
+            .ToDictionary(
+                group => group.Key,
+                group =>
+                {
+                    var highest = group.OrderByDescending(row => row.Version).First();
+                    return new HighestRow(new PropositionPosition(highest.Version, highest.Live), highest.ModelType);
+                },
+                StringComparer.Ordinal);
     }
 
-    /// <summary>
-    /// The version the store holds for a name among <paramref name="rows"/>, or 0 when it holds none
-    /// — the only half of the conflict predicate that is this schema's business. See
-    /// <see cref="PropositionBatch.FindConflict"/> for the other half.
-    /// </summary>
-    private static Func<string, int> StoredVersion(Dictionary<string, PropositionRow> rows) =>
-        name => rows.TryGetValue(name, out var row) ? row.Version : 0;
+    private static Func<string, PropositionPosition?> PositionIn(Dictionary<string, HighestRow> positions) =>
+        name => positions.TryGetValue(name, out var row) ? row.Position : null;
+
+    private sealed record HighestRow(PropositionPosition Position, string? ModelType);
 }

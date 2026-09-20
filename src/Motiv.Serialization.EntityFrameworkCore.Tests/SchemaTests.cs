@@ -18,8 +18,9 @@ public class SchemaTests
 
         // Assert
         script.ShouldContain("MotivRuleVersion");
-        script.ShouldContain("MotivProposition");
+        script.ShouldContain("MotivPropositionVersion");
         script.ShouldContain("MotivStoreGeneration");
+        script.ShouldNotContain("\"MotivProposition\"");
     }
 
     [Fact]
@@ -31,6 +32,20 @@ public class SchemaTests
 
         // Act
         var key = context.Model.FindEntityType(typeof(RuleVersionRow))!.FindPrimaryKey()!;
+
+        // Assert
+        key.Properties.Select(property => property.Name).ShouldBe(["Name", "Version"]);
+    }
+
+    [Fact]
+    public async Task Should_key_the_proposition_log_on_name_and_version()
+    {
+        // Arrange — the same cross-process compare-and-set the rule log has
+        await using var fixture = await SqliteStoreFixture.CreateAsync();
+        await using var context = fixture.Factory.CreateDbContext();
+
+        // Act
+        var key = context.Model.FindEntityType(typeof(PropositionVersionRow))!.FindPrimaryKey()!;
 
         // Assert
         key.Properties.Select(property => property.Name).ShouldBe(["Name", "Version"]);

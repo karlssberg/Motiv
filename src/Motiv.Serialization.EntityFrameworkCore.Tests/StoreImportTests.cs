@@ -518,6 +518,9 @@ public sealed class ConflictingPropositionStore(IPropositionStore inner) : IProp
     public Task<long> GetGenerationAsync(CancellationToken cancellationToken) =>
         inner.GetGenerationAsync(cancellationToken);
 
+    public Task<IReadOnlyList<StoredPropositionVersion>> HistoryAsync(string name, CancellationToken cancellationToken) =>
+        inner.HistoryAsync(name, cancellationToken);
+
     public Task<PropositionWriteResult> WriteAsync(PropositionBatch batch, CancellationToken cancellationToken) =>
         Task.FromResult(PropositionWriteResult.Conflict(batch.Saves[0].Name, 7));
 }

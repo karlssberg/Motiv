@@ -21,35 +21,32 @@ public class EfPropositionStoreWriteFailureTests
         new(name, "customer", documentJson, version, null);
 
     [Fact]
-    public async Task Should_refuse_an_update_whose_row_was_replaced_underneath_it()
+    public async Task Should_refuse_a_second_row_at_a_version_the_log_already_holds()
     {
-        // Arrange — the mechanism, not the store: `Version` is mapped as a concurrency token in
-        // MotivStoreDbContext, and this is the direct proof that EF honours it against SQLite. A
-        // tracked entity is read with no transaction open (SQLite releases its shared lock at the end
-        // of the statement), a second connection replaces the row and commits, and the first then
-        // saves its own edit against the version it originally read. Without the token that UPDATE
-        // carries no version predicate and silently wins; with it, it matches no rows.
+        // Arrange — the mechanism, not the store: the (Name, Version) primary key is what makes the
+        // version a compare-and-set across processes, and this is the direct proof that EF surfaces a
+        // violation of it against SQLite. Two contexts each add ("a", 2); the second to save matches
+        // an existing key and is refused, which EF reports as a DbUpdateException the store turns
+        // into a conflict.
         await using var fixture = await SqliteStoreFixture.CreateAsync();
         await new EfPropositionStore(fixture.Factory).WriteAsync(PropositionBatch.Save(Row("a", 1)), default);
 
-        await using var stale = fixture.Factory.CreateDbContext();
-        var tracked = await stale.Propositions.SingleAsync(row => row.Name == "a");
+        var contender = StoredPropositionVersion.Saved(Row("a", 2), RuleChangeProvenance.System, DateTimeOffset.UtcNow);
 
-        await using (var fresh = fixture.Factory.CreateDbContext())
+        await using (var first = fixture.Factory.CreateDbContext())
         {
-            var current = await fresh.Propositions.SingleAsync(row => row.Name == "a");
-            current.Version = 2;
-            await fresh.SaveChangesAsync();
+            first.PropositionVersions.Add(contender.ToRow());
+            await first.SaveChangesAsync();
         }
 
-        tracked.Version = 2;
-        tracked.DocumentJson = """{"stale":true}""";
+        await using var second = fixture.Factory.CreateDbContext();
+        second.PropositionVersions.Add((contender with { DocumentJson = """{"stale":true}""" }).ToRow());
 
         // Act
-        var act = async () => await stale.SaveChangesAsync();
+        var act = async () => await second.SaveChangesAsync();
 
-        // Assert — the loser matches no rows, which EF reports as this and nothing else
-        await act.ShouldThrowAsync<DbUpdateConcurrencyException>();
+        // Assert
+        await act.ShouldThrowAsync<DbUpdateException>();
     }
 
     [Fact]

@@ -100,4 +100,26 @@ public class CrossReplicaTests
         (await rules.GetGenerationAsync(default)).ShouldBeGreaterThan(0);
         (await propositions.GetGenerationAsync(default)).ShouldBe(propositionGenerationBefore);
     }
+
+    [Fact]
+    public async Task Should_refuse_the_second_replica_recreating_a_withdrawn_name()
+    {
+        // Arrange — both replicas read the same tombstone and compute next = 3
+        await using var fixture = await SqliteStoreFixture.CreateAsync();
+        var first = new EfPropositionStore(fixture.Factory);
+        var second = new EfPropositionStore(fixture.Factory);
+        var row = new StoredProposition("a", "customer", "{}", 1, null);
+        await first.WriteAsync(PropositionBatch.Save(row), default);
+        await first.WriteAsync(PropositionBatch.Delete("a", 1), default);
+
+        // Act
+        var winner = await first.WriteAsync(PropositionBatch.Save(row with { Version = 3 }), default);
+        var loser = await second.WriteAsync(PropositionBatch.Save(row with { Version = 3 }), default);
+
+        // Assert — the primary key lets exactly one win
+        winner.IsConflict.ShouldBeFalse();
+        loser.IsConflict.ShouldBeTrue();
+        loser.CurrentVersion.ShouldBe(3);
+        (await first.HistoryAsync("a", default)).Select(v => v.Version).ShouldBe([1, 2, 3]);
+    }
 }
