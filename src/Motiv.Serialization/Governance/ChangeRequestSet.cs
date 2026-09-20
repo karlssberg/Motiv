@@ -1152,17 +1152,19 @@ public sealed class ChangeRequestSet
                 ? await rules.StoreGenerationAsync(cancellationToken).ConfigureAwait(false)
                 : 0;
 
-            var propositionsBefore = prepared.PropositionWrites is not null
+            var propositionsBefore = prepared.HasPropositionWrites
                 ? await propositions!.StoreGenerationAsync(cancellationToken).ConfigureAwait(false)
                 : 0;
 
             // --- Phase 2: persist the whole envelope as two independent all-or-nothing batches,
             // rules then propositions — see the remarks above for what a crash between them leaves.
+            // One provenance for both halves: every row either half writes names the same author,
+            // note and request.
+            var provenance = new RuleChangeProvenance(
+                change.Author, change.ChangeNote, ApprovalRef: change.Id.ToString());
+
             if (prepared.Rules.Count > 0)
             {
-                var provenance = new RuleChangeProvenance(
-                    change.Author, change.ChangeNote, ApprovalRef: change.Id.ToString());
-
                 var appended = await rules
                     .AppendCoreAsync(prepared.Rules, provenance, cancellationToken)
                     .ConfigureAwait(false);
@@ -1174,7 +1176,7 @@ public sealed class ChangeRequestSet
                         conflictVersion: appended.CurrentVersion);
             }
 
-            if (prepared.PropositionWrites is { } batch)
+            if (prepared.PropositionWrites(provenance) is { } batch)
             {
                 try
                 {
@@ -1226,7 +1228,7 @@ public sealed class ChangeRequestSet
                 ? await rules.StoreGenerationAsync(cancellationToken).ConfigureAwait(false)
                 : null;
 
-            long? propositionGeneration = prepared.PropositionWrites is not null
+            long? propositionGeneration = prepared.HasPropositionWrites
                 ? await propositions!.StoreGenerationAsync(cancellationToken).ConfigureAwait(false)
                 : null;
 
@@ -1442,17 +1444,23 @@ public sealed class ChangeRequestSet
             List<(string Name, PropositionSet.WritePrepare Edit)> PropositionPublishes,
             List<(string Name, PropositionSet.WritePrepare Edit)> PropositionWithdrawals)
         {
+            /// <summary>Whether the envelope touches any proposition at all.</summary>
+            public bool HasPropositionWrites =>
+                PropositionPublishes.Count > 0 || PropositionWithdrawals.Count > 0;
+
             /// <summary>
-            /// The single store round trip the whole proposition half lands as, or null when the
-            /// envelope touches no propositions and there is nothing to persist.
+            /// The single store round trip the whole proposition half lands as, stamped with the
+            /// envelope's provenance, or null when the envelope touches no propositions and there is
+            /// nothing to persist.
             /// </summary>
-            public PropositionBatch? PropositionWrites =>
-                PropositionPublishes.Count == 0 && PropositionWithdrawals.Count == 0
-                    ? null
-                    : new PropositionBatch(
+            public PropositionBatch? PropositionWrites(RuleChangeProvenance provenance) =>
+                HasPropositionWrites
+                    ? new PropositionBatch(
                         [.. PropositionPublishes.Select(publish => PropositionSet.RowFor(publish.Edit.Authored!))],
                         [.. PropositionWithdrawals.Select(
-                            withdrawal => PropositionSet.DeletionFor(withdrawal.Edit.Authored!))]);
+                            withdrawal => PropositionSet.DeletionFor(withdrawal.Edit.Authored!))],
+                        provenance)
+                    : null;
         }
 
         private static InvalidOperationException Unexpected(ChangeTarget target, string outcome, string detail) =>

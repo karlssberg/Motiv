@@ -44,7 +44,8 @@ public class ChangeRequestSetTests
         ApprovalGate Gate,
         RuleSet Rules,
         PropositionSet Propositions,
-        CanCheckoutRule Rule);
+        CanCheckoutRule Rule,
+        InMemoryPropositionStore Store);
 
     private static Host NewHost()
     {
@@ -52,11 +53,55 @@ public class ChangeRequestSetTests
             .Register("customer.is-active", IsActive)
             .Register("customer.is-adult", IsAdult);
         var scope = new BindingScope(registry);
-        var propositions = new PropositionSet(scope, new InMemoryPropositionStore()).AddModel<Customer>("customer");
+        var store = new InMemoryPropositionStore();
+        var propositions = new PropositionSet(scope, store).AddModel<Customer>("customer");
         var rule = new CanCheckoutRule();
         var rules = new RuleSet(scope).Add(rule);
         var gate = new ApprovalGate();
-        return new Host(new ChangeRequestSet(gate, rules, propositions), gate, rules, propositions, rule);
+        return new Host(new ChangeRequestSet(gate, rules, propositions), gate, rules, propositions, rule, store);
+    }
+
+    [Fact]
+    public async Task Should_record_the_change_request_as_the_provenance_of_a_published_proposition()
+    {
+        // Arrange — one envelope: a new proposition; publish it through the gate
+        var host = NewHost();
+        var created = host.Changes.Create("alice", "a note",
+        [
+            new(ChangeTargetKind.Proposition, "customer.eligible", EligibleIsAdult,
+                BaseVersion: 0, RollbackOfVersion: null, ModelTypeId: "customer"),
+        ]);
+
+        // Act
+        var published = await host.Changes.PublishAsync(created.Change!.Id, breakGlassActive: false);
+
+        // Assert — the row names the author, the note and the request it discharged
+        published.Outcome.ShouldBe(ChangeRequestOutcome.Ok);
+        var row = (await host.Store.HistoryAsync("customer.eligible", default)).ShouldHaveSingleItem();
+        row.Author.ShouldBe("alice");
+        row.ChangeNote!.ShouldBe("a note");
+        row.ApprovalRef!.ShouldBe(created.Change!.Id.ToString());
+    }
+
+    [Fact]
+    public async Task Should_number_a_governed_recreation_past_the_tombstone()
+    {
+        // Arrange — created and withdrawn directly, then re-created through an envelope
+        var host = NewHost();
+        await host.Propositions.CreateAsync("customer.eligible", "customer", EligibleIsAdult, null);
+        await host.Propositions.WithdrawAsync("customer.eligible", 1);
+        var created = host.Changes.Create("alice", "recreate",
+        [
+            new(ChangeTargetKind.Proposition, "customer.eligible", EligibleIsAdult,
+                BaseVersion: 0, RollbackOfVersion: null, ModelTypeId: "customer"),
+        ]);
+
+        // Act
+        var published = await host.Changes.PublishAsync(created.Change!.Id, breakGlassActive: false);
+
+        // Assert
+        published.Outcome.ShouldBe(ChangeRequestOutcome.Ok);
+        (await host.Store.HistoryAsync("customer.eligible", default)).Select(row => row.Version).ShouldBe([1, 2, 3]);
     }
 
     /// <summary>
