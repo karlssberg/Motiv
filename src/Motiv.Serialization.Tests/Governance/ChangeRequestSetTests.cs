@@ -47,13 +47,13 @@ public class ChangeRequestSetTests
         CanCheckoutRule Rule,
         InMemoryPropositionStore Store);
 
-    private static Host NewHost()
+    private static Host NewHost(InMemoryPropositionStore? sharedStore = null)
     {
         var registry = new SpecRegistry()
             .Register("customer.is-active", IsActive)
             .Register("customer.is-adult", IsAdult);
         var scope = new BindingScope(registry);
-        var store = new InMemoryPropositionStore();
+        var store = sharedStore ?? new InMemoryPropositionStore();
         var propositions = new PropositionSet(scope, store).AddModel<Customer>("customer");
         var rule = new CanCheckoutRule();
         var rules = new RuleSet(scope).Add(rule);
@@ -102,6 +102,27 @@ public class ChangeRequestSetTests
         // Assert
         published.Outcome.ShouldBe(ChangeRequestOutcome.Ok);
         (await host.Store.HistoryAsync("customer.eligible", default)).Select(row => row.Version).ShouldBe([1, 2, 3]);
+    }
+
+    [Fact]
+    public async Task Should_refuse_a_stale_replica_publishing_a_creation_another_replica_already_holds()
+    {
+        // Arrange — two hosts over one store; the second never refreshed after the first created
+        var first = NewHost();
+        var second = NewHost(first.Store);
+        await first.Propositions.CreateAsync("customer.eligible", "customer", EligibleIsAdult, null);
+        var created = second.Changes.Create("alice", "stale",
+        [
+            new(ChangeTargetKind.Proposition, "customer.eligible", EligibleIsAdult,
+                BaseVersion: 0, RollbackOfVersion: null, ModelTypeId: "customer"),
+        ]);
+
+        // Act
+        var published = await second.Changes.PublishAsync(created.Change!.Id, breakGlassActive: false);
+
+        // Assert — the store refuses the envelope; the first replica's document stands
+        published.Outcome.ShouldBe(ChangeRequestOutcome.VersionConflict);
+        (await first.Store.HistoryAsync("customer.eligible", default)).Count.ShouldBe(1);
     }
 
     /// <summary>

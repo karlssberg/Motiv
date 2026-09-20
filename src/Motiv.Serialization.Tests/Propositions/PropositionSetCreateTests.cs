@@ -435,6 +435,26 @@ public class PropositionSetCreateTests
         (await store.HistoryAsync("customer.a", default)).ShouldHaveSingleItem().Author.ShouldBe("system");
     }
 
+    [Fact]
+    public async Task Should_refuse_a_stale_replica_creating_a_name_another_replica_already_holds()
+    {
+        // Arrange — two replicas over one store, both loaded while it was empty
+        var (first, _, store) = NewSet();
+        var second = new PropositionSet(
+                new BindingScope(new SpecRegistry().Register("customer.is-active", IsActive)), store)
+            .AddModel<Customer>("customer");
+        const string document = """{ "rule": { "spec": "customer.is-active" } }""";
+        (await first.CreateAsync("customer.a", "customer", document, null)).Version.ShouldBe(1);
+
+        // Act — the second replica has not refreshed; its memory says the name is free
+        var stale = await second.CreateAsync("customer.a", "customer", document, null);
+
+        // Assert — refused by the store, naming the live version; nothing overwritten
+        stale.Outcome.ShouldBe(PropositionUpdateOutcome.VersionConflict);
+        stale.Version.ShouldBe(1);
+        (await store.HistoryAsync("customer.a", default)).Count.ShouldBe(1);
+    }
+
     private sealed class ThrowingStore : IPropositionStore
     {
         public IReadOnlyList<StoredProposition> Load() => [];

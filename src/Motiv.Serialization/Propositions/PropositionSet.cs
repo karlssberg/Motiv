@@ -242,13 +242,22 @@ public sealed class PropositionSet
 
     /// <summary>
     /// The version a creation of <paramref name="name"/> claims: 1 for a name the store has never
-    /// held, otherwise one past the log's highest row — a tombstone included, so a re-created name
-    /// never reuses a version a decision record may already pin.
+    /// held; one past the tombstone for a withdrawn name, so a re-created name never reuses a
+    /// version a decision record may already pin; and the <em>live head itself</em> when the store
+    /// already holds the name — a claim the store's "strictly greater" predicate refuses with the
+    /// current version, which is how a replica that has not refreshed since another replica created
+    /// the name is told so rather than silently superseding it. The store stays the enforcer: this
+    /// replica's memory is silent about every other replica.
     /// </summary>
     internal async Task<int> NextVersionAsync(string name, CancellationToken cancellationToken)
     {
         var history = await _store.HistoryAsync(name, cancellationToken).ConfigureAwait(false);
-        return (StoredPropositionVersion.PositionOf(history)?.Version ?? 0) + 1;
+        return StoredPropositionVersion.PositionOf(history) switch
+        {
+            null => 1,
+            { Live: true } live => live.Version,
+            var retired => retired.Version + 1,
+        };
     }
 
     /// <summary>

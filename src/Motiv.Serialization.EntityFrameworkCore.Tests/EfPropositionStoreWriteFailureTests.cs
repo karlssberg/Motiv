@@ -11,9 +11,9 @@ namespace Motiv.Serialization.EntityFrameworkCore.Tests;
 /// reach — the proposition-side twin of <see cref="EfRuleStoreAppendFailureTests"/>: the
 /// classification decision after a <see cref="DbUpdateException"/> (did we lose a real race, or did
 /// something else go wrong?), both of its answers, and the empty-batch short-circuit. Plus one the
-/// rule side has no need of: proof that the concurrency token the whole design rests on is actually
-/// live against the database, since a mapping that emits no DDL is exactly the kind of claim nothing
-/// else would check.
+/// rule side already has in its own file: proof that the <c>(Name, Version)</c> primary key the whole
+/// design rests on is actually enforced against the database, so a duplicate version surfaces as the
+/// <see cref="DbUpdateException"/> the store classifies.
 /// </summary>
 public class EfPropositionStoreWriteFailureTests
 {
@@ -57,7 +57,7 @@ public class EfPropositionStoreWriteFailureTests
         // runs inside an open transaction and on SQLite a second connection cannot commit until it
         // ends. WriteAsync's own logic depends on two facts, not on timing: "SaveChangesAsync threw"
         // and "the fresh reread, after rollback, found the store past our version". Both are
-        // reproduced directly: an interceptor throws the exception the concurrency token would
+        // reproduced directly: an interceptor throws the exception a primary-key violation would
         // raise, and the context factory — on its second call, which production code only reaches
         // after RollbackAsync — lets the "other replica" commit v2 through a separate context first.
         await using var fixture = await SqliteStoreFixture.CreateAsync();
@@ -142,7 +142,7 @@ public class EfPropositionStoreWriteFailureTests
 
             _thrown = true;
             throw new DbUpdateConcurrencyException(
-                "injected: stands in for the concurrency token matching no rows, so the " +
+                "injected: stands in for the (Name, Version) key refusing a duplicate row, so the " +
                 "classification branch is reachable without timing dependence");
         }
     }

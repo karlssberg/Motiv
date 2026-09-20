@@ -34,7 +34,7 @@ public class MotivStoreDbContext : DbContext
     /// <summary>The append-only rule version log.</summary>
     public DbSet<RuleVersionRow> RuleVersions => Set<RuleVersionRow>();
 
-    /// <summary>Authored propositions, one row per name.</summary>
+    /// <summary>The proposition version log: one row per <c>(Name, Version)</c>, tombstones included.</summary>
     public DbSet<PropositionVersionRow> PropositionVersions => Set<PropositionVersionRow>();
 
     /// <summary>Where each store stands, one row per scope.</summary>
