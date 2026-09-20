@@ -87,7 +87,11 @@ class Checker {
     this.vars.push(v);
     return this.set(node, { var: v });
   }
-  private known(t: LeafType): Known | undefined { return 'known' in t ? t.known : 'var' in t && root(t.var).resolved ? { kind: 'numeric', numeric: root(t.var).resolved!, nullable: false } : undefined; }
+  private known(t: LeafType): Known | undefined {
+    if ('known' in t) return t.known;
+    const resolved = 'var' in t ? root(t.var).resolved : undefined;
+    return resolved ? { kind: 'numeric', numeric: resolved, nullable: false } : undefined;
+  }
 
   visit(node: LeafAst, scope: LeafScope): LeafType {
     switch (node.kind) {
@@ -304,7 +308,9 @@ class Checker {
     let target = concrete;
     if (v.fractional && isIntegral(concrete)) target = 'decimal';
     if (!allows(v, target) || (v.resolved && !join(v.resolved, target))) {
-      const have = v.resolved ? kindName(v.resolved) : v.paramKind === 'number' ? 'a number parameter' : 'this literal';
+      let have = 'this literal';
+      if (v.resolved) have = kindName(v.resolved);
+      else if (v.paramKind === 'number') have = 'a number parameter';
       this.report(node, 'ExpressionTypeMismatch', `cannot use ${have} with ${kindName(concrete)} without losing precision`);
       this.errored.add(v);
       return { unknown: true };

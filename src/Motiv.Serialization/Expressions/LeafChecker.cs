@@ -430,7 +430,12 @@ internal sealed class LeafChecker
             target = NumericKind.Decimal;
         if (!var.Allows(target) || (var.Resolved is { } already && NumericLattice.Join(already, target) is null))
         {
-            var have = var.Resolved is { } h ? Describe(NumericLattice.ClrType(h)) : var.ParamKind == RuleParameterType.Number ? "a number parameter" : "this literal";
+            var have = (var.Resolved, var.ParamKind) switch
+            {
+                ({ } h, _) => Describe(NumericLattice.ClrType(h)),
+                (null, RuleParameterType.Number) => "a number parameter",
+                _ => "this literal",
+            };
             Report(b, RuleErrorCode.ExpressionTypeMismatch, $"cannot use {have} with {Describe(concrete)} without losing precision");
             _errored.Add(var);
             return LeafType.Unknown;

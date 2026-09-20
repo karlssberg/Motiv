@@ -67,10 +67,14 @@ internal static class LeafBinding
     private static string DescribeType(Type type)
     {
         var underlying = Nullable.GetUnderlyingType(type) ?? type;
-        var name = NumericLattice.KindOf(underlying) is { } kind ? NumericLattice.Name(kind)
-            : underlying == typeof(bool) ? "bool"
-            : underlying == typeof(string) ? "string"
-            : LeafScope.ElementType(underlying) is not null ? "collection" : "object";
+        var name = underlying switch
+        {
+            _ when NumericLattice.KindOf(underlying) is { } kind => NumericLattice.Name(kind),
+            _ when underlying == typeof(bool) => "bool",
+            _ when underlying == typeof(string) => "string",
+            _ when LeafScope.ElementType(underlying) is not null => "collection",
+            _ => "object",
+        };
         return underlying == type ? name : $"{name}?";
     }
 #else

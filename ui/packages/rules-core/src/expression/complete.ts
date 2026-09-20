@@ -3,6 +3,18 @@ import type { CompletionItem, DslCompletion } from '../dsl/completion.js';
 import { elementOf, fieldsOf, isCollection, typeName, withVar, type LeafScope } from './scope.js';
 
 const METHODS = ['where', 'any', 'all', 'count', 'sum', 'min', 'max'] as const;
+type Method = (typeof METHODS)[number];
+
+/** What each collection method yields: `where` keeps the collection, the rest are named here. */
+const METHOD_RESULT: Record<Exclude<Method, 'where'>, JsonSchema> = {
+  any: { type: 'boolean' }, all: { type: 'boolean' },
+  count: { type: 'integer', format: 'int32' },
+  sum: { type: 'number' }, min: { type: 'number' }, max: { type: 'number' },
+};
+/** The result type shown beside each method in completion. */
+const METHOD_DETAIL: Record<Method, string> = {
+  where: 'collection', any: 'bool', all: 'bool', count: 'int', sum: 'number', min: 'number', max: 'number',
+};
 
 /**
  * `orders` → `o`: the variable name a template introduces for elements of a collection. A chain
@@ -37,7 +49,7 @@ function typeChain(chain: string, scope: LeafScope): JsonSchema | undefined {
     if (!schema) return;
     if (isCall) {
       if (!isCollection(schema) || !(METHODS as readonly string[]).includes(name)) { schema = undefined; return; }
-      schema = name === 'where' ? schema : name === 'any' || name === 'all' ? { type: 'boolean' } : name === 'count' ? { type: 'integer', format: 'int32' } : { type: 'number' };
+      if (name !== 'where') schema = METHOD_RESULT[name as Exclude<Method, 'where'>];
       return;
     }
     schema = schema.properties?.[name];
@@ -98,7 +110,7 @@ export function completeLeaf(text: string, cursor: number, scope: LeafScope): Ds
       const v = elementVar(receiver);
       const options = METHODS.map((m): CompletionItem => {
         const insert = m === 'count' ? 'count()' : `${m}(${v} => ${v}.)`;
-        const detail = m === 'where' ? 'collection' : m === 'any' || m === 'all' ? 'bool' : m === 'count' ? 'int' : 'number';
+        const detail = METHOD_DETAIL[m];
         // `count()` takes no lambda, so the caret belongs after the closing paren, not inside it.
         const caretOffset = m === 'count' ? insert.length : insert.length - 1;
         return { label: m, kind: 'method', detail, insert, caretOffset };
