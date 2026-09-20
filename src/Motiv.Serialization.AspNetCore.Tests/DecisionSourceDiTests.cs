@@ -50,6 +50,17 @@ public class DecisionSourceDiTests
     }
 
     [Fact]
+    public void Should_refuse_a_second_decision_source()
+    {
+        var sink = new InMemoryDecisionSink();
+        var rules = new ServiceCollection().AddMotivRules(new SpecRegistry(), new MotivRulesOptions()).AddDecisionSource(sink);
+
+        var refused = Should.Throw<InvalidOperationException>(() => rules.AddDecisionSource(sink));
+
+        refused.Message.ShouldContain("AddDecisionSource has already been called");
+    }
+
+    [Fact]
     public async Task Should_name_the_missing_store_when_the_reproducer_cannot_be_built()
     {
         var sink = new InMemoryDecisionSink();

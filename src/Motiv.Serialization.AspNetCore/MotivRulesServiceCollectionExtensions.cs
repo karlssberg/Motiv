@@ -155,6 +155,7 @@ public sealed class MotivRulesBuilder
     /// <param name="source">The log's read side.</param>
     /// <returns>This builder, to allow chained registration.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">A decision source is already registered.</exception>
     public MotivRulesBuilder AddDecisionSource(IDecisionSource source)
     {
         if (source is null) throw new ArgumentNullException(nameof(source));
@@ -163,9 +164,14 @@ public sealed class MotivRulesBuilder
 
     /// <summary><see cref="AddDecisionSource(IDecisionSource)"/> with the source resolved from the container.</summary>
     /// <exception cref="ArgumentNullException"><paramref name="sourceFactory"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">A decision source is already registered. DI is last-wins, so a second call is refused rather than let it replace the first.</exception>
     public MotivRulesBuilder AddDecisionSource(Func<IServiceProvider, IDecisionSource> sourceFactory)
     {
         if (sourceFactory is null) throw new ArgumentNullException(nameof(sourceFactory));
+        if (Services.Any(descriptor => descriptor.ServiceType == typeof(IDecisionSource)))
+            throw new InvalidOperationException(
+                $"{nameof(AddDecisionSource)} has already been called. Call it once — a second call " +
+                "would silently replace the first source, as DI registration is last-wins.");
 
         Services.AddSingleton<IDecisionSource>(sourceFactory);
         Services.AddSingleton(provider => new DecisionReproducer(

@@ -26,9 +26,17 @@ internal static class ScenarioSeeds
     /// decision about a seed customer can be reproduced. A customer typed into the Evaluate table by
     /// hand is not here, and its decisions correctly report the subject as unresolved.
     /// </summary>
-    internal static Customer? FindCustomer(string customerId, JsonSerializerOptions json) =>
-        Seeds.Select(seed => JsonSerializer.Deserialize<Customer>(seed.Model, json))
-            .FirstOrDefault(customer => customer?.CustomerId == customerId);
+    internal static Customer? FindCustomer(string customerId, JsonSerializerOptions json)
+    {
+        foreach (var seed in Seeds)
+        {
+            var customer = JsonSerializer.Deserialize<Customer>(seed.Model, json);
+            if (customer?.CustomerId == customerId)
+                return customer;
+        }
+
+        return null;
+    }
 
     /// <summary>Writes the seeds for every rule that has never been seeded. Returns how many scenarios were written.</summary>
     public static async Task<int> SeedAsync(
