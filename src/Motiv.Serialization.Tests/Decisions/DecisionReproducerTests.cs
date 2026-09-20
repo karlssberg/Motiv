@@ -285,6 +285,46 @@ public class DecisionReproducerTests
     }
 
     [Fact]
+    public async Task Should_leave_the_dependents_of_a_pinned_document_that_did_not_bind_unbound()
+    {
+        // Arrange — eligible v2 references vip; a vip v9 row written straight into the log names a
+        // spec that does not exist, and a forged record pins both
+        await using var host = await AHostAsync();
+        (await host.Propositions.CreateAsync("customer.vip", "customer", EligibleIsActive, null)).Outcome.ShouldBe(PropositionUpdateOutcome.Created);
+        (await host.Propositions.UpdateAsync("customer.eligible", """{ "rule": { "spec": "customer.vip" } }""", 1)).Outcome.ShouldBe(PropositionUpdateOutcome.Updated);
+        var broken = new StoredProposition("customer.vip", "customer", """{ "rule": { "spec": "customer.gone" } }""", 9, null);
+        (await host.PropositionStore.WriteAsync(PropositionBatch.Save(broken), default)).IsConflict.ShouldBeFalse();
+        var decision = await host.DecideAsync(new Customer("cust-42", true, 30));
+        var forged = decision with
+        {
+            Id = Guid.NewGuid(),
+            ReferencedPropositionVersions = [new PropositionVersion("customer.eligible", 2), new PropositionVersion("customer.vip", 9)],
+        };
+        await host.Sink.WriteAsync([forged], default);
+
+        // Act
+        var reproduction = await host.Reproducer().ReproduceAsync(forged.Id, default);
+
+        // Assert — vip failed on its own; eligible was never bound rather than resolved through the live head
+        reproduction.Fidelity.Notes.ShouldContain(n => n.Reason == FidelityReason.PropositionBindFailed && n.Detail.StartsWith("'customer.vip' v9 did not bind"));
+        reproduction.Fidelity.Notes.ShouldContain(n => n.Reason == FidelityReason.PropositionBindFailed && n.Detail.Contains("'customer.eligible' v2 was not bound") && n.Detail.Contains("'customer.vip'"));
+    }
+
+    [Fact]
+    public async Task Should_note_every_pin_when_the_host_has_no_proposition_set()
+    {
+        await using var host = await AHostAsync();
+        var decision = await host.DecideAsync(new Customer("cust-42", true, 30));
+        var withoutPropositions = new DecisionReproducer(
+            host.Sink, host.RuleStore, host.PropositionStore, host.Rules, propositions: null, host.Options.Resolve, Web);
+
+        var reproduction = await withoutPropositions.ReproduceAsync(decision.Id, default);
+
+        reproduction.Propositions.ShouldBeEmpty();
+        reproduction.Fidelity.Notes.ShouldContain(n => n.Reason == FidelityReason.PropositionBindFailed && n.Detail.Contains("no proposition set"));
+    }
+
+    [Fact]
     public async Task Should_throw_for_an_unknown_decision()
     {
         await using var host = await AHostAsync();

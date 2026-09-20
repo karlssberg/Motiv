@@ -90,10 +90,9 @@ public sealed class DecisionReproducer(
         string.Join("; ", errors.Select(error => error.Message));
 
     /// <summary>
-    /// Reads every pinned proposition row and binds them, in dependency order, into an overlay
-    /// over the live source. A pin the log no longer holds falls back to the name's live head and
-    /// says so; a document that will not bind is noted and its dependents are left unbound rather
-    /// than quietly resolved through today's head.
+    /// Reads every pinned proposition row and hands them to <see cref="BindIntoOverlay"/>, which
+    /// binds them over the live source. A pin the log no longer holds falls back to the name's live
+    /// head and says so; a host with no proposition set binds nothing and says that instead.
     /// </summary>
     private async Task<(IReadOnlyList<StoredPropositionVersion> Rows, ISpecSource Source)> BindPinnedPropositionsAsync(
         IReadOnlyList<PropositionVersion> pins, List<FidelityNote> notes, CancellationToken cancellationToken)
@@ -116,17 +115,30 @@ public sealed class DecisionReproducer(
                 rows.Add(row);
         }
 
+        // Every name a pin named, parsed or not: a row that will not parse is still pinned, so its
+        // dependents must wait on it rather than resolve through today's head.
+        var pinnedNames = new HashSet<string>(rows.Select(row => row.Name), StringComparer.Ordinal);
+        return (rows, BindIntoOverlay(ParsePending(rows, notes), pinnedNames, live, notes));
+    }
+
+    /// <summary>
+    /// Binds the parsed rows, in dependency order, into an overlay layered over
+    /// <paramref name="live"/>, and returns that layered source. A document that will not bind is
+    /// noted by <see cref="Bind"/> and its dependents are left unbound — never quietly resolved
+    /// through today's head — as is anything caught in a reference cycle.
+    /// </summary>
+    private ISpecSource BindIntoOverlay(
+        List<Pending> pending, HashSet<string> pinnedNames, ISpecSource live, List<FidelityNote> notes)
+    {
         var overlay = new PropositionOverlay();
         var layered = new LayeredSpecSource(overlay, live);
-        var pending = Parse(rows, notes);
-        var pinnedNames = new HashSet<string>(rows.Select(row => row.Name), StringComparer.Ordinal);
         var bound = new HashSet<string>(StringComparer.Ordinal);
 
         // Bind whatever only waits on names that are bound already or not pinned at all; repeat
         // until a pass binds nothing. Whatever is left waits on a pin that failed, or on a cycle.
         while (pending.Count > 0)
         {
-            var ready = pending.Where(p => p.References.All(r => bound.Contains(r) || !pinnedNames.Contains(r))).ToList();
+            var ready = pending.Where(IsReady).ToList();
             if (ready.Count == 0)
                 break;
 
@@ -148,7 +160,10 @@ public sealed class DecisionReproducer(
                 $"'{left.Row.Name}' v{left.Row.Version} was not bound: it references {string.Join(", ", waitingOn.Select(n => $"'{n}'"))}, which did not bind"));
         }
 
-        return (rows, layered);
+        return layered;
+
+        bool IsReady(Pending candidate) =>
+            candidate.References.All(name => bound.Contains(name) || !pinnedNames.Contains(name));
     }
 
     private async Task<StoredPropositionVersion?> PinnedRowAsync(
@@ -158,8 +173,11 @@ public sealed class DecisionReproducer(
         if (history.FirstOrDefault(r => r.Version == pin.Version && !r.IsTombstone) is { } exact)
             return exact;
 
-        var head = StoredPropositionVersion.HeadOf(history);
-        var fallback = head is null ? null : history.First(r => r.Version == head.Version);
+        // HeadOf answers the head proposition, not the row that carries it, so the row is looked up
+        // by the version it reports rather than re-deriving "highest, unless tombstoned" here.
+        var fallback = StoredPropositionVersion.HeadOf(history) is { } head
+            ? history.First(r => r.Version == head.Version)
+            : null;
         notes.Add(new(FidelityReason.PropositionVersionMissing, fallback is null
             ? $"'{pin.Name}' v{pin.Version} is not in the proposition log, and the name has no live head to stand in"
             : $"'{pin.Name}' v{pin.Version} is not in the proposition log; its head, v{fallback.Version}, was bound instead"));
@@ -168,7 +186,8 @@ public sealed class DecisionReproducer(
 
     private sealed record Pending(StoredPropositionVersion Row, RuleDocument Document, IReadOnlyList<string> References);
 
-    private List<Pending> Parse(IEnumerable<StoredPropositionVersion> rows, List<FidelityNote> notes)
+    /// <summary>Parses each row's document, noting the ones that will not parse and dropping them.</summary>
+    private List<Pending> ParsePending(IEnumerable<StoredPropositionVersion> rows, List<FidelityNote> notes)
     {
         var parser = new RuleDocumentParser(propositions!.Options);
         var pending = new List<Pending>();
@@ -217,6 +236,7 @@ public sealed class DecisionReproducer(
             case DecisionInputKind.Redacted:
                 notes.Add(new(FidelityReason.ModelRedacted, "the capture was a projection; fields the rule reads may be absent"));
                 return new ReproducedModel(ReproducedModelKind.Redacted, Rehydrate(input.Value, modelType, notes), null);
+            case DecisionInputKind.Whole:
             default:
                 return new ReproducedModel(ReproducedModelKind.Whole, Rehydrate(input.Value, modelType, notes), null);
         }
