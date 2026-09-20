@@ -29,7 +29,7 @@ export {
 // The wire contracts shared with the ASP.NET Core endpoints.
 export type {
   Catalog, CatalogEntry, CatalogCollection, CatalogParameter, JsonSchema,
-  RuleError, RuleErrorCode, ValidationResponse, ErrorResponse,
+  RuleError, RuleErrorCode, RuleTextRange, RuleLeafFact, ValidationResponse, ErrorResponse,
   ExplanationNode, EvaluationResult, ValidateRequest, EvaluateRequest, RuleEvaluateRequest,
   RuleListEntry, RuleGetResponse, RuleSaveResult,
   PropositionOrigin, PropositionListEntry, PropositionGetResponse, PropositionCreateRequest,
@@ -104,7 +104,18 @@ export { rangeOfPath, type SourceRange } from './dsl/spans.js';
 export { declaredLocals } from './dsl/locals.js';
 export { tokenSpans, type TokenSpan } from './dsl/tokenRuns.js';
 export {
-  completeDsl, type CompletionItem, type CompletionItemKind, type DslCompletion,
+  completeDsl, healUnterminated, type CompletionItem, type CompletionItemKind, type DslCompletion,
 } from './dsl/completion.js';
-export { diagnosticsFor, type RuleDiagnostic } from './dsl/diagnostics.js';
+export { diagnosticsFor, leafOffset, type RuleDiagnostic } from './dsl/diagnostics.js';
 export { DslSyncController, type DslSyncState, type SyncStatus } from './dslSync.js';
+
+// The expression-leaf language.
+export {
+  tokenizeLeaf, parseLeaf, printLeaf,
+  scopeAt, withVar, fieldsOf, isCollection, elementOf, typeName, isNullable, ancestors,
+  kindOf, canWiden, join, isIntegral, kindName,
+  checkLeaf, analyseLeaf,
+  completeLeaf, elementVar,
+  type LeafTokenKind, type LeafToken, type LeafProblem, type LeafAst, type LeafScope,
+  type NumericKind, type LeafFactLocal, type LeafAnalysis,
+} from './expression/index.js';

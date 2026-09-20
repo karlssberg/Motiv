@@ -8,14 +8,21 @@ internal static class RuleParameterSubstituter
     public static void Apply(
         RuleNode node,
         IReadOnlyDictionary<string, object?> values,
-        List<RuleError> errors)
+        List<RuleError> errors,
+        IReadOnlyList<RuleParameterDeclaration> declarations)
     {
+        if (node.Operator == RuleOperator.Expression)
+        {
+            node.ParameterValues = values;
+            node.ParameterDeclarations = declarations;
+        }
+
         node.WhenTrueText = Interpolate(node.WhenTrueText, $"{node.Path}.whenTrue", values, errors);
         node.WhenFalseText = Interpolate(node.WhenFalseText, $"{node.Path}.whenFalse", values, errors);
         ResolveN(node, values, errors);
 
         foreach (var child in node.Children)
-            Apply(child, values, errors);
+            Apply(child, values, errors, declarations);
     }
 
     private static void ResolveN(

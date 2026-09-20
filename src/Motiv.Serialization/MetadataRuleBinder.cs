@@ -113,8 +113,9 @@ internal sealed class MetadataRuleBinder<TMetadata>(ISpecSource source, RuleSeri
         RuleNode node,
         List<RuleError> errors)
     {
-        errors.Add(new RuleError(node.Path, RuleErrorCode.ExpressionsNotEnabled,
-            "expression nodes require the Motiv.Serialization.Expressions package"));
+        errors.Add(new RuleError(node.Path, RuleErrorCode.ExpressionRequiresMetadata,
+            $"an expression leaf in a metadata document must carry 'whenTrue'/'whenFalse' of type " +
+            $"'{typeof(TMetadata).Name}', or sit under a node that does"));
         return null;
     }
 

@@ -6,12 +6,13 @@ import { EditorState } from '@codemirror/state';
 import { EditorView, keymap, lineNumbers, type ViewUpdate } from '@codemirror/view';
 import type { Diagnostic } from '@codemirror/lint';
 import {
-  getNode, isNodePath, isSpecNode,
-  type Catalog, type NodeSpan, type RuleDocument, type RuleEditorStore,
+  getNode, healUnterminated, isNodePath, isSpecNode, parse, scopeAt,
+  type Catalog, type LeafScope, type NodeSpan, type RuleDocument, type RuleEditorStore, type RulesApiClient,
 } from '@motiv-rules/core';
 import { useRuleEditor } from '@motiv-rules/react';
 import { createMotivCompletion } from './completion.js';
-import { diagnosticsFor } from './lint.js';
+import { diagnosticsFor, placeFacts, type PlacedFact } from './lint.js';
+import { LeafInspector } from './LeafInspector.js';
 import { localMarks } from './localMarks.js';
 import { motivHover } from './hover.js';
 import { motiv } from './motivLanguage.js';
@@ -42,7 +43,9 @@ interface LiveContext {
   sync: DslSync;
   catalog: Catalog;
   diagnostics: Diagnostic[];
+  placedFacts: PlacedFact[];
   store: RuleEditorStore;
+  leafScope: (path: string) => LeafScope | null;
 }
 
 /**
@@ -62,6 +65,47 @@ function innermostSpanAt(spans: readonly NodeSpan[], position: number): NodeSpan
     if (!best || span.to - span.from < best.to - best.from) best = span;
   }
   return best;
+}
+
+/**
+ * Builds a resolver for an expression leaf's scope, resolving the document to scope against
+ * *lazily* and *at most once*, on the first path actually asked for — not eagerly when the
+ * resolver is built, and not again on every further path. Two things depend on this:
+ *
+ * - A diagnostics pass asks this once per expression node (`fromLeafProblems`), so a naive
+ *   per-call resolution would re-parse the whole buffer once per leaf.
+ * - `fromLeafProblems` skips the whole leaf pass outright when the buffer's own parse produced no
+ *   document at all — the common case while healing would even be needed — so resolving eagerly
+ *   would burn a heal-and-reparse on a resolver nothing ends up calling.
+ *
+ * Resolved against the *live* buffer, not the store's committed document: the store only commits
+ * after the DSL sync's debounce (~300ms), so while a user is mid-edit (typing
+ * `orders.where(o => o.` for the first time, say) the committed document does not yet contain the
+ * node a leaf's path names, and resolving against it would silently answer for the wrong scope —
+ * the outer model's fields instead of the collection element's.
+ *
+ * Preference order: the live buffer's own parse when it resolved to a document; failing that (an
+ * open backtick or brace mid-type, which the parser refuses to turn into a document) a healed
+ * reparse of the same text — the same recovery `completeDsl` performs internally; and only as a
+ * last resort, both parses having failed outright, the store's last-committed document.
+ *
+ * Callers build this fresh from the render's own `sync`/`store` (never from `live.current`): it is
+ * itself what feeds `live.current.leafScope`, so reading the ref back here would see the *previous*
+ * render's buffer — one render behind the one this resolver is being built for.
+ */
+export function makeLeafScope(
+  sync: DslSync,
+  store: RuleEditorStore,
+  modelType: string,
+  catalog: Catalog,
+): (path: string) => LeafScope | null {
+  let document: RuleDocument | undefined;
+  return (path) => {
+    document ??= sync.parseResult.document
+      ?? parse(healUnterminated(sync.text)).document
+      ?? store.getState().document;
+    return scopeAt(document, path, modelType, catalog);
+  };
 }
 
 /**
@@ -108,21 +152,51 @@ export function DslEditor(props: {
   store: RuleEditorStore;
   catalog: Catalog;
   sync: DslSync;
+  /** The document's model type, used to resolve an expression leaf's field/method scope. */
+  modelType: string;
   /** The document's name, shown as the buffer's filename; absent for a nameless draft. */
   documentName?: string | undefined;
+  /** Runs the inspector strip's reading; absent hides no UI, but the strip stays scope-only. */
+  client: RulesApiClient;
+  /** The tab this buffer belongs to, so the inspector reads against *this* rule's open scenario. */
+  ruleName?: string | undefined;
 }) {
-  const { store, catalog, sync } = props;
+  const { store, catalog, sync, modelType } = props;
   const filename = props.documentName !== undefined ? `${props.documentName}.motiv` : DRAFT_FILENAME;
   const editorState = useRuleEditor(store);
   const [popover, setPopover] = useState<PayloadTarget | null>(null);
+  /** The caret's offset in the live buffer, tracked from every selection change so the inspector
+   *  strip follows it without polling the view. */
+  const [caret, setCaret] = useState(0);
 
-  const diagnostics = useMemo(
-    () => diagnosticsFor(sync.text, sync.parseResult, editorState.errors),
-    [sync.text, sync.parseResult, editorState.errors],
+  const live = useRef<LiveContext>({
+    sync, catalog, diagnostics: [], placedFacts: [], store, leafScope: () => null,
+  });
+
+  // Built once per render and shared by the diagnostics below and the completion source: each
+  // resolver caches one healed parse of the buffer, so sharing it halves that work mid-edit.
+  const leafScope = useMemo(
+    () => makeLeafScope(sync, store, modelType, catalog),
+    // Keyed on the two parts of `sync` the resolver reads, so a render that changes neither reuses it.
+    [sync.text, sync.parseResult, store, modelType, catalog],
   );
 
-  const live = useRef<LiveContext>({ sync, catalog, diagnostics, store });
-  live.current = { sync, catalog, diagnostics, store };
+  const diagnostics = useMemo(
+    () => diagnosticsFor(sync.text, sync.parseResult, editorState.errors, leafScope),
+    [sync.text, sync.parseResult, editorState.errors, leafScope],
+  );
+
+  const placedFacts = useMemo(
+    () => placeFacts(editorState.facts, sync.parseResult.spans),
+    [editorState.facts, sync.parseResult],
+  );
+
+  // `leafScope` is rebuilt from this render's own `sync`/`store` — not read off `live.current` —
+  // for the same reason `diagnostics` above builds its own: `live.current` still holds the
+  // *previous* render's values until this assignment runs, so resolving through it here would be
+  // one render behind the buffer this resolver is meant to answer for. The once-built completion
+  // extension reads it back out through `() => live.current.leafScope`, which by then is current.
+  live.current = { sync, catalog, diagnostics, placedFacts, store, leafScope };
 
   const toolbar = useRef<HTMLDivElement | null>(null);
   const host = useRef<HTMLDivElement | null>(null);
@@ -159,6 +233,7 @@ export function DslEditor(props: {
     if (!parent) return;
 
     const onUpdate = (update: ViewUpdate) => {
+      if (update.selectionSet) setCaret(update.state.selection.main.head);
       if (!update.docChanged) return;
       if (!applyingHookText.current) live.current.sync.setText(update.state.doc.toString());
       // The card is anchored to a token and edits the node behind it — an edit can move the one
@@ -182,8 +257,10 @@ export function DslEditor(props: {
           motiv(),
           localMarks,
           motivEditorTheme,
-          autocompletion({ override: [createMotivCompletion(() => live.current.catalog)] }),
-          motivHover(() => live.current.diagnostics),
+          autocompletion({
+            override: [createMotivCompletion(() => live.current.catalog, () => live.current.leafScope)],
+          }),
+          motivHover(() => live.current.diagnostics, () => live.current.placedFacts),
           // Reads `openPath` rather than closing over `popover`, since the extensions are built
           // once and would otherwise go on toggling against the state of the first render.
           payloadChips((target) => toggleCard(target)),
@@ -271,6 +348,21 @@ export function DslEditor(props: {
       )}
 
       <div className="dsl-surface" ref={host} />
+
+      <LeafInspector
+        text={sync.text}
+        caret={caret}
+        parseResult={sync.parseResult}
+        // The leaf the inspector found (if any) came from `sync.parseResult`, so it must resolve
+        // paths against *that* parse's document — not the store's last-committed one, which can
+        // disagree with the live buffer for as long as an edit is uncommitted (same reasoning as
+        // `makeLeafScope` above).
+        document={sync.parseResult.document ?? editorState.document}
+        leafScope={live.current.leafScope}
+        client={props.client}
+        modelType={modelType}
+        ruleName={props.ruleName}
+      />
 
       {popover && (
         <PayloadPopover

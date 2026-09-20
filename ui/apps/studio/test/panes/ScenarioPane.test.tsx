@@ -28,11 +28,11 @@ function client(options: {
   } as unknown as RulesApiClient;
 }
 
-function renderPane(apiClient: RulesApiClient = client()) {
+function renderPane(apiClient: RulesApiClient = client(), modelType = 'customer') {
   const store = new RuleEditorStore({ rule: { spec: 'customer.is-active' } });
   render(
     <RuleEditorProvider store={store}>
-      <ScenarioPane client={apiClient} ruleName="can-checkout" version={3} />
+      <ScenarioPane client={apiClient} ruleName="can-checkout" version={3} modelType={modelType} />
     </RuleEditorProvider>,
   );
   return store;
@@ -216,5 +216,19 @@ describe('ScenarioPane justification', () => {
     fireEvent.click(toggle);
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
     expect(toggle.getAttribute('aria-controls')).toBeNull();
+  });
+});
+
+describe('ScenarioPane model type', () => {
+  it('runs every scenario against the model type it is given', async () => {
+    const apiClient = client({
+      catalog: { ...catalog, modelTypes: { ...catalog.modelTypes, order: catalog.modelTypes!.customer! } },
+    });
+    renderPane(apiClient, 'order');
+    await settleCatalog();
+    await runAll();
+    const evaluate = apiClient.evaluate as ReturnType<typeof vi.fn>;
+    expect(evaluate).toHaveBeenCalled();
+    for (const call of evaluate.mock.calls) expect(call[0]).toEqual(expect.objectContaining({ modelType: 'order' }));
   });
 });

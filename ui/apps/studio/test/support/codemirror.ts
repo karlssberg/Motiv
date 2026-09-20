@@ -18,3 +18,21 @@ export function replaceBuffer(container: HTMLElement, text: string): void {
   const view = editorView(container);
   act(() => view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } }));
 }
+
+/**
+ * Types over the whole document and leaves the caret right after it, as real keystrokes would.
+ *
+ * Not the same as {@link replaceBuffer}: that leaves the caret wherever the *prior* selection
+ * maps to through the change, which is rarely the end of what was just typed. Anything that reads
+ * the caret afterwards — starting completion, most of all — needs this instead.
+ */
+export function typeBuffer(container: HTMLElement, text: string): EditorView {
+  const view = editorView(container);
+  act(() => {
+    view.dispatch({
+      changes: { from: 0, to: view.state.doc.length, insert: text },
+      selection: { anchor: text.length },
+    });
+  });
+  return view;
+}

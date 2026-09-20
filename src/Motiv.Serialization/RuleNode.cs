@@ -48,4 +48,16 @@ internal sealed class RuleNode(RuleOperator @operator, string path)
     public string? NParameterName { get; set; }
 
     public string? PathText { get; set; }
+
+    /// <summary>
+    /// The resolved parameter values, set on an <see cref="RuleOperator.Expression" /> node by
+    /// the substituter so the leaf binder can read <c>@name</c> references' values.
+    /// </summary>
+    public IReadOnlyDictionary<string, object?>? ParameterValues { get; set; }
+
+    /// <summary>
+    /// The document's parameter declarations, set on an <see cref="RuleOperator.Expression" /> node
+    /// by the substituter so the leaf binder can type <c>@name</c> references.
+    /// </summary>
+    public IReadOnlyList<RuleParameterDeclaration>? ParameterDeclarations { get; set; }
 }

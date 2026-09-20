@@ -124,6 +124,7 @@ export function PropositionDocument(props: {
         <EditorPane
           client={client}
           documentName={tab.name}
+          modelType={modelType}
           onExtractToCatalog={props.onExtractToCatalog}
           onPromote={props.onPromote}
           title={
@@ -147,7 +148,7 @@ export function PropositionDocument(props: {
           )}
         />
         <div className="rail">
-          <EvaluatePane client={client} />
+          <EvaluatePane client={client} modelType={modelType} />
         </div>
       </div>
 

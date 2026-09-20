@@ -77,5 +77,20 @@ public enum RuleErrorCode
     /// A gate document referenced a spec registered as asynchronous. The approval gate evaluates
     /// change requests synchronously, so it can never bind to an async registry entry.
     /// </summary>
-    GateMustBeSynchronous
+    GateMustBeSynchronous,
+
+    /// <summary>An expression leaf could not be parsed.</summary>
+    InvalidExpression,
+
+    /// <summary>An expression leaf names a field the model does not have.</summary>
+    UnknownField,
+
+    /// <summary>An expression leaf calls a method outside the supported set, or on the wrong kind of value.</summary>
+    UnknownMethod,
+
+    /// <summary>The operands of an expression leaf cannot be given one type without a lossy conversion.</summary>
+    ExpressionTypeMismatch,
+
+    /// <summary>An expression leaf in a metadata document carries no metadata of its own.</summary>
+    ExpressionRequiresMetadata,
 }

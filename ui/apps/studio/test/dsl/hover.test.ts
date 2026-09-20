@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import type { EditorView, Tooltip } from '@codemirror/view';
 import type { Diagnostic } from '@codemirror/lint';
-import { diagnosticTooltipSource, renderDiagnostic } from '../../src/dsl/hover.js';
+import { diagnosticTooltipSource, renderDiagnostic, factTooltipSource } from '../../src/dsl/hover.js';
+import type { PlacedFact } from '../../src/dsl/lint.js';
 
 /** The tooltip source never touches the view, so a bare stand-in suffices. */
 const VIEW = {} as EditorView;
@@ -60,6 +61,23 @@ describe('diagnosticTooltipSource', () => {
     const tooltip = tooltipAt([DIAGNOSTIC], 18)!;
     const dom = tooltip.create(VIEW).dom;
     expect(dom.querySelector('.dsl-hover-code')?.textContent).toBe('UnknownSpec');
+  });
+});
+
+describe('factTooltipSource', () => {
+  const fact: PlacedFact = {
+    path: '$.rule', range: { start: 14, end: 18 }, text: '1000', type: 'decimal',
+    anchor: 'orders.sum(o => o.total)', isWarning: false, message: null, from: 15, to: 19,
+  };
+  it('describes the fact under the pointer', () => {
+    const tooltip = factTooltipSource(() => [fact])(VIEW, 16, 1) as Tooltip;
+    expect(tooltip.pos).toBe(15);
+    const dom = tooltip.create(VIEW).dom;
+    expect(dom.textContent).toContain('1000 as decimal');
+    expect(dom.textContent).toContain('from orders.sum(o => o.total)');
+  });
+  it('is silent between facts', () => {
+    expect(factTooltipSource(() => [fact])(VIEW, 3, 1)).toBeNull();
   });
 });
 

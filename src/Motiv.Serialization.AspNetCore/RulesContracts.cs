@@ -66,7 +66,13 @@ public sealed record RuleEvaluateRequest(JsonElement Model);
 
 /// <summary>The outcome of a validation request.</summary>
 /// <param name="Errors">All errors found; empty when the document is valid.</param>
-public sealed record ValidationResponse(IReadOnlyList<RuleError> Errors);
+/// <param name="Facts">
+/// The facts gathered about the document's expression leaves — solved literal/parameter types, each
+/// leaf's result type, and its warnings. Optional, and <c>null</c> for an asynchronous validation
+/// and for every response that is not produced by the <c>/validate</c> endpoint's synchronous path —
+/// so a caller constructing a response from errors alone need not pass an empty list.
+/// </param>
+public sealed record ValidationResponse(IReadOnlyList<RuleError> Errors, IReadOnlyList<RuleLeafFact>? Facts = null);
 
 /// <summary>A simple error envelope for request-level failures (e.g. unknown model type).</summary>
 /// <param name="Error">A human-readable description of the failure.</param>

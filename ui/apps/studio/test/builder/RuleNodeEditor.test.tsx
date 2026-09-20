@@ -15,7 +15,7 @@ const catalog = {
 };
 const client = () => ({ getCatalog: vi.fn().mockResolvedValue(catalog) }) as unknown as RulesApiClient;
 const renderWith = (store: RuleEditorStore) =>
-  render(<RuleEditorProvider store={store}><BuilderPane client={client()} /></RuleEditorProvider>);
+  render(<RuleEditorProvider store={store}><BuilderPane client={client()} modelType="customer" /></RuleEditorProvider>);
 
 const DESCRIBE = 'Describe what it means for this to be true or false…';
 const REMOVE = 'Remove these descriptions';

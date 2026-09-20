@@ -14,7 +14,7 @@ const catalog = {
 };
 const client = () => ({ getCatalog: vi.fn().mockResolvedValue(catalog) }) as unknown as RulesApiClient;
 const renderWith = (store: RuleEditorStore) =>
-  render(<RuleEditorProvider store={store}><BuilderPane client={client()} /></RuleEditorProvider>);
+  render(<RuleEditorProvider store={store}><BuilderPane client={client()} modelType="customer" /></RuleEditorProvider>);
 
 /** Opens a node's detail panel via its actions menu, where Details lives for every node kind. */
 const openDetail = async (path: string) => {
@@ -93,7 +93,7 @@ describe('QuantifierNode', () => {
     };
     const multiClient = () => ({ getCatalog: vi.fn().mockResolvedValue(multi) }) as unknown as RulesApiClient;
     const store = new RuleEditorStore({ rule: { asAllSatisfied: { spec: 'is-large-order' }, path: 'orders' } });
-    render(<RuleEditorProvider store={store}><BuilderPane client={multiClient()} /></RuleEditorProvider>);
+    render(<RuleEditorProvider store={store}><BuilderPane client={multiClient()} modelType="customer" /></RuleEditorProvider>);
 
     await openDetail('$.rule');
     // the root quantifier is in customer space → only the customer-parented collection is offered

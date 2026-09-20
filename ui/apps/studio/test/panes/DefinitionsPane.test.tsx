@@ -48,7 +48,7 @@ const renderWith = async (
 ) => {
   const result = render(
     <RuleEditorProvider store={store}>
-      <BuilderBody client={client(catalog)} onPromote={onPromote} />
+      <BuilderBody client={client(catalog)} modelType="customer" onPromote={onPromote} />
     </RuleEditorProvider>,
   );
   await act(async () => {});

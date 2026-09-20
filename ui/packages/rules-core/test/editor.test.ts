@@ -97,6 +97,15 @@ describe('loadDocument', () => {
     expect(state.canRedo).toBe(false);
   });
 
+  it('keeps validation facts beside errors and clears both on load', () => {
+    const store = new RuleEditorStore({ rule: { spec: 'a' } });
+    const fact = { path: '$.rule', range: { start: 0, end: 4 }, text: '1000', type: 'decimal', from: 'total', isWarning: false, message: null };
+    store.setErrors([], [fact]);
+    expect(store.getState().facts).toEqual([fact]);
+    store.loadDocument({ rule: { spec: 'a' } });
+    expect(store.getState().facts).toEqual([]);
+  });
+
   it('notifies subscribers', () => {
     const store = new RuleEditorStore({ rule: { spec: 'a' } });
     let notified = 0;

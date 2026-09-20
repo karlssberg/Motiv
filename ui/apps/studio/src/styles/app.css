@@ -652,18 +652,6 @@ textarea.control {
   flex-wrap: wrap;
 }
 
-/* Extension points: inert affordances for not-yet-evaluable node kinds */
-.ext-point {
-  background: transparent;
-  color: var(--muted);
-  border: 1px dashed var(--border);
-  cursor: not-allowed;
-}
-
-.ext-point:hover {
-  background: transparent;
-}
-
 /* Document JSON pane */
 .json {
   font-family: var(--mono);
@@ -1528,6 +1516,35 @@ button.node-dsl:focus-visible {
 
 .dsl-surface .cm-editor {
   height: 100%;
+}
+
+/* The inspector strip: the scope of the expression leaf under the caret, and its reading against
+   the scenario open in the Evaluate table. */
+.leaf-inspector {
+  border-top: 1px solid var(--border);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 72px;
+}
+
+.leaf-inspector-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.leaf-scope {
+  font: 11.5px var(--mono);
+  color: var(--muted);
+}
+
+.leaf-assertions {
+  margin: 0;
+  padding-left: 18px;
+  font: 12.5px var(--mono);
 }
 
 /* Sync pill: how the buffer currently relates to the document */

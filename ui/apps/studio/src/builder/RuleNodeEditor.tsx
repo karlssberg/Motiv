@@ -9,7 +9,6 @@ import {
   type AccordionModel, type Catalog, type HighlightModel,
 } from '@motiv-rules/core';
 import { useRuleEditorStore, useRuleNode } from '@motiv-rules/react';
-import { NodeToolbar } from './NodeToolbar.js';
 import { OperatorPicker } from './OperatorPicker.js';
 import { QuantifierNode } from './QuantifierNode.js';
 import { DecorationEditor } from './DecorationEditor.js';
@@ -48,6 +47,12 @@ export interface BuilderTreeState {
    */
   setOpenPopover: Dispatch<SetStateAction<string | null>>;
   catalog: Catalog;
+  /**
+   * The document's model type — what the rule's root row and every definition body are scoped
+   * to. A row inside a quantifier body narrows it to the element type as it recurses; this is
+   * the root those walks start from, and it is the document's, never a fixed one.
+   */
+  modelType: string;
   /**
    * The document's definition names, so a printed row reparses a bare word as the local it was
    * printed from rather than as a spec of the same name (#234).
@@ -369,10 +374,8 @@ export function RuleNodeEditor(props: { path: string; modelType: string }) {
             <LocalNodeDetail path={path} node={node} catalog={catalog} />
           ) : (
             <>
-              {isHigherOrderNode(node) ? (
+              {isHigherOrderNode(node) && (
                 <QuantifierNode path={path} node={node} catalog={catalog} modelType={modelType} />
-              ) : (
-                <NodeToolbar path={path} node={node} />
               )}
               {/* Payloads are authored at the root only; everything below it is a definition now,
                   and a node that predates that is offered the way out (#234). No node is named in

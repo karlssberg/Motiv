@@ -22,6 +22,12 @@ internal sealed class ModelBinding
     public required Func<RuleSerializer, string, IReadOnlyList<RuleError>> ValidateAsyncSpec { get; init; }
 
     /// <summary>
+    /// Validates a raw rule-document JSON string as <see cref="Validate"/> does, and also reports
+    /// what the checker learned about every expression leaf — the types it solved and its warnings.
+    /// </summary>
+    public required Func<RuleSerializer, string, RuleValidation> Inspect { get; init; }
+
+    /// <summary>
     /// Binds a sample model element to <c>TModel</c>, boxed — for a caller that evaluates something
     /// which knows its own model type, such as a live rule found by name. Throws
     /// <see cref="InvalidModelException"/> when the element cannot be bound.

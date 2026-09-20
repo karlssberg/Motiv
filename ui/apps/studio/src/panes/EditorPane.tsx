@@ -33,6 +33,11 @@ export function EditorPane(props: {
   title?: ReactNode;
   /** The document's name as the DSL surface files it; absent for a nameless draft. */
   documentName?: string | undefined;
+  /** The document's model type: what both surfaces scope the rule, its definitions and their expression leaves to. */
+  modelType: string;
+  /** The rule this pane edits, so the DSL surface's inspector strip reads a leaf against *this*
+   *  rule's open scenario; absent for a document with no name yet (nothing to key a reading on). */
+  ruleName?: string | undefined;
   /**
    * The document's own actions (JSON, Save), drawn at the end of the header after the surface tabs — on the
    * pane that holds the document, so they read as belonging to it. Optional: the pages still
@@ -135,12 +140,23 @@ export function EditorPane(props: {
                   definition is a tree of the same rows (#234). */}
               <BuilderBody
                 client={props.client}
+                modelType={props.modelType}
                 onExtractToCatalog={props.onExtractToCatalog}
                 onPromote={props.onPromote}
               />
             </>
           )
-          : <DslEditor store={store} catalog={catalog} sync={sync} documentName={props.documentName} />}
+          : (
+            <DslEditor
+              store={store}
+              catalog={catalog}
+              sync={sync}
+              modelType={props.modelType}
+              documentName={props.documentName}
+              client={props.client}
+              ruleName={props.ruleName}
+            />
+          )}
       </div>
     </section>
   );

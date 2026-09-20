@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { completeDsl } from '../src/dsl/completion.js';
+import { completeDsl, healUnterminated } from '../src/dsl/completion.js';
+import { parse } from '../src/dsl/parser.js';
+import { scopeAt } from '../src/expression/index.js';
 import type { Catalog, CatalogEntry } from '../src/contracts.js';
+import type { JsonSchema } from '../src/contracts.js';
 
 function spec(name: string, overrides: Partial<CatalogEntry> = {}): CatalogEntry {
   return {
@@ -106,5 +109,38 @@ describe('completeDsl', () => {
     const text = 'is';
     const result = completeDsl(text, text.length, catalog);
     expect(result!.options.map((option) => option.label)).not.toContain('is-eligible');
+  });
+});
+
+describe('completeDsl inside a backtick', () => {
+  const order: JsonSchema = { type: 'object', properties: { total: { type: 'number', format: 'decimal' } } };
+  const customer: JsonSchema = { type: 'object', properties: { age: { type: 'integer' }, orders: { type: 'array', items: order } } };
+  const leafCatalog: Catalog = { ...catalog, modelTypes: { customer } };
+
+  // A real `leafScope` implementation must cope with the author mid-edit — an open backtick, or
+  // an open quantifier brace — which the parser rightly refuses to turn into a document (see
+  // `dsl-parser-errors.test.ts`, which pins `document` staying undefined for exactly that). So
+  // this fixture heals the same trailing constructs `completeDsl`'s own `leafAt` heals internally
+  // before it re-parses, rather than asserting on `parse(text).document` directly — using the
+  // product's own `healUnterminated`, not a copy, so this exercises the real healer.
+  const scopeFor = (text: string, cursor: number) =>
+    completeDsl(text, cursor, leafCatalog, (path) => {
+      const document = parse(healUnterminated(text)).document;
+      return document ? scopeAt(document, path, 'customer', leafCatalog) : null;
+    });
+
+  it('completes fields inside a leaf', () => {
+    const text = 'is-active & `ag';
+    expect(scopeFor(text, text.length)!.options.map((o) => o.label)).toEqual(['age']);
+    expect(scopeFor(text, text.length)!.from).toBe(13);
+  });
+
+  it('completes the element inside a quantifier body', () => {
+    const text = 'all in orders { `tot';
+    expect(scopeFor(text, text.length)!.options.map((o) => o.label)).toEqual(['total']);
+  });
+
+  it('completes DSL outside a backtick as before', () => {
+    expect(scopeFor('is-', 3)!.options.map((o) => o.label)).toContain('is-active');
   });
 });

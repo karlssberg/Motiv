@@ -65,6 +65,7 @@ public sealed class MotivRulesOptions
                     return ex.Errors;
                 }
             },
+            Inspect = static (serializer, documentJson) => serializer.Inspect<TModel>(documentJson),
             BindModel = static (jsonOptions, modelElement) => Bind<TModel>(jsonOptions, modelElement)!,
             Evaluate = static (serializer, resultSerializer, jsonOptions, documentJson, modelElement) =>
             {

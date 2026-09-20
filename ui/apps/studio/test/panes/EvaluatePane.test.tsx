@@ -36,11 +36,11 @@ function client(options: { evaluate?: ReturnType<typeof vi.fn>; catalog?: Catalo
   } as unknown as RulesApiClient;
 }
 
-function renderPane(apiClient: RulesApiClient): RuleEditorStore {
+function renderPane(apiClient: RulesApiClient, modelType = 'customer'): RuleEditorStore {
   const store = new RuleEditorStore({ rule: { spec: 'is-active' } });
   render(
     <RuleEditorProvider store={store}>
-      <EvaluatePane client={apiClient} />
+      <EvaluatePane client={apiClient} modelType={modelType} />
     </RuleEditorProvider>,
   );
   return store;
@@ -93,6 +93,27 @@ describe('EvaluatePane', () => {
 
     await waitFor(() => expect(evaluate).toHaveBeenCalled());
     expect(screen.queryByText('$.age: expected integer, got string')).toBeNull();
+  });
+
+  it('evaluates against the document\'s own model type, with a sample shaped by its schema', async () => {
+    const evaluate = vi.fn().mockResolvedValue(evaluation);
+    const twoModels: Catalog = {
+      ...catalog,
+      modelTypes: {
+        ...catalog.modelTypes,
+        order: { type: ['object', 'null'], properties: { total: { type: 'number' }, status: { type: 'string' } } },
+      },
+    };
+    const store = renderPane(client({ evaluate, catalog: twoModels }), 'order');
+    await settleCatalog();
+
+    const sample = JSON.parse((screen.getByLabelText('sample model') as HTMLTextAreaElement).value);
+    expect(Object.keys(sample)).toEqual(['total', 'status']);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Evaluate' }));
+    await waitFor(() => expect(evaluate).toHaveBeenCalledWith(
+      expect.objectContaining({ modelType: 'order', document: store.getState().document }),
+    ));
   });
 
   it('does not enforce schemas when the catalog carries no model type map', async () => {

@@ -1,5 +1,10 @@
 import type { Catalog } from '../contracts.js';
+import { isExpressionNode } from '../document.js';
+import { getNode } from '../paths.js';
+import type { LeafScope } from '../expression/scope.js';
+import { completeLeaf } from '../expression/complete.js';
 import { declaredLocals } from './locals.js';
+import { parse } from './parser.js';
 import { DSL_KEYWORDS, DSL_QUANTIFIERS, DSL_TYPES, PARAM_REST_CHARS, WORD_REST_CHARS, WORD_START_CHARS } from './lexer.js';
 
 /**
@@ -7,7 +12,9 @@ import { DSL_KEYWORDS, DSL_QUANTIFIERS, DSL_TYPES, PARAM_REST_CHARS, WORD_REST_C
  * them onto its widget's types (`kind` onto its icon vocabulary, `boost` onto its ranking),
  * so the package takes no dependency on any editor, even at the type level.
  */
-export type CompletionItemKind = 'spec' | 'collection' | 'quantifier' | 'keyword' | 'type' | 'parameter' | 'local';
+export type CompletionItemKind =
+  | 'spec' | 'collection' | 'quantifier' | 'keyword' | 'type' | 'parameter' | 'local'
+  | 'field' | 'method' | 'variable';
 
 /** One completion option. */
 export interface CompletionItem {
@@ -17,6 +24,10 @@ export interface CompletionItem {
   detail?: string;
   /** Ranking nudge relative to sibling options; higher sorts earlier. */
   boost?: number;
+  /** Text to insert instead of `label`, e.g. a method template `where(o => o.)`. */
+  insert?: string;
+  /** Where to leave the caret inside `insert`, from its start; absent means at its end. */
+  caretOffset?: number;
 }
 
 /** The completions for one word, and the range they would replace. */
@@ -127,7 +138,18 @@ function wordBefore(text: string, cursor: number): { from: number; text: string 
  * `cursor`, already narrowed to the typed prefix so the source stays honest about what it
  * offers, or `null` when there is no word or nothing matches it.
  */
-export function completeDsl(text: string, cursor: number, catalog: Catalog): DslCompletion | null {
+export function completeDsl(
+  text: string,
+  cursor: number,
+  catalog: Catalog,
+  leafScope?: (path: string) => LeafScope | null,
+): DslCompletion | null {
+  const leaf = leafScope ? leafAt(text, cursor, leafScope) : null;
+  if (leaf) {
+    const inner = completeLeaf(text.slice(leaf.from, leaf.to), cursor - leaf.from, leaf.scope);
+    return inner ? { ...inner, from: inner.from + leaf.from } : null;
+  }
+
   const word = wordBefore(text, cursor);
   if (!word) return null;
 
@@ -145,4 +167,89 @@ export function completeDsl(text: string, cursor: number, catalog: Catalog): Dsl
     // Further typing keeps this list only while it still extends the prefix that produced it.
     isValidFor: (nextWord) => nextWord.toLowerCase().startsWith(prefix),
   };
+}
+
+/** The expression leaf whose text covers `cursor`, with its scope; null outside every backtick. */
+function leafAt(
+  text: string,
+  cursor: number,
+  leafScope: (path: string) => LeafScope | null,
+): { from: number; to: number; scope: LeafScope } | null {
+  // The common case: the rest of the document parses cleanly, so the real node paths (and thus
+  // proper nested scoping, e.g. inside a quantifier body) are available directly.
+  const direct = matchLeaf(parse(text), text, cursor, leafScope, text.length);
+  if (direct !== undefined) return direct;
+
+  // The author is typically mid-edit *inside* the very leaf touching the cursor — an unterminated
+  // backtick, maybe inside an unterminated quantifier body — which the parser (rightly) refuses
+  // to turn into a document. Heal the trailing open constructs with the minimal closing tokens so
+  // the surrounding document parses, keeping real node paths (and therefore real nested scope)
+  // available while typing. `to` stays clamped to the original text: nothing exists there yet.
+  const healed = healUnterminated(text);
+  if (healed.length > text.length) {
+    const viaHeal = matchLeaf(parse(healed), healed, cursor, leafScope, text.length);
+    if (viaHeal !== undefined) return viaHeal;
+  }
+
+  // A syntax error elsewhere in the document — one healing cannot fix — leaves the document
+  // unavailable even after healing. Fall back to a textual search: the last unmatched backtick
+  // before the cursor opens the leaf, scoped at the rule root.
+  const head = text.slice(0, cursor);
+  const backtickCount = (head.match(/`/g) ?? []).length;
+  if (backtickCount % 2 === 0) return null;
+  const from = head.lastIndexOf('`') + 1;
+  const closeIndex = text.indexOf('`', cursor);
+  const to = closeIndex === -1 ? text.length : closeIndex;
+  const scope = leafScope('$.rule');
+  return scope ? { from, to, scope } : null;
+}
+
+/**
+ * Looks for the expression span covering `cursor` in a completed parse of `parsedText` (which
+ * may be `text` itself, or `text` healed with trailing closing tokens appended). Returns
+ * `undefined` — try the next strategy — when the parse failed outright; `null` when it succeeded
+ * but no span covers the cursor; otherwise the leaf's bounds, clamped to `limit` (the length of
+ * the text actually being edited, since a healed parse can place a span past it).
+ */
+function matchLeaf(
+  result: ReturnType<typeof parse>,
+  parsedText: string,
+  cursor: number,
+  leafScope: (path: string) => LeafScope | null,
+  limit: number,
+): { from: number; to: number; scope: LeafScope } | null | undefined {
+  if (!result.document) return undefined;
+  for (const span of result.spans) {
+    const node = getNode(result.document, span.path);
+    if (!node || !isExpressionNode(node)) continue;
+    // The span covers the backticks; the leaf text sits one character inside each.
+    const from = span.from + 1;
+    const rawTo = parsedText[span.to - 1] === '`' && span.to - 1 > span.from ? span.to - 1 : span.to;
+    const to = Math.min(rawTo, limit);
+    if (cursor < from || cursor > to) continue;
+    const scope = leafScope(span.path);
+    return scope ? { from, to, scope } : null;
+  }
+  return null;
+}
+
+/**
+ * Appends the minimal closing tokens — a backtick, then any open quantifier braces — needed to
+ * heal a leaf or quantifier body an in-progress edit has left open, so the surrounding document
+ * can still be parsed for scope purposes. Backtick-delimited leaf text is opaque to this scan, so
+ * a brace inside one is never mistaken for a quantifier body's.
+ *
+ * Exported so a `leafScope` implementation (and its tests) can heal the same way `leafAt` does
+ * internally before it re-parses — a real caller of `completeDsl` needs the same healing.
+ */
+export function healUnterminated(text: string): string {
+  let inLeaf = false;
+  let braceDepth = 0;
+  for (const char of text) {
+    if (char === '`') { inLeaf = !inLeaf; continue; }
+    if (inLeaf) continue;
+    if (char === '{') braceDepth++;
+    else if (char === '}') braceDepth = Math.max(0, braceDepth - 1);
+  }
+  return text + (inLeaf ? '`' : '') + '}'.repeat(braceDepth);
 }

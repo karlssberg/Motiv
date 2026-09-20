@@ -1,3 +1,6 @@
+using System.Reflection;
+using Motiv.Serialization.Expressions;
+
 namespace Motiv.Serialization;
 
 /// <summary>
@@ -258,6 +261,92 @@ public sealed class RuleSerializer
     }
 
     /// <summary>
+    /// Checks a rule document as <see cref="Deserialize{TModel}(string)" /> does — so, unlike
+    /// <see cref="Validate{TModel}(string)" />, an unsupplied required parameter is reported as
+    /// <see cref="RuleErrorCode.MissingParameter" /> rather than stood in by a placeholder — and
+    /// also reports what the checker learned about every expression leaf reached while checking the
+    /// document: the types it solved for literals and parameters, each leaf's result type, and its
+    /// warnings. A leaf inside a quantifier body is analysed against the collection's element type,
+    /// not <typeparamref name="TModel"/>.
+    /// </summary>
+    /// <typeparam name="TModel">The model type the document's spec references were registered for.</typeparam>
+    /// <param name="json">The rule document to inspect.</param>
+    /// <returns>The document's errors and the facts gathered about its expression leaves.</returns>
+    public RuleValidation Inspect<TModel>(string json)
+    {
+        var errors = new List<RuleError>();
+        var document = Prepare(json, null, errors);
+        if (document is null)
+            return new RuleValidation(errors, []);
+
+        // Unlike Validate<TModel>, binding here is not gated on errors.Count == 0: a document with
+        // parameter-supply errors still binds and analyses as far as it can, so facts surface
+        // alongside those errors instead of being withheld by them.
+        if (document.Root is not null)
+            RuleBinder.Bind<TModel>(document, _source, _options, errors);
+
+        // One shared visited set across both walks: a Local node's body is the very same RuleNode
+        // instance LocalResolver.Link assigned to document.Definitions, so a root walk that recurses
+        // into it and the definitions loop below would otherwise gather every fact in that body
+        // twice (once per reference, for a definition referenced more than once).
+        // RuleNode is a plain class with no Equals/GetHashCode override, so a bare HashSet<RuleNode>
+        // already compares by reference — exactly what's needed to de-duplicate the shared instance
+        // LocalResolver.Link assigns to every "local" node naming the same definition.
+        var facts = new List<RuleLeafFact>();
+        var visited = new HashSet<RuleNode>();
+        if (document.Root is not null)
+            CollectFacts<TModel>(document.Root, facts, visited);
+        foreach (var definition in document.Definitions)
+            CollectFacts<TModel>(definition, facts, visited);
+        return new RuleValidation(errors, facts);
+    }
+
+    private static readonly MethodInfo CollectFactsMethod = typeof(RuleSerializer)
+        .GetMethod(nameof(CollectFacts), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+    /// <summary>
+    /// Walks a rule subtree gathering leaf facts, switching to a collection's element type when it
+    /// descends into a higher-order node's body — mirroring how <see cref="RuleBinder.BindHigherOrder{TModel}" />
+    /// (via <c>CollectionBinding</c>) rebinds a quantifier body against the element rather than the parent.
+    /// <paramref name="visited"/> is shared across the whole document so a definition's body — reached
+    /// both by recursing into a <see cref="RuleOperator.Local" /> node and by <see cref="Inspect{TModel}"/>'s
+    /// own pass over <c>document.Definitions</c> — contributes its facts only once.
+    /// </summary>
+    private void CollectFacts<TModel>(RuleNode node, List<RuleLeafFact> facts, HashSet<RuleNode> visited)
+    {
+        if (!visited.Add(node))
+            return;
+
+        switch (node.Operator)
+        {
+            case RuleOperator.Expression:
+                var analysis = LeafBinding.Analyse<TModel>(node, []);
+                if (analysis is not null)
+                    facts.AddRange(LeafBinding.FactsOf(node, analysis));
+                return;
+            case RuleOperator.Local:
+                if (node.Definition is not null)
+                    CollectFacts<TModel>(node.Definition, facts, visited);
+                return;
+        }
+
+        if (node.Operator.IsHigherOrder())
+        {
+            if (node.Children.Count == 0)
+                return;
+            var binding = _source.FindCollection<TModel>(node.PathText!);
+            if (binding is null)
+                return;
+            CollectFactsMethod.MakeGenericMethod(binding.ElementType)
+                .Invoke(this, [node.Children[0], facts, visited]);
+            return;
+        }
+
+        foreach (var child in node.Children)
+            CollectFacts<TModel>(child, facts, visited);
+    }
+
+    /// <summary>
     /// Checks a rule document structurally and semantically against the registry for a metadata
     /// load, accumulating every error instead of throwing. Parameter values are not taken:
     /// required parameters are stood in by type-shaped placeholders, so supply errors are only
@@ -366,10 +455,10 @@ public sealed class RuleSerializer
         List<RuleError> errors)
     {
         if (document.Root is not null)
-            RuleParameterSubstituter.Apply(document.Root, values, errors);
+            RuleParameterSubstituter.Apply(document.Root, values, errors, document.Parameters);
 
         foreach (var definition in document.Definitions)
-            RuleParameterSubstituter.Apply(definition, values, errors);
+            RuleParameterSubstituter.Apply(definition, values, errors, document.Parameters);
     }
 
     private static void ThrowIfInvalid(List<RuleError> errors)

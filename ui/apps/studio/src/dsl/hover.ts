@@ -2,7 +2,7 @@ import { hoverTooltip } from '@codemirror/view';
 import type { Extension } from '@codemirror/state';
 import type { HoverTooltipSource } from '@codemirror/view';
 import type { Diagnostic } from '@codemirror/lint';
-import { splitDiagnosticMessage } from './lint.js';
+import { splitDiagnosticMessage, type PlacedFact } from './lint.js';
 
 /** Appends a `tag` element carrying `text` under `className`, when there is text to show. */
 function appendLine(
@@ -51,7 +51,45 @@ export function diagnosticTooltipSource(
   };
 }
 
-/** The editor extension showing diagnostic tooltips on hover. */
-export function motivHover(getDiagnostics: () => readonly Diagnostic[]): Extension {
-  return hoverTooltip(diagnosticTooltipSource(getDiagnostics));
+/** Renders a fact as the tooltip's DOM: a solved literal's type, or a warning's message. */
+export function renderFact(fact: PlacedFact): HTMLElement {
+  const root = document.createElement('div');
+  root.className = 'dsl-hover';
+  if (fact.isWarning) {
+    appendLine(root, 'div', 'dsl-hover-code', 'warning');
+    appendLine(root, 'div', 'dsl-hover-message', fact.message ?? '');
+  } else {
+    appendLine(root, 'div', 'dsl-hover-message', `${fact.text} as ${fact.type}`);
+    appendLine(root, 'div', 'dsl-hover-path', fact.anchor ? `from ${fact.anchor}` : 'default — no model field fixed this type');
+  }
+  return root;
+}
+
+/**
+ * A hover source describing whichever validation fact covers the hovered position. Facts are
+ * read through a getter so the tooltip always reflects the latest validation pass.
+ */
+export function factTooltipSource(getFacts: () => readonly PlacedFact[]): HoverTooltipSource {
+  return (_view, pos) => {
+    // Prefer the narrowest fact, so a literal wins over the whole-leaf result fact that also covers it.
+    const fact = [...getFacts()]
+      .filter((f) => pos >= f.from && pos <= f.to)
+      .sort((a, b) => (a.to - a.from) - (b.to - b.from))[0];
+    if (!fact) return null;
+
+    return {
+      pos: fact.from,
+      end: fact.to,
+      above: true,
+      create: () => ({ dom: renderFact(fact) }),
+    };
+  };
+}
+
+/** The editor extension showing diagnostic and validation-fact tooltips on hover. */
+export function motivHover(
+  getDiagnostics: () => readonly Diagnostic[],
+  getFacts: () => readonly PlacedFact[] = () => [],
+): Extension {
+  return [hoverTooltip(diagnosticTooltipSource(getDiagnostics)), hoverTooltip(factTooltipSource(getFacts))];
 }

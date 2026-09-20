@@ -33,7 +33,7 @@ export function createValidationController(
         document,
         ...(options.isAsync ? { isAsync: true } : {}),
       })
-      .then((response) => store.setErrors(response.errors))
+      .then((response) => store.setErrors(response.errors, response.facts ?? []))
       .catch(() => { /* transport failures leave prior errors in place */ });
   };
 

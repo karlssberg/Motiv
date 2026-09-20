@@ -1,3 +1,5 @@
+using Motiv.Serialization.Expressions;
+
 namespace Motiv.Serialization;
 
 internal static class AsyncRuleBinder
@@ -115,12 +117,8 @@ internal static class AsyncRuleBinder
         return explanation.ToAsyncSpec();
     }
 
-    private static AsyncSpecBase<TModel, string>? BindExpressionLeaf<TModel>(RuleNode node, List<RuleError> errors)
-    {
-        errors.Add(new RuleError(node.Path, RuleErrorCode.ExpressionsNotEnabled,
-            "expression nodes require the Motiv.Serialization.Expressions package"));
-        return null;
-    }
+    private static AsyncSpecBase<TModel, string>? BindExpressionLeaf<TModel>(RuleNode node, List<RuleError> errors) =>
+        LeafBinding.Bind<TModel>(node, errors)?.ToAsyncSpec();
 
     private static AsyncSpecBase<TModel, string>? Decorate<TModel>(
         RuleNode node,

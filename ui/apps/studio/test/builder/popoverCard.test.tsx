@@ -34,7 +34,7 @@ afterEach(() => { Element.prototype.getBoundingClientRect = original; });
 describe('row popovers', () => {
   it('follows its row when the pane beneath it scrolls', async () => {
     stubLayout();
-    render(<RuleEditorProvider store={new RuleEditorStore(AND)}><BuilderPane client={client()} /></RuleEditorProvider>);
+    render(<RuleEditorProvider store={new RuleEditorStore(AND)}><BuilderPane client={client()} modelType="customer" /></RuleEditorProvider>);
     fireEvent.click(await screen.findByRole('combobox', { name: /^operator at/ }));
 
     const placedAt = () => (screen.getByRole('listbox') as HTMLElement).style.top;

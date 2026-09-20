@@ -3,7 +3,7 @@ import { autocompletion, completionKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { EditorState } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
-import type { Catalog } from '@motiv-rules/core';
+import { healUnterminated, parse, scopeAt, type Catalog, type LeafScope, type RuleDocument } from '@motiv-rules/core';
 import { createMotivCompletion } from '../dsl/completion.js';
 import { motiv } from '../dsl/motivLanguage.js';
 import { motivEditorTheme } from '../dsl/theme.js';
@@ -133,6 +133,32 @@ export function useInlineDslEditor(options: {
       };
     };
 
+    // A row's buffer is a one-line document of its own — not a slice of the tree's document — so
+    // a leaf's path (`$.rule` for the row itself, `$.rule.left` inside a composed row, and so on)
+    // is resolved by parsing *this* buffer, not the store's. The row's `modelType` is already the
+    // narrowed one a caller inside a quantifier body passes (the element type, not the root), so
+    // `scopeAt` needs no ancestor to climb from — the row's own model IS the root it walks from.
+    // Reads `view` rather than closing over `text`, since `view` is what the buffer changes
+    // underneath. This closure is declared above `const view` below it — safe only because
+    // nothing calls `leafScope` until a completion actually runs, well after `view` is assigned;
+    // it must stay a function (not evaluated eagerly) for that ordering to hold.
+    //
+    // A single completion request can call `leafScope` more than once for the same buffer text
+    // (`completeDsl` re-resolves the leaf after healing, and again for the row scope itself), so
+    // the parse is cached by text rather than redone on every call.
+    let parsedText: string | undefined;
+    let parsedDocument: RuleDocument | undefined;
+    const leafScope = (path: string): LeafScope | null => {
+      const { catalog, modelType } = options.scope();
+      const text = view.state.doc.toString();
+      if (text !== parsedText) {
+        parsedText = text;
+        parsedDocument = parse(text).document ?? parse(healUnterminated(text)).document;
+      }
+      if (!parsedDocument) return null;
+      return scopeAt(parsedDocument, path, modelType, catalog);
+    };
+
     const view = new EditorView({
       parent,
       state: EditorState.create({
@@ -142,7 +168,7 @@ export function useInlineDslEditor(options: {
           history(),
           motiv(),
           motivEditorTheme,
-          autocompletion({ override: [createMotivCompletion(scoped)] }),
+          autocompletion({ override: [createMotivCompletion(scoped, () => leafScope)] }),
           ...(options.ariaLabel ? [EditorView.contentAttributes.of({ 'aria-label': options.ariaLabel })] : []),
           // Ahead of the default bindings, which would otherwise claim Enter for a newline.
           keymap.of([

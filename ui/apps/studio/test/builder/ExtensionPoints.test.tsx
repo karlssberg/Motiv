@@ -1,4 +1,3 @@
-import { tooltipOf } from '../support/tooltip.js';
 import { describe, it, expect, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { RuleEditorStore, type RulesApiClient } from '@motiv-rules/core';
@@ -11,24 +10,20 @@ const catalog = {
 };
 const client = () => ({ getCatalog: vi.fn().mockResolvedValue(catalog) }) as unknown as RulesApiClient;
 const renderWith = (store: RuleEditorStore) =>
-  render(<RuleEditorProvider store={store}><EditorPane client={client()} /></RuleEditorProvider>);
+  render(<RuleEditorProvider store={store}><EditorPane client={client()} modelType="customer" /></RuleEditorProvider>);
 
 describe('extension points', () => {
-  it('shows expression as a disabled affordance inside the detail panel, and nothing in the chrome', async () => {
+  it('shows no disabled placeholder affordance, in the chrome or a leaf\'s detail panel', async () => {
     const store = new RuleEditorStore({ rule: { spec: 'is-adult' } });
     renderWith(store);
     // Nothing greyed-out sits in the pane header at rest: a disabled button for a feature that
     // does not exist yet is noise in the primary chrome, so the parameters placeholder is gone.
     expect(screen.queryByRole('button', { name: /parameters .*coming/i })).toBeNull();
 
-    // The node's own extension point lives in its detail panel, which starts closed.
+    // A leaf's own extension point used to be a disabled "expression — coming" button in its
+    // detail panel; expression editing is now the row itself (typed DSL, completion included),
+    // so the placeholder is gone there too, with nothing left to replace it.
     fireEvent.click(await screen.findByRole('button', { name: 'details for $.rule' }));
-
-    // `aria-disabled`, not `disabled`: a disabled button gets no pointer events, so the tooltip
-    // that says why it is off could never appear.
-    const expr = screen.getByRole('button', { name: /expression .*coming/i });
-    expect(expr.getAttribute('aria-disabled')).toBe('true');
-    expect(expr.hasAttribute('disabled')).toBe(false);
-    expect((await tooltipOf(expr)).textContent).toMatch(/backend/);
+    expect(screen.queryByRole('button', { name: /expression .*coming/i })).toBeNull();
   });
 });

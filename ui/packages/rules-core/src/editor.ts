@@ -2,7 +2,7 @@ import {
   binaryOperator, isBinaryNode, isLocalNode, isNotNode, operandsOf,
   type BinaryOperator, type Decoration, type Definition, type Payload, type RuleDocument, type RuleNode,
 } from './document.js';
-import type { RuleError } from './contracts.js';
+import type { RuleError, RuleLeafFact } from './contracts.js';
 import { definitionBodyPath, definitionPath, getNode, localReferences, setNode, splitLast } from './paths.js';
 import { isValidLocalName } from './localNames.js';
 
@@ -10,6 +10,8 @@ import { isValidLocalName } from './localNames.js';
 export interface EditorState {
   document: RuleDocument;
   errors: RuleError[];
+  /** The server checker's per-leaf facts from the last validation, kept beside `errors`. */
+  facts: RuleLeafFact[];
   canUndo: boolean;
   canRedo: boolean;
   /**
@@ -44,6 +46,7 @@ export function errorsForNode(errors: RuleError[], path: string): RuleError[] {
 export class RuleEditorStore {
   #document: RuleDocument;
   #errors: RuleError[] = [];
+  #facts: RuleLeafFact[] = [];
   #undo: RuleDocument[] = [];
   #redo: RuleDocument[] = [];
   /**
@@ -65,6 +68,7 @@ export class RuleEditorStore {
     return {
       document: this.#document,
       errors: this.#errors,
+      facts: this.#facts,
       canUndo: this.#undo.length > 0,
       canRedo: this.#redo.length > 0,
       dirty: this.#isDirty(),
@@ -90,6 +94,7 @@ export class RuleEditorStore {
   revert(): void {
     this.#document = this.#baseline;
     this.#errors = [];
+    this.#facts = [];
     this.#undo = [];
     this.#redo = [];
     this.#dirtyFor = null;
@@ -299,15 +304,17 @@ export class RuleEditorStore {
     this.#commit(next);
   }
 
-  setErrors(errors: RuleError[]): void {
+  setErrors(errors: RuleError[], facts: RuleLeafFact[] = []): void {
     this.#errors = errors;
+    this.#facts = facts;
     this.#notify();
   }
 
-  /** Replaces the entire document as a fresh baseline: history and errors are cleared. */
+  /** Replaces the entire document as a fresh baseline: history, errors and facts are cleared. */
   loadDocument(document: RuleDocument): void {
     this.#document = structuredClone(document);
     this.#errors = [];
+    this.#facts = [];
     this.#undo = [];
     this.#redo = [];
     this.#notify();
