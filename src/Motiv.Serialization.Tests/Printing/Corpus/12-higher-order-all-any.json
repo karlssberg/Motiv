@@ -1,0 +1,1 @@
+{ "rule": { "and": [ { "asAllSatisfied": { "spec": "is-positive" }, "path": "orders" }, { "asAnySatisfied": { "spec": "is-positive" }, "path": "orders", "name": "some positive" } ] } }

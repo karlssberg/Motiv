@@ -1,0 +1,1 @@
+{ "name": "eligible", "rule": { "spec": "customer.is-active" } }

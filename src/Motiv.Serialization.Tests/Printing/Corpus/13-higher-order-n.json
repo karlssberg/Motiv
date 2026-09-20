@@ -1,0 +1,1 @@
+{ "rule": { "or": [ { "asNSatisfied": { "spec": "is-positive" }, "n": 2, "path": "orders" }, { "asAtMostNSatisfied": { "not": { "spec": "is-positive" } }, "n": 1, "path": "orders" } ] } }

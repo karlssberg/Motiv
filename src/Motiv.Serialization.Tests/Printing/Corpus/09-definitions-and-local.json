@@ -1,0 +1,2 @@
+{ "definitions": { "is-active": { "rule": { "spec": "customer.is-active" } }, "grown-up": { "rule": { "spec": "customer.is-adult" }, "whenTrue": "grown", "whenFalse": "young" } },
+  "rule": { "and": [ { "local": "is-active" }, { "local": "grown-up" }, { "not": { "local": "is-active" } } ] } }
