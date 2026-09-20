@@ -46,6 +46,12 @@ specs resolved through handles or `registry.Get`. What a decision is adopted as 
 rule should become code. Exact where the format is; a `TODO` and a warning where it is not.
 _Avoid_: Generated code (it is printed from a document, not generated from a model), export, transpile
 
+**Snapshot**:
+A rule document and the proposition version-log rows it resolved through, carried out of the host —
+by a reproduction or `get_rule` — and bound again elsewhere over a compiled registry, the rows
+shadowing the registry's heads. The generated test's only dependency (`RuleSnapshot`).
+_Avoid_: Export, bundle, fixture
+
 **Namespace**:
 The dotted prefix of a rule or proposition name (`pricing.eu.*`), used as the unit of authorization and
 organization. A pure projection of the names — there is no stored hierarchy to keep in sync.

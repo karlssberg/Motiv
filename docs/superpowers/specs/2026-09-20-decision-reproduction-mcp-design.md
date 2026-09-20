@@ -225,9 +225,9 @@ order. The corpus is nineteen embedded documents in the serialization tests, Stu
 
 ### 7. The MCP endpoint
 
-`app.MapMotivMcp("/mcp")` in `Motiv.Serialization.AspNetCore`, on the official
-`ModelContextProtocol.AspNetCore` package, Streamable HTTP. Opt-in: a host that never calls it
-exposes nothing. `RequireAuthorization()` by default, as the rules API.
+`AddMcp()` on the rules builder and `app.MapMotivMcp("/mcp")` in `Motiv.Serialization.AspNetCore`,
+on the official `ModelContextProtocol.AspNetCore` package, stateless Streamable HTTP. Opt-in: a host
+that never calls the pair exposes nothing. `RequireAuthorization()` by default, as the rules API.
 
 | Tool | Input | Returns | Grant |
 |---|---|---|---|
@@ -250,14 +250,18 @@ Rules:
 - Tool descriptions carry the fidelity vocabulary and tell the agent to scaffold, not invent, when
   the model is unresolved, and to follow the target repository's test conventions.
 
-The same `DecisionReproducer` call is exposed as `GET /api/decisions/{id}/reproduction` and the
-printer as `GET /api/rules/{name}/csharp?version=` for Studio.
+The same `DecisionReproducer` call is exposed under the rules group as `GET decisions/{id}/reproduction`
+(with `GET decisions` and `GET decisions/{id}` beside it) and the printer as
+`GET rules/{name}/csharp?version=` for Studio — as implemented, under `MapMotivRules`'s base path
+rather than a separate `/api/decisions` root.
 
 ### 8. The testing package and the generated test
 
-`Motiv.Serialization.Testing` ships `RuleSnapshot.FromJson(rule, propositions)` and
-`Bind(SpecRegistry)`, layering the snapshot over the registry the test supplies — the same
-`LayeredSpecSource` the reproducer uses.
+`Motiv.Serialization.Snapshots` — not `Motiv.Serialization.Testing`, which already names the
+conformance suites linked into the test projects — ships `RuleSnapshot.FromJson(rule, propositions)`
+and `Bind<TModel>(SpecRegistry)`, layering the snapshot over the registry the test supplies through
+the reproducer's own `PinnedPropositionBinder`. `propositions` are version-log rows (`name`,
+`version`, `modelType`, `document`) as `reproduce_decision` and `get_rule` return them.
 
 ```csharp
 [Fact]

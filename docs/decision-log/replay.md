@@ -103,6 +103,16 @@ model type through the host's `JsonSerializerOptions` — the ones on `MotivRule
 converters apply — and a projection that lacks a field the rule reads deserializes as far as it
 goes. An in-memory capture that is already the model type is used as it is.
 
+## Over HTTP
+
+With `AddDecisionSource`, `MapMotivRules` also maps, under its base path, `GET decisions`
+(`correlationId`, `ruleName`, `satisfied`, `from`, `to`, `limit`; records of rules the caller may not
+read are omitted), `GET decisions/{id}` and `GET decisions/{id}/reproduction` (`Read` on the record's
+rule, else `403`), and `GET rules/{name}/csharp?version=` (`204` for a version on the compiled
+default). A reproduction crosses the wire with the captured input and the replayed model as the
+host's JSON — and a reference capture as its key and nothing else. The [MCP server](./mcp.md)
+serves the same through tools, and a [snapshot](./snapshots.md) binds what came back.
+
 ## The C# Beside It
 
 `Reproduction.CSharp` is the pinned rule document printed by the [C# printer](../live-rules/csharp-printer.md):
@@ -114,5 +124,5 @@ make exact: a higher-order rule's collection selector, an object payload, an exp
 
 ## What Comes Next
 
-The reproduction and its C# are the primitives. The HTTP endpoints that serve them and the MCP
-tools a coding agent calls are the last slice of the same design.
+Studio's own screen over a reproduction — the model as a scenario row, Live pinned to the logged
+version, the fidelity as a chip, "save as scenario" — is a later design over these same endpoints.

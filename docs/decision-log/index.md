@@ -162,12 +162,15 @@ decision.
 | [The Sink and the Queue](./sink.md) | `IDecisionSink`, `DecisionLog`, `DecisionLogOptions`, `DecisionBackpressure`, and `AddDecisionLog()`. |
 | [The Durable Sink and Retention](./durable.md) | `SqlDecisionSink`, `SqlDecisionSinkOptions`, `DecisionSqlDialect`, `DecisionQuery`, and the retention purge. |
 | [Replay](./replay.md) | `IDecisionSource`, `DecisionReproducer`, `Reproduction`, `ReproductionFidelity`, the resolver seam, and `AddDecisionSource()`. |
+| [The MCP Server](./mcp.md) | `AddMcp()`, `MapMotivMcp()`, the seven tools and the three rules they keep. |
+| [Rule Snapshots](./snapshots.md) | `Motiv.Serialization.Snapshots` and `RuleSnapshot` — the generated test's only dependency. |
 
 ## What This Does Not Do Yet
 
 - **A zero-loss queue.** The durable sink ([here](./durable.md)) makes the log outlive the process, but
   the queue in front of it is still a bounded crash-loss window by construction. Closing it needs a
   durable *queue* — an outbox or a broker — which is your own `IDecisionSink` over that transport.
-- **Serving a replay.** [Replay](./replay.md) turns a record back into the documents that decided it
-  and re-runs them; the HTTP endpoint that serves a reproduction, the C# printer that turns one into a
-  test, and the MCP tools a coding agent calls are the next slices.
+- **A replay screen.** [Replay](./replay.md) turns a record back into the documents that decided it
+  and re-runs them, the [MCP server](./mcp.md) and the HTTP endpoints serve it, and a
+  [snapshot](./snapshots.md) is the generated test's dependency; Studio's own screen over a
+  reproduction is a later design.
