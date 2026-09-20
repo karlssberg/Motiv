@@ -124,7 +124,8 @@ public class RuleSnapshotTests
         // Arrange — a hand-written row carries its document as a string; a revert row carries null
         var asText = """{ "name": "customer.eligible", "version": 1, "modelType": "customer", "document": "{ \"rule\": { \"spec\": \"customer.is-active\" } }" }""";
         var asNull = """{ "name": "customer.other", "version": 2, "modelType": "customer", "document": null }""";
-        var snapshot = RuleSnapshot.FromJson(AuditedOverEligible, [asText, asNull]);
+        var absent = """{ "name": "customer.third", "modelType": "customer" }""";
+        var snapshot = RuleSnapshot.FromJson(AuditedOverEligible, [asText, asNull, absent]);
 
         var spec = snapshot.Bind<Customer>(Registry());
 

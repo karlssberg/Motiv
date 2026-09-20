@@ -63,4 +63,23 @@ public class ReproductionContractsTests
         entry.CSharp!.ShouldBe("// printed");
         entry.CSharpWarnings.ShouldBe(new[] { "a warning" });
     }
+
+    [Fact]
+    public void Should_pass_a_whole_capture_that_is_already_json_through_untouched()
+    {
+        // A durable sink hands the capture back as a JsonElement; it crosses as it is, not re-serialised
+        using var captured = JsonDocument.Parse("""{ "age": 41 }""");
+        var reproduction = new Reproduction(
+            Record(DecisionInput.Whole(captured.RootElement)), Rule: null, Propositions: [],
+            new ReproducedModel(ReproducedModelKind.Redacted, captured.RootElement, null), Replayed: null,
+            new ReproductionFidelity([new FidelityNote(FidelityReason.ModelRedacted, "projected")]), CSharp: null, CSharpWarnings: []);
+
+        var entry = DecisionsContracts.Entry(reproduction, Json);
+
+        entry.Decision.Input!.Value!.Value.GetProperty("age").GetInt32().ShouldBe(41);
+        entry.Model.Kind.ShouldBe("Redacted");
+        entry.Model.Value!.Value.GetProperty("age").GetInt32().ShouldBe(41);
+        entry.Fidelity.IsExact.ShouldBeFalse();
+        entry.Fidelity.Notes.ShouldHaveSingleItem().Reason.ShouldBe("ModelRedacted");
+    }
 }

@@ -1,6 +1,8 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.DependencyInjection;
+using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 
 namespace Motiv.Serialization.AspNetCore.Tests;
@@ -12,6 +14,13 @@ namespace Motiv.Serialization.AspNetCore.Tests;
 /// </summary>
 public class MotivMcpEndpointsTests
 {
+    private sealed record Customer(bool IsActive);
+
+    private static SpecBase<Customer, string> IsActive { get; } =
+        Spec.Build((Customer c) => c.IsActive).WhenTrue("active").WhenFalse("inactive").Create();
+
+    private sealed class ActiveRule() : Rule<Customer, string>("active-rule", IsActive);
+
     private static JsonElement Structured(CallToolResult result)
     {
         result.IsError.ShouldNotBe(true, result.Content.OfType<TextContentBlock>().FirstOrDefault()?.Text);
@@ -156,11 +165,54 @@ public class MotivMcpEndpointsTests
 
         ErrorText(await host.CallAsync("get_rule", new { name = "active-rule", version = 9 })).ShouldContain("has no version 9");
         ErrorText(await host.CallAsync("print_rule", new { name = "active-rule", version = 9 })).ShouldContain("has no version 9");
-        ErrorText(await host.CallAsync("print_rule", new { name = "active-rule", version = 1 })).ShouldContain("compiled default");
+        ErrorText(await host.CallAsync("print_rule", new { name = "active-rule", version = 1 })).ShouldContain("'active-rule' v1 ran compiled code");
         ErrorText(await host.CallAsync("get_rule", new { name = "customer.eligible", version = 9 })).ShouldContain("has no version 9");
         ErrorText(await host.CallAsync("print_rule", new { name = "customer.eligible", version = 9 })).ShouldContain("has no version 9");
         var first = Structured(await host.CallAsync("print_rule", new { name = "customer.eligible", version = 1 }));
         first.GetProperty("source").GetString()!.ShouldContain("""registry.Get<Customer>("is-active")""");
         first.GetProperty("source").GetString()!.ShouldNotContain(".Not()");
+    }
+
+    /// <summary>
+    /// A host that registered only its rules and the server: no rule store, no propositions, no
+    /// scenarios, no decision log, no grant source. Every tool answers from what is there and names
+    /// the registration that is missing for the rest.
+    /// </summary>
+    [Fact]
+    public async Task Should_answer_from_a_host_with_no_stores_and_name_each_missing_registration()
+    {
+        var builder = WebApplication.CreateSlimBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddTestAuth();
+        builder.Services.AddMotivRules(new SpecRegistry().Register("is-active", IsActive), new MotivRulesOptions().AddModel<Customer>("customer"))
+            .AddRule<ActiveRule>()
+            .AddMcp();
+        await using var app = builder.Build();
+        app.UseTestAuth();
+        app.MapMotivMcp("/mcp");
+        await app.StartAsync();
+        var http = app.GetTestClient();
+        await using var mcp = await McpClient.CreateAsync(new HttpClientTransport(new HttpClientTransportOptions { Endpoint = new Uri(http.BaseAddress!, "/mcp") }, http, null, false));
+        async Task<CallToolResult> Call(string tool, object args) =>
+            await mcp.CallToolAsync(tool, JsonSerializer.Deserialize<Dictionary<string, object?>>(JsonSerializer.Serialize(args)));
+
+        var rule = Structured(await Call("get_rule", new { name = "active-rule" }));
+
+        rule.GetProperty("version").GetInt32().ShouldBe(1);
+        rule.GetProperty("document").ValueKind.ShouldBe(JsonValueKind.Null);
+        ErrorText(await Call("print_rule", new { name = "active-rule" })).ShouldEndWith("'active-rule' at its live version ran compiled code, not a document, so there is nothing to print");
+        ErrorText(await Call("get_rule", new { name = "active-rule", version = 2 })).ShouldContain("has no version 2");
+        ErrorText(await Call("get_rule", new { name = "nonexistent" })).ShouldContain("no rule or proposition");
+        ErrorText(await Call("print_rule", new { name = "nonexistent" })).ShouldContain("no rule or proposition");
+        ErrorText(await Call("list_decisions", new { })).ShouldContain("AddDecisionSource");
+        ErrorText(await Call("get_decision", new { id = Guid.NewGuid() })).ShouldContain("AddDecisionSource");
+        ErrorText(await Call("list_scenarios", new { rule = "active-rule" })).ShouldContain("AddScenarios");
+        ErrorText(await Call("save_scenario", new { rule = "active-rule", name = "n", model = "{}" })).ShouldContain("AddScenarios");
+    }
+
+    [Fact]
+    public void Should_refuse_null_endpoints()
+    {
+        Should.Throw<ArgumentNullException>(() => MotivMcpEndpoints.MapMotivMcp(null!)).ParamName!.ShouldBe("endpoints");
     }
 }

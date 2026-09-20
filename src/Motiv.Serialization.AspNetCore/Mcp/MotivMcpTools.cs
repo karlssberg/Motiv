@@ -81,7 +81,7 @@ public sealed class MotivMcpTools(
     {
         var (documentJson, printOptions) = await PrintableAsync(name, version, cancellationToken);
         if (documentJson is null)
-            throw new McpException($"'{name}' v{version} is a recorded revert: the rule ran its compiled default, and there is no document to print");
+            throw new McpException($"'{name}'{(version is null ? " at its live version" : $" v{version}")} ran compiled code, not a document, so there is nothing to print");
 
         try
         {
