@@ -36,7 +36,9 @@ answers yes: a logged decision must be re-runnable against the documents that de
    computes the same number and is refused by the key.
 6. **`MotivPropositionVersion` replaces `MotivProposition`.** The concurrency token goes with it:
    the `(Name, Version)` primary key is the compare-and-set, exactly as for rules, and the head is
-   projected in SQL. No migration: the schema guard names the missing table and says what to do.
+   projected in SQL. No migration in the library. Studio's SQLite guard adds the tables an
+   existing Motiv database lacks (added in slice 2, after the e2e host hit exactly this cliff); a
+   database that is not recognisably Motiv's is still refused with the message saying what to do.
 7. **Studio's JSON store is a log too**, with an atomic rewrite, and it still reads a file written
    before provenance existed (rows lacking `author` become system-authored version rows).
 8. **Import carries heads, not history.** The JSON store predates the log; imported rows are

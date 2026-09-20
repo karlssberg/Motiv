@@ -65,6 +65,19 @@ public static class StoreSchema
 
         var missing = await MissingTablesAsync(context, cancellationToken);
 
+        // A Motiv database from before some of its tables existed: EnsureCreated saw "a database
+        // with tables" and created nothing, but the tables it does hold are ours. Studio owns the
+        // model and runs on SQLite, so the model's own create script is authoritative here — the
+        // statements for the missing tables are run and nothing else is touched. A database that
+        // lacks the rule log is not recognisably Motiv's and is still refused below.
+        if (missing.Count > 0 && creationFailure is null && !missing.Contains("MotivRuleVersion"))
+        {
+            await CreateMissingTablesAsync(context, missing, cancellationToken);
+            logger.LogInformation(
+                "Motiv store schema: added {Tables}, which this database predated.", string.Join(", ", missing));
+            missing = await MissingTablesAsync(context, cancellationToken);
+        }
+
         if (missing.Count == 0)
         {
             if (creationFailure is not null)
@@ -98,6 +111,25 @@ public static class StoreSchema
     /// lookup, because that is provider-agnostic and answers the question actually being asked —
     /// can the stores use this schema.
     /// </summary>
+    /// <summary>
+    /// Runs the model's create-script statements that build <paramref name="tables"/> — the
+    /// <c>CREATE TABLE</c> and any <c>CREATE INDEX</c> naming one of them — against a database that
+    /// already holds the rest.
+    /// </summary>
+    private static async Task CreateMissingTablesAsync(
+        MotivStoreDbContext context, IReadOnlyList<string> tables, CancellationToken cancellationToken)
+    {
+        var script = context.Database.GenerateCreateScript();
+        foreach (var statement in script.Split(';'))
+        {
+            var sql = statement.Trim();
+            if (sql.Length == 0 || !tables.Any(table => sql.Contains($"\"{table}\"", StringComparison.Ordinal)))
+                continue;
+
+            await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
+        }
+    }
+
     private static async Task<IReadOnlyList<string>> MissingTablesAsync(
         MotivStoreDbContext context, CancellationToken cancellationToken)
     {

@@ -168,8 +168,9 @@ a name.
 
 An existing database from before the log holds `MotivProposition` and lacks
 `MotivPropositionVersion`. The EF store does not migrate it: create the table (the model's create
-script names it), or delete a development store and let the JSON import re-seed it. Rows in the
-old table are not read.
+script names it) — Studio's startup guard does this for a SQLite store that already holds Motiv's
+other tables — or delete a development store and let the JSON import re-seed it. Rows in the old
+table are not read.
 
 ## Next Steps
 

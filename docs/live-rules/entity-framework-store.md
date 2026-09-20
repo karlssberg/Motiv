@@ -110,8 +110,9 @@ apply:
 
 See [the symmetry with `IRuleStore`](../propositions/IPropositionStore.md#the-symmetry-with-irulestore)
 and [Concurrency](../propositions/IPropositionStore.md#concurrency). A database created before this
-table existed still holds `MotivProposition`; the schema guard reports the missing table rather than
-migrating &mdash; create it, or delete a development store and let the JSON import re-seed it.
+table existed still holds `MotivProposition`. The library does not migrate: create the missing
+table from the model's create script. Studio's startup guard does exactly that for a SQLite store
+that already holds `MotivRuleVersion`, and still refuses a database that is not recognisably Motiv's.
 
 **`MotivStoreGeneration`** holds two rows, keyed by scope (`"rules"` and `"propositions"`), because
 the two stores share no sequence &mdash; a rule publish never bumps the propositions generation, and

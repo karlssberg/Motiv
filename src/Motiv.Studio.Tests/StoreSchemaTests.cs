@@ -74,6 +74,38 @@ public class StoreSchemaTests
     }
 
     [Fact]
+    public async Task Should_add_the_tables_a_motiv_database_from_before_them_lacks()
+    {
+        // Arrange — a store created by an earlier Studio: Motiv's tables, minus the two newest.
+        // EnsureCreated sees "a database with tables" and creates nothing, which is the cliff every
+        // development store hit when the proposition log and the scenario table arrived.
+        var path = TempDatabasePath();
+        try
+        {
+            await using (var context = Context(path))
+            {
+                await context.Database.EnsureCreatedAsync();
+                await context.Database.ExecuteSqlRawAsync("DROP TABLE MotivPropositionVersion");
+                await context.Database.ExecuteSqlRawAsync("DROP TABLE MotivScenario");
+            }
+
+            // Act
+            await using (var context = Context(path))
+                await StoreSchema.EnsureCreatedAsync(context, NullLogger.Instance);
+
+            // Assert — the missing tables exist, and the rest were left alone
+            await using var check = Context(path);
+            (await check.PropositionVersions.CountAsync()).ShouldBe(0);
+            (await check.Scenarios.CountAsync()).ShouldBe(0);
+            (await check.RuleVersions.CountAsync()).ShouldBe(0);
+        }
+        finally
+        {
+            Cleanup(path);
+        }
+    }
+
+    [Fact]
     public async Task Should_surface_the_original_failure_when_the_database_cannot_be_opened()
     {
         // Arrange — an unwritable path stands in for every genuine failure (bad connection string,
