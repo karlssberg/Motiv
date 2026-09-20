@@ -1,15 +1,15 @@
-namespace Motiv.Serialization.Sql;
+namespace Motiv.Serialization;
 
 /// <summary>
 /// One bounded page of the decision log — the question "why was <em>this</em> customer declined, on
 /// the 3rd, at 14:07?" written down.
 /// </summary>
 /// <remarks>
-/// Deliberately small. Reading lives on <see cref="SqlDecisionSink"/> rather than on
-/// <c>IDecisionSink</c>, because that seam is also "emit, don't store" and a sink forwarding to a SIEM
-/// has nothing to read back — putting a query on the interface would make every such implementation
-/// lie. The same reasoning caps what belongs here: enough to answer the question the log exists for,
-/// and not so much that it becomes a reporting API nobody decided to build.
+/// Deliberately small. Reading lives on <see cref="IDecisionSource"/> rather than on
+/// <see cref="IDecisionSink"/>, because that seam is also "emit, don't store" and a sink forwarding to
+/// a SIEM has nothing to read back — putting a query on the sink interface would make every such
+/// implementation lie. The same reasoning caps what belongs here: enough to answer the question the
+/// log exists for, and not so much that it becomes a reporting API nobody decided to build.
 /// </remarks>
 public sealed record DecisionQuery
 {

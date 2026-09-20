@@ -29,6 +29,9 @@ internal sealed class DecisionStatements(DecisionSqlDialect dialect)
     /// <inheritdoc cref="CorrelationIdParameter"/>
     internal const string ToParameter = "@toUtc";
 
+    /// <inheritdoc cref="CorrelationIdParameter"/>
+    internal const string IdParameter = "@id";
+
     /// <summary>Creates both tables and their indexes, if absent. Idempotent by construction.</summary>
     public IReadOnlyList<string> Schema { get; } =
     [
@@ -84,6 +87,12 @@ internal sealed class DecisionStatements(DecisionSqlDialect dialect)
         $"SELECT {Columns(dialect, DecisionSchema.GapColumns)} " +
         $"FROM {dialect.Quote(DecisionSchema.GapTable)} " +
         $"ORDER BY {dialect.Quote(DecisionSchema.LastDroppedUtc)} DESC {dialect.LimitClause}";
+
+    /// <summary>Reads the one decision with a given id; the same columns as <see cref="SelectDecisions"/>.</summary>
+    public string SelectDecisionById =>
+        $"SELECT {Columns(dialect, DecisionSchema.DecisionColumns)} " +
+        $"FROM {dialect.Quote(DecisionSchema.DecisionTable)} " +
+        $"WHERE {WhereEquals(DecisionSchema.Id, IdParameter)}";
 
     /// <summary>Reads decisions matching <paramref name="query"/>, newest first, capped.</summary>
     /// <param name="query">The filters, any of which may be absent.</param>

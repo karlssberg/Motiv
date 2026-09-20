@@ -28,7 +28,7 @@ namespace Motiv.Serialization.Sql;
 /// <em>queue</em> — an outbox or a broker — which is an adopter's implementation of this same seam.
 /// </para>
 /// </remarks>
-public sealed class SqlDecisionSink : IDecisionSink, IAsyncDisposable
+public sealed class SqlDecisionSink : IDecisionSink, IDecisionSource, IAsyncDisposable
 {
     private readonly Func<DbConnection> _connectionFactory;
     private readonly DecisionSqlDialect _dialect;
@@ -219,6 +219,21 @@ public sealed class SqlDecisionSink : IDecisionSink, IAsyncDisposable
 
         return await ReadAllAsync(command, _mapper.Read, cancellationToken).ConfigureAwait(false);
     }
+
+    /// <inheritdoc />
+    public async Task<DecisionRecord?> FindAsync(Guid id, CancellationToken cancellationToken)
+    {
+        await using var connection = await ConnectAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = Command(connection, _statements.SelectDecisionById);
+        Bind(command, DecisionStatements.IdParameter, _dialect.ToParameter(id));
+
+        var rows = await ReadAllAsync(command, _mapper.Read, cancellationToken).ConfigureAwait(false);
+        return rows.Count == 0 ? null : rows[0];
+    }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<DecisionRecord>> QueryAsync(DecisionQuery query, CancellationToken cancellationToken) =>
+        ReadAsync(query, cancellationToken);
 
     /// <summary>Reads the most recent gap markers. Empty is the only healthy value.</summary>
     /// <param name="limit">The most markers to return.</param>
