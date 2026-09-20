@@ -77,6 +77,7 @@ Three tables, one `MotivStoreDbContext`:
 | `MotivRuleVersion`     | `RuleVersionRow` / `StoredRuleVersion`      | The append-only rule version log.                    |
 | `MotivPropositionVersion` | `PropositionVersionRow` / `StoredPropositionVersion` | The append-only proposition version log.     |
 | `MotivStoreGeneration` | `StoreGenerationRow`                        | Where each store stands &mdash; one row per scope.   |
+| `MotivScenario`        | `ScenarioRow` / `StoredScenario`            | A rule's scenarios, one row per `(rule, id)`, replaced in place under a version concurrency token. |
 
 **`MotivRuleVersion`** is [the version log](durability.md#the-version-log) already documented for
 `IRuleStore` in general, persisted as-is:
@@ -180,8 +181,8 @@ persists past a container restart.
 
 ## Backup and Restore
 
-The three tables are **one backup unit**. `MotivRuleVersion`, `MotivPropositionVersion` and
-`MotivStoreGeneration` live in the same database precisely so a single backup captures a consistent
+The four tables are **one backup unit**. `MotivRuleVersion`, `MotivPropositionVersion`,
+`MotivScenario` and `MotivStoreGeneration` live in the same database precisely so a single backup captures a consistent
 snapshot of both stores and the generations they were at &mdash; back up or restore the whole
 database, never one table alone.
 

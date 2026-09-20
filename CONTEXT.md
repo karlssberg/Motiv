@@ -19,6 +19,12 @@ A named, composed boolean decision over a model, built from propositions and spe
 evaluation (`pricing.eu.vat`). What an analyst authors and governs.
 _Avoid_: Policy (reserved for Motiv's single-value result type), logic, condition
 
+**Scenario**:
+A named sample model attached to a rule — a row of its Evaluate table — with an optional expected
+verdict and, when it was saved from a logged decision, that decision's id. Test data, not behaviour:
+stored in the backend, replaced in place under a version compare-and-set, never governed.
+_Avoid_: Sample, fixture, test case (as a stored noun)
+
 **Namespace**:
 The dotted prefix of a rule or proposition name (`pricing.eu.*`), used as the unit of authorization and
 organization. A pure projection of the names — there is no stored hierarchy to keep in sync.

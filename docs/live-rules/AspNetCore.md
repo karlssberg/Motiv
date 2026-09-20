@@ -155,6 +155,23 @@ The rule-management endpoints:
 | `PUT {basePath}/rules/{name}`          | `{ document, baseVersion }`         | `200 { version }`; `409 { currentVersion }`; `400 { errors }`; `404`           |
 | `DELETE {basePath}/rules/{name}`       | `?baseVersion=n`                    | `200 { version }` (reverted to the default); `409 { currentVersion }`; `400 { errors }`; `404` |
 
+### Scenarios
+
+With `AddScenarios()` on the builder, each rule carries a table of named sample models &mdash; what
+Studio's Evaluate pane shows &mdash; stored in the backend rather than the browser. A scenario is
+test data: it never changes what a rule decides, so it is not versioned as a log and not governed.
+Reads need `Read` on the rule's namespace, writes need `Author`. Ids beginning with `__` are
+reserved for host bookkeeping and never listed. Without `AddScenarios()` the routes are not mapped
+and answer `404`, which `@motiv-rules/core`'s `listScenarios` reads as an empty list.
+
+| Method & path | Request | Responses |
+|---|---|---|
+| `GET {basePath}/rules/{name}/scenarios` | &mdash; | `200` &mdash; array of `{ id, name, model, expectedSatisfied, sourceDecisionId, version, author, timestampUtc }`; `403` |
+| `PUT {basePath}/rules/{name}/scenarios/{id}` | `{ name, model, expectedSatisfied?, sourceDecisionId?, baseVersion }` (`baseVersion` 0 creates; the client mints the id) | `200 { version }`; `409 { currentVersion }`; `400 { error }`; `403` |
+| `DELETE {basePath}/rules/{name}/scenarios/{id}` | `?baseVersion=n` | `200 { version }`; `409 { currentVersion }`; `400`; `403` |
+
+`model` is the text as typed, JSON or not, so an edit in progress survives a reload.
+
 `baseVersion` is the version the writer last observed &mdash; the optimistic-concurrency token. A
 `409` means another writer published first; re-`GET` the rule to adopt the current version before
 retrying. A `400` carries the document's binding errors (path, code, message) and leaves the live
