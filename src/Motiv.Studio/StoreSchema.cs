@@ -107,11 +107,6 @@ public static class StoreSchema
     }
 
     /// <summary>
-    /// Which of the four tables cannot be read. A trivial query per table rather than a metadata
-    /// lookup, because that is provider-agnostic and answers the question actually being asked —
-    /// can the stores use this schema.
-    /// </summary>
-    /// <summary>
     /// Runs the model's create-script statements that build <paramref name="tables"/> — the
     /// <c>CREATE TABLE</c> and any <c>CREATE INDEX</c> naming one of them — against a database that
     /// already holds the rest.
@@ -130,6 +125,11 @@ public static class StoreSchema
         }
     }
 
+    /// <summary>
+    /// Which of the four tables cannot be read. A trivial query per table rather than a metadata
+    /// lookup, because that is provider-agnostic and answers the question actually being asked —
+    /// can the stores use this schema.
+    /// </summary>
     private static async Task<IReadOnlyList<string>> MissingTablesAsync(
         MotivStoreDbContext context, CancellationToken cancellationToken)
     {
