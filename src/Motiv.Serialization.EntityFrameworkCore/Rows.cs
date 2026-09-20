@@ -46,11 +46,6 @@ public class StoreGenerationRow
     public long Generation { get; set; }
 }
 
-/// <summary>
-/// Between the persisted rows and the SDK's records. Positional-record construction is the point:
-/// add a parameter to <see cref="StoredRuleVersion"/> and this file stops compiling, which is the
-/// loud break a schema change deserves.
-/// </summary>
 /// <summary>A rule's scenario — one row per <c>(RuleName, Id)</c>, replaced in place under a version concurrency token.</summary>
 public class ScenarioRow
 {
@@ -67,6 +62,11 @@ public class ScenarioRow
     public long Sequence { get; set; }
 }
 
+/// <summary>
+/// Between the persisted rows and the SDK's records. Positional-record construction is the point:
+/// add a parameter to <see cref="StoredRuleVersion"/> and this file stops compiling, which is the
+/// loud break a schema change deserves.
+/// </summary>
 internal static class RowMapping
 {
     public static StoredRuleVersion ToRecord(this RuleVersionRow row) =>

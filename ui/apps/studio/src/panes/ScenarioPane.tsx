@@ -61,23 +61,26 @@ export function ScenarioPane(props: {
     }
   };
 
+  // Marks every row saving in one update before any of them is handed to the store, so two quick
+  // clicks each persist once rather than the second seeing the first still idle.
+  const beginSave = (pending: Scenario[]): void => {
+    if (pending.length === 0) return;
+    setRows((current) => pending.reduce((acc, r) => withSaving(acc, r.id, 'saving'), current));
+    for (const r of pending) void persist(r);
+  };
+
   // A row minted in the browser (version 0) is written as soon as it exists — add and clone go
-  // through here — so two quick clicks each persist once: the row is marked saving in the same
-  // update that hands it to the store.
+  // through here.
   useEffect(() => {
-    const unsaved = rows.filter((r) => r.version === 0 && r.saving === 'idle');
-    if (unsaved.length === 0) return;
-    setRows((current) => unsaved.reduce((acc, r) => withSaving(acc, r.id, 'saving'), current));
-    for (const r of unsaved) void persist(r);
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- persist reads props only
+    beginSave(rows.filter((r) => r.version === 0 && r.saving === 'idle'));
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- beginSave and persist read props only
   }, [rows]);
 
   /** Writes a row the store already holds, once its editor loses focus. */
   const commit = (id: string): void => {
     const row = rowsRef.current.find((r) => r.id === id);
     if (!row || row.version === 0 || row.saving === 'saving') return;
-    setRows((current) => withSaving(current, id, 'saving'));
-    void persist(row);
+    beginSave([row]);
   };
 
   const remove = (id: string): void => {
@@ -111,10 +114,11 @@ export function ScenarioPane(props: {
       if (broken.length > 0) held.set(row.id, broken); else runnable.push(row);
     }
     const loading: Comparison = { live: { status: 'loading' }, draft: { status: 'loading' } };
+    const running = new Set(runnable.map((r) => r.id));
     setRows((current) => {
       let next = current;
       for (const [id, violations] of held) next = withViolations(next, id, violations);
-      return next.map((r) => (runnable.some((x) => x.id === r.id) ? { ...r, violations: [], comparison: loading } : r));
+      return next.map((r) => (running.has(r.id) ? { ...r, violations: [], comparison: loading } : r));
     });
     const rule = { ruleName: props.ruleName, modelType: props.modelType, document: state.document };
     await Promise.all(runnable.map(async (row) => {

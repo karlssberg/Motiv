@@ -37,36 +37,9 @@ public sealed class EfScenarioStore(IDbContextFactory<MotivStoreDbContext> conte
         var version = baseVersion + 1;
         var now = DateTimeOffset.UtcNow;
         if (existing is null)
-        {
-            // Insertion order, kept as a column because SQLite cannot ORDER BY a DateTimeOffset and
-            // a coarse clock would tie two quick adds anyway. A race between replicas can produce a
-            // duplicate sequence; the id breaks the tie, and the order of two simultaneous adds on
-            // two replicas was never meaningful.
-            var sequence = (await context.Scenarios.MaxAsync(row => (long?)row.Sequence, cancellationToken) ?? 0) + 1;
-            context.Scenarios.Add(new ScenarioRow
-            {
-                Sequence = sequence,
-                RuleName = scenario.RuleName,
-                Id = scenario.Id,
-                Name = scenario.Name,
-                ModelJson = scenario.ModelJson,
-                ExpectedSatisfied = scenario.ExpectedSatisfied,
-                SourceDecisionId = scenario.SourceDecisionId,
-                Version = version,
-                Author = scenario.Author,
-                TimestampUtc = now,
-            });
-        }
+            context.Scenarios.Add(NewRow(scenario, version, now, await NextSequenceAsync(context, cancellationToken)));
         else
-        {
-            existing.Name = scenario.Name;
-            existing.ModelJson = scenario.ModelJson;
-            existing.ExpectedSatisfied = scenario.ExpectedSatisfied;
-            existing.SourceDecisionId = scenario.SourceDecisionId;
-            existing.Version = version;
-            existing.Author = scenario.Author;
-            existing.TimestampUtc = now;
-        }
+            Overwrite(existing, scenario, version, now);
 
         try
         {
@@ -100,6 +73,42 @@ public sealed class EfScenarioStore(IDbContextFactory<MotivStoreDbContext> conte
         {
             return ScenarioWriteResult.Conflict(await CurrentVersionAsync(ruleName, id, cancellationToken));
         }
+    }
+
+    /// <summary>
+    /// The next insertion-order slot. Kept as a column because SQLite cannot ORDER BY a
+    /// DateTimeOffset and a coarse clock would tie two quick adds anyway. A race between replicas
+    /// can produce a duplicate sequence; the id breaks the tie, and the order of two simultaneous
+    /// adds on two replicas was never meaningful.
+    /// </summary>
+    private static async Task<long> NextSequenceAsync(MotivStoreDbContext context, CancellationToken cancellationToken) =>
+        (await context.Scenarios.MaxAsync(row => (long?)row.Sequence, cancellationToken) ?? 0) + 1;
+
+    private static ScenarioRow NewRow(StoredScenario scenario, int version, DateTimeOffset now, long sequence) =>
+        new()
+        {
+            Sequence = sequence,
+            RuleName = scenario.RuleName,
+            Id = scenario.Id,
+            Name = scenario.Name,
+            ModelJson = scenario.ModelJson,
+            ExpectedSatisfied = scenario.ExpectedSatisfied,
+            SourceDecisionId = scenario.SourceDecisionId,
+            Version = version,
+            Author = scenario.Author,
+            TimestampUtc = now,
+        };
+
+    /// <summary>Replaces the row in place; the key and the insertion order are the row's for life.</summary>
+    private static void Overwrite(ScenarioRow existing, StoredScenario scenario, int version, DateTimeOffset now)
+    {
+        existing.Name = scenario.Name;
+        existing.ModelJson = scenario.ModelJson;
+        existing.ExpectedSatisfied = scenario.ExpectedSatisfied;
+        existing.SourceDecisionId = scenario.SourceDecisionId;
+        existing.Version = version;
+        existing.Author = scenario.Author;
+        existing.TimestampUtc = now;
     }
 
     private async Task<int> CurrentVersionAsync(string ruleName, string id, CancellationToken cancellationToken)
