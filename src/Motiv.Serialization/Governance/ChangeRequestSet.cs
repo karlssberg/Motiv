@@ -650,12 +650,12 @@ public sealed class ChangeRequestSet
                     change.Name, () => _rules.PrepareRevertCore(change.Name, change.BaseVersion),
                     provenance, cancellationToken).ConfigureAwait(false)),
                 DirectWriteOperation.PropositionCreate => OfProposition(await _propositions!.CreateCoreAsync(
-                    change.Name, change.ModelTypeId!, change.DocumentJson!, change.Description, cancellationToken)
+                    change.Name, change.ModelTypeId!, change.DocumentJson!, change.Description, provenance, cancellationToken)
                     .ConfigureAwait(false)),
                 DirectWriteOperation.PropositionUpdate => OfProposition(await _propositions!.UpdateCoreAsync(
-                    change.Name, change.DocumentJson!, change.BaseVersion, cancellationToken).ConfigureAwait(false)),
+                    change.Name, change.DocumentJson!, change.BaseVersion, provenance, cancellationToken).ConfigureAwait(false)),
                 _ => OfProposition(await _propositions!.WithdrawCoreAsync(
-                    change.Name, change.BaseVersion, cancellationToken).ConfigureAwait(false))
+                    change.Name, change.BaseVersion, provenance, cancellationToken).ConfigureAwait(false))
             };
         }, cancellationToken);
 
@@ -1137,7 +1137,8 @@ public sealed class ChangeRequestSet
         {
             // --- Phase 1: prepare every rule and every proposition edit. Nothing is persisted or
             // applied yet — every bind that can fail has already run by the time this returns.
-            var prepared = rules.Scope.Locked(() => Prepare(rules, propositions, change));
+            var nextVersions = await NextVersionsAsync(propositions, change, cancellationToken).ConfigureAwait(false);
+            var prepared = rules.Scope.Locked(() => Prepare(rules, propositions, change, nextVersions));
             if (prepared.Failure is { } prepareFailure)
                 return prepareFailure;
 
@@ -1311,7 +1312,31 @@ public sealed class ChangeRequestSet
         /// publish holds — see <see cref="PropositionSet.PrepareWithdrawCore"/>'s remarks.
         /// </para>
         /// </remarks>
-        private static EnvelopePrepare Prepare(RuleSet rules, PropositionSet? propositions, ChangeRequest change)
+        /// <summary>
+        /// The version each proposition this envelope may create would claim — read before the
+        /// locked prepare, which cannot await. Only creations consult it; a name that turns out to be
+        /// live at prepare time goes through the update path and ignores its entry.
+        /// </summary>
+        private static async Task<IReadOnlyDictionary<string, int>> NextVersionsAsync(
+            PropositionSet? propositions, ChangeRequest change, CancellationToken cancellationToken)
+        {
+            var next = new Dictionary<string, int>(StringComparer.Ordinal);
+            if (propositions is null)
+                return next;
+
+            foreach (var proposed in Ordered(change, ChangeTargetKind.Proposition, deletions: false))
+            {
+                var name = proposed.Target.Name;
+                if (!next.ContainsKey(name))
+                    next[name] = await propositions.NextVersionAsync(name, cancellationToken).ConfigureAwait(false);
+            }
+
+            return next;
+        }
+
+        private static EnvelopePrepare Prepare(
+            RuleSet rules, PropositionSet? propositions, ChangeRequest change,
+            IReadOnlyDictionary<string, int> nextVersions)
         {
             var prospective = new ScopeGenerationBuilder(rules.Scope.Registry, rules.Scope.Current);
             var prospectiveSource = prospective.Source;
@@ -1339,7 +1364,7 @@ public sealed class ChangeRequestSet
                         name, proposed.ProposedDocumentJson!, proposed.BaseVersion, prospective, envelopeNodes)
                     : propositions.PrepareCreateCore(
                         name, proposed.ModelTypeId!, proposed.ProposedDocumentJson!, proposed.Description,
-                        prospective, envelopeNodes);
+                        nextVersions[name], prospective, envelopeNodes);
 
                 if (edit.Failure is { } failure)
                     return FailWith(PropositionFailure(change, proposed.Target, failure));
