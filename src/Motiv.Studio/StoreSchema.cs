@@ -87,7 +87,10 @@ public static class StoreSchema
             $"The Motiv store schema is incomplete: {string.Join(", ", missing)} could not be read, " +
             "and creating the schema reported no error. EnsureCreated treats a database that already " +
             "holds any table as already created, so this is what a store pointed at somebody else's " +
-            "database looks like. Point it at its own database, or create the schema with migrations.");
+            "database looks like — or a Motiv database from before the proposition version log, " +
+            "which still holds MotivProposition and lacks MotivPropositionVersion. Point it at its " +
+            "own database, create the missing table with migrations, or delete a development store " +
+            "and let the JSON import re-seed it.");
     }
 
     /// <summary>
@@ -101,7 +104,7 @@ public static class StoreSchema
         (string Table, Func<Task> Probe)[] probes =
         [
             ("MotivRuleVersion", () => context.RuleVersions.AsNoTracking().AnyAsync(cancellationToken)),
-            ("MotivProposition", () => context.Propositions.AsNoTracking().AnyAsync(cancellationToken)),
+            ("MotivPropositionVersion", () => context.PropositionVersions.AsNoTracking().AnyAsync(cancellationToken)),
             ("MotivStoreGeneration", () => context.StoreGenerations.AsNoTracking().AnyAsync(cancellationToken)),
         ];
 

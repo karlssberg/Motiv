@@ -30,7 +30,7 @@ public class StoreSchemaTests
             // Assert — all three tables are readable, which is what the stores need
             await using var check = Context(path);
             (await check.RuleVersions.CountAsync()).ShouldBe(0);
-            (await check.Propositions.CountAsync()).ShouldBe(0);
+            (await check.PropositionVersions.CountAsync()).ShouldBe(0);
             (await check.StoreGenerations.CountAsync()).ShouldBe(0);
         }
         finally
@@ -62,7 +62,7 @@ public class StoreSchemaTests
 
             await using var check = Context(path);
             (await check.RuleVersions.CountAsync()).ShouldBe(0);
-            (await check.Propositions.CountAsync()).ShouldBe(0);
+            (await check.PropositionVersions.CountAsync()).ShouldBe(0);
             (await check.StoreGenerations.CountAsync()).ShouldBe(0);
         }
         finally

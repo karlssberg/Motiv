@@ -205,4 +205,40 @@ public class JsonFilePropositionStoreTests : IDisposable
             File.SetUnixFileMode(_path, UnixFileMode.UserRead | UnixFileMode.UserWrite);
         }
     }
+
+    [Fact]
+    public async Task Should_read_a_file_written_before_provenance_existed()
+    {
+        // Arrange — the shape Studio's seed file and any pre-log deployment wrote
+        File.WriteAllText(_path, """
+            [
+              { "name": "customer.eligible", "modelType": "customer", "documentJson": "{}", "version": 2, "description": null }
+            ]
+            """);
+
+        // Act
+        var store = new JsonFilePropositionStore(_path);
+        var heads = store.Load();
+        var history = await store.HistoryAsync("customer.eligible", default);
+
+        // Assert — the head is live at its version; the one row is attributed to the system
+        heads.ShouldHaveSingleItem().Version.ShouldBe(2);
+        history.ShouldHaveSingleItem().Author.ShouldBe("system");
+    }
+
+    [Fact]
+    public async Task Should_keep_the_whole_log_across_instances()
+    {
+        // Arrange
+        var first = new JsonFilePropositionStore(_path);
+        await first.WriteAsync(PropositionBatch.Save(new StoredProposition("a", "customer", "{}", 1, null)), default);
+        await first.WriteAsync(PropositionBatch.Delete("a", 1), default);
+
+        // Act
+        var second = new JsonFilePropositionStore(_path);
+
+        // Assert
+        second.Load().ShouldBeEmpty();
+        (await second.HistoryAsync("a", default)).Select(row => row.Version).ShouldBe([1, 2]);
+    }
 }
