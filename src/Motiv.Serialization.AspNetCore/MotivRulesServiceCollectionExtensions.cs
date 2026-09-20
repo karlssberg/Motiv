@@ -194,9 +194,16 @@ public sealed class MotivRulesBuilder
     /// matching endpoint answers, under the same grants, and a rule the caller may not read is not
     /// found rather than forbidden, so tool results do not leak which rules exist.
     /// </summary>
+    /// <exception cref="InvalidOperationException">The MCP server is already registered; a second call is refused rather than let it register twice.</exception>
     /// <returns>This builder, to allow chained registration.</returns>
     public MotivRulesBuilder AddMcp()
     {
+        if (Services.Any(descriptor => descriptor.ServiceType == typeof(McpRegistered)))
+            throw new InvalidOperationException(
+                $"{nameof(AddMcp)} has already been called. Call it once — a second call would register " +
+                "the server and its tools twice, and which registration answers would depend on order.");
+
+        Services.AddSingleton<McpRegistered>();
         Services.AddHttpContextAccessor();
         Services.AddMcpServer(options => options.ServerInfo = new Implementation
         {
@@ -207,6 +214,9 @@ public sealed class MotivRulesBuilder
             .WithTools<MotivMcpTools>();
         return this;
     }
+
+    /// <summary>The mark AddMcp leaves, so a second call can be refused; the SDK registers its tools as instances of its own type, not as this class.</summary>
+    private sealed class McpRegistered;
 
     private static TService Required<TService>(IServiceProvider provider, string registration) where TService : class =>
         provider.GetService<TService>() ?? throw new InvalidOperationException(

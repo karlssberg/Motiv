@@ -35,6 +35,16 @@ public class McpAuthorizationTests
         (await mcp.ListToolsAsync()).ShouldNotBeEmpty();
     }
 
+    [Fact]
+    public void Should_refuse_a_second_AddMcp()
+    {
+        var rules = new ServiceCollection().AddMotivRules(new SpecRegistry(), new MotivRulesOptions()).AddMcp();
+
+        var refused = Should.Throw<InvalidOperationException>(() => rules.AddMcp());
+
+        refused.Message.ShouldContain("AddMcp has already been called");
+    }
+
     private static HttpClient AnonymousClient(WebApplication app)
     {
         var client = app.GetTestClient();

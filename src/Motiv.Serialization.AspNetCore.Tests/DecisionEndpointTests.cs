@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Motiv.Serialization.AspNetCore.Tests;
 
@@ -72,6 +73,37 @@ public class DecisionEndpointTests
         (await host.Http.GetAsync("/api/rules/rules/active-rule/csharp?version=1")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await host.Http.GetAsync("/api/rules/rules/active-rule/csharp?version=9")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await host.Http.GetAsync("/api/rules/rules/nope/csharp")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Should_answer_not_found_for_a_reproduction_of_an_unknown_decision()
+    {
+        await using var host = await DecisionHost.StartAsync();
+
+        (await host.Http.GetAsync($"/api/rules/decisions/{Guid.NewGuid()}/reproduction")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Should_answer_service_unavailable_for_a_reproduction_when_the_host_registered_only_a_source()
+    {
+        // Arrange — a source registered by hand, not through AddDecisionSource, so no reproducer exists
+        var sink = new InMemoryDecisionSink();
+        var builder = WebApplication.CreateSlimBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddTestAuth();
+        builder.Services.AddSingleton<IDecisionSource>(sink);
+        builder.Services.AddMotivRules(new SpecRegistry(), new MotivRulesOptions());
+        await using var app = builder.Build();
+        app.UseTestAuth();
+        app.MapMotivRules("/api/rules");
+        await app.StartAsync();
+        var record = new DecisionRecord(Guid.NewGuid(), "c", DateTimeOffset.UtcNow, "alice", "some-rule", 1, "build", [], null,
+            new RuleEvaluationResult<object?>(true, "r", ["r"], [], "r", new ExplanationNode(["r"], [])));
+        await sink.WriteAsync([record], default);
+
+        var response = await app.GetTestClient().GetAsync($"/api/rules/decisions/{record.Id}/reproduction");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
     }
 
     [Fact]

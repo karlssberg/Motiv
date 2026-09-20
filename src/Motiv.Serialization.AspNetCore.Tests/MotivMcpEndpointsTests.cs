@@ -131,4 +131,36 @@ public class MotivMcpEndpointsTests
         refused.ShouldContain("author");
         still.GetArrayLength().ShouldBe(1);
     }
+
+    [Fact]
+    public async Task Should_refuse_a_scenario_without_a_name_or_a_model()
+    {
+        await using var host = await DecisionHost.StartAsync();
+
+        ErrorText(await host.CallAsync("save_scenario", new { rule = "active-rule", name = " ", model = "{}" })).ShouldContain("needs a name");
+        ErrorText(await host.CallAsync("save_scenario", new { rule = "active-rule", name = "Named", model = (string?)null })).ShouldContain("needs a model");
+    }
+
+    [Fact]
+    public async Task Should_answer_the_versions_a_rule_or_proposition_never_had_and_print_a_stored_proposition_version()
+    {
+        await using var host = await DecisionHost.StartAsync();
+        (await host.Http.PostAsJsonAsync("/api/rules/propositions", new
+        {
+            name = "customer.eligible", modelType = "customer", document = new { rule = new { spec = "is-active" } }, description = (string?)null,
+        })).EnsureSuccessStatusCode();
+        (await host.Http.PutAsJsonAsync("/api/rules/propositions/customer.eligible", new
+        {
+            document = new { rule = new { not = new { spec = "is-active" } } }, baseVersion = 1,
+        })).EnsureSuccessStatusCode();
+
+        ErrorText(await host.CallAsync("get_rule", new { name = "active-rule", version = 9 })).ShouldContain("has no version 9");
+        ErrorText(await host.CallAsync("print_rule", new { name = "active-rule", version = 9 })).ShouldContain("has no version 9");
+        ErrorText(await host.CallAsync("print_rule", new { name = "active-rule", version = 1 })).ShouldContain("compiled default");
+        ErrorText(await host.CallAsync("get_rule", new { name = "customer.eligible", version = 9 })).ShouldContain("has no version 9");
+        ErrorText(await host.CallAsync("print_rule", new { name = "customer.eligible", version = 9 })).ShouldContain("has no version 9");
+        var first = Structured(await host.CallAsync("print_rule", new { name = "customer.eligible", version = 1 }));
+        first.GetProperty("source").GetString()!.ShouldContain("""registry.Get<Customer>("is-active")""");
+        first.GetProperty("source").GetString()!.ShouldNotContain(".Not()");
+    }
 }

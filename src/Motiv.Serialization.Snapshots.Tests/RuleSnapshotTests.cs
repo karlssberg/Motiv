@@ -27,8 +27,11 @@ public class RuleSnapshotTests
     private static SpecRegistry Registry() =>
         new SpecRegistry().Register("customer.is-active", IsActive).Register("customer.is-adult", IsAdult);
 
-    private static string Row(string name, int version, string modelType, string document) =>
-        JsonSerializer.Serialize(new { name, version, modelType, document = JsonDocument.Parse(document).RootElement });
+    private static string Row(string name, int version, string modelType, string document)
+    {
+        using var parsed = JsonDocument.Parse(document);
+        return JsonSerializer.Serialize(new { name, version, modelType, document = parsed.RootElement });
+    }
 
     /// <summary>Decides for an active minor under eligible v1 (is-active), publishes v2 (is-adult), reproduces.</summary>
     private static async Task<Reproduction> AReproductionAsync()
@@ -98,5 +101,34 @@ public class RuleSnapshotTests
 
         snapshot.Warnings.ShouldHaveSingleItem().ShouldContain("customer.broken");
         bound.Evaluate(new Customer("x", true, 30)).Satisfied.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Should_refuse_null_arguments()
+    {
+        Should.Throw<ArgumentNullException>(() => RuleSnapshot.FromJson(null!, [])).ParamName!.ShouldBe("rule");
+        Should.Throw<ArgumentNullException>(() => RuleSnapshot.FromJson("{}", null!)).ParamName!.ShouldBe("propositions");
+        Should.Throw<ArgumentNullException>(() => RuleSnapshot.FromJson("{}", []).Bind<Customer>(null!)).ParamName!.ShouldBe("registry");
+    }
+
+    [Fact]
+    public void Should_refuse_a_row_that_is_not_an_object_with_a_name()
+    {
+        Should.Throw<ArgumentException>(() => RuleSnapshot.FromJson("{}", ["""[1, 2]"""])).Message.ShouldContain("object with a 'name'");
+        Should.Throw<ArgumentException>(() => RuleSnapshot.FromJson("{}", ["""{ "version": 1 }"""])).Message.ShouldContain("object with a 'name'");
+    }
+
+    [Fact]
+    public async Task Should_read_a_document_written_as_text_and_treat_a_null_document_as_none()
+    {
+        // Arrange — a hand-written row carries its document as a string; a revert row carries null
+        var asText = """{ "name": "customer.eligible", "version": 1, "modelType": "customer", "document": "{ \"rule\": { \"spec\": \"customer.is-active\" } }" }""";
+        var asNull = """{ "name": "customer.other", "version": 2, "modelType": "customer", "document": null }""";
+        var snapshot = RuleSnapshot.FromJson(AuditedOverEligible, [asText, asNull]);
+
+        var spec = snapshot.Bind<Customer>(Registry());
+
+        spec.Evaluate(new Customer("c", IsActive: true, Age: 16)).Satisfied.ShouldBeTrue();
+        await Task.CompletedTask;
     }
 }
