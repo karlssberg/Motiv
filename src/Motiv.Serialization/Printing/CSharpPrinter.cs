@@ -38,19 +38,18 @@ public static class CSharpPrinter
         private readonly List<string> _warnings = [];
         private readonly Dictionary<string, string> _locals = new(StringComparer.Ordinal);
         private readonly HashSet<string> _taken = new(StringComparer.Ordinal);
-        private readonly Stack<string> _models = new();
         private bool _usesDictionary;
         private bool _isAsync;
 
         /// <summary>The model type the node being printed is over: the rule's, or a collection's element inside a higher-order node.</summary>
-        private string Model => _models.Count == 0 ? options.ModelType.Name : _models.Peek();
+        private string _model = options.ModelType.Name;
 
         public CSharpPrintedRule Emit()
         {
             // Every local is named before any body is printed, so a definition may reference one
             // declared after it in the document — the binder resolves them by name, not by order.
             foreach (var definition in document.Definitions)
-                _locals[definition.Name!] = Identifier(definition.Name!);
+                _locals[definition.Name!] = UniqueIdentifier(definition.Name!);
 
             var body = new StringBuilder();
             foreach (var definition in document.Definitions)
@@ -71,11 +70,10 @@ public static class CSharpPrinter
         /// <summary>Required parameters first, then defaulted — C# insists — each group in declaration order.</summary>
         private string Parameters()
         {
-            var ordered = document.Parameters.Where(p => !p.HasDefault).Concat(document.Parameters.Where(p => p.HasDefault));
             var text = new StringBuilder();
-            foreach (var parameter in ordered)
+            foreach (var parameter in document.Parameters.OrderBy(p => p.HasDefault))
             {
-                text.Append(", ").Append(TypeOf(parameter.Type)).Append(' ').Append(Identifier(parameter.Name, register: false));
+                text.Append(", ").Append(TypeOf(parameter.Type)).Append(' ').Append(CSharpIdentifiers.CamelCase(parameter.Name));
                 if (parameter.HasDefault)
                     text.Append(" = ").Append(Scalar(parameter.DefaultValue));
             }
@@ -135,7 +133,7 @@ public static class CSharpPrinter
             var async = options.AsyncSpecs.Contains(name);
             _isAsync |= async;
             var call = new StringBuilder(options.RegistryExpression)
-                .Append(async ? ".GetAsync<" : ".Get<").Append(Model).Append(">(").Append(Literal(name));
+                .Append(async ? ".GetAsync<" : ".Get<").Append(_model).Append(">(").Append(Literal(name));
             if (node.Args is not null)
             {
                 _usesDictionary = true;
@@ -149,8 +147,8 @@ public static class CSharpPrinter
 
         private string ExpressionLeaf(RuleNode node)
         {
-            _warnings.Add($"{node.Path}: expression leaf printed verbatim and not re-parsed; check it compiles as a lambda over {Model}");
-            return $"Spec.From(({Model} m) => {node.ExpressionText}) /* expression printed verbatim; not re-parsed */";
+            _warnings.Add($"{node.Path}: expression leaf printed verbatim and not re-parsed; check it compiles as a lambda over {_model}");
+            return $"Spec.From(({_model} m) => {node.ExpressionText}) /* expression printed verbatim; not re-parsed */";
         }
 
         /// <summary>The chain <c>HigherOrder.Build</c> makes, reanchored onto the model through the collection's selector.</summary>
@@ -165,39 +163,48 @@ public static class CSharpPrinter
             else if (handle.Selector is null)
                 _warnings.Add($"{node.Path}: no selector for the collection at '{path}'; the selector is a placeholder");
 
-            _models.Push(elementType);
+            // The inner spec is over the element type; everything outside it is over the model again.
+            var outerModel = _model;
+            _model = elementType;
             var inner = Node(node.Children[0]);
-            _models.Pop();
+            _model = outerModel;
 
-            var n = node.NParameterName is { } parameter ? Identifier(parameter, register: false) : node.N?.ToString(CultureInfo.InvariantCulture);
+            var n = node.NParameterName is { } parameter
+                ? CSharpIdentifiers.CamelCase(parameter)
+                : node.N?.ToString(CultureInfo.InvariantCulture);
+
+            // The payloads name n the way the document does — a hole the printed interpolation fills
+            // from the parameter, or the literal count.
+            var count = "{" + n + "}";
             var (quantifier, whenTrue, whenFalse) = node.Operator switch
             {
                 RuleOperator.AsAllSatisfied => ("AsAllSatisfied()", "all satisfied", "not all satisfied"),
                 RuleOperator.AsAnySatisfied => ("AsAnySatisfied()", "any satisfied", "none satisfied"),
-                RuleOperator.AsNSatisfied => ($"AsNSatisfied({n})", $"exactly {{{n}}} satisfied", $"not exactly {{{n}}} satisfied"),
-                RuleOperator.AsAtLeastNSatisfied => ($"AsAtLeastNSatisfied({n})", $"at least {{{n}}} satisfied", $"fewer than {{{n}}} satisfied"),
-                _ => ($"AsAtMostNSatisfied({n})", $"at most {{{n}}} satisfied", $"more than {{{n}}} satisfied"),
+                RuleOperator.AsNSatisfied => ($"AsNSatisfied({n})", $"exactly {count} satisfied", $"not exactly {count} satisfied"),
+                RuleOperator.AsAtLeastNSatisfied => ($"AsAtLeastNSatisfied({n})", $"at least {count} satisfied", $"fewer than {count} satisfied"),
+                _ => ($"AsAtMostNSatisfied({n})", $"at most {count} satisfied", $"more than {count} satisfied"),
             };
 
-            return $"Spec.Build({inner}).{quantifier}.WhenTrue({Text(whenTrue)}).WhenFalse({Text(whenFalse)}).Create().ChangeModelTo<{Model}>({selector})";
+            return $"Spec.Build({inner}).{quantifier}.WhenTrue({Text(whenTrue)}).WhenFalse({Text(whenFalse)}).Create().ChangeModelTo<{_model}>({selector})";
         }
 
         private string Decorate(RuleNode node, string core)
         {
+            // An unnamed node's Create() takes no argument; the name, when there is one, is its only one.
+            var name = node.Name is null ? "" : Literal(node.Name);
+
             if (node.HasObjectPayloads)
             {
                 _warnings.Add($"{node.Path}: object whenTrue/whenFalse payloads printed as strings; the printed rule is an explanation rule");
-                var chain = $"Spec.Build({core}).WhenTrue({Literal(JsonSerializer.Serialize(node.WhenTrueElement!.Value))}).WhenFalse({Literal(JsonSerializer.Serialize(node.WhenFalseElement!.Value))})";
-                return $"{chain}.Create({(node.Name is null ? "" : Literal(node.Name))}) /* TODO: object payloads printed as strings */";
+                var trueJson = Literal(JsonSerializer.Serialize(node.WhenTrueElement!.Value));
+                var falseJson = Literal(JsonSerializer.Serialize(node.WhenFalseElement!.Value));
+                return $"Spec.Build({core}).WhenTrue({trueJson}).WhenFalse({falseJson}).Create({name}) /* TODO: object payloads printed as strings */";
             }
 
             if (node.WhenTrueText is not null)
-            {
-                var chain = $"Spec.Build({core}).WhenTrue({Text(node.WhenTrueText)}).WhenFalse({Text(node.WhenFalseText!)})";
-                return node.Name is null ? $"{chain}.Create()" : $"{chain}.Create({Literal(node.Name)})";
-            }
+                return $"Spec.Build({core}).WhenTrue({Text(node.WhenTrueText)}).WhenFalse({Text(node.WhenFalseText!)}).Create({name})";
 
-            return node.Name is null ? core : $"Spec.Build({core}).Create({Literal(node.Name)})";
+            return node.Name is null ? core : $"Spec.Build({core}).Create({name})";
         }
 
         /// <summary>
@@ -246,13 +253,10 @@ public static class CSharpPrinter
             _ => "string",
         };
 
-        /// <summary>A C# identifier for a document name; registered ones are kept unique across the method.</summary>
-        private string Identifier(string name, bool register = true)
+        /// <summary>A C# identifier for a document name, kept distinct from every other one this method declares.</summary>
+        private string UniqueIdentifier(string name)
         {
             var identifier = CSharpIdentifiers.CamelCase(name);
-            if (!register)
-                return identifier;
-
             var candidate = identifier;
             for (var suffix = 2; !_taken.Add(candidate); suffix++)
                 candidate = identifier + suffix.ToString(CultureInfo.InvariantCulture);
