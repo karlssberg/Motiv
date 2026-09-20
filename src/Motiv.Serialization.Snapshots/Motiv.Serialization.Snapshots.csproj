@@ -5,14 +5,14 @@
         <!-- Validates doc comments (see Directory.Build.props) and ships the XML file in the package. -->
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <PackageId>Motiv.Serialization</PackageId>
-        <Title>Motiv.Serialization</Title>
-        <Description>Externalize Motiv rules as JSON documents: compose registered specifications with logical operators and explanation text, validated and loaded at runtime into fully functional Motiv specifications.</Description>
-        <PackageTags>Motiv, Rules Engine, JSON, Serialization, Specification Pattern, Boolean Logic</PackageTags>
+        <PackageId>Motiv.Serialization.Snapshots</PackageId>
+        <Title>Motiv.Serialization.Snapshots</Title>
+        <Description>Bind a rule and its propositions, as a decision reproduction handed them back, against your compiled registry — the dependency a generated Motiv test has instead of a store or a host.</Description>
+        <PackageTags>Motiv, Rules Engine, Decision Log, Testing, Snapshot, Specification Pattern</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageIcon>icon.png</PackageIcon>
         <TargetFrameworks>net8.0;net9.0;netstandard2.0;net10.0</TargetFrameworks>
-        <MinVerTagPrefix>v</MinVerTagPrefix>
+        <MinVerTagPrefix>rules-</MinVerTagPrefix>
     </PropertyGroup>
 
     <ItemGroup>
@@ -21,8 +21,6 @@
 
     <ItemGroup>
         <InternalsVisibleTo Include="$(AssemblyName).Tests" />
-        <InternalsVisibleTo Include="Motiv.Serialization.AspNetCore" />
-        <InternalsVisibleTo Include="Motiv.Serialization.Snapshots" />
     </ItemGroup>
 
     <ItemGroup>
@@ -32,13 +30,11 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Motiv\Motiv.csproj" />
+        <ProjectReference Include="..\Motiv.Serialization\Motiv.Serialization.csproj" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
         <PackageReference Include="System.Text.Json" />
-        <!-- In-box from .NET Core 3.0 onward; needed only here, for the decision log's queue. -->
-        <PackageReference Include="System.Threading.Channels" />
     </ItemGroup>
 
 </Project>

@@ -15,16 +15,19 @@ internal static class PinnedPropositionBinder
 {
     /// <param name="documents">The pinned documents; every name here is a pinned name, parsed or not.</param>
     /// <param name="live">What lies beneath the overlay: the live source, or a bare registry.</param>
-    /// <param name="propositions">Supplies the model bindings and the parser options.</param>
+    /// <param name="resolveModel">The model binding for a document's model-type id, or null after adding why to the errors.</param>
+    /// <param name="options">The parser options the documents are read with.</param>
     /// <param name="notes">Receives a <see cref="FidelityReason.PropositionBindFailed"/> note per document that did not bind.</param>
     /// <returns>The layered source the rule binds against.</returns>
     public static ISpecSource Bind(
-        IReadOnlyList<PinnedDocument> documents, ISpecSource live, PropositionSet propositions, List<FidelityNote> notes)
+        IReadOnlyList<PinnedDocument> documents, ISpecSource live,
+        Func<string?, List<RuleError>, PropositionModelBinding?> resolveModel, RuleSerializerOptions options,
+        List<FidelityNote> notes)
     {
         // Every name a pin named, parsed or not: a row that will not parse is still pinned, so its
         // dependents must wait on it rather than resolve through today's head.
         var pinnedNames = new HashSet<string>(documents.Select(document => document.Name), StringComparer.Ordinal);
-        var pending = Parse(documents, propositions, notes);
+        var pending = Parse(documents, options, notes);
         var overlay = new PropositionOverlay();
         var layered = new LayeredSpecSource(overlay, live);
         var bound = new HashSet<string>(StringComparer.Ordinal);
@@ -40,7 +43,7 @@ internal static class PinnedPropositionBinder
             foreach (var candidate in ready)
             {
                 pending.Remove(candidate);
-                if (BindOne(candidate, layered, propositions, notes) is { } entry)
+                if (BindOne(candidate, layered, resolveModel, notes) is { } entry)
                 {
                     overlay.Set(entry);
                     bound.Add(candidate.Document.Name);
@@ -64,9 +67,9 @@ internal static class PinnedPropositionBinder
     private sealed record Pending(PinnedDocument Document, RuleDocument Parsed, IReadOnlyList<string> References);
 
     /// <summary>Parses each document, noting the ones that will not parse and dropping them.</summary>
-    private static List<Pending> Parse(IEnumerable<PinnedDocument> documents, PropositionSet propositions, List<FidelityNote> notes)
+    private static List<Pending> Parse(IEnumerable<PinnedDocument> documents, RuleSerializerOptions options, List<FidelityNote> notes)
     {
-        var parser = new RuleDocumentParser(propositions.Options);
+        var parser = new RuleDocumentParser(options);
         var pending = new List<Pending>();
         foreach (var document in documents)
         {
@@ -81,10 +84,11 @@ internal static class PinnedPropositionBinder
         return pending;
     }
 
-    private static SpecRegistryEntry? BindOne(Pending candidate, ISpecSource source, PropositionSet propositions, List<FidelityNote> notes)
+    private static SpecRegistryEntry? BindOne(
+        Pending candidate, ISpecSource source, Func<string?, List<RuleError>, PropositionModelBinding?> resolveModel, List<FidelityNote> notes)
     {
         var errors = new List<RuleError>();
-        var entry = propositions.ResolveModel(candidate.Document.ModelType, errors)?.Bind(
+        var entry = resolveModel(candidate.Document.ModelType, errors)?.Bind(
             source, candidate.Document.Name, candidate.Document.Description, candidate.Parsed,
             PropositionSet.BindsAsync(source, candidate.References), errors);
         if (entry is null)

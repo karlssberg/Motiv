@@ -144,7 +144,7 @@ public sealed class DecisionReproducer(
         }
 
         var documents = rows.Select(row => new PinnedDocument(row.Name, row.Version, row.ModelType, row.DocumentJson, row.Description)).ToList();
-        return (rows, PinnedPropositionBinder.Bind(documents, live, propositions, notes));
+        return (rows, PinnedPropositionBinder.Bind(documents, live, propositions.ResolveModel, propositions.Options, notes));
     }
 
     private async Task<StoredPropositionVersion?> PinnedRowAsync(
