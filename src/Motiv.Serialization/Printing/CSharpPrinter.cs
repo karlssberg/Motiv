@@ -425,6 +425,41 @@ internal static class CSharpIdentifiers
         return Keywords.Contains(camel) ? "@" + camel : camel;
     }
 
+    /// <summary>
+    /// <c>2fa-check</c> → <c>_2faCheck</c>: <see cref="PascalCase"/>, made a legal type name — a
+    /// leading digit gains <c>_</c>, and an empty result becomes <c>_</c>.
+    /// </summary>
+    public static string TypeName(string name)
+    {
+        var pascal = PascalCase(name);
+        return pascal.Length == 0 || char.IsDigit(pascal[0]) ? "_" + pascal : pascal;
+    }
+
+    /// <summary>
+    /// The C# name of a type as adopted code would write it: the keyword for a framework primitive
+    /// (<c>int</c>, not <c>Int32</c>, which needs a <c>using System</c> the print does not emit),
+    /// the plain name for anything else.
+    /// </summary>
+    public static string TypeName(Type type)
+    {
+        if (type == typeof(int)) return "int";
+        if (type == typeof(long)) return "long";
+        if (type == typeof(short)) return "short";
+        if (type == typeof(byte)) return "byte";
+        if (type == typeof(sbyte)) return "sbyte";
+        if (type == typeof(uint)) return "uint";
+        if (type == typeof(ulong)) return "ulong";
+        if (type == typeof(ushort)) return "ushort";
+        if (type == typeof(bool)) return "bool";
+        if (type == typeof(string)) return "string";
+        if (type == typeof(char)) return "char";
+        if (type == typeof(double)) return "double";
+        if (type == typeof(float)) return "float";
+        if (type == typeof(decimal)) return "decimal";
+        if (type == typeof(object)) return "object";
+        return type.Name;
+    }
+
     /// <summary><c>account-orders</c> → <c>AccountOrders</c>; anything that is not a letter or digit separates words.</summary>
     public static string PascalCase(string name)
     {

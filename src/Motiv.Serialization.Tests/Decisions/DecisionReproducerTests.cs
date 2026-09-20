@@ -12,7 +12,7 @@ namespace Motiv.Serialization.Tests.Decisions;
 [Collection(Diagnostics.RulesTelemetryTestCollection.Name)]
 public class DecisionReproducerTests
 {
-    private sealed record Customer(string Id, bool IsActive, int Age);
+    private sealed record Customer(string Id, bool IsActive, int Age, IReadOnlyList<int>? Orders = null);
 
     private static PolicyBase<Customer, string> IsActive { get; } =
         Spec.Build((Customer c) => c.IsActive).WhenTrue("active").WhenFalse("inactive").Create();
@@ -24,12 +24,17 @@ public class DecisionReproducerTests
     private sealed class CanCheckout() : Rule<Customer, string>("can-checkout", IsActive);
     private sealed class CanCheckoutAsync() : AsyncRule<Customer, string>("can-checkout-async", IsActiveAsync);
     private sealed class CanCheckoutPolicy() : PolicyRule<Customer, string>("can-checkout-policy", IsActive);
+    private static PolicyBase<int, string> IsPositive { get; } =
+        Spec.Build((int n) => n > 0).WhenTrue("positive").WhenFalse("not positive").Create();
+    /// <summary>A name C# cannot start a class with, over a collection of a framework type.</summary>
+    private sealed class TwoFactorCheck() : Rule<Customer, string>("2fa-check", IsActive);
 
     private const string AuditedOverEligible = """{ "audited": true, "rule": { "spec": "customer.eligible" } }""";
     private const string EligibleIsActive = """{ "rule": { "spec": "customer.is-active" } }""";
     private const string EligibleIsAdult = """{ "rule": { "spec": "customer.is-adult" } }""";
     private const string AuditedOverIsActive = """{ "audited": true, "rule": { "spec": "customer.is-active" } }""";
     private const string AuditedOverIsActiveAsync = """{ "audited": true, "rule": { "spec": "customer.is-active-async" } }""";
+    private const string AuditedOverAllOrdersPositive = """{ "audited": true, "rule": { "asAllSatisfied": { "spec": "is-positive" }, "path": "orders", "name": "all orders positive" } }""";
 
     private static readonly JsonSerializerOptions Web = new(JsonSerializerDefaults.Web);
 
@@ -54,6 +59,7 @@ public class DecisionReproducerTests
                 case CanCheckoutAsync asyncRule: await asyncRule.EvaluateAsync(customer); break;
                 case CanCheckoutPolicy policy: policy.Evaluate(customer); break;
                 case CanCheckout sync: sync.Evaluate(customer); break;
+                case TwoFactorCheck twoFactor: twoFactor.Evaluate(customer); break;
                 default: throw new InvalidOperationException($"unknown rule '{rule}'");
             }
             var deadline = DateTime.UtcNow.AddSeconds(5);
@@ -78,19 +84,22 @@ public class DecisionReproducerTests
         var registry = new SpecRegistry()
             .Register("customer.is-active", IsActive)
             .Register("customer.is-adult", IsAdult)
-            .Register("customer.is-active-async", IsActiveAsync);
+            .Register("customer.is-active-async", IsActiveAsync)
+            .Register("is-positive", IsPositive)
+            .RegisterCollection<Customer, int>("orders", c => c.Orders ?? []);
         var propositionStore = new InMemoryPropositionStore();
         var propositions = new PropositionSet(registry, propositionStore).AddModel<Customer>("customer");
         propositions.Load();
         var ruleStore = new InMemoryRuleStore();
         var rules = new RuleSet(propositions, ruleStore, decisionLog: log)
-            .Add(new CanCheckout()).Add(new CanCheckoutAsync()).Add(new CanCheckoutPolicy());
+            .Add(new CanCheckout()).Add(new CanCheckoutAsync()).Add(new CanCheckoutPolicy()).Add(new TwoFactorCheck());
 
         (await propositions.CreateAsync("customer.eligible", "customer", EligibleIsActive, null)).Outcome.ShouldBe(PropositionUpdateOutcome.Created);
         var alice = new RuleChangeProvenance("alice");
         (await rules.UpdateAsync("can-checkout", AuditedOverEligible, 1, alice)).Outcome.ShouldBe(RuleUpdateOutcome.Updated);
         (await rules.UpdateAsync("can-checkout-async", AuditedOverIsActiveAsync, 1, alice)).Outcome.ShouldBe(RuleUpdateOutcome.Updated);
         (await rules.UpdateAsync("can-checkout-policy", AuditedOverIsActive, 1, alice)).Outcome.ShouldBe(RuleUpdateOutcome.Updated);
+        (await rules.UpdateAsync("2fa-check", AuditedOverAllOrdersPositive, 1, alice)).Outcome.ShouldBe(RuleUpdateOutcome.Updated);
 
         return new Host
         {
@@ -402,6 +411,21 @@ public class DecisionReproducerTests
         // eligible is a runtime proposition, not a compiled spec: adopted code cannot resolve it until it is
         reproduction.CSharp.ShouldContain("""return registry.Get<Customer>("customer.eligible") /* TODO: 'customer.eligible' is not a compiled spec */;""");
         reproduction.CSharpWarnings.ShouldHaveSingleItem().ShouldContain("customer.eligible");
+    }
+
+    [Fact]
+    public async Task Should_print_a_valid_class_name_and_element_type_whatever_the_rule_is_called()
+    {
+        // Arrange — "2fa-check" cannot open a C# class name, and the collection's element type is int, not Int32
+        await using var host = await AHostAsync();
+        var decision = await host.DecideAsync(new Customer("cust-42", true, 30, Orders: [1, 2]), "2fa-check");
+
+        var reproduction = await host.Reproducer().ReproduceAsync(decision.Id, default);
+
+        reproduction.CSharp.ShouldNotBeNull();
+        reproduction.CSharp.ShouldContain("public static class _2faCheckRule");
+        reproduction.CSharp.ShouldContain("""registry.Get<int>("is-positive")""");
+        reproduction.CSharp.ShouldNotContain("Int32");
     }
 
     [Fact]

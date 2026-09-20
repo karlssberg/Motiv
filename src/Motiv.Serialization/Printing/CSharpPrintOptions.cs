@@ -7,10 +7,6 @@ namespace Motiv.Serialization;
 /// </summary>
 public sealed class CSharpPrintOptions
 {
-    private static readonly IReadOnlyDictionary<string, string> NoHandles = new Dictionary<string, string>();
-    private static readonly IReadOnlyDictionary<string, CSharpCollectionHandle> NoCollections = new Dictionary<string, CSharpCollectionHandle>();
-    private static readonly ISet<string> NoAsync = new HashSet<string>();
-
     /// <summary>The model type the printed method is over.</summary>
     public required Type ModelType { get; init; }
 
@@ -21,13 +17,13 @@ public sealed class CSharpPrintOptions
     /// Spec name → the C# expression that is that spec (a compiled handle such as
     /// <c>Specs.IsActive</c>). Unmapped names go through <see cref="RegistryExpression"/>.
     /// </summary>
-    public IReadOnlyDictionary<string, string> SpecHandles { get; init; } = NoHandles;
+    public IReadOnlyDictionary<string, string> SpecHandles { get; init; } = new Dictionary<string, string>(StringComparer.Ordinal);
 
     /// <summary>Collection path → its element type and selector, for higher-order nodes. An unmapped path prints a <c>TODO</c>.</summary>
-    public IReadOnlyDictionary<string, CSharpCollectionHandle> Collections { get; init; } = NoCollections;
+    public IReadOnlyDictionary<string, CSharpCollectionHandle> Collections { get; init; } = new Dictionary<string, CSharpCollectionHandle>(StringComparer.Ordinal);
 
     /// <summary>The spec names registered as async; a reference to one prints through <c>GetAsync</c> and makes the method async-typed.</summary>
-    public ISet<string> AsyncSpecs { get; init; } = NoAsync;
+    public ISet<string> AsyncSpecs { get; init; } = new HashSet<string>(StringComparer.Ordinal);
 
     /// <summary>
     /// Every name the host's registry knows, or null not to check. A reference to a name outside

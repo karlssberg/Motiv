@@ -74,8 +74,8 @@ public sealed class DecisionReproducer(
             KnownSpecs = new HashSet<string>(registry.Entries.Select(entry => entry.Name), StringComparer.Ordinal),
             Collections = registry.Collections
                 .Where(collection => collection.ParentType == rule.ModelType)
-                .ToDictionary(collection => collection.Path, collection => new CSharpCollectionHandle(collection.ElementType.Name, Selector: null), StringComparer.Ordinal),
-            ClassName = CSharpIdentifiers.PascalCase(rule.Name) + "Rule",
+                .ToDictionary(collection => collection.Path, collection => new CSharpCollectionHandle(CSharpIdentifiers.TypeName(collection.ElementType), Selector: null), StringComparer.Ordinal),
+            ClassName = CSharpIdentifiers.TypeName(rule.Name) + "Rule",
             SerializerOptions = propositions?.Options ?? rules.Options,
         };
 
