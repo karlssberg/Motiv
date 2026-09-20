@@ -70,10 +70,17 @@ _Avoid_: Override, bypass, admin mode
 ### Durability
 
 **Version log**:
-The append-only, immutable record of every rule publish — one row per `(Name, Version)`, kept forever
-and never rewritten. The primary key is also the cross-process compare-and-set: two replicas racing
-the same version race on the insert, and the key lets exactly one win.
+The append-only, immutable record of every rule and proposition publish — one row per
+`(Name, Version)`, kept forever and never rewritten. The primary key is also the cross-process
+compare-and-set: two replicas racing the same version race on the insert, and the key lets exactly
+one win.
 _Avoid_: History table, audit log (the log *is* the audit trail, not a copy of one), changelog
+
+**Tombstone**:
+The version-log row a proposition withdrawal writes — one past the withdrawn version, with no
+document — so the log records who withdrew the name and when, and a later re-creation continues the
+numbering rather than reusing a version the decision log may pin.
+_Avoid_: Deleted row, soft delete, marker
 
 **Head projection**:
 A rule's current state as a store reports it — the highest-versioned row in that rule's version log,

@@ -11,15 +11,24 @@ public interface IPropositionStore
 {
     IReadOnlyList<StoredProposition> Load();
     Task<PropositionWriteResult> WriteAsync(PropositionBatch batch, CancellationToken cancellationToken);
+    Task<IReadOnlyList<StoredPropositionVersion>> HistoryAsync(string name, CancellationToken cancellationToken);
 }
 
 public sealed record PropositionBatch(
-    IReadOnlyList<StoredProposition> Saves, IReadOnlyList<PropositionDeletion> Deletes);
+    IReadOnlyList<StoredProposition> Saves,
+    IReadOnlyList<PropositionDeletion> Deletes,
+    RuleChangeProvenance Provenance);
 
 public sealed record PropositionDeletion(string Name, int Version);
 
 public sealed record StoredProposition(
     string Name, string ModelType, string DocumentJson, int Version, string? Description);
+
+public sealed record StoredPropositionVersion(
+    string Name, int Version, string? ModelType, string? DocumentJson, string? Description,
+    string Author, DateTimeOffset TimestampUtc, string? ChangeNote, string? ApprovalRef, string? BuildId);
+
+public sealed record PropositionPosition(int Version, bool Live);
 ```
 
 `ModelType` is carried explicitly because it is not in the document &mdash; a rule takes its model
@@ -136,22 +145,31 @@ basis. But it is blind to every other replica, which is why *enforcement* lives 
 replicas that both read v1 and both publish v2 get one `Updated` and one `VersionConflict`; before
 enforcement moved here, both got `Updated` and one edit vanished.
 
-## The Asymmetry with `IRuleStore`
+## The Symmetry with `IRuleStore`
 
-The two stores are twins, but they are not mirror images, and the difference is deliberate rather
-than an oversight:
+Both stores are append-only version logs keyed on `(Name, Version)`, and that key is the
+cross-process compare-and-set for both:
 
 | | `IRuleStore` | `IPropositionStore` |
 |---|---|---|
-| History | An append-only version log, kept forever | One row per name, replaced in place |
-| Rollback | `RestoreAsync` re-publishes a recorded version | None &mdash; a superseded document is gone |
-| A second writer | `RuleAppendResult.Conflict`, carrying the version the store is actually at | `PropositionWriteResult.Conflict`, the same |
-| Compare-and-set | `(Name, Version)` primary key | The row's version, checked on every entry |
+| History | An append-only version log, kept forever | The same &mdash; `HistoryAsync(name)` |
+| A withdrawal | A null document records a revert to the compiled default | A **tombstone** &mdash; a row one past the deleted version with no document |
+| A re-created name | Continues the numbering | Continues the numbering past the tombstone |
+| Rollback | `RestoreAsync` re-publishes a recorded version | None &mdash; the log exists for replay, not rollback |
+| Provenance | On every row | On every row, from the batch |
 
-What remains asymmetric is **history**, not concurrency. The rule log exists for rollback and audit
-under an [approval gate](../governance/index.md); propositions offer neither, so a superseded
-proposition document is not recoverable. Whether they should be is an open question, tracked
-separately &mdash; it is a schema and retention decision, not a concurrency one.
+The proposition log exists because the [decision log](../decision-log/capture.md) pins the version
+of every proposition a rule resolved through. Without it, that number named a document nobody kept.
+`Load()` still returns live heads only; a tombstoned name is absent from the heads and present in
+the history. A save must land strictly past the highest version the log holds, tombstones included,
+and a deletion must name the live head exactly &mdash; `PropositionBatch.FindConflict` is that
+predicate, written once, and every store applies it against the `PropositionPosition` it holds for
+a name.
+
+An existing database from before the log holds `MotivProposition` and lacks
+`MotivPropositionVersion`. The EF store does not migrate it: create the table (the model's create
+script names it), or delete a development store and let the JSON import re-seed it. Rows in the
+old table are not read.
 
 ## Next Steps
 
