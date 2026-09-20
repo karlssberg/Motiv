@@ -35,6 +35,17 @@ async function ruleVersion(request: APIRequestContext, name: string): Promise<nu
 }
 
 /**
+ * The store is a version log, so a name withdrawn by an earlier run and re-created by this one
+ * continues past its tombstone rather than restarting at 1. The version a create lands on is
+ * therefore read back, never assumed.
+ */
+async function propositionVersion(request: APIRequestContext, name: string): Promise<number> {
+  const response = await request.get(`${API}/propositions/${name}`);
+  expect(response.ok()).toBe(true);
+  return ((await response.json()) as { version: number }).version;
+}
+
+/**
  * Propositions and rules are per-process state on the running host, so normalise before AND after,
  * exactly as `live-rules.spec.ts` does: reverting works from any state and always moves the version
  * forward, so the run starts from the compiled defaults whatever an earlier run left behind.
@@ -105,6 +116,7 @@ test('an authored proposition is a building block the live rule follows', async 
   // produce the very document this asserts.
   await paletteAction(page, 'New');
   await createFromDialog(page, 'New proposition', ELIGIBLE, 'customer.has-orders');
+  const eligibleCreated = await propositionVersion(request, ELIGIBLE);
 
   // It lands in the tree under its namespace, badged as authored rather than compiled…
   await expectInTree(page, 'e2e-eligible authored');
@@ -144,7 +156,7 @@ test('an authored proposition is a building block the live rule follows', async 
   await expectDocument(page, '"customer.is-active"');
   // The count on the button is the same blast radius, restated where the commit happens.
   await page.getByRole('button', { name: 'Save (1)', exact: true }).click();
-  await expect(front.locator('.doc-title').getByText(/^v2\b/)).toBeVisible();
+  await expect(front.locator('.doc-title').getByText(new RegExp(`^v${eligibleCreated + 1}\\b`))).toBeVisible();
 
   // The rule's tab knows: the proposition it uses has moved since it last looked.
   await tab(page, 'Rule', RULE).click();
