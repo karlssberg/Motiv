@@ -66,18 +66,7 @@ public sealed class DecisionReproducer(
         if (rule is null || ruleVersion?.DocumentJson is null)
             return (null, []);
 
-        var registry = rules.Scope.Registry;
-        var options = new CSharpPrintOptions
-        {
-            ModelType = rule.ModelType,
-            AsyncSpecs = new HashSet<string>(registry.Entries.Where(entry => entry.IsAsync).Select(entry => entry.Name), StringComparer.Ordinal),
-            KnownSpecs = new HashSet<string>(registry.Entries.Select(entry => entry.Name), StringComparer.Ordinal),
-            Collections = registry.Collections
-                .Where(collection => collection.ParentType == rule.ModelType)
-                .ToDictionary(collection => collection.Path, collection => new CSharpCollectionHandle(CSharpIdentifiers.TypeName(collection.ElementType), Selector: null), StringComparer.Ordinal),
-            ClassName = CSharpIdentifiers.TypeName(rule.Name) + "Rule",
-            SerializerOptions = propositions?.Options ?? rules.Options,
-        };
+        var options = RulePrintOptions.For(rule, rules.Scope.Registry, propositions?.Options ?? rules.Options);
 
         try
         {

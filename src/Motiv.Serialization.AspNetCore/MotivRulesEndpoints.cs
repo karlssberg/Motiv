@@ -189,7 +189,11 @@ public static class MotivRulesEndpoints
         }
 
         if (rules is not null)
+        {
             MapRuleEndpoints(group, rules, governance, options, resultSerializer, json);
+            MotivDecisionEndpoints.MapCSharpEndpoint(
+                group, rules, endpoints.ServiceProvider.GetService<IRuleStore>(), propositions?.Options ?? rules.Options, json);
+        }
 
         if (propositions is not null)
             MotivPropositionEndpoints.MapPropositionEndpoints(group, propositions, governance, json);
@@ -198,6 +202,11 @@ public static class MotivRulesEndpoints
         // a host without AddScenarios answers 404, which the TypeScript client reads as "no store".
         if (endpoints.ServiceProvider.GetService<IScenarioStore>() is { } scenarios)
             MotivScenarioEndpoints.MapScenarioEndpoints(group, scenarios, json);
+
+        // The decision log's read side, and reproductions over it, exist only when a source is
+        // registered: a host that only writes decisions has nothing to serve here.
+        if (endpoints.ServiceProvider.GetService<IDecisionSource>() is { } decisions)
+            MotivDecisionEndpoints.MapDecisionEndpoints(group, decisions, endpoints.ServiceProvider.GetService<DecisionReproducer>(), json);
 
         return endpoints;
     }

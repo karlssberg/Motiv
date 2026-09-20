@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Motiv.Serialization.AspNetCore;
 
@@ -49,8 +50,8 @@ public sealed record ReproductionEntry(
     ReproducedModelEntry Model,
     RuleEvaluationResult<object?>? Replayed,
     FidelityEntry Fidelity,
-    string? CSharp,
-    IReadOnlyList<string> CSharpWarnings);
+    [property: JsonPropertyName("csharp")] string? CSharp,
+    [property: JsonPropertyName("csharpWarnings")] IReadOnlyList<string> CSharpWarnings);
 
 /// <summary>A rule printed as C#, and where the print needs a person.</summary>
 public sealed record CSharpEntry(string Source, IReadOnlyList<string> Warnings);
