@@ -14,7 +14,7 @@ namespace Motiv.Studio.Tests;
 public class StoreSchemaTests
 {
     [Fact]
-    public async Task Should_create_the_three_tables_and_be_a_no_op_the_second_time()
+    public async Task Should_create_the_four_tables_and_be_a_no_op_the_second_time()
     {
         // Arrange
         var path = TempDatabasePath();
@@ -32,6 +32,7 @@ public class StoreSchemaTests
             (await check.RuleVersions.CountAsync()).ShouldBe(0);
             (await check.PropositionVersions.CountAsync()).ShouldBe(0);
             (await check.StoreGenerations.CountAsync()).ShouldBe(0);
+            (await check.Scenarios.CountAsync()).ShouldBe(0);
         }
         finally
         {
@@ -64,6 +65,7 @@ public class StoreSchemaTests
             (await check.RuleVersions.CountAsync()).ShouldBe(0);
             (await check.PropositionVersions.CountAsync()).ShouldBe(0);
             (await check.StoreGenerations.CountAsync()).ShouldBe(0);
+            (await check.Scenarios.CountAsync()).ShouldBe(0);
         }
         finally
         {

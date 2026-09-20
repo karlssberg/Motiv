@@ -20,7 +20,7 @@ using Motiv.Serialization.EntityFrameworkCore;
 /// A failure that left the schema complete was another instance getting there first, which is
 /// logged and continued past. A failure that did not is rethrown with its original stack: a bad
 /// connection string, an unwritable path and a permission error all land here, and every one of them
-/// must still take the process down loudly. All three tables are checked, because a check of one
+/// must still take the process down loudly. All four tables are checked, because a check of one
 /// proves nothing about the other two.
 /// </para>
 /// <para>
@@ -38,7 +38,7 @@ using Motiv.Serialization.EntityFrameworkCore;
 /// </remarks>
 public static class StoreSchema
 {
-    /// <summary>The three tables the stores need, created if they are not already there.</summary>
+    /// <summary>The four tables the stores need, created if they are not already there.</summary>
     /// <param name="context">A context over the store's database.</param>
     /// <param name="logger">Where a lost creation race is reported.</param>
     /// <param name="cancellationToken">Cancels the creation and the verification.</param>
@@ -71,7 +71,7 @@ public static class StoreSchema
             {
                 logger.LogWarning(
                     creationFailure,
-                    "Creating the Motiv store schema failed, but all three tables are present and " +
+                    "Creating the Motiv store schema failed, but all four tables are present and " +
                     "readable — another instance created them first. Continuing.");
             }
 
@@ -94,7 +94,7 @@ public static class StoreSchema
     }
 
     /// <summary>
-    /// Which of the three tables cannot be read. A trivial query per table rather than a metadata
+    /// Which of the four tables cannot be read. A trivial query per table rather than a metadata
     /// lookup, because that is provider-agnostic and answers the question actually being asked —
     /// can the stores use this schema.
     /// </summary>
@@ -106,6 +106,7 @@ public static class StoreSchema
             ("MotivRuleVersion", () => context.RuleVersions.AsNoTracking().AnyAsync(cancellationToken)),
             ("MotivPropositionVersion", () => context.PropositionVersions.AsNoTracking().AnyAsync(cancellationToken)),
             ("MotivStoreGeneration", () => context.StoreGenerations.AsNoTracking().AnyAsync(cancellationToken)),
+            ("MotivScenario", () => context.Scenarios.AsNoTracking().AnyAsync(cancellationToken)),
         ];
 
         var missing = new List<string>();
