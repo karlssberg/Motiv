@@ -59,20 +59,30 @@ const newId = (): string =>
     ? crypto.randomUUID().replace(/-/g, '')
     : Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
 
+/**
+ * A row at its defaults — unwritten, unevaluated, closed and holding nothing — with whatever the
+ * caller knows about it laid over the top.
+ */
 const fresh = (
-  id: string, name: string, model: string, version = 0, open = false,
-  held: { expectedSatisfied: boolean | null; sourceDecisionId: string | null } = { expectedSatisfied: null, sourceDecisionId: null },
-): Scenario =>
-  ({ id, name, model, ...held, version, saving: 'idle', dirty: false, comparison: UNEVALUATED, open, violations: [] });
+  id: string, name: string, model: string,
+  known: Partial<Omit<Scenario, 'id' | 'name' | 'model'>> = {},
+): Scenario => ({
+  id, name, model,
+  expectedSatisfied: null, sourceDecisionId: null,
+  version: 0, saving: 'idle', dirty: false, comparison: UNEVALUATED, open: false, violations: [],
+  ...known,
+});
 
 /** Rows from the store, unevaluated. Ids beginning with `__` are host bookkeeping and never shown. */
 export const fromStored = (entries: readonly ScenarioEntry[]): Scenario[] =>
   entries.filter((e) => !e.id.startsWith('__'))
-    .map((e) => fresh(e.id, e.name, e.model, e.version, false, e));
+    .map((e) => fresh(e.id, e.name, e.model, {
+      version: e.version, expectedSatisfied: e.expectedSatisfied, sourceDecisionId: e.sourceDecisionId,
+    }));
 
 /** A new scenario, opened straight away: an empty row is nothing to look at until it is edited. */
 export const addScenario = (rows: Scenario[]): Scenario[] =>
-  [...rows, fresh(newId(), `Scenario ${rows.length + 1}`, '{\n  \n}', 0, true)];
+  [...rows, fresh(newId(), `Scenario ${rows.length + 1}`, '{\n  \n}', { open: true })];
 
 /** A copy directly beneath its source, unevaluated and open: the same input, awaiting its own run. */
 export function cloneScenario(rows: Scenario[], id: string): Scenario[] {
@@ -80,14 +90,14 @@ export function cloneScenario(rows: Scenario[], id: string): Scenario[] {
   if (index < 0) return rows;
   const source = rows[index]!;
   // The same input carries the same expectation, but the copy is not the decision's own record.
-  const copy = fresh(newId(), `${source.name} (copy)`, source.model, 0, true,
-    { expectedSatisfied: source.expectedSatisfied, sourceDecisionId: null });
+  const copy = fresh(newId(), `${source.name} (copy)`, source.model,
+    { open: true, expectedSatisfied: source.expectedSatisfied });
   return [...rows.slice(0, index + 1), copy, ...rows.slice(index + 1)];
 }
 
 /**
- * The store accepted the row: it is now at <paramref name="version"/>. A row edited while that
- * write was in flight stays dirty, which is what sends it back to the store at the new version.
+ * The store accepted the row: it is now at the version given. A row edited while that write was
+ * in flight stays dirty, which is what sends it back to the store at the new version.
  */
 export const withSaved = (rows: Scenario[], id: string, version: number): Scenario[] =>
   rows.map((r) => (r.id === id ? { ...r, version, saving: 'idle' as const, saveError: undefined } : r));

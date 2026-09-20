@@ -33,18 +33,18 @@ internal static class ScenarioSeeds
 
             foreach (var (id, name, model) in Seeds)
             {
-                var written = await store.PutAsync(
-                    new StoredScenario(rule, id, name, model, null, null, 0, "system", DateTimeOffset.MinValue),
-                    baseVersion: 0, cancellationToken);
+                var written = await store.PutAsync(Row(rule, id, name, model), baseVersion: 0, cancellationToken);
                 if (!written.IsConflict)
                     seeded++;
             }
 
-            await store.PutAsync(
-                new StoredScenario(rule, MarkerId, "seeded", "{}", null, null, 0, "system", DateTimeOffset.MinValue),
-                baseVersion: 0, cancellationToken);
+            await store.PutAsync(Row(rule, MarkerId, "seeded", "{}"), baseVersion: 0, cancellationToken);
         }
 
         return seeded;
     }
+
+    /// <summary>A first-write row: no expectation, no source decision, authored by the host itself.</summary>
+    private static StoredScenario Row(string rule, string id, string name, string model) =>
+        new(rule, id, name, model, null, null, 0, "system", DateTimeOffset.MinValue);
 }
