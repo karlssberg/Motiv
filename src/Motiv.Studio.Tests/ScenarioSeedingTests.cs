@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using Motiv.Serialization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Shouldly;
@@ -58,5 +59,25 @@ public class ScenarioSeedingTests
             var rows = await client.GetFromJsonAsync<JsonElement>($"/api/rules/rules/{rule}/scenarios");
             rows.GetArrayLength().ShouldBe(4, rule);
         }
+    }
+
+    [Fact]
+    public async Task Should_not_duplicate_seeds_when_a_pass_was_cut_short_before_its_marker()
+    {
+        // Arrange — a replica seeded the rule but never wrote the marker (it crashed, or another
+        // replica is mid-way through the same pass right now)
+        var store = new InMemoryScenarioStore();
+        await ScenarioSeeds.SeedAsync(store, ["can-checkout"], CancellationToken.None);
+        var marker = (await store.ForRuleAsync("can-checkout", CancellationToken.None)).Single(r => r.Id == ScenarioSeeds.MarkerId);
+        await store.DeleteAsync("can-checkout", ScenarioSeeds.MarkerId, marker.Version, CancellationToken.None);
+
+        // Act — the next pass
+        var written = await ScenarioSeeds.SeedAsync(store, ["can-checkout"], CancellationToken.None);
+
+        // Assert — the seeds collide on their ids instead of landing beside the originals
+        written.ShouldBe(0);
+        var rows = await store.ForRuleAsync("can-checkout", CancellationToken.None);
+        rows.Count(r => r.Id != ScenarioSeeds.MarkerId).ShouldBe(4);
+        rows.ShouldContain(r => r.Id == ScenarioSeeds.MarkerId);
     }
 }

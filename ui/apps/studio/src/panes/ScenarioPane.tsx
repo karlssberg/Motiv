@@ -6,8 +6,8 @@ import { SchemaViolations } from './SchemaViolations.js';
 import { Tick } from './Verdict.js';
 import { Caret, IconDelete, IconNew, IconPlay, IconRefresh } from '../shell/icons.js';
 import {
-  addScenario, cloneScenario, editScenario, fromStored, outcomeChanged, removeScenario, runScenario,
-  toggleScenario, withComparison, withSaved, withSaving, withViolations, type Comparison, type Scenario, type Side,
+  addScenario, cloneScenario, editScenario, fromStored, outcomeChanged, pendingSave, removeScenario, runScenario,
+  toggleScenario, withComparison, withDirty, withSaved, withSaving, withViolations, type Comparison, type Scenario, type Side,
 } from './scenarios.js';
 import { Tooltip } from '../shell/Tooltip.js';
 
@@ -33,6 +33,9 @@ export function ScenarioPane(props: {
   const [rows, setRows] = useState<Scenario[]>([]);
   const rowsRef = useRef(rows);
   rowsRef.current = rows;
+  // Rows deleted while their create was still in flight: the store hears about the delete once it
+  // has answered the create, at the version it answered with.
+  const doomed = useRef(new Set<string>());
 
   // The store is the source: Reset re-reads it, which is also how a row another tab changed is
   // brought back into view after a refused save.
@@ -51,8 +54,13 @@ export function ScenarioPane(props: {
   const persist = async (row: Scenario): Promise<void> => {
     try {
       const saved = await props.client.putScenario(props.ruleName, row.id, {
-        name: row.name, model: row.model, expectedSatisfied: null, sourceDecisionId: null, baseVersion: row.version,
+        name: row.name, model: row.model, expectedSatisfied: row.expectedSatisfied, sourceDecisionId: row.sourceDecisionId,
+        baseVersion: row.version,
       });
+      if (saved.outcome === 'saved' && doomed.current.delete(row.id)) {
+        void props.client.deleteScenario(props.ruleName, row.id, saved.version).catch(() => undefined);
+        return;
+      }
       setRows((current) => saved.outcome === 'saved'
         ? withSaved(current, row.id, saved.version)
         : withSaving(current, row.id, 'conflict', `changed elsewhere (now v${saved.currentVersion}) — reset to reload`));
@@ -70,24 +78,31 @@ export function ScenarioPane(props: {
   };
 
   // A row minted in the browser (version 0) is written as soon as it exists — add and clone go
-  // through here.
+  // through here — and so is a row edited while its last write was still in flight, once that
+  // write has answered.
   useEffect(() => {
-    beginSave(rows.filter((r) => r.version === 0 && r.saving === 'idle'));
+    beginSave(pendingSave(rows));
   // eslint-disable-next-line react-hooks/exhaustive-deps -- beginSave and persist read props only
   }, [rows]);
 
-  /** Writes a row the store already holds, once its editor loses focus. */
+  /**
+   * Writes a row once its editor loses focus. An edit made while the row is still being created
+   * or written is not lost: the row is marked dirty and goes to the store when that write answers.
+   */
   const commit = (id: string): void => {
     const row = rowsRef.current.find((r) => r.id === id);
-    if (!row || row.version === 0 || row.saving === 'saving') return;
-    beginSave([row]);
+    if (!row) return;
+    if (row.saving === 'saving') setRows((current) => withDirty(current, id));
+    else beginSave([row]);
   };
 
   const remove = (id: string): void => {
     const row = rowsRef.current.find((r) => r.id === id);
     setRows((current) => removeScenario(current, id));
+    if (!row) return;
     // A stale-version refusal here is not shown: the row is gone locally and Reset shows the truth.
-    if (row && row.version > 0) void props.client.deleteScenario(props.ruleName, id, row.version).catch(() => undefined);
+    if (row.version > 0) void props.client.deleteScenario(props.ruleName, id, row.version).catch(() => undefined);
+    else if (row.saving === 'saving') doomed.current.add(id);
   };
 
   // The inspector strip under the DSL pane reads a leaf against whichever scenario's details are

@@ -9,11 +9,17 @@ namespace Motiv.Serialization.AspNetCore;
 /// A rule's scenarios: listed under <see cref="GrantVerb.Read"/>, written under
 /// <see cref="GrantVerb.Author"/>, and served by the store rather than the rule set — a scenario
 /// may precede its rule's first publish. Ids beginning with <c>__</c> are reserved for host
-/// bookkeeping (Studio's seed marker) and are never listed.
+/// bookkeeping (Studio's seed marker): never listed, and refused on write, so a caller cannot land
+/// a row they will never see again or remove a marker the host relies on.
 /// </summary>
 internal static class MotivScenarioEndpoints
 {
     private const string ReservedPrefix = "__";
+
+    private static bool IsReserved(string id) => id.StartsWith(ReservedPrefix, StringComparison.Ordinal);
+
+    private static IResult ReservedId(JsonSerializerOptions json) =>
+        Results.Json(new ErrorResponse($"Ids beginning with '{ReservedPrefix}' are reserved for the host."), json, statusCode: 400);
 
     internal static void MapScenarioEndpoints(RouteGroupBuilder group, IScenarioStore scenarios, JsonSerializerOptions json)
     {
@@ -24,7 +30,7 @@ internal static class MotivScenarioEndpoints
 
             var rows = await scenarios.ForRuleAsync(name, http.RequestAborted);
             return Results.Json(
-                rows.Where(row => !row.Id.StartsWith(ReservedPrefix, StringComparison.Ordinal))
+                rows.Where(row => !IsReserved(row.Id))
                     .Select(ToEntry)
                     .ToArray(),
                 json);
@@ -35,6 +41,8 @@ internal static class MotivScenarioEndpoints
             if (GrantGate.Refuse(http, GrantVerb.Author, name, json) is { } refusal)
                 return refusal;
 
+            if (IsReserved(id))
+                return ReservedId(json);
             if (string.IsNullOrWhiteSpace(request.Name))
                 return Results.Json(new ErrorResponse("The request must include a name."), json, statusCode: 400);
             if (request.Model is null)
@@ -54,6 +62,8 @@ internal static class MotivScenarioEndpoints
             if (GrantGate.Refuse(http, GrantVerb.Author, name, json) is { } refusal)
                 return refusal;
 
+            if (IsReserved(id))
+                return ReservedId(json);
             if (baseVersion <= 0)
                 return EndpointResponses.NonPositiveBaseVersion(json);
 

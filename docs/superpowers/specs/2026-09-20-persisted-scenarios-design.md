@@ -29,22 +29,28 @@ browser — the coming MCP, a reproduction of a logged decision — could reach 
 6. **Routes exist only when a store is registered.** `AddScenarios()` on the builder maps
    `rules/{name}/scenarios`; without it the routes answer `404`, which `listScenarios` in
    `@motiv-rules/core` reads as an empty list, so an older host still renders the pane.
-7. **Ids beginning with `__` are reserved for host bookkeeping** and never listed. Studio's seeding
-   writes the four customer seeds once per rule and then a `__seeded` marker; a second boot skips
-   any rule with a marker, so a rule an operator emptied stays empty.
+7. **Ids beginning with `__` are reserved for host bookkeeping**: never listed, and refused on write
+   with `400`, so a caller cannot land a row they will never see again or remove a marker the host
+   relies on. Studio's seeding writes the four customer seeds once per rule and then a `__seeded`
+   marker; a second boot skips any rule with a marker, so a rule an operator emptied stays empty.
+   The seeds have fixed ids (`seed-minor` and so on): two replicas seeding at once, or a pass cut
+   short before its marker, collide on the key instead of landing a second copy beside the first.
 8. **Insertion order is a column.** SQLite cannot `ORDER BY` a `DateTimeOffset`, and a coarse clock
    on Windows CI would tie two quick adds; `ScenarioRow.Sequence` (max plus one on insert, id as
    tiebreak) is what "the order they were added" means in SQL.
 9. **Studio saves on blur, add, clone and delete — not per keystroke.** A row minted in the browser
    is written as soon as it exists, marked saving in the same state update that hands it to the
-   store, so two quick adds each persist once. A `409` flags the row "changed elsewhere" and Reset
-   reloads the rule's scenarios from the store. A delete conflict is not shown: the row is gone
-   locally and Reset shows the truth.
+   store, so two quick adds each persist once. An edit that lands while a write is in flight marks
+   the row dirty and it goes back to the store once that write answers, at the version it answered
+   with; a row deleted while its create is in flight is deleted the same way. A `409` flags the row
+   "changed elsewhere" and Reset reloads the rule's scenarios from the store. A delete conflict is
+   not shown: the row is gone locally and Reset shows the truth.
 10. **Provenance is `Author` and `TimestampUtc`**, flattened, rather than the parent spec's
     `RuleChangeProvenance`: a scenario has no change note, approval reference or build id.
-11. **`ExpectedSatisfied` and `SourceDecisionId` are stored but not yet edited in Studio.** They
-    exist for the reproduction slice (a decision saved as a scenario) and the MCP's test
-    generation; the pane's structure is unchanged in this slice.
+11. **`ExpectedSatisfied` and `SourceDecisionId` are stored and carried, but not yet edited, in
+    Studio.** They exist for the reproduction slice (a decision saved as a scenario) and the MCP's
+    test generation. The pane sends back what it loaded, so a rename in Studio never erases a value
+    another client wrote; a clone keeps the expectation (same input) but not the decision id.
 
 ## Rejected
 
@@ -57,7 +63,11 @@ browser — the coming MCP, a reproduction of a logged decision — could reach 
 
 ## Outcome
 
-Every store runs the shared `ScenarioStoreConformance` suite (12 tests). Endpoints: 6 tests
-including both grant refusals and the unmapped-route `404`. Studio: the seeding test boots the
-host twice over one store; the pane's unit tests cover load, empty-host, save-on-blur, add, delete
-and conflict; the axe sweep passed all 80 checks against the stubbed routes.
+Every store runs the shared `ScenarioStoreConformance` suite (12 tests). Endpoints: 7 tests
+including both grant refusals, the reserved-id refusal and the unmapped-route `404`. Studio: the
+seeding test boots the host twice over one store and a unit test proves a pass cut short before
+its marker adds nothing; the pane's unit tests cover load, empty-host, save-on-blur, add, delete,
+conflict, the carried fields and edits or deletes during an in-flight create; the axe sweep passed
+all 80 checks against the stubbed routes. The whole-branch review found no Critical issue; its
+four Important findings (double seeding under a race, erased carried fields, lost in-flight edits,
+writable reserved ids) were each fixed test-first on the branch.

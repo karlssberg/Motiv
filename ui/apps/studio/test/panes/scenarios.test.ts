@@ -40,6 +40,19 @@ describe('scenarios', () => {
     }
   });
 
+  it('keeps a stored row’s expected verdict and source decision, so a save from Studio does not erase them', () => {
+    const [held] = fromStored([{ ...STORED[0]!, expectedSatisfied: true, sourceDecisionId: 'd-1' }]);
+    expect(held!.expectedSatisfied).toBe(true);
+    expect(held!.sourceDecisionId).toBe('d-1');
+    // A fresh row holds neither; a clone keeps the expectation (same input) but is not the decision's.
+    const [added] = addScenario([]);
+    expect(added!.expectedSatisfied).toBeNull();
+    expect(added!.sourceDecisionId).toBeNull();
+    const [, copy] = cloneScenario([held!], held!.id);
+    expect(copy!.expectedSatisfied).toBe(true);
+    expect(copy!.sourceDecisionId).toBeNull();
+  });
+
   it('marks a row saving, then saved at the store’s version, or flagged with why it did not save', () => {
     const rows = seedScenarios();
     const saving = withSaving(rows, 's2', 'saving');

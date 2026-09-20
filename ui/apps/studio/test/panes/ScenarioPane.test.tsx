@@ -208,6 +208,57 @@ describe('ScenarioPane', () => {
     await waitFor(() => expect(api.listScenarios).toHaveBeenCalledTimes(2));
   });
 
+  it('sends a stored row’s expected verdict and source decision back when it is renamed', async () => {
+    const api = client();
+    (api.listScenarios as ReturnType<typeof vi.fn>).mockResolvedValue(
+      [{ ...SEEDS[1], expectedSatisfied: false, sourceDecisionId: 'd-9' }]);
+    renderPane(api);
+    await settleCatalog();
+    fireEvent.click(within(row('Minor')).getByRole('button', { name: 'details of Minor' }));
+    const name = screen.getByLabelText('scenario name');
+    fireEvent.change(name, { target: { value: 'Teenager' } });
+    fireEvent.blur(name);
+    await waitFor(() => expect(api.putScenario).toHaveBeenCalledWith('can-checkout', 's2',
+      expect.objectContaining({ name: 'Teenager', expectedSatisfied: false, sourceDecisionId: 'd-9' })));
+  });
+
+  it('writes an edit made while the row was still being created, once the create has landed', async () => {
+    // The create PUT is held open; the user names the row and tabs out before it answers.
+    const api = client();
+    let land: (value: unknown) => void = () => undefined;
+    (api.putScenario as ReturnType<typeof vi.fn>)
+      .mockImplementationOnce(() => new Promise((resolve) => { land = resolve; }))
+      .mockResolvedValue({ outcome: 'saved', version: 2 });
+    renderPane(api);
+    await settleCatalog();
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+    await waitFor(() => expect(api.putScenario).toHaveBeenCalledTimes(1));
+    const name = screen.getByLabelText('scenario name');
+    fireEvent.change(name, { target: { value: 'Named early' } });
+    fireEvent.blur(name);
+    expect(api.putScenario).toHaveBeenCalledTimes(1);
+    await act(async () => { land({ outcome: 'saved', version: 1 }); });
+    await waitFor(() => expect(api.putScenario).toHaveBeenCalledWith('can-checkout', expect.any(String),
+      expect.objectContaining({ name: 'Named early', baseVersion: 1 })));
+  });
+
+  it('deletes a row removed while it was still being created, once the create has landed', async () => {
+    const api = client();
+    let land: (value: unknown) => void = () => undefined;
+    (api.putScenario as ReturnType<typeof vi.fn>)
+      .mockImplementationOnce(() => new Promise((resolve) => { land = resolve; }));
+    renderPane(api);
+    await settleCatalog();
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+    await waitFor(() => expect(api.putScenario).toHaveBeenCalledTimes(1));
+    const id = (api.putScenario as ReturnType<typeof vi.fn>).mock.calls[0]![1] as string;
+    fireEvent.click(within(row('Scenario 5')).getByRole('button', { name: 'delete Scenario 5' }));
+    expect(screen.queryByRole('row', { name: 'Scenario 5' })).toBeNull();
+    expect(api.deleteScenario).not.toHaveBeenCalled();
+    await act(async () => { land({ outcome: 'saved', version: 1 }); });
+    await waitFor(() => expect(api.deleteScenario).toHaveBeenCalledWith('can-checkout', id, 1));
+  });
+
   it('adds two scenarios from two quick clicks', async () => {
     renderPane();
     await settleCatalog();

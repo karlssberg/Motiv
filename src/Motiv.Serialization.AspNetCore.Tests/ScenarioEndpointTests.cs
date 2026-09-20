@@ -113,6 +113,19 @@ public class ScenarioEndpointTests
     }
 
     [Fact]
+    public async Task Should_refuse_to_write_a_host_bookkeeping_id()
+    {
+        // Arrange — a write under a reserved id would succeed and then never be listed
+        await using var app = await StartAsync();
+        var client = app.GetTestClient();
+
+        // Act & Assert
+        (await Put(client, "r", "__seeded", "seeded", "{}", 0)).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await client.DeleteAsync("/api/rules/rules/r/scenarios/__seeded?baseVersion=1")).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await app.Services.GetRequiredService<IScenarioStore>().ForRuleAsync("r", default)).ShouldBeEmpty();
+    }
+
+    [Fact]
     public async Task Should_refuse_a_put_without_author_grant()
     {
         // Arrange — a caller who may read pricing.* but not author it

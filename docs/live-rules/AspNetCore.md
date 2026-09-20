@@ -161,7 +161,7 @@ With `AddScenarios()` on the builder, each rule carries a table of named sample 
 Studio's Evaluate pane shows &mdash; stored in the backend rather than the browser. A scenario is
 test data: it never changes what a rule decides, so it is not versioned as a log and not governed.
 Reads need `Read` on the rule's namespace, writes need `Author`. Ids beginning with `__` are
-reserved for host bookkeeping and never listed. Without `AddScenarios()` the routes are not mapped
+reserved for host bookkeeping: never listed, and a `PUT` or `DELETE` under one answers `400`. Without `AddScenarios()` the routes are not mapped
 and answer `404`, which `@motiv-rules/core`'s `listScenarios` reads as an empty list.
 
 | Method & path | Request | Responses |

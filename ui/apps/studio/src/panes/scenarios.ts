@@ -26,11 +26,17 @@ export interface Scenario {
   name: string;
   /** The model as typed: JSON text, kept verbatim so an edit in progress survives a re-render. */
   model: string;
+  /** Null for a sample to look at; set for a test to hold. Carried, not edited, by this pane. */
+  expectedSatisfied: boolean | null;
+  /** The logged decision this scenario was saved from, when it was. Carried, not edited, by this pane. */
+  sourceDecisionId: string | null;
   /** The store's version, 0 until first saved. */
   version: number;
   /** Whether the store has the row as shown, is being told, or refused the last write. */
   saving: 'idle' | 'saving' | 'conflict' | 'error';
   saveError?: string | undefined;
+  /** An edit landed while a write was in flight: the row goes back to the store once that write answers. */
+  dirty: boolean;
   comparison: Comparison;
   open: boolean;
   violations: SchemaViolation[];
@@ -53,12 +59,16 @@ const newId = (): string =>
     ? crypto.randomUUID().replace(/-/g, '')
     : Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
 
-const fresh = (id: string, name: string, model: string, version = 0, open = false): Scenario =>
-  ({ id, name, model, version, saving: 'idle', comparison: UNEVALUATED, open, violations: [] });
+const fresh = (
+  id: string, name: string, model: string, version = 0, open = false,
+  held: { expectedSatisfied: boolean | null; sourceDecisionId: string | null } = { expectedSatisfied: null, sourceDecisionId: null },
+): Scenario =>
+  ({ id, name, model, ...held, version, saving: 'idle', dirty: false, comparison: UNEVALUATED, open, violations: [] });
 
 /** Rows from the store, unevaluated. Ids beginning with `__` are host bookkeeping and never shown. */
 export const fromStored = (entries: readonly ScenarioEntry[]): Scenario[] =>
-  entries.filter((e) => !e.id.startsWith('__')).map((e) => fresh(e.id, e.name, e.model, e.version));
+  entries.filter((e) => !e.id.startsWith('__'))
+    .map((e) => fresh(e.id, e.name, e.model, e.version, false, e));
 
 /** A new scenario, opened straight away: an empty row is nothing to look at until it is edited. */
 export const addScenario = (rows: Scenario[]): Scenario[] =>
@@ -69,17 +79,30 @@ export function cloneScenario(rows: Scenario[], id: string): Scenario[] {
   const index = rows.findIndex((r) => r.id === id);
   if (index < 0) return rows;
   const source = rows[index]!;
-  const copy = fresh(newId(), `${source.name} (copy)`, source.model, 0, true);
+  // The same input carries the same expectation, but the copy is not the decision's own record.
+  const copy = fresh(newId(), `${source.name} (copy)`, source.model, 0, true,
+    { expectedSatisfied: source.expectedSatisfied, sourceDecisionId: null });
   return [...rows.slice(0, index + 1), copy, ...rows.slice(index + 1)];
 }
 
-/** The store accepted the row: it is now at <paramref name="version"/> and nothing is pending. */
+/**
+ * The store accepted the row: it is now at <paramref name="version"/>. A row edited while that
+ * write was in flight stays dirty, which is what sends it back to the store at the new version.
+ */
 export const withSaved = (rows: Scenario[], id: string, version: number): Scenario[] =>
   rows.map((r) => (r.id === id ? { ...r, version, saving: 'idle' as const, saveError: undefined } : r));
 
-/** Where a row stands with the store: being written, or why the last write did not land. */
+/** Where a row stands with the store: being written (which takes the dirty edit with it), or why the last write did not land. */
 export const withSaving = (rows: Scenario[], id: string, saving: Scenario['saving'], saveError?: string): Scenario[] =>
-  rows.map((r) => (r.id === id ? { ...r, saving, saveError } : r));
+  rows.map((r) => (r.id === id ? { ...r, saving, saveError, dirty: saving === 'saving' ? false : r.dirty } : r));
+
+/** An edit that could not be written yet: the row is marked to go back to the store when it can. */
+export const withDirty = (rows: Scenario[], id: string): Scenario[] =>
+  rows.map((r) => (r.id === id ? { ...r, dirty: true } : r));
+
+/** Rows the store should hear about now: minted in the browser and never written, or edited while a write was in flight. */
+export const pendingSave = (rows: Scenario[]): Scenario[] =>
+  rows.filter((r) => r.saving === 'idle' && (r.version === 0 || r.dirty));
 
 export const toggleScenario = (rows: Scenario[], id: string): Scenario[] =>
   rows.map((r) => (r.id === id ? { ...r, open: !r.open } : r));
