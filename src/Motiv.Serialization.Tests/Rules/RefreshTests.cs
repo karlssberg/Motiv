@@ -886,6 +886,7 @@ public class RefreshTests
         public Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken ct) => inner.LoadAsync(ct);
 
         public Task<long> GetGenerationAsync(CancellationToken ct) => inner.GetGenerationAsync(ct);
+        public Task<IReadOnlyList<StoredPropositionVersion>> HistoryAsync(string name, CancellationToken ct) => inner.HistoryAsync(name, ct);
 
         public async Task<PropositionWriteResult> WriteAsync(
             PropositionBatch batch, CancellationToken ct)

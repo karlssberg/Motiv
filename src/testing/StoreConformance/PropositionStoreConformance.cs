@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Motiv.Serialization;
@@ -274,5 +275,150 @@ public abstract class PropositionStoreConformance : IAsyncLifetime
 
         // Assert — a poller that rebuilt on this would rebuild forever
         (await Store.GetGenerationAsync(default)).ShouldBe(before);
+    }
+
+    /// <summary>A named author, so a row's provenance is distinguishable from the default.</summary>
+    protected static RuleChangeProvenance By(string author, string? note = null, string? approvalRef = null) =>
+        new(author, note, approvalRef, BuildId: "build-1");
+
+    [Fact]
+    public async Task Should_return_the_whole_history_of_a_name_in_version_order()
+    {
+        // Arrange
+        await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 1)), default);
+        await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 2)), default);
+
+        // Act
+        var history = await Store.HistoryAsync("a", default);
+
+        // Assert — kept forever, in order, so "what did v1 say?" is always answerable
+        history.Select(row => row.Version).ShouldBe([1, 2]);
+        history.ShouldAllBe(row => row.DocumentJson != null && row.ModelType == "customer");
+    }
+
+    [Fact]
+    public async Task Should_return_an_empty_history_for_a_name_it_has_never_held()
+    {
+        // Act & Assert
+        (await Store.HistoryAsync("never", default)).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Should_record_a_deletion_as_a_tombstone_one_past_the_deleted_version()
+    {
+        // Arrange
+        await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 1)), default);
+
+        // Act
+        var written = await Store.WriteAsync(PropositionBatch.Delete("a", 1), default);
+
+        // Assert — gone from the heads, kept in the log as a row that says "withdrawn here"
+        written.IsConflict.ShouldBeFalse();
+        Store.Load().ShouldBeEmpty();
+        var history = await Store.HistoryAsync("a", default);
+        history.Select(row => row.Version).ShouldBe([1, 2]);
+        history[1].IsTombstone.ShouldBeTrue();
+        history[1].DocumentJson.ShouldBeNull();
+        history[1].ModelType!.ShouldBe("customer");
+    }
+
+    [Fact]
+    public async Task Should_refuse_recreating_a_deleted_name_at_or_below_its_tombstone()
+    {
+        // Arrange — the decision log may already pin "a" v1 and v2; neither number may be reused
+        await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 1)), default);
+        await Store.WriteAsync(PropositionBatch.Delete("a", 1), default);
+
+        // Act
+        var atOne = await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 1)), default);
+        var atTwo = await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 2)), default);
+        var atThree = await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 3)), default);
+
+        // Assert
+        atOne.IsConflict.ShouldBeTrue();
+        atOne.CurrentVersion.ShouldBe(2);
+        atTwo.IsConflict.ShouldBeTrue();
+        atTwo.CurrentVersion.ShouldBe(2);
+        atThree.IsConflict.ShouldBeFalse();
+        Store.Load().ShouldHaveSingleItem().Version.ShouldBe(3);
+        (await Store.HistoryAsync("a", default)).Select(row => row.Version).ShouldBe([1, 2, 3]);
+    }
+
+    [Fact]
+    public async Task Should_refuse_deleting_a_name_already_deleted()
+    {
+        // Arrange
+        await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 1)), default);
+        await Store.WriteAsync(PropositionBatch.Delete("a", 1), default);
+
+        // Act — a deletion names a live position; the tombstone is not one
+        var again = await Store.WriteAsync(PropositionBatch.Delete("a", 2), default);
+
+        // Assert
+        again.IsConflict.ShouldBeTrue();
+        again.CurrentVersion.ShouldBe(2);
+        (await Store.HistoryAsync("a", default)).Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task Should_stamp_the_batch_provenance_on_every_row_it_writes()
+    {
+        // Arrange
+        var save = new PropositionBatch([Stored("a", version: 1)], [], By("alice", "why", "cr-1"));
+
+        // Act
+        await Store.WriteAsync(save, default);
+        await Store.WriteAsync(PropositionBatch.Delete("a", 1, By("bob")), default);
+
+        // Assert
+        var history = await Store.HistoryAsync("a", default);
+        history[0].Author.ShouldBe("alice");
+        history[0].ChangeNote!.ShouldBe("why");
+        history[0].ApprovalRef!.ShouldBe("cr-1");
+        history[0].BuildId!.ShouldBe("build-1");
+        history[1].Author.ShouldBe("bob");
+    }
+
+    [Fact]
+    public async Task Should_default_provenance_to_system_with_the_running_build()
+    {
+        // Act — the two-argument shapes callers already use
+        await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 1)), default);
+
+        // Assert
+        var row = (await Store.HistoryAsync("a", default)).ShouldHaveSingleItem();
+        row.Author.ShouldBe("system");
+        row.BuildId.ShouldNotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public async Task Should_stamp_a_timestamp_on_every_row()
+    {
+        // Arrange
+        var before = DateTimeOffset.UtcNow.AddSeconds(-1);
+
+        // Act
+        await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 1)), default);
+
+        // Assert
+        var row = (await Store.HistoryAsync("a", default)).ShouldHaveSingleItem();
+        row.TimestampUtc.ShouldBeGreaterThanOrEqualTo(before);
+        row.TimestampUtc.ShouldBeLessThanOrEqualTo(DateTimeOffset.UtcNow.AddSeconds(1));
+    }
+
+    [Fact]
+    public async Task Should_leave_history_untouched_when_a_batch_is_refused()
+    {
+        // Arrange
+        await Store.WriteAsync(PropositionBatch.Save(Stored("a", version: 1)), default);
+
+        // Act — "b" is fine, "a" conflicts; the batch is all-or-nothing
+        var refused = await Store.WriteAsync(
+            new PropositionBatch([Stored("b", version: 1), Stored("a", version: 1)], []), default);
+
+        // Assert
+        refused.IsConflict.ShouldBeTrue();
+        (await Store.HistoryAsync("a", default)).Count.ShouldBe(1);
+        (await Store.HistoryAsync("b", default)).ShouldBeEmpty();
     }
 }

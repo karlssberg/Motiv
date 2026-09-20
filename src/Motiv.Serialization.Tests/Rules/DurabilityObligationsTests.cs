@@ -74,6 +74,7 @@ public class DurabilityObligationsTests
         public IReadOnlyList<StoredProposition> Load() => _inner.Load();
         public Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken ct) => _inner.LoadAsync(ct);
         public Task<long> GetGenerationAsync(CancellationToken ct) => _inner.GetGenerationAsync(ct);
+        public Task<IReadOnlyList<StoredPropositionVersion>> HistoryAsync(string name, CancellationToken ct) => _inner.HistoryAsync(name, ct);
 
         public Task<PropositionWriteResult> WriteAsync(PropositionBatch batch, CancellationToken ct)
         {

@@ -18,6 +18,8 @@ public class PropositionSetAsyncWriteTests
         public Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken ct) =>
             Task.FromResult<IReadOnlyList<StoredProposition>>([]);
         public Task<long> GetGenerationAsync(CancellationToken ct) => Task.FromResult(0L);
+        public Task<IReadOnlyList<StoredPropositionVersion>> HistoryAsync(string name, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<StoredPropositionVersion>>([]);
 
         public Task<PropositionWriteResult> WriteAsync(
             PropositionBatch batch, CancellationToken cancellationToken) =>
@@ -32,6 +34,7 @@ public class PropositionSetAsyncWriteTests
         public IReadOnlyList<StoredProposition> Load() => _inner.Load();
         public Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken ct) => _inner.LoadAsync(ct);
         public Task<long> GetGenerationAsync(CancellationToken ct) => _inner.GetGenerationAsync(ct);
+        public Task<IReadOnlyList<StoredPropositionVersion>> HistoryAsync(string name, CancellationToken ct) => _inner.HistoryAsync(name, ct);
 
         public async Task<PropositionWriteResult> WriteAsync(
             PropositionBatch batch, CancellationToken cancellationToken)
