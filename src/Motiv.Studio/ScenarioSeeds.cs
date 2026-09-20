@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Motiv.Serialization;
 
 /// <summary>
@@ -19,6 +20,15 @@ internal static class ScenarioSeeds
         ("seed-dormant", "Dormant account", """{ "customerId": "cust-9", "age": 41, "isActive": false, "orderCount": 12, "orders": [{ "total": 300 }] }"""),
         ("seed-new-customer", "New, no orders", """{ "customerId": "cust-1", "age": 25, "isActive": true, "orderCount": 0 }"""),
     ];
+
+    /// <summary>
+    /// The seeded customer with this id, or null — the demo's system of record, so a reference-only
+    /// decision about a seed customer can be reproduced. A customer typed into the Evaluate table by
+    /// hand is not here, and its decisions correctly report the subject as unresolved.
+    /// </summary>
+    internal static Customer? FindCustomer(string customerId, JsonSerializerOptions json) =>
+        Seeds.Select(seed => JsonSerializer.Deserialize<Customer>(seed.Model, json))
+            .FirstOrDefault(customer => customer?.CustomerId == customerId);
 
     /// <summary>Writes the seeds for every rule that has never been seeded. Returns how many scenarios were written.</summary>
     public static async Task<int> SeedAsync(
