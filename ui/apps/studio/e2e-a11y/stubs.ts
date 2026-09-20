@@ -1,4 +1,4 @@
-import { expect, test as base, type Page, type Route } from '@playwright/test';
+import { expect, test as base, type Page, type Request, type Route } from '@playwright/test';
 
 /**
  * The API Studio is scanned against.
@@ -113,8 +113,11 @@ const SCENARIOS = [
   id, name, model, expectedSatisfied: null, sourceDecisionId: null, version: 1, author: 'system', timestampUtc: '2026-09-20T00:00:00Z',
 }));
 
+/** A fixture body, or one chosen per request when the method decides the shape. */
+type Fixture = object | ((request: Request) => object);
+
 /** Every route, matched longest-first so `/rules/{name}` is not swallowed by `/rules`. */
-const ROUTES: ReadonlyArray<readonly [RegExp, unknown]> = [
+const ROUTES: ReadonlyArray<readonly [RegExp, Fixture]> = [
   [/\/api\/rules\/catalog$/, CATALOG],
   [/\/api\/rules\/validate$/, { errors: [] }],
   // The live rule by name, and the draft: the scenario table asks both for every row.
@@ -123,8 +126,9 @@ const ROUTES: ReadonlyArray<readonly [RegExp, unknown]> = [
   [/\/api\/rules\/propositions\/[^/]+\/dependents$/, []],
   [/\/api\/rules\/propositions\/[^/]+$/, { document: RULE_DOCUMENT, version: 2, origin: 'Authored', hasCompiledDefault: false }],
   [/\/api\/rules\/propositions$/, PROPOSITIONS],
-  // The rule's stored scenarios; a PUT or DELETE gets the same body, which the pane reads as a save.
-  [/\/api\/rules\/rules\/[^/]+\/scenarios(\/[^/?]+)?$/, SCENARIOS],
+  // The rule's stored scenarios on GET; a PUT or DELETE answers as the host does, with the version
+  // the write landed at, which is the shape the client reads a save result from.
+  [/\/api\/rules\/rules\/[^/]+\/scenarios(\/[^/?]+)?$/, (request: Request) => (request.method() === 'GET' ? SCENARIOS : { version: 1 })],
   // A code-defined default: the builder starts from the shared store's standing leaf, which is
   // what `composeRule` types over. A stored composite here would leave no root row to type into.
   [/\/api\/rules\/rules\/[^/?]+/, { document: null, version: 3 }],
@@ -159,7 +163,8 @@ export const test = base.extend<{ stubbedApi: void }>({
           await route.abort('failed');
           return;
         }
-        await route.fulfill({ json: match[1] as object });
+        const fixture = match[1];
+        await route.fulfill({ json: typeof fixture === 'function' ? fixture(route.request()) : fixture });
       });
 
       await use();

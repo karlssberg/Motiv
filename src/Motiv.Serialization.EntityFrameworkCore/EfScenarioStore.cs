@@ -1,3 +1,4 @@
+using System.Runtime.ExceptionServices;
 using Microsoft.EntityFrameworkCore;
 using Motiv.Serialization;
 
@@ -46,11 +47,13 @@ public sealed class EfScenarioStore(IDbContextFactory<MotivStoreDbContext> conte
             await context.SaveChangesAsync(cancellationToken);
             return ScenarioWriteResult.Written(version);
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception)
         {
             // Another replica moved the row between the read and this write: a concurrency-token
-            // miss on update, or a key collision on create. Report where the row now stands.
-            return ScenarioWriteResult.Conflict(await CurrentVersionAsync(scenario.RuleName, scenario.Id, cancellationToken));
+            // miss on update, or a key collision on create. Report where the row now stands — and
+            // where it stands is the test: a failure that left the row exactly where this write
+            // assumed it (a missing table, a read-only file) is the database refusing, not a race.
+            return await ConflictOrRethrowAsync(exception, scenario.RuleName, scenario.Id, baseVersion, cancellationToken);
         }
     }
 
@@ -69,9 +72,9 @@ public sealed class EfScenarioStore(IDbContextFactory<MotivStoreDbContext> conte
             await context.SaveChangesAsync(cancellationToken);
             return ScenarioWriteResult.Written(current);
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception)
         {
-            return ScenarioWriteResult.Conflict(await CurrentVersionAsync(ruleName, id, cancellationToken));
+            return await ConflictOrRethrowAsync(exception, ruleName, id, baseVersion, cancellationToken);
         }
     }
 
@@ -109,6 +112,23 @@ public sealed class EfScenarioStore(IDbContextFactory<MotivStoreDbContext> conte
         existing.Version = version;
         existing.Author = scenario.Author;
         existing.TimestampUtc = now;
+    }
+
+    /// <summary>
+    /// A concurrency miss is a conflict by definition. Any other refused write is one only when the
+    /// row no longer stands at <paramref name="baseVersion"/> — a key collision on create, a
+    /// concurrent write the provider reported some other way. Otherwise the failure is operational
+    /// and is rethrown as it came.
+    /// </summary>
+    private async Task<ScenarioWriteResult> ConflictOrRethrowAsync(
+        DbUpdateException exception, string ruleName, string id, int baseVersion, CancellationToken cancellationToken)
+    {
+        var current = await CurrentVersionAsync(ruleName, id, cancellationToken);
+        if (exception is DbUpdateConcurrencyException || current != baseVersion)
+            return ScenarioWriteResult.Conflict(current);
+
+        ExceptionDispatchInfo.Capture(exception).Throw();
+        return null!; // unreachable: Throw() never returns
     }
 
     private async Task<int> CurrentVersionAsync(string ruleName, string id, CancellationToken cancellationToken)

@@ -72,9 +72,13 @@ public static class StoreSchema
         // lacks the rule log is not recognisably Motiv's and is still refused below.
         if (missing.Count > 0 && creationFailure is null && !missing.Contains("MotivRuleVersion"))
         {
-            await CreateMissingTablesAsync(context, missing, cancellationToken);
-            logger.LogInformation(
-                "Motiv store schema: added {Tables}, which this database predated.", string.Join(", ", missing));
+            creationFailure = await CreateMissingTablesAsync(context, missing, cancellationToken);
+            if (creationFailure is null)
+            {
+                logger.LogInformation(
+                    "Motiv store schema: added {Tables}, which this database predated.", string.Join(", ", missing));
+            }
+
             missing = await MissingTablesAsync(context, cancellationToken);
         }
 
@@ -109,9 +113,12 @@ public static class StoreSchema
     /// <summary>
     /// Runs the model's create-script statements that build <paramref name="tables"/> — the
     /// <c>CREATE TABLE</c> and any <c>CREATE INDEX</c> naming one of them — against a database that
-    /// already holds the rest.
+    /// already holds the rest. Two instances starting together backfill together, and the one that
+    /// loses the race gets "already exists" from the database; that failure is returned, not thrown,
+    /// and the caller decides what it meant by looking at the schema, as it does for EnsureCreated.
     /// </summary>
-    private static async Task CreateMissingTablesAsync(
+    /// <returns>The first statement's failure, or null when every statement ran.</returns>
+    private static async Task<Exception?> CreateMissingTablesAsync(
         MotivStoreDbContext context, IReadOnlyList<string> tables, CancellationToken cancellationToken)
     {
         var script = context.Database.GenerateCreateScript();
@@ -121,8 +128,17 @@ public static class StoreSchema
             if (sql.Length == 0 || !tables.Any(table => sql.Contains($"\"{table}\"", StringComparison.Ordinal)))
                 continue;
 
-            await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
+            try
+            {
+                await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
+            }
+            catch (Exception exception) when (exception is not (OutOfMemoryException or OperationCanceledException))
+            {
+                return exception;
+            }
         }
+
+        return null;
     }
 
     /// <summary>

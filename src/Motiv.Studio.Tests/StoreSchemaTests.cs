@@ -1,5 +1,7 @@
+using System.Data.Common;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging.Abstractions;
 using Motiv.Serialization.EntityFrameworkCore;
 using Shouldly;
@@ -106,6 +108,53 @@ public class StoreSchemaTests
     }
 
     [Fact]
+    public async Task Should_survive_losing_the_backfill_race_to_another_instance()
+    {
+        // Arrange — a pre-scenario store, and a second instance that creates MotivScenario an
+        // instant before this one's own CREATE TABLE runs, so the statement fails "already exists"
+        var path = TempDatabasePath();
+        try
+        {
+            await using (var context = Context(path))
+            {
+                await context.Database.EnsureCreatedAsync();
+                await context.Database.ExecuteSqlRawAsync("DROP TABLE MotivScenario");
+            }
+
+            // Act
+            await using (var context = Context(path, new OtherInstanceCreatesFirst(path)))
+                await StoreSchema.EnsureCreatedAsync(context, NullLogger.Instance);
+
+            // Assert — the instance came up, and the table the other one made is the one it uses
+            await using var check = Context(path);
+            (await check.Scenarios.CountAsync()).ShouldBe(0);
+        }
+        finally
+        {
+            Cleanup(path);
+        }
+    }
+
+    /// <summary>Runs a <c>CREATE TABLE "MotivScenario"</c> statement through its own connection before letting the intercepted one proceed.</summary>
+    private sealed class OtherInstanceCreatesFirst(string path) : DbCommandInterceptor
+    {
+        private bool _done;
+
+        public override async ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(
+            DbCommand command, CommandEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
+        {
+            if (!_done && command.CommandText.Contains("CREATE TABLE \"MotivScenario\"", StringComparison.Ordinal))
+            {
+                _done = true;
+                await using var other = Context(path);
+                await other.Database.ExecuteSqlRawAsync(command.CommandText, cancellationToken);
+            }
+
+            return await base.NonQueryExecutingAsync(command, eventData, result, cancellationToken);
+        }
+    }
+
+    [Fact]
     public async Task Should_surface_the_original_failure_when_the_database_cannot_be_opened()
     {
         // Arrange — an unwritable path stands in for every genuine failure (bad connection string,
@@ -155,10 +204,13 @@ public class StoreSchemaTests
         }
     }
 
-    private static MotivStoreDbContext Context(string path) =>
-        new(new DbContextOptionsBuilder<MotivStoreDbContext>()
-            .UseSqlite(ConnectionString(path))
-            .Options);
+    private static MotivStoreDbContext Context(string path, IInterceptor? interceptor = null)
+    {
+        var options = new DbContextOptionsBuilder<MotivStoreDbContext>().UseSqlite(ConnectionString(path));
+        if (interceptor is not null)
+            options.AddInterceptors(interceptor);
+        return new MotivStoreDbContext(options.Options);
+    }
 
     private static string TempDatabasePath() =>
         Path.Combine(Path.GetTempPath(), $"motiv-schema-{Guid.NewGuid():N}.db");

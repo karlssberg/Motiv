@@ -143,6 +143,20 @@ describe('ScenarioPane', () => {
     expect(names()).toEqual(['Active adult, 3 orders', 'Minor', 'Dormant account', 'New, no orders']);
   });
 
+  it('keeps the rows it has and says why when a reload fails', async () => {
+    const api = client();
+    renderPane(api);
+    await settleCatalog();
+    const names = () => [...document.querySelectorAll('tr.scenario')].map((r) => r.getAttribute('aria-label'));
+    (api.listScenarios as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Request failed (403).'));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    await settleCatalog();
+
+    expect(names()).toEqual(['Active adult, 3 orders', 'Minor', 'Dormant account', 'New, no orders']);
+    expect(screen.getByRole('status').textContent).toContain('Request failed (403).');
+  });
+
   it('adds a scenario, opened for editing', async () => {
     renderPane();
     await settleCatalog();

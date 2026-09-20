@@ -31,6 +31,10 @@ export function ScenarioPane(props: {
   const state = useRuleEditor(store);
   const catalogState = useCatalog(props.client);
   const [rows, setRows] = useState<Scenario[]>([]);
+  // Why the last load failed, or null. The client already reads a host with no scenario store as
+  // an empty list, so reaching this means a real refusal — forbidden, unreachable — and the rows
+  // already on screen are worth more than a blank table that looks like "no scenarios".
+  const [loadError, setLoadError] = useState<string | null>(null);
   const rowsRef = useRef(rows);
   rowsRef.current = rows;
   // Rows deleted while their create was still in flight: the store hears about the delete once it
@@ -43,10 +47,9 @@ export function ScenarioPane(props: {
     try {
       const entries = await props.client.listScenarios(props.ruleName);
       setRows(fromStored(entries));
-    } catch {
-      // A host that cannot list (an older server, a network failure) leaves the table empty; the
-      // hint below says how to try again, and Run all has nothing to run.
-      setRows([]);
+      setLoadError(null);
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : String(error));
     }
   }, [props.client, props.ruleName]);
   useEffect(() => { void load(); }, [load]);
@@ -206,7 +209,8 @@ export function ScenarioPane(props: {
             ))}
           </tbody>
         </table>
-        {rows.length === 0 && <p className="pane-hint">No scenarios. Add one, or reset to reload.</p>}
+        {loadError !== null && <p className="pane-hint" role="status">Could not load scenarios: {loadError} — reset to try again</p>}
+        {rows.length === 0 && loadError === null && <p className="pane-hint">No scenarios. Add one, or reset to reload.</p>}
       </div>
     </section>
   );
