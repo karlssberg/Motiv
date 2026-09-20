@@ -129,7 +129,7 @@ public sealed class DecisionReproducer(
         string.Join("; ", errors.Select(error => error.Message));
 
     /// <summary>
-    /// Reads every pinned proposition row and hands them to <see cref="BindIntoOverlay"/>, which
+    /// Reads every pinned proposition row and hands them to <see cref="PinnedPropositionBinder"/>, which
     /// binds them over the live source. A pin the log no longer holds falls back to the name's live
     /// head and says so; a host with no proposition set binds nothing and says that instead.
     /// </summary>
@@ -154,55 +154,8 @@ public sealed class DecisionReproducer(
                 rows.Add(row);
         }
 
-        // Every name a pin named, parsed or not: a row that will not parse is still pinned, so its
-        // dependents must wait on it rather than resolve through today's head.
-        var pinnedNames = new HashSet<string>(rows.Select(row => row.Name), StringComparer.Ordinal);
-        return (rows, BindIntoOverlay(ParsePending(rows, notes), pinnedNames, live, notes));
-    }
-
-    /// <summary>
-    /// Binds the parsed rows, in dependency order, into an overlay layered over
-    /// <paramref name="live"/>, and returns that layered source. A document that will not bind is
-    /// noted by <see cref="Bind"/> and its dependents are left unbound — never quietly resolved
-    /// through today's head — as is anything caught in a reference cycle.
-    /// </summary>
-    private ISpecSource BindIntoOverlay(
-        List<Pending> pending, HashSet<string> pinnedNames, ISpecSource live, List<FidelityNote> notes)
-    {
-        var overlay = new PropositionOverlay();
-        var layered = new LayeredSpecSource(overlay, live);
-        var bound = new HashSet<string>(StringComparer.Ordinal);
-
-        // Bind whatever only waits on names that are bound already or not pinned at all; repeat
-        // until a pass binds nothing. Whatever is left waits on a pin that failed, or on a cycle.
-        while (pending.Count > 0)
-        {
-            var ready = pending.Where(IsReady).ToList();
-            if (ready.Count == 0)
-                break;
-
-            foreach (var candidate in ready)
-            {
-                pending.Remove(candidate);
-                if (Bind(candidate, layered, notes) is { } entry)
-                {
-                    overlay.Set(entry);
-                    bound.Add(candidate.Row.Name);
-                }
-            }
-        }
-
-        foreach (var left in pending)
-        {
-            var waitingOn = left.References.Where(r => pinnedNames.Contains(r) && !bound.Contains(r));
-            notes.Add(new(FidelityReason.PropositionBindFailed,
-                $"'{left.Row.Name}' v{left.Row.Version} was not bound: it references {string.Join(", ", waitingOn.Select(n => $"'{n}'"))}, which did not bind"));
-        }
-
-        return layered;
-
-        bool IsReady(Pending candidate) =>
-            candidate.References.All(name => bound.Contains(name) || !pinnedNames.Contains(name));
+        var documents = rows.Select(row => new PinnedDocument(row.Name, row.Version, row.ModelType, row.DocumentJson, row.Description)).ToList();
+        return (rows, PinnedPropositionBinder.Bind(documents, live, propositions, notes));
     }
 
     private async Task<StoredPropositionVersion?> PinnedRowAsync(
@@ -221,37 +174,6 @@ public sealed class DecisionReproducer(
             ? $"'{pin.Name}' v{pin.Version} is not in the proposition log, and the name has no live head to stand in"
             : $"'{pin.Name}' v{pin.Version} is not in the proposition log; its head, v{fallback.Version}, was bound instead"));
         return fallback;
-    }
-
-    private sealed record Pending(StoredPropositionVersion Row, RuleDocument Document, IReadOnlyList<string> References);
-
-    /// <summary>Parses each row's document, noting the ones that will not parse and dropping them.</summary>
-    private List<Pending> ParsePending(IEnumerable<StoredPropositionVersion> rows, List<FidelityNote> notes)
-    {
-        var parser = new RuleDocumentParser(propositions!.Options);
-        var pending = new List<Pending>();
-        foreach (var row in rows)
-        {
-            var errors = new List<RuleError>();
-            var document = parser.Parse(row.DocumentJson!, errors);
-            if (document is null || errors.Count > 0)
-                notes.Add(new(FidelityReason.PropositionBindFailed, $"'{row.Name}' v{row.Version} does not parse: {Describe(errors)}"));
-            else
-                pending.Add(new Pending(row, document, DocumentReferences.From(document)));
-        }
-
-        return pending;
-    }
-
-    private SpecRegistryEntry? Bind(Pending candidate, ISpecSource source, List<FidelityNote> notes)
-    {
-        var errors = new List<RuleError>();
-        var entry = propositions!.ResolveModel(candidate.Row.ModelType, errors)?.Bind(
-            source, candidate.Row.Name, candidate.Row.Description, candidate.Document,
-            PropositionSet.BindsAsync(source, candidate.References), errors);
-        if (entry is null)
-            notes.Add(new(FidelityReason.PropositionBindFailed, $"'{candidate.Row.Name}' v{candidate.Row.Version} did not bind: {Describe(errors)}"));
-        return entry;
     }
 
     /// <summary>
