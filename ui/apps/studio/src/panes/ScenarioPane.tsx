@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type CSSProperties } from 'react';
 import { validateAgainstSchema, type EvaluationResult, type RulesApiClient, type SchemaViolation } from '@motiv-rules/core';
 import { JustificationTree, useCatalog, useRuleEditor, useRuleEditorStore } from '@motiv-rules/react';
 import { selectScenario } from './scenarioSelection.js';
@@ -6,8 +6,8 @@ import { SchemaViolations } from './SchemaViolations.js';
 import { Tick } from './Verdict.js';
 import { Caret, IconDelete, IconNew, IconPlay, IconRefresh } from '../shell/icons.js';
 import {
-  addScenario, cloneScenario, editScenario, outcomeChanged, removeScenario, runScenario, seedScenarios,
-  toggleScenario, withComparison, withViolations, type Comparison, type Scenario, type Side,
+  addScenario, cloneScenario, editScenario, fromStored, outcomeChanged, removeScenario, runScenario,
+  toggleScenario, withComparison, withSaved, withSaving, withViolations, type Comparison, type Scenario, type Side,
 } from './scenarios.js';
 import { Tooltip } from '../shell/Tooltip.js';
 
@@ -16,8 +16,9 @@ import { Tooltip } from '../shell/Tooltip.js';
  * rule decides right now and what the tab's *draft* would decide. A row whose two answers differ
  * is what saving would change — the table is the rule's unit tests, run against both versions.
  *
- * Scenarios are tab state, like the single sample model this pane replaced. Editing a model drops
- * its row back to unevaluated: the last verdict described the old input.
+ * Scenarios belong to the rule and live in the host's store: loaded when the tab opens, written back
+ * when a row is added, cloned, deleted, or its editor loses focus. Editing a model drops its row
+ * back to unevaluated: the last verdict described the old input.
  */
 export function ScenarioPane(props: {
   client: RulesApiClient;
@@ -29,7 +30,62 @@ export function ScenarioPane(props: {
   const store = useRuleEditorStore();
   const state = useRuleEditor(store);
   const catalogState = useCatalog(props.client);
-  const [rows, setRows] = useState<Scenario[]>(seedScenarios);
+  const [rows, setRows] = useState<Scenario[]>([]);
+  const rowsRef = useRef(rows);
+  rowsRef.current = rows;
+
+  // The store is the source: Reset re-reads it, which is also how a row another tab changed is
+  // brought back into view after a refused save.
+  const load = useCallback(async () => {
+    try {
+      const entries = await props.client.listScenarios(props.ruleName);
+      setRows(fromStored(entries));
+    } catch {
+      // A host that cannot list (an older server, a network failure) leaves the table empty; the
+      // hint below says how to try again, and Run all has nothing to run.
+      setRows([]);
+    }
+  }, [props.client, props.ruleName]);
+  useEffect(() => { void load(); }, [load]);
+
+  const persist = async (row: Scenario): Promise<void> => {
+    try {
+      const saved = await props.client.putScenario(props.ruleName, row.id, {
+        name: row.name, model: row.model, expectedSatisfied: null, sourceDecisionId: null, baseVersion: row.version,
+      });
+      setRows((current) => saved.outcome === 'saved'
+        ? withSaved(current, row.id, saved.version)
+        : withSaving(current, row.id, 'conflict', `changed elsewhere (now v${saved.currentVersion}) — reset to reload`));
+    } catch (error) {
+      setRows((current) => withSaving(current, row.id, 'error', error instanceof Error ? error.message : String(error)));
+    }
+  };
+
+  // A row minted in the browser (version 0) is written as soon as it exists — add and clone go
+  // through here — so two quick clicks each persist once: the row is marked saving in the same
+  // update that hands it to the store.
+  useEffect(() => {
+    const unsaved = rows.filter((r) => r.version === 0 && r.saving === 'idle');
+    if (unsaved.length === 0) return;
+    setRows((current) => unsaved.reduce((acc, r) => withSaving(acc, r.id, 'saving'), current));
+    for (const r of unsaved) void persist(r);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- persist reads props only
+  }, [rows]);
+
+  /** Writes a row the store already holds, once its editor loses focus. */
+  const commit = (id: string): void => {
+    const row = rowsRef.current.find((r) => r.id === id);
+    if (!row || row.version === 0 || row.saving === 'saving') return;
+    setRows((current) => withSaving(current, id, 'saving'));
+    void persist(row);
+  };
+
+  const remove = (id: string): void => {
+    const row = rowsRef.current.find((r) => r.id === id);
+    setRows((current) => removeScenario(current, id));
+    // A stale-version refusal here is not shown: the row is gone locally and Reset shows the truth.
+    if (row && row.version > 0) void props.client.deleteScenario(props.ruleName, id, row.version).catch(() => undefined);
+  };
 
   // The inspector strip under the DSL pane reads a leaf against whichever scenario's details are
   // open here — published to the tiny external store, keyed by rule, so it survives this pane
@@ -46,7 +102,7 @@ export function ScenarioPane(props: {
     // Enforce the catalog's model schema per scenario when we have one and the text parses; a row
     // that breaks it is held back with its violations, the rest run. Unparseable text is the run's
     // problem to report, not the schema's.
-    const held = new Map<number, SchemaViolation[]>();
+    const held = new Map<string, SchemaViolation[]>();
     const runnable: Scenario[] = [];
     for (const row of rows) {
       let model: unknown;
@@ -87,8 +143,8 @@ export function ScenarioPane(props: {
               <IconNew size={14} />Add
             </button>
           </Tooltip>
-          <Tooltip text="Throw away these scenarios and restore the seeded set">
-            <button type="button" className="btn btn-secondary" onClick={() => setRows(seedScenarios())}>
+          <Tooltip text="Reload this rule's scenarios from the store">
+            <button type="button" className="btn btn-secondary" onClick={() => void load()}>
               <IconRefresh size={14} />Reset
             </button>
           </Tooltip>
@@ -124,13 +180,14 @@ export function ScenarioPane(props: {
                   // closed row's stale model would never be seen, so it publishes nothing.
                   if (row.open) selectScenario(props.ruleName, { name: change.name ?? row.name, model: change.model ?? row.model });
                 }}
+                onCommit={() => commit(row.id)}
                 onClone={() => setRows((current) => cloneScenario(current, row.id))}
-                onDelete={() => setRows((current) => removeScenario(current, row.id))}
+                onDelete={() => remove(row.id)}
               />
             ))}
           </tbody>
         </table>
-        {rows.length === 0 && <p className="pane-hint">No scenarios. Add one, or reset to the seeds.</p>}
+        {rows.length === 0 && <p className="pane-hint">No scenarios. Add one, or reset to reload.</p>}
       </div>
     </section>
   );
@@ -140,6 +197,7 @@ function ScenarioRow(props: {
   row: Scenario;
   onToggle: () => void;
   onEdit: (change: { name?: string; model?: string }) => void;
+  onCommit: () => void;
   onClone: () => void;
   onDelete: () => void;
 }) {
@@ -166,6 +224,9 @@ function ScenarioRow(props: {
         <td>
           <span className="scenario-name">{row.name}</span>
           {changed && <span className="pane-badge badge-changed">flips</span>}
+          {(row.saving === 'conflict' || row.saving === 'error') && (
+            <span className="pane-hint" role="status">{row.saveError}</span>
+          )}
         </td>
         <td aria-label="live"><Cell side={row.comparison.live} /></td>
         <td aria-label="draft"><Cell side={row.comparison.draft} /></td>
@@ -181,8 +242,8 @@ function ScenarioRow(props: {
           <td />
           <td colSpan={4}>
             <div className="scenario-editor">
-              <input aria-label="scenario name" className="control" value={row.name} onChange={(e) => props.onEdit({ name: e.target.value })} />
-              <textarea aria-label="scenario model" className="control" rows={5} value={row.model} onChange={(e) => props.onEdit({ model: e.target.value })} />
+              <input aria-label="scenario name" className="control" value={row.name} onChange={(e) => props.onEdit({ name: e.target.value })} onBlur={props.onCommit} />
+              <textarea aria-label="scenario model" className="control" rows={5} value={row.model} onChange={(e) => props.onEdit({ model: e.target.value })} onBlur={props.onCommit} />
             </div>
             <SchemaViolations violations={row.violations} />
             {row.comparison.draft.status !== 'idle' && (

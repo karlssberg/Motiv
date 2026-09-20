@@ -103,6 +103,16 @@ const EVALUATION = {
   },
 };
 
+/** The four seeds, as the host lists them. */
+const SCENARIOS = [
+  ['s1', 'Active adult, 3 orders', '{ "customerId": "cust-42", "age": 30, "isActive": true, "orderCount": 3, "orders": [{ "total": 120 }] }'],
+  ['s2', 'Minor', '{ "customerId": "cust-7", "age": 16, "isActive": true, "orderCount": 1, "orders": [{ "total": 20 }] }'],
+  ['s3', 'Dormant account', '{ "customerId": "cust-9", "age": 41, "isActive": false, "orderCount": 12, "orders": [{ "total": 300 }] }'],
+  ['s4', 'New, no orders', '{ "customerId": "cust-1", "age": 25, "isActive": true, "orderCount": 0 }'],
+].map(([id, name, model]) => ({
+  id, name, model, expectedSatisfied: null, sourceDecisionId: null, version: 1, author: 'system', timestampUtc: '2026-09-20T00:00:00Z',
+}));
+
 /** Every route, matched longest-first so `/rules/{name}` is not swallowed by `/rules`. */
 const ROUTES: ReadonlyArray<readonly [RegExp, unknown]> = [
   [/\/api\/rules\/catalog$/, CATALOG],
@@ -113,6 +123,8 @@ const ROUTES: ReadonlyArray<readonly [RegExp, unknown]> = [
   [/\/api\/rules\/propositions\/[^/]+\/dependents$/, []],
   [/\/api\/rules\/propositions\/[^/]+$/, { document: RULE_DOCUMENT, version: 2, origin: 'Authored', hasCompiledDefault: false }],
   [/\/api\/rules\/propositions$/, PROPOSITIONS],
+  // The rule's stored scenarios; a PUT or DELETE gets the same body, which the pane reads as a save.
+  [/\/api\/rules\/rules\/[^/]+\/scenarios(\/[^/?]+)?$/, SCENARIOS],
   // A code-defined default: the builder starts from the shared store's standing leaf, which is
   // what `composeRule` types over. A stored composite here would leave no root row to type into.
   [/\/api\/rules\/rules\/[^/?]+/, { document: null, version: 3 }],

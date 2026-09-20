@@ -1,9 +1,21 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { EvaluationResult, RulesApiClient } from '@motiv-rules/core';
+import type { ScenarioEntry } from '@motiv-rules/core';
 import {
-  addScenario, cloneScenario, diffAssertions, editScenario, outcomeChanged, removeScenario,
-  runScenario, seedScenarios, toggleScenario, withViolations, type Scenario,
+  addScenario, cloneScenario, diffAssertions, editScenario, fromStored, outcomeChanged, removeScenario,
+  runScenario, toggleScenario, withSaved, withSaving, withViolations, type Scenario,
 } from '../../src/panes/scenarios.js';
+
+/** Four stored rows, as the host lists them — what the browser used to seed for itself. */
+const STORED: ScenarioEntry[] = [
+  ['s1', 'Active adult, 3 orders', '{ "customerId": "cust-42", "age": 30, "isActive": true, "orderCount": 3, "orders": [{ "total": 120 }] }'],
+  ['s2', 'Minor', '{ "customerId": "cust-7", "age": 16, "isActive": true, "orderCount": 1, "orders": [{ "total": 20 }] }'],
+  ['s3', 'Dormant account', '{ "customerId": "cust-9", "age": 41, "isActive": false, "orderCount": 12, "orders": [{ "total": 300 }] }'],
+  ['s4', 'New, no orders', '{ "customerId": "cust-1", "age": 25, "isActive": true, "orderCount": 0 }'],
+].map(([id, name, model]) => ({
+  id: id!, name: name!, model: model!, expectedSatisfied: null, sourceDecisionId: null, version: 1, author: 'system', timestampUtc: '2026-09-20T00:00:00Z',
+}));
+const seedScenarios = (): Scenario[] => fromStored(STORED);
 
 const result = (satisfied: boolean, ...assertions: string[]): EvaluationResult => ({
   satisfied, reason: assertions.join(' & '), assertions, values: assertions,
@@ -17,15 +29,25 @@ const client = (live: EvaluationResult, draft: EvaluationResult): RulesApiClient
   }) as unknown as RulesApiClient;
 
 describe('scenarios', () => {
-  it('seeds named scenarios, each unevaluated', () => {
-    const rows = seedScenarios();
-    expect(rows.length).toBeGreaterThan(1);
-    expect(new Set(rows.map((r) => r.id)).size).toBe(rows.length);
+  it('turns stored rows into unevaluated scenarios at their versions, hiding host bookkeeping ids', () => {
+    const rows = fromStored([...STORED, { ...STORED[0]!, id: '__seeded', name: 'seeded' }]);
+    expect(rows.map((r) => r.id)).toEqual(['s1', 's2', 's3', 's4']);
     for (const row of rows) {
       expect(row.name).not.toBe('');
-      expect(() => JSON.parse(row.model)).not.toThrow();
+      expect(row.version).toBe(1);
+      expect(row.saving).toBe('idle');
       expect(row.comparison).toEqual({ live: { status: 'idle' }, draft: { status: 'idle' } });
     }
+  });
+
+  it('marks a row saving, then saved at the store’s version, or flagged with why it did not save', () => {
+    const rows = seedScenarios();
+    const saving = withSaving(rows, 's2', 'saving');
+    expect(saving[1]!.saving).toBe('saving');
+    const saved = withSaved(saving, 's2', 7);
+    expect(saved[1]).toMatchObject({ saving: 'idle', version: 7 });
+    const conflicted = withSaving(saved, 's2', 'conflict', 'changed elsewhere');
+    expect(conflicted[1]).toMatchObject({ saving: 'conflict', saveError: 'changed elsewhere' });
   });
 
   it('diffs two assertion lists into removed, same and added', () => {
@@ -103,12 +125,13 @@ describe('scenarios', () => {
     expect(removeScenario(rows, first!.id).map((r) => r.id)).not.toContain(first!.id);
   });
 
-  it('derives ids from the list, so adding is a pure function of its input', () => {
+  it('gives every added or cloned row a fresh string id, unsaved until the store answers', () => {
     const rows = seedScenarios();
-    const once = addScenario(rows);
-    const twice = addScenario(rows);
-    expect(once.at(-1)!.id).toBe(twice.at(-1)!.id);
-    expect(new Set(addScenario(once).map((r) => r.id)).size).toBe(rows.length + 2);
+    const added = addScenario(addScenario(rows));
+    expect(new Set(added.map((r) => r.id)).size).toBe(rows.length + 2);
+    expect(added.at(-1)).toMatchObject({ version: 0, saving: 'idle' });
+    expect(typeof added.at(-1)!.id).toBe('string');
+    expect(cloneScenario(rows, 's1')[1]).toMatchObject({ version: 0, saving: 'idle' });
   });
 
   it('opens a new or cloned row, toggles a row, and a deleted row takes its state with it', () => {

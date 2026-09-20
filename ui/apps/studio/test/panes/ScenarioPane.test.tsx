@@ -4,6 +4,16 @@ import { RuleEditorStore, type Catalog, type EvaluationResult, type RulesApiClie
 import { RuleEditorProvider } from '@motiv-rules/react';
 import { ScenarioPane } from '../../src/panes/ScenarioPane.js';
 
+/** The four seeds, as the host stores and lists them. */
+const SEEDS = [
+  ['s1', 'Active adult, 3 orders', '{ "customerId": "cust-42", "age": 30, "isActive": true, "orderCount": 3, "orders": [{ "total": 120 }] }'],
+  ['s2', 'Minor', '{ "customerId": "cust-7", "age": 16, "isActive": true, "orderCount": 1, "orders": [{ "total": 20 }] }'],
+  ['s3', 'Dormant account', '{ "customerId": "cust-9", "age": 41, "isActive": false, "orderCount": 12, "orders": [{ "total": 300 }] }'],
+  ['s4', 'New, no orders', '{ "customerId": "cust-1", "age": 25, "isActive": true, "orderCount": 0 }'],
+].map(([id, name, model]) => ({
+  id, name, model, expectedSatisfied: null, sourceDecisionId: null, version: 1, author: 'system', timestampUtc: '2026-09-20T00:00:00Z',
+}));
+
 const result = (satisfied: boolean, ...assertions: string[]): EvaluationResult => ({
   satisfied, reason: assertions.join(' & '), assertions, values: assertions,
   justification: assertions.join('\n'), explanation: { assertions, underlying: [] },
@@ -25,6 +35,9 @@ function client(options: {
     evaluateRule: vi.fn((_name: string, model: { age: number; isActive: boolean }) => Promise.resolve(live(model))),
     evaluate: vi.fn((request: { model: { age: number; isActive: boolean } }) => Promise.resolve(draft(request.model))),
     getCatalog: vi.fn().mockResolvedValue(options.catalog ?? catalog),
+    listScenarios: vi.fn(() => Promise.resolve(SEEDS.map((s) => ({ ...s })))),
+    putScenario: vi.fn().mockResolvedValue({ outcome: 'saved', version: 2 }),
+    deleteScenario: vi.fn().mockResolvedValue({ outcome: 'saved', version: 1 }),
   } as unknown as RulesApiClient;
 }
 
@@ -113,7 +126,7 @@ describe('ScenarioPane', () => {
     expect(within(row('Teenager')).getAllByText('–')).toHaveLength(2);
   });
 
-  it('clones beneath the source, deletes, and resets to the seeds', async () => {
+  it('clones beneath the source, deletes, and Reset reloads from the store', async () => {
     renderPane();
     await settleCatalog();
     const names = () => [...document.querySelectorAll('tr.scenario')].map((r) => r.getAttribute('aria-label'));
@@ -126,6 +139,7 @@ describe('ScenarioPane', () => {
     expect(names()).not.toContain('Minor');
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    await settleCatalog();
     expect(names()).toEqual(['Active adult, 3 orders', 'Minor', 'Dormant account', 'New, no orders']);
   });
 
@@ -136,6 +150,62 @@ describe('ScenarioPane', () => {
     const added = row('Scenario 5');
     expect(within(added).getByRole('button', { name: 'details of Scenario 5' }).getAttribute('aria-expanded')).toBe('true');
     expect(screen.getByLabelText('scenario name')).toBeDefined();
+  });
+
+  it('loads the rule’s scenarios from the store', async () => {
+    const api = client();
+    renderPane(api);
+    await settleCatalog();
+    expect(api.listScenarios).toHaveBeenCalledWith('can-checkout');
+    expect(row('Active adult, 3 orders')).toBeDefined();
+  });
+
+  it('renders an empty table with a hint when the host has no scenario store', async () => {
+    const api = client();
+    (api.listScenarios as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    renderPane(api);
+    await settleCatalog();
+    expect(screen.getByText('No scenarios. Add one, or reset to reload.')).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: 'Run all' }));
+    expect(api.evaluate).not.toHaveBeenCalled();
+  });
+
+  it('saves a renamed scenario when its editor loses focus, at its version', async () => {
+    const api = client();
+    renderPane(api);
+    await settleCatalog();
+    fireEvent.click(within(row('Minor')).getByRole('button', { name: 'details of Minor' }));
+    const name = screen.getByLabelText('scenario name');
+    fireEvent.change(name, { target: { value: 'Teenager' } });
+    expect(api.putScenario).not.toHaveBeenCalled();
+    fireEvent.blur(name);
+    await waitFor(() => expect(api.putScenario).toHaveBeenCalledWith('can-checkout', 's2',
+      expect.objectContaining({ name: 'Teenager', baseVersion: 1 })));
+  });
+
+  it('adds and deletes through the store', async () => {
+    const api = client();
+    renderPane(api);
+    await settleCatalog();
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+    await waitFor(() => expect(api.putScenario).toHaveBeenCalledWith('can-checkout', expect.any(String),
+      expect.objectContaining({ name: 'Scenario 5', baseVersion: 0 })));
+    fireEvent.click(within(row('Minor')).getByRole('button', { name: 'delete Minor' }));
+    await waitFor(() => expect(api.deleteScenario).toHaveBeenCalledWith('can-checkout', 's2', 1));
+  });
+
+  it('flags a row the store says changed elsewhere, and Reset reloads it', async () => {
+    const api = client();
+    (api.putScenario as ReturnType<typeof vi.fn>).mockResolvedValue({ outcome: 'conflict', currentVersion: 3 });
+    renderPane(api);
+    await settleCatalog();
+    fireEvent.click(within(row('Minor')).getByRole('button', { name: 'details of Minor' }));
+    const name = screen.getByLabelText('scenario name');
+    fireEvent.change(name, { target: { value: 'Teenager' } });
+    fireEvent.blur(name);
+    await waitFor(() => expect(screen.getByText(/changed elsewhere/)).toBeDefined());
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    await waitFor(() => expect(api.listScenarios).toHaveBeenCalledTimes(2));
   });
 
   it('adds two scenarios from two quick clicks', async () => {
