@@ -35,6 +35,7 @@ public class ProviderSchemaTests
         script.ShouldContain("MotivRuleVersion", customMessage: provider);
         script.ShouldContain("MotivPropositionVersion", customMessage: provider);
         script.ShouldContain("MotivStoreGeneration", customMessage: provider);
+        script.ShouldContain("MotivScenario", customMessage: provider);
     }
 
     [Theory]
