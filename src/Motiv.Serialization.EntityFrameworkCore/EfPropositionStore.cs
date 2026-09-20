@@ -34,7 +34,7 @@ public sealed class EfPropositionStore(IDbContextFactory<MotivStoreDbContext> co
         PropositionBatch batch, CancellationToken cancellationToken)
     {
         // An empty batch is not a write — see EfRuleStore.AppendAsync for why that matters.
-        if (batch.Saves.Count == 0 && batch.Deletes.Count == 0)
+        if (batch.IsEmpty)
             return PropositionWriteResult.Written;
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
@@ -127,7 +127,7 @@ public sealed class EfPropositionStore(IDbContextFactory<MotivStoreDbContext> co
                 group => group.Key,
                 group =>
                 {
-                    var highest = group.OrderByDescending(row => row.Version).First();
+                    var highest = group.MaxBy(row => row.Version)!;
                     return new HighestRow(new PropositionPosition(highest.Version, highest.Live), highest.ModelType);
                 },
                 StringComparer.Ordinal);

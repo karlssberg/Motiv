@@ -1292,6 +1292,28 @@ public sealed class ChangeRequestSet
         }
 
         /// <summary>
+        /// The version each proposition this envelope may create would claim — read before the
+        /// locked prepare, which cannot await. Only creations consult it; a name that turns out to be
+        /// live at prepare time goes through the update path and ignores its entry.
+        /// </summary>
+        private static async Task<IReadOnlyDictionary<string, int>> NextVersionsAsync(
+            PropositionSet? propositions, ChangeRequest change, CancellationToken cancellationToken)
+        {
+            var next = new Dictionary<string, int>(StringComparer.Ordinal);
+            if (propositions is null)
+                return next;
+
+            foreach (var proposed in Ordered(change, ChangeTargetKind.Proposition, deletions: false))
+            {
+                var name = proposed.Target.Name;
+                if (!next.ContainsKey(name))
+                    next[name] = await propositions.NextVersionAsync(name, cancellationToken).ConfigureAwait(false);
+            }
+
+            return next;
+        }
+
+        /// <summary>
         /// Binds every edit in the envelope for real — producing publishable rule publications and
         /// proposition writes, not just errors — walking phases A/B/C in the same order
         /// <see cref="Validate"/> already proved would work. Assumes <see cref="BindingScope"/>'s
@@ -1314,28 +1336,6 @@ public sealed class ChangeRequestSet
         /// publish holds — see <see cref="PropositionSet.PrepareWithdrawCore"/>'s remarks.
         /// </para>
         /// </remarks>
-        /// <summary>
-        /// The version each proposition this envelope may create would claim — read before the
-        /// locked prepare, which cannot await. Only creations consult it; a name that turns out to be
-        /// live at prepare time goes through the update path and ignores its entry.
-        /// </summary>
-        private static async Task<IReadOnlyDictionary<string, int>> NextVersionsAsync(
-            PropositionSet? propositions, ChangeRequest change, CancellationToken cancellationToken)
-        {
-            var next = new Dictionary<string, int>(StringComparer.Ordinal);
-            if (propositions is null)
-                return next;
-
-            foreach (var proposed in Ordered(change, ChangeTargetKind.Proposition, deletions: false))
-            {
-                var name = proposed.Target.Name;
-                if (!next.ContainsKey(name))
-                    next[name] = await propositions.NextVersionAsync(name, cancellationToken).ConfigureAwait(false);
-            }
-
-            return next;
-        }
-
         private static EnvelopePrepare Prepare(
             RuleSet rules, PropositionSet? propositions, ChangeRequest change,
             IReadOnlyDictionary<string, int> nextVersions)

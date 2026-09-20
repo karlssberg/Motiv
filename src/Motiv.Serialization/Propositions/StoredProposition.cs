@@ -70,6 +70,23 @@ public sealed record StoredPropositionVersion(
             : new StoredProposition(highest.Name, highest.ModelType!, highest.DocumentJson!, highest.Version, highest.Description);
     }
 
+    /// <summary>
+    /// The live heads of a whole log, grouped by name — every name whose highest row carries a
+    /// document. What an in-memory or file-backed store's <c>Load</c> answers with.
+    /// </summary>
+    public static IReadOnlyList<StoredProposition> HeadsOf(
+        IEnumerable<IEnumerable<StoredPropositionVersion>> logsByName)
+    {
+        var heads = new List<StoredProposition>();
+        foreach (var rows in logsByName)
+        {
+            if (HeadOf(rows) is { } head)
+                heads.Add(head);
+        }
+
+        return heads;
+    }
+
     private static StoredPropositionVersion? Highest(IEnumerable<StoredPropositionVersion> rows)
     {
         StoredPropositionVersion? highest = null;

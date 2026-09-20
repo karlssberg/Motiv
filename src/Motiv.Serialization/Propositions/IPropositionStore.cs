@@ -39,6 +39,12 @@ public sealed record PropositionBatch(
     {
     }
 
+    /// <summary>
+    /// Whether the batch asks for nothing. An empty batch is not a write: a store must leave its
+    /// generation where it stands, or every replica rebuilds its whole world for nothing, on a timer.
+    /// </summary>
+    public bool IsEmpty => Saves.Count == 0 && Deletes.Count == 0;
+
     /// <summary>A batch that writes one proposition and retires nothing.</summary>
     public static PropositionBatch Save(StoredProposition proposition, RuleChangeProvenance? provenance = null) =>
         new([proposition], [], provenance ?? RuleChangeProvenance.System);
@@ -239,14 +245,7 @@ public sealed class InMemoryPropositionStore : IPropositionStore
     {
         lock (_gate)
         {
-            var heads = new List<StoredProposition>();
-            foreach (var rows in _log.Values)
-            {
-                if (StoredPropositionVersion.HeadOf(rows) is { } head)
-                    heads.Add(head);
-            }
-
-            return heads;
+            return StoredPropositionVersion.HeadsOf(_log.Values);
         }
     }
 
@@ -282,9 +281,7 @@ public sealed class InMemoryPropositionStore : IPropositionStore
                 rows.Add(StoredPropositionVersion.Tombstone(deletion, modelType, batch.Provenance, now));
             }
 
-            // An empty batch is not a write. A generation that moved anyway would make every
-            // replica rebuild its whole world for nothing, on a timer.
-            if (batch.Saves.Count > 0 || batch.Deletes.Count > 0)
+            if (!batch.IsEmpty)
                 _generation++;
 
             return Task.FromResult(PropositionWriteResult.Written);

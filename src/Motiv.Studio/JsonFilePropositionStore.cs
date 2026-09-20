@@ -20,18 +20,13 @@ using Motiv.Serialization;
 /// happens: a real store would log it, refuse to write over an unread file, or both.
 /// </para>
 /// <para>
-/// The generation deliberately does <em>not</em> mirror <c>JsonFileRuleStore</c>'s, even though the
-/// two stores otherwise share a shape. <c>JsonFileRuleStore</c> is an append-only version log —
-/// <c>AppendAsync</c> only ever adds rows, so the file's row count is monotonic and moves on every
-/// accepted write, which is what makes it a valid generation there. This store instead replaces rows
-/// in place: <see cref="WriteAsync"/> drops every superseded name and re-appends the saves, so saving
-/// a changed document under an <em>existing</em> name — editing a proposition, the common case —
-/// leaves the row count identical. Row count is therefore not transferable between an append-only
-/// store and a replace store; using it here would mean a poller could observe creates and deletes but
-/// never an edit to an existing proposition, which is exactly the case Spec 2B's refresh exists to
-/// converge on. So the generation here is instead the file's last-write time in UTC ticks, or
-/// <c>0</c> when the file does not exist — it moves on every write regardless of whether the row
-/// count changed.
+/// The generation deliberately does <em>not</em> mirror <c>JsonFileRuleStore</c>'s row count, even
+/// though both stores are now append-only version logs and a row count would move on every accepted
+/// write here too. <see cref="IPropositionStore.GetGenerationAsync"/> must be a <em>scalar</em> read:
+/// every replica polls it on a timer, and counting rows means parsing the whole file on each poll,
+/// which is the rebuild the poll exists to avoid. So the generation here is the file's last-write
+/// time in UTC ticks, or <c>0</c> when the file does not exist — it moves on every write, and costs
+/// one stat call to read.
 /// </para>
 /// <para>
 /// Deriving the generation from mtime instead of a held counter has a consequence
@@ -69,11 +64,8 @@ public sealed class JsonFilePropositionStore(string path) : IPropositionStore
     {
         lock (_gate)
         {
-            return [.. ReadAll()
-                .GroupBy(row => row.Name, StringComparer.Ordinal)
-                .Select(StoredPropositionVersion.HeadOf)
-                .Where(head => head is not null)
-                .Select(head => head!)];
+            return StoredPropositionVersion.HeadsOf(
+                ReadAll().GroupBy(row => row.Name, StringComparer.Ordinal));
         }
     }
 
@@ -95,7 +87,7 @@ public sealed class JsonFilePropositionStore(string path) : IPropositionStore
         // An empty batch is not a write. The generation is the file's mtime rather than a held
         // counter, so rewriting the file here would bump it even though nothing changed, and a
         // poller would then rebuild its whole world for nothing, on a timer.
-        if (batch.Saves.Count == 0 && batch.Deletes.Count == 0)
+        if (batch.IsEmpty)
             return Task.FromResult(PropositionWriteResult.Written);
 
         lock (_gate)
@@ -166,7 +158,6 @@ public sealed class JsonFilePropositionStore(string path) : IPropositionStore
         if (CurrentGeneration() <= previousGeneration)
             File.SetLastWriteTimeUtc(path, new DateTime(previousGeneration + 1, DateTimeKind.Utc));
     }
-
 
     /// <summary>
     /// The log, tolerating the pre-log file shape: a row with no <c>author</c> was written when the

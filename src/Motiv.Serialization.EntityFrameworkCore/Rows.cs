@@ -21,7 +21,11 @@ public class RuleVersionRow
     public string? BuildId { get; set; }
 }
 
-/// <summary>One authored proposition, keyed by name. Replaced in place, never appended.</summary>
+/// <summary>
+/// One row of the append-only proposition version log, keyed by <c>(Name, Version)</c>. A save
+/// carries a document; a tombstone carries none. Kept separate from <see cref="StoredPropositionVersion"/>
+/// for the reasons <see cref="RuleVersionRow"/> gives.
+/// </summary>
 public class PropositionVersionRow
 {
     public string Name { get; set; } = string.Empty;

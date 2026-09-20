@@ -248,14 +248,7 @@ public sealed class PropositionSet
     internal async Task<int> NextVersionAsync(string name, CancellationToken cancellationToken)
     {
         var history = await _store.HistoryAsync(name, cancellationToken).ConfigureAwait(false);
-        var highest = 0;
-        foreach (var row in history)
-        {
-            if (row.Version > highest)
-                highest = row.Version;
-        }
-
-        return highest + 1;
+        return (StoredPropositionVersion.PositionOf(history)?.Version ?? 0) + 1;
     }
 
     /// <summary>
