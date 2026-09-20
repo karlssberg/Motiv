@@ -17,6 +17,8 @@
 
     <ItemGroup>
         <PackageReference Include="MinVer" PrivateAssets="all" />
+        <!-- The MCP server a coding agent reaches the decision log through; opt-in via AddMcp()/MapMotivMcp(). -->
+        <PackageReference Include="ModelContextProtocol.AspNetCore" />
     </ItemGroup>
 
     <ItemGroup>

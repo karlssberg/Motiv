@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using ModelContextProtocol.AspNetCore;
+using ModelContextProtocol.Protocol;
 
 namespace Motiv.Serialization.AspNetCore;
 
@@ -182,6 +184,27 @@ public sealed class MotivRulesBuilder
             provider.GetService<PropositionSet>(),
             provider.GetService<DecisionLog>()?.Resolve ?? new DecisionModelResolvers(),
             provider.GetRequiredService<MotivRulesOptions>().JsonSerializerOptions));
+        return this;
+    }
+
+    /// <summary>
+    /// Registers the MCP server a coding agent reaches the decision log through — stateless
+    /// Streamable HTTP, with <see cref="MotivMcpTools"/> as its tools. Opt-in: nothing is exposed
+    /// until <see cref="MotivMcpEndpoints.MapMotivMcp"/> is also called. Each tool answers what the
+    /// matching endpoint answers, under the same grants, and a rule the caller may not read is not
+    /// found rather than forbidden, so tool results do not leak which rules exist.
+    /// </summary>
+    /// <returns>This builder, to allow chained registration.</returns>
+    public MotivRulesBuilder AddMcp()
+    {
+        Services.AddHttpContextAccessor();
+        Services.AddMcpServer(options => options.ServerInfo = new Implementation
+        {
+            Name = "motiv",
+            Version = typeof(MotivRulesBuilder).Assembly.GetName().Version?.ToString(3) ?? "0.0.0",
+        })
+            .WithHttpTransport(options => options.SessionMode = HttpServerSessionMode.Stateless)
+            .WithTools<MotivMcpTools>();
         return this;
     }
 
