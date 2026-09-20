@@ -98,12 +98,14 @@ Two facts the design states rather than hides:
 
 ### 2. The proposition version log (#224, prerequisite)
 
-`IPropositionStore` gains the mirror of what `IRuleStore` has: `AppendAsync(versions)` with the
-`(Name, Version)` primary key as the cross-replica compare-and-set, and `HistoryAsync(name)`
-returning `StoredPropositionVersion(Name, Version, DocumentJson, Author, TimestampUtc, ChangeNote,
-BuildId)`. Rows are kept forever, bounded only by the decision log's own retention if an adopter
-ever configures pruning. The in-memory and EF stores implement it; the head projection stays
-derived from the log, as for rules. The existing CAS on the head is preserved by the insert.
+`IPropositionStore` keeps its `WriteAsync(PropositionBatch)` contract — the 2026-09-09 CAS design
+said a log could implement it by a PK insert with no caller change — and gains `HistoryAsync(name)`
+returning `StoredPropositionVersion(Name, Version, ModelType, DocumentJson, Description, Author,
+TimestampUtc, ChangeNote, ApprovalRef, BuildId)` in version order. A save inserts a row keyed
+`(Name, Version)`; a deletion inserts a tombstone at `Version + 1` with a null document, so a
+re-created name continues its numbering. Provenance travels on the batch. Rows are kept forever.
+The in-memory, EF and Studio JSON stores implement it; the head projection stays derived from the
+log. See `2026-09-20-proposition-version-log-design.md`.
 
 ### 3. Persisted scenarios
 
