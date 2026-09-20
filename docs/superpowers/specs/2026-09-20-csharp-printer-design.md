@@ -29,9 +29,11 @@ step where the rules-engine complaint about logic leaking out of the codebase co
    quantifier with fixed `WhenTrue`/`WhenFalse` texts; a print that differed would produce
    different assertions. `n` prints as a literal or the parameter it names, with the texts as
    interpolated strings in that case.
-5. **Document interpolation is C# interpolation.** `{param}` and `{{` mean the same in both, so a
-   payload text containing a brace prints as `$"…"` verbatim. Parameters become method arguments
-   under their own names, required first then defaulted, so the interpolation resolves.
+5. **Document interpolation is C# interpolation, with the holes renamed.** `{{` means the same in
+   both, and a `{param}` hole prints as `{argument}` where the argument is the parameter's C#
+   identifier (`min_orders` → `minOrders`), formatted as `RuleParameterSubstituter` formats the
+   value: `true`/`false` for a boolean, the invariant culture for a number. Parameters become
+   method arguments, required first then defaulted.
 6. **Three stand-ins, each a `TODO` and a warning.** A collection with no handle prints a
    PascalCased member guess over `object`; object payloads print as their JSON in string payloads
    (the print is an explanation rule); an expression leaf prints `Spec.From` verbatim. Nothing
@@ -41,9 +43,11 @@ step where the rules-engine complaint about logic leaking out of the codebase co
    unambiguous without a precedence table.
 8. **`Reproduction.CSharp` and `CSharpWarnings` sit on the record.** The reproducer prints the
    pinned document with the registry's collections named by element type (no selector — the
-   registry holds a delegate, not its source) and every reference through `registry.Get`. A
-   recorded revert prints nothing: there is no document.
-9. **The fidelity corpus is embedded and compared on justification.** Sixteen documents under
+   registry holds a delegate, not its source), every reference through `registry.Get`, and the
+   registry's names as `KnownSpecs`, so a reference to a runtime proposition is a `TODO` and a
+   warning rather than an `UnknownSpec` the first time the adopted code runs. A recorded revert
+   prints nothing: there is no document.
+9. **The fidelity corpus is embedded and compared on justification.** Nineteen documents under
    `Printing/Corpus/` plus Studio's `loyalty-discount.json`; each is bound, printed, compiled with
    Roslyn against Motiv and the test's public model, and evaluated over six customers.
    `Justification` equality is stricter than the spec's "assertions as sets" and is what proves
@@ -58,12 +62,17 @@ step where the rules-engine complaint about logic leaking out of the codebase co
   common case; the print is meant to be read.
 - **Guessing `TModel` from the first referenced spec.** Wrong for a document over compiled specs
   of several model types, and silently so.
-- **Reusing `PropositionSet`'s load ordering for definitions.** Locals are named before any body
-  prints, so declaration order is enough; the binder resolves locals by name.
+- **Emitting definitions in declaration order.** A definition may reference one declared after it
+  (the binder links locals after the whole envelope parses and refuses only cycles), and C# refuses
+  a local used before its declaration. Locals are emitted in dependency order, declaration order as
+  the tiebreak — and only for the definitions the root reaches at the rule's model: a definition
+  used under a quantifier is bound over the element type, where it prints inline.
 
 ## Outcome
 
-`CSharpPrinterTests` pins fifteen exact outputs; `PrinterFidelityTests` compiles and evaluates all
-sixteen corpus documents; `SpecRegistryTests` covers `Get`/`GetAsync`; `DecisionReproducerTests`
+`CSharpPrinterTests` pins nineteen exact outputs; `PrinterFidelityTests` compiles and evaluates all
+nineteen corpus documents — including a snake-case, boolean and number parameter interpolated in a
+payload, a definition referencing a later one, and a local under a quantifier, the three shapes the
+whole-branch review found the first sixteen missing; `SpecRegistryTests` covers `Get`/`GetAsync`; `DecisionReproducerTests`
 covers `CSharp` and the revert case. `Motiv.Serialization.Tests` is green on net8, net9 and net10
 and builds on net472; the library builds on netstandard2.0.

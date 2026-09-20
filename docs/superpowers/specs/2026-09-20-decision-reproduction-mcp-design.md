@@ -208,7 +208,9 @@ remains gated on #251.
 | higher-order | `Spec.Build(inner).AsAllSatisfied()…Create().ChangeModelTo<TModel>(selector)` with the binder's own texts, `N` inlined or as a parameter; the selector and element type come from a caller-supplied collection map, else a `TODO` and a warning |
 | decoration | `.WhenTrue("…").WhenFalse("…").Create("name")`; object payloads as a commented literal with a `TODO` |
 
-- Definitions become `var` locals in declaration order before the root (#234).
+- Definitions become `var` locals before the root (#234) — in dependency order, since a definition
+  may reference one declared after it; a definition referenced only under a quantifier prints
+  inline over the element type instead.
 - Parameters become arguments of a static method returning `SpecBase<TModel, string>`.
 - `TModel` comes from the registered spec, never guessed.
 - `CSharpPrintOptions` carries the name map, the collection map, the async names, the namespace to
@@ -218,8 +220,8 @@ remains gated on #251.
 tests' documents: print, compile with Roslyn against the sample's model assembly, bind the original
 document, evaluate both over a scenario set. `Satisfied` must agree on every scenario and
 `Assertions` as sets — and, as implemented, `Justification` too, which is what proves the fold
-order. The corpus is sixteen embedded documents in the serialization tests plus Studio's
-`loyalty-discount.json`. A document feature landing without a printer case fails this test.
+order. The corpus is nineteen embedded documents in the serialization tests, Studio's
+`loyalty-discount.json` among them. A document feature landing without a printer case fails this test.
 
 ### 7. The MCP endpoint
 

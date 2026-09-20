@@ -399,8 +399,9 @@ public class DecisionReproducerTests
 
         reproduction.CSharp.ShouldNotBeNull();
         reproduction.CSharp.ShouldContain("public static class CanCheckoutRule");
-        reproduction.CSharp.ShouldContain("""return registry.Get<Customer>("customer.eligible");""");
-        reproduction.CSharpWarnings.ShouldBeEmpty();
+        // eligible is a runtime proposition, not a compiled spec: adopted code cannot resolve it until it is
+        reproduction.CSharp.ShouldContain("""return registry.Get<Customer>("customer.eligible") /* TODO: 'customer.eligible' is not a compiled spec */;""");
+        reproduction.CSharpWarnings.ShouldHaveSingleItem().ShouldContain("customer.eligible");
     }
 
     [Fact]

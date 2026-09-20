@@ -1,0 +1,2 @@
+{ "definitions": { "a": { "rule": { "and": [ { "local": "b" }, { "spec": "customer.is-active" } ] } }, "b": { "rule": { "spec": "customer.is-adult" } } },
+  "rule": { "or": [ { "local": "a" }, { "local": "b" } ] } }

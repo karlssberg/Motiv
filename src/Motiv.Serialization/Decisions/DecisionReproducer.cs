@@ -71,6 +71,7 @@ public sealed class DecisionReproducer(
         {
             ModelType = rule.ModelType,
             AsyncSpecs = new HashSet<string>(registry.Entries.Where(entry => entry.IsAsync).Select(entry => entry.Name), StringComparer.Ordinal),
+            KnownSpecs = new HashSet<string>(registry.Entries.Select(entry => entry.Name), StringComparer.Ordinal),
             Collections = registry.Collections
                 .Where(collection => collection.ParentType == rule.ModelType)
                 .ToDictionary(collection => collection.Path, collection => new CSharpCollectionHandle(collection.ElementType.Name, Selector: null), StringComparer.Ordinal),

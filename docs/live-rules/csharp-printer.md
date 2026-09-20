@@ -31,14 +31,14 @@ when `ClassName` is set:
 |---|---|
 | `{ "spec": "name" }` | the handle from `SpecHandles`, else `registry.Get<TModel>("name")` — `GetAsync` for a name in `AsyncSpecs`, which also makes the method return `AsyncSpecBase` |
 | `{ "spec": "name", "args": { "n": 3 } }` | `registry.Get<TModel>("name", new Dictionary<string, object?> { ["n"] = 3 })` |
-| `{ "local": "key" }` | the local the definition became |
-| `definitions` | `var key = …;` per definition, in declaration order, before the root; keys become identifiers (`is-active` → `isActive`, `class` → `@class`, duplicates numbered) |
-| `parameters` | method arguments after the registry — required first, then defaulted — typed `int`, `double`, `string`, `bool` |
+| `{ "local": "key" }` | the local the definition became; under a quantifier, the definition printed inline over the element type, as the binder binds it there |
+| `definitions` | `var key = …;` for every definition the root reaches at the rule's model, each declared after the definitions it references; keys become identifiers (`is-active` → `isActive`, `class` → `@class`, duplicates numbered) |
+| `parameters` | method arguments after the registry — required first, then defaulted — typed `int`, `double`, `string`, `bool`, named as identifiers (`min_orders` → `minOrders`) |
 | `and` / `or` / `xor` | `(a & b)`, `(a \| b)`, `(a ^ b)`, folded left for three or more operands exactly as the binder folds them |
 | `andAlso` / `orElse` | `a.AndAlso(b)`, `a.OrElse(b)`, folded left |
 | `not` | `!a` |
 | `asAllSatisfied` … `asAtMostNSatisfied` with `path` | `Spec.Build(inner).AsAllSatisfied().WhenTrue("all satisfied").WhenFalse("not all satisfied").Create().ChangeModelTo<TModel>(selector)` — the texts are the binder's own; `n` as a literal or the parameter it names |
-| `whenTrue` / `whenFalse` / `name` | `Spec.Build(x).WhenTrue("…").WhenFalse("…").Create()` or `.Create("name")`; a text with `{param}` prints as `$"…"`, since the document's interpolation syntax is C#'s |
+| `whenTrue` / `whenFalse` / `name` | `Spec.Build(x).WhenTrue("…").WhenFalse("…").Create()` or `.Create("name")`; a text with `{param}` prints as `$"…"` with each hole renamed to its argument and formatted as the substituter formats it — `{(strict ? "true" : "false")}` for a boolean, the invariant culture for a number |
 | a root `name` | `return Spec.Build(root).Create("name");` |
 
 `TModel` is never guessed. It is `CSharpPrintOptions.ModelType`: the rule's model type, or the
@@ -54,10 +54,12 @@ source, and adds a line to `Warnings`:
 | a higher-order `path` with no entry in `Collections` | `m => m.PascalCasedPath /* TODO: the collection registered at 'path' */` over element type `object` |
 | object `whenTrue`/`whenFalse` payloads | the JSON as string payloads, `/* TODO: object payloads printed as strings */` — the print is an explanation rule |
 | an `expression` leaf | `Spec.From((TModel m) => text) /* expression printed verbatim; not re-parsed */` |
+| a `spec` name outside `KnownSpecs`, when that is set | `registry.Get<TModel>("name") /* TODO: 'name' is not a compiled spec */` — a runtime-authored proposition, which adopted code cannot resolve until it too is code |
 
 A reproduction (see [replay](../decision-log/replay.md)) prints with the registry's collections
-named by element type but no selector, so a higher-order rule reproduces with a `TODO` on the
-selector and a warning saying so.
+named by element type but no selector, and with the registry's names as `KnownSpecs`: a higher-order
+rule reproduces with a `TODO` on the selector, and a reference to a runtime proposition with a
+`TODO` on the call, each with a warning saying so.
 
 ## `SpecRegistry.Get`
 

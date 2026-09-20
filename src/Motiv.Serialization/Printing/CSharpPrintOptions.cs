@@ -29,6 +29,13 @@ public sealed class CSharpPrintOptions
     /// <summary>The spec names registered as async; a reference to one prints through <c>GetAsync</c> and makes the method async-typed.</summary>
     public ISet<string> AsyncSpecs { get; init; } = NoAsync;
 
+    /// <summary>
+    /// Every name the host's registry knows, or null not to check. A reference to a name outside
+    /// it — a runtime-authored proposition, say — prints with a <c>TODO</c> and a warning, because
+    /// <c>registry.Get</c> would throw for it the first time the adopted code ran.
+    /// </summary>
+    public IReadOnlyCollection<string>? KnownSpecs { get; init; }
+
     /// <summary>The namespace to emit, or null for none. Only used with <see cref="ClassName"/>.</summary>
     public string? Namespace { get; init; }
 

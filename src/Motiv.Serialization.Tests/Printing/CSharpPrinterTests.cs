@@ -186,6 +186,50 @@ public class CSharpPrinterTests
     }
 
     [Fact]
+    public void Should_rename_interpolation_holes_with_their_arguments_and_format_them_as_the_substituter_does()
+    {
+        var source = Body("""
+            { "parameters": { "min-orders": { "type": "integer" }, "min_orders": { "type": "integer" }, "MinOrders": { "type": "integer" }, "class": { "type": "string" }, "strict": { "type": "boolean" }, "ratio": { "type": "number" } },
+              "rule": { "spec": "a", "whenTrue": "{min-orders} {min_orders} {MinOrders} {class} {strict} {ratio} {{kept}}", "whenFalse": "no" } }
+            """, o => o.Handles["a"] = "A");
+
+        source.ShouldContain("Build(SpecRegistry registry, int minOrders, int minOrders2, int minOrders3, string @class, bool strict, double ratio)");
+        source.ShouldContain("""WhenTrue($"{minOrders} {minOrders2} {minOrders3} {@class} {(strict ? "true" : "false")} {ratio.ToString(System.Globalization.CultureInfo.InvariantCulture)} {{kept}}")""");
+    }
+
+    [Fact]
+    public void Should_inline_a_local_referenced_under_a_quantifier_over_the_element_model()
+    {
+        var source = Body("""{ "definitions": { "large": { "rule": { "spec": "is-positive" } } }, "rule": { "asAllSatisfied": { "local": "large" }, "path": "orders" } }""",
+            o => o.Collections["orders"] = new CSharpCollectionHandle("int", "c => c.Orders"));
+
+        // No local over Customer: the binder never binds this definition at the rule's model
+        source.ShouldNotContain("var large");
+        source.ShouldContain("""Spec.Build(Spec.Build(registry.Get<int>("is-positive")).Create("large")).AsAllSatisfied()""");
+    }
+
+    [Fact]
+    public void Should_emit_definitions_in_dependency_order()
+    {
+        var source = Body("""{ "definitions": { "a": { "rule": { "and": [ { "local": "b" }, { "spec": "x" } ] } }, "b": { "rule": { "spec": "y" } } }, "rule": { "local": "a" } }""",
+            o => { o.Handles["x"] = "X"; o.Handles["y"] = "Y"; });
+
+        source.IndexOf("var b = ", StringComparison.Ordinal).ShouldBeLessThan(source.IndexOf("var a = ", StringComparison.Ordinal));
+        source.ShouldContain("""var a = Spec.Build((b & X)).Create("a");""");
+    }
+
+    [Fact]
+    public void Should_warn_about_a_reference_that_is_not_a_known_spec()
+    {
+        var printed = CSharpPrinter.Print("""{ "rule": { "and": [ { "spec": "customer.is-active" }, { "spec": "customer.eligible" } ] } }""",
+            new CSharpPrintOptions { ModelType = typeof(Customer), KnownSpecs = new HashSet<string> { "customer.is-active" } });
+
+        printed.Source.ShouldContain("""registry.Get<Customer>("customer.eligible") /* TODO: 'customer.eligible' is not a compiled spec */""");
+        printed.Source.ShouldContain("""registry.Get<Customer>("customer.is-active")""");
+        printed.Warnings.ShouldHaveSingleItem().ShouldContain("customer.eligible");
+    }
+
+    [Fact]
     public void Should_throw_the_parse_errors_for_a_document_that_does_not_parse()
     {
         Should.Throw<RuleSerializationException>(() => CSharpPrinter.Print("""{ "rule": { } }""", Options())).Errors.ShouldNotBeEmpty();

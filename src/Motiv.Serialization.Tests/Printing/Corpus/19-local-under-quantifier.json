@@ -1,0 +1,2 @@
+{ "definitions": { "large": { "rule": { "spec": "is-positive" } }, "active": { "rule": { "spec": "customer.is-active" } } },
+  "rule": { "and": [ { "asAllSatisfied": { "local": "large" }, "path": "orders", "name": "all large" }, { "local": "active" } ] } }

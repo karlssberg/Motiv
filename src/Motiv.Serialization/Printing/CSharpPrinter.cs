@@ -37,6 +37,8 @@ public static class CSharpPrinter
 
         private readonly List<string> _warnings = [];
         private readonly Dictionary<string, string> _locals = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, RuleParameterDeclaration> _parameters = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, string> _arguments = new(StringComparer.Ordinal);
         private readonly HashSet<string> _taken = new(StringComparer.Ordinal);
         private bool _usesDictionary;
         private bool _isAsync;
@@ -46,13 +48,23 @@ public static class CSharpPrinter
 
         public CSharpPrintedRule Emit()
         {
-            // Every local is named before any body is printed, so a definition may reference one
-            // declared after it in the document — the binder resolves them by name, not by order.
+            // Parameters are named first, in declaration order, so a hole in a payload text and the
+            // argument it fills from agree; then every local, so a body may reference any of them.
+            foreach (var parameter in document.Parameters)
+            {
+                _parameters[parameter.Name] = parameter;
+                _arguments[parameter.Name] = UniqueIdentifier(parameter.Name);
+            }
+
             foreach (var definition in document.Definitions)
                 _locals[definition.Name!] = UniqueIdentifier(definition.Name!);
 
+            // Only the definitions referenced at the rule's model become locals — a definition used
+            // solely under a quantifier is bound over the element type, where it is printed inline,
+            // and one used nowhere is never bound. Each local is declared before any local that
+            // references it: the document's order is whatever the author wrote.
             var body = new StringBuilder();
-            foreach (var definition in document.Definitions)
+            foreach (var definition in InDependencyOrder(ReferencedAtModel()))
                 body.Append(Indent).Append("var ").Append(_locals[definition.Name!]).Append(" = ").Append(Node(definition)).Append(";\n");
 
             var root = Node(document.Root!);
@@ -73,12 +85,79 @@ public static class CSharpPrinter
             var text = new StringBuilder();
             foreach (var parameter in document.Parameters.OrderBy(p => p.HasDefault))
             {
-                text.Append(", ").Append(TypeOf(parameter.Type)).Append(' ').Append(CSharpIdentifiers.CamelCase(parameter.Name));
+                text.Append(", ").Append(TypeOf(parameter.Type)).Append(' ').Append(_arguments[parameter.Name]);
                 if (parameter.HasDefault)
                     text.Append(" = ").Append(Scalar(parameter.DefaultValue));
             }
 
             return text.ToString();
+        }
+
+        /// <summary>
+        /// The definitions the root reaches at the rule's model, directly or through other such
+        /// definitions, in declaration order. A reference under a quantifier is over the element
+        /// type and does not count; the binder binds that one at the reference, never as a local.
+        /// </summary>
+        private IReadOnlyList<RuleNode> ReferencedAtModel()
+        {
+            var byName = document.Definitions.ToDictionary(definition => definition.Name!, StringComparer.Ordinal);
+            var referenced = new HashSet<string>(StringComparer.Ordinal);
+            Walk(document.Root!);
+            return document.Definitions.Where(definition => referenced.Contains(definition.Name!)).ToList();
+
+            void Walk(RuleNode node)
+            {
+                if (node.Operator.IsHigherOrder())
+                    return;
+                if (node.Operator == RuleOperator.Local)
+                {
+                    if (referenced.Add(node.LocalName!) && byName.TryGetValue(node.LocalName!, out var definition))
+                        Walk(definition);
+                    return;
+                }
+
+                foreach (var child in node.Children)
+                    Walk(child);
+            }
+        }
+
+        /// <summary>
+        /// Definitions so that each follows every definition it references, declaration order as
+        /// the tiebreak. The parser has already refused cycles, so the walk terminates.
+        /// </summary>
+        private static IEnumerable<RuleNode> InDependencyOrder(IReadOnlyList<RuleNode> definitions)
+        {
+            var byName = definitions.ToDictionary(definition => definition.Name!, StringComparer.Ordinal);
+            var ordered = new List<RuleNode>();
+            var visited = new HashSet<string>(StringComparer.Ordinal);
+
+            foreach (var definition in definitions)
+                Visit(definition);
+            return ordered;
+
+            void Visit(RuleNode definition)
+            {
+                if (!visited.Add(definition.Name!))
+                    return;
+                foreach (var referenced in ReferencedLocals(definition))
+                {
+                    if (byName.TryGetValue(referenced, out var dependency))
+                        Visit(dependency);
+                }
+
+                ordered.Add(definition);
+            }
+        }
+
+        private static IEnumerable<string> ReferencedLocals(RuleNode node)
+        {
+            if (node.Operator == RuleOperator.Local)
+                yield return node.LocalName!;
+            foreach (var child in node.Children)
+            {
+                foreach (var referenced in ReferencedLocals(child))
+                    yield return referenced;
+            }
         }
 
         private string Wrap(string method)
@@ -105,7 +184,9 @@ public static class CSharpPrinter
         private string Core(RuleNode node) => node.Operator switch
         {
             RuleOperator.Spec => SpecReference(node),
-            RuleOperator.Local => _locals[node.LocalName!],
+            // A local is a name the binder binds at the reference's model. Over the rule's model that
+            // is the declared local; under a quantifier it is the definition again, over the element.
+            RuleOperator.Local => _model == options.ModelType.Name ? _locals[node.LocalName!] : Node(node.Definition!),
             RuleOperator.Expression => ExpressionLeaf(node),
             RuleOperator.Not => "!" + Node(node.Children[0]),
             RuleOperator.And => Fold(node, (l, r) => $"({l} & {r})"),
@@ -142,7 +223,14 @@ public static class CSharpPrinter
                     .Append(" }");
             }
 
-            return call.Append(')').ToString();
+            call.Append(')');
+            if (options.KnownSpecs is { } known && !known.Contains(name))
+            {
+                _warnings.Add($"{node.Path}: '{name}' is not a compiled spec on this host; registry.Get will throw UnknownSpec until it is registered or the reference is replaced");
+                call.Append(" /* TODO: '").Append(name).Append("' is not a compiled spec */");
+            }
+
+            return call.ToString();
         }
 
         private string ExpressionLeaf(RuleNode node)
@@ -170,12 +258,12 @@ public static class CSharpPrinter
             _model = outerModel;
 
             var n = node.NParameterName is { } parameter
-                ? CSharpIdentifiers.CamelCase(parameter)
+                ? _arguments.TryGetValue(parameter, out var argument) ? argument : CSharpIdentifiers.CamelCase(parameter)
                 : node.N?.ToString(CultureInfo.InvariantCulture);
 
-            // The payloads name n the way the document does — a hole the printed interpolation fills
-            // from the parameter, or the literal count.
-            var count = "{" + n + "}";
+            // The payloads name n the way the document does: a hole Text fills from the parameter,
+            // or the literal count written straight in.
+            var count = node.NParameterName is { } named ? "{" + named + "}" : n;
             var (quantifier, whenTrue, whenFalse) = node.Operator switch
             {
                 RuleOperator.AsAllSatisfied => ("AsAllSatisfied()", "all satisfied", "not all satisfied"),
@@ -208,31 +296,76 @@ public static class CSharpPrinter
         }
 
         /// <summary>
-        /// A payload text as the C# that yields the same string: an interpolated literal when it
-        /// carries a <c>{parameter}</c> or an escaped brace — the document's syntax is C#'s — and a
-        /// plain literal otherwise.
+        /// A payload text as the C# that yields the string the substituter would: a plain literal
+        /// when it has no brace, otherwise an interpolated literal whose holes name the printed
+        /// arguments and format as <c>RuleParameterSubstituter</c> does — <c>true</c>/<c>false</c>
+        /// for a boolean, the invariant culture for a number. A hole naming no parameter is kept as
+        /// written; the document would not bind either.
         /// </summary>
-        private static string Text(string text) =>
-            text.IndexOf('{') >= 0 || text.IndexOf('}') >= 0 ? "$" + Literal(text) : Literal(text);
+        private string Text(string text)
+        {
+            if (text.IndexOf('{') < 0 && text.IndexOf('}') < 0)
+                return Literal(text);
+
+            var literal = new StringBuilder("$\"");
+            for (var index = 0; index < text.Length; index++)
+            {
+                var character = text[index];
+                if (character == '{' && index + 1 < text.Length && text[index + 1] == '{')
+                {
+                    literal.Append("{{");
+                    index++;
+                }
+                else if (character == '}' && index + 1 < text.Length && text[index + 1] == '}')
+                {
+                    literal.Append("}}");
+                    index++;
+                }
+                else if (character == '{' && text.IndexOf('}', index + 1) is var end && end > index)
+                {
+                    literal.Append('{').Append(Hole(text.Substring(index + 1, end - index - 1))).Append('}');
+                    index = end;
+                }
+                else
+                {
+                    literal.Append(Escaped(character));
+                }
+            }
+
+            return literal.Append('"').ToString();
+        }
+
+        private string Hole(string name)
+        {
+            if (!_parameters.TryGetValue(name, out var parameter))
+                return name;
+
+            var argument = _arguments[name];
+            return parameter.Type switch
+            {
+                RuleParameterType.Boolean => $"({argument} ? \"true\" : \"false\")",
+                RuleParameterType.Number => $"{argument}.ToString(System.Globalization.CultureInfo.InvariantCulture)",
+                _ => argument,
+            };
+        }
 
         private static string Literal(string text)
         {
             var literal = new StringBuilder("\"");
             foreach (var character in text)
-            {
-                literal.Append(character switch
-                {
-                    '"' => "\\\"",
-                    '\\' => "\\\\",
-                    '\n' => "\\n",
-                    '\r' => "\\r",
-                    '\t' => "\\t",
-                    _ => character.ToString(),
-                });
-            }
-
+                literal.Append(Escaped(character));
             return literal.Append('"').ToString();
         }
+
+        private static string Escaped(char character) => character switch
+        {
+            '"' => "\\\"",
+            '\\' => "\\\\",
+            '\n' => "\\n",
+            '\r' => "\\r",
+            '\t' => "\\t",
+            _ => character.ToString(),
+        };
 
         private static string Scalar(object? value) => value switch
         {
