@@ -7,6 +7,48 @@ public class SpecRegistryTests
     private static SpecBase<int, string> IsPositive { get; } =
         Spec.Build((int n) => n > 0).Create("is positive");
 
+    private sealed record Customer(bool IsActive, int Age = 0);
+
+    private static SpecBase<Customer, string> IsActive { get; } =
+        Spec.Build((Customer c) => c.IsActive).WhenTrue("customer is active").WhenFalse("customer is inactive").Create();
+
+    private static AsyncSpecBase<Customer, string> IsActiveAsync { get; } =
+        Spec.BuildAsync((Customer c) => new ValueTask<bool>(c.IsActive)).WhenTrue("active").WhenFalse("inactive").Create();
+
+    [Fact]
+    public void Should_get_a_registered_spec_by_name_as_an_explanation_spec()
+    {
+        var registry = new SpecRegistry().Register("customer.is-active", IsActive);
+
+        var spec = registry.Get<Customer>("customer.is-active");
+
+        spec.Evaluate(new Customer(true)).Assertions.ShouldBe(new[] { "customer is active" });
+    }
+
+    [Fact]
+    public void Should_get_a_parameterised_spec_with_arguments()
+    {
+        var registry = new SpecRegistry().RegisterParameterised<Customer>(
+            "customer.older-than",
+            [new RuleParameterDeclaration("age", RuleParameterType.Integer, false, null)],
+            args => Spec.Build((Customer c) => c.Age > (int)args["age"]!).Create($"older than {args["age"]}"));
+
+        var spec = registry.Get<Customer>("customer.older-than", new Dictionary<string, object?> { ["age"] = 18 });
+
+        spec.Evaluate(new Customer(true, Age: 30)).Reason.ShouldBe("older than 18 == true");
+    }
+
+    [Fact]
+    public void Should_refuse_to_get_an_unknown_name_a_wrong_model_or_an_async_spec_synchronously()
+    {
+        var registry = new SpecRegistry().Register("customer.is-active", IsActive).Register("customer.is-active-async", IsActiveAsync);
+
+        Should.Throw<RuleSerializationException>(() => registry.Get<Customer>("missing")).Errors.ShouldContain(e => e.Code == RuleErrorCode.UnknownSpec);
+        Should.Throw<RuleSerializationException>(() => registry.Get<int>("customer.is-active")).Errors.ShouldContain(e => e.Code == RuleErrorCode.ModelTypeMismatch);
+        Should.Throw<RuleSerializationException>(() => registry.Get<Customer>("customer.is-active-async")).Errors.ShouldContain(e => e.Code == RuleErrorCode.AsyncSpecInSyncLoad);
+        registry.GetAsync<Customer>("customer.is-active-async").ShouldNotBeNull();
+    }
+
     [Fact]
     public void Should_find_a_registered_spec_by_name()
     {
