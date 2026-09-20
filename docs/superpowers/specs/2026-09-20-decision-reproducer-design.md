@@ -25,7 +25,9 @@ same today, and if not, why".
 3. **The rule replays itself.** `RuleBase.ReplayAsync(serializer, documentJson, model)` binds the
    pinned document (null: the compiled default) through the existing `BindStoredState` and evaluates
    the bound spec directly. Never `Evaluate`, so a replay records nothing, pins nothing and opens no
-   span. The four rule flavours each implement it once.
+   span. The four rule flavours each implement it once. Because it records nothing, it binds an
+   `audited` document without the capture gate that guards a live publish: a read-only reproduction
+   host needs no decision log.
 4. **A transient overlay over the live source.** Pinned proposition documents bind into a fresh
    `PropositionOverlay` layered by `LayeredSpecSource` over `BindingScope.Source` — the live source,
    not the bare registry — so a pinned version shadows today's head for exactly the pinned names
@@ -34,7 +36,9 @@ same today, and if not, why".
 5. **Dependency-ordered binding, dependents of a failure left unbound.** Pinned documents bind in
    passes: a document binds once every pinned name it references is bound. What is left when a pass
    binds nothing waits on a pin that failed (or on a cycle) and is noted `PropositionBindFailed`
-   rather than resolved through the live head, which would silently substitute today's logic.
+   rather than resolved through the live head, which would silently substitute today's logic. The
+   rule is the last dependent: after any `PropositionBindFailed` nothing replays, because the rule's
+   own document would resolve the failed name through today's head.
 6. **A missing pin falls back to the head and says so.** A version the log no longer holds — a
    pre-log store, or a record older than the log — binds the name's live head with
    `PropositionVersionMissing`; a name with no head at all binds nothing.

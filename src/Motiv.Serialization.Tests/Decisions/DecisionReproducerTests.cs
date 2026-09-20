@@ -18,12 +18,18 @@ public class DecisionReproducerTests
         Spec.Build((Customer c) => c.IsActive).WhenTrue("active").WhenFalse("inactive").Create();
     private static PolicyBase<Customer, string> IsAdult { get; } =
         Spec.Build((Customer c) => c.Age >= 18).WhenTrue("adult").WhenFalse("minor").Create();
+    private static AsyncPolicyBase<Customer, string> IsActiveAsync { get; } =
+        Spec.BuildAsync((Customer c) => new ValueTask<bool>(c.IsActive)).WhenTrue("active").WhenFalse("inactive").Create();
 
     private sealed class CanCheckout() : Rule<Customer, string>("can-checkout", IsActive);
+    private sealed class CanCheckoutAsync() : AsyncRule<Customer, string>("can-checkout-async", IsActiveAsync);
+    private sealed class CanCheckoutPolicy() : PolicyRule<Customer, string>("can-checkout-policy", IsActive);
 
     private const string AuditedOverEligible = """{ "audited": true, "rule": { "spec": "customer.eligible" } }""";
     private const string EligibleIsActive = """{ "rule": { "spec": "customer.is-active" } }""";
     private const string EligibleIsAdult = """{ "rule": { "spec": "customer.is-adult" } }""";
+    private const string AuditedOverIsActive = """{ "audited": true, "rule": { "spec": "customer.is-active" } }""";
+    private const string AuditedOverIsActiveAsync = """{ "audited": true, "rule": { "spec": "customer.is-active-async" } }""";
 
     private static readonly JsonSerializerOptions Web = new(JsonSerializerDefaults.Web);
 
@@ -36,16 +42,20 @@ public class DecisionReproducerTests
         public required InMemoryRuleStore RuleStore { get; init; }
         public required InMemoryPropositionStore PropositionStore { get; init; }
         public required DecisionLogOptions Options { get; init; }
-        public CanCheckout Rule => (CanCheckout)Rules.Find("can-checkout")!;
-
         public DecisionReproducer Reproducer() =>
             new(Sink, RuleStore, PropositionStore, Rules, Propositions, Options.Resolve, Web);
 
-        /// <summary>Evaluates the audited rule and waits for the log's writer to hand the record to the sink.</summary>
-        public async Task<DecisionRecord> DecideAsync(Customer customer)
+        /// <summary>Evaluates an audited rule and waits for the log's writer to hand the record to the sink.</summary>
+        public async Task<DecisionRecord> DecideAsync(Customer customer, string rule = "can-checkout")
         {
             var before = Sink.Records.Count;
-            Rule.Evaluate(customer);
+            switch (Rules.Find(rule))
+            {
+                case CanCheckoutAsync asyncRule: await asyncRule.EvaluateAsync(customer); break;
+                case CanCheckoutPolicy policy: policy.Evaluate(customer); break;
+                case CanCheckout sync: sync.Evaluate(customer); break;
+                default: throw new InvalidOperationException($"unknown rule '{rule}'");
+            }
             var deadline = DateTime.UtcNow.AddSeconds(5);
             while (Sink.Records.Count == before && DateTime.UtcNow < deadline)
                 await Task.Delay(10);
@@ -65,15 +75,22 @@ public class DecisionReproducerTests
             configure(options);
         var log = new DecisionLog(sink, options);
 
-        var registry = new SpecRegistry().Register("customer.is-active", IsActive).Register("customer.is-adult", IsAdult);
+        var registry = new SpecRegistry()
+            .Register("customer.is-active", IsActive)
+            .Register("customer.is-adult", IsAdult)
+            .Register("customer.is-active-async", IsActiveAsync);
         var propositionStore = new InMemoryPropositionStore();
         var propositions = new PropositionSet(registry, propositionStore).AddModel<Customer>("customer");
         propositions.Load();
         var ruleStore = new InMemoryRuleStore();
-        var rules = new RuleSet(propositions, ruleStore, decisionLog: log).Add(new CanCheckout());
+        var rules = new RuleSet(propositions, ruleStore, decisionLog: log)
+            .Add(new CanCheckout()).Add(new CanCheckoutAsync()).Add(new CanCheckoutPolicy());
 
         (await propositions.CreateAsync("customer.eligible", "customer", EligibleIsActive, null)).Outcome.ShouldBe(PropositionUpdateOutcome.Created);
-        (await rules.UpdateAsync("can-checkout", AuditedOverEligible, 1, new RuleChangeProvenance("alice"))).Outcome.ShouldBe(RuleUpdateOutcome.Updated);
+        var alice = new RuleChangeProvenance("alice");
+        (await rules.UpdateAsync("can-checkout", AuditedOverEligible, 1, alice)).Outcome.ShouldBe(RuleUpdateOutcome.Updated);
+        (await rules.UpdateAsync("can-checkout-async", AuditedOverIsActiveAsync, 1, alice)).Outcome.ShouldBe(RuleUpdateOutcome.Updated);
+        (await rules.UpdateAsync("can-checkout-policy", AuditedOverIsActive, 1, alice)).Outcome.ShouldBe(RuleUpdateOutcome.Updated);
 
         return new Host
         {
@@ -305,9 +322,57 @@ public class DecisionReproducerTests
         // Act
         var reproduction = await host.Reproducer().ReproduceAsync(forged.Id, default);
 
-        // Assert — vip failed on its own; eligible was never bound rather than resolved through the live head
+        // Assert — vip failed on its own; eligible was never bound rather than resolved through the
+        // live head; and the rule, which references eligible, did not replay against today's logic either
         reproduction.Fidelity.Notes.ShouldContain(n => n.Reason == FidelityReason.PropositionBindFailed && n.Detail.StartsWith("'customer.vip' v9 did not bind"));
         reproduction.Fidelity.Notes.ShouldContain(n => n.Reason == FidelityReason.PropositionBindFailed && n.Detail.Contains("'customer.eligible' v2 was not bound") && n.Detail.Contains("'customer.vip'"));
+        reproduction.Replayed.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Should_replay_an_audited_document_on_a_host_without_a_decision_log()
+    {
+        // Arrange — the decision was logged here; the reproduction runs on a host that only reads
+        await using var host = await AHostAsync();
+        var decision = await host.DecideAsync(new Customer("cust-42", true, 30));
+        var registry = new SpecRegistry().Register("customer.is-active", IsActive).Register("customer.is-adult", IsAdult);
+        var propositions = new PropositionSet(registry, host.PropositionStore).AddModel<Customer>("customer");
+        propositions.Load();
+        var readOnly = new RuleSet(propositions, host.RuleStore).Add(new CanCheckout());
+        var reproducer = new DecisionReproducer(host.Sink, host.RuleStore, host.PropositionStore, readOnly, propositions, new DecisionModelResolvers(), Web);
+
+        // Act
+        var reproduction = await reproducer.ReproduceAsync(decision.Id, default);
+
+        // Assert — an audited document records nothing on replay, so the capture gate does not apply
+        reproduction.Fidelity.Notes.ShouldNotContain(n => n.Reason == FidelityReason.PropositionBindFailed);
+        reproduction.Replayed!.Satisfied.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Should_reproduce_a_decision_of_an_async_rule()
+    {
+        await using var host = await AHostAsync();
+        var decision = await host.DecideAsync(new Customer("cust-42", true, 30), "can-checkout-async");
+
+        var reproduction = await host.Reproducer().ReproduceAsync(decision.Id, default);
+
+        reproduction.Fidelity.IsExact.ShouldBeTrue(string.Join("; ", reproduction.Fidelity.Notes));
+        reproduction.Replayed!.Satisfied.ShouldBeTrue();
+        reproduction.Replayed.Assertions.ShouldBe(["active"]);
+    }
+
+    [Fact]
+    public async Task Should_reproduce_a_decision_of_a_policy_rule_with_its_single_value()
+    {
+        await using var host = await AHostAsync();
+        var decision = await host.DecideAsync(new Customer("cust-9", IsActive: false, 41), "can-checkout-policy");
+
+        var reproduction = await host.Reproducer().ReproduceAsync(decision.Id, default);
+
+        reproduction.Fidelity.IsExact.ShouldBeTrue(string.Join("; ", reproduction.Fidelity.Notes));
+        reproduction.Replayed!.Satisfied.ShouldBeFalse();
+        reproduction.Replayed.Values.ShouldBe(["inactive"]);
     }
 
     [Fact]

@@ -12,7 +12,7 @@ public enum FidelityReason
     /// <summary>A pinned proposition version is not in the proposition log; its live head was bound instead, when there was one.</summary>
     PropositionVersionMissing,
 
-    /// <summary>A pinned document no longer binds. The replay ran without it only if the rule still bound; otherwise <see cref="Reproduction.Replayed"/> is null.</summary>
+    /// <summary>A pinned document no longer binds, or the rule's own did not. Nothing replays: a rule that resolved the name through today's head would not be reproducing the decision.</summary>
     PropositionBindFailed,
 
     /// <summary>The capture was a projection; fields the rule reads may be absent from the replayed model.</summary>

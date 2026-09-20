@@ -65,7 +65,7 @@ log holds, which is reported as `OutcomeDiverged` rather than hidden.
 |---|---|---|
 | `RuleVersion` | the row at that version from `IRuleStore.HistoryAsync`; a null document (a recorded revert) binds the compiled default | `RuleVersionMissing`; nothing replays |
 | `BuildId` | compared with this host's build | `BuildMismatch`; the replay still runs, since the documents may well bind identically |
-| `ReferencedPropositionVersions` | each pinned row from `IPropositionStore.HistoryAsync`, bound in dependency order into a transient overlay layered *over the live source*, so a pinned version shadows today's head and everything unpinned resolves as production does | `PropositionVersionMissing` (the name's live head stands in, when there is one) or `PropositionBindFailed` (dependents of a failed bind are left unbound rather than quietly resolved through the head) |
+| `ReferencedPropositionVersions` | each pinned row from `IPropositionStore.HistoryAsync`, bound in dependency order into a transient overlay layered *over the live source*, so a pinned version shadows today's head and everything unpinned resolves as production does | `PropositionVersionMissing` (the name's live head stands in, when there is one) or `PropositionBindFailed` (dependents of a failed bind are left unbound, and nothing replays — the rule would otherwise resolve the name through today's head) |
 | `Input` | `Whole` as captured; `Redacted` as captured, with `ModelRedacted`; `Reference` through the resolver | `ModelUnresolved` |
 
 The live `RuleSet` and `PropositionSet` are read, never written. The overlay the pinned documents
@@ -81,7 +81,7 @@ quote, and the reasons are:
 | `RuleVersionMissing` | the rule log lacks the pinned version, or this host has no such rule; nothing replays |
 | `BuildMismatch` | the decision was made on another build |
 | `PropositionVersionMissing` | a pinned proposition version is not in the log; its live head was bound instead, when there was one |
-| `PropositionBindFailed` | a pinned document no longer binds, or the rule's own document did not |
+| `PropositionBindFailed` | a pinned document no longer binds, or the rule's own document did not; nothing replays |
 | `ModelRedacted` | the capture was a projection; fields the rule reads may be absent |
 | `ModelUnresolved` | nothing was captured, no resolver is registered, or the resolver returned nothing |
 | `OutcomeDiverged` | the replay decided differently from the log — loud on purpose |
@@ -91,7 +91,9 @@ quote, and the reasons are:
 **A replay never records.** The reproducer asks the rule to bind the pinned document and evaluate
 the bound spec directly, not through `Rule.Evaluate`. Nothing is written to the decision log, no
 proposition pin is taken, and no telemetry span opens. Reproducing a decision a thousand times
-leaves the log exactly as it was.
+leaves the log exactly as it was. For the same reason an `audited` document replays on a host that
+has no decision log or capture posture at all — a read-only reproduction host needs the two version
+logs and nothing else.
 
 **A durable sink hands the model back as JSON.** A `Whole` or `Redacted` capture read from
 `SqlDecisionSink` is a `JsonElement`, not the model. The reproducer rehydrates it to the rule's

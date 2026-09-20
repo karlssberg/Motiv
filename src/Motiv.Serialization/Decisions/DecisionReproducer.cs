@@ -44,7 +44,10 @@ public sealed class DecisionReproducer(
             ? new ReproducedModel(ReproducedModelKind.Absent, null, null)
             : await RehydrateAsync(decision.Input, rule.ModelType, notes, cancellationToken).ConfigureAwait(false);
 
-        var replayed = rule is not null && ruleVersion is not null && model.Value is not null
+        // A pinned document that did not bind leaves the rule to resolve that name through today's
+        // head, and a verdict computed that way is not a reproduction of anything. No replay, then.
+        var pinsBound = notes.All(note => note.Reason != FidelityReason.PropositionBindFailed);
+        var replayed = rule is not null && ruleVersion is not null && model.Value is not null && pinsBound
             ? await ReplayAsync(rule, ruleVersion, source, model.Value, decision, notes, cancellationToken).ConfigureAwait(false)
             : null;
 
