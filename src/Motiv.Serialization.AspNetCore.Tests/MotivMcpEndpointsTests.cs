@@ -73,6 +73,18 @@ public class MotivMcpEndpointsTests
     }
 
     [Fact]
+    public async Task Should_serve_version_one_of_a_document_default_rule_as_its_document()
+    {
+        await using var host = await DecisionHost.StartAsync();
+
+        var row = Structured(await host.CallAsync("get_rule", new { name = "document-rule", version = 1 }));
+        var printed = Structured(await host.CallAsync("print_rule", new { name = "document-rule", version = 1 }));
+
+        row.GetProperty("document").GetProperty("rule").GetProperty("spec").GetString()!.ShouldBe("is-active");
+        printed.GetProperty("source").GetString()!.ShouldContain("""registry.Get<Customer>("is-active")""");
+    }
+
+    [Fact]
     public async Task Should_answer_not_found_for_a_rule_the_caller_may_not_read_exactly_as_for_a_missing_one()
     {
         await using var host = await DecisionHost.StartAsync();

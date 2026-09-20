@@ -8,7 +8,9 @@ public static class MotivMcpEndpoints
 {
     /// <summary>
     /// Maps the MCP endpoint (Streamable HTTP) at <paramref name="pattern"/>. Secure by default:
-    /// the endpoint requires authorization as the rules API does, unless <paramref name="anonymous"/>.
+    /// the endpoint requires authorization as the rules API does; <paramref name="anonymous"/> is
+    /// the same escape as <see cref="MotivRulesEndpointOptions.AllowAnonymous"/>, and like it holds
+    /// under a host whose fallback policy requires an authenticated user.
     /// Needs <see cref="MotivRulesBuilder.AddMcp"/> to have registered the server and its tools.
     /// </summary>
     public static IEndpointConventionBuilder MapMotivMcp(
@@ -17,7 +19,9 @@ public static class MotivMcpEndpoints
         if (endpoints is null) throw new ArgumentNullException(nameof(endpoints));
 
         var mcp = endpoints.MapMcp(pattern);
-        if (!anonymous)
+        if (anonymous)
+            mcp.AllowAnonymous();
+        else
             mcp.RequireAuthorization();
         return mcp;
     }

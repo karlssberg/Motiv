@@ -107,9 +107,10 @@ goes. An in-memory capture that is already the model type is used as it is.
 
 With `AddDecisionSource`, `MapMotivRules` also maps, under its base path, `GET decisions`
 (`correlationId`, `ruleName`, `satisfied`, `from`, `to`, `limit`; records of rules the caller may not
-read are omitted), `GET decisions/{id}` and `GET decisions/{id}/reproduction` (`Read` on the record's
-rule, else `403`), and `GET rules/{name}/csharp?version=` (`204` for a version on the compiled
-default). A reproduction crosses the wire with the captured input and the replayed model as the
+read are omitted, and `limit` counts records before that filter), `GET decisions/{id}` and
+`GET decisions/{id}/reproduction` (`Read` on the record's rule, else `403`; `503` when no reproducer
+is registered), and `GET rules/{name}/csharp?version=` (`204` for a version that ran compiled code;
+version 1 is the rule's default, so a document default prints and a compiled one is `204`). A reproduction crosses the wire with the captured input and the replayed model as the
 host's JSON — and a reference capture as its key and nothing else. The [MCP server](./mcp.md)
 serves the same through tools, and a [snapshot](./snapshots.md) binds what came back.
 

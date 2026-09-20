@@ -39,7 +39,7 @@ public sealed class MotivMcpTools(
     }
 
     [McpServerTool(Name = "list_decisions", ReadOnly = true, Idempotent = true, UseStructuredContent = true)]
-    [Description("Logged decisions, newest first, filtered by rule, verdict and window. Only decisions of rules the caller may read are listed.")]
+    [Description("Logged decisions, newest first, filtered by rule, verdict and window. Only decisions of rules the caller may read are listed, and the limit counts records before that filter, so pass ruleName to reach a readable rule's older decisions.")]
     public async Task<JsonElement> ListDecisions(
         [Description("A rule name, or omitted for every rule.")] string? ruleName = null,
         [Description("true for satisfied decisions only, false for unsatisfied only.")] bool? satisfied = null,
@@ -102,13 +102,14 @@ public sealed class MotivMcpTools(
         CancellationToken cancellationToken = default)
     {
         RequireReadable(name);
-        if (rules.FindEntry(name) is { } rule)
+        if (rules.Find(name) is { } rule && rules.FindEntry(name) is { } live)
         {
-            if (await RuleRowAsync(name, version ?? rule.Version, cancellationToken) is { } row)
+            if (await RuleRowAsync(name, version ?? live.Version, cancellationToken) is { } row)
                 return Json(DecisionsContracts.Entry(row));
-            if (version is null || version == rule.Version || version == 1)
-                return Json(new { name, version = version ?? rule.Version, document = EndpointResponses.DocumentElement(version == 1 ? null : rule.DocumentJson) });
-            throw NoSuchVersion("rule", name, version);
+            var (exists, documentJson) = await RuleVersionLookup.DocumentAtAsync(rule, live, ruleStore, version, cancellationToken);
+            if (!exists)
+                throw NoSuchVersion("rule", name, version);
+            return Json(new { name, version = version ?? live.Version, document = EndpointResponses.DocumentElement(documentJson) });
         }
 
         if (propositions?.Find(name) is { } proposition)
@@ -199,9 +200,9 @@ public sealed class MotivMcpTools(
         var serializerOptions = propositions?.Options ?? rules.Options;
         if (rules.Find(name) is { } rule && rules.FindEntry(name) is { } live)
         {
-            var documentJson = version is null || version == live.Version
-                ? live.DocumentJson
-                : await StoredRuleDocumentAsync(name, version.Value, cancellationToken);
+            var (exists, documentJson) = await RuleVersionLookup.DocumentAtAsync(rule, live, ruleStore, version, cancellationToken);
+            if (!exists)
+                throw NoSuchVersion("rule", name, version);
             return (documentJson, RulePrintOptions.For(rule, rules.Scope.Registry, serializerOptions));
         }
 
@@ -217,20 +218,6 @@ public sealed class MotivMcpTools(
         }
 
         throw NotKnown(name);
-    }
-
-    /// <summary>
-    /// The document behind a version of a rule other than its live one. Version 1 is the compiled
-    /// default, which the log never holds a row for — it is bound at startup, not published — so it
-    /// resolves to no document at all; any other version the log lacks does not exist.
-    /// </summary>
-    private async Task<string?> StoredRuleDocumentAsync(string name, int version, CancellationToken cancellationToken)
-    {
-        if (await RuleRowAsync(name, version, cancellationToken) is { } row)
-            return row.DocumentJson;
-        if (version == 1)
-            return null;
-        throw NoSuchVersion("rule", name, version);
     }
 
     /// <summary>

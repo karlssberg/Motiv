@@ -60,7 +60,7 @@ internal static class MotivDecisionEndpoints
 
     /// <summary>
     /// A rule's document at a version — the live one by default — printed as the reproducer prints
-    /// it. A version on the compiled default has no document and answers <c>204</c>.
+    /// it. A version that ran compiled code has no document and answers <c>204</c>.
     /// </summary>
     internal static void MapCSharpEndpoint(
         RouteGroupBuilder group, RuleSet rules, IRuleStore? store, RuleSerializerOptions serializerOptions, JsonSerializerOptions json)
@@ -72,27 +72,11 @@ internal static class MotivDecisionEndpoints
             if (rules.Find(name) is not { } rule || rules.FindEntry(name) is not { } live)
                 return Results.Json(new ErrorResponse($"Unknown rule '{name}'."), json, statusCode: 404);
 
-            string? documentJson;
-            if (version is null || version == live.Version)
-            {
-                documentJson = live.DocumentJson;
-            }
-            else if (store is not null)
-            {
-                // Version 1 is the compiled default, which the log never holds a row for: it is bound
-                // at startup, not published. Any other version the log lacks does not exist.
-                var history = await store.HistoryAsync(name, http.RequestAborted);
-                if (history.FirstOrDefault(row => row.Version == version) is { } row)
-                    documentJson = row.DocumentJson;
-                else if (version == 1)
-                    documentJson = null;
-                else
-                    return Results.Json(new ErrorResponse($"Rule '{name}' has no version {version}."), json, statusCode: 404);
-            }
-            else
-            {
-                return Results.Json(new ErrorResponse($"Rule '{name}' has no version {version}: this host keeps no rule history."), json, statusCode: 404);
-            }
+            var (exists, documentJson) = await RuleVersionLookup.DocumentAtAsync(rule, live, store, version, http.RequestAborted);
+            if (!exists)
+                return Results.Json(new ErrorResponse(store is null
+                    ? $"Rule '{name}' has no version {version}: this host keeps no rule history."
+                    : $"Rule '{name}' has no version {version}."), json, statusCode: 404);
 
             if (documentJson is null)
                 return Results.NoContent();

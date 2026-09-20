@@ -73,4 +73,16 @@ public class DecisionEndpointTests
         (await host.Http.GetAsync("/api/rules/rules/active-rule/csharp?version=9")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
         (await host.Http.GetAsync("/api/rules/rules/nope/csharp")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
+
+    [Fact]
+    public async Task Should_print_version_one_of_a_document_default_rule()
+    {
+        await using var host = await DecisionHost.StartAsync();
+
+        var response = await host.Http.GetAsync("/api/rules/rules/document-rule/csharp?version=1");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("source").GetString()!
+            .ShouldContain("""registry.Get<Customer>("is-active")""");
+    }
 }

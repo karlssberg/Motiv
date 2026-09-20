@@ -21,6 +21,10 @@ internal sealed class DecisionHost : IAsyncDisposable
 
     private sealed class ActiveRule() : Rule<Customer, string>("active-rule", IsActive);
 
+    /// <summary>A rule whose version 1 is a document, not compiled code, as Studio's loyalty-discount is.</summary>
+    private sealed class DocumentRule() : Rule<Customer, string>(
+        "document-rule", RuleDocuments.FromJson("""{ "rule": { "spec": "is-active" } }"""));
+
     public required WebApplication App { get; init; }
 
     public required HttpClient Http { get; init; }
@@ -44,6 +48,7 @@ internal sealed class DecisionHost : IAsyncDisposable
         builder.Services.AddSingleton<IGrantSource>(grants);
         builder.Services.AddMotivRules(registry, options)
             .AddRule<ActiveRule>()
+            .AddRule<DocumentRule>()
             .AddRuleStore()
             .AddPropositions()
             .AddScenarios()
@@ -66,6 +71,7 @@ internal sealed class DecisionHost : IAsyncDisposable
         var http = app.GetTestClient();
         var document = JsonDocument.Parse("""{ "audited": true, "rule": { "spec": "is-active" } }""").RootElement;
         (await http.PutAsJsonAsync("/api/rules/rules/active-rule", new { document, baseVersion = 1 })).EnsureSuccessStatusCode();
+        (await http.PutAsJsonAsync("/api/rules/rules/document-rule", new { document, baseVersion = 1 })).EnsureSuccessStatusCode();
         (await http.PostAsJsonAsync("/api/rules/rules/active-rule/evaluate", new { model = new { isActive = true, age = 30, id = "cust-42" } })).EnsureSuccessStatusCode();
 
         var deadline = DateTime.UtcNow.AddSeconds(5);

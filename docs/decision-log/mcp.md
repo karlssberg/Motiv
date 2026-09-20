@@ -31,7 +31,7 @@ sticky sessions behind a load balancer.
 | Tool | Input | Returns | Grant |
 |---|---|---|---|
 | `get_decision` | `id` | the record: rule and version, build, proposition versions, the captured input, the outcome with its justification | `Read` on the rule |
-| `list_decisions` | `ruleName?`, `satisfied?`, `fromUtc?`, `toUtc?`, `limit?` (20, at most 200) | records newest first, only for rules the caller may read | `Read`, per record |
+| `list_decisions` | `ruleName?`, `satisfied?`, `fromUtc?`, `toUtc?`, `limit?` (20, at most 200) | records newest first, only for rules the caller may read; `limit` counts records before that filter, so pass `ruleName` to reach a readable rule's older decisions | `Read`, per record |
 | `reproduce_decision` | `id` | the [reproduction](./replay.md): pinned rows, the model as far as it could be recovered, the replay, the fidelity verdict, and the rule as C# | `Read` on the rule |
 | `print_rule` | `name`, `version?` | a rule or an authored proposition as [C#](../live-rules/csharp-printer.md), with its warnings | `Read` |
 | `get_rule` | `name`, `version?` | the document and its version-log row (the live document when the host keeps no log) | `Read` |
