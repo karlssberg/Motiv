@@ -234,6 +234,18 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
         }
     }
 
+    /// <inheritdoc />
+    internal sealed override async ValueTask<RuleEvaluationResult<object?>> ReplayAsync(
+        RuleSerializer serializer, string? documentJson, object model, CancellationToken cancellationToken)
+    {
+        var errors = new List<RuleError>();
+        if (BindStoredState(serializer, documentJson, version: 0, errors) is not State state)
+            throw new RuleSerializationException(errors);
+
+        var result = await state.Spec.EvaluateAsync((TModel)model, cancellationToken).ConfigureAwait(false);
+        return ResultProjection.ProjectUntyped(result);
+    }
+
     internal sealed override RulePrepareResult PrepareUpdate(
         RuleSerializer serializer, string documentJson, int expectedVersion)
     {

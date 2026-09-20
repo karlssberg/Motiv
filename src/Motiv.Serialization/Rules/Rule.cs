@@ -189,6 +189,17 @@ public class Rule<TModel, TMetadata> : RuleBase
         }
     }
 
+    /// <inheritdoc />
+    internal sealed override ValueTask<RuleEvaluationResult<object?>> ReplayAsync(
+        RuleSerializer serializer, string? documentJson, object model, CancellationToken cancellationToken)
+    {
+        var errors = new List<RuleError>();
+        if (BindStoredState(serializer, documentJson, version: 0, errors) is not State state)
+            throw new RuleSerializationException(errors);
+
+        return new(ResultProjection.ProjectUntyped(state.Spec.Evaluate((TModel)model)));
+    }
+
     internal sealed override RulePrepareResult PrepareUpdate(
         RuleSerializer serializer, string documentJson, int expectedVersion)
     {
