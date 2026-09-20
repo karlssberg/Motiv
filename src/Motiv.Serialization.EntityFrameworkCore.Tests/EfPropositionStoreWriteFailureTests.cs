@@ -124,9 +124,10 @@ public class EfPropositionStoreWriteFailureTests
     }
 
     /// <summary>
-    /// Throws on the first save only, then behaves normally. Throws the concurrency subclass rather
-    /// than the base type because that is what the token actually raises — and because the store's
-    /// catch is written against the base, this is also what proves the subclass reaches it.
+    /// Throws on the first save only, then behaves normally. Throws <see cref="DbUpdateException"/>
+    /// because that is what a duplicate <c>(Name, Version)</c> row raises — a primary-key violation,
+    /// now that the version log carries no concurrency token — and the store's catch is written
+    /// against exactly that.
     /// </summary>
     private sealed class ThrowOnFirstSaveInterceptor : SaveChangesInterceptor
     {
@@ -141,7 +142,7 @@ public class EfPropositionStoreWriteFailureTests
                 return base.SavingChangesAsync(eventData, result, cancellationToken);
 
             _thrown = true;
-            throw new DbUpdateConcurrencyException(
+            throw new DbUpdateException(
                 "injected: stands in for the (Name, Version) key refusing a duplicate row, so the " +
                 "classification branch is reachable without timing dependence");
         }

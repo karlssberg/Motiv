@@ -73,8 +73,8 @@ public sealed record PropositionBatch(
     /// and surfacing as whatever that store does with a duplicate.
     /// </para>
     /// <para>
-    /// A deletion at a non-positive version is refused before the lookup is consulted: no row has
-    /// ever carried version 0, so no deletion can honestly name it.
+    /// A save or a deletion at a non-positive version is refused before the lookup is consulted: no
+    /// row has ever carried version 0, so no deletion can honestly name it and no save can start there.
     /// </para>
     /// <para>
     /// Call it before writing anything: the batch is all-or-nothing, and in a store with no rollback
@@ -89,7 +89,7 @@ public sealed record PropositionBatch(
         foreach (var save in Saves)
         {
             var current = position(save.Name);
-            if (!claimed.Add(save.Name) || (current is not null && save.Version <= current.Version))
+            if (!claimed.Add(save.Name) || save.Version < 1 || (current is not null && save.Version <= current.Version))
                 return PropositionWriteResult.Conflict(save.Name, current?.Version ?? 0);
         }
 

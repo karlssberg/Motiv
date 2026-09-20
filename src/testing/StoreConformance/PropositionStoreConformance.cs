@@ -195,6 +195,19 @@ public abstract class PropositionStoreConformance : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Should_refuse_a_save_at_a_non_positive_version()
+    {
+        // Act — a name the store has never held has no version to move past, but version 0 is not a
+        // row the log can hold either: the first row of every name is version 1
+        var result = await Store.WriteAsync(new PropositionBatch([Stored("fresh", version: 0)], []), default);
+
+        // Assert
+        result.IsConflict.ShouldBeTrue();
+        result.Name!.ShouldBe("fresh");
+        result.CurrentVersion.ShouldBe(0);
+    }
+
+    [Fact]
     public async Task Should_refuse_a_batch_that_names_one_proposition_twice()
     {
         // Act — a batch that cannot say what it wants for a name is the same stale-writer signal as
