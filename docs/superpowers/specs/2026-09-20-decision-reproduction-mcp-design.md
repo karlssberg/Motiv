@@ -156,11 +156,12 @@ options.Resolve
 ```csharp
 public sealed record Reproduction(
     DecisionRecord Decision,
-    StoredRuleVersion Rule,
-    IReadOnlyList<StoredPropositionVersion> Propositions,   // transitive closure at pinned versions
-    ReproducedModel Model,                                   // Resolved | Reference | Whole | Redacted
-    ReproductionFidelity Fidelity,                           // Exact | Degraded(reasons)
-    string CSharp);
+    StoredRuleVersion? Rule,                                 // null when the rule log lacks the pinned version
+    IReadOnlyList<StoredPropositionVersion> Propositions,   // the pinned rows that were bound
+    ReproducedModel Model,                                   // Whole | Redacted | Resolved | Reference | Absent
+    RuleEvaluationResult<object?>? Replayed,                 // null when nothing could run
+    ReproductionFidelity Fidelity);                          // IsExact, or Notes(reason, detail)
+// string CSharp arrives with slice 4 (the printer); slice 3 ships the record without it.
 ```
 
 `DecisionReproducer.ReproduceAsync(decisionId, ct)`:
@@ -179,8 +180,10 @@ public sealed record Reproduction(
 
 | Fidelity reason | Cause |
 |---|---|
+| `RuleVersionMissing` | the rule log lacks the pinned version, or the host has no such rule; nothing replays |
 | `BuildMismatch` | the host's build id differs from `Decision.BuildId` |
-| `PropositionVersionMissing` | a pinned version is absent from the history |
+| `PropositionVersionMissing` | a pinned version is absent from the history; the live head stands in |
+| `PropositionBindFailed` | a pinned document, or the rule's own, no longer binds |
 | `ModelRedacted` | the captured input was a projection |
 | `ModelUnresolved` | reference-only capture and no resolver, or the resolver returned null |
 | `OutcomeDiverged` | re-evaluation disagreed with the logged verdict |

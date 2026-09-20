@@ -25,6 +25,20 @@ verdict and, when it was saved from a logged decision, that decision's id. Test 
 stored in the backend, replaced in place under a version compare-and-set, never governed.
 _Avoid_: Sample, fixture, test case (as a stored noun)
 
+**Reproduction**:
+A logged decision run again under the rule and proposition versions that decided it: the pinned
+rows, the model as far as capture and a resolver allow, the re-evaluation, and a fidelity verdict.
+Read from the version logs and evaluated on a transient overlay; the live sets are never touched and
+nothing is recorded.
+_Avoid_: Replay (the act; a reproduction is the result), re-run, simulation
+
+**Fidelity**:
+How exactly a reproduction re-ran the logged decision — *exact* when every anchor was honoured and
+the verdict agreed, otherwise a list of reasons (`RuleVersionMissing`, `BuildMismatch`,
+`PropositionVersionMissing`, `PropositionBindFailed`, `ModelRedacted`, `ModelUnresolved`,
+`OutcomeDiverged`), each a value a generated test can quote.
+_Avoid_: Confidence, accuracy, degraded (as a state on its own)
+
 **Namespace**:
 The dotted prefix of a rule or proposition name (`pricing.eu.*`), used as the unit of authorization and
 organization. A pure projection of the names — there is no stored hierarchy to keep in sync.
