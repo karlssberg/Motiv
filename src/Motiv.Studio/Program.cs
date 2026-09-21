@@ -234,7 +234,14 @@ builder.Services.AddMotivRules(registry, options)
     {
         log.Backpressure = DecisionBackpressure.Block;
         log.Capture.ReferenceOnly<Customer>(customer => customer.CustomerId ?? "anonymous");
+        // The mirror of the capture posture: how a logged key becomes a customer again for a
+        // reproduction. The demo's system of record is the four seeded customers.
+        log.Resolve.Reference<Customer>((customerId, _) =>
+            Task.FromResult(ScenarioSeeds.FindCustomer(customerId, options.JsonSerializerOptions)));
     })
+    // Seam: the log read back. The SQL sink keeps its records, so it is also the source a
+    // reproduction reads a decision from.
+    .AddDecisionSource(provider => provider.GetRequiredService<SqlDecisionSink>())
     .AddPropositions(provider => new EfPropositionStore(
         provider.GetRequiredService<IDbContextFactory<MotivStoreDbContext>>()))
     // Seam: scenarios. Each rule's sample models live in the same database as the rules, so a

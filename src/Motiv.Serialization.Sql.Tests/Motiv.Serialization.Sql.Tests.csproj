@@ -33,6 +33,7 @@
 
     <ItemGroup>
         <Compile Include="..\testing\PoolClearGate\*.cs" LinkBase="PoolClearGate" />
+        <Compile Include="..\testing\StoreConformance\DecisionSourceConformance.cs" LinkBase="StoreConformance" />
     </ItemGroup>
 
 </Project>

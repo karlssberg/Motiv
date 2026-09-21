@@ -234,6 +234,15 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
         }
     }
 
+    /// <inheritdoc />
+    internal sealed override async ValueTask<RuleEvaluationResult<object?>> ReplayAsync(
+        RuleSerializer serializer, string? documentJson, object model, CancellationToken cancellationToken)
+    {
+        var state = BindForReplay(serializer, documentJson);
+        var result = await state.Spec.EvaluateAsync((TModel)model, cancellationToken).ConfigureAwait(false);
+        return ResultProjection.ProjectUntyped(result);
+    }
+
     internal sealed override RulePrepareResult PrepareUpdate(
         RuleSerializer serializer, string documentJson, int expectedVersion)
     {
@@ -343,14 +352,34 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
     }
 
     /// <summary>
+    /// Binds a pinned document for a replay: the compiled default when it is null, otherwise the
+    /// document without the audit-capture gate, since a replay records nothing. Throws rather than
+    /// collecting errors, because a replay has no slot to leave empty.
+    /// </summary>
+    private State BindForReplay(RuleSerializer serializer, string? documentJson)
+    {
+        if (documentJson is null)
+            return BindDefault(serializer);
+
+        var errors = new List<RuleError>();
+        return TryBindState(serializer, documentJson, version: 0, errors, requireCapture: false)
+            ?? throw new RuleSerializationException(errors);
+    }
+
+    /// <summary>
     /// Binds a document, applies the flavour and audit checks, and assembles the state they produce —
     /// collecting every reason it would not bind into <paramref name="errors"/>. The one failure shape
     /// behind the four callers that report a bad document rather than throwing on one; each then says
     /// so in its own terms.
     /// </summary>
     /// <returns>The bound state, or null when it did not bind, in which case <paramref name="errors"/> says why.</returns>
+    /// <param name="requireCapture">
+    /// Whether an audited document must have a log and a capture posture to bind. True for anything
+    /// that will be evaluated live; false for a replay, which records nothing and so needs neither.
+    /// </param>
     private State? TryBindState(
-        RuleSerializer serializer, string documentJson, int version, List<RuleError> errors)
+        RuleSerializer serializer, string documentJson, int version, List<RuleError> errors,
+        bool requireCapture = true)
     {
         AsyncSpecBase<TModel, TMetadata> spec;
         try
@@ -370,7 +399,7 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
         }
 
         var audited = serializer.IsAudited(documentJson);
-        if (RequireAuditCapture(audited) is { } auditError)
+        if (requireCapture && RequireAuditCapture(audited) is { } auditError)
         {
             errors.Add(auditError);
             return null;

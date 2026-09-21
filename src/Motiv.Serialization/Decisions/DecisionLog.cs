@@ -84,6 +84,9 @@ public sealed class DecisionLog : IAsyncDisposable
     /// <summary>How much of an evaluated model each rule's records may keep.</summary>
     public DecisionCaptureRegistry Capture => _options.Capture;
 
+    /// <summary>How a reference-only capture gets its model back for a reproduction; the mirror of <see cref="Capture"/>.</summary>
+    public DecisionModelResolvers Resolve => _options.Resolve;
+
     /// <summary>
     /// How many records have been shed under <see cref="DecisionBackpressure.Drop"/> since this log was
     /// created. Monotonic: taking a gap marker reports a run, it does not forgive it, and the sum of

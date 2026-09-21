@@ -204,6 +204,15 @@ public abstract class RuleBase
         RuleSerializer serializer, string? documentJson, int version, List<RuleError> errors);
 
     /// <summary>
+    /// Binds <paramref name="documentJson"/> (null: the compiled default) against
+    /// <paramref name="serializer"/>'s source and evaluates it once, for a reproduction. Evaluates
+    /// the bound spec directly — never <c>Evaluate</c> — so nothing is recorded, pinned or traced.
+    /// </summary>
+    /// <exception cref="RuleSerializationException">The document did not bind against that source.</exception>
+    internal abstract ValueTask<RuleEvaluationResult<object?>> ReplayAsync(
+        RuleSerializer serializer, string? documentJson, object model, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Validates and binds the document against <paramref name="expectedVersion"/>, returning a
     /// publication that is not yet live. Binding is the fallible half; committing is not — the split
     /// is what lets the store write sit between them.

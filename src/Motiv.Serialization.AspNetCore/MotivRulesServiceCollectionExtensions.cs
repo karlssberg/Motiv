@@ -144,6 +144,52 @@ public sealed class MotivRulesBuilder
         return this;
     }
 
+    /// <summary>
+    /// Registers where logged decisions are read back, and a <see cref="DecisionReproducer"/> over
+    /// it. The source is usually the same object as the sink — an <see cref="InMemoryDecisionSink"/>
+    /// or a durable sink that keeps records — but it is registered on its own, because a sink that
+    /// only forwards has nothing to read. The reproducer needs the rule and proposition version
+    /// logs, so <see cref="AddRuleStore(IRuleStore,bool)"/> and <see cref="AddPropositions(IPropositionStore)"/> must
+    /// also be called; resolving it without them says which is missing.
+    /// </summary>
+    /// <param name="source">The log's read side.</param>
+    /// <returns>This builder, to allow chained registration.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">A decision source is already registered.</exception>
+    public MotivRulesBuilder AddDecisionSource(IDecisionSource source)
+    {
+        if (source is null) throw new ArgumentNullException(nameof(source));
+        return AddDecisionSource(_ => source);
+    }
+
+    /// <summary><see cref="AddDecisionSource(IDecisionSource)"/> with the source resolved from the container.</summary>
+    /// <exception cref="ArgumentNullException"><paramref name="sourceFactory"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">A decision source is already registered. DI is last-wins, so a second call is refused rather than let it replace the first.</exception>
+    public MotivRulesBuilder AddDecisionSource(Func<IServiceProvider, IDecisionSource> sourceFactory)
+    {
+        if (sourceFactory is null) throw new ArgumentNullException(nameof(sourceFactory));
+        if (Services.Any(descriptor => descriptor.ServiceType == typeof(IDecisionSource)))
+            throw new InvalidOperationException(
+                $"{nameof(AddDecisionSource)} has already been called. Call it once — a second call " +
+                "would silently replace the first source, as DI registration is last-wins.");
+
+        Services.AddSingleton<IDecisionSource>(sourceFactory);
+        Services.AddSingleton(provider => new DecisionReproducer(
+            provider.GetRequiredService<IDecisionSource>(),
+            Required<IRuleStore>(provider, nameof(AddRuleStore)),
+            Required<IPropositionStore>(provider, nameof(AddPropositions)),
+            provider.GetRequiredService<RuleSet>(),
+            provider.GetService<PropositionSet>(),
+            provider.GetService<DecisionLog>()?.Resolve ?? new DecisionModelResolvers(),
+            provider.GetRequiredService<MotivRulesOptions>().JsonSerializerOptions));
+        return this;
+    }
+
+    private static TService Required<TService>(IServiceProvider provider, string registration) where TService : class =>
+        provider.GetService<TService>() ?? throw new InvalidOperationException(
+            $"A {nameof(DecisionReproducer)} needs the {typeof(TService).Name} version log to read pinned versions from. " +
+            $"Call {registration}() on the Motiv rules builder before {nameof(AddDecisionSource)}() is used.");
+
     private MotivRulesBuilder AddPropositionsCore(Func<IServiceProvider, IPropositionStore> storeFactory)
     {
         if (Services.Any(descriptor => descriptor.ServiceType == typeof(PropositionSet)))

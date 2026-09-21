@@ -101,6 +101,9 @@ public sealed class RuleSet
     /// <summary>The coordinator this set publishes under.</summary>
     internal BindingScope Scope { get; }
 
+    /// <summary>The options every serializer this set builds is given; a reproduction binds with the same.</summary>
+    internal RuleSerializerOptions Options => _options;
+
     /// <summary>The number of registered rules.</summary>
     public int Count => _rules.Count;
 

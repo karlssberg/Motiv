@@ -124,7 +124,10 @@ out would leave the log claiming a gap in a period it no longer covers.
 
 Reading lives on `SqlDecisionSink`, **not** on `IDecisionSink`. That seam is also "emit, don't store",
 and a sink forwarding to a SIEM has nothing to read back — a query on the interface would make every
-such implementation lie.
+such implementation lie. `DecisionQuery` lives in `Motiv.Serialization` (it moved there from
+`Motiv.Serialization.Sql` when the read side gained an interface of its own). `SqlDecisionSink` also
+implements `IDecisionSource` — `FindAsync(id)` and `QueryAsync(query)` — which is what a reproduction
+reads through; see [replay](replay.md).
 
 ```csharp
 var records = await sink.ReadAsync(new DecisionQuery
