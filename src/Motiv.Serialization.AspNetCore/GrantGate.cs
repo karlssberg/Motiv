@@ -37,6 +37,11 @@ internal static class GrantGate
             source => GrantEvaluator.IsGranted(source.GrantsFor(http.User), verb, name),
             $"Requires the '{verb.ToString().ToLowerInvariant()}' grant on '{name}'.");
 
+    /// <summary>Whether the caller holds <paramref name="verb"/> on <paramref name="name"/>; true when no grant source is registered.</summary>
+    public static bool IsGranted(HttpContext http, GrantVerb verb, string name) =>
+        http.RequestServices.GetService<IGrantSource>() is not { } source
+        || GrantEvaluator.IsGranted(source.GrantsFor(http.User), verb, name);
+
     /// <summary>Refuses the request unless its grants include Author or Publish on at least one namespace.</summary>
     public static IResult? RefuseUnlessAuthorAnywhere(HttpContext http, JsonSerializerOptions json) =>
         RefuseUnless(

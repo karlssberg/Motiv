@@ -178,6 +178,9 @@ anchors, the capture postures and the backpressure choices.
 | [Capture Postures](./decision-log/capture.md)                             | `StoreWhole`, `Redact`, `ReferenceOnly`, and the bind-time refusal that makes choosing one mandatory. |
 | [The Sink and the Queue](./decision-log/sink.md)                          | `IDecisionSink`, `DecisionLog`, `DecisionBackpressure`, and `AddDecisionLog()`.                    |
 | [The Durable Sink and Retention](./decision-log/durable.md)               | `SqlDecisionSink`, the three dialects, the mandatory retention window, and the purge.             |
+| [Replay](./decision-log/replay.md)                                        | `IDecisionSource`, `DecisionReproducer`, `Reproduction`, the fidelity verdict, and the decision endpoints. |
+| [The MCP Server](./decision-log/mcp.md)                                   | `AddMcp()`, `MapMotivMcp()`, and the seven tools a coding agent reaches the log through.          |
+| [Snapshots](./decision-log/snapshots.md)                                  | `RuleSnapshot`: a reproduction's rows bound over a compiled registry in a test.                   |
 
 ## Structural Limits
 

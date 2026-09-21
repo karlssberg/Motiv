@@ -10,3 +10,7 @@ items:
     href: durable.md
   - name: Replay
     href: replay.md
+  - name: The MCP Server
+    href: mcp.md
+  - name: Rule Snapshots
+    href: snapshots.md

@@ -5,24 +5,18 @@
         <!-- Validates doc comments (see Directory.Build.props) and ships the XML file in the package. -->
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <PackageId>Motiv.Serialization.AspNetCore</PackageId>
-        <Title>Motiv.Serialization.AspNetCore</Title>
-        <Description>ASP.NET Core minimal-API endpoints (catalog, validate, evaluate) that expose a Motiv SpecRegistry to a rules-engine frontend.</Description>
-        <PackageTags>Motiv, Rules Engine, ASP.NET Core, JSON, Specification Pattern</PackageTags>
+        <PackageId>Motiv.Serialization.Snapshots</PackageId>
+        <Title>Motiv.Serialization.Snapshots</Title>
+        <Description>Bind a rule and its propositions, as a decision reproduction handed them back, against your compiled registry — the dependency a generated Motiv test has instead of a store or a host.</Description>
+        <PackageTags>Motiv, Rules Engine, Decision Log, Testing, Snapshot, Specification Pattern</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageIcon>icon.png</PackageIcon>
-        <TargetFramework>net10.0</TargetFramework>
-        <MinVerTagPrefix>v</MinVerTagPrefix>
+        <TargetFrameworks>net8.0;net9.0;netstandard2.0;net10.0</TargetFrameworks>
+        <MinVerTagPrefix>rules-</MinVerTagPrefix>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="MinVer" PrivateAssets="all" />
-        <!-- The MCP server a coding agent reaches the decision log through; opt-in via AddMcp()/MapMotivMcp(). -->
-        <PackageReference Include="ModelContextProtocol.AspNetCore" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
 
     <ItemGroup>
@@ -37,6 +31,10 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Motiv.Serialization\Motiv.Serialization.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+        <PackageReference Include="System.Text.Json" />
     </ItemGroup>
 
 </Project>

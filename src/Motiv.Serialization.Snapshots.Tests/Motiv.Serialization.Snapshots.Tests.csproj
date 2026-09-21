@@ -4,16 +4,10 @@
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
         <OutputType>Library</OutputType>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>
-        <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.TestHost" />
-        <PackageReference Include="ModelContextProtocol" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <PackageReference Include="Shouldly" />
         <PackageReference Include="xunit" />
@@ -28,7 +22,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Motiv.Serialization.AspNetCore\Motiv.Serialization.AspNetCore.csproj" />
+        <ProjectReference Include="..\Motiv.Serialization.Snapshots\Motiv.Serialization.Snapshots.csproj" />
     </ItemGroup>
 
 </Project>

@@ -164,6 +164,11 @@ Reads need `Read` on the rule's namespace, writes need `Author`. Ids beginning w
 reserved for host bookkeeping: never listed, and a `PUT` or `DELETE` under one answers `400`. Without `AddScenarios()` the routes are not mapped
 and answer `404`, which `@motiv-rules/core`'s `listScenarios` reads as an empty list.
 
+With `AddDecisionSource()` the group also serves the decision log — `decisions`, `decisions/{id}`,
+`decisions/{id}/reproduction` — and `rules/{name}/csharp?version=`; see
+[replay](../decision-log/replay.md). With `AddMcp()` and `MapMotivMcp()` the same is reachable by a
+coding agent; see [the MCP server](../decision-log/mcp.md).
+
 | Method & path | Request | Responses |
 |---|---|---|
 | `GET {basePath}/rules/{name}/scenarios` | &mdash; | `200` &mdash; array of `{ id, name, model, expectedSatisfied, sourceDecisionId, version, author, timestampUtc }`; `403` |

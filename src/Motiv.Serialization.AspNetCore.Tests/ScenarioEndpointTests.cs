@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.TestHost;
@@ -165,14 +164,5 @@ public class ScenarioEndpointTests
 
         // Act & Assert
         (await app.GetTestClient().GetAsync("/api/rules/rules/r/scenarios")).StatusCode.ShouldBe(HttpStatusCode.NotFound);
-    }
-
-    /// <summary>A grant source that answers the same grants for every principal.</summary>
-    private sealed class FixedGrants(IReadOnlyList<NamespaceGrant> grants) : IGrantSource
-    {
-        public bool SupportsAdministration => false;
-        public IReadOnlyCollection<string> KnownRoles => [];
-        public IReadOnlyList<NamespaceGrant> GrantsFor(ClaimsPrincipal principal) => grants;
-        public bool IsAdministrator(ClaimsPrincipal principal) => false;
     }
 }
