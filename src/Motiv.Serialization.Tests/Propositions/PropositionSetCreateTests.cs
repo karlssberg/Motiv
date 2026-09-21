@@ -384,12 +384,85 @@ public class PropositionSetCreateTests
     private sealed record Customer(bool IsActive);
 
     /// <summary>A store that refuses to persist, standing in for a full disk or a database outage.</summary>
+    [Fact]
+    public async Task Should_continue_version_numbering_when_recreating_a_withdrawn_name()
+    {
+        // Arrange — v1 created, withdrawn (tombstone v2); the decision log may pin both numbers
+        var (set, _, store) = NewSet();
+        const string document = """{ "rule": { "spec": "customer.is-active" } }""";
+        (await set.CreateAsync("customer.a", "customer", document, null)).Version.ShouldBe(1);
+        (await set.WithdrawAsync("customer.a", 1)).Outcome.ShouldBe(PropositionUpdateOutcome.Removed);
+
+        // Act
+        var recreated = await set.CreateAsync("customer.a", "customer", document, null);
+
+        // Assert
+        recreated.Outcome.ShouldBe(PropositionUpdateOutcome.Created);
+        recreated.Version.ShouldBe(3);
+        (await store.HistoryAsync("customer.a", default)).Select(row => row.Version).ShouldBe([1, 2, 3]);
+    }
+
+    [Fact]
+    public async Task Should_record_the_caller_as_the_author_of_every_version()
+    {
+        // Arrange
+        var (set, _, store) = NewSet();
+        const string document = """{ "rule": { "spec": "customer.is-active" } }""";
+
+        // Act
+        await set.CreateAsync("customer.a", "customer", document, null, new RuleChangeProvenance("alice", "first"));
+        await set.UpdateAsync("customer.a", document, 1, new RuleChangeProvenance("bob", "second"));
+        await set.WithdrawAsync("customer.a", 2, new RuleChangeProvenance("carol"));
+
+        // Assert
+        var history = await store.HistoryAsync("customer.a", default);
+        history.Select(row => row.Author).ShouldBe(["alice", "bob", "carol"]);
+        history.Select(row => row.ChangeNote).ShouldBe(["first", "second", null]);
+        history[2].IsTombstone.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Should_attribute_a_write_with_no_provenance_to_the_system()
+    {
+        // Arrange
+        var (set, _, store) = NewSet();
+        const string document = """{ "rule": { "spec": "customer.is-active" } }""";
+
+        // Act
+        await set.CreateAsync("customer.a", "customer", document, null);
+
+        // Assert
+        (await store.HistoryAsync("customer.a", default)).ShouldHaveSingleItem().Author.ShouldBe("system");
+    }
+
+    [Fact]
+    public async Task Should_refuse_a_stale_replica_creating_a_name_another_replica_already_holds()
+    {
+        // Arrange — two replicas over one store, both loaded while it was empty
+        var (first, _, store) = NewSet();
+        var second = new PropositionSet(
+                new BindingScope(new SpecRegistry().Register("customer.is-active", IsActive)), store)
+            .AddModel<Customer>("customer");
+        const string document = """{ "rule": { "spec": "customer.is-active" } }""";
+        (await first.CreateAsync("customer.a", "customer", document, null)).Version.ShouldBe(1);
+
+        // Act — the second replica has not refreshed; its memory says the name is free
+        var stale = await second.CreateAsync("customer.a", "customer", document, null);
+
+        // Assert — refused by the store, naming the live version; nothing overwritten
+        stale.Outcome.ShouldBe(PropositionUpdateOutcome.VersionConflict);
+        stale.Version.ShouldBe(1);
+        (await store.HistoryAsync("customer.a", default)).Count.ShouldBe(1);
+    }
+
     private sealed class ThrowingStore : IPropositionStore
     {
         public IReadOnlyList<StoredProposition> Load() => [];
         public Task<IReadOnlyList<StoredProposition>> LoadAsync(CancellationToken ct) =>
             Task.FromResult<IReadOnlyList<StoredProposition>>([]);
         public Task<long> GetGenerationAsync(CancellationToken ct) => Task.FromResult(0L);
+        public Task<IReadOnlyList<StoredPropositionVersion>> HistoryAsync(string name, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<StoredPropositionVersion>>([]);
 
         public Task<PropositionWriteResult> WriteAsync(
             PropositionBatch batch, CancellationToken cancellationToken) =>

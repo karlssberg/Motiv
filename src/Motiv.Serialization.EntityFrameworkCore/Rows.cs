@@ -21,20 +21,25 @@ public class RuleVersionRow
     public string? BuildId { get; set; }
 }
 
-/// <summary>One authored proposition, keyed by name. Replaced in place, never appended.</summary>
-public class PropositionRow
+/// <summary>
+/// One row of the append-only proposition version log, keyed by <c>(Name, Version)</c>. A save
+/// carries a document; a tombstone carries none. Kept separate from <see cref="StoredPropositionVersion"/>
+/// for the reasons <see cref="RuleVersionRow"/> gives.
+/// </summary>
+public class PropositionVersionRow
 {
     public string Name { get; set; } = string.Empty;
-    public string ModelType { get; set; } = string.Empty;
-    public string DocumentJson { get; set; } = string.Empty;
     public int Version { get; set; }
+    public string? ModelType { get; set; }
+    public string? DocumentJson { get; set; }
     public string? Description { get; set; }
+    public string Author { get; set; } = string.Empty;
+    public DateTimeOffset TimestampUtc { get; set; }
+    public string? ChangeNote { get; set; }
+    public string? ApprovalRef { get; set; }
+    public string? BuildId { get; set; }
 }
 
-/// <summary>
-/// Where one store stands. Two rows exist — <c>rules</c> and <c>propositions</c> — because the two
-/// stores are never written in the same transaction and so share no sequence.
-/// </summary>
 public class StoreGenerationRow
 {
     public string Scope { get; set; } = string.Empty;
@@ -65,16 +70,22 @@ internal static class RowMapping
             BuildId = version.BuildId,
         };
 
-    public static StoredProposition ToRecord(this PropositionRow row) =>
-        new(row.Name, row.ModelType, row.DocumentJson, row.Version, row.Description);
+    public static StoredPropositionVersion ToRecord(this PropositionVersionRow row) =>
+        new(row.Name, row.Version, row.ModelType, row.DocumentJson, row.Description,
+            row.Author, row.TimestampUtc, row.ChangeNote, row.ApprovalRef, row.BuildId);
 
-    public static PropositionRow ToRow(this StoredProposition proposition) =>
+    public static PropositionVersionRow ToRow(this StoredPropositionVersion version) =>
         new()
         {
-            Name = proposition.Name,
-            ModelType = proposition.ModelType,
-            DocumentJson = proposition.DocumentJson,
-            Version = proposition.Version,
-            Description = proposition.Description,
+            Name = version.Name,
+            Version = version.Version,
+            ModelType = version.ModelType,
+            DocumentJson = version.DocumentJson,
+            Description = version.Description,
+            Author = version.Author,
+            TimestampUtc = version.TimestampUtc,
+            ChangeNote = version.ChangeNote,
+            ApprovalRef = version.ApprovalRef,
+            BuildId = version.BuildId,
         };
 }

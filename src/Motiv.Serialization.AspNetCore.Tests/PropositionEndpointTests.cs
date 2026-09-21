@@ -473,4 +473,35 @@ public class PropositionEndpointTests
         body!.Origin.ShouldBe("Compiled");
         body.Document.ShouldBeNull();
     }
+
+    [Fact]
+    public async Task Should_record_the_caller_and_change_note_on_every_version()
+    {
+        // Arrange
+        await using var app = await StartAsync();
+        var client = app.GetTestClient();
+        client.DefaultRequestHeaders.Add(TestAuthHandler.SubjectHeader, "alice");
+        const string document = """{ "rule": { "spec": "customer.is-active" } }""";
+
+        // Act
+        var created = await client.PostAsJsonAsync("/api/rules/propositions", new
+        {
+            name = "customer.a", modelType = "customer",
+            document = JsonDocument.Parse(document).RootElement, description = (string?)null,
+            changeNote = "first",
+        });
+        var updated = await client.PutAsJsonAsync("/api/rules/propositions/customer.a", new
+        {
+            document = JsonDocument.Parse(document).RootElement, baseVersion = 1, changeNote = "second",
+        });
+        var deleted = await client.DeleteAsync("/api/rules/propositions/customer.a?baseVersion=2");
+
+        // Assert — the principal is the author of every row, and the note travels with the write
+        created.StatusCode.ShouldBe(HttpStatusCode.Created);
+        updated.StatusCode.ShouldBe(HttpStatusCode.OK);
+        deleted.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var history = await app.Services.GetRequiredService<IPropositionStore>().HistoryAsync("customer.a", default);
+        history.Select(row => row.ChangeNote).ShouldBe(["first", "second", null]);
+        history.Select(row => row.Author).ShouldBe(["alice", "alice", "alice"]);
+    }
 }

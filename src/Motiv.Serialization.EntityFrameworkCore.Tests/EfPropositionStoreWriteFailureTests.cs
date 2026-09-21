@@ -11,9 +11,9 @@ namespace Motiv.Serialization.EntityFrameworkCore.Tests;
 /// reach — the proposition-side twin of <see cref="EfRuleStoreAppendFailureTests"/>: the
 /// classification decision after a <see cref="DbUpdateException"/> (did we lose a real race, or did
 /// something else go wrong?), both of its answers, and the empty-batch short-circuit. Plus one the
-/// rule side has no need of: proof that the concurrency token the whole design rests on is actually
-/// live against the database, since a mapping that emits no DDL is exactly the kind of claim nothing
-/// else would check.
+/// rule side already has in its own file: proof that the <c>(Name, Version)</c> primary key the whole
+/// design rests on is actually enforced against the database, so a duplicate version surfaces as the
+/// <see cref="DbUpdateException"/> the store classifies.
 /// </summary>
 public class EfPropositionStoreWriteFailureTests
 {
@@ -21,35 +21,32 @@ public class EfPropositionStoreWriteFailureTests
         new(name, "customer", documentJson, version, null);
 
     [Fact]
-    public async Task Should_refuse_an_update_whose_row_was_replaced_underneath_it()
+    public async Task Should_refuse_a_second_row_at_a_version_the_log_already_holds()
     {
-        // Arrange — the mechanism, not the store: `Version` is mapped as a concurrency token in
-        // MotivStoreDbContext, and this is the direct proof that EF honours it against SQLite. A
-        // tracked entity is read with no transaction open (SQLite releases its shared lock at the end
-        // of the statement), a second connection replaces the row and commits, and the first then
-        // saves its own edit against the version it originally read. Without the token that UPDATE
-        // carries no version predicate and silently wins; with it, it matches no rows.
+        // Arrange — the mechanism, not the store: the (Name, Version) primary key is what makes the
+        // version a compare-and-set across processes, and this is the direct proof that EF surfaces a
+        // violation of it against SQLite. Two contexts each add ("a", 2); the second to save matches
+        // an existing key and is refused, which EF reports as a DbUpdateException the store turns
+        // into a conflict.
         await using var fixture = await SqliteStoreFixture.CreateAsync();
         await new EfPropositionStore(fixture.Factory).WriteAsync(PropositionBatch.Save(Row("a", 1)), default);
 
-        await using var stale = fixture.Factory.CreateDbContext();
-        var tracked = await stale.Propositions.SingleAsync(row => row.Name == "a");
+        var contender = StoredPropositionVersion.Saved(Row("a", 2), RuleChangeProvenance.System, DateTimeOffset.UtcNow);
 
-        await using (var fresh = fixture.Factory.CreateDbContext())
+        await using (var first = fixture.Factory.CreateDbContext())
         {
-            var current = await fresh.Propositions.SingleAsync(row => row.Name == "a");
-            current.Version = 2;
-            await fresh.SaveChangesAsync();
+            first.PropositionVersions.Add(contender.ToRow());
+            await first.SaveChangesAsync();
         }
 
-        tracked.Version = 2;
-        tracked.DocumentJson = """{"stale":true}""";
+        await using var second = fixture.Factory.CreateDbContext();
+        second.PropositionVersions.Add((contender with { DocumentJson = """{"stale":true}""" }).ToRow());
 
         // Act
-        var act = async () => await stale.SaveChangesAsync();
+        var act = async () => await second.SaveChangesAsync();
 
-        // Assert — the loser matches no rows, which EF reports as this and nothing else
-        await act.ShouldThrowAsync<DbUpdateConcurrencyException>();
+        // Assert
+        await act.ShouldThrowAsync<DbUpdateException>();
     }
 
     [Fact]
@@ -60,7 +57,7 @@ public class EfPropositionStoreWriteFailureTests
         // runs inside an open transaction and on SQLite a second connection cannot commit until it
         // ends. WriteAsync's own logic depends on two facts, not on timing: "SaveChangesAsync threw"
         // and "the fresh reread, after rollback, found the store past our version". Both are
-        // reproduced directly: an interceptor throws the exception the concurrency token would
+        // reproduced directly: an interceptor throws the exception a primary-key violation would
         // raise, and the context factory — on its second call, which production code only reaches
         // after RollbackAsync — lets the "other replica" commit v2 through a separate context first.
         await using var fixture = await SqliteStoreFixture.CreateAsync();
@@ -127,9 +124,10 @@ public class EfPropositionStoreWriteFailureTests
     }
 
     /// <summary>
-    /// Throws on the first save only, then behaves normally. Throws the concurrency subclass rather
-    /// than the base type because that is what the token actually raises — and because the store's
-    /// catch is written against the base, this is also what proves the subclass reaches it.
+    /// Throws on the first save only, then behaves normally. Throws <see cref="DbUpdateException"/>
+    /// because that is what a duplicate <c>(Name, Version)</c> row raises — a primary-key violation,
+    /// now that the version log carries no concurrency token — and the store's catch is written
+    /// against exactly that.
     /// </summary>
     private sealed class ThrowOnFirstSaveInterceptor : SaveChangesInterceptor
     {
@@ -144,8 +142,8 @@ public class EfPropositionStoreWriteFailureTests
                 return base.SavingChangesAsync(eventData, result, cancellationToken);
 
             _thrown = true;
-            throw new DbUpdateConcurrencyException(
-                "injected: stands in for the concurrency token matching no rows, so the " +
+            throw new DbUpdateException(
+                "injected: stands in for the (Name, Version) key refusing a duplicate row, so the " +
                 "classification branch is reachable without timing dependence");
         }
     }

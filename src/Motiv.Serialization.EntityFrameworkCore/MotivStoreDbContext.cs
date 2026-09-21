@@ -34,8 +34,8 @@ public class MotivStoreDbContext : DbContext
     /// <summary>The append-only rule version log.</summary>
     public DbSet<RuleVersionRow> RuleVersions => Set<RuleVersionRow>();
 
-    /// <summary>Authored propositions, one row per name.</summary>
-    public DbSet<PropositionRow> Propositions => Set<PropositionRow>();
+    /// <summary>The proposition version log: one row per <c>(Name, Version)</c>, tombstones included.</summary>
+    public DbSet<PropositionVersionRow> PropositionVersions => Set<PropositionVersionRow>();
 
     /// <summary>Where each store stands, one row per scope.</summary>
     public DbSet<StoreGenerationRow> StoreGenerations => Set<StoreGenerationRow>();
@@ -56,19 +56,15 @@ public class MotivStoreDbContext : DbContext
             entity.Property(row => row.DocumentJson);
         });
 
-        modelBuilder.Entity<PropositionRow>(entity =>
+        modelBuilder.Entity<PropositionVersionRow>(entity =>
         {
-            entity.ToTable("MotivProposition");
-            entity.HasKey(row => row.Name);
-            entity.Property(row => row.ModelType).IsRequired();
-            entity.Property(row => row.DocumentJson).IsRequired();
-            // The concurrency token is what makes the version a real compare-and-set on a table that
-            // replaces rows rather than appending them. It puts `AND Version = @original` into every
-            // generated UPDATE and DELETE, so a replica that committed first leaves this one matching
-            // no rows and EF raises DbUpdateConcurrencyException — the same signal the rule store gets
-            // from a (Name, Version) primary key violation, and equally provider-agnostic. It emits no
-            // DDL of its own: the column already exists, so this needs no migration.
-            entity.Property(row => row.Version).IsConcurrencyToken();
+            entity.ToTable("MotivPropositionVersion");
+            // The composite key is the cross-process compare-and-set, exactly as for rules: two
+            // replicas racing the same version race on the insert, and the key lets exactly one win.
+            entity.HasKey(row => new { row.Name, row.Version });
+            entity.Property(row => row.Name).IsRequired();
+            entity.Property(row => row.Author).IsRequired();
+            entity.Property(row => row.DocumentJson);
         });
 
         modelBuilder.Entity<StoreGenerationRow>(entity =>

@@ -75,7 +75,7 @@ Three tables, one `MotivStoreDbContext`:
 | Table                 | Maps to                                    | Purpose                                              |
 |------------------------|---------------------------------------------|-------------------------------------------------------|
 | `MotivRuleVersion`     | `RuleVersionRow` / `StoredRuleVersion`      | The append-only rule version log.                    |
-| `MotivProposition`     | `PropositionRow` / `StoredProposition`      | Authored propositions, one row per name.             |
+| `MotivPropositionVersion` | `PropositionVersionRow` / `StoredPropositionVersion` | The append-only proposition version log.     |
 | `MotivStoreGeneration` | `StoreGenerationRow`                        | Where each store stands &mdash; one row per scope.   |
 
 **`MotivRuleVersion`** is [the version log](durability.md#the-version-log) already documented for
@@ -90,18 +90,27 @@ Three tables, one `MotivStoreDbContext`:
 - **`Author`, `TimestampUtc`, `ChangeNote`, `ApprovalRef` and `BuildId`** are the provenance columns,
   carried straight through from `RuleChangeProvenance`.
 
-**`MotivProposition`** holds one row per authored proposition, replaced in place on every save
-&mdash; there is no version log on this side, so a superseded document is not recoverable; see
-[the rule-side asymmetry](../propositions/IPropositionStore.md#the-asymmetry-with-irulestore) for why
-that is deliberate.
+**`MotivPropositionVersion`** is the proposition-side twin of the rule log, and the same rules
+apply:
 
-`Version` is mapped as a **concurrency token**. That is what makes it a real compare-and-set on a
-table that replaces rows rather than appending them: every generated `UPDATE` and `DELETE` carries
-`AND Version = @original`, so a replica that committed first leaves this one matching no rows and EF
-raises `DbUpdateConcurrencyException` &mdash; the same signal `EfRuleStore` gets from a
-`(Name, Version)` primary-key violation, and equally free of provider error codes. A create is guarded
-by the `Name` primary key. The token emits no DDL of its own; it changes only the `WHERE` clause, so
-it needs no migration. See [Concurrency](../propositions/IPropositionStore.md#concurrency).
+- **`(Name, Version)`** is the primary key and the cross-process compare-and-set. A save inserts a
+  row strictly past the highest version the log holds for the name; two replicas racing the same
+  number race on the insert, and the key lets exactly one win. There is no concurrency token &mdash;
+  rows are never updated in place.
+- **`DocumentJson` is nullable, and null is a tombstone.** A withdrawal inserts a row one past the
+  withdrawn version with no document. `Load()` projects the live heads in SQL and never returns a
+  tombstone; `HistoryAsync(name)` returns every row. A re-created name continues past its tombstone,
+  so a version a decision record pinned is never reused. Collapsing null-document rows in a script
+  turns a recorded withdrawal into a name that was never withdrawn.
+- **`ModelType` and `Description`** travel with the document; the tombstone carries the retired
+  row's model type.
+- **`Author`, `TimestampUtc`, `ChangeNote`, `ApprovalRef` and `BuildId`** are the provenance columns,
+  stamped from the batch's `RuleChangeProvenance` and the store's clock.
+
+See [the symmetry with `IRuleStore`](../propositions/IPropositionStore.md#the-symmetry-with-irulestore)
+and [Concurrency](../propositions/IPropositionStore.md#concurrency). A database created before this
+table existed still holds `MotivProposition`; the schema guard reports the missing table rather than
+migrating &mdash; create it, or delete a development store and let the JSON import re-seed it.
 
 **`MotivStoreGeneration`** holds two rows, keyed by scope (`"rules"` and `"propositions"`), because
 the two stores share no sequence &mdash; a rule publish never bumps the propositions generation, and
@@ -171,7 +180,7 @@ persists past a container restart.
 
 ## Backup and Restore
 
-The three tables are **one backup unit**. `MotivRuleVersion`, `MotivProposition` and
+The three tables are **one backup unit**. `MotivRuleVersion`, `MotivPropositionVersion` and
 `MotivStoreGeneration` live in the same database precisely so a single backup captures a consistent
 snapshot of both stores and the generations they were at &mdash; back up or restore the whole
 database, never one table alone.
@@ -195,7 +204,7 @@ generation moved" as a proxy for "there's something new to load," without re-rea
 on every poll.
 
 An out-of-band writer &mdash; a DBA running a manual `UPDATE`, a data-fix script, a migration that
-also seeds rows &mdash; that inserts or edits `MotivRuleVersion` or `MotivProposition` rows without
+also seeds rows &mdash; that inserts or edits `MotivRuleVersion` or `MotivPropositionVersion` rows without
 also bumping the generation leaves every replica silently skewed: the data changed, but nothing tells
 a poller to notice. Grant the application the only write credentials to these tables, and keep DBA
 access read-only outside of migrations, which own their own schema changes and aren't expected to

@@ -20,18 +20,13 @@ using Motiv.Serialization;
 /// happens: a real store would log it, refuse to write over an unread file, or both.
 /// </para>
 /// <para>
-/// The generation deliberately does <em>not</em> mirror <c>JsonFileRuleStore</c>'s, even though the
-/// two stores otherwise share a shape. <c>JsonFileRuleStore</c> is an append-only version log —
-/// <c>AppendAsync</c> only ever adds rows, so the file's row count is monotonic and moves on every
-/// accepted write, which is what makes it a valid generation there. This store instead replaces rows
-/// in place: <see cref="WriteAsync"/> drops every superseded name and re-appends the saves, so saving
-/// a changed document under an <em>existing</em> name — editing a proposition, the common case —
-/// leaves the row count identical. Row count is therefore not transferable between an append-only
-/// store and a replace store; using it here would mean a poller could observe creates and deletes but
-/// never an edit to an existing proposition, which is exactly the case Spec 2B's refresh exists to
-/// converge on. So the generation here is instead the file's last-write time in UTC ticks, or
-/// <c>0</c> when the file does not exist — it moves on every write regardless of whether the row
-/// count changed.
+/// The generation deliberately does <em>not</em> mirror <c>JsonFileRuleStore</c>'s row count, even
+/// though both stores are now append-only version logs and a row count would move on every accepted
+/// write here too. <see cref="IPropositionStore.GetGenerationAsync"/> must be a <em>scalar</em> read:
+/// every replica polls it on a timer, and counting rows means parsing the whole file on each poll,
+/// which is the rebuild the poll exists to avoid. So the generation here is the file's last-write
+/// time in UTC ticks, or <c>0</c> when the file does not exist — it moves on every write, and costs
+/// one stat call to read.
 /// </para>
 /// <para>
 /// Deriving the generation from mtime instead of a held counter has a consequence
@@ -68,7 +63,10 @@ public sealed class JsonFilePropositionStore(string path) : IPropositionStore
     public IReadOnlyList<StoredProposition> Load()
     {
         lock (_gate)
-            return ReadAll();
+        {
+            return StoredPropositionVersion.HeadsOf(
+                ReadAll().GroupBy(row => row.Name, StringComparer.Ordinal));
+        }
     }
 
     /// <inheritdoc />
@@ -86,46 +84,54 @@ public sealed class JsonFilePropositionStore(string path) : IPropositionStore
     public Task<PropositionWriteResult> WriteAsync(
         PropositionBatch batch, CancellationToken cancellationToken)
     {
-        // An empty batch is not a write. Now that the generation is the file's mtime rather than a
-        // held counter, rewriting the file here would bump it even though nothing changed —
-        // File.WriteAllText touches mtime regardless of whether the bytes it wrote differ from what
-        // was already there. A poller would then rebuild its whole world for nothing, on a timer.
-        if (batch.Saves.Count == 0 && batch.Deletes.Count == 0)
+        // An empty batch is not a write. The generation is the file's mtime rather than a held
+        // counter, so rewriting the file here would bump it even though nothing changed, and a
+        // poller would then rebuild its whole world for nothing, on a timer.
+        if (batch.IsEmpty)
             return Task.FromResult(PropositionWriteResult.Written);
 
         lock (_gate)
         {
             // Read once and decide against that reading: the conflict check and the rewrite must see
             // the same file, or a batch could be cleared against one state and written over another.
-            var stored = ReadAll();
-
+            //
             // Enforced against a file read a moment ago, which is exactly the weakness the class
             // remarks already own: two processes over one path can both read the same stale contents
             // and both pass this check. That is a property of the sample store, not of the contract —
             // the EF store makes the same predicate the database's own.
-            var versions = stored.ToDictionary(row => row.Name, row => row.Version, StringComparer.Ordinal);
-            var conflict = batch.FindConflict(
-                name => versions.TryGetValue(name, out var version) ? version : 0);
+            var log = ReadAll();
+            var byName = log.ToLookup(row => row.Name, StringComparer.Ordinal);
 
+            var conflict = batch.FindConflict(name => StoredPropositionVersion.PositionOf(byName[name]));
             if (conflict is not null)
                 return Task.FromResult(conflict);
 
-            // Every name the batch speaks for, whether to replace it or drop it. One set rather than
-            // two lookups: a rewritten file keeps the rows the batch says nothing about, then appends
-            // the saves.
-            var superseded = new HashSet<string>(
-                batch.Deletes.Select(deletion => deletion.Name), StringComparer.Ordinal);
-            foreach (var proposition in batch.Saves)
-                superseded.Add(proposition.Name);
+            var now = DateTimeOffset.UtcNow;
+            foreach (var save in batch.Saves)
+                log.Add(StoredPropositionVersion.Saved(save, batch.Provenance, now));
+            foreach (var deletion in batch.Deletes)
+            {
+                var modelType = StoredPropositionVersion.HeadOf(byName[deletion.Name])?.ModelType;
+                log.Add(StoredPropositionVersion.Tombstone(deletion, modelType, batch.Provenance, now));
+            }
 
             var previousGeneration = CurrentGeneration();
-
-            Write([.. stored.Where(existing => !superseded.Contains(existing.Name)), .. batch.Saves]);
-
+            WriteAllAtomically(JsonSerializer.Serialize(log, Json));
             EnsureGenerationMovedPast(previousGeneration);
         }
 
         return Task.FromResult(PropositionWriteResult.Written);
+    }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<StoredPropositionVersion>> HistoryAsync(
+        string name, CancellationToken cancellationToken)
+    {
+        lock (_gate)
+        {
+            return Task.FromResult<IReadOnlyList<StoredPropositionVersion>>(
+                [.. ReadAll().Where(row => row.Name == name).OrderBy(row => row.Version)]);
+        }
     }
 
     /// <summary>
@@ -153,14 +159,23 @@ public sealed class JsonFilePropositionStore(string path) : IPropositionStore
             File.SetLastWriteTimeUtc(path, new DateTime(previousGeneration + 1, DateTimeKind.Utc));
     }
 
-    private List<StoredProposition> ReadAll()
+    /// <summary>
+    /// The log, tolerating the pre-log file shape: a row with no <c>author</c> was written when the
+    /// file held heads rather than versions, and is read as a system-authored version row.
+    /// </summary>
+    private List<StoredPropositionVersion> ReadAll()
     {
         if (!File.Exists(path))
             return [];
 
         try
         {
-            return JsonSerializer.Deserialize<List<StoredProposition>>(File.ReadAllText(path), Json) ?? [];
+            var rows = JsonSerializer.Deserialize<List<StoredPropositionVersion>>(File.ReadAllText(path), Json) ?? [];
+            return [.. rows
+                .Where(row => row?.Name is not null)
+                .Select(row => string.IsNullOrEmpty(row.Author)
+                    ? row with { Author = RuleChangeProvenance.System.Author }
+                    : row)];
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
@@ -184,6 +199,22 @@ public sealed class JsonFilePropositionStore(string path) : IPropositionStore
         }
     }
 
-    private void Write(List<StoredProposition> propositions) =>
-        File.WriteAllText(path, JsonSerializer.Serialize(propositions, Json));
+    /// <summary>
+    /// Replaces the whole log without ever leaving a torn file at <c>path</c>: a sibling temp file is
+    /// written first and renamed into place, as <see cref="JsonFileRuleStore"/> does.
+    /// </summary>
+    private void WriteAllAtomically(string contents)
+    {
+        var tempPath = path + $".{Guid.NewGuid():N}.tmp";
+        try
+        {
+            File.WriteAllText(tempPath, contents);
+            File.Move(tempPath, path, overwrite: true);
+        }
+        catch
+        {
+            try { File.Delete(tempPath); } catch (Exception e) when (e is not OutOfMemoryException) { }
+            throw;
+        }
+    }
 }

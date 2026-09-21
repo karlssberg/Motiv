@@ -202,6 +202,7 @@ public sealed class PropositionSet
     /// <param name="modelTypeId">A registered model-type id.</param>
     /// <param name="documentJson">The rule document defining the proposition.</param>
     /// <param name="description">An optional description.</param>
+    /// <param name="provenance">Who is publishing, and why; the system when omitted. Stamped on the version row.</param>
     /// <param name="cancellationToken">Cancels while waiting for the gate or the store.</param>
     /// <returns>
     /// The outcome, carrying the dependents that broke when an override is why it was rejected.
@@ -209,9 +210,11 @@ public sealed class PropositionSet
     /// </returns>
     public Task<PropositionUpdateResult> CreateAsync(
         string name, string modelTypeId, string documentJson, string? description,
-        CancellationToken cancellationToken = default) =>
+        RuleChangeProvenance? provenance = null, CancellationToken cancellationToken = default) =>
         Scope.LockedAsync(
-            () => CreateCoreAsync(name, modelTypeId, documentJson, description, cancellationToken),
+            () => CreateCoreAsync(
+                name, modelTypeId, documentJson, description,
+                provenance ?? RuleChangeProvenance.System, cancellationToken),
             cancellationToken);
 
     /// <summary>
@@ -220,24 +223,53 @@ public sealed class PropositionSet
     /// called; the persist-and-commit choreography the two share — and the locking that choreography
     /// exists to get right — lives in <see cref="PersistAndCommitCoreAsync"/>.
     /// </summary>
-    internal Task<PropositionUpdateResult> CreateCoreAsync(
+    internal async Task<PropositionUpdateResult> CreateCoreAsync(
         string name, string modelTypeId, string documentJson, string? description,
-        CancellationToken cancellationToken) =>
-        PersistAndCommitCoreAsync(
-            () => PrepareCreateCascade(name, modelTypeId, documentJson, description),
-            PropositionUpdateResult.Created,
-            cancellationToken);
+        RuleChangeProvenance provenance, CancellationToken cancellationToken)
+    {
+        // Read before the prepare, which runs under the monitor and cannot await. A withdrawn name
+        // resumes past its tombstone rather than at 1; a concurrent re-creation on another replica
+        // is caught by the store's key, exactly as any other version race is.
+        var version = await NextVersionAsync(name, cancellationToken).ConfigureAwait(false);
+
+        return await PersistAndCommitCoreAsync(
+                () => PrepareCreateCascade(name, modelTypeId, documentJson, description, version),
+                PropositionUpdateResult.Created,
+                provenance,
+                cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// The version a creation of <paramref name="name"/> claims: 1 for a name the store has never
+    /// held; one past the tombstone for a withdrawn name, so a re-created name never reuses a
+    /// version a decision record may already pin; and the <em>live head itself</em> when the store
+    /// already holds the name — a claim the store's "strictly greater" predicate refuses with the
+    /// current version, which is how a replica that has not refreshed since another replica created
+    /// the name is told so rather than silently superseding it. The store stays the enforcer: this
+    /// replica's memory is silent about every other replica.
+    /// </summary>
+    internal async Task<int> NextVersionAsync(string name, CancellationToken cancellationToken)
+    {
+        var history = await _store.HistoryAsync(name, cancellationToken).ConfigureAwait(false);
+        return StoredPropositionVersion.PositionOf(history) switch
+        {
+            null => 1,
+            { Live: true } live => live.Version,
+            var retired => retired.Version + 1,
+        };
+    }
 
     /// <summary>
     /// The prepare half of <see cref="CreateCoreAsync"/>: a lone create, binding against a fresh
     /// single-use fork of the live world. Assumes <see cref="BindingScope"/>'s inner monitor is held.
     /// </summary>
     private WritePrepare PrepareCreateCascade(
-        string name, string modelTypeId, string documentJson, string? description) =>
+        string name, string modelTypeId, string documentJson, string? description, int version) =>
         // A lone write has no other envelope members to protect from a stale rebind, so the
         // exclusion set is empty.
         PrepareCreateCore(
-            name, modelTypeId, documentJson, description,
+            name, modelTypeId, documentJson, description, version,
             new ScopeGenerationBuilder(Scope.Registry, Scope.Current), []);
 
     /// <summary>
@@ -253,8 +285,9 @@ public sealed class PropositionSet
     /// <see cref="BindingScope.PrepareClosure"/>'s remarks for why this must never be omitted for a
     /// governed publish.
     /// </param>
+    /// <param name="version">The version this creation claims — see <see cref="NextVersionAsync"/>.</param>
     internal WritePrepare PrepareCreateCore(
-        string name, string modelTypeId, string documentJson, string? description,
+        string name, string modelTypeId, string documentJson, string? description, int version,
         ScopeGenerationBuilder prospective, HashSet<NodeId> excluding)
     {
         // The *live* world, deliberately, not prospective.Source's: a governed envelope that creates
@@ -275,7 +308,7 @@ public sealed class PropositionSet
         // lands on a name existing documents already reference, so publishing it changes what
         // they resolve exactly as an update would, on the same all-or-nothing terms.
         var authored = new AuthoredProposition(
-            this, name, modelTypeId, documentJson, version: 1, description,
+            this, name, modelTypeId, documentJson, version, description,
             bound: entry, quarantine: [], references: prepared.References);
 
         return PrepareCascadeInto(authored, prospective, excluding);
@@ -288,20 +321,25 @@ public sealed class PropositionSet
     /// <param name="name">The dot-separated name.</param>
     /// <param name="documentJson">The replacement document.</param>
     /// <param name="expectedVersion">The version the caller last observed.</param>
+    /// <param name="provenance">Who is publishing, and why; the system when omitted. Stamped on the version row.</param>
     /// <param name="cancellationToken">Cancels while waiting for the gate or the store.</param>
     /// <returns>The outcome, carrying the dependents that broke when that is why it was rejected.</returns>
     public Task<PropositionUpdateResult> UpdateAsync(
-        string name, string documentJson, int expectedVersion, CancellationToken cancellationToken = default) =>
+        string name, string documentJson, int expectedVersion,
+        RuleChangeProvenance? provenance = null, CancellationToken cancellationToken = default) =>
         Scope.LockedAsync(
-            () => UpdateCoreAsync(name, documentJson, expectedVersion, cancellationToken),
+            () => UpdateCoreAsync(
+                name, documentJson, expectedVersion, provenance ?? RuleChangeProvenance.System, cancellationToken),
             cancellationToken);
 
     /// <summary><see cref="UpdateAsync"/> without taking the outer scope gate. See <see cref="CreateCoreAsync"/>.</summary>
     internal Task<PropositionUpdateResult> UpdateCoreAsync(
-        string name, string documentJson, int expectedVersion, CancellationToken cancellationToken) =>
+        string name, string documentJson, int expectedVersion,
+        RuleChangeProvenance provenance, CancellationToken cancellationToken) =>
         PersistAndCommitCoreAsync(
             () => PrepareUpdateCascade(name, documentJson, expectedVersion),
             PropositionUpdateResult.Updated,
+            provenance,
             cancellationToken);
 
     /// <summary>
@@ -354,10 +392,11 @@ public sealed class PropositionSet
     /// </remarks>
     /// <param name="prepare">Binds the closure and decides whether the write may proceed.</param>
     /// <param name="success">Names the outcome of a committed write, given its new version.</param>
+    /// <param name="provenance">Stamped on the version row the store writes.</param>
     /// <param name="cancellationToken">Cancels the store round trip.</param>
     private async Task<PropositionUpdateResult> PersistAndCommitCoreAsync(
         Func<WritePrepare> prepare, Func<int, PropositionUpdateResult> success,
-        CancellationToken cancellationToken)
+        RuleChangeProvenance provenance, CancellationToken cancellationToken)
     {
         var prepared = Scope.Locked(prepare);
         if (prepared.Failure is { } failure)
@@ -368,7 +407,7 @@ public sealed class PropositionSet
         // for what the pair is compared for.
         var before = await TimedGenerationAsync(cancellationToken).ConfigureAwait(false);
 
-        var written = await TimedWriteAsync(SaveBatchFor(prepared.Authored!), cancellationToken)
+        var written = await TimedWriteAsync(SaveBatchFor(prepared.Authored!, provenance), cancellationToken)
             .ConfigureAwait(false);
 
         // The store's answer, not this replica's. PrepareUpdateCore already compared the caller's
@@ -412,7 +451,8 @@ public sealed class PropositionSet
     }
 
     /// <summary>The batch a publish of <paramref name="authored"/> writes: one save, nothing removed.</summary>
-    private static PropositionBatch SaveBatchFor(AuthoredProposition authored) => PropositionBatch.Save(RowFor(authored));
+    private static PropositionBatch SaveBatchFor(AuthoredProposition authored, RuleChangeProvenance provenance) =>
+        PropositionBatch.Save(RowFor(authored), provenance);
 
     /// <summary>
     /// The deletion a withdrawal of <paramref name="authored"/> writes — the delete half of a governed
@@ -531,17 +571,20 @@ public sealed class PropositionSet
     /// </summary>
     /// <param name="name">The dot-separated name.</param>
     /// <param name="expectedVersion">The version the caller last observed.</param>
+    /// <param name="provenance">Who is withdrawing, and why; the system when omitted. Stamped on the tombstone.</param>
     /// <param name="cancellationToken">Cancels while waiting for the gate or the store.</param>
     /// <returns>The outcome.</returns>
     public Task<PropositionUpdateResult> WithdrawAsync(
-        string name, int expectedVersion, CancellationToken cancellationToken = default) =>
+        string name, int expectedVersion,
+        RuleChangeProvenance? provenance = null, CancellationToken cancellationToken = default) =>
         Scope.LockedAsync(
-            () => WithdrawCoreAsync(name, expectedVersion, cancellationToken),
+            () => WithdrawCoreAsync(
+                name, expectedVersion, provenance ?? RuleChangeProvenance.System, cancellationToken),
             cancellationToken);
 
     /// <summary><see cref="WithdrawAsync"/> without taking the outer scope gate. See <see cref="CreateCoreAsync"/>.</summary>
     internal async Task<PropositionUpdateResult> WithdrawCoreAsync(
-        string name, int expectedVersion, CancellationToken cancellationToken)
+        string name, int expectedVersion, RuleChangeProvenance provenance, CancellationToken cancellationToken)
     {
         var prepared = Scope.Locked(() => PrepareWithdraw(name, expectedVersion));
         if (prepared.Failure is { } failure)
@@ -554,7 +597,7 @@ public sealed class PropositionSet
         // The version the row must still be at for this withdrawal to be the writer's to make: a
         // deletion names an existing position rather than claiming a new one.
         var written = await TimedWriteAsync(
-                PropositionBatch.Delete(name, prepared.Authored!.Version), cancellationToken)
+                PropositionBatch.Delete(name, prepared.Authored!.Version, provenance), cancellationToken)
             .ConfigureAwait(false);
 
         if (written.IsConflict)
