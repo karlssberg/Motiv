@@ -1,0 +1,2 @@
+{ "name": "checkout", "definitions": { "trusted": { "rule": { "andAlso": [ { "spec": "customer.is-active" }, { "spec": "customer.is-adult" } ] } } },
+  "rule": { "orElse": [ { "local": "trusted" }, { "and": [ { "spec": "customer.has-orders" }, { "asAllSatisfied": { "spec": "is-positive" }, "path": "orders" } ], "whenTrue": "good history", "whenFalse": "no history" } ] } }

@@ -112,6 +112,7 @@ registry into a single `AsyncSpecBase`:
 | [RuleDocuments](RuleDocuments.md)                   | `FromJson()` and `Embedded()` — document sources for rule defaults.               |
 | [ASP.NET Core Integration](AspNetCore.md)           | `AddMotivRules()`, `AddRule()`, `MapMotivRules()`, and the HTTP endpoint contract. |
 | [DeserializeAsyncSpec()](DeserializeAsyncSpec.md)   | Loading rule documents into the async hierarchy, and the sync/async boundary rules. |
+| [C# Printer](csharp-printer.md)                     | `CSharpPrinter`, `CSharpPrintOptions`, `SpecRegistry.Get()` — a document as the builder chain it compiles to, and the fidelity corpus. |
 
 ## Next Steps
 

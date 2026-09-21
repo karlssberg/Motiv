@@ -1,0 +1,1 @@
+{ "rule": { "orElse": [ { "andAlso": [ { "spec": "customer.is-active" }, { "spec": "customer.is-adult" } ] }, { "spec": "customer.has-orders" } ] } }

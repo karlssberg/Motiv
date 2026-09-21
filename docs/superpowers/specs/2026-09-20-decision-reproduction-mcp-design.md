@@ -199,24 +199,29 @@ remains gated on #251.
 
 | Node | Emits |
 |---|---|
-| `Spec` reference | the registered handle from a caller-supplied name map, else `registry.Get<TModel>("name")` |
+| `Spec` reference | the registered handle from a caller-supplied name map, else `registry.Get<TModel>("name")` — `SpecRegistry.Get`/`GetAsync` are real since slice 4, with `args` as a dictionary literal |
 | `Local` reference | the local variable its definition became |
 | `Expression` | `Spec.From((TModel m) => <text>)`, verbatim, with a "not re-parsed" comment |
 | `And` / `Or` / `XOr` | `left & right` / `left \| right` / `left ^ right` |
 | `AndAlso` / `OrElse` | `.AndAlso(right)` / `.OrElse(right)` |
 | `Not` | `!operand` |
-| higher-order | `Spec.Build(inner).AsAllSatisfied()` etc., `N` inlined or as a parameter |
+| higher-order | `Spec.Build(inner).AsAllSatisfied()…Create().ChangeModelTo<TModel>(selector)` with the binder's own texts, `N` inlined or as a parameter; the selector and element type come from a caller-supplied collection map, else a `TODO` and a warning |
 | decoration | `.WhenTrue("…").WhenFalse("…").Create("name")`; object payloads as a commented literal with a `TODO` |
 
-- Definitions become `var` locals in declaration order before the root (#234).
+- Definitions become `var` locals before the root (#234) — in dependency order, since a definition
+  may reference one declared after it; a definition referenced only under a quantifier prints
+  inline over the element type instead.
 - Parameters become arguments of a static method returning `SpecBase<TModel, string>`.
 - `TModel` comes from the registered spec, never guessed.
-- `PrintOptions` carries the name map, the namespace to emit, and whether to wrap in a class.
+- `CSharpPrintOptions` carries the name map, the collection map, the async names, the namespace to
+  emit, and the class to wrap in; `CSharpPrintedRule` carries the source and its warnings.
 
 **Fidelity test as the contract.** Over the sample project's rule corpus and the serialization
 tests' documents: print, compile with Roslyn against the sample's model assembly, bind the original
 document, evaluate both over a scenario set. `Satisfied` must agree on every scenario and
-`Assertions` as sets. A document feature landing without a printer case fails this test.
+`Assertions` as sets — and, as implemented, `Justification` too, which is what proves the fold
+order. The corpus is nineteen embedded documents in the serialization tests, Studio's
+`loyalty-discount.json` among them. A document feature landing without a printer case fails this test.
 
 ### 7. The MCP endpoint
 

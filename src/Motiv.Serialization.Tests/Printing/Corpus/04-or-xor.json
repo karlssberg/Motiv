@@ -1,0 +1,1 @@
+{ "rule": { "or": [ { "spec": "customer.is-active" }, { "xor": [ { "spec": "customer.is-adult" }, { "spec": "customer.has-orders" } ] } ] } }

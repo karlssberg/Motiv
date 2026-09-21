@@ -105,6 +105,47 @@ public sealed class SpecRegistry : ISpecSource
         _entries.TryGetValue(name, out var entry) ? entry : null;
 
     /// <summary>
+    /// The spec registered under <paramref name="name"/>, as the explanation spec a rule document's
+    /// <c>spec</c> node binds to — arguments resolved against a parameterised entry's declaration,
+    /// a metadata spec converted to its explanation form. What printed C# resolves an unmapped
+    /// reference through.
+    /// </summary>
+    /// <exception cref="RuleSerializationException">
+    /// The name is unknown, names an async spec, has another model type, or the arguments do not
+    /// match its declaration — the same errors a document binding the reference would report.
+    /// </exception>
+    public SpecBase<TModel, string> Get<TModel>(string name, IReadOnlyDictionary<string, object?>? args = null)
+    {
+        var errors = new List<RuleError>();
+        return RuleBinder.BindOperator<TModel>(ReferenceTo(name, args), this, errors)
+            ?? throw new RuleSerializationException(errors);
+    }
+
+    /// <summary><see cref="Get{TModel}"/> for a spec registered as async.</summary>
+    /// <exception cref="RuleSerializationException">The name is unknown, has another model type, or the arguments do not match its declaration.</exception>
+    public AsyncSpecBase<TModel, string> GetAsync<TModel>(string name, IReadOnlyDictionary<string, object?>? args = null)
+    {
+        var errors = new List<RuleError>();
+        return AsyncRuleBinder.BindOperator<TModel>(ReferenceTo(name, args), this, errors)
+            ?? throw new RuleSerializationException(errors);
+    }
+
+    /// <summary>The <c>spec</c> node a document would carry for this reference, so one binder serves both.</summary>
+    private static RuleNode ReferenceTo(string name, IReadOnlyDictionary<string, object?>? args)
+    {
+        if (name is null) throw new ArgumentNullException(nameof(name));
+        var node = new RuleNode(RuleOperator.Spec, "$") { SpecName = name };
+        if (args is not null)
+        {
+            node.Args = new Dictionary<string, object?>(StringComparer.Ordinal);
+            foreach (var pair in args)
+                node.Args[pair.Key] = pair.Value;
+        }
+
+        return node;
+    }
+
+    /// <summary>
     /// Whether a name is a legal spec reference: dot-separated segments, each an ASCII letter
     /// followed by ASCII letters, digits, <c>-</c> or <c>_</c>. Exposed so runtime authoring can
     /// reject a name by the same rule documents are bound by, rather than a second copy of it.

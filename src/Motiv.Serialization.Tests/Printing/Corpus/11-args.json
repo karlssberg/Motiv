@@ -1,0 +1,1 @@
+{ "rule": { "and": [ { "spec": "customer.min-orders", "args": { "n": 2 } }, { "spec": "customer.is-active" } ] } }

@@ -1,0 +1,2 @@
+{ "parameters": { "min": { "type": "integer", "default": 2 }, "who": { "type": "string", "default": "the customer" } },
+  "rule": { "asAtLeastNSatisfied": { "spec": "is-positive" }, "n": "@min", "path": "orders", "whenTrue": "{who} has {min}+ positive {{orders}}", "whenFalse": "{who} does not" } }

@@ -1,0 +1,2 @@
+{ "parameters": { "min_orders": { "type": "integer", "default": 2 }, "strict-mode": { "type": "boolean", "default": true }, "Ratio": { "type": "number", "default": 1.5 } },
+  "rule": { "spec": "customer.min-orders", "args": { "n": 2 }, "whenTrue": "min {min_orders} strict {strict-mode} ratio {Ratio} {{literal}}", "whenFalse": "not {min_orders}" } }

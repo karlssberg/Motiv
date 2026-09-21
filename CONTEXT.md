@@ -39,6 +39,13 @@ the verdict agreed, otherwise a list of reasons (`RuleVersionMissing`, `BuildMis
 `OutcomeDiverged`), each a value a generated test can quote.
 _Avoid_: Confidence, accuracy, degraded (as a state on its own)
 
+**Printed rule**:
+A rule document written as the C# builder chain that compiles to the same specification — a static
+`Build(SpecRegistry registry, …)` with definitions as locals, parameters as arguments, and compiled
+specs resolved through handles or `registry.Get`. What a decision is adopted as when the runtime
+rule should become code. Exact where the format is; a `TODO` and a warning where it is not.
+_Avoid_: Generated code (it is printed from a document, not generated from a model), export, transpile
+
 **Namespace**:
 The dotted prefix of a rule or proposition name (`pricing.eu.*`), used as the unit of authorization and
 organization. A pure projection of the names — there is no stored hierarchy to keep in sync.

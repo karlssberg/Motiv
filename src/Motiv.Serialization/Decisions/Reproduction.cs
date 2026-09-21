@@ -71,13 +71,21 @@ public sealed record ReproducedModel(ReproducedModelKind Kind, object? Value, st
 /// <param name="Rule">The pinned rule version row, or null when the log lacks it.</param>
 /// <param name="Propositions">The pinned proposition rows that were bound, heads standing in where a pin was missing.</param>
 /// <param name="Replayed">The re-evaluation, or null when nothing could run.</param>
+/// <param name="CSharp">
+/// The pinned rule document printed as C# — the code to adopt when the decision is what the rule
+/// should keep doing — or null when the pinned version has no document (a recorded revert) or is
+/// missing. Compiled specs it references resolve through <c>registry.Get</c>; see <see cref="CSharpPrinter"/>.
+/// </param>
+/// <param name="CSharpWarnings">Every place the print needs a person's attention: an expression leaf, an object payload, a collection with no selector.</param>
 public sealed record Reproduction(
     DecisionRecord Decision,
     StoredRuleVersion? Rule,
     IReadOnlyList<StoredPropositionVersion> Propositions,
     ReproducedModel Model,
     RuleEvaluationResult<object?>? Replayed,
-    ReproductionFidelity Fidelity);
+    ReproductionFidelity Fidelity,
+    string? CSharp,
+    IReadOnlyList<string> CSharpWarnings);
 
 /// <summary>The log holds no decision with the requested id; retention may have purged it.</summary>
 public sealed class DecisionNotFoundException(Guid id)

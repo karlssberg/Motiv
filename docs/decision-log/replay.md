@@ -18,6 +18,8 @@ reproduction.Model           // Whole | Redacted | Resolved | Reference | Absent
 reproduction.Replayed        // the re-evaluation, or null when nothing could run
 reproduction.Fidelity.IsExact
 reproduction.Fidelity.Notes  // each FidelityNote(Reason, Detail)
+reproduction.CSharp          // the pinned document as C#, or null for a recorded revert
+reproduction.CSharpWarnings  // where the print needs a person
 ```
 
 ## Registering It
@@ -101,7 +103,16 @@ model type through the host's `JsonSerializerOptions` — the ones on `MotivRule
 converters apply — and a projection that lacks a field the rule reads deserializes as far as it
 goes. An in-memory capture that is already the model type is used as it is.
 
+## The C# Beside It
+
+`Reproduction.CSharp` is the pinned rule document printed by the [C# printer](../live-rules/csharp-printer.md):
+a static `Build(SpecRegistry registry, …)` in a class named after the rule, every compiled spec
+resolved through `registry.Get<TModel>("name")`, every registered collection of the model named
+by its element type. It is null when the pinned version is a recorded revert — there is no
+document, the rule ran its compiled default — and `CSharpWarnings` lists what the print could not
+make exact: a higher-order rule's collection selector, an object payload, an expression leaf.
+
 ## What Comes Next
 
-The reproduction is the primitive. The HTTP endpoint that serves it, the C# printer that turns it
-into a test, and the MCP tools a coding agent calls are the following slices of the same design.
+The reproduction and its C# are the primitives. The HTTP endpoints that serve them and the MCP
+tools a coding agent calls are the last slice of the same design.
