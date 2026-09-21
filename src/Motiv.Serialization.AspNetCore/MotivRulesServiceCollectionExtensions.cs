@@ -118,6 +118,32 @@ public sealed class MotivRulesBuilder
         return AddPropositionsCore(storeFactory);
     }
 
+    /// <summary>
+    /// Stores each rule's scenarios — named sample models — behind
+    /// <c>{basePath}/rules/{name}/scenarios</c>. In memory when no store is given. Test data, not
+    /// behaviour: never governed, never versioned as a log.
+    /// </summary>
+    public MotivRulesBuilder AddScenarios(IScenarioStore? store = null) =>
+        AddScenariosCore(_ => store ?? new InMemoryScenarioStore());
+
+    /// <summary><see cref="AddScenarios(IScenarioStore?)"/> with the store resolved from the container.</summary>
+    public MotivRulesBuilder AddScenarios(Func<IServiceProvider, IScenarioStore> storeFactory)
+    {
+        ArgumentNullException.ThrowIfNull(storeFactory);
+        return AddScenariosCore(storeFactory);
+    }
+
+    private MotivRulesBuilder AddScenariosCore(Func<IServiceProvider, IScenarioStore> storeFactory)
+    {
+        if (Services.Any(descriptor => descriptor.ServiceType == typeof(IScenarioStore)))
+            throw new InvalidOperationException(
+                $"{nameof(AddScenarios)} has already been called. Call it once — a second call " +
+                "would silently replace the first store, as DI registration is last-wins.");
+
+        Services.AddSingleton<IScenarioStore>(storeFactory);
+        return this;
+    }
+
     private MotivRulesBuilder AddPropositionsCore(Func<IServiceProvider, IPropositionStore> storeFactory)
     {
         if (Services.Any(descriptor => descriptor.ServiceType == typeof(PropositionSet)))

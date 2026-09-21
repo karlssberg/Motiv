@@ -34,6 +34,7 @@ export type {
   RuleListEntry, RuleGetResponse, RuleSaveResult,
   PropositionOrigin, PropositionListEntry, PropositionGetResponse, PropositionCreateRequest,
   DependentEntry, PropositionSaveResult, BrokenDependent,
+  ScenarioEntry, ScenarioPutRequest, ScenarioSaveResult,
 } from './contracts.js';
 
 // Client-side JSON Schema validation.

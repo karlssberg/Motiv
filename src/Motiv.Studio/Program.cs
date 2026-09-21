@@ -237,6 +237,10 @@ builder.Services.AddMotivRules(registry, options)
     })
     .AddPropositions(provider => new EfPropositionStore(
         provider.GetRequiredService<IDbContextFactory<MotivStoreDbContext>>()))
+    // Seam: scenarios. Each rule's sample models live in the same database as the rules, so a
+    // scenario saved on one replica is on every other's Evaluate table the next time the tab loads.
+    .AddScenarios(provider => new EfScenarioStore(
+        provider.GetRequiredService<IDbContextFactory<MotivStoreDbContext>>()))
     .AddGovernance(new JsonFileGateStore(gatePath))
     .AddRuleStore(provider => new EfRuleStore(
         provider.GetRequiredService<IDbContextFactory<MotivStoreDbContext>>()))
@@ -273,6 +277,15 @@ await using (var bootstrap = app.Services.GetRequiredService<IDbContextFactory<M
                  .CreateDbContext())
 {
     await StoreSchema.EnsureCreatedAsync(bootstrap, app.Logger);
+}
+
+// Seam: the Evaluate table's seeds. Once per rule, then left alone — see ScenarioSeeds.
+{
+    var seeded = await ScenarioSeeds.SeedAsync(
+        app.Services.GetRequiredService<IScenarioStore>(),
+        app.Services.GetRequiredService<RuleSet>().Rules.Select(rule => rule.Name),
+        CancellationToken.None);
+    app.Logger.LogInformation("Scenario seeds: wrote {Seeded} scenarios", seeded);
 }
 
 // One-way migration off the JSON stores. Opt-in, and a no-op once the database holds anything, so

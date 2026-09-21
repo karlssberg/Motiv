@@ -194,6 +194,11 @@ public static class MotivRulesEndpoints
         if (propositions is not null)
             MotivPropositionEndpoints.MapPropositionEndpoints(group, propositions, governance, json);
 
+        // Scenarios are served by their store alone, so the routes exist only when one is registered:
+        // a host without AddScenarios answers 404, which the TypeScript client reads as "no store".
+        if (endpoints.ServiceProvider.GetService<IScenarioStore>() is { } scenarios)
+            MotivScenarioEndpoints.MapScenarioEndpoints(group, scenarios, json);
+
         return endpoints;
     }
 

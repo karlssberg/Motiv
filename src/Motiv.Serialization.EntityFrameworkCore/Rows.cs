@@ -46,6 +46,22 @@ public class StoreGenerationRow
     public long Generation { get; set; }
 }
 
+/// <summary>A rule's scenario — one row per <c>(RuleName, Id)</c>, replaced in place under a version concurrency token.</summary>
+public class ScenarioRow
+{
+    public string RuleName { get; set; } = string.Empty;
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string ModelJson { get; set; } = string.Empty;
+    public bool? ExpectedSatisfied { get; set; }
+    public string? SourceDecisionId { get; set; }
+    public int Version { get; set; }
+    public string Author { get; set; } = string.Empty;
+    public DateTimeOffset TimestampUtc { get; set; }
+    /// <summary>Insertion order, assigned by the store: what "the order they were added" means in SQL, where a timestamp cannot be ordered on every provider.</summary>
+    public long Sequence { get; set; }
+}
+
 /// <summary>
 /// Between the persisted rows and the SDK's records. Positional-record construction is the point:
 /// add a parameter to <see cref="StoredRuleVersion"/> and this file stops compiling, which is the
@@ -88,4 +104,8 @@ internal static class RowMapping
             ApprovalRef = version.ApprovalRef,
             BuildId = version.BuildId,
         };
+
+    public static StoredScenario ToRecord(this ScenarioRow row) =>
+        new(row.RuleName, row.Id, row.Name, row.ModelJson, row.ExpectedSatisfied, row.SourceDecisionId,
+            row.Version, row.Author, row.TimestampUtc);
 }

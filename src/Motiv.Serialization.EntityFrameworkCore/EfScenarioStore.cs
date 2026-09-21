@@ -1,0 +1,142 @@
+using System.Runtime.ExceptionServices;
+using Microsoft.EntityFrameworkCore;
+using Motiv.Serialization;
+
+namespace Motiv.Serialization.EntityFrameworkCore;
+
+/// <summary>The scenario store over one table replaced in place, with the version as a concurrency token.</summary>
+public sealed class EfScenarioStore(IDbContextFactory<MotivStoreDbContext> contextFactory) : IScenarioStore
+{
+    public async Task<IReadOnlyList<StoredScenario>> LoadAsync(CancellationToken cancellationToken)
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+        var rows = await context.Scenarios.AsNoTracking()
+            .OrderBy(row => row.RuleName).ThenBy(row => row.Sequence).ThenBy(row => row.Id)
+            .ToListAsync(cancellationToken);
+        return [.. rows.Select(row => row.ToRecord())];
+    }
+
+    public async Task<IReadOnlyList<StoredScenario>> ForRuleAsync(string ruleName, CancellationToken cancellationToken)
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+        var rows = await context.Scenarios.AsNoTracking()
+            .Where(row => row.RuleName == ruleName)
+            .OrderBy(row => row.Sequence).ThenBy(row => row.Id)
+            .ToListAsync(cancellationToken);
+        return [.. rows.Select(row => row.ToRecord())];
+    }
+
+    public async Task<ScenarioWriteResult> PutAsync(StoredScenario scenario, int baseVersion, CancellationToken cancellationToken)
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+        var existing = await context.Scenarios
+            .SingleOrDefaultAsync(row => row.RuleName == scenario.RuleName && row.Id == scenario.Id, cancellationToken);
+        var current = existing?.Version ?? 0;
+        if (baseVersion != current)
+            return ScenarioWriteResult.Conflict(current);
+
+        var version = baseVersion + 1;
+        var now = DateTimeOffset.UtcNow;
+        if (existing is null)
+            context.Scenarios.Add(NewRow(scenario, version, now, await NextSequenceAsync(context, cancellationToken)));
+        else
+            Overwrite(existing, scenario, version, now);
+
+        try
+        {
+            await context.SaveChangesAsync(cancellationToken);
+            return ScenarioWriteResult.Written(version);
+        }
+        catch (DbUpdateException exception)
+        {
+            // Another replica moved the row between the read and this write: a concurrency-token
+            // miss on update, or a key collision on create. Report where the row now stands — and
+            // where it stands is the test: a failure that left the row exactly where this write
+            // assumed it (a missing table, a read-only file) is the database refusing, not a race.
+            return await ConflictOrRethrowAsync(exception, scenario.RuleName, scenario.Id, baseVersion, cancellationToken);
+        }
+    }
+
+    public async Task<ScenarioWriteResult> DeleteAsync(string ruleName, string id, int baseVersion, CancellationToken cancellationToken)
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+        var existing = await context.Scenarios
+            .SingleOrDefaultAsync(row => row.RuleName == ruleName && row.Id == id, cancellationToken);
+        var current = existing?.Version ?? 0;
+        if (existing is null || baseVersion != current)
+            return ScenarioWriteResult.Conflict(current);
+
+        context.Scenarios.Remove(existing);
+        try
+        {
+            await context.SaveChangesAsync(cancellationToken);
+            return ScenarioWriteResult.Written(current);
+        }
+        catch (DbUpdateException exception)
+        {
+            return await ConflictOrRethrowAsync(exception, ruleName, id, baseVersion, cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// The next insertion-order slot. Kept as a column because SQLite cannot ORDER BY a
+    /// DateTimeOffset and a coarse clock would tie two quick adds anyway. A race between replicas
+    /// can produce a duplicate sequence; the id breaks the tie, and the order of two simultaneous
+    /// adds on two replicas was never meaningful.
+    /// </summary>
+    private static async Task<long> NextSequenceAsync(MotivStoreDbContext context, CancellationToken cancellationToken) =>
+        (await context.Scenarios.MaxAsync(row => (long?)row.Sequence, cancellationToken) ?? 0) + 1;
+
+    private static ScenarioRow NewRow(StoredScenario scenario, int version, DateTimeOffset now, long sequence) =>
+        new()
+        {
+            Sequence = sequence,
+            RuleName = scenario.RuleName,
+            Id = scenario.Id,
+            Name = scenario.Name,
+            ModelJson = scenario.ModelJson,
+            ExpectedSatisfied = scenario.ExpectedSatisfied,
+            SourceDecisionId = scenario.SourceDecisionId,
+            Version = version,
+            Author = scenario.Author,
+            TimestampUtc = now,
+        };
+
+    /// <summary>Replaces the row in place; the key and the insertion order are the row's for life.</summary>
+    private static void Overwrite(ScenarioRow existing, StoredScenario scenario, int version, DateTimeOffset now)
+    {
+        existing.Name = scenario.Name;
+        existing.ModelJson = scenario.ModelJson;
+        existing.ExpectedSatisfied = scenario.ExpectedSatisfied;
+        existing.SourceDecisionId = scenario.SourceDecisionId;
+        existing.Version = version;
+        existing.Author = scenario.Author;
+        existing.TimestampUtc = now;
+    }
+
+    /// <summary>
+    /// A concurrency miss is a conflict by definition. Any other refused write is one only when the
+    /// row no longer stands at <paramref name="baseVersion"/> — a key collision on create, a
+    /// concurrent write the provider reported some other way. Otherwise the failure is operational
+    /// and is rethrown as it came.
+    /// </summary>
+    private async Task<ScenarioWriteResult> ConflictOrRethrowAsync(
+        DbUpdateException exception, string ruleName, string id, int baseVersion, CancellationToken cancellationToken)
+    {
+        var current = await CurrentVersionAsync(ruleName, id, cancellationToken);
+        if (exception is DbUpdateConcurrencyException || current != baseVersion)
+            return ScenarioWriteResult.Conflict(current);
+
+        ExceptionDispatchInfo.Capture(exception).Throw();
+        return null!; // unreachable: Throw() never returns
+    }
+
+    private async Task<int> CurrentVersionAsync(string ruleName, string id, CancellationToken cancellationToken)
+    {
+        await using var fresh = await contextFactory.CreateDbContextAsync(cancellationToken);
+        return await fresh.Scenarios.AsNoTracking()
+            .Where(row => row.RuleName == ruleName && row.Id == id)
+            .Select(row => row.Version)
+            .SingleOrDefaultAsync(cancellationToken);
+    }
+}

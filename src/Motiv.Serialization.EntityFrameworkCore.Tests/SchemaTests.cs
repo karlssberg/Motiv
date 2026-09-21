@@ -7,7 +7,7 @@ namespace Motiv.Serialization.EntityFrameworkCore.Tests;
 public class SchemaTests
 {
     [Fact]
-    public async Task Should_create_the_three_tables()
+    public async Task Should_create_the_four_tables()
     {
         // Arrange
         await using var fixture = await SqliteStoreFixture.CreateAsync();
@@ -20,6 +20,7 @@ public class SchemaTests
         script.ShouldContain("MotivRuleVersion");
         script.ShouldContain("MotivPropositionVersion");
         script.ShouldContain("MotivStoreGeneration");
+        script.ShouldContain("MotivScenario");
         script.ShouldNotContain("\"MotivProposition\"");
     }
 
@@ -49,5 +50,20 @@ public class SchemaTests
 
         // Assert
         key.Properties.Select(property => property.Name).ShouldBe(["Name", "Version"]);
+    }
+
+    [Fact]
+    public async Task Should_key_scenarios_on_rule_and_id_with_version_as_the_concurrency_token()
+    {
+        // Arrange — rows are replaced in place, so the version is the compare-and-set here
+        await using var fixture = await SqliteStoreFixture.CreateAsync();
+        await using var context = fixture.Factory.CreateDbContext();
+
+        // Act
+        var entity = context.Model.FindEntityType(typeof(ScenarioRow))!;
+
+        // Assert
+        entity.FindPrimaryKey()!.Properties.Select(p => p.Name).ShouldBe(["RuleName", "Id"]);
+        entity.FindProperty("Version")!.IsConcurrencyToken.ShouldBeTrue();
     }
 }

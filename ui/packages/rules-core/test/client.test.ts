@@ -494,4 +494,38 @@ describe('generation tracking', () => {
 
     expect(client.generation).toBeUndefined();
   });
+  it('lists a rule’s scenarios, and treats a missing scenario store as an empty list', async () => {
+    const entries = [{ id: 's1', name: 'Minor', model: '{ "age": 16 }', expectedSatisfied: null, sourceDecisionId: null, version: 1, author: 'alice', timestampUtc: '2026-09-20T00:00:00Z' }];
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(entries));
+    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock });
+
+    expect(await client.listScenarios('can-checkout')).toEqual(entries);
+    expect(fetchMock).toHaveBeenCalledWith('/api/rules/rules/can-checkout/scenarios', { method: 'GET' });
+
+    fetchMock.mockResolvedValue(jsonResponse({ error: 'not here' }, 404));
+    expect(await client.listScenarios('can-checkout')).toEqual([]);
+  });
+
+  it('puts a scenario and returns saved or conflict as values', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ version: 1 }));
+    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock });
+    const request = { name: 'Minor', model: '{ "age": 16 }', expectedSatisfied: null, sourceDecisionId: null, baseVersion: 0 };
+
+    expect(await client.putScenario('can-checkout', 's1', request)).toEqual({ outcome: 'saved', version: 1 });
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(url).toBe('/api/rules/rules/can-checkout/scenarios/s1');
+    expect(init.method).toBe('PUT');
+    expect(JSON.parse(init.body)).toEqual(request);
+
+    fetchMock.mockResolvedValue(jsonResponse({ currentVersion: 2 }, 409));
+    expect(await client.putScenario('can-checkout', 's1', request)).toEqual({ outcome: 'conflict', currentVersion: 2 });
+  });
+
+  it('deletes a scenario at a base version', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ version: 1 }));
+    const client = new RulesApiClient({ baseUrl: '/api/rules', fetch: fetchMock });
+
+    expect(await client.deleteScenario('can-checkout', 's1', 1)).toEqual({ outcome: 'saved', version: 1 });
+    expect(fetchMock).toHaveBeenCalledWith('/api/rules/rules/can-checkout/scenarios/s1?baseVersion=1', { method: 'DELETE' });
+  });
 });

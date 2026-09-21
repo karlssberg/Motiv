@@ -40,6 +40,9 @@ public class MotivStoreDbContext : DbContext
     /// <summary>Where each store stands, one row per scope.</summary>
     public DbSet<StoreGenerationRow> StoreGenerations => Set<StoreGenerationRow>();
 
+    /// <summary>Each rule's scenarios: one row per <c>(RuleName, Id)</c>, replaced in place.</summary>
+    public DbSet<ScenarioRow> Scenarios => Set<ScenarioRow>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -65,6 +68,19 @@ public class MotivStoreDbContext : DbContext
             entity.Property(row => row.Name).IsRequired();
             entity.Property(row => row.Author).IsRequired();
             entity.Property(row => row.DocumentJson);
+        });
+
+        modelBuilder.Entity<ScenarioRow>(entity =>
+        {
+            entity.ToTable("MotivScenario");
+            entity.HasKey(row => new { row.RuleName, row.Id });
+            entity.Property(row => row.Name).IsRequired();
+            entity.Property(row => row.ModelJson).IsRequired();
+            entity.Property(row => row.Author).IsRequired();
+            // Rows are replaced in place, so the version is a concurrency token: every UPDATE and
+            // DELETE carries `AND Version = @original`, and a replica that committed first leaves
+            // this one matching no rows — DbUpdateConcurrencyException, provider-agnostic.
+            entity.Property(row => row.Version).IsConcurrencyToken();
         });
 
         modelBuilder.Entity<StoreGenerationRow>(entity =>

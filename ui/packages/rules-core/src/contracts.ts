@@ -230,3 +230,31 @@ export interface BrokenDependent {
   kind: 'rule' | 'proposition';
   errors: RuleError[];
 }
+
+/** One scenario of a rule: a named sample model, as the API lists it. `model` is the text as stored, JSON or not. */
+export interface ScenarioEntry {
+  id: string;
+  name: string;
+  model: string;
+  /** Null for a sample to look at; set for a test to hold. */
+  expectedSatisfied: boolean | null;
+  /** The logged decision this scenario was saved from, when it was. */
+  sourceDecisionId: string | null;
+  version: number;
+  author: string;
+  timestampUtc: string;
+}
+
+/** A create (`baseVersion` 0) or replace of one scenario. */
+export interface ScenarioPutRequest {
+  name: string;
+  model: string;
+  expectedSatisfied: boolean | null;
+  sourceDecisionId: string | null;
+  baseVersion: number;
+}
+
+/** The outcome of a scenario write; a stale base version is a value, not a throw. */
+export type ScenarioSaveResult =
+  | { outcome: 'saved'; version: number }
+  | { outcome: 'conflict'; currentVersion: number };

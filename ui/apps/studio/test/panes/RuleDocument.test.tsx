@@ -26,6 +26,7 @@ function makeClient(overrides: Partial<Record<string, unknown>> = {}): RulesApiC
     validate: vi.fn().mockResolvedValue({ errors: [] }),
     // The panes each fetch the catalog on mount; an empty one is enough for them to render.
     getCatalog: vi.fn().mockResolvedValue({ specs: [], collections: [] }),
+    listScenarios: vi.fn().mockResolvedValue([]),
     ...overrides,
   } as unknown as RulesApiClient;
 }

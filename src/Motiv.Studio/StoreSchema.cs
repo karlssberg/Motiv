@@ -20,7 +20,7 @@ using Motiv.Serialization.EntityFrameworkCore;
 /// A failure that left the schema complete was another instance getting there first, which is
 /// logged and continued past. A failure that did not is rethrown with its original stack: a bad
 /// connection string, an unwritable path and a permission error all land here, and every one of them
-/// must still take the process down loudly. All three tables are checked, because a check of one
+/// must still take the process down loudly. All four tables are checked, because a check of one
 /// proves nothing about the other two.
 /// </para>
 /// <para>
@@ -38,7 +38,7 @@ using Motiv.Serialization.EntityFrameworkCore;
 /// </remarks>
 public static class StoreSchema
 {
-    /// <summary>The three tables the stores need, created if they are not already there.</summary>
+    /// <summary>The four tables the stores need, created if they are not already there.</summary>
     /// <param name="context">A context over the store's database.</param>
     /// <param name="logger">Where a lost creation race is reported.</param>
     /// <param name="cancellationToken">Cancels the creation and the verification.</param>
@@ -65,13 +65,30 @@ public static class StoreSchema
 
         var missing = await MissingTablesAsync(context, cancellationToken);
 
+        // A Motiv database from before some of its tables existed: EnsureCreated saw "a database
+        // with tables" and created nothing, but the tables it does hold are ours. Studio owns the
+        // model and runs on SQLite, so the model's own create script is authoritative here — the
+        // statements for the missing tables are run and nothing else is touched. A database that
+        // lacks the rule log is not recognisably Motiv's and is still refused below.
+        if (missing.Count > 0 && creationFailure is null && !missing.Contains("MotivRuleVersion"))
+        {
+            creationFailure = await CreateMissingTablesAsync(context, missing, cancellationToken);
+            if (creationFailure is null)
+            {
+                logger.LogInformation(
+                    "Motiv store schema: added {Tables}, which this database predated.", string.Join(", ", missing));
+            }
+
+            missing = await MissingTablesAsync(context, cancellationToken);
+        }
+
         if (missing.Count == 0)
         {
             if (creationFailure is not null)
             {
                 logger.LogWarning(
                     creationFailure,
-                    "Creating the Motiv store schema failed, but all three tables are present and " +
+                    "Creating the Motiv store schema failed, but all four tables are present and " +
                     "readable — another instance created them first. Continuing.");
             }
 
@@ -94,7 +111,38 @@ public static class StoreSchema
     }
 
     /// <summary>
-    /// Which of the three tables cannot be read. A trivial query per table rather than a metadata
+    /// Runs the model's create-script statements that build <paramref name="tables"/> — the
+    /// <c>CREATE TABLE</c> and any <c>CREATE INDEX</c> naming one of them — against a database that
+    /// already holds the rest. Two instances starting together backfill together, and the one that
+    /// loses the race gets "already exists" from the database; that failure is returned, not thrown,
+    /// and the caller decides what it meant by looking at the schema, as it does for EnsureCreated.
+    /// </summary>
+    /// <returns>The first statement's failure, or null when every statement ran.</returns>
+    private static async Task<Exception?> CreateMissingTablesAsync(
+        MotivStoreDbContext context, IReadOnlyList<string> tables, CancellationToken cancellationToken)
+    {
+        var script = context.Database.GenerateCreateScript();
+        foreach (var statement in script.Split(';'))
+        {
+            var sql = statement.Trim();
+            if (sql.Length == 0 || !tables.Any(table => sql.Contains($"\"{table}\"", StringComparison.Ordinal)))
+                continue;
+
+            try
+            {
+                await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
+            }
+            catch (Exception exception) when (exception is not (OutOfMemoryException or OperationCanceledException))
+            {
+                return exception;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Which of the four tables cannot be read. A trivial query per table rather than a metadata
     /// lookup, because that is provider-agnostic and answers the question actually being asked —
     /// can the stores use this schema.
     /// </summary>
@@ -106,6 +154,7 @@ public static class StoreSchema
             ("MotivRuleVersion", () => context.RuleVersions.AsNoTracking().AnyAsync(cancellationToken)),
             ("MotivPropositionVersion", () => context.PropositionVersions.AsNoTracking().AnyAsync(cancellationToken)),
             ("MotivStoreGeneration", () => context.StoreGenerations.AsNoTracking().AnyAsync(cancellationToken)),
+            ("MotivScenario", () => context.Scenarios.AsNoTracking().AnyAsync(cancellationToken)),
         ];
 
         var missing = new List<string>();

@@ -3,6 +3,7 @@ import type {
   PropositionCreateRequest, PropositionGetResponse, PropositionListEntry, PropositionSaveResult,
   RuleError, RuleGetResponse, RuleListEntry, RuleSaveResult,
   ValidateRequest, ValidationResponse,
+  ScenarioEntry, ScenarioPutRequest, ScenarioSaveResult,
 } from './contracts.js';
 import type { RuleDocument } from './document.js';
 
@@ -212,6 +213,34 @@ export class RulesApiClient {
     return body.dependents ?? [];
   }
 
+  /** GET {baseUrl}/rules/{rule}/scenarios — `[]` when the host mounted no scenario store (404). */
+  async listScenarios(rule: string): Promise<ScenarioEntry[]> {
+    const response = await this.#fetch(`${this.#baseUrl}/rules/${encodeURIComponent(rule)}/scenarios`, { method: 'GET' });
+    if (response.status === 404) {
+      this.#trackGeneration(response);
+      return [];
+    }
+    return this.#read<ScenarioEntry[]>(response);
+  }
+
+  /** PUT {baseUrl}/rules/{rule}/scenarios/{id} — 409 returns a typed conflict rather than throwing. */
+  async putScenario(rule: string, id: string, request: ScenarioPutRequest): Promise<ScenarioSaveResult> {
+    const response = await this.#fetch(
+      `${this.#baseUrl}/rules/${encodeURIComponent(rule)}/scenarios/${encodeURIComponent(id)}`,
+      { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(request) },
+    );
+    return this.#readScenarioResult(response);
+  }
+
+  /** DELETE {baseUrl}/rules/{rule}/scenarios/{id}?baseVersion=N — 409 returns a typed conflict. */
+  async deleteScenario(rule: string, id: string, baseVersion: number): Promise<ScenarioSaveResult> {
+    const response = await this.#fetch(
+      `${this.#baseUrl}/rules/${encodeURIComponent(rule)}/scenarios/${encodeURIComponent(id)}?baseVersion=${baseVersion}`,
+      { method: 'DELETE' },
+    );
+    return this.#readScenarioResult(response);
+  }
+
   #post(path: string, body: unknown): Promise<Response> {
     return this.#fetch(`${this.#baseUrl}${path}`, {
       method: 'POST',
@@ -317,6 +346,19 @@ export class RulesApiClient {
 
     const message = body?.error ?? `Request failed (${response.status}).`;
     throw new RulesApiError(response.status, message);
+  }
+
+  async #readScenarioResult(response: Response): Promise<ScenarioSaveResult> {
+    this.#trackGeneration(response);
+    if (response.ok) {
+      const body = (await response.json()) as { version: number };
+      return { outcome: 'saved', version: body.version };
+    }
+    if (response.status === 409) {
+      const body = (await response.json().catch(() => undefined)) as { currentVersion?: number } | undefined;
+      if (body && typeof body.currentVersion === 'number') return { outcome: 'conflict', currentVersion: body.currentVersion };
+    }
+    return this.#throwFromErrorResponse(response);
   }
 
   async #read<T>(response: Response): Promise<T> {

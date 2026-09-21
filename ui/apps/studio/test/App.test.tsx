@@ -26,6 +26,7 @@ function testClient(): RulesApiClient {
       document: null, version: 0, origin: 'Compiled', hasCompiledDefault: true,
     }),
     getDependents: vi.fn().mockResolvedValue([]),
+    listScenarios: vi.fn().mockResolvedValue([]),
   } as unknown as RulesApiClient;
 }
 
