@@ -24,7 +24,7 @@ namespace Motiv.Serialization.EntityFrameworkCore.Tests;
 /// </para>
 /// <para>
 /// The guard against the clear itself returning is <c>PoolClearGateTests</c>, compiled into this
-/// assembly from <c>src/testing/PoolClearGate</c>. The two are a pair: that one says the shortcut is
+/// assembly from <c>test/testing/PoolClearGate</c>. The two are a pair: that one says the shortcut is
 /// not taken, this one says the shortcut is not needed.
 /// </para>
 /// </remarks>

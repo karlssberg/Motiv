@@ -19,21 +19,19 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <!-- The one provider in play, and only here: behavioural conformance runs on SQLite. -->
-        <PackageReference Include="Microsoft.Data.Sqlite" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Motiv.Serialization.Sql\Motiv.Serialization.Sql.csproj" />
+        <ProjectReference Include="..\..\src\Motiv.Serialization.EntityFrameworkCore\Motiv.Serialization.EntityFrameworkCore.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Include="..\testing\StoreConformance\*.cs" LinkBase="StoreConformance" />
+        <Compile Include="..\testing\PoolClearGate\*.cs" LinkBase="PoolClearGate" />
     </ItemGroup>
 
     <ItemGroup>
         <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-2m69-gcr7-jv3q" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Compile Include="..\testing\PoolClearGate\*.cs" LinkBase="PoolClearGate" />
-        <Compile Include="..\testing\StoreConformance\DecisionSourceConformance.cs" LinkBase="StoreConformance" />
     </ItemGroup>
 
 </Project>

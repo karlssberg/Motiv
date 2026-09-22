@@ -2,7 +2,7 @@ import type { JsonSchema } from '../../src/index.js';
 
 /**
  * The two model shapes the conformance corpus (`./corpus.json`) checks against. Mirrors
- * `src/Motiv.Serialization.Tests/Expressions/CorpusFixtures.cs`'s `Order`/`Customer` records —
+ * `test/Motiv.Serialization.Tests/Expressions/CorpusFixtures.cs`'s `Order`/`Customer` records —
  * both sides must agree on every case in the corpus.
  */
 export const ORDER: JsonSchema = {

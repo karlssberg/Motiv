@@ -1,5 +1,5 @@
 {
-  "$comment": "Run by ui/packages/rules-core/test/expression-corpus.test.ts and src/Motiv.Serialization.Tests/Expressions/LeafCorpusTests.cs. A case passes on both sides or CI fails.",
+  "$comment": "Run by ui/packages/rules-core/test/expression-corpus.test.ts and test/Motiv.Serialization.Tests/Expressions/LeafCorpusTests.cs. A case passes on both sides or CI fails.",
   "parameters": {
     "minAge": "integer",
     "vip": "number",

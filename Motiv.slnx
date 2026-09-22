@@ -17,22 +17,22 @@
     <File Path="LICENSE" />
     <File Path="README.md" />
   </Folder>
-  <Project Path="src/Motiv.Analyzer.Tests/Motiv.Analyzer.Tests.csproj" />
+  <Project Path="test/Motiv.Analyzer.Tests/Motiv.Analyzer.Tests.csproj" />
   <Project Path="src/Motiv.Analyzer/Motiv.Analyzer.csproj" />
-  <Project Path="src/Motiv.CodeFix.Tests/Motiv.CodeFix.Tests.csproj" />
+  <Project Path="test/Motiv.CodeFix.Tests/Motiv.CodeFix.Tests.csproj" />
   <Project Path="src/Motiv.CodeFix/Motiv.CodeFix.csproj" />
-  <Project Path="src/Motiv.Serialization.AspNetCore.Tests/Motiv.Serialization.AspNetCore.Tests.csproj" />
+  <Project Path="test/Motiv.Serialization.AspNetCore.Tests/Motiv.Serialization.AspNetCore.Tests.csproj" />
   <Project Path="src/Motiv.Serialization.AspNetCore/Motiv.Serialization.AspNetCore.csproj" />
   <Project Path="src/Motiv.Serialization.EntityFrameworkCore/Motiv.Serialization.EntityFrameworkCore.csproj" />
-  <Project Path="src/Motiv.Serialization.EntityFrameworkCore.Tests/Motiv.Serialization.EntityFrameworkCore.Tests.csproj" />
+  <Project Path="test/Motiv.Serialization.EntityFrameworkCore.Tests/Motiv.Serialization.EntityFrameworkCore.Tests.csproj" />
   <Project Path="src/Motiv.Serialization.Snapshots/Motiv.Serialization.Snapshots.csproj" />
-  <Project Path="src/Motiv.Serialization.Snapshots.Tests/Motiv.Serialization.Snapshots.Tests.csproj" />
+  <Project Path="test/Motiv.Serialization.Snapshots.Tests/Motiv.Serialization.Snapshots.Tests.csproj" />
   <Project Path="src/Motiv.Serialization.Sql/Motiv.Serialization.Sql.csproj" />
-  <Project Path="src/Motiv.Serialization.Sql.Tests/Motiv.Serialization.Sql.Tests.csproj" />
-  <Project Path="src/Motiv.Serialization.Tests/Motiv.Serialization.Tests.csproj" />
+  <Project Path="test/Motiv.Serialization.Sql.Tests/Motiv.Serialization.Sql.Tests.csproj" />
+  <Project Path="test/Motiv.Serialization.Tests/Motiv.Serialization.Tests.csproj" />
   <Project Path="src/Motiv.Serialization/Motiv.Serialization.csproj" />
-  <Project Path="src/Motiv.Studio.Tests/Motiv.Studio.Tests.csproj" />
+  <Project Path="test/Motiv.Studio.Tests/Motiv.Studio.Tests.csproj" />
   <Project Path="src/Motiv.Studio/Motiv.Studio.csproj" />
-  <Project Path="src/Motiv.Tests/Motiv.Tests.csproj" />
+  <Project Path="test/Motiv.Tests/Motiv.Tests.csproj" />
   <Project Path="src/Motiv/Motiv.csproj" />
 </Solution>

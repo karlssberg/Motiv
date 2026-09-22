@@ -25,7 +25,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Motiv.Serialization\Motiv.Serialization.csproj" />
+        <ProjectReference Include="..\..\src\Motiv.Serialization\Motiv.Serialization.csproj" />
     </ItemGroup>
 
     <!--

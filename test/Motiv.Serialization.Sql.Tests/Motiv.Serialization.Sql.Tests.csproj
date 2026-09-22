@@ -4,21 +4,14 @@
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
         <OutputType>Library</OutputType>
-        <TargetFrameworks>net8.0;net9.0;net472;net10.0</TargetFrameworks>
+        <TargetFramework>net10.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AutoFixture" />
-        <PackageReference Include="AutoFixture.AutoNSubstitute" />
-        <PackageReference Include="AutoFixture.Xunit2" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <PackageReference Include="Shouldly" />
-        <PackageReference Include="System.Collections.Immutable" />
-        <PackageReference Include="System.Net.Http" />
-        <PackageReference Include="System.Text.RegularExpressions" />
-        <PackageReference Include="System.ComponentModel.TypeConverter" />
         <PackageReference Include="xunit" />
-        <PackageReference Include="xunit.runner.visualstudio" >
+        <PackageReference Include="xunit.runner.visualstudio">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
@@ -26,14 +19,21 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
+        <!-- The one provider in play, and only here: behavioural conformance runs on SQLite. -->
+        <PackageReference Include="Microsoft.Data.Sqlite" />
     </ItemGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="Traversal\DescriptionBaseline.txt" />
+        <ProjectReference Include="..\..\src\Motiv.Serialization.Sql\Motiv.Serialization.Sql.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Motiv\Motiv.csproj" />
+        <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-2m69-gcr7-jv3q" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Include="..\testing\PoolClearGate\*.cs" LinkBase="PoolClearGate" />
+        <Compile Include="..\testing\StoreConformance\DecisionSourceConformance.cs" LinkBase="StoreConformance" />
     </ItemGroup>
 
 </Project>
