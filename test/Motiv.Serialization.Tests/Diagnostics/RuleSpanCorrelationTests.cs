@@ -60,6 +60,26 @@ public class RuleSpanCorrelationTests
                 await ((NumberAsyncPolicyRule)rules.Find("number-async-policy")!).EvaluateAsync(1)
         };
 
+    /// <summary>The boolean-only entry points — the policy flavours inherit these rather than shadow them.</summary>
+    private static readonly IReadOnlyDictionary<string, Func<RuleSet, Task>> Matches =
+        new Dictionary<string, Func<RuleSet, Task>>(StringComparer.Ordinal)
+        {
+            ["number"] = rules =>
+            {
+                ((NumberRule)rules.Find("number")!).Matches(1);
+                return Task.CompletedTask;
+            },
+            ["number-policy"] = rules =>
+            {
+                ((NumberPolicyRule)rules.Find("number-policy")!).Matches(1);
+                return Task.CompletedTask;
+            },
+            ["number-async"] = async rules =>
+                await ((NumberAsyncRule)rules.Find("number-async")!).MatchesAsync(1),
+            ["number-async-policy"] = async rules =>
+                await ((NumberAsyncPolicyRule)rules.Find("number-async-policy")!).MatchesAsync(1)
+        };
+
     private static RuleSet NewRules() =>
         new RuleSet(
                 new SpecRegistry()
@@ -109,6 +129,39 @@ public class RuleSpanCorrelationTests
         core.Parent.ShouldBeSameAs(rule);
         rule.Id.ShouldNotBeNullOrEmpty();
         core.ParentId!.ShouldBe(rule.Id!);
+    }
+
+    [Theory]
+    [MemberData(nameof(EveryEntryPoint))]
+    public async Task Should_tag_a_match_with_the_rule_name_and_version(string ruleName)
+    {
+        // Arrange
+        var rules = NewRules();
+        using var harness = new RulesTelemetryHarness();
+
+        // Act
+        await Matches[ruleName](rules);
+
+        // Assert — a flag call site on the fast path is still an evaluation an operator can find
+        var span = harness.SingleActivity("motiv.rules.evaluate");
+        span.GetTagItem("motiv.rules.name").ShouldBe(ruleName);
+        span.GetTagItem("motiv.rules.version").ShouldBe(1);
+    }
+
+    [Theory]
+    [MemberData(nameof(EveryEntryPoint))]
+    public async Task Should_not_build_a_result_when_an_unaudited_rule_is_matched(string ruleName)
+    {
+        // Arrange
+        var rules = NewRules();
+        using var harness = new RulesTelemetryHarness(listenToCore: true);
+
+        // Act
+        await Matches[ruleName](rules);
+
+        // Assert — core opens motiv.evaluate only around Evaluate, so its absence is the evidence
+        // that the rule reached the spec's boolean path rather than evaluating and discarding a tree.
+        harness.Activities.ShouldNotContain(activity => activity.OperationName == "motiv.evaluate");
     }
 
     [Fact]
