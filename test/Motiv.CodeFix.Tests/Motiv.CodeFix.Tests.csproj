@@ -26,8 +26,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Motiv.CodeFix\Motiv.CodeFix.csproj" OutputItemType="Analyzer" />
-      <ProjectReference Include="..\Motiv.Analyzer\Motiv.Analyzer.csproj" OutputItemType="Analyzer" />
-      <ProjectReference Include="..\Motiv\Motiv.csproj"  />
+      <ProjectReference Include="..\..\src\Motiv.CodeFix\Motiv.CodeFix.csproj" OutputItemType="Analyzer" />
+      <ProjectReference Include="..\..\src\Motiv.Analyzer\Motiv.Analyzer.csproj" OutputItemType="Analyzer" />
+      <ProjectReference Include="..\..\src\Motiv\Motiv.csproj"  />
     </ItemGroup>
 </Project>

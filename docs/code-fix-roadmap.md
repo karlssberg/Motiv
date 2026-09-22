@@ -636,5 +636,5 @@ Motiv.CodeFix/
   - Policy pattern implementation
 
 - **Test Examples:**
-  - `/home/user/Motiv/src/Motiv.Analyzer.Tests/`
-  - `/home/user/Motiv/src/Motiv.CodeFix.Tests/`
+  - `/home/user/Motiv/test/Motiv.Analyzer.Tests/`
+  - `/home/user/Motiv/test/Motiv.CodeFix.Tests/`
