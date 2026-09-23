@@ -124,8 +124,24 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
             return SatisfiedAsync(EvaluateAsyncIn(generation, state, model, cancellationToken));
 
         var activity = MotivRulesTelemetry.StartRuleEvaluation(Name, state.Version);
-        var matching = state.Spec.MatchesAsync(model, cancellationToken);
-        return activity is null ? matching : CloseAsync(activity, matching);
+        if (activity is null)
+            return state.Spec.MatchesAsync(model, cancellationToken);
+
+        // Guarded although no spec core ships throws here — each faults its task instead — because
+        // a span left open by a synchronous throw leaves Activity.Current pointing at it for the
+        // rest of the caller's flow, and the guard costs nothing on the path that does not throw.
+        ValueTask<bool> matching;
+        try
+        {
+            matching = state.Spec.MatchesAsync(model, cancellationToken);
+        }
+        catch
+        {
+            activity.Dispose();
+            throw;
+        }
+
+        return CloseAsync(activity, matching);
     }
 
     private static async ValueTask<bool> SatisfiedAsync(ValueTask<BooleanResultBase<TMetadata>> evaluation) =>
