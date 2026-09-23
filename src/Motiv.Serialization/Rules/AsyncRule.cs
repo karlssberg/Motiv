@@ -124,35 +124,24 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
             return SatisfiedAsync(EvaluateAsyncIn(generation, state, model, cancellationToken));
 
         var activity = MotivRulesTelemetry.StartRuleEvaluation(Name, state.Version);
-        if (activity is null)
-            return state.Spec.MatchesAsync(model, cancellationToken);
-
-        // Guarded although no spec core ships throws here — each faults its task instead — because
-        // a span left open by a synchronous throw leaves Activity.Current pointing at it for the
-        // rest of the caller's flow, and the guard costs nothing on the path that does not throw.
-        ValueTask<bool> matching;
-        try
-        {
-            matching = state.Spec.MatchesAsync(model, cancellationToken);
-        }
-        catch
-        {
-            activity.Dispose();
-            throw;
-        }
-
-        return CloseAsync(activity, matching);
+        return activity is null
+            ? state.Spec.MatchesAsync(model, cancellationToken)
+            : MatchObservedAsync(activity, state.Spec, model, cancellationToken);
     }
 
     private static async ValueTask<bool> SatisfiedAsync(ValueTask<BooleanResultBase<TMetadata>> evaluation) =>
         (await evaluation.ConfigureAwait(false)).Satisfied;
 
-    /// <summary>Awaits a match and closes its span, in a finally for the reason ObserveAsync gives.</summary>
-    private static async ValueTask<bool> CloseAsync(Activity activity, ValueTask<bool> matching)
+    /// <summary>
+    /// Runs a match under its span and closes the span either way. The spec is called in here rather
+    /// than by the caller so that even a synchronous throw lands in the finally.
+    /// </summary>
+    private static async ValueTask<bool> MatchObservedAsync(
+        Activity activity, AsyncSpecBase<TModel, TMetadata> spec, TModel model, CancellationToken cancellationToken)
     {
         try
         {
-            return await matching.ConfigureAwait(false);
+            return await spec.MatchesAsync(model, cancellationToken).ConfigureAwait(false);
         }
         finally
         {
