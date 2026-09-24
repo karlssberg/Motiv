@@ -97,8 +97,65 @@ public class AsyncRule<TModel, TMetadata> : RuleBase
         // rule must keep forwarding the underlying ValueTask untouched, with no state machine between
         // it and its caller. Only an audited evaluation pays for the wrapper.
         var generation = Scope.Active;
-        var state = StateIn(generation);
+        return EvaluateAsyncIn(generation, StateIn(generation), model, cancellationToken);
+    }
 
+    /// <summary>
+    /// Evaluates the current rule implementation against the model, returning only whether it is
+    /// satisfied — the boolean fast path a flag call site wants.
+    /// </summary>
+    /// <param name="model">The model to evaluate.</param>
+    /// <param name="cancellationToken">A token that can cancel the evaluation.</param>
+    /// <returns><c>true</c> when the current implementation is satisfied; otherwise <c>false</c>.</returns>
+    /// <remarks>
+    /// Always agrees with <c>EvaluateAsync(model).Satisfied</c>. An unaudited binding reaches the
+    /// bound spec's own <c>MatchesAsync</c>, so no result tree is built. An audited binding still
+    /// evaluates and records in full: audited means every decision is recorded, whichever entry point
+    /// the caller chose. Reads the pinned world when a <c>DecisionSnapshot</c> is open, as
+    /// <see cref="EvaluateAsync"/> does.
+    /// </remarks>
+    public ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default)
+    {
+        // Not an async method, for the reasons EvaluateAsync is not: an unbound rule throws here, and
+        // an unobserved, unaudited match forwards the spec's ValueTask untouched.
+        var generation = Scope.Active;
+        var state = StateIn(generation);
+        if (state.Audited)
+            return SatisfiedAsync(EvaluateAsyncIn(generation, state, model, cancellationToken));
+
+        var activity = MotivRulesTelemetry.StartRuleEvaluation(Name, state.Version);
+        return activity is null
+            ? state.Spec.MatchesAsync(model, cancellationToken)
+            : MatchObservedAsync(activity, state.Spec, model, cancellationToken);
+    }
+
+    private static async ValueTask<bool> SatisfiedAsync(ValueTask<BooleanResultBase<TMetadata>> evaluation) =>
+        (await evaluation.ConfigureAwait(false)).Satisfied;
+
+    /// <summary>
+    /// Runs a match under its span and closes the span either way. The spec is called in here rather
+    /// than by the caller so that even a synchronous throw lands in the finally.
+    /// </summary>
+    private static async ValueTask<bool> MatchObservedAsync(
+        Activity activity, AsyncSpecBase<TModel, TMetadata> spec, TModel model, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await spec.MatchesAsync(model, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            activity.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Evaluates <paramref name="state"/>, read from <paramref name="generation"/> by the caller, so
+    /// an entry point that has already inspected the state evaluates the very binding it inspected.
+    /// </summary>
+    private ValueTask<BooleanResultBase<TMetadata>> EvaluateAsyncIn(
+        ScopeGeneration generation, State state, TModel model, CancellationToken cancellationToken)
+    {
         // Opened before the evaluation so core's motiv.evaluate span lands inside it — see
         // Rule.Evaluate. Null, and free, when nothing is listening to the rules source; when it is
         // not null the wrapper below is mandatory, since an activity nobody disposes would leave

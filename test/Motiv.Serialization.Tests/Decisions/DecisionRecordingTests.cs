@@ -60,6 +60,17 @@ public class DecisionRecordingTests
                 _ => throw new InvalidOperationException($"unknown flavour '{flavour}'")
             };
 
+        /// <summary>Reaches the boolean-only entry point of the named flavour, awaiting the async ones.</summary>
+        public async Task<bool> MatchAsync(string flavour, Customer customer) =>
+            Rules.Find(flavour) switch
+            {
+                AsyncPolicyFlavoured rule => await rule.MatchesAsync(customer),
+                AsyncSpecFlavoured rule => await rule.MatchesAsync(customer),
+                PolicyFlavoured rule => rule.Matches(customer),
+                SpecFlavoured rule => rule.Matches(customer),
+                _ => throw new InvalidOperationException($"unknown flavour '{flavour}'")
+            };
+
         /// <summary>Drains the writer so the sink can be read, then reopens the log for further use.</summary>
         public async Task<IReadOnlyList<DecisionRecord>> DrainAsync()
         {
@@ -116,6 +127,55 @@ public class DecisionRecordingTests
 
         // Assert — audited means total, not sampled
         records.Count(record => record.RuleName == flavour).ShouldBe(2);
+    }
+
+    [Theory]
+    [MemberData(nameof(Flavours))]
+    public async Task Should_record_one_decision_per_match_of_an_audited_rule(string flavour)
+    {
+        // Arrange
+        await using var host = await AHostAsync();
+
+        // Act
+        await host.MatchAsync(flavour, Alice);
+        await host.MatchAsync(flavour, Alice);
+        var records = await host.DrainAsync();
+
+        // Assert — the fast path is not a way around the audit: audited means total, whichever entry
+        // point the caller chose
+        records.Count(record => record.RuleName == flavour).ShouldBe(2);
+    }
+
+    [Theory]
+    [MemberData(nameof(Flavours))]
+    public async Task Should_record_the_outcome_a_match_returned(string flavour)
+    {
+        // Arrange
+        await using var host = await AHostAsync();
+
+        // Act
+        var matched = await host.MatchAsync(flavour, Alice);
+        var record = (await host.DrainAsync()).ShouldHaveSingleItem();
+
+        // Assert — the record carries the full explanation even though the caller asked for a bool
+        record.Outcome.Satisfied.ShouldBe(matched);
+        record.Outcome.Assertions.ShouldBe(["active"]);
+        record.Outcome.Justification.ShouldNotBeNullOrWhiteSpace();
+    }
+
+    [Theory]
+    [MemberData(nameof(Flavours))]
+    public async Task Should_record_nothing_for_an_unaudited_match(string flavour)
+    {
+        // Arrange
+        await using var host = await AHostAsync(PlainDocument);
+
+        // Act
+        await host.MatchAsync(flavour, Alice);
+        var records = await host.DrainAsync();
+
+        // Assert
+        records.ShouldBeEmpty();
     }
 
     [Theory]

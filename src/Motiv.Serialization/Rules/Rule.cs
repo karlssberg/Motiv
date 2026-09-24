@@ -86,8 +86,39 @@ public class Rule<TModel, TMetadata> : RuleBase
     public BooleanResultBase<TMetadata> Evaluate(TModel model)
     {
         var generation = Scope.Active;
-        var state = StateIn(generation);
+        return EvaluateIn(generation, StateIn(generation), model);
+    }
 
+    /// <summary>
+    /// Evaluates the current rule implementation against the model, returning only whether it is
+    /// satisfied — the boolean fast path a flag call site wants.
+    /// </summary>
+    /// <param name="model">The model to evaluate.</param>
+    /// <returns><c>true</c> when the current implementation is satisfied; otherwise <c>false</c>.</returns>
+    /// <remarks>
+    /// Always agrees with <c>Evaluate(model).Satisfied</c>. An unaudited binding reaches the bound
+    /// spec's own <c>Matches</c>, so no result tree is built and a higher-order spec may stop at its
+    /// first counterexample. An audited binding still evaluates and records in full: audited means
+    /// every decision is recorded, whichever entry point the caller chose. Reads the pinned world
+    /// when a <c>DecisionSnapshot</c> is open, as <see cref="Evaluate"/> does.
+    /// </remarks>
+    public bool Matches(TModel model)
+    {
+        var generation = Scope.Active;
+        var state = StateIn(generation);
+        if (state.Audited)
+            return EvaluateIn(generation, state, model).Satisfied;
+
+        using var activity = MotivRulesTelemetry.StartRuleEvaluation(Name, state.Version);
+        return state.Spec.Matches(model);
+    }
+
+    /// <summary>
+    /// Evaluates <paramref name="state"/>, read from <paramref name="generation"/> by the caller, so
+    /// an entry point that has already inspected the state evaluates the very binding it inspected.
+    /// </summary>
+    private BooleanResultBase<TMetadata> EvaluateIn(ScopeGeneration generation, State state, TModel model)
+    {
         // Opened before the evaluation so core's own motiv.evaluate span lands inside it, which is
         // what carries this rule's name and version onto the evaluation — see StartRuleEvaluation.
         // Null, and free, when nothing is listening to the rules source.

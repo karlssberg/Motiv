@@ -62,6 +62,28 @@ eligibility.Satisfied;  // true
 eligibility.Assertions; // ["customer is active", "customer is an adult"]
 ```
 
+### Matching
+
+When the caller wants the answer and not the explanation, as a feature-flag call site does, use
+`Matches()` / `MatchesAsync()`. Every flavour has it; the policy classes inherit it unchanged,
+because a `bool` has nothing to narrow.
+
+```csharp
+bool Matches(TModel model);                                                               // Rule, PolicyRule
+ValueTask<bool> MatchesAsync(TModel model, CancellationToken cancellationToken = default); // AsyncRule, AsyncPolicyRule
+```
+
+```csharp
+if (canCheckout.Matches(customer))
+    ShowCheckout();
+```
+
+`Matches(model)` always equals `Evaluate(model).Satisfied`. On an unaudited rule it reaches the
+bound spec's own boolean path, so no result tree is built and a higher-order proposition such as
+`AsAllSatisfied()` may stop at its first counterexample. On an audited rule it evaluates in full and
+records the decision anyway, because an audited rule records every decision whichever method the
+caller used.
+
 ## Remarks
 
 - **Evaluations read an immutable snapshot.** Each call captures the current implementation once;
