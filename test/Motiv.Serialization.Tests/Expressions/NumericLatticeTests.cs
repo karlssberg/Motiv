@@ -1,4 +1,4 @@
-#if NET8_0_OR_GREATER
+#if NET8_0_OR_GREATER && !MOTIV_NETSTANDARD_ASSET
 using System.Linq.Expressions;
 using Motiv.Serialization.Expressions;
 
