@@ -14,7 +14,7 @@ internal class DefaultSpecFieldCustomizer : ISpecFieldCustomizer
     ///     Returns the proposition name as an identifier type.
     /// </summary>
     public TypeSyntax GetFieldType(string propositionName, string? modelTypeName) =>
-        IdentifierName(propositionName);
+        ParseTypeName(propositionName);
 
     /// <summary>
     ///     Returns a target-typed <c>new()</c> expression.
@@ -27,7 +27,7 @@ internal class DefaultSpecFieldCustomizer : ISpecFieldCustomizer
     ///     Returns <c>new PropositionName(this)</c>.
     /// </summary>
     public ExpressionSyntax GetConstructorAssignment(string propositionName) =>
-        ObjectCreationExpression(IdentifierName(propositionName))
+        ObjectCreationExpression(ParseTypeName(propositionName))
             .WithArgumentList(ArgumentList(SingletonSeparatedList(
                 Argument(ThisExpression()))));
 

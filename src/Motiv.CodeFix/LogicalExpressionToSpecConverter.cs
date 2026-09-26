@@ -21,6 +21,8 @@ internal class LogicalExpressionToSpecConverter(
     ISpecFieldCustomizer fieldCustomizer)
 {
     private Dictionary<ISymbol, string> _variableTypeNames = new(SymbolEqualityComparer.Default);
+    private SpecTypeParameters? _typeParameters;
+    private MemberDeclarationSyntax? _instanceField;
 
     private readonly SpecInvocationReplacer _invocationReplacer = new(propositionName, defaultModelName, fieldCustomizer);
 
@@ -48,6 +50,8 @@ internal class LogicalExpressionToSpecConverter(
             variable => variable.Symbol,
             variable => variable.Type?.GetCSharpTypeName() ?? "object",
             SymbolEqualityComparer.Default);
+        _typeParameters = SpecTypeParameters.Find(logicalExpressionSyntax, semanticModel, variables.Select(variable => variable.Type));
+        var specTypeName = _typeParameters.Qualify(propositionName);
 
         var containingTypeSymbol = await syntaxContext.ContainingTypeSymbol(cancellationToken).ConfigureAwait(false);
         var detectionResult = DetectInstanceMethods(logicalExpressionSyntax, semanticModel, containingTypeSymbol);
@@ -62,11 +66,15 @@ internal class LogicalExpressionToSpecConverter(
 
         var modelTypeName = variableSymbols.Length == 1
             ? GetSymbolTypeName(variableSymbols.First())
-            : $"{propositionName}.{defaultModelName}";
+            : $"{specTypeName}.{defaultModelName}";
+
+        _instanceField = _typeParameters.IsEmpty
+            ? null
+            : BuildInstanceField(syntaxContext, specTypeName, modelTypeName);
 
         var newRoot = _invocationReplacer.Replace(
             syntaxContext, variableSymbols, logicalExpressionSyntax,
-            root, hasInstanceMethods, groupedExpression, modelTypeName);
+            root, hasInstanceMethods, groupedExpression, specTypeName, modelTypeName);
 
         var baseNamespace = newRoot.DescendantNodes().OfType<BaseNamespaceDeclarationSyntax>().FirstOrDefault();
         var isBlockNamespace = baseNamespace is NamespaceDeclarationSyntax;
@@ -85,6 +93,41 @@ internal class LogicalExpressionToSpecConverter(
             resultDoc = await SpecClassPlacer.MoveSpecClassesBeforeOrphanBrace(resultDoc, cancellationToken).ConfigureAwait(false);
 
         return resultDoc;
+    }
+
+    /// <summary>
+    ///     Whether the expression can be converted. A spec over the surrounding type parameters holds its instance
+    ///     statically, once per closed type, so it has no <c>this</c> to call instance methods on.
+    /// </summary>
+    public static bool CanConvert(
+        ExpressionSyntax expression,
+        SemanticModel semanticModel,
+        INamedTypeSymbol? containingTypeSymbol)
+    {
+        var valueTypes = GetVariablesInExpression(expression, semanticModel).Select(variable => variable.Type);
+        return SpecTypeParameters.Find(expression, semanticModel, valueTypes).IsEmpty
+               || !DetectInstanceMethods(expression, semanticModel, containingTypeSymbol).HasInstanceMethods;
+    }
+
+    /// <summary>
+    ///     <c>public static readonly XProposition&lt;T&gt; Instance = new();</c>, declared and formatted the way the
+    ///     field customizer declares a spec field.
+    /// </summary>
+    private MemberDeclarationSyntax BuildInstanceField(SyntaxContext syntaxContext, string specTypeName, string modelTypeName)
+    {
+        var field = FieldDeclaration(
+                VariableDeclaration(fieldCustomizer.GetFieldType(specTypeName, modelTypeName))
+                    .WithVariables(SingletonSeparatedList(
+                        VariableDeclarator(Identifier(SpecTypeParameters.InstanceFieldName))
+                            .WithInitializer(EqualsValueClause(fieldCustomizer.GetFieldInitializer(specTypeName))))))
+            .WithModifiers(TokenList(
+                Token(SyntaxKind.PublicKeyword),
+                Token(SyntaxKind.StaticKeyword),
+                Token(SyntaxKind.ReadOnlyKeyword)));
+
+        var lineFeed = syntaxContext.LineFeed;
+        var formatted = fieldCustomizer.FormatMember(field.NormalizeWhitespace(eol: lineFeed.ToString()), lineFeed);
+        return SyntaxIndentHelper.ReindentMember(formatted, syntaxContext.GetIndent(1).ToString());
     }
 
     private static InstanceMethodResult DetectInstanceMethods(
@@ -137,7 +180,7 @@ internal class LogicalExpressionToSpecConverter(
             variableTypeName, variable.Name, logicalExpressionSyntax, originalExpressionText);
 
         yield return new SimpleSpecClassDeclaration(
-            syntaxContext, propositionName, variableTypeName, specChain).Build();
+            syntaxContext, propositionName, variableTypeName, specChain, _typeParameters, _instanceField).Build();
     }
 
     private IEnumerable<MemberDeclarationSyntax> BuildSingleVarComposedSpec(
@@ -164,7 +207,9 @@ internal class LogicalExpressionToSpecConverter(
             innerLambdaModelType: variableTypeName,
             innerLambdaParameterName: variable.Name,
             decomposition,
-            containingTypeName: containingTypeName).Build();
+            containingTypeName: containingTypeName,
+            typeParameters: _typeParameters,
+            instanceField: _instanceField).Build();
     }
 
     private IEnumerable<MemberDeclarationSyntax> BuildMultiVarComposedSpec(
@@ -195,7 +240,9 @@ internal class LogicalExpressionToSpecConverter(
             decomposition,
             resolvedContainingTypeName,
             nestedRecordName: defaultModelName,
-            nestedRecordParameterList: recordParameterList).Build();
+            nestedRecordParameterList: recordParameterList,
+            typeParameters: _typeParameters,
+            instanceField: _instanceField).Build();
     }
 
     private string GetSymbolTypeName(ISymbol symbol) => _variableTypeNames[symbol];

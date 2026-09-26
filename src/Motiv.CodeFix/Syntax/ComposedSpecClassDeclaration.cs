@@ -16,12 +16,14 @@ public class ComposedSpecClassDeclaration(
     ExpressionDecomposition decomposition,
     string? containingTypeName = null,
     string? nestedRecordName = null,
-    ParameterListSyntax? nestedRecordParameterList = null)
-    : SpecClassDeclaration(syntaxContext, propositionName)
+    ParameterListSyntax? nestedRecordParameterList = null,
+    SpecTypeParameters? typeParameters = null,
+    MemberDeclarationSyntax? instanceField = null)
+    : SpecClassDeclaration(syntaxContext, propositionName, typeParameters, instanceField)
 {
     protected override TypeSyntax GetModelType() =>
         nestedRecordName is not null
-            ? QualifiedName(IdentifierName(PropositionName), IdentifierName(nestedRecordName))
+            ? ParseTypeName($"{SpecTypeName}.{nestedRecordName}")
             : ParseTypeName(innerLambdaModelType);
 
     protected override ParenthesizedLambdaExpressionSyntax AttachLambdaBody(
