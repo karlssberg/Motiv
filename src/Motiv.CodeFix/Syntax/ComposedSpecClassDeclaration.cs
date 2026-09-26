@@ -14,10 +14,10 @@ public class ComposedSpecClassDeclaration(
     string innerLambdaModelType,
     string innerLambdaParameterName,
     ExpressionDecomposition decomposition,
+    SpecTypeParameters typeParameters,
     string? containingTypeName = null,
     string? nestedRecordName = null,
     ParameterListSyntax? nestedRecordParameterList = null,
-    SpecTypeParameters? typeParameters = null,
     MemberDeclarationSyntax? instanceField = null)
     : SpecClassDeclaration(syntaxContext, propositionName, typeParameters, instanceField)
 {

@@ -16,6 +16,9 @@ public sealed class SpecTypeParameters
 {
     public const string InstanceFieldName = "Instance";
 
+    /// <summary>An expression that depends on no type parameters.</summary>
+    public static readonly SpecTypeParameters None = new([]);
+
     private readonly ImmutableArray<ITypeParameterSymbol> _typeParameters;
 
     private SpecTypeParameters(ImmutableArray<ITypeParameterSymbol> typeParameters) =>

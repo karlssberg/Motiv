@@ -378,4 +378,90 @@ public class MotivConvertToSpecInPlaceTests
             }
         }.RunAsync();
     }
+
+
+    [Fact]
+    public async Task Should_give_a_single_clause_generic_spec_a_body_to_hold_its_instance()
+    {
+        const string booleanExpression = "value is not null";
+
+        const string source =
+          $$"""
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public bool IsPresent<T>(T value)
+                {
+                    if ({{booleanExpression}})
+                        return true;
+
+                    return false;
+                }
+            }
+            """;
+
+        const string expectedTransformedCode =
+          $$"""
+            using Motiv;
+
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public bool IsPresent<T>(T value)
+                {
+                    if (ValueProposition<T>.Instance.Matches(value))
+                        return true;
+
+                    return false;
+                }
+            }
+
+            public class ValueProposition<T>() : Spec<T>(() =>
+                Spec.Build((T value) => {{booleanExpression}})
+                    .Create("{{booleanExpression}}"))
+            {
+                public static readonly ValueProposition<T> Instance = new();
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            FixedState = { Sources = { (Source, expectedTransformedCode) } },
+            ExpectedDiagnostics =
+            {
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                    .WithSpan(Source, 7, 13, 7, 13 + booleanExpression.Length)
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_not_offer_a_fix_in_top_level_statements_where_no_type_can_hold_the_spec()
+    {
+        const string booleanExpression = "args.Length > 0 && args.Length < 10";
+
+        const string source =
+          $$"""
+            System.Console.WriteLine({{booleanExpression}});
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { (Source, source) },
+                OutputKind = Microsoft.CodeAnalysis.OutputKind.ConsoleApplication
+            },
+            // No fix is registered, so the document is left as it was
+            FixedState = { Sources = { (Source, source) } },
+            ExpectedDiagnostics =
+            {
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                    .WithSpan(Source, 1, 26, 1, 26 + booleanExpression.Length)
+            }
+        }.RunAsync();
+    }
 }
