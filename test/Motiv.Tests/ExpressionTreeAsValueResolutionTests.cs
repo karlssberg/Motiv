@@ -166,6 +166,95 @@ public class ExpressionTreeAsValueResolutionTests
             """);
     }
 
+    [Fact]
+    public void Should_print_the_value_of_a_model_independent_argument_containing_its_own_lambda()
+    {
+        int[] values = [1, 2, 3, 4, 5];
+        var sut = Spec
+            .From((int n) => n == Display.AsValue(values.Count(v => v > 0)))
+            .Create("at limit");
+
+        var act = sut.Evaluate(5);
+
+        act.Justification.ShouldBe(ExpectedJustification);
+    }
+
+    [Fact]
+    public void Should_print_the_name_of_a_variable_captured_two_scopes_out()
+    {
+        var outer = 5;
+        var specs = new List<ExpressionSpecBase<int, string>>();
+        for (var i = 0; i < 1; i++)
+        {
+            var middle = i;
+            for (var j = 0; j < 1; j++)
+            {
+                var inner = j;
+                specs.Add(Spec.From((int n) => n == outer + middle + inner).Create("at limit"));
+            }
+        }
+
+        var act = specs[0].Evaluate(5);
+
+        act.Assertions.ShouldBe(["n == outer + middle + inner"]);
+    }
+
+    [Theory]
+    [InlineData(5, "n > 4")]
+    [InlineData(7, "n > 6")]
+    public void Should_print_the_value_of_a_model_dependent_argument_on_every_evaluation(int model, string expectedAssertion)
+    {
+        var sut = Spec
+            .From((int n) => n > Display.AsValue(n - 1))
+            .Create("above predecessor");
+
+        _ = sut.Evaluate(model + 10).Assertions.ToArray(); // compiles and caches the value getter
+        var act = sut.Evaluate(model);
+
+        act.Assertions.ShouldBe([expectedAssertion]);
+    }
+
+    [Fact]
+    public void Should_keep_the_source_text_in_the_statement_for_a_member_of_the_model()
+    {
+        var sut = Spec
+            .From((string s) => Display.AsValue(s.Length) > 3)
+            .Create("is long");
+
+        var act = sut.Evaluate("test");
+
+        act.Justification.ShouldBe(
+            """
+            is long == true
+                (string s) => s.Length > 3 == true
+                    4 > 3
+            """);
+    }
+
+    private class Price(int pence)
+    {
+        public int Pence { get; } = pence;
+
+        public override bool Equals(object? obj) => obj is Price other && other.Pence == Pence;
+
+        public override int GetHashCode() => Pence;
+
+        public override string ToString() => $"{Pence}p";
+    }
+
+    [Fact]
+    public void Should_print_a_captured_value_of_an_unformatted_type_with_its_ToString()
+    {
+        var price = new Price(5);
+        var sut = Spec
+            .From((Price p) => p.Equals(Display.AsValue(price)))
+            .Create("is the price");
+
+        var act = sut.Evaluate(new Price(5));
+
+        act.Assertions.ShouldBe(["p.Equals(5p) == true"]);
+    }
+
     private static int GetLimit() => 5;
 
     [Fact]
