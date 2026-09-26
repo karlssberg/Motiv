@@ -1,8 +1,7 @@
 # Code fix expression contexts — Design
 
 **Date:** 2026-09-26
-**Status:** Implemented as a stack of four PRs. 29 of 33 convertible contexts pass; the four left
-are the capture problems listed under "Out of scope".
+**Status:** Implemented as a stack of PRs. Every convertible context in the matrix passes.
 **Plan:** `docs/superpowers/plans/2026-09-26-codefix-expression-contexts.md`
 
 ## Problem
@@ -112,9 +111,18 @@ are sound.
    and a lambda's parameter. The last one was a bug: `numbers.Any(x => x > 5)` made `x` a model
    value.
 
+10. **A generic spec holds itself** (`codefix/generic-method-specs`). When the expression depends on
+    the surrounding type parameters (a method's or the containing type's), the spec class declares
+    them, with the constraints copied from their declaration. It also carries
+    `public static readonly XProposition<T> Instance = new();`, and the call site reads
+    `XProposition<T>.Instance`. A field on the containing type cannot have a method's type parameter
+    in its type, but a static field on the generic class can, and the runtime keeps one per closed
+    type. The spec is therefore still built once per type argument, not once per call. When the
+    expression also calls instance methods there is no `this` to capture statically, so the fix is
+    not offered.
+
 ## Out of scope, left as skipped rows
 
-- **Method type parameters.** `T` cannot appear in a field type on the containing class.
 - **Constructors that `this`-capturing specs need** when the class already declares one. The old
   behaviour, which deleted a primary constructor's parameter list, is kept and not widened.
 - **Two conversions in one member.** Both derive the same proposition name.

@@ -10,7 +10,6 @@ namespace Motiv.CodeFix.Tests;
 /// </summary>
 public class MotivConvertToSpecContextTests
 {
-    private const string UncapturedSymbol = "The generated spec cannot see a symbol the expression uses";
 
     private static readonly Dictionary<string, string> ConvertibleContexts = new()
     {
@@ -494,6 +493,30 @@ public class MotivConvertToSpecContextTests
                 public bool HasLargeNumber(int[] numbers) => [|numbers.Length > 0 && numbers.Any(x => x > 5)|];
             }
             """,
+        ["GenericClass"] =
+            """
+            namespace MyNamespace;
+
+            public class Box<T>
+            {
+                public bool HoldsBoth(T first, T second) => [|first is not null && second is not null|];
+            }
+            """,
+        ["GenericMethodSingleValue"] =
+            """
+            using System;
+
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public bool IsInRange<T>(T value, T min) where T : IComparable<T>
+                {
+                    Console.WriteLine(value); // must survive
+                    return [|value.CompareTo(min) > 0 && value.CompareTo(min) < 10|];
+                }
+            }
+            """,
         ["InstancePropertyReference"] =
             """
             namespace MyNamespace;
@@ -630,7 +653,9 @@ public class MotivConvertToSpecContextTests
     [InlineData("Struct")]
     [InlineData("QueryWhereClause")]
     [InlineData("SwitchStatementWhenClause")]
-    [InlineData("GenericMethod", Skip = UncapturedSymbol)]
+    [InlineData("GenericMethod")]
+    [InlineData("GenericClass")]
+    [InlineData("GenericMethodSingleValue")]
     [InlineData("InstancePropertyReference")]
     [InlineData("StaticPropertyReference")]
     [InlineData("OutVariableDeclaredInExpression")]
