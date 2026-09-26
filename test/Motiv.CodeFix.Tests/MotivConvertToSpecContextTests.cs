@@ -463,6 +463,37 @@ public class MotivConvertToSpecContextTests
                 public bool AreBothMissing<T>(T first, T second) where T : class => [|first is null && second is null|];
             }
             """,
+        ["StaticPropertyReference"] =
+            """
+            namespace MyNamespace;
+
+            public static class Settings
+            {
+                public static int Retries { get; set; }
+
+                public static bool IsRetrying() => [|Retries > 0 && Retries < 3|];
+            }
+            """,
+        ["OutVariableDeclaredInExpression"] =
+            """
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public bool IsSmallNumber(string text) => [|int.TryParse(text, out var n) && n < 10|];
+            }
+            """,
+        ["LambdaDeclaredInExpression"] =
+            """
+            using System.Linq;
+
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public bool HasLargeNumber(int[] numbers) => [|numbers.Length > 0 && numbers.Any(x => x > 5)|];
+            }
+            """,
         ["InstancePropertyReference"] =
             """
             namespace MyNamespace;
@@ -597,10 +628,13 @@ public class MotivConvertToSpecContextTests
     [InlineData("ConversionOperator")]
     [InlineData("Record")]
     [InlineData("Struct")]
-    [InlineData("QueryWhereClause", Skip = UncapturedSymbol)]
-    [InlineData("SwitchStatementWhenClause", Skip = UncapturedSymbol)]
+    [InlineData("QueryWhereClause")]
+    [InlineData("SwitchStatementWhenClause")]
     [InlineData("GenericMethod", Skip = UncapturedSymbol)]
-    [InlineData("InstancePropertyReference", Skip = UncapturedSymbol)]
+    [InlineData("InstancePropertyReference")]
+    [InlineData("StaticPropertyReference")]
+    [InlineData("OutVariableDeclaredInExpression")]
+    [InlineData("LambdaDeclaredInExpression")]
     public async Task Should_produce_compiling_code_and_keep_surrounding_code_when_converting_expression_in_context(
         string context)
     {

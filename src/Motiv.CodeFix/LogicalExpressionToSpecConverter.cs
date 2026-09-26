@@ -20,6 +20,8 @@ internal class LogicalExpressionToSpecConverter(
     Document document,
     ISpecFieldCustomizer fieldCustomizer)
 {
+    private Dictionary<ISymbol, string> _variableTypeNames = new(SymbolEqualityComparer.Default);
+
     private readonly SpecInvocationReplacer _invocationReplacer = new(propositionName, defaultModelName, fieldCustomizer);
 
     /// <summary>
@@ -40,7 +42,12 @@ internal class LogicalExpressionToSpecConverter(
         if (root is null) return document;
 
         var semanticModel = await syntaxContext.SemanticModel(cancellationToken).ConfigureAwait(false);
-        var variableSymbols = GetVariablesInExpression(logicalExpressionSyntax, semanticModel).ToImmutableArray();
+        var variables = GetVariablesInExpression(logicalExpressionSyntax, semanticModel);
+        var variableSymbols = variables.Select(variable => variable.Symbol).ToImmutableArray();
+        _variableTypeNames = variables.ToDictionary(
+            variable => variable.Symbol,
+            variable => variable.Type?.GetCSharpTypeName() ?? "object",
+            SymbolEqualityComparer.Default);
 
         var containingTypeSymbol = await syntaxContext.ContainingTypeSymbol(cancellationToken).ConfigureAwait(false);
         var detectionResult = DetectInstanceMethods(logicalExpressionSyntax, semanticModel, containingTypeSymbol);
@@ -191,26 +198,45 @@ internal class LogicalExpressionToSpecConverter(
             nestedRecordParameterList: recordParameterList).Build();
     }
 
-    private static string GetSymbolTypeName(ISymbol symbol) =>
-        symbol.GetTypeSymbol()?.GetCSharpTypeName() ?? "object";
+    private string GetSymbolTypeName(ISymbol symbol) => _variableTypeNames[symbol];
 
-    private static IEnumerable<ISymbol> GetVariablesInExpression(
+    /// <summary>
+    ///     The values the expression reads from its surroundings, each of which becomes a model value: fields,
+    ///     properties, parameters, range variables and locals — except one the expression declares itself
+    ///     (<c>o is string s</c>, <c>out var n</c>, a lambda's parameter), which the generated lambda declares too.
+    /// </summary>
+    private static ImmutableArray<(ISymbol Symbol, ITypeSymbol? Type)> GetVariablesInExpression(
         ExpressionSyntax expression,
         SemanticModel semanticModel) =>
-        expression
+    [
+        ..expression
             .DescendantNodesAndSelf()
             .OfType<IdentifierNameSyntax>()
             .Where(identifier =>
                 !(identifier.Parent is MemberAccessExpressionSyntax memberAccess &&
                   memberAccess.Name == identifier))
-            .Select(identifier => semanticModel.GetSymbolInfo(identifier).Symbol)
-            .Where(symbol =>
-                symbol is IFieldSymbol or IParameterSymbol ||
-                symbol is ILocalSymbol local && !IsPatternIntroducedVariable(local))
-            .Distinct(SymbolEqualityComparer.Default)
-            .Cast<ISymbol>();
+            .Select(identifier => (Identifier: identifier, Symbol: semanticModel.GetSymbolInfo(identifier).Symbol))
+            .Where(candidate => IsModelValue(candidate.Symbol, expression))
+            .GroupBy(candidate => candidate.Symbol!, SymbolEqualityComparer.Default)
+            .Select(group =>
+            {
+                var symbol = group.Key;
+                // A range variable carries no type of its own; the expression that reads it does
+                var type = symbol.GetTypeSymbol() ?? semanticModel.GetTypeInfo(group.First().Identifier).Type;
+                return (symbol, type);
+            })
+    ];
 
-    private static bool IsPatternIntroducedVariable(ILocalSymbol symbol) =>
+    private static bool IsModelValue(ISymbol? symbol, ExpressionSyntax expression) =>
+        symbol switch
+        {
+            IFieldSymbol or IRangeVariableSymbol => true,
+            IPropertySymbol property => !property.IsIndexer,
+            IParameterSymbol or ILocalSymbol => !IsDeclaredWithin(symbol, expression),
+            _ => false
+        };
+
+    private static bool IsDeclaredWithin(ISymbol symbol, ExpressionSyntax expression) =>
         symbol.DeclaringSyntaxReferences
-            .Any(syntaxRef => syntaxRef.GetSyntax() is SingleVariableDesignationSyntax);
+            .Any(syntaxRef => syntaxRef.SyntaxTree == expression.SyntaxTree && expression.Span.Contains(syntaxRef.Span));
 }
