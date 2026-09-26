@@ -35,13 +35,13 @@ public class MotivConvertToSpecWithDebugOutputTests
 
             public class MyClass
             {
-                private readonly SpecBase<int, string> _isValidProposition = new IsValidProposition()
+                private static readonly SpecBase<int, string> IsValidProposition = new IsValidProposition()
                     .Tap((model, result) =>
                         Debug.WriteLine($"[Motiv] IsValidProposition | Model: {model} | Satisfied: {result.Satisfied} | Reason: {result.Reason}"));
                 public bool IsValid(int value)
                 {
                     // {{booleanExpression}}
-                    var isValidResult = _isValidProposition.Evaluate(value);
+                    var isValidResult = IsValidProposition.Evaluate(value);
                     return isValidResult.Satisfied;
                 }
             }
@@ -90,13 +90,13 @@ public class MotivConvertToSpecWithDebugOutputTests
 
             public class MyClass
             {
-                private readonly SpecBase<IsValidProposition.Model, string> _isValidProposition = new IsValidProposition()
+                private static readonly SpecBase<IsValidProposition.Model, string> IsValidProposition = new IsValidProposition()
                     .Tap((model, result) =>
                         Debug.WriteLine($"[Motiv] IsValidProposition | Model: {model} | Satisfied: {result.Satisfied} | Reason: {result.Reason}"));
                 public bool IsValid(int valueA, int valueB, bool valueC)
                 {
                     // {{booleanExpression}}
-                    var isValidResult = _isValidProposition.Evaluate(new IsValidProposition.Model(valueA, valueB, valueC));
+                    var isValidResult = IsValidProposition.Evaluate(new IsValidProposition.Model(valueA, valueB, valueC));
                     return isValidResult.Satisfied;
                 }
             }
@@ -114,7 +114,7 @@ public class MotivConvertToSpecWithDebugOutputTests
                 return isValueAGreaterThanValueB.AndAlso(isValueC);
             })
             {
-                public record Model(int ValueA, int ValueB, bool ValueC);
+                public readonly record struct Model(int ValueA, int ValueB, bool ValueC);
             }
             """;
 
@@ -166,7 +166,7 @@ public class MotivConvertToSpecWithDebugOutputTests
                 public class Playground
                 {
                     private readonly SpecBase<string, string> _isFeatureEnabledProposition;
-                    private readonly SpecBase<string, string> _isGreenProposition = new IsGreenProposition()
+                    private static readonly SpecBase<string, string> IsGreenProposition = new IsGreenProposition()
                         .Tap((model, result) =>
                             Debug.WriteLine($"[Motiv] IsGreenProposition | Model: {model} | Satisfied: {result.Satisfied} | Reason: {result.Reason}"));
                     public Playground()
@@ -186,7 +186,7 @@ public class MotivConvertToSpecWithDebugOutputTests
                     public bool IsGreen(string text)
                     {
                         // text == "green"
-                        var isGreenResult = _isGreenProposition.Evaluate(text);
+                        var isGreenResult = IsGreenProposition.Evaluate(text);
                         return isGreenResult.Satisfied;
                     }
                 }

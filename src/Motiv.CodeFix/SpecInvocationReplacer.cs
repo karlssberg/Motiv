@@ -16,9 +16,10 @@ internal class SpecInvocationReplacer(
     string defaultModelName,
     ISpecFieldCustomizer fieldCustomizer)
 {
-    private bool _isMethodStatic;
+    // A spec is an immutable decision tree, so it is built once per type — unless it captures `this`.
+    private bool _isFieldStatic;
 
-    private string FieldName => _isMethodStatic ? propositionName : $"_{propositionName.ToCamelCase()}";
+    private string FieldName => _isFieldStatic ? propositionName : $"_{propositionName.ToCamelCase()}";
 
     /// <summary>
     ///     Replaces the logical expression in the containing class with a spec field and invocation.
@@ -41,7 +42,7 @@ internal class SpecInvocationReplacer(
         string? modelTypeName = null)
     {
         var method = logicalExpressionSyntax.Ancestors().OfType<MethodDeclarationSyntax>().First();
-        _isMethodStatic = method.Modifiers.Any(SyntaxKind.StaticKeyword);
+        _isFieldStatic = !hasInstanceMethods;
         var containingClass = method.Ancestors().OfType<ClassDeclarationSyntax>().First();
         var statement = logicalExpressionSyntax.Ancestors().OfType<StatementSyntax>().FirstOrDefault();
 
@@ -50,7 +51,7 @@ internal class SpecInvocationReplacer(
 
         var resultVarName = DeriveResultVarName();
 
-        var field = BuildFieldDeclaration(hasInstanceMethods, modelTypeName);
+        var field = BuildFieldDeclaration(modelTypeName);
         var replacementMethod = BuildReplacementMethod(method, statement, resultVarName, specInvocation, commentTrivia);
         ConstructorDeclarationSyntax? constructor = hasInstanceMethods
             ? BuildConstructor(containingClass)
@@ -91,18 +92,18 @@ internal class SpecInvocationReplacer(
         SyntaxTrivia lineFeed) =>
         fieldCustomizer.FormatMember(member.NormalizeWhitespace(eol: eol), lineFeed);
 
-    private FieldDeclarationSyntax BuildFieldDeclaration(bool hasInstanceMethods, string? modelTypeName)
+    private FieldDeclarationSyntax BuildFieldDeclaration(string? modelTypeName)
     {
         var fieldType = fieldCustomizer.GetFieldType(propositionName, modelTypeName);
         var declarator = VariableDeclarator(Identifier(FieldName));
 
-        if (!hasInstanceMethods)
+        if (_isFieldStatic)
         {
             var initializer = fieldCustomizer.GetFieldInitializer(propositionName);
             declarator = declarator.WithInitializer(EqualsValueClause(initializer));
         }
 
-        var modifiers = _isMethodStatic
+        var modifiers = _isFieldStatic
             ? TokenList(
                 Token(SyntaxKind.PrivateKeyword),
                 Token(SyntaxKind.StaticKeyword),
