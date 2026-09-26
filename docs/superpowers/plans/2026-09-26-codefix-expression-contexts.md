@@ -18,6 +18,7 @@ Four stacked PRs, bottom to top. Each layer's failing tests are rows the layer b
    - Update the exact-output tests to `private static readonly XProposition XProposition = new();`
      and `XProposition.Evaluate(…)`. Watch them fail, then make `SpecInvocationReplacer` choose
      static from `hasInstanceMethods` instead of from the method's modifiers.
+   - Expect `public readonly record struct Model(…)` and generate it from `ComposedSpecClassDeclaration`.
 4. **`codefix/replace-expression-in-place`: rewrite the expression, not the method.**
    - Un-skip the `MethodRewrite` and `RequiresMethod` rows and watch them fail.
    - Split `SpecInvocationReplacer` into choosing the replacement: the statement form (return,

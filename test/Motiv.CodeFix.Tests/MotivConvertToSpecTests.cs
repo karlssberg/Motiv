@@ -35,11 +35,11 @@ public class MotivConvertToSpecTests
 
             public class MyClass
             {
-                private readonly IsValidProposition _isValidProposition = new();
+                private static readonly IsValidProposition IsValidProposition = new();
                 public bool IsValid(int value)
                 {
                     // {{booleanExpression}}
-                    var isValidResult = _isValidProposition.Evaluate(value);
+                    var isValidResult = IsValidProposition.Evaluate(value);
                     return isValidResult.Satisfied;
                 }
             }
@@ -86,11 +86,11 @@ public class MotivConvertToSpecTests
 
             public class MyClass
             {
-                private readonly IsValidProposition _isValidProposition = new();
+                private static readonly IsValidProposition IsValidProposition = new();
                 public bool IsValid(int valueA, int valueB, bool valueC)
                 {
                     // {{booleanExpression}}
-                    var isValidResult = _isValidProposition.Evaluate(new IsValidProposition.Model(valueA, valueB, valueC));
+                    var isValidResult = IsValidProposition.Evaluate(new IsValidProposition.Model(valueA, valueB, valueC));
                     return isValidResult.Satisfied;
                 }
             }
@@ -108,7 +108,7 @@ public class MotivConvertToSpecTests
                 return isValueAGreaterThanValueB.AndAlso(isValueC);
             })
             {
-                public record Model(int ValueA, int ValueB, bool ValueC);
+                public readonly record struct Model(int ValueA, int ValueB, bool ValueC);
             }
             """;
 
@@ -153,11 +153,11 @@ public class MotivConvertToSpecTests
 
             public class MyClass
             {
-                private readonly IsSatisfiedProposition _isSatisfiedProposition = new();
+                private static readonly IsSatisfiedProposition IsSatisfiedProposition = new();
                 public void IsValid(int valueA, int valueB, bool valueC)
                 {
                     // {{booleanExpression}}
-                    var isSatisfiedResult = _isSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(valueA, valueB, valueC));
+                    var isSatisfiedResult = IsSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(valueA, valueB, valueC));
                     var isSatisfied = isSatisfiedResult.Satisfied;
                 }
             }
@@ -175,7 +175,7 @@ public class MotivConvertToSpecTests
                 return isValueAGreaterThanValueB.AndAlso(isValueC);
             })
             {
-                public record Model(int ValueA, int ValueB, bool ValueC);
+                public readonly record struct Model(int ValueA, int ValueB, bool ValueC);
             }
             """;
 
@@ -221,12 +221,12 @@ public class MotivConvertToSpecTests
 
               public class MyClass
               {
-                  private readonly IsSatisfiedProposition _isSatisfiedProposition = new();
+                  private static readonly IsSatisfiedProposition IsSatisfiedProposition = new();
                   public void IsValid(int valueA, int valueB, int valueC)
                   {
                       // {{clause1}} && ({{clause2}} ||
                       //     !({{clause3}} ^ {{clause4}}))
-                      var isSatisfiedResult = _isSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(valueA, valueB, valueC));
+                      var isSatisfiedResult = IsSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(valueA, valueB, valueC));
                       var isSatisfied = isSatisfiedResult.Satisfied;
                   }
               }
@@ -252,7 +252,7 @@ public class MotivConvertToSpecTests
                   return isValueANonNegative.AndAlso((isValueBNonNegative.OrElse(!(isValueCAtLeast1 ^ isValueCAtMost10))));
               })
               {
-                  public record Model(int ValueA, int ValueB, int ValueC);
+                  public readonly record struct Model(int ValueA, int ValueB, int ValueC);
               }
               """;
 
@@ -304,11 +304,11 @@ public class MotivConvertToSpecTests
 
             public class MyClass
             {
-                private readonly IsValidProposition _isValidProposition = new();
+                private static readonly IsValidProposition IsValidProposition = new();
                 public bool IsValid(Order order)
                 {
                     // order.Total > 100
-                    var isValidResult = _isValidProposition.Evaluate(order);
+                    var isValidResult = IsValidProposition.Evaluate(order);
                     return isValidResult.Satisfied;
                 }
             }
@@ -368,11 +368,11 @@ public class MotivConvertToSpecTests
 
             public class MyClass
             {
-                private readonly IsValidProposition _isValidProposition = new();
+                private static readonly IsValidProposition IsValidProposition = new();
                 public bool IsValid(Order order)
                 {
                     // {{booleanExpression}}
-                    var isValidResult = _isValidProposition.Evaluate(order);
+                    var isValidResult = IsValidProposition.Evaluate(order);
                     return isValidResult.Satisfied;
                 }
             }
@@ -420,11 +420,11 @@ public class MotivConvertToSpecTests
 
             public class MyClass
             {
-                private readonly IsValidProposition _isValidProposition = new();
+                private static readonly IsValidProposition IsValidProposition = new();
                 public bool IsValid(object obj)
                 {
                     // {{booleanExpression}}
-                    var isValidResult = _isValidProposition.Evaluate(obj);
+                    var isValidResult = IsValidProposition.Evaluate(obj);
                     return isValidResult.Satisfied;
                 }
             }
@@ -471,11 +471,11 @@ public class MotivConvertToSpecTests
 
               public class MyClass
               {
-                  private readonly IsValidProposition _isValidProposition = new();
+                  private static readonly IsValidProposition IsValidProposition = new();
                   public bool IsValid(int x, int y)
                   {
                       // {{booleanExpression}}
-                      var isValidResult = _isValidProposition.Evaluate(new IsValidProposition.Model(x, y));
+                      var isValidResult = IsValidProposition.Evaluate(new IsValidProposition.Model(x, y));
                       return isValidResult.Satisfied;
                   }
               }
@@ -493,7 +493,7 @@ public class MotivConvertToSpecTests
                   return isXGreaterThan5.AndAlso(isYLessThan10);
               })
               {
-                  public record Model(int X, int Y);
+                  public readonly record struct Model(int X, int Y);
               }
               """;
 
@@ -537,11 +537,11 @@ public class MotivConvertToSpecTests
 
             public class MyClass
             {
-                private readonly IsSatisfiedProposition _isSatisfiedProposition = new();
+                private static readonly IsSatisfiedProposition IsSatisfiedProposition = new();
                 public void IsValid(int age, bool name)
                 {
                     // {{booleanExpression}}
-                    var isSatisfiedResult = _isSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(age, name));
+                    var isSatisfiedResult = IsSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(age, name));
                     var isSatisfied = isSatisfiedResult.Satisfied;
                 }
             }
@@ -560,7 +560,7 @@ public class MotivConvertToSpecTests
                     .AndAlso(isAgePositive);
             })
             {
-                public record Model(int Age, bool Name);
+                public readonly record struct Model(int Age, bool Name);
             }
             """;
 
@@ -604,12 +604,12 @@ public class MotivConvertToSpecTests
 
               public class MyClass
               {
-                  private readonly IsSatisfiedProposition _isSatisfiedProposition = new();
+                  private static readonly IsSatisfiedProposition IsSatisfiedProposition = new();
                   public void IsValid(int valueA, int valueB, int valueC)
                   {
                       // ({{clause1}} && {{clause2}}) ||
                       //     ({{clause3}} && {{clause2}})
-                      var isSatisfiedResult = _isSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(valueA, valueC, valueB));
+                      var isSatisfiedResult = IsSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(valueA, valueC, valueB));
                       var isSatisfied = isSatisfiedResult.Satisfied;
                   }
               }
@@ -631,7 +631,7 @@ public class MotivConvertToSpecTests
                   return (isValueANonNegative.AndAlso(isValueCAtLeast1)).OrElse((isValueBNonNegative.AndAlso(isValueCAtLeast1)));
               })
               {
-                  public record Model(int ValueA, int ValueC, int ValueB);
+                  public readonly record struct Model(int ValueA, int ValueC, int ValueB);
               }
               """;
 
@@ -675,12 +675,12 @@ public class MotivConvertToSpecTests
 
               public class MyClass
               {
-                  private readonly IsFeatureEnabledProposition _isFeatureEnabledProposition = new();
+                  private static readonly IsFeatureEnabledProposition IsFeatureEnabledProposition = new();
                   public bool IsFeatureEnabled(int valueA, int valueB, int valueC)
                   {
                       // ({{clause1}} && {{clause2}}) ||
                       //     ({{clause3}} && {{clause2}})
-                      var isFeatureEnabledResult = _isFeatureEnabledProposition.Evaluate(new IsFeatureEnabledProposition.Model(valueA, valueC, valueB));
+                      var isFeatureEnabledResult = IsFeatureEnabledProposition.Evaluate(new IsFeatureEnabledProposition.Model(valueA, valueC, valueB));
                       return isFeatureEnabledResult.Satisfied;
                   }
               }
@@ -702,7 +702,7 @@ public class MotivConvertToSpecTests
                   return (isValueANonNegative.AndAlso(is1LessThanValueC)).OrElse((isValueBNonNegative.AndAlso(is1LessThanValueC)));
               })
               {
-                  public record Model(int ValueA, int ValueC, int ValueB);
+                  public readonly record struct Model(int ValueA, int ValueC, int ValueB);
               }
               """;
 
@@ -745,11 +745,11 @@ public class MotivConvertToSpecTests
 
             public class MyClass
             {
-                private readonly IsGreenProposition _isGreenProposition = new();
+                private static readonly IsGreenProposition IsGreenProposition = new();
                 public bool IsGreen(string text)
                 {
                     // text == "green"
-                    var isGreenResult = _isGreenProposition.Evaluate(text);
+                    var isGreenResult = IsGreenProposition.Evaluate(text);
                     return isGreenResult.Satisfied;
                 }
             }
@@ -805,7 +805,7 @@ public class MotivConvertToSpecTests
                 public class Playground
                 {
                     private readonly IsFeatureEnabledProposition _isFeatureEnabledProposition;
-                    private readonly IsGreenProposition _isGreenProposition = new();
+                    private static readonly IsGreenProposition IsGreenProposition = new();
                     public Playground()
                     {
                         _isFeatureEnabledProposition = new IsFeatureEnabledProposition(this);
@@ -821,7 +821,7 @@ public class MotivConvertToSpecTests
                     public bool IsGreen(string text)
                     {
                         // text == "green"
-                        var isGreenResult = _isGreenProposition.Evaluate(text);
+                        var isGreenResult = IsGreenProposition.Evaluate(text);
                         return isGreenResult.Satisfied;
                     }
                 }
@@ -897,7 +897,7 @@ public class MotivConvertToSpecTests
             public class Playground
             {
                 private readonly IsFeatureEnabledProposition _isFeatureEnabledProposition;
-                private readonly IsGreenProposition _isGreenProposition = new();
+                private static readonly IsGreenProposition IsGreenProposition = new();
                 public Playground()
                 {
                     _isFeatureEnabledProposition = new IsFeatureEnabledProposition(this);
@@ -913,7 +913,7 @@ public class MotivConvertToSpecTests
                 public bool IsGreen(string text)
                 {
                     // text == "green"
-                    var isGreenResult = _isGreenProposition.Evaluate(text);
+                    var isGreenResult = IsGreenProposition.Evaluate(text);
                     return isGreenResult.Satisfied;
                 }
             }
@@ -939,7 +939,7 @@ public class MotivConvertToSpecTests
                 return (isValueANonNegative.AndAlso(is1LessThanValueC)).AndAlso((isNullOrEmpty.AndAlso(isGreen)));
             })
             {
-                public record Model(int ValueA, int ValueC, string Text);
+                public readonly record struct Model(int ValueA, int ValueC, string Text);
             }
 
             public class IsGreenProposition() : Spec<string>(() =>
@@ -992,7 +992,7 @@ public class MotivConvertToSpecTests
                 public class Playground
                 {
                     private readonly IsFeatureEnabledProposition _isFeatureEnabledProposition;
-                    private readonly IsGreenProposition _isGreenProposition = new();
+                    private static readonly IsGreenProposition IsGreenProposition = new();
                     public Playground()
                     {
                         _isFeatureEnabledProposition = new IsFeatureEnabledProposition(this);
@@ -1009,7 +1009,7 @@ public class MotivConvertToSpecTests
                     public bool IsGreen(string text)
                     {
                         // text == "green"
-                        var isGreenResult = _isGreenProposition.Evaluate(text);
+                        var isGreenResult = IsGreenProposition.Evaluate(text);
                         return isGreenResult.Satisfied;
                     }
                 }
@@ -1040,7 +1040,7 @@ public class MotivConvertToSpecTests
                         .AndAlso((isNullOrEmpty.AndAlso(isGreen))));
                 })
                 {
-                    public record Model(int ValueA, int ValueC, int ValueB, string Text);
+                    public readonly record struct Model(int ValueA, int ValueC, int ValueB, string Text);
                 }
 
                 public class IsGreenProposition() : Spec<string>(() =>
@@ -1092,13 +1092,13 @@ public class MotivConvertToSpecTests
             {
                 public class Playground()
                 {
-                    private readonly IsFeatureEnabledProposition _isFeatureEnabledProposition = new();
+                    private static readonly IsFeatureEnabledProposition IsFeatureEnabledProposition = new();
                     private static readonly IsGreenProposition IsGreenProposition = new();
                     public bool IsFeatureEnabled(int valueA, int valueB, int valueC, string text)
                     {
                         // (valueA >= 0 && 1 < valueC) ||
                         //     IsGreen(text)
-                        var isFeatureEnabledResult = _isFeatureEnabledProposition.Evaluate(new IsFeatureEnabledProposition.Model(valueA, valueC, text));
+                        var isFeatureEnabledResult = IsFeatureEnabledProposition.Evaluate(new IsFeatureEnabledProposition.Model(valueA, valueC, text));
                         return isFeatureEnabledResult.Satisfied;
                     }
 
@@ -1127,7 +1127,7 @@ public class MotivConvertToSpecTests
                     return (isValueANonNegative.AndAlso(is1LessThanValueC)).OrElse(isGreen);
                 })
                 {
-                    public record Model(int ValueA, int ValueC, string Text);
+                    public readonly record struct Model(int ValueA, int ValueC, string Text);
                 }
 
                 public class IsGreenProposition() : Spec<string>(() =>
