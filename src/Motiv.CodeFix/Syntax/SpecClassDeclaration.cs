@@ -8,10 +8,21 @@ namespace Motiv.CodeFix.Syntax;
 /// <summary>
 ///     Abstract base for building a class that extends Spec&lt;TModel&gt; with a primary constructor.
 /// </summary>
-public abstract class SpecClassDeclaration(SyntaxContext syntaxContext, string propositionName)
+/// <param name="syntaxContext">The syntax context for trivia handling.</param>
+/// <param name="propositionName">The name of the class.</param>
+/// <param name="typeParameters">The type parameters the class declares, if the expression depends on any.</param>
+/// <param name="instanceField">The static field holding the class's own instance, when it declares type parameters.</param>
+public abstract class SpecClassDeclaration(
+    SyntaxContext syntaxContext,
+    string propositionName,
+    SpecTypeParameters typeParameters,
+    MemberDeclarationSyntax? instanceField = null)
 {
     protected SyntaxContext SyntaxContext => syntaxContext;
     protected string PropositionName => propositionName;
+
+    /// <summary>The class's name with its type arguments, as the class refers to itself.</summary>
+    protected string SpecTypeName => typeParameters.Qualify(propositionName);
 
     public TypeDeclarationSyntax Build()
     {
@@ -23,11 +34,34 @@ public abstract class SpecClassDeclaration(SyntaxContext syntaxContext, string p
             .WithBaseList(BaseList(SingletonSeparatedList<BaseTypeSyntax>(baseType)));
 
         classDeclaration = AddClassBody(classDeclaration);
+        classDeclaration = typeParameters.ApplyTo(classDeclaration);
 
         var normalized = classDeclaration
             .NormalizeWhitespace(eol: syntaxContext.LineFeed.ToString());
 
-        return FormatOutput(normalized);
+        var formatted = FormatOutput(normalized);
+        return instanceField is null ? formatted : AddInstanceField(formatted, instanceField);
+    }
+
+    /// <summary>
+    ///     Adds the already formatted instance field as the class's first member, giving a semicolon-terminated
+    ///     class a body to hold it.
+    /// </summary>
+    private TypeDeclarationSyntax AddInstanceField(TypeDeclarationSyntax classDeclaration, MemberDeclarationSyntax field)
+    {
+        var lineFeed = syntaxContext.LineFeed;
+
+        if (classDeclaration.OpenBraceToken.IsKind(SyntaxKind.None))
+        {
+            classDeclaration = classDeclaration
+                .WithSemicolonToken(Token(SyntaxKind.None))
+                .WithOpenBraceToken(Token(TriviaList(lineFeed), SyntaxKind.OpenBraceToken, TriviaList(lineFeed)))
+                .WithCloseBraceToken(Token(SyntaxKind.CloseBraceToken));
+        }
+
+        var separator = classDeclaration.Members.Any() ? TriviaList(lineFeed, lineFeed) : TriviaList(lineFeed);
+        return classDeclaration.WithMembers(
+            classDeclaration.Members.Insert(0, field.WithTrailingTrivia(separator)));
     }
 
     private PrimaryConstructorBaseTypeSyntax BuildBaseType()

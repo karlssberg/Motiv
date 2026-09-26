@@ -284,4 +284,184 @@ public class MotivConvertToSpecInPlaceTests
             }
         }.RunAsync();
     }
+
+
+    [Fact]
+    public async Task Should_declare_the_method_type_parameters_on_a_self_holding_spec_when_expression_is_generic()
+    {
+        const string booleanExpression = "first is null && second is null";
+
+        const string source =
+          $$"""
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public bool AreBothMissing<T>(T first, T second) where T : class => {{booleanExpression}};
+            }
+            """;
+
+        const string expectedTransformedCode =
+          $$"""
+            using Motiv;
+
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public bool AreBothMissing<T>(T first, T second) where T : class
+                {
+                    // {{booleanExpression}}
+                    var areBothMissingResult = AreBothMissingProposition<T>.Instance.Evaluate(new AreBothMissingProposition<T>.Model(first, second));
+                    return areBothMissingResult.Satisfied;
+                }
+            }
+
+            public class AreBothMissingProposition<T>() : Spec<AreBothMissingProposition<T>.Model>(() =>
+            {
+                var isFirstNull = Spec
+                    .Build((Model m) => m.First is null)
+                    .Create("first is null");
+
+                var isSecondNull = Spec
+                    .Build((Model m) => m.Second is null)
+                    .Create("second is null");
+
+                return isFirstNull.AndAlso(isSecondNull);
+            })
+                where T : class
+            {
+                public static readonly AreBothMissingProposition<T> Instance = new();
+
+                public readonly record struct Model(T First, T Second);
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            FixedState = { Sources = { (Source, expectedTransformedCode) } },
+            ExpectedDiagnostics =
+            {
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                    .WithSpan(Source, 5, 73, 5, 73 + booleanExpression.Length)
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_not_offer_a_fix_when_a_generic_expression_calls_an_instance_method()
+    {
+        const string booleanExpression = "value is not null && !IsMissing(value)";
+
+        const string source =
+          $$"""
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public bool IsKnownValue<T>(T value) => {{booleanExpression}};
+
+                private bool IsMissing(object value) => ReferenceEquals(value, null);
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            // No fix is registered, so the document is left as it was
+            FixedState = { Sources = { (Source, source) } },
+            ExpectedDiagnostics =
+            {
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                    .WithSpan(Source, 5, 45, 5, 45 + booleanExpression.Length)
+            }
+        }.RunAsync();
+    }
+
+
+    [Fact]
+    public async Task Should_give_a_single_clause_generic_spec_a_body_to_hold_its_instance()
+    {
+        const string booleanExpression = "value is not null";
+
+        const string source =
+          $$"""
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public bool IsPresent<T>(T value)
+                {
+                    if ({{booleanExpression}})
+                        return true;
+
+                    return false;
+                }
+            }
+            """;
+
+        const string expectedTransformedCode =
+          $$"""
+            using Motiv;
+
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public bool IsPresent<T>(T value)
+                {
+                    if (ValueProposition<T>.Instance.Matches(value))
+                        return true;
+
+                    return false;
+                }
+            }
+
+            public class ValueProposition<T>() : Spec<T>(() =>
+                Spec.Build((T value) => {{booleanExpression}})
+                    .Create("{{booleanExpression}}"))
+            {
+                public static readonly ValueProposition<T> Instance = new();
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            FixedState = { Sources = { (Source, expectedTransformedCode) } },
+            ExpectedDiagnostics =
+            {
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                    .WithSpan(Source, 7, 13, 7, 13 + booleanExpression.Length)
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_not_offer_a_fix_in_top_level_statements_where_no_type_can_hold_the_spec()
+    {
+        const string booleanExpression = "args.Length > 0 && args.Length < 10";
+
+        const string source =
+          $$"""
+            System.Console.WriteLine({{booleanExpression}});
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { (Source, source) },
+                OutputKind = Microsoft.CodeAnalysis.OutputKind.ConsoleApplication
+            },
+            // No fix is registered, so the document is left as it was
+            FixedState = { Sources = { (Source, source) } },
+            ExpectedDiagnostics =
+            {
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                    .WithSpan(Source, 1, 26, 1, 26 + booleanExpression.Length)
+            }
+        }.RunAsync();
+    }
 }

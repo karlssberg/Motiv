@@ -20,7 +20,16 @@ internal class SpecInvocationReplacer(
     // A spec is an immutable decision tree, so it is built once per type — unless it captures `this`.
     private bool _isFieldStatic;
 
+    // The spec class's name with any type arguments; a generic spec holds its own instance instead of a field
+    private string _specTypeName = string.Empty;
+    private bool _isGeneric;
+
     private string FieldName => _isFieldStatic ? propositionName : $"_{propositionName.ToCamelCase()}";
+
+    private ExpressionSyntax SpecAccess =>
+        _isGeneric
+            ? ParseExpression($"{_specTypeName}.{SpecTypeParameters.InstanceFieldName}")
+            : IdentifierName(FieldName);
 
     private string ResultVariableName
     {
@@ -42,6 +51,7 @@ internal class SpecInvocationReplacer(
     /// <param name="root">The syntax root to transform.</param>
     /// <param name="hasInstanceMethods">Whether the expression contains instance method calls.</param>
     /// <param name="groupedExpression">The expression after and-chain grouping.</param>
+    /// <param name="specTypeName">The spec class's name with any type arguments.</param>
     /// <param name="modelTypeName">The model type name for the field type.</param>
     /// <returns>The updated syntax root.</returns>
     public SyntaxNode Replace(
@@ -51,9 +61,12 @@ internal class SpecInvocationReplacer(
         SyntaxNode root,
         bool hasInstanceMethods,
         ExpressionSyntax groupedExpression,
+        string specTypeName,
         string? modelTypeName = null)
     {
         _isFieldStatic = !hasInstanceMethods;
+        _specTypeName = specTypeName;
+        _isGeneric = specTypeName != propositionName;
         var containingType = syntaxContext.ContainingType
             ?? throw new InvalidOperationException("The expression is not inside a type declaration.");
         var lineFeed = syntaxContext.LineFeed;
@@ -63,6 +76,8 @@ internal class SpecInvocationReplacer(
         var comment = new EvaluationComment(groupedExpression, lineFeed);
 
         var newType = ReplaceExpression(containingType, expression, model, comment);
+        if (_isGeneric)
+            return root.ReplaceNode(containingType, newType);
 
         var containingMember = ContainingMember(expression, containingType);
         var indent = GetIndent(containingMember);
@@ -194,17 +209,16 @@ internal class SpecInvocationReplacer(
                     .WithVariables(SingletonSeparatedList(
                         VariableDeclarator(Identifier(ResultVariableName))
                             .WithInitializer(EqualsValueClause(
-                                InvocationExpression(MemberAccess(FieldName, "Evaluate"))
+                                InvocationExpression(
+                                        MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SpecAccess, IdentifierName("Evaluate")))
                                     .WithArgumentList(ArgumentList(SingletonSeparatedList(model))))))))
             .NormalizeWhitespace();
 
-    private MemberAccessExpressionSyntax ResultSatisfied() => MemberAccess(ResultVariableName, "Satisfied");
-
-    private static MemberAccessExpressionSyntax MemberAccess(string target, string member) =>
-        MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(target), IdentifierName(member));
+    private MemberAccessExpressionSyntax ResultSatisfied() =>
+        MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(ResultVariableName), IdentifierName("Satisfied"));
 
     private ExpressionSyntax BuildSatisfiedCheck(ArgumentSyntax model) =>
-        fieldCustomizer.GetSatisfiedCheck(IdentifierName(FieldName), model).NormalizeWhitespace();
+        fieldCustomizer.GetSatisfiedCheck(SpecAccess, model).NormalizeWhitespace();
 
     private ArgumentSyntax BuildModelArgument(ImmutableArray<ISymbol> variableSymbols)
     {
@@ -213,7 +227,7 @@ internal class SpecInvocationReplacer(
 
         var modelArgs = variableSymbols.Select(s => Argument(IdentifierName(s.Name)));
         return Argument(
-            ObjectCreationExpression(QualifiedName(IdentifierName(propositionName), IdentifierName(defaultModelName)))
+            ObjectCreationExpression(ParseTypeName($"{_specTypeName}.{defaultModelName}"))
                 .WithArgumentList(ArgumentList(SeparatedList(modelArgs))));
     }
 

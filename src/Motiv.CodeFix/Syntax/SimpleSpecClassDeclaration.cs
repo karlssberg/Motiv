@@ -12,8 +12,10 @@ public class SimpleSpecClassDeclaration(
     SyntaxContext syntaxContext,
     string propositionName,
     string modelTypeName,
-    ExpressionSyntax specChainExpression)
-    : SpecClassDeclaration(syntaxContext, propositionName)
+    ExpressionSyntax specChainExpression,
+    SpecTypeParameters typeParameters,
+    MemberDeclarationSyntax? instanceField = null)
+    : SpecClassDeclaration(syntaxContext, propositionName, typeParameters, instanceField)
 {
     protected override TypeSyntax GetModelType() => ParseTypeName(modelTypeName);
 

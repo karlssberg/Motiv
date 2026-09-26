@@ -52,7 +52,11 @@ public class MotivCodeFixProvider : CodeFixProvider
                 continue;
 
             // The spec is held in a field, so there must be a type to hold it
-            if (expressionSyntax.FirstAncestorOrSelf<TypeDeclarationSyntax>() is null)
+            if (expressionSyntax.FirstAncestorOrSelf<TypeDeclarationSyntax>() is not { } containingType)
+                continue;
+
+            var containingTypeSymbol = semanticModel.GetDeclaredSymbol(containingType, context.CancellationToken) as INamedTypeSymbol;
+            if (!LogicalExpressionToSpecConverter.CanConvert(expressionSyntax, semanticModel, containingTypeSymbol))
                 continue;
 
             // Derive context-aware class names from the expression
