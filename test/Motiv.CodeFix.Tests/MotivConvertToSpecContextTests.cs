@@ -70,6 +70,30 @@ public class MotivConvertToSpecContextTests
                 }
             }
             """,
+        ["ParenthesizedDeclaration"] =
+            """
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public bool Check(int n)
+                {
+                    var isInRange = ([|n > 0 && n < 10|]);
+                    return isInRange; // must survive
+                }
+            }
+            """,
+        ["PrimaryConstructorCallingInstanceMethod"] =
+            """
+            namespace MyNamespace;
+
+            public class MyClass()
+            {
+                public bool IsSmallEven(int n) => [|n < 10 && IsEven(n)|];
+
+                public bool IsEven(int n) => n % 2 == 0; // must survive
+            }
+            """,
         ["AnnotatedMethod"] =
             """
             using System.Diagnostics.CodeAnalysis;
@@ -549,6 +573,8 @@ public class MotivConvertToSpecContextTests
     [InlineData("BlockNamespace")]
     [InlineData("NestedClass")]
     [InlineData("MultiStatementMethod")]
+    [InlineData("ParenthesizedDeclaration")]
+    [InlineData("PrimaryConstructorCallingInstanceMethod")]
     [InlineData("AnnotatedMethod")]
     [InlineData("IfCondition")]
     [InlineData("WhileCondition")]
