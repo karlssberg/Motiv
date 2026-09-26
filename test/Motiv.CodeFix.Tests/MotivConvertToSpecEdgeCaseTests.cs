@@ -35,6 +35,7 @@ public class MotivConvertToSpecEdgeCaseTests
             public class MyClass
             {
                 private static readonly IsValidProposition IsValidProposition = new();
+
                 public bool IsValid(string text)
                 {
                     // {{booleanExpression}}
@@ -108,6 +109,7 @@ public class MotivConvertToSpecEdgeCaseTests
             public class MyClass
             {
                 private static readonly IsValidProposition IsValidProposition = new();
+
                 public bool IsValid(Order order)
                 {
                     // order.Address.City == "NYC"
@@ -160,6 +162,7 @@ public class MotivConvertToSpecEdgeCaseTests
             public class MyClass
             {
                 private static readonly IsValidProposition IsValidProposition = new();
+
                 public bool IsValid(object value)
                 {
                     // {{booleanExpression}}
@@ -213,6 +216,7 @@ public class MotivConvertToSpecEdgeCaseTests
             public class MyClass
             {
                 private static readonly IsMatchProposition IsMatchProposition = new();
+
                 public bool IsMatch(string name)
                 {
                     // {{booleanExpression}}
@@ -265,6 +269,7 @@ public class MotivConvertToSpecEdgeCaseTests
             public class MyClass
             {
                 private static readonly IsInRangeProposition IsInRangeProposition = new();
+
                 public bool IsInRange(int x)
                 {
                     // {{booleanExpression}}
@@ -317,6 +322,7 @@ public class MotivConvertToSpecEdgeCaseTests
             public class MyClass
             {
                 private static readonly IsValidProposition IsValidProposition = new();
+
                 public bool IsValid(object obj)
                 {
                     // {{booleanExpression}}
@@ -372,6 +378,7 @@ public class MotivConvertToSpecEdgeCaseTests
             public class MyClass
             {
                 private static readonly IsSatisfiedProposition IsSatisfiedProposition = new();
+
                 public void Check(int a, int b, int c)
                 {
                     // {{booleanExpression}}
@@ -443,6 +450,7 @@ public class MotivConvertToSpecEdgeCaseTests
             public class MyClass
             {
                 private static readonly IsSatisfiedProposition IsSatisfiedProposition = new();
+
                 public void Check(int a, int b)
                 {
                     // {{booleanExpression}}
@@ -507,6 +515,7 @@ public class MotivConvertToSpecEdgeCaseTests
             public class MyClass
             {
                 private static readonly IsValidProposition IsValidProposition = new();
+
                 public bool IsValid(object obj)
                 {
                     // obj is int ||
@@ -560,6 +569,7 @@ public class MotivConvertToSpecEdgeCaseTests
             public class MyClass
             {
                 private static readonly IsInvalidProposition IsInvalidProposition = new();
+
                 public bool IsInvalid(int a, int b)
                 {
                     // {{booleanExpression}}

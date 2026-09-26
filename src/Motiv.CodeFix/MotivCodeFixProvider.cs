@@ -44,10 +44,15 @@ public class MotivCodeFixProvider : CodeFixProvider
                 continue;
 
             // Ensure we only attempt to fix when the node is an expression
-            var node = root.FindNode(diagnostic.Location.SourceSpan);
+            // Innermost, because an argument shares its expression's span and would otherwise win the tie
+            var node = root.FindNode(diagnostic.Location.SourceSpan, getInnermostNodeForTie: true);
             var expressionSyntax = node as ExpressionSyntax
                                    ?? node.FirstAncestorOrSelf<ExpressionSyntax>();
             if (expressionSyntax is null)
+                continue;
+
+            // The spec is held in a field, so there must be a type to hold it
+            if (expressionSyntax.FirstAncestorOrSelf<TypeDeclarationSyntax>() is null)
                 continue;
 
             // Derive context-aware class names from the expression

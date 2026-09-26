@@ -33,6 +33,15 @@ internal interface ISpecFieldCustomizer
     ExpressionSyntax GetConstructorAssignment(string propositionName);
 
     /// <summary>
+    ///     Returns the boolean check that replaces an expression in place, where there is no
+    ///     statement to hold the evaluated result.
+    /// </summary>
+    /// <param name="field">The spec field.</param>
+    /// <param name="model">The model argument to evaluate the spec against.</param>
+    /// <returns>A <c>bool</c> expression.</returns>
+    ExpressionSyntax GetSatisfiedCheck(ExpressionSyntax field, ArgumentSyntax model);
+
+    /// <summary>
     ///     Returns additional using directives needed by this customizer.
     /// </summary>
     /// <returns>Using directive syntax nodes to add.</returns>

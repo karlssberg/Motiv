@@ -14,8 +14,8 @@ public class SyntaxContext(Document document, ExpressionSyntax logicalExpression
         await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false)
         ?? throw new InvalidOperationException("Could not get semantic model");
 
-    public ClassDeclarationSyntax? ContainingClass { get; } =
-        logicalExpressionSyntax.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
+    public TypeDeclarationSyntax? ContainingType { get; } =
+        logicalExpressionSyntax.Ancestors().OfType<TypeDeclarationSyntax>().FirstOrDefault();
 
     public SyntaxTrivia BaselineIndent { get; } = ComputeBaselineIndent(logicalExpressionSyntax);
 
@@ -30,9 +30,9 @@ public class SyntaxContext(Document document, ExpressionSyntax logicalExpression
 
     public async ValueTask<INamedTypeSymbol?> ContainingTypeSymbol(CancellationToken cancellationToken)
     {
-        if (ContainingClass is null) return null;
+        if (ContainingType is null) return null;
         var semanticModel = await SemanticModel(cancellationToken).ConfigureAwait(false);
-        return semanticModel.GetDeclaredSymbol(ContainingClass) as INamedTypeSymbol;
+        return semanticModel.GetDeclaredSymbol(ContainingType);
     }
 
     private static SyntaxTrivia ComputeBaselineIndent(ExpressionSyntax expression)
