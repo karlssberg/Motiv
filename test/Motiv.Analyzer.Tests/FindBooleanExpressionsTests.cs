@@ -729,6 +729,29 @@ public class FindBooleanExpressionsTests
     }
 
     [Fact]
+    public async Task Should_still_analyze_a_lambda_whose_target_type_cannot_be_inferred_yet()
+    {
+        // Code under edit: the lambda's target method does not exist yet, so it has no converted type
+        const string source =
+            """
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public void Check()
+                {
+                    {|CS0103:Missing|}(x => {|MOTIV0001:x > 0 && x < 10|});
+                }
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } }
+        }.RunAsync();
+    }
+
+    [Fact]
     public async Task Should_identify_boolean_expression_inside_delegate_lambda()
     {
         const string booleanExpression = "n > 0 && n < 10";
