@@ -233,7 +233,9 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
 
     protected override Expression VisitMember(MemberExpression node)
     {
-        if (node.Expression is not ConstantExpression && !ReferenceEquals(node.Expression, _elidedReceiver))
+        if (node.Expression is not ConstantExpression
+            && !IsClosureLink(node.Expression)
+            && !ReferenceEquals(node.Expression, _elidedReceiver))
         {
             if (node.Expression is null)
                 OutputText.Append(node.Member.DeclaringType?.Name);
@@ -248,6 +250,15 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
         OutputText.Append(node.Member.Name);
         return node;
     }
+
+    /// <summary>
+    /// Whether the expression is the compiler-generated hop from one closure to the closure of an enclosing scope
+    /// (e.g. <c>CS$&lt;&gt;8__locals1</c>). Such names contain <c>&lt;</c>, which no C# identifier can.
+    /// </summary>
+    private static bool IsClosureLink(Expression? expression) =>
+        expression is MemberExpression { Member.Name: var name } link
+        && name.IndexOf('<') >= 0
+        && (link.Expression is ConstantExpression || IsClosureLink(link.Expression));
 
     protected override Expression VisitMemberInit(MemberInitExpression node)
     {
@@ -437,22 +448,14 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
             case ParameterExpression parameterExpression:
                 OutputText.Append(parameterExpression.Name);
                 break;
-            case MemberExpression { Expression: ConstantExpression constantExpression } memberExpression:
-
-                var (value, valueType) = constantExpression.GetConstantExpressionValue(memberExpression.Member.Name);
-                if (IsSupported(value))
-                {
-                    var serializeSupported = SerializeSupported(value, valueType);
-                    OutputText.Append(serializeSupported);
-                    break;
-                }
-                OutputText.Append(value);
-                break;
             case ConstantExpression constantExpression:
                 OutputText.Append(
                     SerializeSupported(constantExpression.Value, constantExpression.Type)
                         ?? constantExpression.Value?.ToString()
                         ?? "null");
+                break;
+            case var _ when CapturedValueReader.TryEvaluate(node, out var value):
+                OutputText.Append(SerializeSupported(value, node.Type) ?? value);
                 break;
             default:
                 Visit(node);
@@ -826,14 +829,22 @@ internal class CSharpExpressionSerializer<T>(T model, ParameterExpression modelP
                 OutputText.Append(serialization);
                 return node;
             default:
-                var valueGetter = CompiledDelegateCache.GetValue(node, n =>
-                {
-                    var body = Expression.Convert(n, typeof(object));
-                    return Expression.Lambda<Func<T, object>>(body, modelParameter).Compile();
-                });
-                var value = valueGetter(model);
+                var value = CapturedValueReader.TryRead(node, out var read)
+                    ? read
+                    : GetCompiledValueGetter(node)(model);
                 OutputText.Append(SerializeSupported(value, node.Type) ?? value);
                 return node;
         }
     }
+
+    /// <summary>
+    /// Compiles a value that reflection cannot read (it depends on the model, or is more than a member chain) once
+    /// per node. Checking the cache first keeps a hit allocation-free: passing the factory lambda to
+    /// <see cref="ConditionalWeakTable{TKey,TValue}.GetValue" /> allocates it on every call.
+    /// </summary>
+    private Func<T, object> GetCompiledValueGetter(Expression node) =>
+        CompiledDelegateCache.TryGetValue(node, out var valueGetter)
+            ? valueGetter
+            : CompiledDelegateCache.GetValue(node, n =>
+                Expression.Lambda<Func<T, object>>(Expression.Convert(n, typeof(object)), modelParameter).Compile());
 }

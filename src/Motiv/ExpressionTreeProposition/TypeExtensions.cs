@@ -1,5 +1,4 @@
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace Motiv.ExpressionTreeProposition;
 
@@ -26,29 +25,6 @@ internal static class ExpressionTreeExtensions
     {
         return methodCallExpression.Method.Name;
     }
-
-    internal static (object?, Type) GetConstantExpressionValue(
-        this ConstantExpression constantExpression,
-        string capturedVariableName)
-    {
-        var value = constantExpression.Value;
-        var valueType = constantExpression.Type;
-
-        if (value is null || !IsClosureObject(value.GetType())) return (value, valueType); // not a closure
-
-        var capturedField = value.GetClosureObjectField(capturedVariableName);
-
-        return capturedField is not null
-            ? (capturedField.GetValue(value), capturedField.FieldType)
-            : (value, valueType); // If no suitable field found, return the closure object itself
-    }
-
-    internal static FieldInfo? GetClosureObjectField(this object value, string capturedVariableName) =>
-        value.GetType().GetField(capturedVariableName);
-
-    internal static bool IsClosureObject(this Type type) =>
-        // Closure types are compiler-generated and usually have specific naming patterns
-        type.Name.StartsWith("<>") || type.Name.Contains("DisplayClass");
 
     private static string GetTypeKeyword(Type type)
     {
