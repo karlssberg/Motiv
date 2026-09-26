@@ -34,11 +34,11 @@ public class MotivConvertToSpecEdgeCaseTests
 
             public class MyClass
             {
-                private readonly IsValidProposition _isValidProposition = new();
+                private static readonly IsValidProposition IsValidProposition = new();
                 public bool IsValid(string text)
                 {
                     // {{booleanExpression}}
-                    var isValidResult = _isValidProposition.Evaluate(text);
+                    var isValidResult = IsValidProposition.Evaluate(text);
                     return isValidResult.Satisfied;
                 }
             }
@@ -107,11 +107,11 @@ public class MotivConvertToSpecEdgeCaseTests
 
             public class MyClass
             {
-                private readonly IsValidProposition _isValidProposition = new();
+                private static readonly IsValidProposition IsValidProposition = new();
                 public bool IsValid(Order order)
                 {
                     // order.Address.City == "NYC"
-                    var isValidResult = _isValidProposition.Evaluate(order);
+                    var isValidResult = IsValidProposition.Evaluate(order);
                     return isValidResult.Satisfied;
                 }
             }
@@ -159,11 +159,11 @@ public class MotivConvertToSpecEdgeCaseTests
 
             public class MyClass
             {
-                private readonly IsValidProposition _isValidProposition = new();
+                private static readonly IsValidProposition IsValidProposition = new();
                 public bool IsValid(object value)
                 {
                     // {{booleanExpression}}
-                    var isValidResult = _isValidProposition.Evaluate(value);
+                    var isValidResult = IsValidProposition.Evaluate(value);
                     return isValidResult.Satisfied;
                 }
             }
@@ -212,11 +212,11 @@ public class MotivConvertToSpecEdgeCaseTests
 
             public class MyClass
             {
-                private readonly IsMatchProposition _isMatchProposition = new();
+                private static readonly IsMatchProposition IsMatchProposition = new();
                 public bool IsMatch(string name)
                 {
                     // {{booleanExpression}}
-                    var isMatchResult = _isMatchProposition.Evaluate(name);
+                    var isMatchResult = IsMatchProposition.Evaluate(name);
                     return isMatchResult.Satisfied;
                 }
             }
@@ -264,11 +264,11 @@ public class MotivConvertToSpecEdgeCaseTests
 
             public class MyClass
             {
-                private readonly IsInRangeProposition _isInRangeProposition = new();
+                private static readonly IsInRangeProposition IsInRangeProposition = new();
                 public bool IsInRange(int x)
                 {
                     // {{booleanExpression}}
-                    var isInRangeResult = _isInRangeProposition.Evaluate(x);
+                    var isInRangeResult = IsInRangeProposition.Evaluate(x);
                     return isInRangeResult.Satisfied;
                 }
             }
@@ -316,11 +316,11 @@ public class MotivConvertToSpecEdgeCaseTests
 
             public class MyClass
             {
-                private readonly IsValidProposition _isValidProposition = new();
+                private static readonly IsValidProposition IsValidProposition = new();
                 public bool IsValid(object obj)
                 {
                     // {{booleanExpression}}
-                    var isValidResult = _isValidProposition.Evaluate(obj);
+                    var isValidResult = IsValidProposition.Evaluate(obj);
                     return isValidResult.Satisfied;
                 }
             }
@@ -371,11 +371,11 @@ public class MotivConvertToSpecEdgeCaseTests
 
             public class MyClass
             {
-                private readonly IsSatisfiedProposition _isSatisfiedProposition = new();
+                private static readonly IsSatisfiedProposition IsSatisfiedProposition = new();
                 public void Check(int a, int b, int c)
                 {
                     // {{booleanExpression}}
-                    var isSatisfiedResult = _isSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(a, b, c));
+                    var isSatisfiedResult = IsSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(a, b, c));
                     var isSatisfied = isSatisfiedResult.Satisfied;
                 }
             }
@@ -398,7 +398,7 @@ public class MotivConvertToSpecEdgeCaseTests
                     .AndAlso(isCPositive);
             })
             {
-                public record Model(int A, int B, int C);
+                public readonly record struct Model(int A, int B, int C);
             }
             """;
 
@@ -442,11 +442,11 @@ public class MotivConvertToSpecEdgeCaseTests
 
             public class MyClass
             {
-                private readonly IsSatisfiedProposition _isSatisfiedProposition = new();
+                private static readonly IsSatisfiedProposition IsSatisfiedProposition = new();
                 public void Check(int a, int b)
                 {
                     // {{booleanExpression}}
-                    var isSatisfiedResult = _isSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(a, b));
+                    var isSatisfiedResult = IsSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(a, b));
                     var isSatisfied = isSatisfiedResult.Satisfied;
                 }
             }
@@ -464,7 +464,7 @@ public class MotivConvertToSpecEdgeCaseTests
                 return ((isAPositive)).AndAlso(((isBLessThan10)));
             })
             {
-                public record Model(int A, int B);
+                public readonly record struct Model(int A, int B);
             }
             """;
 
@@ -506,12 +506,12 @@ public class MotivConvertToSpecEdgeCaseTests
 
             public class MyClass
             {
-                private readonly IsValidProposition _isValidProposition = new();
+                private static readonly IsValidProposition IsValidProposition = new();
                 public bool IsValid(object obj)
                 {
                     // obj is int ||
                     //     obj is string
-                    var isValidResult = _isValidProposition.Evaluate(obj);
+                    var isValidResult = IsValidProposition.Evaluate(obj);
                     return isValidResult.Satisfied;
                 }
             }
@@ -559,11 +559,11 @@ public class MotivConvertToSpecEdgeCaseTests
 
             public class MyClass
             {
-                private readonly IsInvalidProposition _isInvalidProposition = new();
+                private static readonly IsInvalidProposition IsInvalidProposition = new();
                 public bool IsInvalid(int a, int b)
                 {
                     // {{booleanExpression}}
-                    var isInvalidResult = _isInvalidProposition.Evaluate(new IsInvalidProposition.Model(a, b));
+                    var isInvalidResult = IsInvalidProposition.Evaluate(new IsInvalidProposition.Model(a, b));
                     return isInvalidResult.Satisfied;
                 }
             }
@@ -581,7 +581,7 @@ public class MotivConvertToSpecEdgeCaseTests
                 return !(isAPositive.AndAlso(isBPositive));
             })
             {
-                public record Model(int A, int B);
+                public readonly record struct Model(int A, int B);
             }
             """;
 

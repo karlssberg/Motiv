@@ -51,11 +51,13 @@ public class ComposedSpecClassDeclaration(
         if (nestedRecordName is null || nestedRecordParameterList is null)
             return base.AddClassBody(classDeclaration);
 
+        // A struct, because a model is created on every evaluation
         var nestedRecord = RecordDeclaration(
-                SyntaxKind.RecordDeclaration,
+                SyntaxKind.RecordStructDeclaration,
                 Token(SyntaxKind.RecordKeyword),
                 Identifier(nestedRecordName))
-            .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
+            .WithClassOrStructKeyword(Token(SyntaxKind.StructKeyword))
+            .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.ReadOnlyKeyword)))
             .WithParameterList(nestedRecordParameterList)
             .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
 

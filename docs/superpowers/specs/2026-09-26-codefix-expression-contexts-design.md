@@ -63,6 +63,9 @@ are sound.
    type. A static field also works where an instance field cannot be referenced: instance and
    static field initializers, constructor initializers, static local functions and structs. The
    field keeps the proposition's PascalCase name, as static-method conversions already did.
+   The multi-variable `Model` that is created on every evaluation becomes a
+   `readonly record struct`, so a conversion adds no heap allocation to the call site. The output
+   already needs C# 12 for primary constructors, so C# 10's record structs cost nothing.
 6. **The fix replaces the expression, not the method.** An expression that is the whole value of a
    `return`, a single-variable `var` or an assignment statement in a block keeps today's
    provenance-preserving form: a comment, `var xResult = Spec.Evaluate(…);`, then the original
