@@ -215,7 +215,7 @@ public class RuleSerializerDeserializeTests
         error.Message.ShouldContain("is-ready");
     }
 
-#if NET8_0_OR_GREATER
+#if NET8_0_OR_GREATER && !MOTIV_NETSTANDARD_ASSET
     [Fact]
     public void Should_bind_an_expression_node_now_that_expressions_are_enabled()
     {
