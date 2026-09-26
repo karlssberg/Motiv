@@ -59,6 +59,7 @@ public class MotivAnalyzer : DiagnosticAnalyzer
 
         // Check if this expression is inside a Spec.Build() lambda - if so, ignore it
         if (IsInsideSpecLambda(expression, context.SemanticModel)) return;
+        if (CannotHoldSpecEvaluation(expression, context.SemanticModel)) return;
 
         var diagnostic = Diagnostic.Create(Motiv0001, expression.GetLocation());
         context.ReportDiagnostic(diagnostic);
@@ -104,10 +105,33 @@ public class MotivAnalyzer : DiagnosticAnalyzer
         if (IsNestedInPatternExpression(node)) return;
 
         if (IsInsideSpecLambda(node, context.SemanticModel)) return;
+        if (CannotHoldSpecEvaluation(node, context.SemanticModel)) return;
 
         var diagnostic = Diagnostic.Create(Motiv0001, node.GetLocation());
         context.ReportDiagnostic(diagnostic);
     }
+
+    /// <summary>
+    /// A compile-time constant (a <c>const</c>, an attribute argument, a default parameter value, a
+    /// <c>case</c> label) cannot be replaced by a call, and an expression-tree lambda is translated rather
+    /// than executed, so a spec evaluation in either would not compile or would not mean the same thing.
+    /// </summary>
+    private static bool CannotHoldSpecEvaluation(SyntaxNode node, SemanticModel semanticModel) =>
+        IsCompileTimeConstant(node, semanticModel) || IsInsideExpressionTreeLambda(node, semanticModel);
+
+    private static bool IsCompileTimeConstant(SyntaxNode node, SemanticModel semanticModel) =>
+        semanticModel.GetConstantValue(node).HasValue;
+
+    private static bool IsInsideExpressionTreeLambda(SyntaxNode node, SemanticModel semanticModel) =>
+        node.Ancestors()
+            .OfType<LambdaExpressionSyntax>()
+            .Any(lambda => IsExpressionTree(lambda, semanticModel));
+
+    private static bool IsExpressionTree(LambdaExpressionSyntax lambda, SemanticModel semanticModel) =>
+        semanticModel.GetTypeInfo(lambda).ConvertedType is INamedTypeSymbol convertedType
+        && SymbolEqualityComparer.Default.Equals(
+            convertedType.OriginalDefinition,
+            semanticModel.Compilation.GetTypeByMetadataName("System.Linq.Expressions.Expression`1"));
 
     private static bool IsInsideSpecLambda(SyntaxNode node, SemanticModel semanticModel)
     {
