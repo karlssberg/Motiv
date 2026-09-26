@@ -705,6 +705,30 @@ public class FindBooleanExpressionsTests
     }
 
     [Fact]
+    public async Task Should_ignore_is_type_check_inside_expression_tree_lambda()
+    {
+        const string source =
+            """
+            using System;
+            using System.Linq.Expressions;
+
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public Expression<Func<object, bool>> IsText() => value => value is string;
+            }
+            """;
+
+        // No diagnostics should be reported since an expression tree is translated, not executed
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            ExpectedDiagnostics = { } // Empty - no diagnostics expected
+        }.RunAsync();
+    }
+
+    [Fact]
     public async Task Should_identify_boolean_expression_inside_delegate_lambda()
     {
         const string booleanExpression = "n > 0 && n < 10";
