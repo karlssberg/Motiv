@@ -15,14 +15,14 @@ namespace Motiv.CodeFix.Syntax;
 public abstract class SpecClassDeclaration(
     SyntaxContext syntaxContext,
     string propositionName,
-    SpecTypeParameters? typeParameters = null,
+    SpecTypeParameters typeParameters,
     MemberDeclarationSyntax? instanceField = null)
 {
     protected SyntaxContext SyntaxContext => syntaxContext;
     protected string PropositionName => propositionName;
 
     /// <summary>The class's name with its type arguments, as the class refers to itself.</summary>
-    protected string SpecTypeName => typeParameters?.Qualify(propositionName) ?? propositionName;
+    protected string SpecTypeName => typeParameters.Qualify(propositionName);
 
     public TypeDeclarationSyntax Build()
     {
@@ -34,7 +34,7 @@ public abstract class SpecClassDeclaration(
             .WithBaseList(BaseList(SingletonSeparatedList<BaseTypeSyntax>(baseType)));
 
         classDeclaration = AddClassBody(classDeclaration);
-        classDeclaration = typeParameters?.ApplyTo(classDeclaration) ?? classDeclaration;
+        classDeclaration = typeParameters.ApplyTo(classDeclaration);
 
         var normalized = classDeclaration
             .NormalizeWhitespace(eol: syntaxContext.LineFeed.ToString());

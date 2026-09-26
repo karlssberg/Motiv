@@ -502,6 +502,38 @@ public class MotivConvertToSpecContextTests
                 public bool HoldsBoth(T first, T second) => [|first is not null && second is not null|];
             }
             """,
+        ["GenericArray"] =
+            """
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public bool StartsWithValue<T>(T[] items) => [|items.Length > 0 && items[0] is not null|];
+            }
+            """,
+        ["GenericClassAndMethod"] =
+            """
+            namespace MyNamespace;
+
+            public class Pair<TKey> where TKey : class
+            {
+                public bool AreBothMissing<TValue>(TKey key, TValue value) where TValue : class => [|value is null && key is null|];
+            }
+            """,
+        ["GenericLocalFunction"] =
+            """
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public bool Check(string first, string second)
+                {
+                    return AreBothMissing(first, second); // must survive
+
+                    static bool AreBothMissing<T>(T a, T b) where T : class => [|a is null && b is null|];
+                }
+            }
+            """,
         ["GenericMethodSingleValue"] =
             """
             using System;
@@ -656,6 +688,9 @@ public class MotivConvertToSpecContextTests
     [InlineData("GenericMethod")]
     [InlineData("GenericClass")]
     [InlineData("GenericMethodSingleValue")]
+    [InlineData("GenericArray")]
+    [InlineData("GenericLocalFunction")]
+    [InlineData("GenericClassAndMethod")]
     [InlineData("InstancePropertyReference")]
     [InlineData("StaticPropertyReference")]
     [InlineData("OutVariableDeclaredInExpression")]

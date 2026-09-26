@@ -20,7 +20,7 @@ internal class LogicalExpressionToSpecConverter(
     Document document,
     ISpecFieldCustomizer fieldCustomizer)
 {
-    private SpecTypeParameters? _typeParameters;
+    private SpecTypeParameters _typeParameters = SpecTypeParameters.None;
     private MemberDeclarationSyntax? _instanceField;
 
     private readonly SpecInvocationReplacer _invocationReplacer = new(propositionName, defaultModelName, fieldCustomizer);
@@ -242,8 +242,8 @@ internal class LogicalExpressionToSpecConverter(
             innerLambdaModelType: modelValue.TypeName,
             innerLambdaParameterName: modelValue.Symbol.Name,
             decomposition,
+            _typeParameters,
             containingTypeName: hasInstanceMethods ? containingTypeName : null,
-            typeParameters: _typeParameters,
             instanceField: _instanceField).Build();
     }
 
@@ -274,10 +274,10 @@ internal class LogicalExpressionToSpecConverter(
             innerLambdaModelType: defaultModelName,
             innerLambdaParameterName: "m",
             decomposition,
+            _typeParameters,
             resolvedContainingTypeName,
             nestedRecordName: defaultModelName,
             nestedRecordParameterList: recordParameterList,
-            typeParameters: _typeParameters,
             instanceField: _instanceField).Build();
     }
 

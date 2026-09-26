@@ -13,7 +13,7 @@ public class SimpleSpecClassDeclaration(
     string propositionName,
     string modelTypeName,
     ExpressionSyntax specChainExpression,
-    SpecTypeParameters? typeParameters = null,
+    SpecTypeParameters typeParameters,
     MemberDeclarationSyntax? instanceField = null)
     : SpecClassDeclaration(syntaxContext, propositionName, typeParameters, instanceField)
 {
