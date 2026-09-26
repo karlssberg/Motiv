@@ -257,14 +257,18 @@ internal class ExpressionTreeTransformer<TModel>(Expression<Func<TModel, bool>> 
         var specExpression = UnwrapConvertExpression(args[1]);
 
         var enumerableItemType = GetEnumerableItemType(enumerableExpression.Type)!;
-        var compiledValue = Expression
-            .Lambda<Func<object>>(Expression.Convert(specExpression, typeof(object)))
-            .Compile()();
+        // A captured spec is almost always a closure field, which reflection reads in nanoseconds; compiling it
+        // (tens of µs) dominated construction. Anything else is interpreted: it runs once, so JIT never pays off.
+        var specValue = CapturedValueReader.TryRead(specExpression, out var read)
+            ? read
+            : Expression
+                .Lambda<Func<object>>(Expression.Convert(specExpression, typeof(object)))
+                .Compile(preferInterpretation: true)();
 
         return factory(
             expression,
             enumerableItemType,
-            compiledValue
+            specValue
                 ?? throw new InvalidOperationException($"The expression {expression.Serialize()} returned null."));
     }
 
