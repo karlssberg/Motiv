@@ -287,6 +287,109 @@ public class ExpressionNameDeriverTests
         Assert.Equal("ClampProposition", propositionName);
     }
 
+    [Theory]
+    [InlineData("((n > 0 && n < 10))", "int n", "IsNPositiveAndLessThan10Proposition")]
+    [InlineData("x > 0 ^ y > 0", "int x, int y", "ClampProposition")]
+    [InlineData("firstMeasurement > 0 && secondMeasurement > 0", "int firstMeasurement, int secondMeasurement", "ClampProposition")]
+    [InlineData("n > 0 && theFirstRatherLongMeasurementName > theSecondRatherLongMeasurementName", "int n, int theFirstRatherLongMeasurementName, int theSecondRatherLongMeasurementName", "ClampProposition")]
+    [InlineData("theFirstRatherLongMeasurementName > theSecondRatherLongMeasurementName && n > 0", "int n, int theFirstRatherLongMeasurementName, int theSecondRatherLongMeasurementName", "ClampProposition")]
+    public void DeriveClassNames_ConditionThatClauseMeaningCannotName_FallsBackToEnclosingMember(
+        string condition,
+        string parameterList,
+        string expectedName)
+    {
+        var (expression, semanticModel) = CreateConditionContext(condition, parameterList);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal(expectedName, propositionName);
+    }
+
+    [Fact]
+    public void DeriveClassNames_ConditionInLocalFunction_UsesLocalFunctionName()
+    {
+        var source = """
+            public class TestClass
+            {
+                public void TestMethod()
+                {
+                    void Validate(int x, int y)
+                    {
+                        if (x > 0 && y > 0 && x < y)
+                        {
+                        }
+                    }
+                }
+            }
+            """;
+        var (expression, semanticModel) = CreateContext(source, root => root
+            .DescendantNodes()
+            .OfType<IfStatementSyntax>()
+            .First()
+            .Condition);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("ValidateProposition", propositionName);
+    }
+
+    [Fact]
+    public void DeriveClassNames_ConditionInPropertyGetter_UsesPropertyName()
+    {
+        var source = """
+            public class TestClass
+            {
+                private int _x;
+                private int _y;
+
+                public string Quadrant
+                {
+                    get
+                    {
+                        if (_x > 0 && _y > 0 && _x < _y)
+                            return "upper";
+
+                        return "other";
+                    }
+                }
+            }
+            """;
+        var (expression, semanticModel) = CreateContext(source, root => root
+            .DescendantNodes()
+            .OfType<IfStatementSyntax>()
+            .First()
+            .Condition);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("QuadrantProposition", propositionName);
+    }
+
+    [Fact]
+    public void DeriveClassNames_ConditionWithNoEnclosingMember_FallsBackToRootIdentifier()
+    {
+        var source = """
+            public class TestClass
+            {
+                public TestClass(int count)
+                {
+                    if (count > 0 && count < 10 && count != 5)
+                    {
+                    }
+                }
+            }
+            """;
+        var (expression, semanticModel) = CreateContext(source, root => root
+            .DescendantNodes()
+            .OfType<IfStatementSyntax>()
+            .First()
+            .Condition);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("CountProposition", propositionName);
+    }
+
     [Fact]
     public void DeriveClassNames_ExpressionBodiedProperty_UsesPropertyName()
     {

@@ -411,18 +411,18 @@ public class MotivConvertToSpecInPlaceTests
             {
                 public bool IsPresent<T>(T value)
                 {
-                    if (ValueProposition<T>.Instance.Matches(value))
+                    if (IsValueNotNullProposition<T>.Instance.Matches(value))
                         return true;
 
                     return false;
                 }
             }
 
-            public class ValueProposition<T>() : Spec<T>(() =>
+            public class IsValueNotNullProposition<T>() : Spec<T>(() =>
                 Spec.Build((T value) => {{booleanExpression}})
                     .Create("{{booleanExpression}}"))
             {
-                public static readonly ValueProposition<T> Instance = new();
+                public static readonly IsValueNotNullProposition<T> Instance = new();
             }
             """;
 
