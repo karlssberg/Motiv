@@ -357,6 +357,25 @@ the .NET distribution, so `UNAVAILABLE` is what a container gets today — but a
 *"there is no .NET SDK"* as a fact would decline work the moment that stops being true, and would
 have no way to notice it had. The verdict carries the reason it measured for exactly that purpose.
 
+**The `netstandard2.0` builds run on every machine, through the `ns20asset` leg** (#250). A
+`ProjectReference` resolves to the nearest compatible asset, so only `net472` ever loaded the
+`netstandard2.0` builds of `Motiv`, `Motiv.Serialization` and `Motiv.Serialization.Snapshots` — and
+`net472` runs on Windows CI alone (off Windows it aborts with *Could not find 'mono' host*, which is
+expected). `ns20asset` is a test-project target framework that runs on `net10.0` but pins every
+project reference, transitive ones included, to `netstandard2.0`; `Directory.Build.props` and
+`Directory.Build.targets` define it, and a test project opts in by listing `$(NetStandardAssetLeg)`.
+Run it alone with `-f ns20asset`. `dotnet test` labels it `(net10.0)` — the label is read from the
+test assembly — so the same project appears twice under that name. It proves API shape and `#if`
+branches, not Framework runtime behaviour, which stays `net472`'s job. Two rules follow:
+
+- Gate a test on the library's **surface** with `MOTIV_NETSTANDARD_ASSET`, not on the runtime:
+  `#if NET8_0_OR_GREATER && !MOTIV_NETSTANDARD_ASSET` for an API compiled only into the modern
+  builds. `NETFRAMEWORK` and friends keep meaning the runtime the test runs on.
+- NuGet restore does not read `SetTargetFramework`, so a package the `netstandard2.0` builds need
+  only on that surface, and that is not in the shared framework, must be referenced for the leg in
+  `Directory.Build.targets` (today: `Microsoft.Bcl.AsyncInterfaces`). `TargetAssetTests` names the
+  missing assembly when one is added.
+
 ### Code Intelligence
 
 Prefer LSP over Grep/Glob/Read for code navigation:

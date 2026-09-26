@@ -39,5 +39,26 @@
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
         <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+
+        <!--
+          The netstandard2.0 asset leg (#250): a test-project target framework that RUNS on the
+          modern runtime but LOADS the netstandard2.0 build of every referenced project. Without it,
+          only net472 ever picks netstandard2.0 — a ProjectReference resolves to the nearest
+          compatible asset — and net472 runs on Windows CI alone.
+
+          A test project opts in by listing $(NetStandardAssetLeg) in its TargetFrameworks.
+          The alias is not a real TFM, so its identity is spelled out here, before the SDK's
+          inference would try to parse the name; Directory.Build.targets pins the references.
+          MOTIV_NETSTANDARD_ASSET lets a test gate on the library's SURFACE ("was this API
+          compiled in?") separately from the runtime it runs on (NETFRAMEWORK, NET8_0_OR_GREATER).
+        -->
+        <NetStandardAssetLeg>ns20asset</NetStandardAssetLeg>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(TargetFramework)' == '$(NetStandardAssetLeg)'">
+        <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
+        <TargetFrameworkVersion>v10.0</TargetFrameworkVersion>
+        <TargetFrameworkMoniker>.NETCoreApp,Version=v10.0</TargetFrameworkMoniker>
+        <DefineConstants>$(DefineConstants);MOTIV_NETSTANDARD_ASSET</DefineConstants>
     </PropertyGroup>
 </Project>

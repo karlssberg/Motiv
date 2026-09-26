@@ -4,7 +4,7 @@
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
         <OutputType>Library</OutputType>
-        <TargetFrameworks>net8.0;net9.0;net472;net10.0</TargetFrameworks>
+        <TargetFrameworks>net8.0;net9.0;net472;net10.0;$(NetStandardAssetLeg)</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>
@@ -35,6 +35,7 @@
     -->
     <ItemGroup>
         <Compile Include="..\testing\StoreConformance\*.cs" LinkBase="StoreConformance" />
+        <Compile Include="..\testing\TargetAsset\*.cs" LinkBase="TargetAsset" />
         <EmbeddedResource Include="Printing\Corpus\*.json" />
     </ItemGroup>
 

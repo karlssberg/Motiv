@@ -1,4 +1,4 @@
-#if NET8_0_OR_GREATER
+#if NET8_0_OR_GREATER && !MOTIV_NETSTANDARD_ASSET
 using System.Text.Json.Serialization;
 using Motiv.Serialization.Expressions;
 
