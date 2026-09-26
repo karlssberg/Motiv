@@ -216,21 +216,25 @@ internal class LogicalExpressionToSpecConverter(
                 !(identifier.Parent is MemberAccessExpressionSyntax memberAccess &&
                   memberAccess.Name == identifier))
             .Select(identifier => (Identifier: identifier, Symbol: semanticModel.GetSymbolInfo(identifier).Symbol))
-            .Where(candidate => candidate.Symbol switch
-            {
-                IFieldSymbol or IRangeVariableSymbol => true,
-                IPropertySymbol property => !property.IsIndexer,
-                IParameterSymbol or ILocalSymbol => !IsDeclaredWithin(candidate.Symbol, expression),
-                _ => false
-            })
-            .GroupBy(candidate => candidate.Symbol, SymbolEqualityComparer.Default)
+            .Where(candidate => IsModelValue(candidate.Symbol, expression))
+            .GroupBy(candidate => candidate.Symbol!, SymbolEqualityComparer.Default)
             .Select(group =>
             {
-                var (identifier, symbol) = group.First();
+                var symbol = group.Key;
                 // A range variable carries no type of its own; the expression that reads it does
-                return (symbol!, symbol!.GetTypeSymbol() ?? semanticModel.GetTypeInfo(identifier).Type);
+                var type = symbol.GetTypeSymbol() ?? semanticModel.GetTypeInfo(group.First().Identifier).Type;
+                return (symbol, type);
             })
     ];
+
+    private static bool IsModelValue(ISymbol? symbol, ExpressionSyntax expression) =>
+        symbol switch
+        {
+            IFieldSymbol or IRangeVariableSymbol => true,
+            IPropertySymbol property => !property.IsIndexer,
+            IParameterSymbol or ILocalSymbol => !IsDeclaredWithin(symbol, expression),
+            _ => false
+        };
 
     private static bool IsDeclaredWithin(ISymbol symbol, ExpressionSyntax expression) =>
         symbol.DeclaringSyntaxReferences
