@@ -8,8 +8,9 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 namespace Motiv.CodeFix;
 
 /// <summary>
-///     Replaces a logical expression in a method with a spec invocation,
-///     adding a field declaration (and optionally a constructor) to the containing class.
+///     Replaces a logical expression with a spec evaluation, adding a field declaration (and optionally a
+///     constructor) to the containing type. Only the expression is rewritten — or, when it is the whole
+///     value of a statement, that one statement — so everything around it is left as it was.
 /// </summary>
 internal class SpecInvocationReplacer(
     string propositionName,
@@ -21,8 +22,19 @@ internal class SpecInvocationReplacer(
 
     private string FieldName => _isFieldStatic ? propositionName : $"_{propositionName.ToCamelCase()}";
 
+    private string ResultVariableName
+    {
+        get
+        {
+            var baseName = propositionName.EndsWith("Proposition")
+                ? propositionName.Substring(0, propositionName.Length - "Proposition".Length)
+                : propositionName;
+            return $"{baseName.ToCamelCase()}Result";
+        }
+    }
+
     /// <summary>
-    ///     Replaces the logical expression in the containing class with a spec field and invocation.
+    ///     Replaces the logical expression in the containing type with a spec field and invocation.
     /// </summary>
     /// <param name="syntaxContext">The syntax context for trivia handling.</param>
     /// <param name="variableSymbols">The variables referenced by the expression.</param>
@@ -41,56 +53,169 @@ internal class SpecInvocationReplacer(
         ExpressionSyntax groupedExpression,
         string? modelTypeName = null)
     {
-        var method = logicalExpressionSyntax.Ancestors().OfType<MethodDeclarationSyntax>().First();
         _isFieldStatic = !hasInstanceMethods;
-        var containingClass = method.Ancestors().OfType<ClassDeclarationSyntax>().First();
-        var statement = logicalExpressionSyntax.Ancestors().OfType<StatementSyntax>().FirstOrDefault();
-
-        var commentTrivia = BuildCommentTrivia(groupedExpression);
-        var specInvocation = BuildSpecInvocationExpression(variableSymbols);
-
-        var resultVarName = DeriveResultVarName();
-
-        var field = BuildFieldDeclaration(modelTypeName);
-        var replacementMethod = BuildReplacementMethod(method, statement, resultVarName, specInvocation, commentTrivia);
-        ConstructorDeclarationSyntax? constructor = hasInstanceMethods
-            ? BuildConstructor(containingClass)
-            : null;
-
+        var containingType = syntaxContext.ContainingType
+            ?? throw new InvalidOperationException("The expression is not inside a type declaration.");
         var lineFeed = syntaxContext.LineFeed;
-        var eol = lineFeed.ToString();
 
-        var newField = FormatMember(field, eol, lineFeed);
-        var newMethod = (MemberDeclarationSyntax)replacementMethod.NormalizeWhitespace(eol: eol);
-        var newConstructor = constructor is not null
-            ? FormatMember(constructor, eol, lineFeed)
+        var expression = OutermostParentheses(logicalExpressionSyntax);
+        var model = BuildModelArgument(variableSymbols);
+        var comment = new EvaluationComment(groupedExpression, lineFeed);
+
+        var newType = ReplaceExpression(containingType, expression, model, comment);
+
+        var containingMember = ContainingMember(expression, containingType);
+        var indent = GetIndent(containingMember);
+        var field = FormatMember(BuildFieldDeclaration(modelTypeName), indent, lineFeed);
+        var constructor = hasInstanceMethods
+            ? FormatMember(BuildConstructor(containingType), indent, lineFeed)
             : null;
 
-        var indent = GetIndentFromOriginalMethod(method);
-        if (indent.Length > 0)
-        {
-            newField = SyntaxIndentHelper.ReindentMember(newField, indent);
-            newMethod = SyntaxIndentHelper.ReindentMember(newMethod, indent);
-            if (newConstructor is not null)
-                newConstructor = SyntaxIndentHelper.ReindentMember(newConstructor, indent);
-        }
-
-        newField = newField.WithTrailingTrivia(lineFeed);
-        newMethod = newMethod.WithTrailingTrivia(lineFeed);
-        if (newConstructor is not null)
-            newConstructor = newConstructor.WithTrailingTrivia(lineFeed, lineFeed);
-
-        if (!hasInstanceMethods && variableSymbols.Length == 1)
-            newMethod = newMethod.WithLeadingTrivia(method.GetLeadingTrivia());
-
-        return ApplyMemberChanges(root, containingClass, method, newField, newMethod, newConstructor, FieldName);
+        var containingMemberIndex = containingType.Members.IndexOf(containingMember);
+        return root.ReplaceNode(containingType, AddMembers(newType, containingMemberIndex, field, constructor, lineFeed));
     }
 
-    private MemberDeclarationSyntax FormatMember(
-        MemberDeclarationSyntax member,
-        string eol,
-        SyntaxTrivia lineFeed) =>
-        fieldCustomizer.FormatMember(member.NormalizeWhitespace(eol: eol), lineFeed);
+    /// <summary>
+    ///     Rewrites the smallest node that can hold the evaluation: the statement whose whole value is the
+    ///     expression, else a <c>bool</c> expression-bodied method, else the expression itself.
+    /// </summary>
+    private TypeDeclarationSyntax ReplaceExpression(
+        TypeDeclarationSyntax containingType,
+        ExpressionSyntax expression,
+        ArgumentSyntax model,
+        EvaluationComment comment)
+    {
+        if (FindHostStatement(expression) is { } statement)
+            return containingType.ReplaceNode(statement, BuildEvaluatedStatements(statement, expression, model, comment));
+
+        if (FindBoolExpressionBodiedMethod(expression) is { } method)
+            return containingType.ReplaceNode(method, BuildBlockBodiedMethod(method, model, comment));
+
+        return containingType.ReplaceNode(expression, BuildSatisfiedCheck(model).WithTriviaFrom(expression));
+    }
+
+    private static ExpressionSyntax OutermostParentheses(ExpressionSyntax expression)
+    {
+        while (expression.Parent is ParenthesizedExpressionSyntax parenthesized)
+            expression = parenthesized;
+        return expression;
+    }
+
+    /// <summary>
+    ///     The statement whose whole value is <paramref name="expression" />, when it sits in a block and so can be
+    ///     preceded by the statement that evaluates the spec.
+    /// </summary>
+    private static StatementSyntax? FindHostStatement(ExpressionSyntax expression)
+    {
+        StatementSyntax? statement = expression.Parent switch
+        {
+            ReturnStatementSyntax returnStatement => returnStatement,
+            EqualsValueClauseSyntax
+            {
+                Parent: VariableDeclaratorSyntax
+                {
+                    Parent: VariableDeclarationSyntax
+                    {
+                        Variables.Count: 1,
+                        Parent: LocalDeclarationStatementSyntax local
+                    }
+                }
+            } when !local.IsConst && local.UsingKeyword.IsKind(SyntaxKind.None) => local,
+            AssignmentExpressionSyntax { Parent: ExpressionStatementSyntax assignmentStatement } assignment
+                when assignment.IsKind(SyntaxKind.SimpleAssignmentExpression) => assignmentStatement,
+            _ => null
+        };
+
+        return statement?.Parent is BlockSyntax or SwitchSectionSyntax ? statement : null;
+    }
+
+    private static MethodDeclarationSyntax? FindBoolExpressionBodiedMethod(ExpressionSyntax expression) =>
+        expression.Parent is ArrowExpressionClauseSyntax { Parent: MethodDeclarationSyntax method }
+        && method.ReturnType is PredefinedTypeSyntax returnType
+        && returnType.Keyword.IsKind(SyntaxKind.BoolKeyword)
+            ? method
+            : null;
+
+    /// <summary>
+    ///     <c>var result = Field.Evaluate(model);</c> followed by <paramref name="statement" /> reading
+    ///     <c>result.Satisfied</c> — the result stays in scope for whoever wants to know why.
+    /// </summary>
+    private IEnumerable<StatementSyntax> BuildEvaluatedStatements(
+        StatementSyntax statement,
+        ExpressionSyntax expression,
+        ArgumentSyntax model,
+        EvaluationComment comment)
+    {
+        var indent = GetIndent(statement);
+
+        yield return BuildEvaluateStatement(model)
+            .WithLeadingTrivia(statement.GetLeadingTrivia().AddRange(comment.Lines(indent)).Add(indent))
+            .WithTrailingTrivia(comment.LineFeed);
+
+        yield return statement
+            .ReplaceNode(expression, ResultSatisfied().WithTriviaFrom(expression))
+            .WithLeadingTrivia(indent);
+    }
+
+    private MethodDeclarationSyntax BuildBlockBodiedMethod(
+        MethodDeclarationSyntax method,
+        ArgumentSyntax model,
+        EvaluationComment comment)
+    {
+        var lineFeed = comment.LineFeed;
+        var indent = GetIndent(method);
+        var bodyIndent = Whitespace(indent + "    ");
+
+        var evaluateStatement = BuildEvaluateStatement(model)
+            .WithLeadingTrivia(TriviaList(bodyIndent).AddRange(comment.Lines(bodyIndent)).Add(bodyIndent))
+            .WithTrailingTrivia(lineFeed);
+        var returnStatement = ReturnStatement(ResultSatisfied())
+            .NormalizeWhitespace()
+            .WithLeadingTrivia(bodyIndent)
+            .WithTrailingTrivia(lineFeed);
+
+        var body = Block(evaluateStatement, returnStatement)
+            .WithOpenBraceToken(Token(SyntaxKind.OpenBraceToken).WithLeadingTrivia(indent).WithTrailingTrivia(lineFeed))
+            .WithCloseBraceToken(Token(SyntaxKind.CloseBraceToken)
+                .WithLeadingTrivia(indent)
+                .WithTrailingTrivia(method.SemicolonToken.TrailingTrivia));
+
+        var tokenBeforeArrow = method.ExpressionBody!.ArrowToken.GetPreviousToken();
+        return method
+            .ReplaceToken(tokenBeforeArrow, tokenBeforeArrow.WithTrailingTrivia(lineFeed))
+            .WithExpressionBody(null)
+            .WithSemicolonToken(Token(SyntaxKind.None))
+            .WithBody(body);
+    }
+
+    private LocalDeclarationStatementSyntax BuildEvaluateStatement(ArgumentSyntax model) =>
+        LocalDeclarationStatement(
+                VariableDeclaration(IdentifierName("var"))
+                    .WithVariables(SingletonSeparatedList(
+                        VariableDeclarator(Identifier(ResultVariableName))
+                            .WithInitializer(EqualsValueClause(
+                                InvocationExpression(MemberAccess(FieldName, "Evaluate"))
+                                    .WithArgumentList(ArgumentList(SingletonSeparatedList(model))))))))
+            .NormalizeWhitespace();
+
+    private MemberAccessExpressionSyntax ResultSatisfied() => MemberAccess(ResultVariableName, "Satisfied");
+
+    private static MemberAccessExpressionSyntax MemberAccess(string target, string member) =>
+        MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(target), IdentifierName(member));
+
+    private ExpressionSyntax BuildSatisfiedCheck(ArgumentSyntax model) =>
+        fieldCustomizer.GetSatisfiedCheck(IdentifierName(FieldName), model).NormalizeWhitespace();
+
+    private ArgumentSyntax BuildModelArgument(ImmutableArray<ISymbol> variableSymbols)
+    {
+        if (variableSymbols.Length == 1)
+            return Argument(IdentifierName(variableSymbols.First().Name));
+
+        var modelArgs = variableSymbols.Select(s => Argument(IdentifierName(s.Name)));
+        return Argument(
+            ObjectCreationExpression(QualifiedName(IdentifierName(propositionName), IdentifierName(defaultModelName)))
+                .WithArgumentList(ArgumentList(SeparatedList(modelArgs))));
+    }
 
     private FieldDeclarationSyntax BuildFieldDeclaration(string? modelTypeName)
     {
@@ -118,32 +243,7 @@ internal class SpecInvocationReplacer(
             .WithModifiers(modifiers);
     }
 
-    private MethodDeclarationSyntax BuildReplacementMethod(
-        MethodDeclarationSyntax originalMethod,
-        StatementSyntax? statement,
-        string resultVarName,
-        ExpressionSyntax specInvocation,
-        SyntaxTriviaList commentTrivia)
-    {
-        var evaluateStatement = LocalDeclarationStatement(
-            VariableDeclaration(IdentifierName("var"))
-                .WithVariables(SingletonSeparatedList(
-                    VariableDeclarator(Identifier(resultVarName))
-                        .WithInitializer(EqualsValueClause(specInvocation)))))
-            .WithLeadingTrivia(commentTrivia);
-
-        var assignmentStatement = BuildAssignmentStatement(statement, originalMethod, resultVarName);
-
-        var body = Block(evaluateStatement, assignmentStatement);
-
-        return originalMethod
-            .WithAttributeLists(List<AttributeListSyntax>())
-            .WithExpressionBody(null)
-            .WithSemicolonToken(Token(SyntaxKind.None))
-            .WithBody(body);
-    }
-
-    private ConstructorDeclarationSyntax BuildConstructor(ClassDeclarationSyntax containingClass)
+    private ConstructorDeclarationSyntax BuildConstructor(TypeDeclarationSyntax containingType)
     {
         var assignment = fieldCustomizer.GetConstructorAssignment(propositionName);
 
@@ -153,163 +253,112 @@ internal class SpecInvocationReplacer(
                 IdentifierName(FieldName),
                 assignment));
 
-        return ConstructorDeclaration(containingClass.Identifier)
+        return ConstructorDeclaration(containingType.Identifier.WithoutTrivia())
             .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
             .WithBody(Block(assignmentStatement));
     }
 
-    private InvocationExpressionSyntax BuildSpecInvocationExpression(
-        ImmutableArray<ISymbol> variableSymbols)
+    private MemberDeclarationSyntax FormatMember(MemberDeclarationSyntax member, SyntaxTrivia indent, SyntaxTrivia lineFeed)
     {
-        var evaluateAccess = MemberAccessExpression(
-            SyntaxKind.SimpleMemberAccessExpression,
-            IdentifierName(FieldName),
-            IdentifierName("Evaluate"));
-
-        ArgumentSyntax argument;
-        if (variableSymbols.Length == 1)
-        {
-            argument = Argument(IdentifierName(variableSymbols.First().Name));
-        }
-        else
-        {
-            var modelArgs = variableSymbols.Select(s => Argument(IdentifierName(s.Name)));
-            var modelCreation = ObjectCreationExpression(
-                    QualifiedName(IdentifierName(propositionName), IdentifierName(defaultModelName)))
-                .WithArgumentList(ArgumentList(SeparatedList(modelArgs)));
-            argument = Argument(modelCreation);
-        }
-
-        return InvocationExpression(evaluateAccess)
-            .WithArgumentList(ArgumentList(SingletonSeparatedList(argument)));
+        var formatted = fieldCustomizer.FormatMember(member.NormalizeWhitespace(eol: lineFeed.ToString()), lineFeed);
+        if (indent.Span.Length > 0)
+            formatted = SyntaxIndentHelper.ReindentMember(formatted, indent.ToString());
+        return formatted.WithTrailingTrivia(lineFeed);
     }
 
-    private static StatementSyntax BuildAssignmentStatement(
-        StatementSyntax? statement,
-        MethodDeclarationSyntax method,
-        string resultVarName)
-    {
-        var satisfiedAccess = MemberAccessExpression(
-            SyntaxKind.SimpleMemberAccessExpression,
-            IdentifierName(resultVarName),
-            IdentifierName("Satisfied"));
+    private static MemberDeclarationSyntax ContainingMember(ExpressionSyntax expression, TypeDeclarationSyntax containingType) =>
+        expression.Ancestors().OfType<MemberDeclarationSyntax>().First(member => member.Parent == containingType);
 
-        return statement switch
-        {
-            ReturnStatementSyntax => ReturnStatement(satisfiedAccess),
-            LocalDeclarationStatementSyntax local =>
-                LocalDeclarationStatement(
-                    VariableDeclaration(IdentifierName("var"))
-                        .WithVariables(SingletonSeparatedList(
-                            VariableDeclarator(local.Declaration.Variables.First().Identifier)
-                                .WithInitializer(EqualsValueClause(satisfiedAccess))))),
-            ExpressionStatementSyntax { Expression: AssignmentExpressionSyntax assignment } =>
-                ExpressionStatement(
-                    AssignmentExpression(
-                        SyntaxKind.SimpleAssignmentExpression,
-                        assignment.Left,
-                        satisfiedAccess)),
-            null when method.ExpressionBody is not null && method.ReturnType.ToString() == "bool"
-                => ReturnStatement(satisfiedAccess),
-            _ => LocalDeclarationStatement(
-                VariableDeclaration(IdentifierName("var"))
-                    .WithVariables(SingletonSeparatedList(
-                        VariableDeclarator(Identifier("isSatisfied"))
-                            .WithInitializer(EqualsValueClause(satisfiedAccess)))))
-        };
+    private static SyntaxTrivia GetIndent(SyntaxNode node)
+    {
+        var whitespace = node.GetLeadingTrivia().LastOrDefault(t => t.IsKind(SyntaxKind.WhitespaceTrivia));
+        return whitespace.IsKind(SyntaxKind.WhitespaceTrivia) ? whitespace : Whitespace("");
     }
 
-    private static SyntaxTriviaList BuildCommentTrivia(ExpressionSyntax expression)
+    private TypeDeclarationSyntax AddMembers(
+        TypeDeclarationSyntax containingType,
+        int containingMemberIndex,
+        MemberDeclarationSyntax field,
+        MemberDeclarationSyntax? constructor,
+        SyntaxTrivia lineFeed)
     {
-        var normalized = expression.NormalizeWhitespace().ToFullString();
-        var parts = normalized.Split([" || "], 2, StringSplitOptions.None);
+        var fieldAdded = containingType.Members.OfType<FieldDeclarationSyntax>()
+            .Any(f => f.Declaration.Variables.Any(v => v.Identifier.Text == FieldName));
 
-        var trivia = new List<SyntaxTrivia>();
-        if (parts.Length <= 1)
-        {
-            trivia.Add(Comment($"// {normalized}"));
-            trivia.Add(EndOfLine("\n"));
-        }
-        else
-        {
-            trivia.Add(Comment($"// {parts[0]} ||"));
-            trivia.Add(EndOfLine("\n"));
-            trivia.Add(Comment($"//     {parts[1]}"));
-            trivia.Add(EndOfLine("\n"));
-        }
+        var members = containingType.Members.ToList();
 
-        return TriviaList(trivia);
-    }
-
-    private string DeriveResultVarName()
-    {
-        var baseName = propositionName.EndsWith("Proposition")
-            ? propositionName.Substring(0, propositionName.Length - "Proposition".Length)
-            : propositionName;
-        return $"{baseName.ToCamelCase()}Result";
-    }
-
-    private static string GetIndentFromOriginalMethod(MethodDeclarationSyntax method) =>
-        method
-            .GetLeadingTrivia()
-            .LastOrDefault(t => t.IsKind(SyntaxKind.WhitespaceTrivia))
-            .ToString();
-
-    private static SyntaxNode ApplyMemberChanges(
-        SyntaxNode root,
-        ClassDeclarationSyntax containingClass,
-        MethodDeclarationSyntax method,
-        MemberDeclarationSyntax newField,
-        MemberDeclarationSyntax newMethod,
-        MemberDeclarationSyntax? newConstructor,
-        string fieldName)
-    {
-        var fieldAdded = containingClass.Members.OfType<FieldDeclarationSyntax>()
-            .Any(f => f.Declaration.Variables.Any(v => v.Identifier.Text == fieldName));
-
-        var existingMembers = containingClass.Members
-            .Select(m => m == method ? newMethod : m).ToList();
-
+        // Static initializers run in textual order, so the spec must be declared before the member reading it
         if (!fieldAdded)
-            InsertAfterLastField(existingMembers, newField);
-        if (newConstructor is not null)
-            InsertAfterLastField(existingMembers, newConstructor);
+            InsertMember(members, Math.Min(AfterLastField(members), containingMemberIndex), field, lineFeed);
+        if (constructor is not null)
+            InsertMember(members, AfterLastField(members), constructor, lineFeed);
 
-        var newClass = containingClass.WithMembers(List(existingMembers));
-        newClass = RemovePrimaryConstructorIfNeeded(newClass, newConstructor);
-
-        return root.ReplaceNode(containingClass, newClass);
+        var newType = containingType.WithMembers(List(members));
+        return constructor is null ? newType : RemovePrimaryConstructor(newType, lineFeed);
     }
 
-    private static void InsertAfterLastField(List<MemberDeclarationSyntax> members, MemberDeclarationSyntax member)
+    private static int AfterLastField(List<MemberDeclarationSyntax> members) =>
+        members.FindLastIndex(m => m is FieldDeclarationSyntax) + 1;
+
+    /// <summary>
+    ///     Inserts <paramref name="member" /> at <paramref name="index" />, separated by a blank line from a
+    ///     following member that is not a field and has none of its own. A blank line an earlier conversion left
+    ///     below the member before it moves down, so the fields stay together.
+    /// </summary>
+    private static void InsertMember(List<MemberDeclarationSyntax> members, int index, MemberDeclarationSyntax member, SyntaxTrivia lineFeed)
     {
-        var lastFieldIndex = -1;
-        for (var i = 0; i < members.Count; i++)
+        var next = index < members.Count ? members[index] : null;
+
+        var needsBlankLine = next is not null and not FieldDeclarationSyntax
+            && !next.GetLeadingTrivia().FirstOrDefault().IsKind(SyntaxKind.EndOfLineTrivia);
+
+        if (index > 0 && EndsWithBlankLine(members[index - 1]))
         {
-            if (members[i] is FieldDeclarationSyntax)
-                lastFieldIndex = i;
+            members[index - 1] = members[index - 1].WithTrailingTrivia(lineFeed);
+            needsBlankLine = true;
         }
 
-        members.Insert(lastFieldIndex + 1, member);
+        members.Insert(index, needsBlankLine ? member.WithTrailingTrivia(lineFeed, lineFeed) : member);
     }
 
-    private static ClassDeclarationSyntax RemovePrimaryConstructorIfNeeded(
-        ClassDeclarationSyntax classDeclaration,
-        MemberDeclarationSyntax? newConstructor)
-    {
-        if (newConstructor is null || classDeclaration.ParameterList is null)
-            return classDeclaration;
+    private static bool EndsWithBlankLine(MemberDeclarationSyntax member) =>
+        member.GetTrailingTrivia() is { Count: >= 2 } trivia
+        && trivia[trivia.Count - 1].IsKind(SyntaxKind.EndOfLineTrivia)
+        && trivia[trivia.Count - 2].IsKind(SyntaxKind.EndOfLineTrivia);
 
-        var classLeadingWhitespace = classDeclaration
+    private static TypeDeclarationSyntax RemovePrimaryConstructor(TypeDeclarationSyntax typeDeclaration, SyntaxTrivia lineFeed)
+    {
+        if (typeDeclaration.ParameterList is null)
+            return typeDeclaration;
+
+        var typeLeadingWhitespace = typeDeclaration
             .GetLeadingTrivia()
             .LastOrDefault(t => t.IsKind(SyntaxKind.WhitespaceTrivia));
 
-        SyntaxTrivia[] openBraceTrivia = classLeadingWhitespace.RawKind == 0
-            ? [EndOfLine("\n")]
-            : [EndOfLine("\n"), classLeadingWhitespace];
+        SyntaxTrivia[] openBraceTrivia = typeLeadingWhitespace.RawKind == 0
+            ? [lineFeed]
+            : [lineFeed, typeLeadingWhitespace];
 
-        return classDeclaration
+        return typeDeclaration
             .WithParameterList(null)
-            .WithOpenBraceToken(classDeclaration.OpenBraceToken.WithLeadingTrivia(openBraceTrivia));
+            .WithOpenBraceToken(typeDeclaration.OpenBraceToken.WithLeadingTrivia(openBraceTrivia));
+    }
+
+    /// <summary>
+    ///     The <c>// expression</c> comment above an evaluation, split after the first <c>||</c> so a long
+    ///     disjunction reads as two lines. The first line follows whatever indent precedes it.
+    /// </summary>
+    private sealed class EvaluationComment(ExpressionSyntax expression, SyntaxTrivia lineFeed)
+    {
+        private readonly string[] _parts = expression.NormalizeWhitespace().ToFullString().Split([" || "], 2, StringSplitOptions.None);
+
+        public SyntaxTrivia LineFeed => lineFeed;
+
+        public SyntaxTriviaList Lines(SyntaxTrivia indent) =>
+            _parts.Length == 1
+                ? TriviaList(Comment($"// {_parts[0]}"), lineFeed)
+                : TriviaList(
+                    Comment($"// {_parts[0]} ||"), lineFeed,
+                    indent, Comment($"//     {_parts[1]}"), lineFeed);
     }
 }

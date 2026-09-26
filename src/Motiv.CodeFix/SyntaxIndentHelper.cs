@@ -18,8 +18,9 @@ internal static class SyntaxIndentHelper
     public static MemberDeclarationSyntax ReindentMember(MemberDeclarationSyntax member, string extraIndent)
     {
         var text = member.ToFullString();
+        var lineEnding = text.Contains("\r\n") ? "\r\n" : "\n";
         var lines = text.Split('\n');
-        var reindented = string.Join("\n", lines.Select(line =>
+        var reindented = string.Join(lineEnding, lines.Select(line =>
         {
             var trimmedEnd = line.TrimEnd('\r');
             return string.IsNullOrWhiteSpace(trimmedEnd)

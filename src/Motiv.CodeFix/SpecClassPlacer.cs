@@ -40,8 +40,9 @@ internal static class SpecClassPlacer
     /// </summary>
     /// <param name="newRoot">The syntax root to update.</param>
     /// <param name="fieldCustomizer">The field customizer providing additional using directives.</param>
+    /// <param name="lineFeed">The line ending used by the document.</param>
     /// <returns>The updated syntax root with using statements.</returns>
-    public static SyntaxNode AddUsingStatementsIfNeeded(SyntaxNode newRoot, ISpecFieldCustomizer fieldCustomizer)
+    public static SyntaxNode AddUsingStatementsIfNeeded(SyntaxNode newRoot, ISpecFieldCustomizer fieldCustomizer, SyntaxTrivia lineFeed)
     {
         var compilationUnit = (CompilationUnitSyntax)newRoot;
         var existingUsings = new HashSet<string>(
@@ -51,13 +52,14 @@ internal static class SpecClassPlacer
 
         var usingsToAdd = fieldCustomizer.GetAdditionalUsings()
             .Where(u => !existingUsings.Contains(u.Name?.ToString() ?? ""))
+            .Select(u => u.WithTrailingTrivia(lineFeed))
             .ToList();
 
         if (!existingUsings.Contains(nameof(Motiv)))
         {
             usingsToAdd.Add(UsingDirective(IdentifierName(nameof(Motiv)))
                 .NormalizeWhitespace()
-                .WithTrailingTrivia(EndOfLine("\n"), EndOfLine("\n")));
+                .WithTrailingTrivia(compilationUnit.Usings.Any() ? TriviaList(lineFeed) : TriviaList(lineFeed, lineFeed)));
         }
 
         return usingsToAdd.Count > 0

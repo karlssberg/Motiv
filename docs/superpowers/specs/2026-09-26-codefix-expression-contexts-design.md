@@ -1,7 +1,8 @@
 # Code fix expression contexts — Design
 
 **Date:** 2026-09-26
-**Status:** In progress. The layers ship as a stack of four PRs.
+**Status:** Implemented as a stack of four PRs. 29 of 33 convertible contexts pass; the four left
+are the capture problems listed under "Out of scope".
 **Plan:** `docs/superpowers/plans/2026-09-26-codefix-expression-contexts.md`
 
 ## Problem
@@ -79,6 +80,27 @@ are sound.
    The spec field goes on the nearest `TypeDeclarationSyntax`, whether class, struct or record. An
    expression with no containing type (top-level statements) is offered no fix.
 
+7. **The spec field precedes the member that reads it.** Static initializers run in textual order.
+   A spec field appended after a `static readonly bool X = Spec.Matches(…)` initializer compiles,
+   but it is still null when `X` is initialized. The field therefore goes after the last field, or
+   before the containing member when that comes earlier. This is a runtime failure that "it
+   compiles" cannot see. An exact-output test found it, not the matrix.
+8. **The fixed document keeps the source's line endings and layout.** Each context is also run with
+   CRLF line endings, and the output must contain no bare `\n`. `SyntaxIndentHelper` rejoined lines
+   with `\n`, and three other places hard-coded it. A blank line separates the spec fields from the
+   next member. A later conversion in the same type moves that blank line down, so the spec fields
+   stay grouped together. `using Motiv;` gets its own blank line only when it is the first `using` in
+   the file.
+
+## Bugs the matrix found beyond the method rewrite
+
+- **The provider converted the wrong node.** `FindNode(span)` returns the *outermost* node with
+  that span. For an argument that node is the `ArgumentSyntax`, and the provider then climbed to
+  the enclosing invocation: `Console.WriteLine(n > 0)` became a spec over `Console.WriteLine`. In
+  `: base(…)` there is no enclosing expression, so no fix was offered. Fixed with
+  `getInnermostNodeForTie: true`.
+- **`using Motiv;` was followed by two blank lines** whenever the file already had a `using`.
+
 ## Out of scope, left as skipped rows
 
 - **Symbols the generated spec cannot see:** range variables in query clauses, pattern-introduced
@@ -87,5 +109,8 @@ are sound.
 - **Constructors that `this`-capturing specs need** when the class already declares one. The old
   behaviour, which deleted a primary constructor's parameter list, is kept and not widened.
 - **Two conversions in one member.** Both derive the same proposition name.
+- **Names for inline positions.** A condition or argument has no assignment target or return to
+  name it after, so the name comes from the expression. `if (n > 0 && n < 10)` becomes
+  `NProposition`. Naming by the enclosing member, or by the clause's meaning, is its own change.
 - **A corpus run** with Fix All over real repositories, and a semantic property test that the
   original boolean equals `Satisfied`.

@@ -32,6 +32,14 @@ internal class DefaultSpecFieldCustomizer : ISpecFieldCustomizer
                 Argument(ThisExpression()))));
 
     /// <summary>
+    ///     Returns <c>field.Matches(model)</c>, the fast path that builds no result.
+    /// </summary>
+    public ExpressionSyntax GetSatisfiedCheck(ExpressionSyntax field, ArgumentSyntax model) =>
+        InvocationExpression(
+                MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, field, IdentifierName("Matches")))
+            .WithArgumentList(ArgumentList(SingletonSeparatedList(model)));
+
+    /// <summary>
     ///     No additional usings needed.
     /// </summary>
     public IEnumerable<UsingDirectiveSyntax> GetAdditionalUsings() => [];

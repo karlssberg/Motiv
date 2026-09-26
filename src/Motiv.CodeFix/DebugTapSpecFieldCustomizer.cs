@@ -42,14 +42,25 @@ internal class DebugTapSpecFieldCustomizer : ISpecFieldCustomizer
             propositionName);
 
     /// <summary>
+    ///     Returns <c>field.Evaluate(model).Satisfied</c>. <c>Matches</c> would skip the <c>Tap</c>
+    ///     callback, since it builds no result to hand it.
+    /// </summary>
+    public ExpressionSyntax GetSatisfiedCheck(ExpressionSyntax field, ArgumentSyntax model) =>
+        MemberAccessExpression(
+            SyntaxKind.SimpleMemberAccessExpression,
+            InvocationExpression(
+                    MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, field, IdentifierName("Evaluate")))
+                .WithArgumentList(ArgumentList(SingletonSeparatedList(model))),
+            IdentifierName("Satisfied"));
+
+    /// <summary>
     ///     Returns a <c>using System.Diagnostics;</c> directive.
     /// </summary>
     public IEnumerable<UsingDirectiveSyntax> GetAdditionalUsings()
     {
         yield return UsingDirective(
                 QualifiedName(IdentifierName("System"), IdentifierName("Diagnostics")))
-            .NormalizeWhitespace()
-            .WithTrailingTrivia(EndOfLine("\n"));
+            .NormalizeWhitespace();
     }
 
     /// <summary>
