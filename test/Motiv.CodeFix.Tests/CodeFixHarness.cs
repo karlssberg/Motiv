@@ -1,4 +1,6 @@
 using System.Collections.Immutable;
+using System.Reflection;
+using System.Runtime.Loader;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
@@ -68,9 +70,30 @@ internal static class CodeFixHarness
             FindMissingSurvivors(source, fixedSource));
     }
 
+    /// <summary>
+    ///     Compiles <paramref name="markedSource" /> — markup removed — into an assembly loaded in a collectible context,
+    ///     so the fixed and unfixed code can be run side by side.
+    /// </summary>
+    public static async Task<Assembly> Load(string markedSource)
+    {
+        var document = await CreateDocument(ParseMarkup(markedSource).Source);
+        var compilation = await GetCompilation(document);
+
+        using var image = new MemoryStream();
+        var emitResult = compilation.Emit(image);
+        if (!emitResult.Success)
+            throw new InvalidOperationException($"The source does not compile:\n{string.Join("\n", emitResult.Diagnostics)}");
+
+        image.Position = 0;
+        return new AssemblyLoadContext(name: null, isCollectible: true).LoadFromStream(image);
+    }
+
     private static (string Source, TextSpan Span) ParseMarkup(string markedSource)
     {
         var start = markedSource.IndexOf(MarkupStart, StringComparison.Ordinal);
+        if (start < 0 && !markedSource.Contains(MarkupEnd))
+            return (markedSource, default);
+
         var end = markedSource.IndexOf(MarkupEnd, StringComparison.Ordinal);
         if (start < 0 || end < start)
             throw new ArgumentException("The source must mark exactly one expression with [| and |].", nameof(markedSource));

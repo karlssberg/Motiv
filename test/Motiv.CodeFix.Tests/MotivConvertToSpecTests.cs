@@ -253,7 +253,7 @@ public class MotivConvertToSpecTests
                       .Build((Model m) => m.ValueC <= 10)
                       .Create("{{clause4}}");
 
-                  return isValueANonNegative.AndAlso((isValueBNonNegative.OrElse(!(isValueCAtLeast1 ^ isValueCAtMost10))));
+                  return isValueANonNegative.AndAlso(isValueBNonNegative.OrElse(!(isValueCAtLeast1 ^ isValueCAtMost10)));
               })
               {
                   public readonly record struct Model(int ValueA, int ValueB, int ValueC);
@@ -638,7 +638,8 @@ public class MotivConvertToSpecTests
                       .Build((Model m) => m.ValueB >= 0)
                       .Create("{{clause3}}");
 
-                  return (isValueANonNegative.AndAlso(isValueCAtLeast1)).OrElse((isValueBNonNegative.AndAlso(isValueCAtLeast1)));
+                  return isValueANonNegative.AndAlso(isValueCAtLeast1)
+                      .OrElse(isValueBNonNegative.AndAlso(isValueCAtLeast1));
               })
               {
                   public readonly record struct Model(int ValueA, int ValueC, int ValueB);
@@ -710,7 +711,8 @@ public class MotivConvertToSpecTests
                       .Build((Model m) => m.ValueB >= 0)
                       .Create("{{clause3}}");
 
-                  return (isValueANonNegative.AndAlso(is1LessThanValueC)).OrElse((isValueBNonNegative.AndAlso(is1LessThanValueC)));
+                  return isValueANonNegative.AndAlso(is1LessThanValueC)
+                      .OrElse(isValueBNonNegative.AndAlso(is1LessThanValueC));
               })
               {
                   public readonly record struct Model(int ValueA, int ValueC, int ValueB);
@@ -950,7 +952,8 @@ public class MotivConvertToSpecTests
                     .Build((Model m) => instance.IsGreen(m.Text))
                     .Create("{{clause4}}");
 
-                return (isValueANonNegative.AndAlso(is1LessThanValueC)).AndAlso((isNullOrEmpty.AndAlso(isGreen)));
+                return isValueANonNegative.AndAlso(is1LessThanValueC)
+                    .AndAlso(isNullOrEmpty.AndAlso(isGreen));
             })
             {
                 public readonly record struct Model(int ValueA, int ValueC, string Text);
@@ -1051,8 +1054,8 @@ public class MotivConvertToSpecTests
                         .Build((Model m) => instance.IsGreen(m.Text))
                         .Create("IsGreen(text)");
 
-                    return (isValueANonNegative.AndAlso(is1LessThanValueC)).OrElse(isValueBNonNegative.AndAlso(is1LessThanValueC)
-                        .AndAlso((isNullOrEmpty.AndAlso(isGreen))));
+                    return isValueANonNegative.AndAlso(is1LessThanValueC)
+                        .OrElse(isValueBNonNegative.AndAlso(is1LessThanValueC).AndAlso(isNullOrEmpty.AndAlso(isGreen)));
                 })
                 {
                     public readonly record struct Model(int ValueA, int ValueC, int ValueB, string Text);
@@ -1140,7 +1143,8 @@ public class MotivConvertToSpecTests
                         .Build((Model m) => Playground.IsGreen(m.Text))
                         .Create("IsGreen(text)");
 
-                    return (isValueANonNegative.AndAlso(is1LessThanValueC)).OrElse(isGreen);
+                    return isValueANonNegative.AndAlso(is1LessThanValueC)
+                        .OrElse(isGreen);
                 })
                 {
                     public readonly record struct Model(int ValueA, int ValueC, string Text);

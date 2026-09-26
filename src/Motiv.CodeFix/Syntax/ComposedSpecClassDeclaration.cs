@@ -98,6 +98,35 @@ public class ComposedSpecClassDeclaration(
 
     private class BlankLineRewriter(SyntaxContext syntaxContext) : CSharpSyntaxRewriter
     {
+        // Only the composition's outermost chain is broken across lines; a chain inside one of its arguments
+        // stays on one line, so indentation never suggests it continues the outer chain
+        private bool _inComposition;
+        private int _argumentDepth;
+
+        private bool IsInsideCompositionArgument => _inComposition && _argumentDepth > 0;
+
+        public override SyntaxNode? VisitReturnStatement(ReturnStatementSyntax node)
+        {
+            // The composition itself sits inside the base constructor's argument, so depth counts from here
+            var outerArgumentDepth = _argumentDepth;
+            _inComposition = true;
+            _argumentDepth = 0;
+
+            var visited = base.VisitReturnStatement(node);
+
+            _inComposition = false;
+            _argumentDepth = outerArgumentDepth;
+            return visited;
+        }
+
+        public override SyntaxNode? VisitArgumentList(ArgumentListSyntax node)
+        {
+            _argumentDepth++;
+            var visited = base.VisitArgumentList(node);
+            _argumentDepth--;
+            return visited;
+        }
+
         public override SyntaxNode VisitBlock(BlockSyntax node)
         {
             var updated = new List<StatementSyntax>();
@@ -123,7 +152,7 @@ public class ComposedSpecClassDeclaration(
                 Expression: InvocationExpressionSyntax or IdentifierNameSyntax { Identifier.Text: "Spec" }
             };
 
-            if (isSpecChain)
+            if (isSpecChain && !IsInsideCompositionArgument)
                 node = syntaxContext.InsertChainLineBreak(node);
 
             return base.VisitMemberAccessExpression(node);
