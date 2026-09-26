@@ -13,8 +13,6 @@ public class MotivConvertToSpecContextTests
     private const string MethodRewrite = "The fix rewrites the enclosing method instead of the expression";
     private const string RequiresMethod = "The fix requires the expression to sit in a class method";
     private const string UncapturedSymbol = "The generated spec cannot see a symbol the expression uses";
-    private const string FlagsConstant = "The analyzer flags compile-time constants";
-    private const string FlagsExpressionTree = "The analyzer flags expression-tree lambdas";
 
     private static readonly Dictionary<string, string> ConvertibleContexts = new()
     {
@@ -589,12 +587,12 @@ public class MotivConvertToSpecContextTests
     }
 
     [Theory]
-    [InlineData("ConstField", Skip = FlagsConstant)]
-    [InlineData("ConstLocal", Skip = FlagsConstant)]
-    [InlineData("AttributeArgument", Skip = FlagsConstant)]
-    [InlineData("DefaultParameterValue", Skip = FlagsConstant)]
-    [InlineData("CaseLabel", Skip = FlagsConstant)]
-    [InlineData("ExpressionTreeLambda", Skip = FlagsExpressionTree)]
+    [InlineData("ConstField")]
+    [InlineData("ConstLocal")]
+    [InlineData("AttributeArgument")]
+    [InlineData("DefaultParameterValue")]
+    [InlineData("CaseLabel")]
+    [InlineData("ExpressionTreeLambda")]
     public async Task Should_not_flag_expression_when_context_cannot_hold_a_spec_evaluation(string context)
     {
         var spans = await CodeFixHarness.GetDiagnosticSpans(NonConvertibleContexts[context]);
