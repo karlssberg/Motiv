@@ -38,6 +38,7 @@ public class MotivConvertToSpecWithDebugOutputTests
                 private static readonly SpecBase<int, string> IsValidProposition = new IsValidProposition()
                     .Tap((model, result) =>
                         Debug.WriteLine($"[Motiv] IsValidProposition | Model: {model} | Satisfied: {result.Satisfied} | Reason: {result.Reason}"));
+
                 public bool IsValid(int value)
                 {
                     // {{booleanExpression}}
@@ -93,6 +94,7 @@ public class MotivConvertToSpecWithDebugOutputTests
                 private static readonly SpecBase<IsValidProposition.Model, string> IsValidProposition = new IsValidProposition()
                     .Tap((model, result) =>
                         Debug.WriteLine($"[Motiv] IsValidProposition | Model: {model} | Satisfied: {result.Satisfied} | Reason: {result.Reason}"));
+
                 public bool IsValid(int valueA, int valueB, bool valueC)
                 {
                     // {{booleanExpression}}
@@ -169,6 +171,7 @@ public class MotivConvertToSpecWithDebugOutputTests
                     private static readonly SpecBase<string, string> IsGreenProposition = new IsGreenProposition()
                         .Tap((model, result) =>
                             Debug.WriteLine($"[Motiv] IsGreenProposition | Model: {model} | Satisfied: {result.Satisfied} | Reason: {result.Reason}"));
+
                     public Playground()
                     {
                         _isFeatureEnabledProposition = new IsFeatureEnabledProposition(this)

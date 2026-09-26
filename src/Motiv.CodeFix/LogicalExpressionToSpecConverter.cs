@@ -70,7 +70,7 @@ internal class LogicalExpressionToSpecConverter(
             instanceMethodNames, staticMethodNames, containingTypeName).ToArray();
 
         newRoot = SpecClassPlacer.AddNearContainingClass(syntaxContext, newRoot, baseNamespace, rootMembers);
-        newRoot = SpecClassPlacer.AddUsingStatementsIfNeeded(newRoot, fieldCustomizer);
+        newRoot = SpecClassPlacer.AddUsingStatementsIfNeeded(newRoot, fieldCustomizer, syntaxContext.LineFeed);
 
         var resultDoc = document.WithSyntaxRoot(newRoot);
 
