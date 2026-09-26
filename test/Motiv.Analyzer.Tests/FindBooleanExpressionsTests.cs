@@ -628,4 +628,109 @@ public class FindBooleanExpressionsTests
             ExpectedDiagnostics = { } // Empty - no diagnostics expected
         }.RunAsync();
     }
+
+    [Fact]
+    public async Task Should_ignore_boolean_expression_that_is_a_compile_time_constant()
+    {
+        const string source =
+            """
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                private const int Limit = 5;
+
+                private const bool IsInRange = Limit > 0 && Limit < 10;
+            }
+            """;
+
+        // No diagnostics should be reported since a constant cannot hold a spec evaluation
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            ExpectedDiagnostics = { } // Empty - no diagnostics expected
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_ignore_boolean_expression_in_attribute_argument()
+    {
+        const string source =
+            """
+            using System;
+
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                private const int Limit = 5;
+
+                [Obsolete("Use something else", Limit > 0 && Limit < 10)]
+                public void Check()
+                {
+                }
+            }
+            """;
+
+        // No diagnostics should be reported since an attribute argument must be a constant
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            ExpectedDiagnostics = { } // Empty - no diagnostics expected
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_ignore_boolean_expression_inside_expression_tree_lambda()
+    {
+        const string source =
+            """
+            using System;
+            using System.Linq.Expressions;
+
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public Expression<Func<int, bool>> IsInRange() => n => n > 0 && n < 10;
+            }
+            """;
+
+        // No diagnostics should be reported since an expression tree is translated, not executed
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            ExpectedDiagnostics = { } // Empty - no diagnostics expected
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_identify_boolean_expression_inside_delegate_lambda()
+    {
+        const string booleanExpression = "n > 0 && n < 10";
+        const string source =
+          $$"""
+            using System;
+
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public Func<int, bool> IsInRange() => n => {{booleanExpression}};
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState =
+            {
+                Sources = { (Source, source) },
+                ExpectedDiagnostics =
+                {
+                    new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                        .WithSpan(Source, 7, 48, 7, 48 + booleanExpression.Length)
+                }
+            }
+        }.RunAsync();
+    }
 }
