@@ -1,5 +1,6 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Motiv.CodeFix.Syntax;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Motiv.CodeFix;
@@ -36,20 +37,19 @@ internal static class ExpressionDecomposer
             _ => CreateLeafClause(expr)
         };
 
-        ExpressionDecomposition DecomposeParenthesized(ParenthesizedExpressionSyntax paren)
-        {
-            var inner = DecomposeCore(paren.Expression);
-            return new ExpressionDecomposition(
-                inner.Clauses,
-                ParenthesizedExpression(inner.CompositionExpression));
-        }
+        // The source's parentheses shaped the syntax tree; the composition parenthesizes by its own precedence
+        ExpressionDecomposition DecomposeParenthesized(ParenthesizedExpressionSyntax paren) =>
+            DecomposeCore(paren.Expression);
 
         ExpressionDecomposition DecomposeNot(PrefixUnaryExpressionSyntax unary)
         {
             var inner = DecomposeCore(unary.Operand);
+            var operand = inner.CompositionExpression is IdentifierNameSyntax
+                ? inner.CompositionExpression
+                : ParenthesizedExpression(inner.CompositionExpression);
             return new ExpressionDecomposition(
                 inner.Clauses,
-                PrefixUnaryExpression(SyntaxKind.LogicalNotExpression, inner.CompositionExpression));
+                PrefixUnaryExpression(SyntaxKind.LogicalNotExpression, operand));
         }
 
         ExpressionDecomposition DecomposeBinary(BinaryExpressionSyntax binary, (string Op, bool IsInfix) op)
@@ -61,18 +61,25 @@ internal static class ExpressionDecomposer
             ExpressionSyntax composition;
             if (op.IsInfix)
             {
+                // `^` is left-associative, so a right operand that is itself a `^` needs parentheses to keep its grouping
                 composition = BinaryExpression(
                     SyntaxKind.ExclusiveOrExpression,
                     left.CompositionExpression,
-                    right.CompositionExpression);
+                    right.CompositionExpression is BinaryExpressionSyntax
+                        ? ParenthesizedExpression(right.CompositionExpression)
+                        : right.CompositionExpression);
             }
             else
             {
+                // Member access binds tighter than `!` and `^`, so a receiver that is either needs parentheses
+                var receiver = left.CompositionExpression is PrefixUnaryExpressionSyntax or BinaryExpressionSyntax
+                    ? ParenthesizedExpression(left.CompositionExpression)
+                    : left.CompositionExpression;
                 var methodName = op.Op == ".AndAlso" ? "AndAlso" : "OrElse";
                 composition = InvocationExpression(
                     MemberAccessExpression(
                         SyntaxKind.SimpleMemberAccessExpression,
-                        left.CompositionExpression,
+                        receiver,
                         IdentifierName(methodName)),
                     ArgumentList(SingletonSeparatedList(Argument(right.CompositionExpression))));
             }
@@ -84,10 +91,10 @@ internal static class ExpressionDecomposer
         {
             counter++;
             var transformed = transformClause(expr);
-            var clauseName = ClauseNameDeriver.DeriveName(expr, counter);
+            // A positional placeholder: two different clauses can derive the same name, so ClauseSet names them
             return new ExpressionDecomposition(
                 [(expr.ToString().Trim(), transformed, expr)],
-                IdentifierName(clauseName));
+                IdentifierName(ClauseSet.Placeholder(counter)));
         }
     }
 
