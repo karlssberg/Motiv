@@ -128,9 +128,8 @@ public class MotivAnalyzer : DiagnosticAnalyzer
             .Any(lambda => IsExpressionTree(lambda, semanticModel));
 
     private static bool IsExpressionTree(LambdaExpressionSyntax lambda, SemanticModel semanticModel) =>
-        semanticModel.GetTypeInfo(lambda).ConvertedType is INamedTypeSymbol convertedType
-        && SymbolEqualityComparer.Default.Equals(
-            convertedType.OriginalDefinition,
+        SymbolEqualityComparer.Default.Equals(
+            semanticModel.GetTypeInfo(lambda).ConvertedType?.OriginalDefinition,
             semanticModel.Compilation.GetTypeByMetadataName("System.Linq.Expressions.Expression`1"));
 
     private static bool IsInsideSpecLambda(SyntaxNode node, SemanticModel semanticModel)
