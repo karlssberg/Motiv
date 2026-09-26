@@ -101,11 +101,20 @@ are sound.
   `getInnermostNodeForTie: true`.
 - **`using Motiv;` was followed by two blank lines** whenever the file already had a `using`.
 
+## Follow-up layers
+
+9. **Everything the expression reads is a model value** (`codefix/capture-model-values`).
+   Properties, query range variables and pattern variables from an enclosing `case … when` are
+   passed in the way fields already were, so the spec stays static and captures no `this`. A range
+   variable's type comes from `GetTypeInfo` on the identifier that reads it, because
+   `IRangeVariableSymbol` carries no type. A symbol the expression *declares* is never a model
+   value, because the generated lambda declares it too. That covers `o is string s`, `out var n`
+   and a lambda's parameter. The last one was a bug: `numbers.Any(x => x > 5)` made `x` a model
+   value.
+
 ## Out of scope, left as skipped rows
 
-- **Symbols the generated spec cannot see:** range variables in query clauses, pattern-introduced
-  variables in `when` clauses, method type parameters, and instance properties. Each needs its own
-  capture strategy.
+- **Method type parameters.** `T` cannot appear in a field type on the containing class.
 - **Constructors that `this`-capturing specs need** when the class already declares one. The old
   behaviour, which deleted a primary constructor's parameter list, is kept and not widened.
 - **Two conversions in one member.** Both derive the same proposition name.
