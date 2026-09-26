@@ -137,12 +137,23 @@ are sound.
     one of its arguments stays on one line, so its indentation can't suggest it continues the outer
     chain.
 
+12. **A condition is named after what it tests** (`codefix/inline-position-names`). A condition or
+    argument has no assignment target or `return` to borrow a name from, so it was named after its
+    most common identifier: `if (NProposition.Matches(n))`. It now takes the meaning of its clauses,
+    using the names `ClauseNameDeriver` already gives clause variables:
+    - one clause: `IsNPositive`;
+    - two clauses: joined by their operator, with a shared `Is{Subject}` stated once, as in
+      `IsNPositiveAndLessThan10`, or `IsXPositiveOrIsYPositive` when the subjects differ;
+    - more than two clauses: named after the enclosing member, because at that length the clause
+      names read as a sentence rather than a name.
+
+    Expression-bodied properties and local functions take their own name, as methods already did.
+    A field's leading underscore no longer leaks into the name (`_countProposition`). A `return` in
+    a method whose name is too generic to use keeps its old root-identifier name.
+
 ## Out of scope, left as skipped rows
 
 - **Constructors that `this`-capturing specs need** when the class already declares one. The old
   behaviour, which deleted a primary constructor's parameter list, is kept and not widened.
 - **Two conversions in one member.** Both derive the same proposition name.
-- **Names for inline positions.** A condition or argument has no assignment target or return to
-  name it after, so the name comes from the expression. `if (n > 0 && n < 10)` becomes
-  `NProposition`. Naming by the enclosing member, or by the clause's meaning, is its own change.
 - **A corpus run** with Fix All over real repositories.

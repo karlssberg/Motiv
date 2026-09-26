@@ -1,4 +1,6 @@
+using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Motiv.CodeFix;
@@ -10,6 +12,7 @@ public static class ExpressionNameDeriver
 {
     private const string ModelName = "Model";
     private const string PropositionBaseName = "Proposition";
+    private const int MaxJoinedNameLength = 50;
 
     /// <summary>
     /// Derives Proposition and Model class names from an expression's content.
@@ -30,8 +33,8 @@ public static class ExpressionNameDeriver
         // 4. Fallback "Proposition" (lowest priority)
         var baseName = DeriveBaseNameFromContext(expression, semanticModel);
 
-        // Step 2: Convert to PascalCase
-        var pascalName = baseName.Capitalize();
+        // Step 2: Convert to PascalCase, without a field's leading underscore
+        var pascalName = baseName.TrimStart('_').Capitalize();
 
         // Step 3: Append suffixes (unless base name is already the fallback)
         var propositionName = pascalName is PropositionBaseName ? pascalName: $"{pascalName}{PropositionBaseName}";
@@ -60,9 +63,102 @@ public static class ExpressionNameDeriver
             return methodName;
         }
 
-        // Priority 3: Derive from expression content
+        // Priority 3: A condition or argument has nothing to borrow a name from, so name what it tests
+        if (!HasReturnContext(expression) && TryGetClauseMeaningName(expression, out var clauseMeaningName))
+        {
+            return clauseMeaningName;
+        }
+
+        // Priority 4: Derive from expression content
         return DeriveBaseName(expression, semanticModel);
     }
+
+    private static bool HasReturnContext(ExpressionSyntax expression) =>
+        expression.Ancestors().Any(ancestor => ancestor is ReturnStatementSyntax or ArrowExpressionClauseSyntax);
+
+    /// <summary>
+    /// Names a condition after what it tests: one clause by its own meaning (<c>IsNPositive</c>), two joined by
+    /// their operator with a shared subject stated once (<c>IsNPositiveAndLessThan10</c>). More than two clauses
+    /// would make a sentence rather than a name, so the enclosing member names them instead.
+    /// </summary>
+    private static bool TryGetClauseMeaningName(ExpressionSyntax expression, out string name)
+    {
+        name = DescribeClauses(Unparenthesize(expression)) ?? EnclosingMemberName(expression) ?? string.Empty;
+        return name.Length > 0;
+    }
+
+    private static string? DescribeClauses(ExpressionSyntax condition)
+    {
+        if (!ContainsLogicalOperator(condition))
+            return ClauseMeaning(condition);
+
+        if (condition is not BinaryExpressionSyntax binary
+            || GetConnective(binary) is not { } connective
+            || ContainsLogicalOperator(binary.Left)
+            || ContainsLogicalOperator(binary.Right))
+        {
+            return null;
+        }
+
+        return JoinClauseMeanings(ClauseMeaning(binary.Left), connective, ClauseMeaning(binary.Right));
+    }
+
+    private static string? ClauseMeaning(ExpressionSyntax clause)
+    {
+        var name = ClauseNameDeriver.DeriveName(clause, clauseNumber: 0);
+        return name.StartsWith("Clause", StringComparison.Ordinal) ? null : name;
+    }
+
+    private static string? JoinClauseMeanings(string? left, string connective, string? right)
+    {
+        if (left is null || right is null)
+            return null;
+
+        var leftWords = SplitWords(left);
+        var rightWords = SplitWords(right);
+        var shared = leftWords.Zip(rightWords, string.Equals).TakeWhile(same => same).Count();
+
+        // "Is" alone is not a subject; only a shared "Is{Subject}" is stated once
+        var rightRemainder = shared >= 2 && shared < rightWords.Count
+            ? string.Concat(rightWords.Skip(shared))
+            : right;
+
+        var joined = $"{left}{connective}{rightRemainder}";
+        return joined.Length <= MaxJoinedNameLength ? joined : null;
+    }
+
+    private static List<string> SplitWords(string pascalName) =>
+        Regex.Split(pascalName, "(?<!^)(?=[A-Z])").ToList();
+
+    private static string? GetConnective(BinaryExpressionSyntax binary) =>
+        binary.OperatorToken.Kind() switch
+        {
+            SyntaxKind.AmpersandAmpersandToken => "And",
+            SyntaxKind.BarBarToken => "Or",
+            _ => null
+        };
+
+    private static bool ContainsLogicalOperator(ExpressionSyntax expression) =>
+        expression.DescendantNodesAndSelf().OfType<BinaryExpressionSyntax>().Any(binary =>
+            binary.OperatorToken.Kind() is SyntaxKind.AmpersandAmpersandToken or SyntaxKind.BarBarToken or SyntaxKind.CaretToken);
+
+    private static ExpressionSyntax Unparenthesize(ExpressionSyntax expression)
+    {
+        while (expression is ParenthesizedExpressionSyntax parenthesized)
+            expression = parenthesized.Expression;
+        return expression;
+    }
+
+    private static string? EnclosingMemberName(ExpressionSyntax expression) =>
+        expression.Ancestors()
+            .Select(ancestor => ancestor switch
+            {
+                MethodDeclarationSyntax method => method.Identifier.ValueText,
+                LocalFunctionStatementSyntax localFunction => localFunction.Identifier.ValueText,
+                PropertyDeclarationSyntax property => property.Identifier.ValueText,
+                _ => null
+            })
+            .FirstOrDefault(name => name is not null && !IsGenericMethodName(name));
 
     /// <summary>
     /// Attempts to get the name of the variable to which the expression is assigned.
@@ -120,14 +216,18 @@ public static class ExpressionNameDeriver
             .OfType<ArrowExpressionClauseSyntax>()
             .FirstOrDefault();
 
-        if (arrowClause?.Parent is MethodDeclarationSyntax arrowMethod)
+        var arrowMemberName = arrowClause?.Parent switch
         {
-            var arrowMethodName = arrowMethod.Identifier.ValueText;
-            if (!IsGenericMethodName(arrowMethodName))
-            {
-                name = arrowMethodName;
-                return true;
-            }
+            MethodDeclarationSyntax arrowMethod => arrowMethod.Identifier.ValueText,
+            PropertyDeclarationSyntax arrowProperty => arrowProperty.Identifier.ValueText,
+            LocalFunctionStatementSyntax arrowLocalFunction => arrowLocalFunction.Identifier.ValueText,
+            _ => null
+        };
+
+        if (arrowMemberName is not null && !IsGenericMethodName(arrowMemberName))
+        {
+            name = arrowMemberName;
+            return true;
         }
 
         name = string.Empty;

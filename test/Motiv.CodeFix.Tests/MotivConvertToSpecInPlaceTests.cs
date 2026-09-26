@@ -37,15 +37,15 @@ public class MotivConvertToSpecInPlaceTests
 
             public class MyClass
             {
-                private static readonly NProposition NProposition = new();
+                private static readonly IsNPositiveAndLessThan10Proposition IsNPositiveAndLessThan10Proposition = new();
 
                 public void Print(int n)
                 {
-                    Console.WriteLine(NProposition.Matches(n));
+                    Console.WriteLine(IsNPositiveAndLessThan10Proposition.Matches(n));
                 }
             }
 
-            public class NProposition() : Spec<int>(() =>
+            public class IsNPositiveAndLessThan10Proposition() : Spec<int>(() =>
                 Spec.Build((int n) => {{booleanExpression}})
                     .Create("{{booleanExpression}}"));
             """;
@@ -91,18 +91,18 @@ public class MotivConvertToSpecInPlaceTests
 
             public class MyClass
             {
-                private static readonly NProposition NProposition = new();
+                private static readonly IsNPositiveAndLessThan10Proposition IsNPositiveAndLessThan10Proposition = new();
 
                 public int Clamp(int n)
                 {
-                    if (NProposition.Matches(n))
+                    if (IsNPositiveAndLessThan10Proposition.Matches(n))
                         return n;
 
                     return 0;
                 }
             }
 
-            public class NProposition() : Spec<int>(() =>
+            public class IsNPositiveAndLessThan10Proposition() : Spec<int>(() =>
                 Spec.Build((int n) => {{booleanExpression}})
                     .Create("{{booleanExpression}}"));
             """;
@@ -206,20 +206,20 @@ public class MotivConvertToSpecInPlaceTests
 
             public class MyClass
             {
-                private static readonly SpecBase<int, string> NProposition = new NProposition()
+                private static readonly SpecBase<int, string> IsNPositiveAndLessThan10Proposition = new IsNPositiveAndLessThan10Proposition()
                     .Tap((model, result) =>
-                        Debug.WriteLine($"[Motiv] NProposition | Model: {model} | Satisfied: {result.Satisfied} | Reason: {result.Reason}"));
+                        Debug.WriteLine($"[Motiv] IsNPositiveAndLessThan10Proposition | Model: {model} | Satisfied: {result.Satisfied} | Reason: {result.Reason}"));
 
                 public int Clamp(int n)
                 {
-                    if (NProposition.Evaluate(n).Satisfied)
+                    if (IsNPositiveAndLessThan10Proposition.Evaluate(n).Satisfied)
                         return n;
 
                     return 0;
                 }
             }
 
-            public class NProposition() : Spec<int>(() =>
+            public class IsNPositiveAndLessThan10Proposition() : Spec<int>(() =>
                 Spec.Build((int n) => {{booleanExpression}})
                     .Create("{{booleanExpression}}"));
             """;
