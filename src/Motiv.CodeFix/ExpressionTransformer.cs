@@ -87,20 +87,18 @@ internal static class ExpressionTransformer
     ///     and prefixes instance and static method calls.
     /// </summary>
     /// <param name="expression">The expression to transform.</param>
-    /// <param name="variableSymbols">The variables to convert.</param>
+    /// <param name="memberNames">Each variable's name mapped to its model member, from <see cref="ModelMemberNames" />.</param>
     /// <param name="instanceMethodNames">Instance method names to prefix.</param>
     /// <param name="staticMethodNames">Static method names to prefix with class name.</param>
     /// <param name="className">The class name for static method qualification.</param>
     /// <returns>The transformed expression.</returns>
     public static ExpressionSyntax ConvertVariablesToModelMemberAccess(
         ExpressionSyntax expression,
-        ImmutableArray<ISymbol> variableSymbols,
+        IReadOnlyDictionary<string, string> memberNames,
         HashSet<string> instanceMethodNames,
         HashSet<string>? staticMethodNames = null,
         string? className = null)
     {
-        var memberNames = ModelMemberNames(variableSymbols);
-
         var result = ReplaceMemberAccessRoots(expression, memberNames);
         result = ReplaceStandaloneIdentifiers(result, memberNames);
         result = PrefixInstanceMethods(result, instanceMethodNames);
@@ -120,9 +118,8 @@ internal static class ExpressionTransformer
             .Select(symbol => symbol.Name)
             .Distinct()
             .GroupBy(name => name.ToPascalCase())
-            .SelectMany(group => group.Count() == 1
-                ? group.Select(name => (Name: name, Member: group.Key))
-                : group.Select(name => (Name: name, Member: name.Capitalize())))
+            .SelectMany(group => group.Select(name =>
+                (Name: name, Member: group.Count() == 1 ? group.Key : name.Capitalize())))
             .ToDictionary(pair => pair.Name, pair => pair.Member);
 
     private static ExpressionSyntax ReplaceMemberAccessRoots(

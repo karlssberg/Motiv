@@ -534,4 +534,84 @@ public class MotivConvertToSpecInPlaceTests
             }
         }.RunAsync();
     }
+
+    [Fact]
+    public async Task Should_declare_the_spec_in_the_namespace_that_encloses_the_expression()
+    {
+        const string booleanExpression = "item.Price > 0 && quantity > 0";
+
+        const string source =
+          $$"""
+            namespace Outer
+            {
+                namespace Inner
+                {
+                    public class Item
+                    {
+                        public int Price { get; set; }
+                    }
+
+                    public class Order
+                    {
+                        public bool IsValid(Item item, int quantity) => {{booleanExpression}};
+                    }
+                }
+            }
+            """;
+
+        const string expectedTransformedCode =
+          $$"""
+            using Motiv;
+
+            namespace Outer
+            {
+                namespace Inner
+                {
+                    public class Item
+                    {
+                        public int Price { get; set; }
+                    }
+
+                    public class Order
+                    {
+                        private static readonly IsValidProposition IsValidProposition = new();
+
+                        public bool IsValid(Item item, int quantity)
+                        {
+                            // {{booleanExpression}}
+                            var isValidResult = IsValidProposition.Evaluate(new IsValidProposition.Model(item, quantity));
+                            return isValidResult.Satisfied;
+                        }
+                    }
+
+                    public class IsValidProposition() : Spec<IsValidProposition.Model>(() =>
+                    {
+                        var isItemPricePositive = Spec
+                            .Build((Model m) => m.Item.Price > 0)
+                            .Create("item.Price > 0");
+
+                        var isQuantityPositive = Spec
+                            .Build((Model m) => m.Quantity > 0)
+                            .Create("quantity > 0");
+
+                        return isItemPricePositive.AndAlso(isQuantityPositive);
+                    })
+                    {
+                        public readonly record struct Model(Item Item, int Quantity);
+                    }
+                }
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            FixedState = { Sources = { (Source, expectedTransformedCode) } },
+            ExpectedDiagnostics =
+            {
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                    .WithSpan(Source, 12, 61, 12, 61 + booleanExpression.Length)
+            }
+        }.RunAsync();
+    }
 }

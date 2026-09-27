@@ -70,7 +70,10 @@ internal class LogicalExpressionToSpecConverter(
             syntaxContext, variableSymbols, logicalExpressionSyntax,
             root, hasInstanceMethods, groupedExpression, modelTypeName);
 
-        var baseNamespace = newRoot.DescendantNodes().OfType<BaseNamespaceDeclarationSyntax>().FirstOrDefault();
+        // The namespace that encloses the expression, found again by its start, which the replacement comes after
+        var enclosingNamespaceStart = logicalExpressionSyntax.Ancestors().OfType<BaseNamespaceDeclarationSyntax>().FirstOrDefault()?.SpanStart;
+        var baseNamespace = newRoot.DescendantNodes().OfType<BaseNamespaceDeclarationSyntax>()
+            .FirstOrDefault(ns => ns.SpanStart == enclosingNamespaceStart);
         var isBlockNamespace = baseNamespace is NamespaceDeclarationSyntax;
         var containingTypeName = ResolveContainingTypeName(containingTypeSymbol, isBlockNamespace, semanticModel, logicalExpressionSyntax);
 
@@ -217,11 +220,11 @@ internal class LogicalExpressionToSpecConverter(
         string? containingTypeName)
     {
         var hasInstanceMethods = instanceMethodNames.Count > 0;
+        var memberNames = ExpressionTransformer.ModelMemberNames(variableSymbols);
         var decomposition = ExpressionDecomposer.Decompose(
             logicalExpressionSyntax,
-            expr => ExpressionTransformer.ConvertVariablesToModelMemberAccess(expr, variableSymbols, instanceMethodNames, staticMethodNames, containingTypeName));
+            expr => ExpressionTransformer.ConvertVariablesToModelMemberAccess(expr, memberNames, instanceMethodNames, staticMethodNames, containingTypeName));
 
-        var memberNames = ExpressionTransformer.ModelMemberNames(variableSymbols);
         var recordParameterList = ParameterList(
             SeparatedList(
                 variableSymbols.Select(s =>
