@@ -83,6 +83,19 @@ jobs:
         else
           scripts/mutation/summarise.sh "$title" >> "$GITHUB_STEP_SUMMARY"
         fi
+    - name: List undetected mutants
+      if: always()
+      run: |
+        report="$RUNNER_TEMP/stryker/reports/mutation-report.json"
+        [ -f "$report" ] || exit 0
+        # Printed to the log as well as the summary, so triage does not depend on downloading the
+        # artifact.
+        scripts/mutation/survivors.sh "$report" | tee "$RUNNER_TEMP/survivors.txt"
+        {
+          printf '\n<details><summary>%s undetected mutants (Survived, NoCoverage)</summary>\n\n```\n' "$(wc -l < "$RUNNER_TEMP/survivors.txt")"
+          cat "$RUNNER_TEMP/survivors.txt"
+          printf '```\n\n</details>\n'
+        } >> "$GITHUB_STEP_SUMMARY"
     - name: Upload reports
       if: always()
       uses: actions/upload-artifact@v4

@@ -80,7 +80,9 @@ change the mutation setup itself. It splits `src/Motiv` into shards by directory
 `test/Motiv.Tests/stryker-shards.json`. A final `rest` shard mutates every file the listed shards
 leave out, so a new directory is still covered. Each shard uploads its own
 `mutation-report-motiv-<shard>` artifact. The `combine` job scores all the shards together and names
-any shard that sent no report.
+any shard that sent no report. Each shard's job summary also lists its undetected mutants
+(Survived and NoCoverage) as `path:line:column  mutator  -> replacement`, and prints the same list to
+its log, so you can triage without downloading the artifact.
 
 To mutate one shard's files locally, pass the same globs, for example
 `dotnet tool run dotnet-stryker --mutate "**/OrElse/**" --mutate "**/AndAlso/**"`.
