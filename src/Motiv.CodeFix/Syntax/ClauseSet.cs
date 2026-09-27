@@ -10,7 +10,7 @@ namespace Motiv.CodeFix.Syntax;
 /// </summary>
 public class ClauseSet
 {
-    private readonly Dictionary<int, string> _clauseNameMapping;
+    private readonly Dictionary<string, string> _placeholderReplacements;
 
     /// <summary>
     ///     The identifier standing for the <paramref name="position" />th clause (1-based) in a composition expression.
@@ -22,7 +22,7 @@ public class ClauseSet
     {
         var uniqueClauses = new Dictionary<string, (string OriginalText, ExpressionSyntax TransformedExpression, ExpressionSyntax OriginalExpression, string DerivedName)>();
         var usedNames = new HashSet<string>();
-        _clauseNameMapping = new Dictionary<int, string>();
+        _placeholderReplacements = new Dictionary<string, string>();
 
         for (var i = 0; i < clauses.Count; i++)
         {
@@ -32,13 +32,12 @@ public class ClauseSet
             if (!uniqueClauses.TryGetValue(transformedKey, out var clause))
             {
                 var derivedName = Unique(ClauseNameDeriver.DeriveName(originalExpression, uniqueClauses.Count + 1), usedNames);
-                uniqueClauses[transformedKey] = (original, transformedExpression, originalExpression, derivedName);
-                _clauseNameMapping[i] = derivedName;
+                clause = (original, transformedExpression, originalExpression, derivedName);
+                uniqueClauses[transformedKey] = clause;
             }
-            else
-            {
-                _clauseNameMapping[i] = clause.DerivedName;
-            }
+
+            // A repeated clause resolves to the name of its first occurrence
+            _placeholderReplacements[Placeholder(i + 1)] = clause.DerivedName.ToCamelCase();
         }
 
         UniqueClauses = uniqueClauses;
@@ -60,14 +59,10 @@ public class ClauseSet
     /// </summary>
     public ExpressionSyntax ResolveComposition(ExpressionSyntax compositionExpression)
     {
-        var replacements = _clauseNameMapping.ToDictionary(
-            mapping => Placeholder(mapping.Key + 1),
-            mapping => mapping.Value.ToCamelCase());
-
         return compositionExpression.ReplaceNodes(
             compositionExpression.DescendantNodesAndSelf().OfType<IdentifierNameSyntax>(),
             (original, _) =>
-                replacements.TryGetValue(original.Identifier.Text, out var camelName)
+                _placeholderReplacements.TryGetValue(original.Identifier.Text, out var camelName)
                     ? IdentifierName(camelName)
                     : original);
     }
