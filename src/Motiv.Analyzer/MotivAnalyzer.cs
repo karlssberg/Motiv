@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Operations;
 
 namespace Motiv.Analyzer;
 
@@ -122,15 +123,36 @@ public class MotivAnalyzer : DiagnosticAnalyzer
     private static bool IsCompileTimeConstant(SyntaxNode node, SemanticModel semanticModel) =>
         semanticModel.GetConstantValue(node).HasValue;
 
-    private static bool IsInsideExpressionTreeLambda(SyntaxNode node, SemanticModel semanticModel) =>
-        node.Ancestors()
-            .OfType<LambdaExpressionSyntax>()
-            .Any(lambda => IsExpressionTree(lambda, semanticModel));
+    /// <summary>
+    /// Walks the operations rather than the syntax, which also holds the implicit lambdas of query clauses over
+    /// <c>IQueryable</c>, and treats a conversion to any <c>Expression</c> — <c>Expression&lt;T&gt;</c> or
+    /// <c>LambdaExpression</c> — as an expression tree.
+    /// </summary>
+    private static bool IsInsideExpressionTreeLambda(SyntaxNode node, SemanticModel semanticModel)
+    {
+        // Null when System.Linq.Expressions is not referenced, which no type then derives from
+        var expressionType = semanticModel.Compilation.GetTypeByMetadataName("System.Linq.Expressions.Expression");
 
-    private static bool IsExpressionTree(LambdaExpressionSyntax lambda, SemanticModel semanticModel) =>
-        SymbolEqualityComparer.Default.Equals(
-            semanticModel.GetTypeInfo(lambda).ConvertedType?.OriginalDefinition,
-            semanticModel.Compilation.GetTypeByMetadataName("System.Linq.Expressions.Expression`1"));
+        for (var operation = semanticModel.GetOperation(node); operation is not null; operation = operation.Parent)
+        {
+            if (operation is IConversionOperation { Operand: IAnonymousFunctionOperation } conversion
+                && DerivesFrom(conversion.Type, expressionType))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool DerivesFrom(ITypeSymbol? type, INamedTypeSymbol? baseType)
+    {
+        for (var current = type; current is not null; current = current.BaseType)
+        {
+            if (SymbolEqualityComparer.Default.Equals(current.OriginalDefinition, baseType))
+                return true;
+        }
+
+        return false;
+    }
 
     private static bool IsInsideSpecLambda(SyntaxNode node, SemanticModel semanticModel)
     {

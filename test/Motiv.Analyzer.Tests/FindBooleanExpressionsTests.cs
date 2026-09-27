@@ -705,6 +705,53 @@ public class FindBooleanExpressionsTests
     }
 
     [Fact]
+    public async Task Should_ignore_boolean_expression_in_query_clause_over_queryable()
+    {
+        const string source =
+            """
+            using System.Linq;
+
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public IQueryable<int> InRange(IQueryable<int> numbers) =>
+                    from n in numbers where n > 0 && n < 10 select n;
+            }
+            """;
+
+        // No diagnostics should be reported since a query clause over IQueryable is an expression tree with no lambda syntax
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            ExpectedDiagnostics = { } // Empty - no diagnostics expected
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_ignore_boolean_expression_inside_lambda_converted_to_non_generic_expression()
+    {
+        const string source =
+            """
+            using System.Linq.Expressions;
+
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public LambdaExpression IsInRange() => (int n) => n > 0 && n < 10;
+            }
+            """;
+
+        // No diagnostics should be reported since a LambdaExpression is an expression tree too
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            ExpectedDiagnostics = { } // Empty - no diagnostics expected
+        }.RunAsync();
+    }
+
+    [Fact]
     public async Task Should_ignore_is_type_check_inside_expression_tree_lambda()
     {
         const string source =
