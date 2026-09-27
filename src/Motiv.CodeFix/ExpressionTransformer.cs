@@ -109,7 +109,8 @@ internal static class ExpressionTransformer
 
     /// <summary>
     ///     The model member each variable is read through: its name Pascal-cased without a field's leading
-    ///     underscores, unless that would give two variables one member, as <c>limit</c> and <c>_limit</c> would.
+    ///     underscores, unless that would give two variables one member, as <c>limit</c> and <c>_limit</c> would; and
+    ///     as written when even capitalizing would, as <c>limit</c> and <c>Limit</c> would.
     /// </summary>
     /// <param name="variableSymbols">The variables the model holds.</param>
     /// <returns>Each variable's name mapped to its model member's name.</returns>
@@ -119,8 +120,12 @@ internal static class ExpressionTransformer
             .Distinct()
             .GroupBy(name => name.ToPascalCase())
             .SelectMany(group => group.Select(name =>
-                (Name: name, Member: group.Count() == 1 ? group.Key : name.Capitalize())))
+                (Name: name, Member: group.Count() == 1 ? group.Key : DistinctMemberName(name, group))))
             .ToDictionary(pair => pair.Name, pair => pair.Member);
+
+    // Capitalized, unless another name capitalizes the same way (limit and Limit), when it stays as written
+    private static string DistinctMemberName(string name, IEnumerable<string> namesSharingMember) =>
+        namesSharingMember.Count(other => other.Capitalize() == name.Capitalize()) == 1 ? name.Capitalize() : name;
 
     private static ExpressionSyntax ReplaceMemberAccessRoots(
         ExpressionSyntax expression,

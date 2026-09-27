@@ -34,13 +34,9 @@ public static class StringExtensions
     /// of a field name so <c>_limit</c> becomes <c>Limit</c>.
     /// </summary>
     /// <param name="input">The identifier.</param>
-    /// <returns>The Pascal-cased name, or the capitalized identifier when it is only underscores.</returns>
+    /// <returns>The Pascal-cased name, or the identifier unchanged when it is only underscores.</returns>
     public static string ToPascalCase(this string input) =>
-        input.TrimStart('_') switch
-        {
-            "" => input.Capitalize(),
-            var trimmed => trimmed.Capitalize()
-        };
+        input.TrimStart('_') is { Length: > 0 } trimmed ? trimmed.Capitalize() : input;
 
     /// <summary>
     /// Escapes double quotes in a string for use in C# string literals.

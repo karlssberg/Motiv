@@ -99,6 +99,30 @@ public class MotivConvertToSpecNoFixTests
         await VerifyNoFix(source, 5, 39, booleanExpression);
     }
 
+    [Fact]
+    public async Task Should_not_offer_a_fix_when_the_model_would_read_a_computed_property_the_guard_skipped()
+    {
+        const string booleanExpression = "HasSelection && SelectedItem.Length > 0";
+
+        const string source =
+          $$"""
+            namespace MyNamespace;
+
+            public class Picker
+            {
+                private string _selected = "";
+
+                public bool HasSelection { get; set; }
+
+                public string SelectedItem => _selected ?? throw new System.InvalidOperationException();
+
+                public bool CanEdit() => {{booleanExpression}};
+            }
+            """;
+
+        await VerifyNoFix(source, 11, 30, booleanExpression);
+    }
+
     private static async Task VerifyNoFix(string source, int line, int column, string booleanExpression) =>
         await new VerifyCS.Test
         {
