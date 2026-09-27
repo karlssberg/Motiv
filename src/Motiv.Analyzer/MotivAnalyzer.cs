@@ -125,29 +125,14 @@ public class MotivAnalyzer : DiagnosticAnalyzer
 
     /// <summary>
     /// Walks the operations rather than the syntax, which also holds the implicit lambdas of query clauses over
-    /// <c>IQueryable</c>, and treats a conversion to any <c>Expression</c> — <c>Expression&lt;T&gt;</c> or
-    /// <c>LambdaExpression</c> — as an expression tree.
+    /// <c>IQueryable</c>. A lambda becomes a delegate through a delegate creation, and an expression tree —
+    /// <c>Expression&lt;T&gt;</c> or <c>LambdaExpression</c> — through a conversion, so a converted lambda is a tree.
     /// </summary>
     private static bool IsInsideExpressionTreeLambda(SyntaxNode node, SemanticModel semanticModel)
     {
-        // Null when System.Linq.Expressions is not referenced, which no type then derives from
-        var expressionType = semanticModel.Compilation.GetTypeByMetadataName("System.Linq.Expressions.Expression");
-
         for (var operation = semanticModel.GetOperation(node); operation is not null; operation = operation.Parent)
         {
-            if (operation is IConversionOperation { Operand: IAnonymousFunctionOperation } conversion
-                && DerivesFrom(conversion.Type, expressionType))
-                return true;
-        }
-
-        return false;
-    }
-
-    private static bool DerivesFrom(ITypeSymbol? type, INamedTypeSymbol? baseType)
-    {
-        for (var current = type; current is not null; current = current.BaseType)
-        {
-            if (SymbolEqualityComparer.Default.Equals(current.OriginalDefinition, baseType))
+            if (operation is IConversionOperation { Operand: IAnonymousFunctionOperation })
                 return true;
         }
 
