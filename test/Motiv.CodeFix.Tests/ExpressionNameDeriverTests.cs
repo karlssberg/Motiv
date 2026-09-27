@@ -413,6 +413,132 @@ public class ExpressionNameDeriverTests
     }
 
     [Fact]
+    public void DeriveClassNames_ReturnInPropertyGetter_UsesPropertyName()
+    {
+        var source = """
+            public class TestClass
+            {
+                private int _count;
+
+                public bool IsInRange
+                {
+                    get { return _count > 0 && _count < 10; }
+                }
+            }
+            """;
+        var (expression, semanticModel) = CreateContext(source, root => root
+            .DescendantNodes()
+            .OfType<ReturnStatementSyntax>()
+            .First()
+            .Expression!);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("IsInRangeProposition", propositionName);
+    }
+
+    [Fact]
+    public void DeriveClassNames_ExpressionBodiedGetAccessor_UsesPropertyName()
+    {
+        var source = """
+            public class TestClass
+            {
+                private int _count;
+
+                public bool IsInRange
+                {
+                    get => _count > 0 && _count < 10;
+                }
+            }
+            """;
+        var (expression, semanticModel) = CreateContext(source, root => root
+            .DescendantNodes()
+            .OfType<ArrowExpressionClauseSyntax>()
+            .First()
+            .Expression);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("IsInRangeProposition", propositionName);
+    }
+
+    [Fact]
+    public void DeriveClassNames_ReturnInBlockBodiedLocalFunction_UsesLocalFunctionName()
+    {
+        var source = """
+            public class TestClass
+            {
+                public bool Check(int value)
+                {
+                    bool IsSmall(int x)
+                    {
+                        return x > 0 && x < 5;
+                    }
+
+                    return IsSmall(value);
+                }
+            }
+            """;
+        var (expression, semanticModel) = CreateContext(source, root => root
+            .DescendantNodes()
+            .OfType<ReturnStatementSyntax>()
+            .First()
+            .Expression!);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("IsSmallProposition", propositionName);
+    }
+
+    [Fact]
+    public void DeriveClassNames_ClausesOverDifferentValuesSharingLeadingWords_KeepsBothSubjects()
+    {
+        var source = """
+            public class TestClass
+            {
+                public void Check(int x, int xMax)
+                {
+                    if (x > 0 && xMax > 0) { }
+                }
+            }
+            """;
+        var (expression, semanticModel) = CreateContext(source, root => root
+            .DescendantNodes()
+            .OfType<IfStatementSyntax>()
+            .First()
+            .Condition);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("IsXPositiveAndIsXMaxPositiveProposition", propositionName);
+    }
+
+    [Fact]
+    public void DeriveClassNames_SingleClauseWithLogicalLambda_UsesClauseMeaning()
+    {
+        var source = """
+            using System.Linq;
+
+            public class TestClass
+            {
+                public void Check(int[] items)
+                {
+                    if (items.Any(x => x > 0 && x < 5)) { }
+                }
+            }
+            """;
+        var (expression, semanticModel) = CreateContext(source, root => root
+            .DescendantNodes()
+            .OfType<IfStatementSyntax>()
+            .First()
+            .Condition);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("IsItemsAnyProposition", propositionName);
+    }
+
+    [Fact]
     public void DeriveClassNames_UnderscorePrefixedField_DropsTheUnderscore()
     {
         var source = """

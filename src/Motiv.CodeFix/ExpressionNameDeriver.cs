@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Motiv.CodeFix.Syntax;
 
 namespace Motiv.CodeFix;
 
@@ -64,7 +65,7 @@ public static class ExpressionNameDeriver
         }
 
         // Priority 3: A condition or argument has nothing to borrow a name from, so name what it tests
-        if (!HasReturnContext(expression) && TryGetClauseMeaningName(expression, out var clauseMeaningName))
+        if (!HasReturnContext(expression) && ClauseMeaningName(expression) is { } clauseMeaningName)
         {
             return clauseMeaningName;
         }
@@ -81,11 +82,8 @@ public static class ExpressionNameDeriver
     /// their operator with a shared subject stated once (<c>IsNPositiveAndLessThan10</c>). More than two clauses
     /// would make a sentence rather than a name, so the enclosing member names them instead.
     /// </summary>
-    private static bool TryGetClauseMeaningName(ExpressionSyntax expression, out string name)
-    {
-        name = DescribeClauses(Unparenthesize(expression)) ?? EnclosingMemberName(expression) ?? string.Empty;
-        return name.Length > 0;
-    }
+    private static string? ClauseMeaningName(ExpressionSyntax expression) =>
+        DescribeClauses(Unparenthesize(expression)) ?? EnclosingMemberName(expression);
 
     private static string? DescribeClauses(ExpressionSyntax condition)
     {
@@ -100,16 +98,36 @@ public static class ExpressionNameDeriver
             return null;
         }
 
-        return JoinClauseMeanings(ClauseMeaning(binary.Left), connective, ClauseMeaning(binary.Right));
+        return JoinClauseMeanings(
+            ClauseMeaning(binary.Left),
+            connective,
+            ClauseMeaning(binary.Right),
+            SameSubject(binary.Left, binary.Right));
     }
 
     private static string? ClauseMeaning(ExpressionSyntax clause)
     {
-        var name = ClauseNameDeriver.DeriveName(clause, clauseNumber: 0);
-        return name.StartsWith("Clause", StringComparison.Ordinal) ? null : name;
+        const int unnamedClause = 0;
+        var name = ClauseNameDeriver.DeriveName(clause, unnamedClause);
+        return name == ClauseSet.Placeholder(unnamedClause) ? null : name;
     }
 
-    private static string? JoinClauseMeanings(string? left, string connective, string? right)
+    // Whether both clauses test the same value, so a shared leading word names one subject, not two
+    private static bool SameSubject(ExpressionSyntax left, ExpressionSyntax right) =>
+        Subject(left) is { } leftSubject
+        && Subject(right) is { } rightSubject
+        && SyntaxFactory.AreEquivalent(leftSubject, rightSubject, topLevel: false);
+
+    private static ExpressionSyntax? Subject(ExpressionSyntax clause) =>
+        Unparenthesize(clause) switch
+        {
+            BinaryExpressionSyntax binary => binary.Left,
+            IsPatternExpressionSyntax isPattern => isPattern.Expression,
+            PrefixUnaryExpressionSyntax unary => Subject(unary.Operand),
+            _ => null
+        };
+
+    private static string? JoinClauseMeanings(string? left, string connective, string? right, bool sameSubject)
     {
         if (left is null || right is null)
             return null;
@@ -119,7 +137,7 @@ public static class ExpressionNameDeriver
         var shared = leftWords.Zip(rightWords, string.Equals).TakeWhile(same => same).Count();
 
         // "Is" alone is not a subject; only a shared "Is{Subject}" is stated once
-        var rightRemainder = shared >= 2 && shared < rightWords.Count
+        var rightRemainder = sameSubject && shared >= 2 && shared < rightWords.Count
             ? string.Concat(rightWords.Skip(shared))
             : right;
 
@@ -138,9 +156,12 @@ public static class ExpressionNameDeriver
             _ => null
         };
 
+    // A lambda's body is its own expression: `items.Any(x => x > 0 && x < 5)` is still one clause
     private static bool ContainsLogicalOperator(ExpressionSyntax expression) =>
-        expression.DescendantNodesAndSelf().OfType<BinaryExpressionSyntax>().Any(binary =>
-            binary.OperatorToken.Kind() is SyntaxKind.AmpersandAmpersandToken or SyntaxKind.BarBarToken or SyntaxKind.CaretToken);
+        expression.DescendantNodesAndSelf(node => node is not AnonymousFunctionExpressionSyntax)
+            .OfType<BinaryExpressionSyntax>()
+            .Any(binary =>
+                binary.OperatorToken.Kind() is SyntaxKind.AmpersandAmpersandToken or SyntaxKind.BarBarToken or SyntaxKind.CaretToken);
 
     private static ExpressionSyntax Unparenthesize(ExpressionSyntax expression)
     {
@@ -151,14 +172,21 @@ public static class ExpressionNameDeriver
 
     private static string? EnclosingMemberName(ExpressionSyntax expression) =>
         expression.Ancestors()
-            .Select(ancestor => ancestor switch
-            {
-                MethodDeclarationSyntax method => method.Identifier.ValueText,
-                LocalFunctionStatementSyntax localFunction => localFunction.Identifier.ValueText,
-                PropertyDeclarationSyntax property => property.Identifier.ValueText,
-                _ => null
-            })
+            .Select(MemberName)
             .FirstOrDefault(name => name is not null && !IsGenericMethodName(name));
+
+    // The member that holds a node, nearest first: a getter's property, a local function before its method
+    private static string? NearestMemberName(SyntaxNode node) =>
+        node.Ancestors().Select(MemberName).FirstOrDefault(name => name is not null);
+
+    private static string? MemberName(SyntaxNode node) =>
+        node switch
+        {
+            MethodDeclarationSyntax method => method.Identifier.ValueText,
+            LocalFunctionStatementSyntax localFunction => localFunction.Identifier.ValueText,
+            PropertyDeclarationSyntax property => property.Identifier.ValueText,
+            _ => null
+        };
 
     /// <summary>
     /// Attempts to get the name of the variable to which the expression is assigned.
@@ -198,11 +226,7 @@ public static class ExpressionNameDeriver
 
         if (returnStatement is not null)
         {
-            var method = returnStatement.Ancestors()
-                .OfType<MethodDeclarationSyntax>()
-                .FirstOrDefault();
-
-            var returnMethodName = method?.Identifier.ValueText;
+            var returnMethodName = NearestMemberName(returnStatement);
 
             if (returnMethodName is not null && !IsGenericMethodName(returnMethodName))
             {
@@ -216,13 +240,7 @@ public static class ExpressionNameDeriver
             .OfType<ArrowExpressionClauseSyntax>()
             .FirstOrDefault();
 
-        var arrowMemberName = arrowClause?.Parent switch
-        {
-            MethodDeclarationSyntax arrowMethod => arrowMethod.Identifier.ValueText,
-            PropertyDeclarationSyntax arrowProperty => arrowProperty.Identifier.ValueText,
-            LocalFunctionStatementSyntax arrowLocalFunction => arrowLocalFunction.Identifier.ValueText,
-            _ => null
-        };
+        var arrowMemberName = arrowClause is null ? null : NearestMemberName(arrowClause);
 
         if (arrowMemberName is not null && !IsGenericMethodName(arrowMemberName))
         {

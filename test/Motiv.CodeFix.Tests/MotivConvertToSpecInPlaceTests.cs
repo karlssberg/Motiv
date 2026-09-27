@@ -88,15 +88,15 @@ public class MotivConvertToSpecInPlaceTests
 
             public class Counter
             {
-                private static readonly IProposition IProposition = new();
+                private static readonly IsIPositiveAndLessThan5Proposition IsIPositiveAndLessThan5Proposition = new();
 
                 public void Record(bool[] seen, int i)
                 {
-                    seen[i++] = IProposition.Matches(i);
+                    seen[i++] = IsIPositiveAndLessThan5Proposition.Matches(i);
                 }
             }
 
-            public class IProposition() : Spec<int>(() =>
+            public class IsIPositiveAndLessThan5Proposition() : Spec<int>(() =>
                 Spec.Build((int i) => {{booleanExpression}})
                     .Create("{{booleanExpression}}"));
             """;
