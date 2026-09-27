@@ -112,20 +112,31 @@ public static class ExpressionNameDeriver
         return name == ClauseSet.Placeholder(unnamedClause) ? null : name;
     }
 
-    // Whether both clauses test the same value, so a shared leading word names one subject, not two
+    // Whether both clauses test the same value, or one tests a member of the other's (text and text.Length), so
+    // a shared leading word names one subject rather than two that merely begin alike (x and xMax)
     private static bool SameSubject(ExpressionSyntax left, ExpressionSyntax right) =>
         Subject(left) is { } leftSubject
         && Subject(right) is { } rightSubject
-        && SyntaxFactory.AreEquivalent(leftSubject, rightSubject, topLevel: false);
+        && Receivers(leftSubject).Any(leftValue => Receivers(rightSubject).Any(rightValue =>
+            SyntaxFactory.AreEquivalent(leftValue, rightValue, topLevel: false)));
 
     private static ExpressionSyntax? Subject(ExpressionSyntax clause) =>
         Unparenthesize(clause) switch
         {
+            // A constant compared against a value names that value: 0 < n and null != x test n and x
+            BinaryExpressionSyntax { Left: LiteralExpressionSyntax } binary => binary.Right,
             BinaryExpressionSyntax binary => binary.Left,
             IsPatternExpressionSyntax isPattern => isPattern.Expression,
             PrefixUnaryExpressionSyntax unary => Subject(unary.Operand),
             _ => null
         };
+
+    // The value itself, then each receiver it is read through: text.Length, then text
+    private static IEnumerable<ExpressionSyntax> Receivers(ExpressionSyntax value)
+    {
+        for (var current = value; current is not null; current = (current as MemberAccessExpressionSyntax)?.Expression)
+            yield return current;
+    }
 
     private static string? JoinClauseMeanings(string? left, string connective, string? right, bool sameSubject)
     {

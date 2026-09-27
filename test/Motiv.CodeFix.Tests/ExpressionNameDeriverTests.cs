@@ -514,6 +514,52 @@ public class ExpressionNameDeriverTests
     }
 
     [Fact]
+    public void DeriveClassNames_ReversedComparisonAndComparisonOfSameValue_StatesSubjectOnce()
+    {
+        var source = """
+            public class TestClass
+            {
+                public void Check(int n)
+                {
+                    if (0 < n && n < 10) { }
+                }
+            }
+            """;
+        var (expression, semanticModel) = CreateContext(source, root => root
+            .DescendantNodes()
+            .OfType<IfStatementSyntax>()
+            .First()
+            .Condition);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("IsNPositiveAndLessThan10Proposition", propositionName);
+    }
+
+    [Fact]
+    public void DeriveClassNames_ValueAndOneOfItsMembers_StatesSubjectOnce()
+    {
+        var source = """
+            public class TestClass
+            {
+                public void Check(string text)
+                {
+                    if (text != null && text.Length > 0) { }
+                }
+            }
+            """;
+        var (expression, semanticModel) = CreateContext(source, root => root
+            .DescendantNodes()
+            .OfType<IfStatementSyntax>()
+            .First()
+            .Condition);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("IsTextNotNullAndLengthPositiveProposition", propositionName);
+    }
+
+    [Fact]
     public void DeriveClassNames_SingleClauseWithLogicalLambda_UsesClauseMeaning()
     {
         var source = """
