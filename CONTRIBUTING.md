@@ -41,6 +41,9 @@ To run tests:
 dotnet test
 ```
 
+To find behaviour the tests execute but never check, run mutation testing — see
+[docs/contributing/mutation-testing.md](docs/contributing/mutation-testing.md).
+
 ## How to Contribute
 
 ### Branching Strategy

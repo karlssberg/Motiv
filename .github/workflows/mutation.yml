@@ -1,0 +1,78 @@
+# Mutation testing, report-only (#294, rollout step 1): Stryker.NET mutates src/Motiv and runs
+# test/Motiv.Tests against every mutant. The HTML and JSON reports are published as an artifact and
+# the score is written to the job summary. Nothing here fails on a low score — `thresholds.break`
+# in test/Motiv.Tests/stryker-config.json is 0 until the baseline has been triaged.
+#
+# Not on every PR: a full run is far slower than the test suite it drives. It runs on demand, and on
+# a PR only when the mutation setup itself changes, so a change to the config proves itself.
+
+name: Mutation testing
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - ".config/dotnet-tools.json"
+      - "test/Motiv.Tests/stryker-config.json"
+      - ".github/workflows/mutation.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mutation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  motiv:
+    runs-on: ubuntu-latest
+    # The hosted-runner ceiling. The first runs measure the real cost; see the PR-gate step in #294.
+    timeout-minutes: 360
+    steps:
+    - uses: actions/checkout@v5
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        # 10.0 is both the mutated target framework and the runtime Stryker.NET 5 requires; 8.0 and
+        # 9.0 because Motiv.Tests restores for every framework it targets.
+        dotnet-version: |
+          8.0.x
+          9.0.x
+          10.0.x
+    - name: Restore tools
+      run: dotnet tool restore
+    - name: Run Stryker.NET
+      working-directory: test/Motiv.Tests
+      run: |
+        # Stryker refuses an --output directory that does not already exist.
+        mkdir -p "$RUNNER_TEMP/stryker"
+        dotnet tool run dotnet-stryker --output "$RUNNER_TEMP/stryker"
+    - name: Summarise score
+      if: always()
+      run: |
+        report="$RUNNER_TEMP/stryker/reports/mutation-report.json"
+        if [ ! -f "$report" ]; then
+          echo "No mutation report was written." >> "$GITHUB_STEP_SUMMARY"
+          exit 0
+        fi
+        # Stryker's own formula: detected (Killed + Timeout) over valid (detected + Survived + NoCoverage).
+        jq -r '
+          [.files[].mutants[].status] as $s
+          | def n($k): [$s[] | select(. == $k)] | length;
+          (n("Killed") + n("Timeout")) as $detected
+          | ($detected + n("Survived") + n("NoCoverage")) as $valid
+          | "## Mutation score — src/Motiv\n\n"
+            + "**\(if $valid == 0 then "n/a" else ($detected * 10000 / $valid | round / 100 | tostring) + "%" end)** "
+            + "(\($detected) detected of \($valid) valid mutants)\n\n"
+            + "| Status | Mutants |\n|---|---|\n"
+            + ([ "Killed", "Timeout", "Survived", "NoCoverage", "CompileError", "RuntimeError", "Ignored" ]
+               | map("| \(.) | \(n(.)) |") | join("\n"))
+        ' "$report" >> "$GITHUB_STEP_SUMMARY"
+    - name: Upload reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: mutation-report-motiv
+        path: ${{ runner.temp }}/stryker
+        if-no-files-found: warn
