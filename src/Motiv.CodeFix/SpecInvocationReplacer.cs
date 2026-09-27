@@ -22,12 +22,12 @@ internal class SpecInvocationReplacer(
 
     // The spec class's name with any type arguments; a generic spec holds its own instance instead of a field
     private string _specTypeName = string.Empty;
-    private bool _isGeneric;
+    private bool IsGeneric => _specTypeName != propositionName;
 
     private string FieldName => _isFieldStatic ? propositionName : $"_{propositionName.ToCamelCase()}";
 
     private ExpressionSyntax SpecAccess =>
-        _isGeneric
+        IsGeneric
             ? ParseExpression($"{_specTypeName}.{SpecTypeParameters.InstanceFieldName}")
             : IdentifierName(FieldName);
 
@@ -66,7 +66,6 @@ internal class SpecInvocationReplacer(
     {
         _isFieldStatic = !hasInstanceMethods;
         _specTypeName = specTypeName;
-        _isGeneric = specTypeName != propositionName;
         var containingType = syntaxContext.ContainingType
             ?? throw new InvalidOperationException("The expression is not inside a type declaration.");
         var lineFeed = syntaxContext.LineFeed;
@@ -76,7 +75,7 @@ internal class SpecInvocationReplacer(
         var comment = new EvaluationComment(groupedExpression, lineFeed);
 
         var newType = ReplaceExpression(containingType, expression, model, comment, lineFeed);
-        if (_isGeneric)
+        if (IsGeneric)
             return root.ReplaceNode(containingType, newType);
 
         var containingMember = ContainingMember(expression, containingType);
@@ -212,13 +211,14 @@ internal class SpecInvocationReplacer(
                     .WithVariables(SingletonSeparatedList(
                         VariableDeclarator(Identifier(ResultVariableName))
                             .WithInitializer(EqualsValueClause(
-                                InvocationExpression(
-                                        MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SpecAccess, IdentifierName("Evaluate")))
+                                InvocationExpression(MemberAccess(SpecAccess, "Evaluate"))
                                     .WithArgumentList(ArgumentList(SingletonSeparatedList(model))))))))
             .NormalizeWhitespace();
 
-    private MemberAccessExpressionSyntax ResultSatisfied() =>
-        MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(ResultVariableName), IdentifierName("Satisfied"));
+    private MemberAccessExpressionSyntax ResultSatisfied() => MemberAccess(IdentifierName(ResultVariableName), "Satisfied");
+
+    private static MemberAccessExpressionSyntax MemberAccess(ExpressionSyntax target, string member) =>
+        MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, target, IdentifierName(member));
 
     private ExpressionSyntax BuildSatisfiedCheck(ArgumentSyntax model) =>
         fieldCustomizer.GetSatisfiedCheck(SpecAccess, model).NormalizeWhitespace();
@@ -269,7 +269,7 @@ internal class SpecInvocationReplacer(
             .WithBody(Block(assignmentStatement));
     }
 
-    private MemberDeclarationSyntax FormatMember(MemberDeclarationSyntax member, SyntaxTrivia indent, SyntaxTrivia lineFeed)
+    internal MemberDeclarationSyntax FormatMember(MemberDeclarationSyntax member, SyntaxTrivia indent, SyntaxTrivia lineFeed)
     {
         var formatted = fieldCustomizer.FormatMember(member.NormalizeWhitespace(eol: lineFeed.ToString()), lineFeed);
         if (indent.Span.Length > 0)

@@ -123,8 +123,10 @@ internal class LogicalExpressionToSpecConverter(
         if (!detectionResult.HasInstanceMethods)
             return true;
 
+        // The syntactic check spares the semantic search wherever no generic declaration is in scope
         return expression.FirstAncestorOrSelf<TypeDeclarationSyntax>() is ClassDeclarationSyntax
-               && SpecTypeParameters.Find(expression, semanticModel, variables.Select(variable => variable.Type)).IsEmpty;
+               && (!SpecTypeParameters.AnyInScope(expression)
+                   || SpecTypeParameters.Find(expression, semanticModel, variables.Select(variable => variable.Type)).IsEmpty);
     }
 
     /// <summary>
@@ -150,9 +152,7 @@ internal class LogicalExpressionToSpecConverter(
                 Token(SyntaxKind.StaticKeyword),
                 Token(SyntaxKind.ReadOnlyKeyword)));
 
-        var lineFeed = syntaxContext.LineFeed;
-        var formatted = fieldCustomizer.FormatMember(field.NormalizeWhitespace(eol: lineFeed.ToString()), lineFeed);
-        return SyntaxIndentHelper.ReindentMember(formatted, syntaxContext.GetIndent(1).ToString());
+        return _invocationReplacer.FormatMember(field, syntaxContext.GetIndent(1), syntaxContext.LineFeed);
     }
 
     private static InstanceMethodResult DetectInstanceMethods(

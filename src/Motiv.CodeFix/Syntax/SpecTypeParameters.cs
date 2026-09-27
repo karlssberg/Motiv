@@ -26,6 +26,16 @@ public sealed class SpecTypeParameters
 
     public bool IsEmpty => _typeParameters.IsEmpty;
 
+    /// <summary>Whether any type, method or local function around <paramref name="node" /> declares type parameters.</summary>
+    public static bool AnyInScope(SyntaxNode node) =>
+        node.Ancestors().Any(ancestor => ancestor switch
+        {
+            TypeDeclarationSyntax type => type.TypeParameterList is not null,
+            MethodDeclarationSyntax method => method.TypeParameterList is not null,
+            LocalFunctionStatementSyntax localFunction => localFunction.TypeParameterList is not null,
+            _ => false
+        });
+
     /// <summary>
     ///     Finds the type parameters named in <paramref name="expression" /> or in the types of the values it reads,
     ///     the containing type's before the method's, each in declaration order.
@@ -41,12 +51,23 @@ public sealed class SpecTypeParameters
             .Select(type => semanticModel.GetSymbolInfo(type).Symbol)
             .OfType<ITypeParameterSymbol>();
 
+        // A constraint may name another type parameter (where TList : ICollection<TItem>), which must be declared too
+        var found = new List<ITypeParameterSymbol>();
+        var pending = new Queue<ITypeParameterSymbol>(valueTypes.SelectMany(TypeParametersIn).Concat(namedInExpression));
+        while (pending.Count > 0)
+        {
+            var typeParameter = pending.Dequeue();
+            if (found.Contains(typeParameter, SymbolEqualityComparer.Default))
+                continue;
+
+            found.Add(typeParameter);
+            foreach (var referenced in typeParameter.ConstraintTypes.SelectMany(TypeParametersIn))
+                pending.Enqueue(referenced);
+        }
+
         return new SpecTypeParameters(
         [
-            ..valueTypes
-                .SelectMany(TypeParametersIn)
-                .Concat(namedInExpression)
-                .Distinct<ITypeParameterSymbol>(SymbolEqualityComparer.Default)
+            ..found
                 .OrderBy(typeParameter => typeParameter.TypeParameterKind)
                 .ThenBy(typeParameter => typeParameter.Ordinal)
         ]);
@@ -75,22 +96,37 @@ public sealed class SpecTypeParameters
         type switch
         {
             ITypeParameterSymbol typeParameter => [typeParameter],
-            INamedTypeSymbol named => named.TypeArguments.SelectMany(TypeParametersIn),
+            // A nested type of a generic type depends on the outer type's parameters too: Tree<T>.Node
+            INamedTypeSymbol named => named.TypeArguments.SelectMany(TypeParametersIn)
+                .Concat(named.ContainingType is { } outer ? TypeParametersIn(outer) : []),
             IArrayTypeSymbol array => TypeParametersIn(array.ElementType),
             _ => []
         };
 
-    private static IEnumerable<TypeParameterConstraintClauseSyntax> DeclaredConstraints(ITypeParameterSymbol typeParameter) =>
-        typeParameter.DeclaringSyntaxReferences
-            .Select(reference => reference.GetSyntax())
-            .Select(syntax => syntax.Parent?.Parent switch
-            {
-                MethodDeclarationSyntax method => method.ConstraintClauses,
-                TypeDeclarationSyntax type => type.ConstraintClauses,
-                LocalFunctionStatementSyntax localFunction => localFunction.ConstraintClauses,
-                _ => default
-            })
-            .SelectMany(clauses => clauses)
-            .Where(clause => clause.Name.Identifier.ValueText == typeParameter.Name)
-            .Select(clause => clause.WithoutTrivia());
+    /// <summary>
+    ///     The constraint clause for <paramref name="typeParameter" />, built from the symbol rather than copied from
+    ///     syntax: an override inherits constraints it may not restate, and each part of a partial type may repeat them.
+    /// </summary>
+    private static IEnumerable<TypeParameterConstraintClauseSyntax> DeclaredConstraints(ITypeParameterSymbol typeParameter)
+    {
+        var constraints = new List<TypeParameterConstraintSyntax>();
+        if (typeParameter.HasReferenceTypeConstraint)
+            constraints.Add(ClassOrStructConstraint(SyntaxKind.ClassConstraint));
+        else if (typeParameter.HasUnmanagedTypeConstraint)
+            constraints.Add(TypeConstraint(IdentifierName("unmanaged")));
+        else if (typeParameter.HasValueTypeConstraint)
+            constraints.Add(ClassOrStructConstraint(SyntaxKind.StructConstraint));
+        else if (typeParameter.HasNotNullConstraint)
+            constraints.Add(TypeConstraint(IdentifierName("notnull")));
+
+        constraints.AddRange(typeParameter.ConstraintTypes.Select(type =>
+            TypeConstraint(ParseTypeName(type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)))));
+
+        if (typeParameter.HasConstructorConstraint)
+            constraints.Add(ConstructorConstraint());
+
+        return constraints.Count == 0
+            ? []
+            : [TypeParameterConstraintClause(IdentifierName(typeParameter.Name)).WithConstraints(SeparatedList(constraints))];
+    }
 }
