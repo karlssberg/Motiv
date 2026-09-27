@@ -76,5 +76,11 @@ the difference.
 ## CI
 
 `.github/workflows/mutation.yml` runs on demand (`workflow_dispatch`) and on pull requests that
-change the mutation setup itself. It uploads the report directory as the `mutation-report-motiv`
-artifact.
+change the mutation setup itself. It splits `src/Motiv` into shards by directory, as listed in
+`test/Motiv.Tests/stryker-shards.json`. A final `rest` shard mutates every file the listed shards
+leave out, so a new directory is still covered. Each shard uploads its own
+`mutation-report-motiv-<shard>` artifact. The `combine` job scores all the shards together and names
+any shard that sent no report.
+
+To mutate one shard's files locally, pass the same globs, for example
+`dotnet tool run dotnet-stryker --mutate "**/OrElse/**" --mutate "**/AndAlso/**"`.

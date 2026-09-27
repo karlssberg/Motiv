@@ -1,0 +1,7 @@
+{
+  "higher-order": ["HigherOrderProposition"],
+  "expression-tree": ["ExpressionTreeProposition"],
+  "decorator-result-predicate": ["DecoratorProposition", "BooleanResultPredicateProposition"],
+  "predicate-traversal-shared": ["BooleanPredicateProposition", "Traversal", "Shared"],
+  "operators": ["Not", "OrElse", "AndAlso", "XOr", "And", "Or"]
+}
