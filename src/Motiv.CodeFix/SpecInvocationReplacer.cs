@@ -53,9 +53,9 @@ internal class SpecInvocationReplacer(
 
         var field = BuildFieldDeclaration(modelTypeName);
         var replacementMethod = BuildReplacementMethod(method, statement, resultVarName, specInvocation, commentTrivia);
-        ConstructorDeclarationSyntax? constructor = hasInstanceMethods
-            ? BuildConstructor(containingClass)
-            : null;
+        ConstructorDeclarationSyntax? constructor = _isFieldStatic
+            ? null
+            : BuildConstructor(containingClass);
 
         var lineFeed = syntaxContext.LineFeed;
         var eol = lineFeed.ToString();
@@ -80,7 +80,7 @@ internal class SpecInvocationReplacer(
         if (newConstructor is not null)
             newConstructor = newConstructor.WithTrailingTrivia(lineFeed, lineFeed);
 
-        if (!hasInstanceMethods && variableSymbols.Length == 1)
+        if (_isFieldStatic && variableSymbols.Length == 1)
             newMethod = newMethod.WithLeadingTrivia(method.GetLeadingTrivia());
 
         return ApplyMemberChanges(root, containingClass, method, newField, newMethod, newConstructor, FieldName);
@@ -97,25 +97,19 @@ internal class SpecInvocationReplacer(
         var fieldType = fieldCustomizer.GetFieldType(propositionName, modelTypeName);
         var declarator = VariableDeclarator(Identifier(FieldName));
 
+        var modifiers = TokenList(Token(SyntaxKind.PrivateKeyword));
+
+        // A static field initializes itself; an instance one is assigned by the constructor
         if (_isFieldStatic)
         {
-            var initializer = fieldCustomizer.GetFieldInitializer(propositionName);
-            declarator = declarator.WithInitializer(EqualsValueClause(initializer));
+            declarator = declarator.WithInitializer(EqualsValueClause(fieldCustomizer.GetFieldInitializer(propositionName)));
+            modifiers = modifiers.Add(Token(SyntaxKind.StaticKeyword));
         }
-
-        var modifiers = _isFieldStatic
-            ? TokenList(
-                Token(SyntaxKind.PrivateKeyword),
-                Token(SyntaxKind.StaticKeyword),
-                Token(SyntaxKind.ReadOnlyKeyword))
-            : TokenList(
-                Token(SyntaxKind.PrivateKeyword),
-                Token(SyntaxKind.ReadOnlyKeyword));
 
         return FieldDeclaration(
                 VariableDeclaration(fieldType)
                     .WithVariables(SingletonSeparatedList(declarator)))
-            .WithModifiers(modifiers);
+            .WithModifiers(modifiers.Add(Token(SyntaxKind.ReadOnlyKeyword)));
     }
 
     private MethodDeclarationSyntax BuildReplacementMethod(
