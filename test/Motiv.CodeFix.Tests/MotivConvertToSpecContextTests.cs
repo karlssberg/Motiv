@@ -603,6 +603,20 @@ public class MotivConvertToSpecContextTests
     }
 
     [Fact]
+    public async Task Should_refuse_a_context_that_does_not_compile_rather_than_find_nothing_to_flag()
+    {
+        const string context =
+            """
+            public class MyClass
+            {
+                public bool Check(int n) => [|n > 0 && Missing|];
+            }
+            """;
+
+        await Should.ThrowAsync<InvalidOperationException>(() => CodeFixHarness.GetDiagnosticSpans(context));
+    }
+
+    [Fact]
     public void Should_cover_every_context_with_a_test_case()
     {
         var convertibleCases = GetInlineDataContexts(

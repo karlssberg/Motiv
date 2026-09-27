@@ -39,6 +39,9 @@ internal static class CodeFixHarness
         var (source, span) = ParseMarkup(markedSource);
         var document = await CreateDocument(source);
 
+        // A source that does not compile gets no diagnostic either, which would pass as "not flagged"
+        await AssertCompiles(document, "the source under test");
+
         var diagnostics = await GetAnalyzerDiagnostics(document);
         return [..diagnostics.Select(d => d.Location.SourceSpan).Where(span.Contains)];
     }
