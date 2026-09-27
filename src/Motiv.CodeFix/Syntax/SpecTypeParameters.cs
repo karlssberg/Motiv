@@ -20,9 +20,18 @@ public sealed class SpecTypeParameters
     public static readonly SpecTypeParameters None = new([]);
 
     private readonly ImmutableArray<ITypeParameterSymbol> _typeParameters;
+    private readonly SemanticModel? _semanticModel;
+    private readonly int _specPosition;
 
-    private SpecTypeParameters(ImmutableArray<ITypeParameterSymbol> typeParameters) =>
+    private SpecTypeParameters(
+        ImmutableArray<ITypeParameterSymbol> typeParameters,
+        SemanticModel? semanticModel = null,
+        int specPosition = 0)
+    {
         _typeParameters = typeParameters;
+        _semanticModel = semanticModel;
+        _specPosition = specPosition;
+    }
 
     public bool IsEmpty => _typeParameters.IsEmpty;
 
@@ -65,12 +74,14 @@ public sealed class SpecTypeParameters
                 pending.Enqueue(referenced);
         }
 
+        // The spec is declared beside the outermost type, so its constraints name types as the source would there
+        var specPosition = expression.Ancestors().OfType<BaseTypeDeclarationSyntax>().Last().SpanStart;
         return new SpecTypeParameters(
         [
             ..found
                 .OrderBy(typeParameter => typeParameter.TypeParameterKind)
                 .ThenBy(typeParameter => typeParameter.Ordinal)
-        ]);
+        ], semanticModel, specPosition);
     }
 
     /// <summary>
@@ -107,11 +118,13 @@ public sealed class SpecTypeParameters
     ///     The constraint clause for <paramref name="typeParameter" />, built from the symbol rather than copied from
     ///     syntax: an override inherits constraints it may not restate, and each part of a partial type may repeat them.
     /// </summary>
-    private static IEnumerable<TypeParameterConstraintClauseSyntax> DeclaredConstraints(ITypeParameterSymbol typeParameter)
+    private IEnumerable<TypeParameterConstraintClauseSyntax> DeclaredConstraints(ITypeParameterSymbol typeParameter)
     {
         var constraints = new List<TypeParameterConstraintSyntax>();
         if (typeParameter.HasReferenceTypeConstraint)
-            constraints.Add(ClassOrStructConstraint(SyntaxKind.ClassConstraint));
+            constraints.Add(typeParameter.ReferenceTypeConstraintNullableAnnotation == NullableAnnotation.Annotated
+                ? ClassOrStructConstraint(SyntaxKind.ClassConstraint).WithQuestionToken(Token(SyntaxKind.QuestionToken))
+                : ClassOrStructConstraint(SyntaxKind.ClassConstraint));
         else if (typeParameter.HasUnmanagedTypeConstraint)
             constraints.Add(TypeConstraint(IdentifierName("unmanaged")));
         else if (typeParameter.HasValueTypeConstraint)
@@ -120,7 +133,7 @@ public sealed class SpecTypeParameters
             constraints.Add(TypeConstraint(IdentifierName("notnull")));
 
         constraints.AddRange(typeParameter.ConstraintTypes.Select(type =>
-            TypeConstraint(ParseTypeName(type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)))));
+            TypeConstraint(ParseTypeName(type.ToMinimalDisplayString(_semanticModel!, _specPosition)))));
 
         if (typeParameter.HasConstructorConstraint)
             constraints.Add(ConstructorConstraint());

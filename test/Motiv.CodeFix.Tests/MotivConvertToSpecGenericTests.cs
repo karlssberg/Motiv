@@ -77,6 +77,16 @@ public class MotivConvertToSpecGenericTests
                     where TRaw : unmanaged =>
                     [|!value.Equals(default(TValue)) && item is not null && key is not null && !raw.Equals(default(TRaw))|];
             }
+            """,
+        ["ConstraintTypeQualifiedInSource"] =
+            """
+            namespace MyNamespace;
+
+            public static class Streams
+            {
+                public static bool AreReadable<T>(T first, T second) where T : System.IO.Stream =>
+                    [|first.CanRead && second.CanRead|];
+            }
             """
     };
 
@@ -86,10 +96,32 @@ public class MotivConvertToSpecGenericTests
     [InlineData("ConstraintNamingAnotherTypeParameter")]
     [InlineData("NestedTypeOfGenericClass")]
     [InlineData("EveryConstraintKind")]
+    [InlineData("ConstraintTypeQualifiedInSource")]
     public async Task Should_declare_every_type_parameter_the_spec_depends_on_with_its_constraints(string source)
     {
         var outcome = await CodeFixHarness.ApplyFix(Sources[source]);
 
         outcome.CompilerErrors.ShouldBeEmpty(outcome.FixedSource);
+    }
+
+    [Fact]
+    public async Task Should_keep_a_nullable_reference_type_constraint_nullable()
+    {
+        const string source =
+            """
+            #nullable enable
+            namespace MyNamespace;
+
+            public static class Checks
+            {
+                public static bool AreBothSet<T>(T? first, T? second) where T : class? =>
+                    [|first is not null && second is not null|];
+            }
+            """;
+
+        var outcome = await CodeFixHarness.ApplyFix(source);
+
+        // Once on the method, once on the spec
+        outcome.FixedSource.Split(["where T : class?"], StringSplitOptions.None).Length.ShouldBe(3, outcome.FixedSource);
     }
 }
