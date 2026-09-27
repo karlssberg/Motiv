@@ -6,7 +6,7 @@ internal class ExpressionNegationMappings() : ReadOnlyDictionary<string, string>
     new Dictionary<string, string>
     {
         ["NAND"] = "AND",
-        ["NAND ALSO"] = "NAND ALSO",
+        ["NAND ALSO"] = "AND ALSO",
         ["NOR"] = "OR",
         ["NOR ELSE"] = "OR ELSE",
         ["XNOR"] = "XOR",
