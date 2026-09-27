@@ -80,6 +80,18 @@ internal class LogicalExpressionToSpecConverter(
         return resultDoc;
     }
 
+    /// <summary>
+    ///     Whether the fix can hold <paramref name="expression" />'s spec. One that calls an instance method captures
+    ///     <c>this</c> through a constructor, which only a class can take: a record would lose its positional members,
+    ///     a struct would hand the spec a stale copy of itself, and an interface cannot hold an instance field.
+    /// </summary>
+    public static bool CanConvert(
+        ExpressionSyntax expression,
+        SemanticModel semanticModel,
+        INamedTypeSymbol? containingTypeSymbol) =>
+        expression.FirstAncestorOrSelf<TypeDeclarationSyntax>() is ClassDeclarationSyntax
+        || !DetectInstanceMethods(expression, semanticModel, containingTypeSymbol).HasInstanceMethods;
+
     private static InstanceMethodResult DetectInstanceMethods(
         ExpressionSyntax expression,
         SemanticModel semanticModel,

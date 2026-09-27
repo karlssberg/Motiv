@@ -63,6 +63,57 @@ public class MotivConvertToSpecInPlaceTests
     }
 
     [Fact]
+    public async Task Should_evaluate_in_place_when_the_assignment_target_is_evaluated_first()
+    {
+        const string booleanExpression = "i > 0 && i < 5";
+
+        const string source =
+          $$"""
+            namespace MyNamespace;
+
+            public class Counter
+            {
+                public void Record(bool[] seen, int i)
+                {
+                    seen[i++] = {{booleanExpression}};
+                }
+            }
+            """;
+
+        const string expectedTransformedCode =
+          $$"""
+            using Motiv;
+
+            namespace MyNamespace;
+
+            public class Counter
+            {
+                private static readonly IProposition IProposition = new();
+
+                public void Record(bool[] seen, int i)
+                {
+                    seen[i++] = IProposition.Matches(i);
+                }
+            }
+
+            public class IProposition() : Spec<int>(() =>
+                Spec.Build((int i) => {{booleanExpression}})
+                    .Create("{{booleanExpression}}"));
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            FixedState = { Sources = { (Source, expectedTransformedCode) } },
+            ExpectedDiagnostics =
+            {
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                    .WithSpan(Source, 7, 21, 7, 21 + booleanExpression.Length)
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
     public async Task Should_replace_only_the_condition_when_expression_is_an_if_condition()
     {
         const string booleanExpression = "n > 0 && n < 10";

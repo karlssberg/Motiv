@@ -51,8 +51,14 @@ public class MotivCodeFixProvider : CodeFixProvider
             if (expressionSyntax is null)
                 continue;
 
-            // The spec is held in a field, so there must be a type to hold it
-            if (expressionSyntax.FirstAncestorOrSelf<TypeDeclarationSyntax>() is null)
+            // The spec is held in a field beside the member holding the expression, so there must be one; an
+            // argument to a primary constructor's base type sits in the type's header, outside every member
+            if (expressionSyntax.FirstAncestorOrSelf<TypeDeclarationSyntax>() is not { } containingType
+                || !expressionSyntax.Ancestors().OfType<MemberDeclarationSyntax>().Any(member => member.Parent == containingType))
+                continue;
+
+            var containingTypeSymbol = semanticModel.GetDeclaredSymbol(containingType, context.CancellationToken) as INamedTypeSymbol;
+            if (!LogicalExpressionToSpecConverter.CanConvert(expressionSyntax, semanticModel, containingTypeSymbol))
                 continue;
 
             // Derive context-aware class names from the expression

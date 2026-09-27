@@ -62,7 +62,7 @@ internal class SpecInvocationReplacer(
         var model = BuildModelArgument(variableSymbols);
         var comment = new EvaluationComment(groupedExpression, lineFeed);
 
-        var newType = ReplaceExpression(containingType, expression, model, comment);
+        var newType = ReplaceExpression(containingType, expression, model, comment, lineFeed);
 
         var containingMember = ContainingMember(expression, containingType);
         var indent = GetIndent(containingMember);
@@ -83,13 +83,14 @@ internal class SpecInvocationReplacer(
         TypeDeclarationSyntax containingType,
         ExpressionSyntax expression,
         ArgumentSyntax model,
-        EvaluationComment comment)
+        EvaluationComment comment,
+        SyntaxTrivia lineFeed)
     {
         if (FindHostStatement(expression) is { } statement)
-            return containingType.ReplaceNode(statement, BuildEvaluatedStatements(statement, expression, model, comment));
+            return containingType.ReplaceNode(statement, BuildEvaluatedStatements(statement, expression, model, comment, lineFeed));
 
         if (FindBoolExpressionBodiedMethod(expression) is { } method)
-            return containingType.ReplaceNode(method, BuildBlockBodiedMethod(method, model, comment));
+            return containingType.ReplaceNode(method, BuildBlockBodiedMethod(method, model, comment, lineFeed));
 
         return containingType.ReplaceNode(expression, BuildSatisfiedCheck(model).WithTriviaFrom(expression));
     }
@@ -121,7 +122,8 @@ internal class SpecInvocationReplacer(
                     }
                 }
             } when !local.IsConst && local.UsingKeyword.IsKind(SyntaxKind.None) => local,
-            AssignmentExpressionSyntax { Parent: ExpressionStatementSyntax assignmentStatement } assignment
+            // Only a plain name: any other target is evaluated before the value, so hoisting would reorder them
+            AssignmentExpressionSyntax { Parent: ExpressionStatementSyntax assignmentStatement, Left: IdentifierNameSyntax } assignment
                 when assignment.IsKind(SyntaxKind.SimpleAssignmentExpression) => assignmentStatement,
             _ => null
         };
@@ -144,13 +146,14 @@ internal class SpecInvocationReplacer(
         StatementSyntax statement,
         ExpressionSyntax expression,
         ArgumentSyntax model,
-        EvaluationComment comment)
+        EvaluationComment comment,
+        SyntaxTrivia lineFeed)
     {
         var indent = GetIndent(statement);
 
         yield return BuildEvaluateStatement(model)
             .WithLeadingTrivia(statement.GetLeadingTrivia().AddRange(comment.Lines(indent)).Add(indent))
-            .WithTrailingTrivia(comment.LineFeed);
+            .WithTrailingTrivia(lineFeed);
 
         yield return statement
             .ReplaceNode(expression, ResultSatisfied().WithTriviaFrom(expression))
@@ -160,9 +163,9 @@ internal class SpecInvocationReplacer(
     private MethodDeclarationSyntax BuildBlockBodiedMethod(
         MethodDeclarationSyntax method,
         ArgumentSyntax model,
-        EvaluationComment comment)
+        EvaluationComment comment,
+        SyntaxTrivia lineFeed)
     {
-        var lineFeed = comment.LineFeed;
         var indent = GetIndent(method);
         var bodyIndent = Whitespace(indent + "    ");
 
@@ -325,17 +328,9 @@ internal class SpecInvocationReplacer(
         if (typeDeclaration.ParameterList is null)
             return typeDeclaration;
 
-        var typeLeadingWhitespace = typeDeclaration
-            .GetLeadingTrivia()
-            .LastOrDefault(t => t.IsKind(SyntaxKind.WhitespaceTrivia));
-
-        SyntaxTrivia[] openBraceTrivia = typeLeadingWhitespace.RawKind == 0
-            ? [lineFeed]
-            : [lineFeed, typeLeadingWhitespace];
-
         return typeDeclaration
             .WithParameterList(null)
-            .WithOpenBraceToken(typeDeclaration.OpenBraceToken.WithLeadingTrivia(openBraceTrivia));
+            .WithOpenBraceToken(typeDeclaration.OpenBraceToken.WithLeadingTrivia(lineFeed, GetIndent(typeDeclaration)));
     }
 
     /// <summary>
@@ -345,8 +340,6 @@ internal class SpecInvocationReplacer(
     private sealed class EvaluationComment(ExpressionSyntax expression, SyntaxTrivia lineFeed)
     {
         private readonly string[] _parts = SplitAtFirstDisjunction(expression.NormalizeWhitespace());
-
-        public SyntaxTrivia LineFeed => lineFeed;
 
         public SyntaxTriviaList Lines(SyntaxTrivia indent) =>
             _parts.Length == 1
