@@ -71,6 +71,15 @@ public class MotivConvertToSpecModelValueTests
 
                 public bool IsWithin(int limit) => [|limit > 0 && limit <= Limit|];
             }
+            """,
+        ["NamedArgumentLabel"] =
+            """
+            namespace MyNamespace;
+
+            public class Checks
+            {
+                public bool IsNamed(int count, string text) => [|count > 0 && string.Equals(a: text, b: "x")|];
+            }
             """
     };
 
@@ -80,6 +89,7 @@ public class MotivConvertToSpecModelValueTests
     [InlineData("PropertyPatternName")]
     [InlineData("ObjectInitializerTarget")]
     [InlineData("NamesDifferingOnlyInCase")]
+    [InlineData("NamedArgumentLabel")]
     public async Task Should_produce_compiling_code_when_a_name_is_not_a_value_of_the_expression_scope(string source)
     {
         var outcome = await CodeFixHarness.ApplyFix(Sources[source]);

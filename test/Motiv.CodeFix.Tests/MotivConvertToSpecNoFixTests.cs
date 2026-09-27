@@ -123,6 +123,32 @@ public class MotivConvertToSpecNoFixTests
         await VerifyNoFix(source, 11, 30, booleanExpression);
     }
 
+    [Theory]
+    [InlineData("abstract", "public abstract int Count { get; }")]
+    [InlineData("abstract", "public virtual int Count { get; set; }")]
+    public async Task Should_not_offer_a_fix_when_the_model_would_read_a_property_an_override_can_compute(
+        string typeModifier,
+        string propertyDeclaration)
+    {
+        const string booleanExpression = "IsEnabled && Count > 0";
+
+        var source =
+          $$"""
+            namespace MyNamespace;
+
+            public {{typeModifier}} class Picker
+            {
+                public bool IsEnabled { get; set; }
+
+                {{propertyDeclaration}}
+
+                public bool HasItems() => {{booleanExpression}};
+            }
+            """;
+
+        await VerifyNoFix(source, 9, 31, booleanExpression);
+    }
+
     private static async Task VerifyNoFix(string source, int line, int column, string booleanExpression) =>
         await new VerifyCS.Test
         {

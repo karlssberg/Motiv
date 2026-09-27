@@ -271,17 +271,19 @@ internal class LogicalExpressionToSpecConverter(
     ];
 
     private static bool IsModelValue(IdentifierNameSyntax identifier, ISymbol? symbol, ExpressionSyntax expression) =>
-        symbol switch
+        IsReadFromScope(identifier)
+        && symbol switch
         {
-            IFieldSymbol => IsReadFromScope(identifier),
-            IPropertySymbol property => !property.IsIndexer && IsReadFromScope(identifier),
+            IFieldSymbol => true,
+            IPropertySymbol property => !property.IsIndexer,
             IRangeVariableSymbol or IParameterSymbol or ILocalSymbol => !IsDeclaredWithin(symbol, expression),
             _ => false
         };
 
     /// <summary>
     ///     Whether a bare name is read from the expression's scope, rather than naming a member of another object:
-    ///     <c>?.Name</c>, <c>{ Name: … }</c>, <c>new T { Name = … }</c>, <c>x with { Name = … }</c>, <c>new { Name = … }</c>.
+    ///     <c>?.Name</c>, <c>{ Name: … }</c>, <c>new T { Name = … }</c>, <c>x with { Name = … }</c>, <c>new { Name = … }</c>,
+    ///     or a named argument's parameter, <c>M(name: …)</c>.
     /// </summary>
     private static bool IsReadFromScope(IdentifierNameSyntax identifier) =>
         identifier.Parent switch
@@ -294,10 +296,12 @@ internal class LogicalExpressionToSpecConverter(
     /// <summary>
     ///     Whether a property can be read eagerly, when the model is built, without changing what the expression does:
     ///     an auto-property or a positional record member reads like a field, but a computed getter may throw or have
-    ///     effects that a <c>&amp;&amp;</c> or <c>||</c> before it would have skipped.
+    ///     effects that a <c>&amp;&amp;</c> or <c>||</c> before it would have skipped, and so may an override of an
+    ///     abstract or virtual one.
     /// </summary>
     private static bool IsReadLikeAField(IPropertySymbol property) =>
-        property.DeclaringSyntaxReferences.Length > 0
+        !(property.IsAbstract || property.IsVirtual || property.IsOverride && !property.IsSealed)
+        && property.DeclaringSyntaxReferences.Length > 0
         && property.DeclaringSyntaxReferences.All(reference => reference.GetSyntax() switch
         {
             ParameterSyntax => true,
