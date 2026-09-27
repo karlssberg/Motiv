@@ -339,12 +339,12 @@ internal class SpecInvocationReplacer(
     }
 
     /// <summary>
-    ///     The <c>// expression</c> comment above an evaluation, split after the first <c>||</c> so a long
-    ///     disjunction reads as two lines. The first line follows whatever indent precedes it.
+    ///     The <c>// expression</c> comment above an evaluation, split after the first top-level <c>||</c> so a
+    ///     long disjunction reads as two lines. The first line follows whatever indent precedes it.
     /// </summary>
     private sealed class EvaluationComment(ExpressionSyntax expression, SyntaxTrivia lineFeed)
     {
-        private readonly string[] _parts = expression.NormalizeWhitespace().ToFullString().Split([" || "], 2, StringSplitOptions.None);
+        private readonly string[] _parts = SplitAtFirstDisjunction(expression.NormalizeWhitespace());
 
         public SyntaxTrivia LineFeed => lineFeed;
 
@@ -354,5 +354,24 @@ internal class SpecInvocationReplacer(
                 : TriviaList(
                     Comment($"// {_parts[0]} ||"), lineFeed,
                     indent, Comment($"//     {_parts[1]}"), lineFeed);
+
+        // Only a top-level `||` splits the comment; one inside parentheses would break the line mid-group
+        private static string[] SplitAtFirstDisjunction(ExpressionSyntax expression)
+        {
+            var text = expression.ToFullString();
+            if (!expression.IsKind(SyntaxKind.LogicalOrExpression))
+                return [text];
+
+            var first = (BinaryExpressionSyntax)expression;
+            while (first.Left.IsKind(SyntaxKind.LogicalOrExpression))
+                first = (BinaryExpressionSyntax)first.Left;
+
+            var split = first.OperatorToken.SpanStart - expression.FullSpan.Start;
+            return
+            [
+                text.Substring(0, split).TrimEnd(),
+                text.Substring(split + first.OperatorToken.Span.Length).TrimStart()
+            ];
+        }
     }
 }

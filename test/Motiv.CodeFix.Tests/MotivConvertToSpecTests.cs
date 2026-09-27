@@ -228,8 +228,7 @@ public class MotivConvertToSpecTests
 
                   public void IsValid(int valueA, int valueB, int valueC)
                   {
-                      // {{clause1}} && ({{clause2}} ||
-                      //     !({{clause3}} ^ {{clause4}}))
+                      // {{clause1}} && ({{clause2}} || !({{clause3}} ^ {{clause4}}))
                       var isSatisfiedResult = IsSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(valueA, valueB, valueC));
                       var isSatisfied = isSatisfiedResult.Satisfied;
                   }

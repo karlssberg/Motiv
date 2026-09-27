@@ -284,4 +284,70 @@ public class MotivConvertToSpecInPlaceTests
             }
         }.RunAsync();
     }
+
+    [Fact]
+    public async Task Should_keep_the_comment_on_one_line_when_the_disjunction_is_nested()
+    {
+        const string booleanExpression = "a && (b || c)";
+
+        const string source =
+          $$"""
+            namespace MyNamespace;
+
+            public static class Rules
+            {
+                public static bool Check(bool a, bool b, bool c) => {{booleanExpression}};
+            }
+            """;
+
+        const string expectedTransformedCode =
+          $$"""
+            using Motiv;
+
+            namespace MyNamespace;
+
+            public static class Rules
+            {
+                private static readonly CheckProposition CheckProposition = new();
+
+                public static bool Check(bool a, bool b, bool c)
+                {
+                    // {{booleanExpression}}
+                    var checkResult = CheckProposition.Evaluate(new CheckProposition.Model(a, b, c));
+                    return checkResult.Satisfied;
+                }
+            }
+
+            public class CheckProposition() : Spec<CheckProposition.Model>(() =>
+            {
+                var isA = Spec
+                    .Build((Model m) => m.A)
+                    .Create("a");
+
+                var isB = Spec
+                    .Build((Model m) => m.B)
+                    .Create("b");
+
+                var isC = Spec
+                    .Build((Model m) => m.C)
+                    .Create("c");
+
+                return isA.AndAlso((isB.OrElse(isC)));
+            })
+            {
+                public readonly record struct Model(bool A, bool B, bool C);
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            FixedState = { Sources = { (Source, expectedTransformedCode) } },
+            ExpectedDiagnostics =
+            {
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                    .WithSpan(Source, 5, 57, 5, 57 + booleanExpression.Length)
+            }
+        }.RunAsync();
+    }
 }
