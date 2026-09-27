@@ -73,6 +73,32 @@ public class MotivConvertToSpecNoFixTests
         await VerifyNoFix(source, 5, 36, booleanExpression);
     }
 
+    [Theory]
+    [InlineData("private static")]
+    [InlineData("protected static")]
+    [InlineData("private protected static")]
+    [InlineData("private")]
+    [InlineData("protected")]
+    public async Task Should_not_offer_a_fix_when_an_expression_calls_a_method_the_spec_cannot_access(
+        string modifiers)
+    {
+        const string booleanExpression = "value > 0 && IsKnown(value)";
+
+        var source =
+          $$"""
+            namespace MyNamespace;
+
+            public class Values
+            {
+                public bool IsValid(int value) => {{booleanExpression}};
+
+                {{modifiers}} bool IsKnown(int value) => value.Equals(42);
+            }
+            """;
+
+        await VerifyNoFix(source, 5, 39, booleanExpression);
+    }
+
     private static async Task VerifyNoFix(string source, int line, int column, string booleanExpression) =>
         await new VerifyCS.Test
         {

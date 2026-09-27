@@ -63,7 +63,7 @@ internal class LogicalExpressionToSpecConverter(
 
         var baseNamespace = newRoot.DescendantNodes().OfType<BaseNamespaceDeclarationSyntax>().FirstOrDefault();
         var isBlockNamespace = baseNamespace is NamespaceDeclarationSyntax;
-        var containingTypeName = ResolveContainingTypeName(containingTypeSymbol, isBlockNamespace);
+        var containingTypeName = ResolveContainingTypeName(containingTypeSymbol, isBlockNamespace, semanticModel, logicalExpressionSyntax);
 
         var rootMembers = BuildSpecClassMembers(
             syntaxContext, variableSymbols, groupedExpression,
@@ -83,14 +83,29 @@ internal class LogicalExpressionToSpecConverter(
     /// <summary>
     ///     Whether the fix can hold <paramref name="expression" />'s spec. One that calls an instance method captures
     ///     <c>this</c> through a constructor, which only a class can take: a record would lose its positional members,
-    ///     a struct would hand the spec a stale copy of itself, and an interface cannot hold an instance field.
+    ///     a struct would hand the spec a stale copy of itself, and an interface cannot hold an instance field. The
+    ///     spec is a class of its own, so every method of the containing type it calls must be one it can reach.
     /// </summary>
     public static bool CanConvert(
         ExpressionSyntax expression,
         SemanticModel semanticModel,
-        INamedTypeSymbol? containingTypeSymbol) =>
-        expression.FirstAncestorOrSelf<TypeDeclarationSyntax>() is ClassDeclarationSyntax
-        || !DetectInstanceMethods(expression, semanticModel, containingTypeSymbol).HasInstanceMethods;
+        INamedTypeSymbol? containingTypeSymbol)
+    {
+        var detectionResult = DetectInstanceMethods(expression, semanticModel, containingTypeSymbol);
+        if (!detectionResult.ResolvedMethods.Concat(detectionResult.StaticMethods)
+                .All(call => IsAccessibleToSpec(call.Method, semanticModel.Compilation)))
+            return false;
+
+        return expression.FirstAncestorOrSelf<TypeDeclarationSyntax>() is ClassDeclarationSyntax
+               || !detectionResult.HasInstanceMethods;
+    }
+
+    /// <summary>
+    ///     Whether a type of the same assembly, declared outside the method's own type and deriving from nothing of
+    ///     it, can call the method — which is what the spec is.
+    /// </summary>
+    private static bool IsAccessibleToSpec(IMethodSymbol method, Compilation compilation) =>
+        compilation.IsSymbolAccessibleWithin(method, compilation.Assembly);
 
     private static InstanceMethodResult DetectInstanceMethods(
         ExpressionSyntax expression,
@@ -103,12 +118,23 @@ internal class LogicalExpressionToSpecConverter(
             : new InstanceMethodResult([], [], []);
     }
 
+    /// <summary>
+    ///     The containing type's name, qualified by its namespace in a file-scoped namespace, and otherwise as the
+    ///     source would name it beside the outermost type, where the spec is declared — so a nested type keeps its
+    ///     outer types.
+    /// </summary>
     private static string? ResolveContainingTypeName(
         INamedTypeSymbol? containingTypeSymbol,
-        bool isBlockNamespace) =>
-        containingTypeSymbol is not null
-            ? (isBlockNamespace ? containingTypeSymbol.Name : containingTypeSymbol.ToDisplayString())
-            : null;
+        bool isBlockNamespace,
+        SemanticModel semanticModel,
+        ExpressionSyntax expression)
+    {
+        if (containingTypeSymbol is null) return null;
+        if (!isBlockNamespace) return containingTypeSymbol.ToDisplayString();
+
+        var specPosition = expression.Ancestors().OfType<BaseTypeDeclarationSyntax>().Last().SpanStart;
+        return containingTypeSymbol.ToMinimalDisplayString(semanticModel, specPosition);
+    }
 
     private IEnumerable<MemberDeclarationSyntax> BuildSpecClassMembers(
         SyntaxContext syntaxContext,
@@ -124,7 +150,7 @@ internal class LogicalExpressionToSpecConverter(
         if (variableSymbols.Length == 1 && !hasInstanceMethods && !hasStaticMethods)
             return BuildSimpleSpec(syntaxContext, variableSymbols.First(), logicalExpressionSyntax);
 
-        if (variableSymbols.Length == 1 && hasInstanceMethods)
+        if (variableSymbols.Length == 1)
             return BuildSingleVarComposedSpec(syntaxContext, variableSymbols.First(), logicalExpressionSyntax, instanceMethodNames, staticMethodNames, containingTypeName);
 
         return BuildMultiVarComposedSpec(syntaxContext, variableSymbols, logicalExpressionSyntax, instanceMethodNames, staticMethodNames, containingTypeName);
@@ -153,6 +179,7 @@ internal class LogicalExpressionToSpecConverter(
         HashSet<string> staticMethodNames,
         string? containingTypeName)
     {
+        var hasInstanceMethods = instanceMethodNames.Count > 0;
         var variableTypeName = GetSymbolTypeName(variable);
         var decomposition = ExpressionDecomposer.Decompose(
             logicalExpressionSyntax,
@@ -169,7 +196,7 @@ internal class LogicalExpressionToSpecConverter(
             innerLambdaModelType: variableTypeName,
             innerLambdaParameterName: variable.Name,
             decomposition,
-            containingTypeName: containingTypeName).Build();
+            containingTypeName: hasInstanceMethods ? containingTypeName : null).Build();
     }
 
     private IEnumerable<MemberDeclarationSyntax> BuildMultiVarComposedSpec(
