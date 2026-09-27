@@ -44,9 +44,11 @@ internal class LogicalExpressionToSpecConverter(
         var semanticModel = await syntaxContext.SemanticModel(cancellationToken).ConfigureAwait(false);
         var variables = GetVariablesInExpression(logicalExpressionSyntax, semanticModel);
         var variableSymbols = variables.Select(variable => variable.Symbol).ToImmutableArray();
+        // The spec is declared beside the outermost type, so each type is named as the source would name it there
+        var specPosition = logicalExpressionSyntax.Ancestors().OfType<BaseTypeDeclarationSyntax>().Last().SpanStart;
         _variableTypeNames = variables.ToDictionary(
             variable => variable.Symbol,
-            variable => variable.Type?.GetCSharpTypeName() ?? "object",
+            variable => variable.Type?.ToMinimalDisplayString(semanticModel, specPosition) ?? "object",
             SymbolEqualityComparer.Default);
 
         var containingTypeSymbol = await syntaxContext.ContainingTypeSymbol(cancellationToken).ConfigureAwait(false);
@@ -219,10 +221,11 @@ internal class LogicalExpressionToSpecConverter(
             logicalExpressionSyntax,
             expr => ExpressionTransformer.ConvertVariablesToModelMemberAccess(expr, variableSymbols, instanceMethodNames, staticMethodNames, containingTypeName));
 
+        var memberNames = ExpressionTransformer.ModelMemberNames(variableSymbols);
         var recordParameterList = ParameterList(
             SeparatedList(
                 variableSymbols.Select(s =>
-                    Parameter(Identifier(s.Name.Capitalize()))
+                    Parameter(Identifier(memberNames[s.Name]))
                         .WithType(ParseTypeName(GetSymbolTypeName(s))))));
 
         var resolvedContainingTypeName = hasInstanceMethods ? containingTypeName : null;

@@ -401,4 +401,137 @@ public class MotivConvertToSpecInPlaceTests
             }
         }.RunAsync();
     }
+
+    [Fact]
+    public async Task Should_name_model_members_without_underscores_and_types_as_the_source_does()
+    {
+        const string booleanExpression = "items.Count < _limit && _limit > 0";
+
+        const string source =
+          $$"""
+            using System.Collections.Generic;
+
+            namespace MyNamespace;
+
+            public class Basket
+            {
+                private readonly int _limit = 10;
+
+                public bool HasRoom(List<int> items) => {{booleanExpression}};
+            }
+            """;
+
+        const string expectedTransformedCode =
+          $$"""
+            using System.Collections.Generic;
+            using Motiv;
+
+            namespace MyNamespace;
+
+            public class Basket
+            {
+                private readonly int _limit = 10;
+                private static readonly HasRoomProposition HasRoomProposition = new();
+
+                public bool HasRoom(List<int> items)
+                {
+                    // {{booleanExpression}}
+                    var hasRoomResult = HasRoomProposition.Evaluate(new HasRoomProposition.Model(items, _limit));
+                    return hasRoomResult.Satisfied;
+                }
+            }
+
+            public class HasRoomProposition() : Spec<HasRoomProposition.Model>(() =>
+            {
+                var isItemsCountLessThanLimit = Spec
+                    .Build((Model m) => m.Items.Count < m.Limit)
+                    .Create("items.Count < _limit");
+
+                var isLimitPositive = Spec
+                    .Build((Model m) => m.Limit > 0)
+                    .Create("_limit > 0");
+
+                return isItemsCountLessThanLimit.AndAlso(isLimitPositive);
+            })
+            {
+                public readonly record struct Model(List<int> Items, int Limit);
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            FixedState = { Sources = { (Source, expectedTransformedCode) } },
+            ExpectedDiagnostics =
+            {
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                    .WithSpan(Source, 9, 45, 9, 45 + booleanExpression.Length)
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_keep_the_underscore_when_dropping_it_would_give_two_values_one_model_member()
+    {
+        const string booleanExpression = "limit > 0 && limit <= _limit";
+
+        const string source =
+          $$"""
+            namespace MyNamespace;
+
+            public class Basket
+            {
+                private readonly int _limit = 10;
+
+                public bool IsWithin(int limit) => {{booleanExpression}};
+            }
+            """;
+
+        const string expectedTransformedCode =
+          $$"""
+            using Motiv;
+
+            namespace MyNamespace;
+
+            public class Basket
+            {
+                private readonly int _limit = 10;
+                private static readonly IsWithinProposition IsWithinProposition = new();
+
+                public bool IsWithin(int limit)
+                {
+                    // {{booleanExpression}}
+                    var isWithinResult = IsWithinProposition.Evaluate(new IsWithinProposition.Model(limit, _limit));
+                    return isWithinResult.Satisfied;
+                }
+            }
+
+            public class IsWithinProposition() : Spec<IsWithinProposition.Model>(() =>
+            {
+                var isLimitPositive = Spec
+                    .Build((Model m) => m.Limit > 0)
+                    .Create("limit > 0");
+
+                var isLimitAtMostLimit = Spec
+                    .Build((Model m) => m.Limit <= m._limit)
+                    .Create("limit <= _limit");
+
+                return isLimitPositive.AndAlso(isLimitAtMostLimit);
+            })
+            {
+                public readonly record struct Model(int Limit, int _limit);
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            FixedState = { Sources = { (Source, expectedTransformedCode) } },
+            ExpectedDiagnostics =
+            {
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                    .WithSpan(Source, 7, 40, 7, 40 + booleanExpression.Length)
+            }
+        }.RunAsync();
+    }
 }
