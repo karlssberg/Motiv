@@ -21,7 +21,7 @@ public class NegationSurfaceTests
     [Fact]
     public void Should_report_a_negated_policy_as_not_collapsible()
     {
-        IBooleanOperationSpec sut = (IBooleanOperationSpec)Policy("a").Not();
+        var sut = (IBooleanOperationSpec)Policy("a").Not();
 
         sut.IsCollapsable.ShouldBeFalse();
     }
@@ -31,7 +31,7 @@ public class NegationSurfaceTests
     {
         SpecBase<int, string> operand = Policy("a");
 
-        IBooleanOperationSpec sut = (IBooleanOperationSpec)operand.Not();
+        var sut = (IBooleanOperationSpec)operand.Not();
 
         sut.IsCollapsable.ShouldBeFalse();
     }

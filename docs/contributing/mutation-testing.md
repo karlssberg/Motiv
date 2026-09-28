@@ -196,8 +196,11 @@ It runs weekly rather than nightly. `src/Motiv` alone takes about 150 runner-min
 and survivors are triaged by hand, so a nightly report would mostly repeat the previous one. To get
 a fresh report sooner, dispatch the workflow.
 
-A pull request that changes the mutation setup runs `src/Motiv` alone, as before. To prove a change
-to one of the other configs, dispatch the workflow on your branch.
+A pull request that changes the mutation setup (the scripts, this workflow, the Stryker tool version,
+or any project's `stryker-config.json`, `stryker-shards.json` or the `src/Motiv` baselines) runs the
+scripts' tests and the `src/Motiv` shards alone. That proves the scripts, the `src/Motiv` config and
+the workflow wiring, not the other projects' configs: to prove a change to one of those, dispatch the
+workflow on your branch.
 
 `scripts/mutation/plan.sh` builds the job matrix. A project with a `stryker-shards.json` is split the
 same way as `src/Motiv`, including a `rest` shard. A project without one runs as a single `all`
@@ -209,12 +212,14 @@ fails on a score.
 framework on each side. `src/Motiv.Serialization` mutates `net10.0`, like `src/Motiv`.
 
 Each job uploads a `mutation-report-<project>-<shard>` artifact. `@motiv-rules/core` uploads
-`mutation-report-rules-core`, which holds `mutation.html` and `mutation.json`. Each job also prints
-its undetected mutants to its log and job summary, using the same format as the `src/Motiv` shards.
-StrykerJS keys files relative to the package, so the workflow passes
-`survivors.sh --prefix ui/packages/rules-core` to print repository-relative paths. `combine` writes
-one score per .NET project and names any shard that sent no report. `@motiv-rules/core` writes its
-own score in its job summary.
+`mutation-js-report-rules-core`, which holds `mutation.html` and `mutation.json`. It is named apart
+from the `mutation-report-*` prefix because `combine` downloads the .NET shards' reports by that
+pattern. Each job also prints its undetected mutants to its log and job summary, using the same
+format as the `src/Motiv` shards. StrykerJS keys files relative to the package, so the workflow
+passes `survivors.sh --prefix ui/packages/rules-core` to print repository-relative paths. `combine`
+(`scripts/mutation/combine.sh`) writes one score per .NET project and names any shard that sent no
+report. `@motiv-rules/core` writes its own score in its job summary.
 
-`scripts/mutation/tests/scripts.test.sh` tests `plan.sh`, `survivors.sh` and `summarise.sh` against
-fake reports in both tools' formats. It needs only `jq`, and the workflow runs it before planning.
+`scripts/mutation/tests/scripts.test.sh` tests `plan.sh`, `survivors.sh`, `summarise.sh` and
+`combine.sh` against fake reports in both tools' formats, and `pr-scope.sh` against a throwaway git
+repository. It needs only `jq` and `git`, and the workflow runs it before planning.

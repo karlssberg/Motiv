@@ -55,10 +55,12 @@ jobs:
         cat "$RUNNER_TEMP/scope.json"
         {
           echo "count=$(jq '.files | length' "$RUNNER_TEMP/scope.json")"
+          # Every later step keys on this; it is unset when this step fails, so they skip then too.
+          echo "run=$(jq '.files | length > 0' "$RUNNER_TEMP/scope.json")"
           echo "break=$(jq '.break // empty' "$RUNNER_TEMP/scope.json")"
         } >> "$GITHUB_OUTPUT"
     - name: Nothing to mutate
-      if: steps.scope.outputs.count == '0'
+      if: steps.scope.outputs.run == 'false'
       run: |
         cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
         ## Mutation gate — changed files in src/Motiv
@@ -67,7 +69,7 @@ jobs:
         A change to tests alone is measured by the full run (`mutation.yml`), not here.
         EOF
     - name: Setup .NET
-      if: steps.scope.outputs.count != '0'
+      if: steps.scope.outputs.run == 'true'
       uses: actions/setup-dotnet@v5
       with:
         # As in mutation.yml: 10.0 is the mutated framework and Stryker.NET 5's runtime; 8.0 and 9.0
@@ -77,10 +79,10 @@ jobs:
           9.0.x
           10.0.x
     - name: Restore tools
-      if: steps.scope.outputs.count != '0'
+      if: steps.scope.outputs.run == 'true'
       run: dotnet tool restore
     - name: Run Stryker.NET
-      if: steps.scope.outputs.count != '0'
+      if: steps.scope.outputs.run == 'true'
       working-directory: test/Motiv.Tests
       env:
         BREAK: ${{ steps.scope.outputs.break }}
@@ -109,45 +111,34 @@ jobs:
         fi
         exit "$status"
     - name: Summarise score
-      if: always() && steps.scope.outputs.count != '0' && steps.scope.outputs.count != ''
+      if: always() && steps.scope.outputs.run == 'true'
       env:
         BREAK: ${{ steps.scope.outputs.break }}
+        COUNT: ${{ steps.scope.outputs.count }}
       run: |
-        title="Mutation gate — changed files in src/Motiv"
         report="$RUNNER_TEMP/stryker/reports/mutation-report.json"
         {
-          if [ -f "$report" ]; then
-            scripts/mutation/summarise.sh "$title" "$report"
-            # With no valid mutants Stryker's score is NaN, and it never breaks on NaN. Say so, rather
-            # than let a green check read as a pass.
-            valid=$(jq '[ .files[].mutants[].status | select(. == "Killed" or . == "Timeout" or . == "Survived" or . == "NoCoverage") ] | length' "$report")
-            if [ "$valid" -eq 0 ]; then
-              printf '\n**Gate not applied:** the changed files produced no valid mutants, so there is no score to hold to %s%%.\n' "$BREAK"
-            fi
-          else
-            scripts/mutation/summarise.sh "$title"
+          scripts/mutation/summarise.sh "Mutation gate — changed files in src/Motiv" "$report"
+          # With no valid mutants Stryker's score is NaN, and it never breaks on NaN. Say so, rather
+          # than let a green check read as a pass.
+          if [ -f "$report" ] && [ "$(scripts/mutation/summarise.sh --valid "$report")" -eq 0 ]; then
+            printf '\n**Gate not applied:** the changed files produced no valid mutants, so there is no score to hold to %s%%.\n' "$BREAK"
           fi
           printf '\n**Break threshold: %s%%** — the lowest post-triage baseline of the areas touched:\n\n' "$BREAK"
           jq -r '.areas[] | "- \(.name): \(.baseline)%"' "$RUNNER_TEMP/scope.json"
-          printf '\n<details><summary>%s changed files mutated</summary>\n\n' "$(jq '.files | length' "$RUNNER_TEMP/scope.json")"
+          printf '\n<details><summary>%s changed files mutated</summary>\n\n' "$COUNT"
           jq -r '.files[] | "- `\(.)`"' "$RUNNER_TEMP/scope.json"
           printf '\n</details>\n'
         } >> "$GITHUB_STEP_SUMMARY"
     - name: List undetected mutants
-      if: always() && steps.scope.outputs.count != '0' && steps.scope.outputs.count != ''
-      run: |
-        report="$RUNNER_TEMP/stryker/reports/mutation-report.json"
-        [ -f "$report" ] || exit 0
-        # Printed to the log as well as the summary, so triage does not depend on downloading the
-        # artifact.
-        scripts/mutation/survivors.sh "$report" | tee "$RUNNER_TEMP/survivors.txt"
-        {
-          printf '\n<details><summary>%s undetected mutants (Survived, NoCoverage)</summary>\n\n```\n' "$(wc -l < "$RUNNER_TEMP/survivors.txt")"
-          cat "$RUNNER_TEMP/survivors.txt"
-          printf '```\n\n</details>\n'
-        } >> "$GITHUB_STEP_SUMMARY"
+      if: always() && steps.scope.outputs.run == 'true'
+      # --details prints the list to the log as well as the summary, so triage does not depend on
+      # downloading the artifact.
+      run: >-
+        scripts/mutation/survivors.sh --details "$RUNNER_TEMP/stryker/reports/mutation-report.json"
+        >> "$GITHUB_STEP_SUMMARY"
     - name: Upload reports
-      if: always() && steps.scope.outputs.count != '0' && steps.scope.outputs.count != ''
+      if: always() && steps.scope.outputs.run == 'true'
       uses: actions/upload-artifact@v4
       with:
         name: mutation-report-motiv-pr

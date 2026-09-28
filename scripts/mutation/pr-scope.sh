@@ -26,9 +26,8 @@ for file in "${files[@]}"; do
   fi
 done
 
-printf '%s\n' "${files[@]}" | jq -R . | jq -s \
-  --slurpfile shards "$shards" --slurpfile baselines "$baselines" '
-  map(select(. != "")) as $files
+jq -n --slurpfile shards "$shards" --slurpfile baselines "$baselines" '
+  $ARGS.positional as $files
   | ($shards[0] | to_entries) as $shards
   | $baselines[0] as $baselines
   # Directories a file sits in: every path segment but the file name.
@@ -45,4 +44,4 @@ printf '%s\n' "${files[@]}" | jq -R . | jq -s \
       areas: [ $touched[] | { name: ., baseline: $baselines[.] } ],
       break: (if ($touched | length) == 0 then null
               else [ $touched[] | $baselines[.] ] | min | floor end) }
-'
+' --args "${files[@]}"

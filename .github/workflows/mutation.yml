@@ -8,8 +8,9 @@
 # union per project and names any shard that did not report.
 #
 # Not on every PR: a full run is far slower than the test suite it drives. On a PR it runs only when
-# the mutation setup itself changes, and then for src/Motiv alone, so a change to the config proves
-# itself without paying for everything.
+# the mutation setup itself changes, and then only the scripts' tests and the src/Motiv shards: that
+# proves the scripts, the src/Motiv config and the workflow wiring, not the other projects' configs —
+# dispatch the workflow on the branch for those.
 #
 # The scheduled full run (#294 step 4) adds src/Motiv.Serialization, src/Motiv.Analyzer,
 # src/Motiv.CodeFix and @motiv-rules/core (StrykerJS). Weekly, not nightly: src/Motiv alone is about
@@ -28,8 +29,9 @@ on:
     branches: [ "main" ]
     paths:
       - ".config/dotnet-tools.json"
-      - "test/Motiv.Tests/stryker-config.json"
-      - "test/Motiv.Tests/stryker-shards.json"
+      - "test/*/stryker-config.json"
+      - "test/*/stryker-shards.json"
+      - "test/Motiv.Tests/stryker-baselines.json"
       - "scripts/mutation/**"
       - ".github/workflows/mutation.yml"
 
@@ -59,7 +61,7 @@ jobs:
     - id: plan
       env:
         # A PR pays for src/Motiv alone; the schedule and a dispatch plan every project.
-        SCOPE: ${{ github.event_name == 'pull_request' && '' || '--full' }}
+        SCOPE: ${{ github.event_name != 'pull_request' && '--full' || '' }}
       run: echo "matrix=$(scripts/mutation/plan.sh ${SCOPE:+"$SCOPE"})" >> "$GITHUB_OUTPUT"
 
   dotnet:
@@ -98,27 +100,16 @@ jobs:
         dotnet tool run dotnet-stryker --output "$RUNNER_TEMP/stryker" "${mutate[@]}"
     - name: Summarise score
       if: always()
-      run: |
-        title="Mutation score — ${{ matrix.src }} (${{ matrix.name }})"
-        report="$RUNNER_TEMP/stryker/reports/mutation-report.json"
-        if [ -f "$report" ]; then
-          scripts/mutation/summarise.sh "$title" "$report" >> "$GITHUB_STEP_SUMMARY"
-        else
-          scripts/mutation/summarise.sh "$title" >> "$GITHUB_STEP_SUMMARY"
-        fi
+      run: >-
+        scripts/mutation/summarise.sh "Mutation score — ${{ matrix.src }} (${{ matrix.name }})"
+        "$RUNNER_TEMP/stryker/reports/mutation-report.json" >> "$GITHUB_STEP_SUMMARY"
     - name: List undetected mutants
       if: always()
-      run: |
-        report="$RUNNER_TEMP/stryker/reports/mutation-report.json"
-        [ -f "$report" ] || exit 0
-        # Printed to the log as well as the summary, so triage does not depend on downloading the
-        # artifact.
-        scripts/mutation/survivors.sh "$report" | tee "$RUNNER_TEMP/survivors.txt"
-        {
-          printf '\n<details><summary>%s undetected mutants (Survived, NoCoverage)</summary>\n\n```\n' "$(wc -l < "$RUNNER_TEMP/survivors.txt")"
-          cat "$RUNNER_TEMP/survivors.txt"
-          printf '```\n\n</details>\n'
-        } >> "$GITHUB_STEP_SUMMARY"
+      # --details prints the list to the log as well as the summary, so triage does not depend on
+      # downloading the artifact.
+      run: >-
+        scripts/mutation/survivors.sh --details "$RUNNER_TEMP/stryker/reports/mutation-report.json"
+        >> "$GITHUB_STEP_SUMMARY"
     - name: Upload reports
       if: always()
       uses: actions/upload-artifact@v4
@@ -151,31 +142,21 @@ jobs:
       run: pnpm -C ui/packages/rules-core mutate
     - name: Summarise score
       if: always()
-      run: |
-        title="Mutation score — @motiv-rules/core"
-        report="ui/packages/rules-core/reports/mutation/mutation.json"
-        if [ -f "$report" ]; then
-          scripts/mutation/summarise.sh "$title" "$report" >> "$GITHUB_STEP_SUMMARY"
-        else
-          scripts/mutation/summarise.sh "$title" >> "$GITHUB_STEP_SUMMARY"
-        fi
+      run: >-
+        scripts/mutation/summarise.sh "Mutation score — @motiv-rules/core"
+        ui/packages/rules-core/reports/mutation/mutation.json >> "$GITHUB_STEP_SUMMARY"
     - name: List undetected mutants
       if: always()
-      run: |
-        report="ui/packages/rules-core/reports/mutation/mutation.json"
-        [ -f "$report" ] || exit 0
-        # StrykerJS keys files relative to the package; --prefix roots them at the repository.
-        scripts/mutation/survivors.sh --prefix ui/packages/rules-core "$report" | tee "$RUNNER_TEMP/survivors.txt"
-        {
-          printf '\n<details><summary>%s undetected mutants (Survived, NoCoverage)</summary>\n\n```\n' "$(wc -l < "$RUNNER_TEMP/survivors.txt")"
-          cat "$RUNNER_TEMP/survivors.txt"
-          printf '```\n\n</details>\n'
-        } >> "$GITHUB_STEP_SUMMARY"
+      # StrykerJS keys files relative to the package; --prefix roots them at the repository.
+      run: >-
+        scripts/mutation/survivors.sh --prefix ui/packages/rules-core --details
+        ui/packages/rules-core/reports/mutation/mutation.json >> "$GITHUB_STEP_SUMMARY"
     - name: Upload reports
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: mutation-report-rules-core
+        # Not mutation-report-*: that prefix is the .NET shards', which combine downloads by pattern.
+        name: mutation-js-report-rules-core
         path: ui/packages/rules-core/reports/mutation
         if-no-files-found: warn
 
@@ -187,27 +168,12 @@ jobs:
     - uses: actions/checkout@v5
     - uses: actions/download-artifact@v4
       with:
+        # The .NET shards' artifacts only; @motiv-rules/core uploads mutation-js-report-rules-core and
+        # summarises itself.
         pattern: mutation-report-*
         path: reports
     - name: Summarise score
       env:
         MATRIX: ${{ needs.plan.outputs.matrix }}
-      run: |
-        # One section per Stryker.NET project, in plan order. @motiv-rules/core summarises itself.
-        projects=$(jq -r '.include | reduce .[] as $e ([]; if any(.[]; . == $e.project) then . else . + [$e.project] end) | .[]' <<< "$MATRIX")
-        for project in $projects; do
-          src=$(jq -r --arg p "$project" 'first(.include[] | select(.project == $p)) | .src' <<< "$MATRIX")
-          reports=()
-          missing=()
-          for shard in $(jq -r --arg p "$project" '.include[] | select(.project == $p) | .name' <<< "$MATRIX"); do
-            report="reports/mutation-report-$project-$shard/reports/mutation-report.json"
-            if [ -f "$report" ]; then reports+=("$report"); else missing+=("$shard"); fi
-          done
-          {
-            scripts/mutation/summarise.sh "Mutation score — $src (all shards)" "${reports[@]}"
-            if [ "${#missing[@]}" -gt 0 ]; then
-              printf '\n**Incomplete:** no report from %s. The score above covers the other shards only.\n' "${missing[*]}"
-            fi
-            printf '\n'
-          } >> "$GITHUB_STEP_SUMMARY"
-        done
+      # One section per Stryker.NET project, in plan order.
+      run: scripts/mutation/combine.sh "$MATRIX" reports >> "$GITHUB_STEP_SUMMARY"
