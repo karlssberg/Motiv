@@ -177,3 +177,44 @@ scripts/mutation/pr-scope.sh origin/main HEAD   # prints files, globs, areas and
 cd test/Motiv.Tests
 dotnet tool run dotnet-stryker --mutate "**/src/Motiv/Not/NotPolicy.cs" --break-at 72 --threshold-low 72
 ```
+
+## Scheduled full run
+
+Every Sunday at 03:17 UTC, and on any `workflow_dispatch`, the workflow mutates every project that
+has a checked-in Stryker config, not just `src/Motiv`:
+
+| Mutated | Tests run | Config | Shards |
+|---|---|---|---|
+| `src/Motiv` | `test/Motiv.Tests` | `stryker-config.json` | `stryker-shards.json` |
+| `src/Motiv.Serialization` | `test/Motiv.Serialization.Tests` | `stryker-config.json` | `stryker-shards.json` |
+| `src/Motiv.Analyzer` | `test/Motiv.Analyzer.Tests` | `stryker-config.json` | one `all` shard |
+| `src/Motiv.CodeFix` | `test/Motiv.CodeFix.Tests` | `stryker-config.json` | one `all` shard |
+| `@motiv-rules/core` | its Vitest suite (StrykerJS) | `pnpm -C ui/packages/rules-core mutate` | one job |
+
+It runs weekly rather than nightly. `src/Motiv` alone takes about 150 runner-minutes, and
+`src/Motiv.Serialization` is two-thirds its size. The code these runs measure changes over weeks,
+and survivors are triaged by hand, so a nightly report would mostly repeat the previous one. To get
+a fresh report sooner, dispatch the workflow.
+
+A pull request that changes the mutation setup runs `src/Motiv` alone, as before. To prove a change
+to one of the other configs, dispatch the workflow on your branch.
+
+`scripts/mutation/plan.sh` builds the job matrix. A project with a `stryker-shards.json` is split the
+same way as `src/Motiv`, including a `rest` shard. A project without one runs as a single `all`
+shard. Every project's config keeps `thresholds.break: 0`, so the scheduled run reports and never
+fails on a score.
+
+`src/Motiv.Analyzer` and `src/Motiv.CodeFix` build `netstandard2.0` only, and their tests run on
+`net10.0` only. Their configs therefore name no `target-framework`, because there is only one
+framework on each side. `src/Motiv.Serialization` mutates `net10.0`, like `src/Motiv`.
+
+Each job uploads a `mutation-report-<project>-<shard>` artifact. `@motiv-rules/core` uploads
+`mutation-report-rules-core`, which holds `mutation.html` and `mutation.json`. Each job also prints
+its undetected mutants to its log and job summary, using the same format as the `src/Motiv` shards.
+StrykerJS keys files relative to the package, so the workflow passes
+`survivors.sh --prefix ui/packages/rules-core` to print repository-relative paths. `combine` writes
+one score per .NET project and names any shard that sent no report. `@motiv-rules/core` writes its
+own score in its job summary.
+
+`scripts/mutation/tests/scripts.test.sh` tests `plan.sh`, `survivors.sh` and `summarise.sh` against
+fake reports in both tools' formats. It needs only `jq`, and the workflow runs it before planning.

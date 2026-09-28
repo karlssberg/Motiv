@@ -1,19 +1,29 @@
-# Mutation testing, report-only (#294, rollout step 1): Stryker.NET mutates src/Motiv and runs
-# test/Motiv.Tests against every mutant. Nothing here fails on a low score — `thresholds.break`
-# in test/Motiv.Tests/stryker-config.json is 0 until the baseline has been triaged.
+# Mutation testing, report-only (#294): Stryker.NET mutates src/Motiv and runs test/Motiv.Tests
+# against every mutant. Nothing here fails on a low score — `thresholds.break` in every
+# stryker-config.json is 0 until the baseline has been triaged.
 #
-# Sharded by directory (test/Motiv.Tests/stryker-shards.json): a single job ran for 2.5 hours and
+# Sharded by directory (each test project's stryker-shards.json): a single job ran for 2.5 hours and
 # then lost its runner, and since Stryker writes its reports only at the end, it left nothing behind.
 # Each shard publishes its own report, so a lost shard costs that shard alone; `combine` scores the
-# union and names any shard that did not report.
+# union per project and names any shard that did not report.
 #
-# Not on every PR: a full run is far slower than the test suite it drives. It runs on demand, and on
-# a PR only when the mutation setup itself changes, so a change to the config proves itself.
+# Not on every PR: a full run is far slower than the test suite it drives. On a PR it runs only when
+# the mutation setup itself changes, and then for src/Motiv alone, so a change to the config proves
+# itself without paying for everything.
+#
+# The scheduled full run (#294 step 4) adds src/Motiv.Serialization, src/Motiv.Analyzer,
+# src/Motiv.CodeFix and @motiv-rules/core (StrykerJS). Weekly, not nightly: src/Motiv alone is about
+# 150 runner-minutes and Motiv.Serialization is two-thirds its size, while the code these runs
+# measure changes over weeks, and survivors are triaged by hand — a nightly report would mostly
+# repeat the last one. A dispatch runs the same full set on demand.
 
 name: Mutation testing
 
 on:
   workflow_dispatch:
+  schedule:
+    # Sundays 03:17 UTC — off the hour, when scheduled runs queue behind everyone else's.
+    - cron: "17 3 * * 0"
   pull_request:
     branches: [ "main" ]
     paths:
@@ -27,22 +37,34 @@ permissions:
   contents: read
 
 concurrency:
-  group: mutation-${{ github.ref }}
+  # Keyed on the event too, so a dispatch on main does not cancel the scheduled run, nor it the dispatch.
+  group: mutation-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  scripts:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+    - name: Test the mutation scripts
+      run: bash scripts/mutation/tests/scripts.test.sh
+
   plan:
+    needs: scripts
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
     steps:
     - uses: actions/checkout@v5
     - id: plan
-      run: echo "matrix=$(scripts/mutation/plan-shards.sh)" >> "$GITHUB_OUTPUT"
+      env:
+        # A PR pays for src/Motiv alone; the schedule and a dispatch plan every project.
+        SCOPE: ${{ github.event_name == 'pull_request' && '' || '--full' }}
+      run: echo "matrix=$(scripts/mutation/plan.sh ${SCOPE:+"$SCOPE"})" >> "$GITHUB_OUTPUT"
 
-  motiv:
+  dotnet:
     needs: plan
-    name: motiv (${{ matrix.name }})
+    name: ${{ matrix.project }} (${{ matrix.name }})
     runs-on: ubuntu-latest
     timeout-minutes: 240
     strategy:
@@ -54,7 +76,7 @@ jobs:
       uses: actions/setup-dotnet@v5
       with:
         # 10.0 is both the mutated target framework and the runtime Stryker.NET 5 requires; 8.0 and
-        # 9.0 because Motiv.Tests restores for every framework it targets.
+        # 9.0 because Motiv.Tests and Motiv.Serialization.Tests restore for every framework they target.
         dotnet-version: |
           8.0.x
           9.0.x
@@ -62,11 +84,12 @@ jobs:
     - name: Restore tools
       run: dotnet tool restore
     - name: Run Stryker.NET
-      working-directory: test/Motiv.Tests
+      working-directory: ${{ matrix.dir }}
       env:
         GLOBS: ${{ toJSON(matrix.globs) }}
       run: |
-        # Read into an array so the shell never expands the globs itself.
+        # Read into an array so the shell never expands the globs itself. An unsharded project has
+        # none, and mutates everything.
         mapfile -t globs < <(jq -r '.[]' <<< "$GLOBS")
         mutate=()
         for glob in "${globs[@]}"; do mutate+=(--mutate "$glob"); done
@@ -76,7 +99,7 @@ jobs:
     - name: Summarise score
       if: always()
       run: |
-        title="Mutation score — src/Motiv (${{ matrix.name }})"
+        title="Mutation score — ${{ matrix.src }} (${{ matrix.name }})"
         report="$RUNNER_TEMP/stryker/reports/mutation-report.json"
         if [ -f "$report" ]; then
           scripts/mutation/summarise.sh "$title" "$report" >> "$GITHUB_STEP_SUMMARY"
@@ -100,33 +123,91 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: mutation-report-motiv-${{ matrix.name }}
+        name: mutation-report-${{ matrix.project }}-${{ matrix.name }}
         path: ${{ runner.temp }}/stryker
         if-no-files-found: warn
 
+  rules-core:
+    # The scheduled full run and a dispatch alone, like every project but src/Motiv: a PR to the
+    # mutation setup does not pay for it.
+    if: github.event_name != 'pull_request'
+    needs: scripts
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+    - uses: actions/checkout@v5
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 9
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: pnpm
+        cache-dependency-path: ui/pnpm-lock.yaml
+    - name: Install
+      working-directory: ui
+      run: pnpm install --frozen-lockfile
+    - name: Run StrykerJS
+      run: pnpm -C ui/packages/rules-core mutate
+    - name: Summarise score
+      if: always()
+      run: |
+        title="Mutation score — @motiv-rules/core"
+        report="ui/packages/rules-core/reports/mutation/mutation.json"
+        if [ -f "$report" ]; then
+          scripts/mutation/summarise.sh "$title" "$report" >> "$GITHUB_STEP_SUMMARY"
+        else
+          scripts/mutation/summarise.sh "$title" >> "$GITHUB_STEP_SUMMARY"
+        fi
+    - name: List undetected mutants
+      if: always()
+      run: |
+        report="ui/packages/rules-core/reports/mutation/mutation.json"
+        [ -f "$report" ] || exit 0
+        # StrykerJS keys files relative to the package; --prefix roots them at the repository.
+        scripts/mutation/survivors.sh --prefix ui/packages/rules-core "$report" | tee "$RUNNER_TEMP/survivors.txt"
+        {
+          printf '\n<details><summary>%s undetected mutants (Survived, NoCoverage)</summary>\n\n```\n' "$(wc -l < "$RUNNER_TEMP/survivors.txt")"
+          cat "$RUNNER_TEMP/survivors.txt"
+          printf '```\n\n</details>\n'
+        } >> "$GITHUB_STEP_SUMMARY"
+    - name: Upload reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: mutation-report-rules-core
+        path: ui/packages/rules-core/reports/mutation
+        if-no-files-found: warn
+
   combine:
-    needs: [ plan, motiv ]
+    needs: [ plan, dotnet ]
     if: always() && needs.plan.result == 'success'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
     - uses: actions/download-artifact@v4
       with:
-        pattern: mutation-report-motiv-*
+        pattern: mutation-report-*
         path: reports
     - name: Summarise score
       env:
         MATRIX: ${{ needs.plan.outputs.matrix }}
       run: |
-        reports=()
-        missing=()
-        for shard in $(jq -r '.include[].name' <<< "$MATRIX"); do
-          report="reports/mutation-report-motiv-$shard/reports/mutation-report.json"
-          if [ -f "$report" ]; then reports+=("$report"); else missing+=("$shard"); fi
+        # One section per Stryker.NET project, in plan order. @motiv-rules/core summarises itself.
+        projects=$(jq -r '.include | reduce .[] as $e ([]; if any(.[]; . == $e.project) then . else . + [$e.project] end) | .[]' <<< "$MATRIX")
+        for project in $projects; do
+          src=$(jq -r --arg p "$project" 'first(.include[] | select(.project == $p)) | .src' <<< "$MATRIX")
+          reports=()
+          missing=()
+          for shard in $(jq -r --arg p "$project" '.include[] | select(.project == $p) | .name' <<< "$MATRIX"); do
+            report="reports/mutation-report-$project-$shard/reports/mutation-report.json"
+            if [ -f "$report" ]; then reports+=("$report"); else missing+=("$shard"); fi
+          done
+          {
+            scripts/mutation/summarise.sh "Mutation score — $src (all shards)" "${reports[@]}"
+            if [ "${#missing[@]}" -gt 0 ]; then
+              printf '\n**Incomplete:** no report from %s. The score above covers the other shards only.\n' "${missing[*]}"
+            fi
+            printf '\n'
+          } >> "$GITHUB_STEP_SUMMARY"
         done
-        {
-          scripts/mutation/summarise.sh "Mutation score — src/Motiv (all shards)" "${reports[@]}"
-          if [ "${#missing[@]}" -gt 0 ]; then
-            printf '\n**Incomplete:** no report from %s. The score above covers the other shards only.\n' "${missing[*]}"
-          fi
-        } >> "$GITHUB_STEP_SUMMARY"
