@@ -1,0 +1,155 @@
+# Mutation testing PR gate (#294, rollout step 3): mutates only the src/Motiv C# files a pull
+# request changes, and fails when their score falls below the post-triage baseline of the area they
+# sit in. The full, report-only run stays in mutation.yml; a full run is ~150 runner-minutes, this
+# one scales with the diff.
+#
+# Scope is worked out from git by scripts/mutation/pr-scope.sh and passed to Stryker as --mutate
+# globs, rather than with Stryker's own --since. In Stryker.NET 5.0.0 --since marks every mutant as
+# changed when any non-.cs file under the test project changes (Motiv.Tests.csproj,
+# stryker-config.json, the embedded DescriptionBaseline.txt), and every mutant a changed test file
+# covers — repo-wide — when a test .cs file changes. Either turns a PR into a full run.
+# See docs/contributing/mutation-testing.md, "PR gate".
+#
+# The break threshold is passed on the command line (--break-at), so stryker-config.json keeps
+# `break: 0` and the full run stays report-only.
+
+name: Mutation gate
+
+on:
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - "src/Motiv/**"
+      - "test/Motiv.Tests/**"
+      - ".config/dotnet-tools.json"
+      - "scripts/mutation/**"
+      - ".github/workflows/mutation-pr.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mutation-pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changed:
+    name: motiv (changed files)
+    runs-on: ubuntu-latest
+    # Scales with the diff, but a refactor touching many files is still a long run.
+    timeout-minutes: 240
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        # The pull_request checkout is the merge commit; its first parent is the main it merges
+        # into, so HEAD^1..HEAD is exactly what the PR changes.
+        fetch-depth: 2
+    - name: Work out scope
+      id: scope
+      run: |
+        if ! git rev-parse --verify --quiet HEAD^2 > /dev/null; then
+          echo "::error::Expected the pull request merge commit at HEAD; cannot tell what the PR changed."
+          exit 1
+        fi
+        scripts/mutation/pr-scope.sh HEAD^1 HEAD > "$RUNNER_TEMP/scope.json"
+        cat "$RUNNER_TEMP/scope.json"
+        {
+          echo "count=$(jq '.files | length' "$RUNNER_TEMP/scope.json")"
+          echo "break=$(jq '.break // empty' "$RUNNER_TEMP/scope.json")"
+        } >> "$GITHUB_OUTPUT"
+    - name: Nothing to mutate
+      if: steps.scope.outputs.count == '0'
+      run: |
+        cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+        ## Mutation gate — changed files in src/Motiv
+
+        No `src/Motiv` C# file changed, so there is nothing to mutate and the gate does not apply.
+        A change to tests alone is measured by the full run (`mutation.yml`), not here.
+        EOF
+    - name: Setup .NET
+      if: steps.scope.outputs.count != '0'
+      uses: actions/setup-dotnet@v5
+      with:
+        # As in mutation.yml: 10.0 is the mutated framework and Stryker.NET 5's runtime; 8.0 and 9.0
+        # because Motiv.Tests restores for every framework it targets.
+        dotnet-version: |
+          8.0.x
+          9.0.x
+          10.0.x
+    - name: Restore tools
+      if: steps.scope.outputs.count != '0'
+      run: dotnet tool restore
+    - name: Run Stryker.NET
+      if: steps.scope.outputs.count != '0'
+      working-directory: test/Motiv.Tests
+      env:
+        BREAK: ${{ steps.scope.outputs.break }}
+      run: |
+        # Read into an array so the shell never expands the globs itself.
+        mapfile -t globs < <(jq -r '.globs[]' "$RUNNER_TEMP/scope.json")
+        mutate=()
+        for glob in "${globs[@]}"; do mutate+=(--mutate "$glob"); done
+        # Stryker refuses an --output directory that does not already exist.
+        mkdir -p "$RUNNER_TEMP/stryker"
+        # Stryker requires break <= low, and the config's low (60) is below some areas' baselines,
+        # so low is raised to the break for this run. It only colours the report.
+        status=0
+        dotnet tool run dotnet-stryker --output "$RUNNER_TEMP/stryker" "${mutate[@]}" \
+          --break-at "$BREAK" --threshold-low "$BREAK" || status=$?
+        # Exit code 2 is Stryker's "score below the break threshold"; anything else non-zero is a
+        # failed run, not a verdict.
+        if [ "$status" -eq 2 ]; then
+          echo "::error::Mutation score of the changed files is below the gate's break threshold of $BREAK%. The undetected mutants are listed below and in the job summary."
+        fi
+        # Stryker also exits 0 when it finds no test project, without writing a report; that is not
+        # a pass.
+        if [ "$status" -eq 0 ] && [ ! -f "$RUNNER_TEMP/stryker/reports/mutation-report.json" ]; then
+          echo "::error::Stryker exited 0 but wrote no mutation report."
+          exit 1
+        fi
+        exit "$status"
+    - name: Summarise score
+      if: always() && steps.scope.outputs.count != '0' && steps.scope.outputs.count != ''
+      env:
+        BREAK: ${{ steps.scope.outputs.break }}
+      run: |
+        title="Mutation gate — changed files in src/Motiv"
+        report="$RUNNER_TEMP/stryker/reports/mutation-report.json"
+        {
+          if [ -f "$report" ]; then
+            scripts/mutation/summarise.sh "$title" "$report"
+            # With no valid mutants Stryker's score is NaN, and it never breaks on NaN. Say so, rather
+            # than let a green check read as a pass.
+            valid=$(jq '[ .files[].mutants[].status | select(. == "Killed" or . == "Timeout" or . == "Survived" or . == "NoCoverage") ] | length' "$report")
+            if [ "$valid" -eq 0 ]; then
+              printf '\n**Gate not applied:** the changed files produced no valid mutants, so there is no score to hold to %s%%.\n' "$BREAK"
+            fi
+          else
+            scripts/mutation/summarise.sh "$title"
+          fi
+          printf '\n**Break threshold: %s%%** — the lowest post-triage baseline of the areas touched:\n\n' "$BREAK"
+          jq -r '.areas[] | "- \(.name): \(.baseline)%"' "$RUNNER_TEMP/scope.json"
+          printf '\n<details><summary>%s changed files mutated</summary>\n\n' "$(jq '.files | length' "$RUNNER_TEMP/scope.json")"
+          jq -r '.files[] | "- `\(.)`"' "$RUNNER_TEMP/scope.json"
+          printf '\n</details>\n'
+        } >> "$GITHUB_STEP_SUMMARY"
+    - name: List undetected mutants
+      if: always() && steps.scope.outputs.count != '0' && steps.scope.outputs.count != ''
+      run: |
+        report="$RUNNER_TEMP/stryker/reports/mutation-report.json"
+        [ -f "$report" ] || exit 0
+        # Printed to the log as well as the summary, so triage does not depend on downloading the
+        # artifact.
+        scripts/mutation/survivors.sh "$report" | tee "$RUNNER_TEMP/survivors.txt"
+        {
+          printf '\n<details><summary>%s undetected mutants (Survived, NoCoverage)</summary>\n\n```\n' "$(wc -l < "$RUNNER_TEMP/survivors.txt")"
+          cat "$RUNNER_TEMP/survivors.txt"
+          printf '```\n\n</details>\n'
+        } >> "$GITHUB_STEP_SUMMARY"
+    - name: Upload reports
+      if: always() && steps.scope.outputs.count != '0' && steps.scope.outputs.count != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: mutation-report-motiv-pr
+        path: ${{ runner.temp }}/stryker
+        if-no-files-found: warn

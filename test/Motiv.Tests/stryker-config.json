@@ -10,8 +10,8 @@
     "coverage-analysis": "perTest",
     "mutation-level": "Standard",
     "reporters": [ "html", "json", "progress" ],
-    // Report-only while the baseline is established: `break` stays 0 so a low score never fails the
-    // run. It is raised to the post-triage baseline when the PR gate is added.
+    // The full run is report-only: `break` stays 0 so a low score never fails it. The PR gate
+    // (mutation-pr.yml) passes its own break on the command line, from stryker-baselines.json.
     "thresholds": { "high": 80, "low": 60, "break": 0 }
   }
 }
