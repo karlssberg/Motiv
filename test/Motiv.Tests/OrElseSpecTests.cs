@@ -553,5 +553,25 @@ public class OrElseSpecTests
 
         result.Justification.ShouldBe(expected);
     }
-}
 
+    [Fact]
+    public void Should_collapse_OR_ELSE_operators_in_a_non_policy_result_justification()
+    {
+        // Arrange: declared as BooleanResultBase so OrElse builds an OrElseBooleanResult, not a policy result
+        BooleanResultBase<string> first = Spec.Build<bool>(_ => false).Create("first").Evaluate(false);
+        BooleanResultBase<string> second = Spec.Build<bool>(_ => false).Create("second").Evaluate(false);
+        BooleanResultBase<string> third = Spec.Build<bool>(_ => false).Create("third").Evaluate(false);
+
+        // Act
+        var act = first.OrElse(second).OrElse(third).Justification;
+
+        // Assert
+        act.ShouldBe(
+            """
+            OR ELSE
+                first == false
+                second == false
+                third == false
+            """);
+    }
+}

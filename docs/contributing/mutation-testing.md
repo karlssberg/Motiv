@@ -75,6 +75,14 @@ Stryker.NET's `docs/mutations.md`.
 Prefer a test over a comment. An exclusion is right only when you can say why no test could tell
 the difference.
 
+The one other reason to exclude a mutant is that it takes the runner down with it. Turning
+`IsCollapsable` off on `AndBooleanResult` or `OrElseBooleanResult` makes the 3,000- and 50,000-deep
+chains in `Traversal/` build a justification whose memory grows with the cube of its depth. It fills
+the runner's memory in seconds, before Stryker's timeout fires, and the job ends with *The runner
+has received a shutdown signal* just after *Retrying the test session*. Those two lines are disabled,
+and a small test pins each collapse, so the exclusion hides no gap. If a shard dies that way again,
+look for another mutant that makes deep-chain work super-linear.
+
 ## CI
 
 `.github/workflows/mutation.yml` runs on demand (`workflow_dispatch`) and on pull requests that

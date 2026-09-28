@@ -19,5 +19,9 @@ internal sealed class AndBooleanResult<TMetadata>(
 
     public override string Operation => Operator.And;
 
+    // Un-collapsing the 3,000-deep AND chain in DeepCompositionTests builds a justification whose memory grows with the
+    // cube of its depth: it exhausts the runner before Stryker's timeout fires, which lost the operators shard
+    // twice (#294). Collapsing is pinned by PropositionResultDescriptionTests.Should_collapse_AND_and_ANDALSO_operators_in_spec_result_description.
+    // Stryker disable once Boolean : un-collapsing a deep chain exhausts the runner's memory
     public override bool IsCollapsable => true;
 }
