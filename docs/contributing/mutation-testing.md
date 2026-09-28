@@ -223,3 +223,77 @@ report. `@motiv-rules/core` writes its own score in its job summary.
 `scripts/mutation/tests/scripts.test.sh` tests `plan.sh`, `survivors.sh`, `summarise.sh` and
 `combine.sh` against fake reports in both tools' formats, and `pr-scope.sh` against a throwaway git
 repository. It needs only `jq` and `git`, and the workflow runs it before planning.
+
+## StrykerJS (@motiv-rules/core)
+
+The TypeScript side runs [StrykerJS](https://stryker-mutator.io/docs/stryker-js/introduction/) with
+the Vitest runner over `ui/packages/rules-core`. Its `src/expression/` is one half of the leaf
+language whose contract with `Motiv.Serialization` is `test/expression/corpus.json`, so a mutant
+that survives there is behaviour the corpus does not pin down. Report-only, like the .NET run.
+
+### Running it
+
+```bash
+pnpm -C ui install                         # once
+pnpm -C ui/packages/rules-core mutate      # stryker run, reads stryker.config.mjs
+```
+
+It mutates all of `src/**/*.ts` (about 4,800 mutants; roughly 11 minutes on 4 cores). To mutate a
+subset, pass `--mutate`, which replaces the configured globs:
+
+```bash
+pnpm -C ui/packages/rules-core mutate --mutate "src/expression/**/*.ts"
+```
+
+The run copies the package into a sandbox, `ui/packages/rules-core/.stryker-tmp/sandbox-*/`, which is
+git-ignored. The copy sits two directories deeper than the package, so a test that reaches outside
+the package through a fixed relative path will miss its file there. `test/schema.test.ts` walks up
+to `schemas/rule.v1.json` for this reason. Take care when adding a test like that. When the path was
+fixed, `schema.test.ts` failed in its `beforeAll`, but the dry run was still reported as succeeded
+and all of `src/schema.ts` showed up as NoCoverage. A whole file at 0% covered usually means this.
+
+13 mutants in `src/localNames.ts` currently end as `RuntimeError`, which is excluded from the
+score. The runner turns test names into a regular expression, and at least one name in
+`localNames.test.ts` (`normalizeLocalName("is active") is "is-active"`) produces an invalid one
+(`SyntaxError: Invalid regular expression`). The cause is the test name, not a mutant.
+
+### Reports
+
+- `ui/packages/rules-core/reports/mutation/mutation.html`: open this in a browser.
+- `ui/packages/rules-core/reports/mutation/mutation.json`: the
+  [mutation-testing-report-schema](https://github.com/stryker-mutator/mutation-testing-elements/tree/master/packages/report-schema)
+  JSON, for tooling.
+
+Both are git-ignored. The clear-text reporter also prints a per-file score table and every surviving
+mutant to the console.
+
+### What the checked-in config decides
+
+`ui/packages/rules-core/stryker.config.mjs`:
+
+- **`testRunner: 'vitest'`, `coverageAnalysis: 'perTest'`**: each mutant runs only the tests that
+  cover it. The Vitest runner always works this way, and the config states it anyway.
+- **`plugins`**: the runner is resolved from this package with `import.meta.resolve`. The default
+  `@stryker-mutator/*` glob only looks next to `@stryker-mutator/core`. pnpm's isolated
+  `node_modules` does not put the runner there, so the default fails with *"no TestRunner plugins
+  were loaded"*.
+- **`cleanTempDir: 'always'`**: the sandbox is deleted even after a failed run. A sandbox left
+  behind holds a copy of `test/`, and `pnpm test` would collect those copies too.
+- **`thresholds.break: null`**: report-only until the baseline has been triaged.
+- **Version**: `@stryker-mutator/*` is pinned to 9.6.1. 10.x requires Node 22, and the `ui`
+  workflows run Node 20.
+
+### Marking an equivalent mutant
+
+Use a comment on the line above, naming the mutator and giving a reason:
+
+```ts
+// Stryker disable next-line StringLiteral: the label is only read by a debugger
+const label = 'scratch';
+```
+
+Syntax: `// Stryker [disable|restore] [next-line] <mutator list | all>[: reason]`. Without
+`next-line`, a comment applies until a matching `restore`. The mutator name is shown in the
+clear-text output (`[Survived] EqualityOperator`) and in the HTML report's drawer. A disabled
+mutant is reported as `Ignored` and does not count towards the score. The same rule applies as for
+the .NET run: prefer a test (for `src/expression/`, a corpus case) over a comment.
