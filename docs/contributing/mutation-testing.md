@@ -197,10 +197,11 @@ and survivors are triaged by hand, so a nightly report would mostly repeat the p
 a fresh report sooner, dispatch the workflow.
 
 A pull request that changes the mutation setup (the scripts, this workflow, the Stryker tool version,
-or any project's `stryker-config.json`, `stryker-shards.json` or the `src/Motiv` baselines) runs the
-scripts' tests and the `src/Motiv` shards alone. That proves the scripts, the `src/Motiv` config and
-the workflow wiring, not the other projects' configs: to prove a change to one of those, dispatch the
-workflow on your branch.
+or `test/Motiv.Tests`'s `stryker-config.json` or `stryker-shards.json`) runs the scripts' tests and
+the `src/Motiv` shards alone. That proves the scripts, the `src/Motiv` config and
+the workflow wiring. A change to another project's config, or to the PR gate's baselines, does not
+start it, because this run would prove nothing about either: dispatch the workflow on your branch
+to prove another project's config.
 
 `scripts/mutation/plan.sh` builds the job matrix. A project with a `stryker-shards.json` is split the
 same way as `src/Motiv`, including a `rest` shard. A project without one runs as a single `all`
@@ -251,11 +252,6 @@ the package through a fixed relative path will miss its file there. `test/schema
 to `schemas/rule.v1.json` for this reason. Take care when adding a test like that. When the path was
 fixed, `schema.test.ts` failed in its `beforeAll`, but the dry run was still reported as succeeded
 and all of `src/schema.ts` showed up as NoCoverage. A whole file at 0% covered usually means this.
-
-13 mutants in `src/localNames.ts` currently end as `RuntimeError`, which is excluded from the
-score. The runner turns test names into a regular expression, and at least one name in
-`localNames.test.ts` (`normalizeLocalName("is active") is "is-active"`) produces an invalid one
-(`SyntaxError: Invalid regular expression`). The cause is the test name, not a mutant.
 
 ### Reports
 

@@ -29,9 +29,10 @@ on:
     branches: [ "main" ]
     paths:
       - ".config/dotnet-tools.json"
-      - "test/*/stryker-config.json"
-      - "test/*/stryker-shards.json"
-      - "test/Motiv.Tests/stryker-baselines.json"
+      # Only the src/Motiv config: a PR runs the src/Motiv shards alone, which prove nothing about
+      # another project's config or the PR gate's baselines (mutation-pr.yml reads those).
+      - "test/Motiv.Tests/stryker-config.json"
+      - "test/Motiv.Tests/stryker-shards.json"
       - "scripts/mutation/**"
       - ".github/workflows/mutation.yml"
 
