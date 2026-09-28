@@ -67,7 +67,10 @@ public class NegatedOperatorJustificationTests
     [InlineData("XNOR", "XOR")]
     public void Should_map_each_operator_heading_to_its_negation(string operation, string expected)
     {
-        OperatorNegation.Negate(operation).ShouldBe(expected);
+        var negated = OperatorNegation.Negate(operation);
+
+        negated.ShouldNotBeNull();
+        negated!.ShouldBe(expected);
     }
 
     [Theory]
