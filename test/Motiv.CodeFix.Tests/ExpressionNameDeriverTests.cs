@@ -247,6 +247,413 @@ public class ExpressionNameDeriverTests
         Assert.Equal("Model", modelName);
     }
 
+    [Fact]
+    public void DeriveClassNames_ConditionWithOneClause_UsesClauseMeaning()
+    {
+        var (expression, semanticModel) = CreateConditionContext("n > 0", "int n");
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("IsNPositiveProposition", propositionName);
+    }
+
+    [Fact]
+    public void DeriveClassNames_ConditionWithTwoClauses_JoinsClauseMeaningsSharingTheirSubject()
+    {
+        var (expression, semanticModel) = CreateConditionContext("n > 0 && n < 10", "int n");
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("IsNPositiveAndLessThan10Proposition", propositionName);
+    }
+
+    [Fact]
+    public void DeriveClassNames_ConditionWithTwoClausesOnDifferentSubjects_JoinsWholeClauseMeanings()
+    {
+        var (expression, semanticModel) = CreateConditionContext("x > 0 || y > 0", "int x, int y");
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("IsXPositiveOrIsYPositiveProposition", propositionName);
+    }
+
+    [Fact]
+    public void DeriveClassNames_ConditionWithMoreThanTwoClauses_UsesEnclosingMemberName()
+    {
+        var (expression, semanticModel) = CreateConditionContext("x > 0 && y > 0 && x < y", "int x, int y");
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("ClampProposition", propositionName);
+    }
+
+    [Theory]
+    [InlineData("((n > 0 && n < 10))", "int n", "IsNPositiveAndLessThan10Proposition")]
+    [InlineData("x > 0 ^ y > 0", "int x, int y", "ClampProposition")]
+    [InlineData("firstMeasurement > 0 && secondMeasurement > 0", "int firstMeasurement, int secondMeasurement", "ClampProposition")]
+    [InlineData("n > 0 && theFirstRatherLongMeasurementName > theSecondRatherLongMeasurementName", "int n, int theFirstRatherLongMeasurementName, int theSecondRatherLongMeasurementName", "ClampProposition")]
+    [InlineData("theFirstRatherLongMeasurementName > theSecondRatherLongMeasurementName && n > 0", "int n, int theFirstRatherLongMeasurementName, int theSecondRatherLongMeasurementName", "ClampProposition")]
+    public void DeriveClassNames_ConditionThatClauseMeaningCannotName_FallsBackToEnclosingMember(
+        string condition,
+        string parameterList,
+        string expectedName)
+    {
+        var (expression, semanticModel) = CreateConditionContext(condition, parameterList);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal(expectedName, propositionName);
+    }
+
+    [Fact]
+    public void DeriveClassNames_ConditionInLocalFunction_UsesLocalFunctionName()
+    {
+        var source = """
+            public class TestClass
+            {
+                public void TestMethod()
+                {
+                    void Validate(int x, int y)
+                    {
+                        if (x > 0 && y > 0 && x < y)
+                        {
+                        }
+                    }
+                }
+            }
+            """;
+        var (expression, semanticModel) = CreateContext(source, root => root
+            .DescendantNodes()
+            .OfType<IfStatementSyntax>()
+            .First()
+            .Condition);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("ValidateProposition", propositionName);
+    }
+
+    [Fact]
+    public void DeriveClassNames_ConditionInPropertyGetter_UsesPropertyName()
+    {
+        var source = """
+            public class TestClass
+            {
+                private int _x;
+                private int _y;
+
+                public string Quadrant
+                {
+                    get
+                    {
+                        if (_x > 0 && _y > 0 && _x < _y)
+                            return "upper";
+
+                        return "other";
+                    }
+                }
+            }
+            """;
+        var (expression, semanticModel) = CreateContext(source, root => root
+            .DescendantNodes()
+            .OfType<IfStatementSyntax>()
+            .First()
+            .Condition);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("QuadrantProposition", propositionName);
+    }
+
+    [Fact]
+    public void DeriveClassNames_ConditionWithNoEnclosingMember_FallsBackToRootIdentifier()
+    {
+        var source = """
+            public class TestClass
+            {
+                public TestClass(int count)
+                {
+                    if (count > 0 && count < 10 && count != 5)
+                    {
+                    }
+                }
+            }
+            """;
+        var (expression, semanticModel) = CreateContext(source, root => root
+            .DescendantNodes()
+            .OfType<IfStatementSyntax>()
+            .First()
+            .Condition);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("CountProposition", propositionName);
+    }
+
+    [Fact]
+    public void DeriveClassNames_ExpressionBodiedProperty_UsesPropertyName()
+    {
+        var source = """
+            public class TestClass
+            {
+                private int _count;
+
+                public bool IsInRange => _count > 0 && _count < 10;
+            }
+            """;
+        var (expression, semanticModel) = CreateContext(source, root => root
+            .DescendantNodes()
+            .OfType<ArrowExpressionClauseSyntax>()
+            .First()
+            .Expression);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("IsInRangeProposition", propositionName);
+    }
+
+    [Fact]
+    public void DeriveClassNames_ReturnInPropertyGetter_UsesPropertyName()
+    {
+        var source = """
+            public class TestClass
+            {
+                private int _count;
+
+                public bool IsInRange
+                {
+                    get { return _count > 0 && _count < 10; }
+                }
+            }
+            """;
+        var (expression, semanticModel) = CreateContext(source, root => root
+            .DescendantNodes()
+            .OfType<ReturnStatementSyntax>()
+            .First()
+            .Expression!);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("IsInRangeProposition", propositionName);
+    }
+
+    [Fact]
+    public void DeriveClassNames_ExpressionBodiedGetAccessor_UsesPropertyName()
+    {
+        var source = """
+            public class TestClass
+            {
+                private int _count;
+
+                public bool IsInRange
+                {
+                    get => _count > 0 && _count < 10;
+                }
+            }
+            """;
+        var (expression, semanticModel) = CreateContext(source, root => root
+            .DescendantNodes()
+            .OfType<ArrowExpressionClauseSyntax>()
+            .First()
+            .Expression);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("IsInRangeProposition", propositionName);
+    }
+
+    [Fact]
+    public void DeriveClassNames_ReturnInBlockBodiedLocalFunction_UsesLocalFunctionName()
+    {
+        var source = """
+            public class TestClass
+            {
+                public bool Check(int value)
+                {
+                    bool IsSmall(int x)
+                    {
+                        return x > 0 && x < 5;
+                    }
+
+                    return IsSmall(value);
+                }
+            }
+            """;
+        var (expression, semanticModel) = CreateContext(source, root => root
+            .DescendantNodes()
+            .OfType<ReturnStatementSyntax>()
+            .First()
+            .Expression!);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("IsSmallProposition", propositionName);
+    }
+
+    [Fact]
+    public void DeriveClassNames_ClausesOverDifferentValuesSharingLeadingWords_KeepsBothSubjects()
+    {
+        var source = """
+            public class TestClass
+            {
+                public void Check(int x, int xMax)
+                {
+                    if (x > 0 && xMax > 0) { }
+                }
+            }
+            """;
+        var (expression, semanticModel) = CreateContext(source, root => root
+            .DescendantNodes()
+            .OfType<IfStatementSyntax>()
+            .First()
+            .Condition);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("IsXPositiveAndIsXMaxPositiveProposition", propositionName);
+    }
+
+    [Fact]
+    public void DeriveClassNames_ReversedComparisonAndComparisonOfSameValue_StatesSubjectOnce()
+    {
+        var source = """
+            public class TestClass
+            {
+                public void Check(int n)
+                {
+                    if (0 < n && n < 10) { }
+                }
+            }
+            """;
+        var (expression, semanticModel) = CreateContext(source, root => root
+            .DescendantNodes()
+            .OfType<IfStatementSyntax>()
+            .First()
+            .Condition);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("IsNPositiveAndLessThan10Proposition", propositionName);
+    }
+
+    [Fact]
+    public void DeriveClassNames_ValueAndOneOfItsMembers_StatesSubjectOnce()
+    {
+        var source = """
+            public class TestClass
+            {
+                public void Check(string text)
+                {
+                    if (text != null && text.Length > 0) { }
+                }
+            }
+            """;
+        var (expression, semanticModel) = CreateContext(source, root => root
+            .DescendantNodes()
+            .OfType<IfStatementSyntax>()
+            .First()
+            .Condition);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("IsTextNotNullAndLengthPositiveProposition", propositionName);
+    }
+
+    [Fact]
+    public void DeriveClassNames_SingleClauseWithLogicalLambda_UsesClauseMeaning()
+    {
+        var source = """
+            using System.Linq;
+
+            public class TestClass
+            {
+                public void Check(int[] items)
+                {
+                    if (items.Any(x => x > 0 && x < 5)) { }
+                }
+            }
+            """;
+        var (expression, semanticModel) = CreateContext(source, root => root
+            .DescendantNodes()
+            .OfType<IfStatementSyntax>()
+            .First()
+            .Condition);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("IsItemsAnyProposition", propositionName);
+    }
+
+    [Fact]
+    public void DeriveClassNames_UnderscorePrefixedField_DropsTheUnderscore()
+    {
+        var source = """
+            public class TestClass
+            {
+                private int _count;
+
+                public bool TestMethod()
+                {
+                    return _count > 0;
+                }
+            }
+            """;
+        var (expression, semanticModel) = CreateContext(source, root => root
+            .DescendantNodes()
+            .OfType<ReturnStatementSyntax>()
+            .First()
+            .Expression!);
+
+        var (propositionName, _) = ExpressionNameDeriver.DeriveClassNames(expression, semanticModel, 0);
+
+        Assert.Equal("CountProposition", propositionName);
+    }
+
+    /// <summary>
+    /// Helper method to create an <c>if</c> condition context, with no assignment or return to name it after.
+    /// </summary>
+    private static (ExpressionSyntax Expression, SemanticModel SemanticModel) CreateConditionContext(
+        string expression,
+        string parameterList)
+    {
+        var source = $$"""
+            public class TestClass
+            {
+                public void Clamp({{parameterList}})
+                {
+                    if ({{expression}})
+                    {
+                    }
+                }
+            }
+            """;
+
+        return CreateContext(source, root => root
+            .DescendantNodes()
+            .OfType<IfStatementSyntax>()
+            .First()
+            .Condition);
+    }
+
+    private static (ExpressionSyntax Expression, SemanticModel SemanticModel) CreateContext(
+        string source,
+        Func<SyntaxNode, ExpressionSyntax> findExpression)
+    {
+        var tree = CSharpSyntaxTree.ParseText(source);
+
+        var compilation = CSharpCompilation.Create(
+            "TestAssembly",
+            new[] { tree },
+            new[]
+            {
+                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(System.Runtime.AssemblyTargetedPatchBandAttribute).Assembly.Location)
+            },
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+        return (findExpression(tree.GetRoot()), compilation.GetSemanticModel(tree));
+    }
+
     /// <summary>
     /// Helper method to create a compilable expression context for testing.
     /// </summary>
@@ -267,26 +674,11 @@ public class ExpressionNameDeriverTests
             }
             """;
 
-        var tree = CSharpSyntaxTree.ParseText(source);
-
-        var compilation = CSharpCompilation.Create(
-            "TestAssembly",
-            new[] { tree },
-            new[]
-            {
-                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(System.Runtime.AssemblyTargetedPatchBandAttribute).Assembly.Location)
-            },
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-
-        var semanticModel = compilation.GetSemanticModel(tree);
-        var returnExpr = tree.GetRoot()
+        return CreateContext(source, root => root
             .DescendantNodes()
             .OfType<ReturnStatementSyntax>()
             .First()
-            .Expression!;
-
-        return (returnExpr, semanticModel);
+            .Expression!);
     }
 
     /// <summary>
@@ -310,27 +702,12 @@ public class ExpressionNameDeriverTests
             }
             """;
 
-        var tree = CSharpSyntaxTree.ParseText(source);
-
-        var compilation = CSharpCompilation.Create(
-            "TestAssembly",
-            new[] { tree },
-            new[]
-            {
-                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(System.Runtime.AssemblyTargetedPatchBandAttribute).Assembly.Location)
-            },
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-
-        var semanticModel = compilation.GetSemanticModel(tree);
-        var assignmentExpr = tree.GetRoot()
+        return CreateContext(source, root => root
             .DescendantNodes()
             .OfType<VariableDeclaratorSyntax>()
             .First(v => v.Identifier.ValueText == variableName)
             .Initializer!
-            .Value;
-
-        return (assignmentExpr, semanticModel);
+            .Value);
     }
 
     /// <summary>
@@ -354,26 +731,11 @@ public class ExpressionNameDeriverTests
             }
             """;
 
-        var tree = CSharpSyntaxTree.ParseText(source);
-
-        var compilation = CSharpCompilation.Create(
-            "TestAssembly",
-            new[] { tree },
-            new[]
-            {
-                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(System.Runtime.AssemblyTargetedPatchBandAttribute).Assembly.Location)
-            },
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-
-        var semanticModel = compilation.GetSemanticModel(tree);
-        var returnExpr = tree.GetRoot()
+        return CreateContext(source, root => root
             .DescendantNodes()
             .OfType<ReturnStatementSyntax>()
             .First()
-            .Expression!;
-
-        return (returnExpr, semanticModel);
+            .Expression!);
     }
 
     /// <summary>
@@ -399,26 +761,11 @@ public class ExpressionNameDeriverTests
             }
             """;
 
-        var tree = CSharpSyntaxTree.ParseText(source);
-
-        var compilation = CSharpCompilation.Create(
-            "TestAssembly",
-            new[] { tree },
-            new[]
-            {
-                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(System.Runtime.AssemblyTargetedPatchBandAttribute).Assembly.Location)
-            },
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-
-        var semanticModel = compilation.GetSemanticModel(tree);
-        var assignmentExpr = tree.GetRoot()
+        return CreateContext(source, root => root
             .DescendantNodes()
             .OfType<VariableDeclaratorSyntax>()
             .First(v => v.Identifier.ValueText == variableName)
             .Initializer!
-            .Value;
-
-        return (assignmentExpr, semanticModel);
+            .Value);
     }
 }
