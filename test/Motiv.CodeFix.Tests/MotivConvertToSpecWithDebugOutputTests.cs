@@ -160,6 +160,7 @@ public class MotivConvertToSpecWithDebugOutputTests
 
         var expectedTransformedCode =
               $$"""
+                using System;
                 using System.Diagnostics;
                 using Motiv;
 
@@ -174,7 +175,7 @@ public class MotivConvertToSpecWithDebugOutputTests
 
                     public Playground()
                     {
-                        _isFeatureEnabledProposition = new IsFeatureEnabledProposition(this)
+                        _isFeatureEnabledProposition = new IsFeatureEnabledProposition(IsGreen)
                             .Tap((model, result) =>
                                 Debug.WriteLine($"[Motiv] IsFeatureEnabledProposition | Model: {model} | Satisfied: {result.Satisfied} | Reason: {result.Reason}"));
                     }
@@ -194,17 +195,17 @@ public class MotivConvertToSpecWithDebugOutputTests
                     }
                 }
 
-                public class IsFeatureEnabledProposition(MyNamespace.Playground instance) : Spec<string>(() =>
+                public class IsFeatureEnabledProposition(Func<string, bool> isGreen) : Spec<string>(() =>
                 {
                     var isNullOrEmpty = Spec
                         .Build((string text) => {{clause1}})
                         .Create("{{clause1}}");
 
-                    var isGreen = Spec
-                        .Build((string text) => instance.IsGreen(text))
+                    var isGreenText = Spec
+                        .Build((string text) => isGreen(text))
                         .Create("{{clause2}}");
 
-                    return isNullOrEmpty.AndAlso(isGreen);
+                    return isNullOrEmpty.AndAlso(isGreenText);
                 });
 
                 public class IsGreenProposition() : Spec<string>(() =>

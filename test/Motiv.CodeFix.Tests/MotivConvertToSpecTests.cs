@@ -811,6 +811,7 @@ public class MotivConvertToSpecTests
 
         var expectedTransformedCode =
               $$"""
+                using System;
                 using Motiv;
 
                 namespace MyNamespace;
@@ -822,7 +823,7 @@ public class MotivConvertToSpecTests
 
                     public Playground()
                     {
-                        _isFeatureEnabledProposition = new IsFeatureEnabledProposition(this);
+                        _isFeatureEnabledProposition = new IsFeatureEnabledProposition(IsGreen);
                     }
 
                     public bool IsFeatureEnabled(string text)
@@ -840,17 +841,17 @@ public class MotivConvertToSpecTests
                     }
                 }
 
-                public class IsFeatureEnabledProposition(MyNamespace.Playground instance) : Spec<string>(() =>
+                public class IsFeatureEnabledProposition(Func<string, bool> isGreen) : Spec<string>(() =>
                 {
                     var isNullOrEmpty = Spec
                         .Build((string text) => {{clause1}})
                         .Create("{{clause1}}");
 
-                    var isGreen = Spec
-                        .Build((string text) => instance.IsGreen(text))
+                    var isGreenText = Spec
+                        .Build((string text) => isGreen(text))
                         .Create("{{clause2}}");
 
-                    return isNullOrEmpty.AndAlso(isGreen);
+                    return isNullOrEmpty.AndAlso(isGreenText);
                 });
 
                 public class IsGreenProposition() : Spec<string>(() =>
@@ -904,6 +905,7 @@ public class MotivConvertToSpecTests
 
         const string expectedTransformedCode =
           $$"""
+            using System;
             using Motiv;
 
             namespace MyNamespace;
@@ -915,7 +917,7 @@ public class MotivConvertToSpecTests
 
                 public Playground()
                 {
-                    _isFeatureEnabledProposition = new IsFeatureEnabledProposition(this);
+                    _isFeatureEnabledProposition = new IsFeatureEnabledProposition(IsGreen);
                 }
 
                 public bool IsFeatureEnabled(int valueA, int valueC, string text)
@@ -933,7 +935,7 @@ public class MotivConvertToSpecTests
                 }
             }
 
-            public class IsFeatureEnabledProposition(MyNamespace.Playground instance) : Spec<IsFeatureEnabledProposition.Model>(() =>
+            public class IsFeatureEnabledProposition(Func<string, bool> isGreen) : Spec<IsFeatureEnabledProposition.Model>(() =>
             {
                 var isValueANonNegative = Spec
                     .Build((Model m) => m.ValueA >= 0)
@@ -947,12 +949,12 @@ public class MotivConvertToSpecTests
                     .Build((Model m) => string.IsNullOrEmpty(m.Text))
                     .Create("{{clause3}}");
 
-                var isGreen = Spec
-                    .Build((Model m) => instance.IsGreen(m.Text))
+                var isGreenText = Spec
+                    .Build((Model m) => isGreen(m.Text))
                     .Create("{{clause4}}");
 
                 return isValueANonNegative.AndAlso(is1LessThanValueC)
-                    .AndAlso(isNullOrEmpty.AndAlso(isGreen));
+                    .AndAlso(isNullOrEmpty.AndAlso(isGreenText));
             })
             {
                 public readonly record struct Model(int ValueA, int ValueC, string Text);
@@ -1001,6 +1003,7 @@ public class MotivConvertToSpecTests
 
         const string expectedTransformedCode =
           $$"""
+            using System;
             using Motiv;
 
             namespace MyNamespace
@@ -1012,7 +1015,7 @@ public class MotivConvertToSpecTests
 
                     public Playground()
                     {
-                        _isFeatureEnabledProposition = new IsFeatureEnabledProposition(this);
+                        _isFeatureEnabledProposition = new IsFeatureEnabledProposition(IsGreen);
                     }
 
                     public bool IsFeatureEnabled(int valueA, int valueB, int valueC, string text)
@@ -1031,7 +1034,7 @@ public class MotivConvertToSpecTests
                     }
                 }
 
-                public class IsFeatureEnabledProposition(Playground instance) : Spec<IsFeatureEnabledProposition.Model>(() =>
+                public class IsFeatureEnabledProposition(Func<string, bool> isGreen) : Spec<IsFeatureEnabledProposition.Model>(() =>
                 {
                     var isValueANonNegative = Spec
                         .Build((Model m) => m.ValueA >= 0)
@@ -1049,12 +1052,12 @@ public class MotivConvertToSpecTests
                         .Build((Model m) => string.IsNullOrEmpty(m.Text))
                         .Create("string.IsNullOrEmpty(text)");
 
-                    var isGreen = Spec
-                        .Build((Model m) => instance.IsGreen(m.Text))
+                    var isGreenText = Spec
+                        .Build((Model m) => isGreen(m.Text))
                         .Create("IsGreen(text)");
 
                     return isValueANonNegative.AndAlso(is1LessThanValueC)
-                        .OrElse(isValueBNonNegative.AndAlso(is1LessThanValueC).AndAlso(isNullOrEmpty.AndAlso(isGreen)));
+                        .OrElse(isValueBNonNegative.AndAlso(is1LessThanValueC).AndAlso(isNullOrEmpty.AndAlso(isGreenText)));
                 })
                 {
                     public readonly record struct Model(int ValueA, int ValueC, int ValueB, string Text);
@@ -1103,13 +1106,14 @@ public class MotivConvertToSpecTests
 
         const string expectedTransformedCode =
           $$"""
+            using System;
             using Motiv;
 
             namespace MyNamespace
             {
                 public class Playground()
                 {
-                    private static readonly IsFeatureEnabledProposition IsFeatureEnabledProposition = new();
+                    private static readonly IsFeatureEnabledProposition IsFeatureEnabledProposition = new(IsGreen);
                     private static readonly IsGreenProposition IsGreenProposition = new();
 
                     public bool IsFeatureEnabled(int valueA, int valueB, int valueC, string text)
@@ -1128,7 +1132,7 @@ public class MotivConvertToSpecTests
                     }
                 }
 
-                public class IsFeatureEnabledProposition() : Spec<IsFeatureEnabledProposition.Model>(() =>
+                public class IsFeatureEnabledProposition(Func<string, bool> isGreen) : Spec<IsFeatureEnabledProposition.Model>(() =>
                 {
                     var isValueANonNegative = Spec
                         .Build((Model m) => m.ValueA >= 0)
@@ -1138,12 +1142,12 @@ public class MotivConvertToSpecTests
                         .Build((Model m) => 1 < m.ValueC)
                         .Create("1 < valueC");
 
-                    var isGreen = Spec
-                        .Build((Model m) => Playground.IsGreen(m.Text))
+                    var isGreenText = Spec
+                        .Build((Model m) => isGreen(m.Text))
                         .Create("IsGreen(text)");
 
                     return isValueANonNegative.AndAlso(is1LessThanValueC)
-                        .OrElse(isGreen);
+                        .OrElse(isGreenText);
                 })
                 {
                     public readonly record struct Model(int ValueA, int ValueC, string Text);

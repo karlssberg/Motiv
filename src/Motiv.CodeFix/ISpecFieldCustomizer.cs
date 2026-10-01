@@ -18,19 +18,21 @@ internal interface ISpecFieldCustomizer
     TypeSyntax GetFieldType(string propositionName, string? modelTypeName);
 
     /// <summary>
-    ///     Returns the initializer expression for a non-instance field (simple case).
+    ///     Returns the initializer expression for a static field.
     /// </summary>
-    /// <param name="propositionName">The proposition class name.</param>
+    /// <param name="specTypeName">The spec class's name with any type arguments.</param>
+    /// <param name="arguments">The method groups the spec is built from; empty when it takes no delegates.</param>
     /// <returns>The initializer expression.</returns>
-    ExpressionSyntax GetFieldInitializer(string propositionName);
+    ExpressionSyntax GetFieldInitializer(string specTypeName, ArgumentListSyntax arguments);
 
     /// <summary>
-    ///     Returns the expression to assign to the field inside a constructor body
-    ///     (instance methods case).
+    ///     Returns the expression to assign to the field inside a constructor body, when a delegate the spec
+    ///     takes is bound to <c>this</c>.
     /// </summary>
-    /// <param name="propositionName">The proposition class name.</param>
+    /// <param name="specTypeName">The spec class's name with any type arguments.</param>
+    /// <param name="arguments">The method groups the spec is built from.</param>
     /// <returns>The constructor assignment expression.</returns>
-    ExpressionSyntax GetConstructorAssignment(string propositionName);
+    ExpressionSyntax GetConstructorAssignment(string specTypeName, ArgumentListSyntax arguments);
 
     /// <summary>
     ///     Returns the boolean check that replaces an expression in place, where there is no

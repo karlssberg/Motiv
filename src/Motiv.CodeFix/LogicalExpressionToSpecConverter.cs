@@ -50,45 +50,43 @@ internal class LogicalExpressionToSpecConverter(
         var modelValues = variables
             .Select(variable => (variable.Symbol, TypeName: variable.Type?.ToMinimalDisplayString(semanticModel, specPosition) ?? "object"))
             .ToImmutableArray();
-        _typeParameters = SpecTypeParameters.Find(logicalExpressionSyntax, semanticModel, variables.Select(variable => variable.Type));
+        var containingTypeSymbol = await syntaxContext.ContainingTypeSymbol(cancellationToken).ConfigureAwait(false);
+        var helpers = HelperDelegates.Find(logicalExpressionSyntax, semanticModel, containingTypeSymbol, specPosition);
+
+        _typeParameters = SpecTypeParameters.Find(
+            logicalExpressionSyntax, semanticModel, variables.Select(variable => variable.Type).Concat(helpers.SignatureTypes));
         var specTypeName = _typeParameters.Qualify(propositionName);
 
-        var containingTypeSymbol = await syntaxContext.ContainingTypeSymbol(cancellationToken).ConfigureAwait(false);
-        var detectionResult = DetectInstanceMethods(logicalExpressionSyntax, semanticModel, containingTypeSymbol);
-
-        var hasInstanceMethods = detectionResult.HasInstanceMethods;
-        var instanceMethodNames = detectionResult.AllMethodNames;
-        var staticMethodNames = detectionResult.StaticMethodNames;
-
-        var groupedExpression = hasInstanceMethods
-            ? LogicalChainGrouper.Group(logicalExpressionSyntax)
-            : logicalExpressionSyntax;
+        // Marked, so each call is still recognised in the clauses rebuilt from the expression
+        var specExpression = helpers.Annotate(logicalExpressionSyntax);
+        var groupedExpression = helpers.AnyInstance
+            ? LogicalChainGrouper.Group(specExpression)
+            : specExpression;
 
         var modelTypeName = modelValues.Length == 1
             ? modelValues[0].TypeName
             : $"{specTypeName}.{defaultModelName}";
 
-        _instanceField = _typeParameters.IsEmpty
-            ? null
-            : BuildInstanceField(syntaxContext, specTypeName, modelTypeName);
+        // A generic spec that takes no delegates holds its own instance, once per closed type
+        var holdsOwnInstance = !_typeParameters.IsEmpty && helpers.IsEmpty;
+        _instanceField = holdsOwnInstance
+            ? BuildInstanceField(syntaxContext, specTypeName, modelTypeName)
+            : null;
 
         var newRoot = _invocationReplacer.Replace(
             syntaxContext, variableSymbols, logicalExpressionSyntax,
-            root, hasInstanceMethods, groupedExpression, specTypeName, modelTypeName);
+            root, helpers, groupedExpression, specTypeName, holdsOwnInstance, modelTypeName);
 
         // The namespace that encloses the expression, found again by its start, which the replacement comes after
         var enclosingNamespaceStart = logicalExpressionSyntax.Ancestors().OfType<BaseNamespaceDeclarationSyntax>().FirstOrDefault()?.SpanStart;
         var baseNamespace = newRoot.DescendantNodes().OfType<BaseNamespaceDeclarationSyntax>()
             .FirstOrDefault(ns => ns.SpanStart == enclosingNamespaceStart);
         var isBlockNamespace = baseNamespace is NamespaceDeclarationSyntax;
-        var containingTypeName = ResolveContainingTypeName(containingTypeSymbol, isBlockNamespace, semanticModel, logicalExpressionSyntax);
 
-        var rootMembers = BuildSpecClassMembers(
-            syntaxContext, modelValues, groupedExpression,
-            instanceMethodNames, staticMethodNames, containingTypeName).ToArray();
+        var rootMembers = BuildSpecClassMembers(syntaxContext, modelValues, groupedExpression, helpers).ToArray();
 
         newRoot = SpecClassPlacer.AddNearContainingClass(syntaxContext, newRoot, baseNamespace, rootMembers);
-        newRoot = SpecClassPlacer.AddUsingStatementsIfNeeded(newRoot, fieldCustomizer, syntaxContext.LineFeed);
+        newRoot = SpecClassPlacer.AddUsingStatementsIfNeeded(newRoot, fieldCustomizer, syntaxContext.LineFeed, helpers.NeedsSystemNamespace);
 
         var resultDoc = document.WithSyntaxRoot(newRoot);
 
@@ -99,12 +97,13 @@ internal class LogicalExpressionToSpecConverter(
     }
 
     /// <summary>
-    ///     Whether the fix can hold <paramref name="expression" />'s spec. One that calls an instance method captures
-    ///     <c>this</c> through a constructor, which only a class can take: a record would lose its positional members,
-    ///     a struct would hand the spec a stale copy of itself, and an interface cannot hold an instance field. A spec
-    ///     over the surrounding type parameters holds its instance statically, once per closed type, so it has no
-    ///     <c>this</c> at all. The spec is a class of its own, so every method of the containing type it calls must be
-    ///     one it can reach. A property the model would read must read like a field (see <see cref="IsReadLikeAField" />).
+    ///     Whether the fix can hold <paramref name="expression" />'s spec. Each method of the containing type it calls
+    ///     must be one a delegate can carry (see <see cref="HelperDelegates.CanBePassed" />). A delegate bound to <c>this</c>
+    ///     needs an instance to build the spec from, which only a class can give: a record would lose its positional
+    ///     members, a struct would hand the spec a stale copy of itself, and an interface cannot hold an instance
+    ///     field. A spec over the enclosing method's type parameters holds its own instance, once per closed type,
+    ///     where nothing can hand it a delegate. A property the model would read must read like a field (see
+    ///     <see cref="IsReadLikeAField" />).
     /// </summary>
     public static bool CanConvert(
         ExpressionSyntax expression,
@@ -115,26 +114,22 @@ internal class LogicalExpressionToSpecConverter(
         if (variables.Any(variable => variable.Symbol is IPropertySymbol property && !IsReadLikeAField(property)))
             return false;
 
-        var detectionResult = DetectInstanceMethods(expression, semanticModel, containingTypeSymbol);
-        if (!detectionResult.ResolvedMethods.Concat(detectionResult.StaticMethods)
-                .All(call => IsAccessibleToSpec(call.Method, semanticModel.Compilation)))
+        var specPosition = expression.Ancestors().OfType<BaseTypeDeclarationSyntax>().Last().SpanStart;
+        var helpers = HelperDelegates.Find(expression, semanticModel, containingTypeSymbol, specPosition);
+        if (!helpers.CanBePassed)
             return false;
 
-        if (!detectionResult.HasInstanceMethods)
+        if (helpers.IsEmpty)
             return true;
 
-        // The syntactic check spares the semantic search wherever no generic declaration is in scope
-        return expression.FirstAncestorOrSelf<TypeDeclarationSyntax>() is ClassDeclarationSyntax
-               && (!SpecTypeParameters.AnyInScope(expression)
-                   || SpecTypeParameters.Find(expression, semanticModel, variables.Select(variable => variable.Type)).IsEmpty);
-    }
+        if (helpers.AnyInstance && expression.FirstAncestorOrSelf<TypeDeclarationSyntax>() is not ClassDeclarationSyntax)
+            return false;
 
-    /// <summary>
-    ///     Whether a type of the same assembly, declared outside the method's own type and deriving from nothing of
-    ///     it, can call the method — which is what the spec is.
-    /// </summary>
-    private static bool IsAccessibleToSpec(IMethodSymbol method, Compilation compilation) =>
-        compilation.IsSymbolAccessibleWithin(method, compilation.Assembly);
+        // The syntactic check spares the semantic search wherever no generic declaration is in scope
+        return !SpecTypeParameters.AnyInScope(expression)
+               || !SpecTypeParameters.Find(expression, semanticModel, variables.Select(variable => variable.Type).Concat(helpers.SignatureTypes))
+                   .DeclaresMethodTypeParameters;
+    }
 
     /// <summary>
     ///     <c>public static readonly XProposition&lt;T&gt; Instance = new();</c>, declared and formatted the way the
@@ -146,7 +141,7 @@ internal class LogicalExpressionToSpecConverter(
                 VariableDeclaration(fieldCustomizer.GetFieldType(specTypeName, modelTypeName))
                     .WithVariables(SingletonSeparatedList(
                         VariableDeclarator(Identifier(SpecTypeParameters.InstanceFieldName))
-                            .WithInitializer(EqualsValueClause(fieldCustomizer.GetFieldInitializer(specTypeName))))))
+                            .WithInitializer(EqualsValueClause(fieldCustomizer.GetFieldInitializer(specTypeName, ArgumentList()))))))
             .WithModifiers(TokenList(
                 Token(SyntaxKind.PublicKeyword),
                 Token(SyntaxKind.StaticKeyword),
@@ -155,53 +150,19 @@ internal class LogicalExpressionToSpecConverter(
         return _invocationReplacer.FormatMember(field, syntaxContext.GetIndent(1), syntaxContext.LineFeed);
     }
 
-    private static InstanceMethodResult DetectInstanceMethods(
-        ExpressionSyntax expression,
-        SemanticModel semanticModel,
-        INamedTypeSymbol? containingTypeSymbol)
-    {
-        var detector = new InstanceMethodDetector(semanticModel);
-        return containingTypeSymbol is not null
-            ? detector.Detect(expression, containingTypeSymbol)
-            : new InstanceMethodResult([], [], []);
-    }
-
-    /// <summary>
-    ///     The containing type's name, qualified by its namespace in a file-scoped namespace, and otherwise as the
-    ///     source would name it beside the outermost type, where the spec is declared — so a nested type keeps its
-    ///     outer types.
-    /// </summary>
-    private static string? ResolveContainingTypeName(
-        INamedTypeSymbol? containingTypeSymbol,
-        bool isBlockNamespace,
-        SemanticModel semanticModel,
-        ExpressionSyntax expression)
-    {
-        if (containingTypeSymbol is null) return null;
-        if (!isBlockNamespace) return containingTypeSymbol.ToDisplayString();
-
-        var specPosition = expression.Ancestors().OfType<BaseTypeDeclarationSyntax>().Last().SpanStart;
-        return containingTypeSymbol.ToMinimalDisplayString(semanticModel, specPosition);
-    }
-
     private IEnumerable<MemberDeclarationSyntax> BuildSpecClassMembers(
         SyntaxContext syntaxContext,
         ImmutableArray<(ISymbol Symbol, string TypeName)> modelValues,
         ExpressionSyntax logicalExpressionSyntax,
-        HashSet<string> instanceMethodNames,
-        HashSet<string> staticMethodNames,
-        string? containingTypeName)
+        HelperDelegates helpers)
     {
-        var hasInstanceMethods = instanceMethodNames.Count > 0;
-        var hasStaticMethods = staticMethodNames.Count > 0;
-
-        if (modelValues.Length == 1 && !hasInstanceMethods && !hasStaticMethods)
+        if (modelValues.Length == 1 && helpers.IsEmpty)
             return BuildSimpleSpec(syntaxContext, modelValues[0], logicalExpressionSyntax);
 
         if (modelValues.Length == 1)
-            return BuildSingleVarComposedSpec(syntaxContext, modelValues[0], logicalExpressionSyntax, instanceMethodNames, staticMethodNames, containingTypeName);
+            return BuildSingleVarComposedSpec(syntaxContext, modelValues[0], logicalExpressionSyntax, helpers);
 
-        return BuildMultiVarComposedSpec(syntaxContext, modelValues, logicalExpressionSyntax, instanceMethodNames, staticMethodNames, containingTypeName);
+        return BuildMultiVarComposedSpec(syntaxContext, modelValues, logicalExpressionSyntax, helpers);
     }
 
     private IEnumerable<MemberDeclarationSyntax> BuildSimpleSpec(
@@ -222,20 +183,9 @@ internal class LogicalExpressionToSpecConverter(
         SyntaxContext syntaxContext,
         (ISymbol Symbol, string TypeName) modelValue,
         ExpressionSyntax logicalExpressionSyntax,
-        HashSet<string> instanceMethodNames,
-        HashSet<string> staticMethodNames,
-        string? containingTypeName)
+        HelperDelegates helpers)
     {
-        var hasInstanceMethods = instanceMethodNames.Count > 0;
-        var decomposition = ExpressionDecomposer.Decompose(
-            logicalExpressionSyntax,
-            expr =>
-            {
-                var result = ExpressionTransformer.PrefixInstanceMethods(expr, instanceMethodNames);
-                if (staticMethodNames.Count > 0 && containingTypeName != null)
-                    result = ExpressionTransformer.PrefixStaticMethods(result, staticMethodNames, containingTypeName);
-                return result;
-            });
+        var decomposition = ExpressionDecomposer.Decompose(logicalExpressionSyntax, helpers.ReplaceCalls);
 
         yield return new ComposedSpecClassDeclaration(
             syntaxContext, propositionName,
@@ -243,7 +193,7 @@ internal class LogicalExpressionToSpecConverter(
             innerLambdaParameterName: modelValue.Symbol.Name,
             decomposition,
             _typeParameters,
-            containingTypeName: hasInstanceMethods ? containingTypeName : null,
+            constructorParameters: [..helpers.Parameters],
             instanceField: _instanceField).Build();
     }
 
@@ -251,15 +201,12 @@ internal class LogicalExpressionToSpecConverter(
         SyntaxContext syntaxContext,
         ImmutableArray<(ISymbol Symbol, string TypeName)> modelValues,
         ExpressionSyntax logicalExpressionSyntax,
-        HashSet<string> instanceMethodNames,
-        HashSet<string> staticMethodNames,
-        string? containingTypeName)
+        HelperDelegates helpers)
     {
-        var hasInstanceMethods = instanceMethodNames.Count > 0;
         var memberNames = ExpressionTransformer.ModelMemberNames(modelValues.Select(value => value.Symbol));
         var decomposition = ExpressionDecomposer.Decompose(
             logicalExpressionSyntax,
-            expr => ExpressionTransformer.ConvertVariablesToModelMemberAccess(expr, memberNames, instanceMethodNames, staticMethodNames, containingTypeName));
+            expr => helpers.ReplaceCalls(ExpressionTransformer.ConvertVariablesToModelMemberAccess(expr, memberNames)));
 
         var recordParameterList = ParameterList(
             SeparatedList(
@@ -267,15 +214,13 @@ internal class LogicalExpressionToSpecConverter(
                     Parameter(Identifier(memberNames[value.Symbol.Name]))
                         .WithType(ParseTypeName(value.TypeName)))));
 
-        var resolvedContainingTypeName = hasInstanceMethods ? containingTypeName : null;
-
         yield return new ComposedSpecClassDeclaration(
             syntaxContext, propositionName,
             innerLambdaModelType: defaultModelName,
             innerLambdaParameterName: "m",
             decomposition,
             _typeParameters,
-            resolvedContainingTypeName,
+            constructorParameters: [..helpers.Parameters],
             nestedRecordName: defaultModelName,
             nestedRecordParameterList: recordParameterList,
             instanceField: _instanceField).Build();

@@ -74,16 +74,16 @@ public class MotivConvertToSpecNoFixTests
     }
 
     [Theory]
-    [InlineData("private static")]
-    [InlineData("protected static")]
-    [InlineData("private protected static")]
-    [InlineData("private")]
-    [InlineData("protected")]
-    public async Task Should_not_offer_a_fix_when_an_expression_calls_a_method_the_spec_cannot_access(
-        string modifiers)
+    [InlineData("value > 0 && IsKnown(ref value)", "bool IsKnown(ref int value) => value.Equals(42);")]
+    [InlineData("value > 0 && IsKnown(value, value)", "bool IsKnown(params int[] values) => values.Length.Equals(2);")]
+    [InlineData("value > 0 && IsKnown(value)", "bool IsKnown(int value, [System.Runtime.InteropServices.Optional] System.DateTime when) => value.Equals(42);")]
+    [InlineData("value > 0 && IsKnown(value)", "bool IsKnown(int value, double limit = double.NaN) => value.Equals(limit);")]
+    [InlineData("value > 0 && IsKnown(value)", "bool IsKnown(int value, float limit = float.PositiveInfinity) => value.Equals(limit);")]
+    [InlineData("value > 0 && IsKnown(limit: Limit(), known: value)", "bool IsKnown(int known, int limit) => known.Equals(limit); int Limit() => 42;")]
+    public async Task Should_not_offer_a_fix_when_a_called_method_cannot_be_passed_as_a_delegate(
+        string booleanExpression,
+        string helper)
     {
-        const string booleanExpression = "value > 0 && IsKnown(value)";
-
         var source =
           $$"""
             namespace MyNamespace;
@@ -92,7 +92,7 @@ public class MotivConvertToSpecNoFixTests
             {
                 public bool IsValid(int value) => {{booleanExpression}};
 
-                {{modifiers}} bool IsKnown(int value) => value.Equals(42);
+                {{helper}}
             }
             """;
 
@@ -100,53 +100,74 @@ public class MotivConvertToSpecNoFixTests
     }
 
     [Fact]
-    public async Task Should_not_offer_a_fix_when_the_model_would_read_a_computed_property_the_guard_skipped()
+    public async Task Should_not_offer_a_fix_when_a_called_method_is_closed_over_the_method_s_own_type_parameter()
     {
-        const string booleanExpression = "HasSelection && SelectedItem.Length > 0";
+        const string booleanExpression = "value is not null && IsKnown(value)";
 
         const string source =
           $$"""
             namespace MyNamespace;
 
-            public class Picker
+            public class Values
             {
-                private string _selected = "";
+                public bool IsValid<T>(T value) => {{booleanExpression}};
 
-                public bool HasSelection { get; set; }
-
-                public string SelectedItem => _selected ?? throw new System.InvalidOperationException();
-
-                public bool CanEdit() => {{booleanExpression}};
+                private static bool IsKnown<TValue>(TValue value) => value!.Equals(42);
             }
             """;
 
-        await VerifyNoFix(source, 11, 30, booleanExpression);
+        await VerifyNoFix(source, 5, 40, booleanExpression);
     }
 
-    [Theory]
-    [InlineData("abstract", "public abstract int Count { get; }")]
-    [InlineData("abstract", "public virtual int Count { get; set; }")]
-    public async Task Should_not_offer_a_fix_when_the_model_would_read_a_property_an_override_can_compute(
-        string typeModifier,
-        string propertyDeclaration)
+    [Fact]
+    public async Task Should_not_offer_a_fix_when_a_called_method_does_not_bind()
     {
-        const string booleanExpression = "IsEnabled && Count > 0";
+        const string booleanExpression = "value > 0 && IsKnown(value)";
 
-        var source =
+        const string source =
           $$"""
             namespace MyNamespace;
 
-            public {{typeModifier}} class Picker
+            public class Values
             {
-                public bool IsEnabled { get; set; }
-
-                {{propertyDeclaration}}
-
-                public bool HasItems() => {{booleanExpression}};
+                public bool IsValid(int value) => {{booleanExpression}};
             }
             """;
 
-        await VerifyNoFix(source, 9, 31, booleanExpression);
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            FixedState = { Sources = { (Source, source) } },
+            ExpectedDiagnostics =
+            {
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                    .WithSpan(Source, 5, 39, 5, 39 + booleanExpression.Length),
+                DiagnosticResult.CompilerError("CS0103").WithSpan(Source, 5, 52, 5, 59).WithArguments("IsKnown")
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_not_offer_a_fix_when_a_called_method_is_a_local_function()
+    {
+        const string booleanExpression = "value > 0 && IsKnown(value)";
+
+        const string source =
+          $$"""
+            namespace MyNamespace;
+
+            public class Values
+            {
+                public bool IsValid(int value)
+                {
+                    return {{booleanExpression}};
+
+                    bool IsKnown(int known) => known.Equals(42);
+                }
+            }
+            """;
+
+        await VerifyNoFix(source, 7, 16, booleanExpression);
     }
 
     private static async Task VerifyNoFix(string source, int line, int column, string booleanExpression) =>
