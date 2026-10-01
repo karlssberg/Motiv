@@ -27,7 +27,7 @@ internal class DebugTapSpecFieldCustomizer : ISpecFieldCustomizer
     /// </summary>
     public ExpressionSyntax GetFieldInitializer(string propositionName) =>
         WrapWithTap(
-            ObjectCreationExpression(IdentifierName(propositionName))
+            ObjectCreationExpression(ParseTypeName(propositionName))
                 .WithArgumentList(ArgumentList()),
             propositionName);
 
@@ -36,7 +36,7 @@ internal class DebugTapSpecFieldCustomizer : ISpecFieldCustomizer
     /// </summary>
     public ExpressionSyntax GetConstructorAssignment(string propositionName) =>
         WrapWithTap(
-            ObjectCreationExpression(IdentifierName(propositionName))
+            ObjectCreationExpression(ParseTypeName(propositionName))
                 .WithArgumentList(ArgumentList(SingletonSeparatedList(
                     Argument(ThisExpression())))),
             propositionName);
