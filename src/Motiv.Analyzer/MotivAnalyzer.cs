@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Operations;
 
 namespace Motiv.Analyzer;
 
@@ -59,6 +60,7 @@ public class MotivAnalyzer : DiagnosticAnalyzer
 
         // Check if this expression is inside a Spec.Build() lambda - if so, ignore it
         if (IsInsideSpecLambda(expression, context.SemanticModel)) return;
+        if (CannotHoldSpecEvaluation(expression, context.SemanticModel)) return;
 
         var diagnostic = Diagnostic.Create(Motiv0001, expression.GetLocation());
         context.ReportDiagnostic(diagnostic);
@@ -104,9 +106,37 @@ public class MotivAnalyzer : DiagnosticAnalyzer
         if (IsNestedInPatternExpression(node)) return;
 
         if (IsInsideSpecLambda(node, context.SemanticModel)) return;
+        if (CannotHoldSpecEvaluation(node, context.SemanticModel)) return;
 
         var diagnostic = Diagnostic.Create(Motiv0001, node.GetLocation());
         context.ReportDiagnostic(diagnostic);
+    }
+
+    /// <summary>
+    /// A compile-time constant (a <c>const</c>, an attribute argument, a default parameter value, a
+    /// <c>case</c> label) cannot be replaced by a call, and an expression-tree lambda is translated rather
+    /// than executed, so a spec evaluation in either would not compile or would not mean the same thing.
+    /// </summary>
+    private static bool CannotHoldSpecEvaluation(SyntaxNode node, SemanticModel semanticModel) =>
+        IsCompileTimeConstant(node, semanticModel) || IsInsideExpressionTreeLambda(node, semanticModel);
+
+    private static bool IsCompileTimeConstant(SyntaxNode node, SemanticModel semanticModel) =>
+        semanticModel.GetConstantValue(node).HasValue;
+
+    /// <summary>
+    /// Walks the operations rather than the syntax, which also holds the implicit lambdas of query clauses over
+    /// <c>IQueryable</c>. A lambda becomes a delegate through a delegate creation, and an expression tree —
+    /// <c>Expression&lt;T&gt;</c> or <c>LambdaExpression</c> — through a conversion, so a converted lambda is a tree.
+    /// </summary>
+    private static bool IsInsideExpressionTreeLambda(SyntaxNode node, SemanticModel semanticModel)
+    {
+        for (var operation = semanticModel.GetOperation(node); operation is not null; operation = operation.Parent)
+        {
+            if (operation is IConversionOperation { Operand: IAnonymousFunctionOperation })
+                return true;
+        }
+
+        return false;
     }
 
     private static bool IsInsideSpecLambda(SyntaxNode node, SemanticModel semanticModel)
