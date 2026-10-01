@@ -40,7 +40,13 @@ internal class LogicalExpressionToSpecConverter(
         if (root is null) return document;
 
         var semanticModel = await syntaxContext.SemanticModel(cancellationToken).ConfigureAwait(false);
-        var variableSymbols = GetVariablesInExpression(logicalExpressionSyntax, semanticModel).ToImmutableArray();
+        var variables = GetVariablesInExpression(logicalExpressionSyntax, semanticModel);
+        var variableSymbols = variables.Select(variable => variable.Symbol).ToImmutableArray();
+        // The spec is declared beside the outermost type, so each type is named as the source would name it there
+        var specPosition = logicalExpressionSyntax.Ancestors().OfType<BaseTypeDeclarationSyntax>().Last().SpanStart;
+        var modelValues = variables
+            .Select(variable => (variable.Symbol, TypeName: variable.Type?.ToMinimalDisplayString(semanticModel, specPosition) ?? "object"))
+            .ToImmutableArray();
 
         var containingTypeSymbol = await syntaxContext.ContainingTypeSymbol(cancellationToken).ConfigureAwait(false);
         var detectionResult = DetectInstanceMethods(logicalExpressionSyntax, semanticModel, containingTypeSymbol);
@@ -53,20 +59,23 @@ internal class LogicalExpressionToSpecConverter(
             ? LogicalChainGrouper.Group(logicalExpressionSyntax)
             : logicalExpressionSyntax;
 
-        var modelTypeName = variableSymbols.Length == 1
-            ? GetSymbolTypeName(variableSymbols.First())
+        var modelTypeName = modelValues.Length == 1
+            ? modelValues[0].TypeName
             : $"{propositionName}.{defaultModelName}";
 
         var newRoot = _invocationReplacer.Replace(
             syntaxContext, variableSymbols, logicalExpressionSyntax,
             root, hasInstanceMethods, groupedExpression, modelTypeName);
 
-        var baseNamespace = newRoot.DescendantNodes().OfType<BaseNamespaceDeclarationSyntax>().FirstOrDefault();
+        // The namespace that encloses the expression, found again by its start, which the replacement comes after
+        var enclosingNamespaceStart = logicalExpressionSyntax.Ancestors().OfType<BaseNamespaceDeclarationSyntax>().FirstOrDefault()?.SpanStart;
+        var baseNamespace = newRoot.DescendantNodes().OfType<BaseNamespaceDeclarationSyntax>()
+            .FirstOrDefault(ns => ns.SpanStart == enclosingNamespaceStart);
         var isBlockNamespace = baseNamespace is NamespaceDeclarationSyntax;
         var containingTypeName = ResolveContainingTypeName(containingTypeSymbol, isBlockNamespace, semanticModel, logicalExpressionSyntax);
 
         var rootMembers = BuildSpecClassMembers(
-            syntaxContext, variableSymbols, groupedExpression,
+            syntaxContext, modelValues, groupedExpression,
             instanceMethodNames, staticMethodNames, containingTypeName).ToArray();
 
         newRoot = SpecClassPlacer.AddNearContainingClass(syntaxContext, newRoot, baseNamespace, rootMembers);
@@ -84,13 +93,18 @@ internal class LogicalExpressionToSpecConverter(
     ///     Whether the fix can hold <paramref name="expression" />'s spec. One that calls an instance method captures
     ///     <c>this</c> through a constructor, which only a class can take: a record would lose its positional members,
     ///     a struct would hand the spec a stale copy of itself, and an interface cannot hold an instance field. The
-    ///     spec is a class of its own, so every method of the containing type it calls must be one it can reach.
+    ///     spec is a class of its own, so every method of the containing type it calls must be one it can reach. A
+    ///     property the model would read must read like a field (see <see cref="IsReadLikeAField" />).
     /// </summary>
     public static bool CanConvert(
         ExpressionSyntax expression,
         SemanticModel semanticModel,
         INamedTypeSymbol? containingTypeSymbol)
     {
+        if (!GetVariablesInExpression(expression, semanticModel)
+                .All(variable => variable.Symbol is not IPropertySymbol property || IsReadLikeAField(property)))
+            return false;
+
         var detectionResult = DetectInstanceMethods(expression, semanticModel, containingTypeSymbol);
         if (!detectionResult.ResolvedMethods.Concat(detectionResult.StaticMethods)
                 .All(call => IsAccessibleToSpec(call.Method, semanticModel.Compilation)))
@@ -138,7 +152,7 @@ internal class LogicalExpressionToSpecConverter(
 
     private IEnumerable<MemberDeclarationSyntax> BuildSpecClassMembers(
         SyntaxContext syntaxContext,
-        ImmutableArray<ISymbol> variableSymbols,
+        ImmutableArray<(ISymbol Symbol, string TypeName)> modelValues,
         ExpressionSyntax logicalExpressionSyntax,
         HashSet<string> instanceMethodNames,
         HashSet<string> staticMethodNames,
@@ -147,40 +161,38 @@ internal class LogicalExpressionToSpecConverter(
         var hasInstanceMethods = instanceMethodNames.Count > 0;
         var hasStaticMethods = staticMethodNames.Count > 0;
 
-        if (variableSymbols.Length == 1 && !hasInstanceMethods && !hasStaticMethods)
-            return BuildSimpleSpec(syntaxContext, variableSymbols.First(), logicalExpressionSyntax);
+        if (modelValues.Length == 1 && !hasInstanceMethods && !hasStaticMethods)
+            return BuildSimpleSpec(syntaxContext, modelValues[0], logicalExpressionSyntax);
 
-        if (variableSymbols.Length == 1)
-            return BuildSingleVarComposedSpec(syntaxContext, variableSymbols.First(), logicalExpressionSyntax, instanceMethodNames, staticMethodNames, containingTypeName);
+        if (modelValues.Length == 1)
+            return BuildSingleVarComposedSpec(syntaxContext, modelValues[0], logicalExpressionSyntax, instanceMethodNames, staticMethodNames, containingTypeName);
 
-        return BuildMultiVarComposedSpec(syntaxContext, variableSymbols, logicalExpressionSyntax, instanceMethodNames, staticMethodNames, containingTypeName);
+        return BuildMultiVarComposedSpec(syntaxContext, modelValues, logicalExpressionSyntax, instanceMethodNames, staticMethodNames, containingTypeName);
     }
 
     private IEnumerable<MemberDeclarationSyntax> BuildSimpleSpec(
         SyntaxContext syntaxContext,
-        ISymbol variable,
+        (ISymbol Symbol, string TypeName) modelValue,
         ExpressionSyntax logicalExpressionSyntax)
     {
-        var variableTypeName = GetSymbolTypeName(variable);
         var originalExpressionText = logicalExpressionSyntax.ToString().Trim();
 
         var specChain = SpecFluentChainBuilder.Build(
-            variableTypeName, variable.Name, logicalExpressionSyntax, originalExpressionText);
+            modelValue.TypeName, modelValue.Symbol.Name, logicalExpressionSyntax, originalExpressionText);
 
         yield return new SimpleSpecClassDeclaration(
-            syntaxContext, propositionName, variableTypeName, specChain).Build();
+            syntaxContext, propositionName, modelValue.TypeName, specChain).Build();
     }
 
     private IEnumerable<MemberDeclarationSyntax> BuildSingleVarComposedSpec(
         SyntaxContext syntaxContext,
-        ISymbol variable,
+        (ISymbol Symbol, string TypeName) modelValue,
         ExpressionSyntax logicalExpressionSyntax,
         HashSet<string> instanceMethodNames,
         HashSet<string> staticMethodNames,
         string? containingTypeName)
     {
         var hasInstanceMethods = instanceMethodNames.Count > 0;
-        var variableTypeName = GetSymbolTypeName(variable);
         var decomposition = ExpressionDecomposer.Decompose(
             logicalExpressionSyntax,
             expr =>
@@ -193,30 +205,31 @@ internal class LogicalExpressionToSpecConverter(
 
         yield return new ComposedSpecClassDeclaration(
             syntaxContext, propositionName,
-            innerLambdaModelType: variableTypeName,
-            innerLambdaParameterName: variable.Name,
+            innerLambdaModelType: modelValue.TypeName,
+            innerLambdaParameterName: modelValue.Symbol.Name,
             decomposition,
             containingTypeName: hasInstanceMethods ? containingTypeName : null).Build();
     }
 
     private IEnumerable<MemberDeclarationSyntax> BuildMultiVarComposedSpec(
         SyntaxContext syntaxContext,
-        ImmutableArray<ISymbol> variableSymbols,
+        ImmutableArray<(ISymbol Symbol, string TypeName)> modelValues,
         ExpressionSyntax logicalExpressionSyntax,
         HashSet<string> instanceMethodNames,
         HashSet<string> staticMethodNames,
         string? containingTypeName)
     {
         var hasInstanceMethods = instanceMethodNames.Count > 0;
+        var memberNames = ExpressionTransformer.ModelMemberNames(modelValues.Select(value => value.Symbol));
         var decomposition = ExpressionDecomposer.Decompose(
             logicalExpressionSyntax,
-            expr => ExpressionTransformer.ConvertVariablesToModelMemberAccess(expr, variableSymbols, instanceMethodNames, staticMethodNames, containingTypeName));
+            expr => ExpressionTransformer.ConvertVariablesToModelMemberAccess(expr, memberNames, instanceMethodNames, staticMethodNames, containingTypeName));
 
         var recordParameterList = ParameterList(
             SeparatedList(
-                variableSymbols.Select(s =>
-                    Parameter(Identifier(s.Name.Capitalize()))
-                        .WithType(ParseTypeName(GetSymbolTypeName(s))))));
+                modelValues.Select(value =>
+                    Parameter(Identifier(memberNames[value.Symbol.Name]))
+                        .WithType(ParseTypeName(value.TypeName)))));
 
         var resolvedContainingTypeName = hasInstanceMethods ? containingTypeName : null;
 
@@ -230,26 +243,74 @@ internal class LogicalExpressionToSpecConverter(
             nestedRecordParameterList: recordParameterList).Build();
     }
 
-    private static string GetSymbolTypeName(ISymbol symbol) =>
-        symbol.GetTypeSymbol()?.GetCSharpTypeName() ?? "object";
-
-    private static IEnumerable<ISymbol> GetVariablesInExpression(
+    /// <summary>
+    ///     The values the expression reads from its surroundings, each of which becomes a model value: fields,
+    ///     properties, parameters, range variables and locals — except one the expression declares itself
+    ///     (<c>o is string s</c>, <c>out var n</c>, a lambda's parameter), which the generated lambda declares too.
+    /// </summary>
+    private static ImmutableArray<(ISymbol Symbol, ITypeSymbol? Type)> GetVariablesInExpression(
         ExpressionSyntax expression,
         SemanticModel semanticModel) =>
-        expression
+    [
+        ..expression
             .DescendantNodesAndSelf()
             .OfType<IdentifierNameSyntax>()
             .Where(identifier =>
                 !(identifier.Parent is MemberAccessExpressionSyntax memberAccess &&
                   memberAccess.Name == identifier))
-            .Select(identifier => semanticModel.GetSymbolInfo(identifier).Symbol)
-            .Where(symbol =>
-                symbol is IFieldSymbol or IParameterSymbol ||
-                symbol is ILocalSymbol local && !IsPatternIntroducedVariable(local))
-            .Distinct(SymbolEqualityComparer.Default)
-            .Cast<ISymbol>();
+            .Select(identifier => (Identifier: identifier, Symbol: semanticModel.GetSymbolInfo(identifier).Symbol))
+            .Where(candidate => IsModelValue(candidate.Identifier, candidate.Symbol, expression))
+            .GroupBy(candidate => candidate.Symbol!, SymbolEqualityComparer.Default)
+            .Select(group =>
+            {
+                var symbol = group.Key;
+                // A range variable carries no type of its own; the expression that reads it does
+                var type = symbol.GetTypeSymbol() ?? semanticModel.GetTypeInfo(group.First().Identifier).Type;
+                return (symbol, type);
+            })
+    ];
 
-    private static bool IsPatternIntroducedVariable(ILocalSymbol symbol) =>
+    private static bool IsModelValue(IdentifierNameSyntax identifier, ISymbol? symbol, ExpressionSyntax expression) =>
+        IsReadFromScope(identifier)
+        && symbol switch
+        {
+            IFieldSymbol => true,
+            IPropertySymbol property => !property.IsIndexer,
+            IRangeVariableSymbol or IParameterSymbol or ILocalSymbol => !IsDeclaredWithin(symbol, expression),
+            _ => false
+        };
+
+    /// <summary>
+    ///     Whether a bare name is read from the expression's scope, rather than naming a member of another object:
+    ///     <c>?.Name</c>, <c>{ Name: … }</c>, <c>new T { Name = … }</c>, <c>x with { Name = … }</c>, <c>new { Name = … }</c>,
+    ///     or a named argument's parameter, <c>M(name: …)</c>.
+    /// </summary>
+    private static bool IsReadFromScope(IdentifierNameSyntax identifier) =>
+        identifier.Parent switch
+        {
+            MemberBindingExpressionSyntax or NameColonSyntax or ExpressionColonSyntax or NameEqualsSyntax => false,
+            AssignmentExpressionSyntax { Parent: InitializerExpressionSyntax } assignment => assignment.Left != identifier,
+            _ => true
+        };
+
+    /// <summary>
+    ///     Whether a property can be read eagerly, when the model is built, without changing what the expression does:
+    ///     an auto-property or a positional record member reads like a field, but a computed getter may throw or have
+    ///     effects that a <c>&amp;&amp;</c> or <c>||</c> before it would have skipped, and so may an override of an
+    ///     abstract or virtual one.
+    /// </summary>
+    private static bool IsReadLikeAField(IPropertySymbol property) =>
+        !(property.IsAbstract || property.IsVirtual || property.IsOverride && !property.IsSealed)
+        && property.DeclaringSyntaxReferences.Length > 0
+        && property.DeclaringSyntaxReferences.All(reference => reference.GetSyntax() switch
+        {
+            ParameterSyntax => true,
+            PropertyDeclarationSyntax { ExpressionBody: null, AccessorList: { } accessors } =>
+                accessors.Accessors.All(accessor => accessor.Body is null && accessor.ExpressionBody is null),
+            _ => false
+        });
+
+    private static bool IsDeclaredWithin(ISymbol symbol, ExpressionSyntax expression) =>
         symbol.DeclaringSyntaxReferences
-            .Any(syntaxRef => syntaxRef.GetSyntax() is SingleVariableDesignationSyntax);
+            .Any(syntaxRef => syntaxRef.SyntaxTree == expression.SyntaxTree && expression.Span.Contains(syntaxRef.Span));
 }

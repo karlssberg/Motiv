@@ -87,31 +87,49 @@ internal static class ExpressionTransformer
     ///     and prefixes instance and static method calls.
     /// </summary>
     /// <param name="expression">The expression to transform.</param>
-    /// <param name="variableSymbols">The variables to convert.</param>
+    /// <param name="memberNames">Each variable's name mapped to its model member, from <see cref="ModelMemberNames" />.</param>
     /// <param name="instanceMethodNames">Instance method names to prefix.</param>
     /// <param name="staticMethodNames">Static method names to prefix with class name.</param>
     /// <param name="className">The class name for static method qualification.</param>
     /// <returns>The transformed expression.</returns>
     public static ExpressionSyntax ConvertVariablesToModelMemberAccess(
         ExpressionSyntax expression,
-        ImmutableArray<ISymbol> variableSymbols,
+        IReadOnlyDictionary<string, string> memberNames,
         HashSet<string> instanceMethodNames,
         HashSet<string>? staticMethodNames = null,
         string? className = null)
     {
-        var variableNames = variableSymbols.Select(s => s.Name).ToArray();
-
-        var result = ReplaceMemberAccessRoots(expression, variableNames);
-        result = ReplaceStandaloneIdentifiers(result, variableNames);
+        var result = ReplaceMemberAccessRoots(expression, memberNames);
+        result = ReplaceStandaloneIdentifiers(result, memberNames);
         result = PrefixInstanceMethods(result, instanceMethodNames);
         if (staticMethodNames != null && className != null)
             result = PrefixStaticMethods(result, staticMethodNames, className);
         return result;
     }
 
+    /// <summary>
+    ///     The model member each variable is read through: its name Pascal-cased without a field's leading
+    ///     underscores, unless that would give two variables one member, as <c>limit</c> and <c>_limit</c> would; and
+    ///     as written when even capitalizing would, as <c>limit</c> and <c>Limit</c> would.
+    /// </summary>
+    /// <param name="variableSymbols">The variables the model holds.</param>
+    /// <returns>Each variable's name mapped to its model member's name.</returns>
+    public static IReadOnlyDictionary<string, string> ModelMemberNames(IEnumerable<ISymbol> variableSymbols) =>
+        variableSymbols
+            .Select(symbol => symbol.Name)
+            .Distinct()
+            .GroupBy(name => name.ToPascalCase())
+            .SelectMany(group => group.Select(name =>
+                (Name: name, Member: group.Count() == 1 ? group.Key : DistinctMemberName(name, group))))
+            .ToDictionary(pair => pair.Name, pair => pair.Member);
+
+    // Capitalized, unless another name capitalizes the same way (limit and Limit), when it stays as written
+    private static string DistinctMemberName(string name, IEnumerable<string> namesSharingMember) =>
+        namesSharingMember.Count(other => other.Capitalize() == name.Capitalize()) == 1 ? name.Capitalize() : name;
+
     private static ExpressionSyntax ReplaceMemberAccessRoots(
         ExpressionSyntax expression,
-        string[] variableNames)
+        IReadOnlyDictionary<string, string> memberNames)
     {
         var memberAccessToReplace = expression.DescendantNodesAndSelf()
             .OfType<MemberAccessExpressionSyntax>()
@@ -121,7 +139,7 @@ internal static class ExpressionTransformer
                 while (expr is MemberAccessExpressionSyntax innerMemberAccess)
                     expr = innerMemberAccess.Expression;
 
-                return expr is IdentifierNameSyntax id && variableNames.Contains(id.Identifier.ValueText);
+                return expr is IdentifierNameSyntax id && memberNames.ContainsKey(id.Identifier.ValueText);
             })
             .ToList();
 
@@ -136,7 +154,7 @@ internal static class ExpressionTransformer
                 if (expr is not IdentifierNameSyntax rootId)
                     return original;
 
-                var propertyName = rootId.Identifier.ValueText.Capitalize();
+                var propertyName = memberNames[rootId.Identifier.ValueText];
                 var newBase = MemberAccessExpression(
                     SyntaxKind.SimpleMemberAccessExpression,
                     IdentifierName("m"),
@@ -148,11 +166,11 @@ internal static class ExpressionTransformer
 
     private static ExpressionSyntax ReplaceStandaloneIdentifiers(
         ExpressionSyntax expression,
-        string[] variableNames)
+        IReadOnlyDictionary<string, string> memberNames)
     {
         var standaloneIdentifiers = expression.DescendantNodesAndSelf()
             .OfType<IdentifierNameSyntax>()
-            .Where(id => variableNames.Contains(id.Identifier.ValueText))
+            .Where(id => memberNames.ContainsKey(id.Identifier.ValueText))
             .Where(id => id.Parent is not MemberAccessExpressionSyntax)
             .ToList();
 
@@ -160,7 +178,7 @@ internal static class ExpressionTransformer
             standaloneIdentifiers,
             (original, _) =>
             {
-                var propertyName = original.Identifier.ValueText.Capitalize();
+                var propertyName = memberNames[original.Identifier.ValueText];
                 return MemberAccessExpression(
                         SyntaxKind.SimpleMemberAccessExpression,
                         IdentifierName("m"),

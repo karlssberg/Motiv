@@ -317,8 +317,8 @@ public class MotivConvertToSpecTests
                 }
             }
 
-            public class IsValidProposition() : Spec<MyNamespace.Order>(() =>
-                Spec.Build((MyNamespace.Order order) => {{booleanExpression}})
+            public class IsValidProposition() : Spec<Order>(() =>
+                Spec.Build((Order order) => {{booleanExpression}})
                     .Create("{{booleanExpression}}"));
             """;
 
@@ -382,8 +382,8 @@ public class MotivConvertToSpecTests
                 }
             }
 
-            public class IsValidProposition() : Spec<MyNamespace.Order>(() =>
-                Spec.Build((MyNamespace.Order order) => {{booleanExpression}})
+            public class IsValidProposition() : Spec<Order>(() =>
+                Spec.Build((Order order) => {{booleanExpression}})
                     .Create("{{booleanExpression}}"));
             """;
 

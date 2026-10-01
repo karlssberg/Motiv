@@ -18,6 +18,28 @@ public class ClauseNameDeriverTests
     }
 
     [Fact]
+    public void DeriveName_UnderscoredField_DropsTheUnderscore()
+    {
+        // _limit < 0
+        var expression = ParseExpression("_limit < 0");
+
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+
+        Assert.Equal("IsLimitNegative", name);
+    }
+
+    [Fact]
+    public void DeriveName_IdentifierOfOnlyUnderscores_KeepsTheUnderscores()
+    {
+        // __ < 0
+        var expression = ParseExpression("__ < 0");
+
+        var name = ClauseNameDeriver.DeriveName(expression, 1);
+
+        Assert.Equal("Is__Negative", name);
+    }
+
+    [Fact]
     public void DeriveName_GreaterThanOrEqualZero_ReturnsNonNegativeName()
     {
         // valueA >= 0

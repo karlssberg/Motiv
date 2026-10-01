@@ -100,7 +100,7 @@ public static class ClauseNameDeriver
             return false;
         }
 
-        part = name.Capitalize();
+        part = name.ToPascalCase();
         return true;
     }
 
@@ -317,7 +317,7 @@ public static class ClauseNameDeriver
         {
             case MemberAccessExpressionSyntax memberAccess:
             {
-                var methodName = memberAccess.Name.Identifier.ValueText.Capitalize();
+                var methodName = memberAccess.Name.Identifier.ValueText.ToPascalCase();
 
                 // For static calls on C# keyword types (e.g., string.IsNullOrEmpty), skip the receiver
                 if (memberAccess.Expression is IdentifierNameSyntax receiverIdentifier &&
@@ -340,7 +340,7 @@ public static class ClauseNameDeriver
 
             case IdentifierNameSyntax identifier:
             {
-                part = identifier.Identifier.ValueText.Capitalize();
+                part = identifier.Identifier.ValueText.ToPascalCase();
                 return true;
             }
 
@@ -371,7 +371,7 @@ public static class ClauseNameDeriver
 
         if (binding is not null)
         {
-            var memberName = binding.Name.Identifier.ValueText.Capitalize();
+            var memberName = binding.Name.Identifier.ValueText.ToPascalCase();
             part = $"{receiverPart}{memberName}";
             return true;
         }
@@ -394,7 +394,7 @@ public static class ClauseNameDeriver
 
         var result = string.Join("", parts
             .Where(p => !IsLambdaParameterName(p))
-            .Select(p => p.Capitalize()));
+            .Select(p => p.ToPascalCase()));
 
         return result.Length > 0 ? result : null;
     }

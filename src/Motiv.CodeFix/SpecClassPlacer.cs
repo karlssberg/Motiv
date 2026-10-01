@@ -231,8 +231,10 @@ internal static class SpecClassPlacer
 
         if (isBlockNamespace && updatedNamespace is NamespaceDeclarationSyntax blockNs)
         {
+            // Keep the brace's own indent, which a nested namespace has
+            var braceIndent = blockNs.CloseBraceToken.LeadingTrivia.Where(t => t.IsKind(SyntaxKind.WhitespaceTrivia));
             updatedNamespace = blockNs.WithCloseBraceToken(
-                blockNs.CloseBraceToken.WithLeadingTrivia(syntaxContext.LineFeed));
+                blockNs.CloseBraceToken.WithLeadingTrivia(braceIndent.Prepend(syntaxContext.LineFeed)));
         }
 
         return newRoot.ReplaceNode(namespaceDeclaration, updatedNamespace);
