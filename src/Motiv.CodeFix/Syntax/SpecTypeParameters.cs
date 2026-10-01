@@ -35,6 +35,10 @@ public sealed class SpecTypeParameters
 
     public bool IsEmpty => _typeParameters.IsEmpty;
 
+    /// <summary>Whether a type parameter is the enclosing method's, which no field of the containing type can name.</summary>
+    public bool DeclaresMethodTypeParameters =>
+        _typeParameters.Any(typeParameter => typeParameter.TypeParameterKind == TypeParameterKind.Method);
+
     /// <summary>Whether any type, method or local function around <paramref name="node" /> declares type parameters.</summary>
     public static bool AnyInScope(SyntaxNode node) =>
         node.Ancestors().Any(ancestor => ancestor switch

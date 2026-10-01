@@ -17,17 +17,22 @@ internal class SpecInvocationReplacer(
     string defaultModelName,
     ISpecFieldCustomizer fieldCustomizer)
 {
-    // A spec is an immutable decision tree, so it is built once per type — unless it captures `this`.
+    // A spec is an immutable decision tree, so it is built once per type — unless a delegate it takes is bound to `this`
     private bool _isFieldStatic;
 
-    // The spec class's name with any type arguments; a generic spec holds its own instance instead of a field
+    // The spec class's name with any type arguments
     private string _specTypeName = string.Empty;
-    private bool IsGeneric => _specTypeName != propositionName;
+
+    // A spec over the enclosing method's type parameters holds its own instance instead of a field
+    private bool _holdsOwnInstance;
+
+    // The method groups the spec is built from, one per delegate it takes
+    private ArgumentListSyntax _constructorArguments = ArgumentList();
 
     private string FieldName => _isFieldStatic ? propositionName : $"_{propositionName.ToCamelCase()}";
 
     private ExpressionSyntax SpecAccess =>
-        IsGeneric
+        _holdsOwnInstance
             ? ParseExpression($"{_specTypeName}.{SpecTypeParameters.InstanceFieldName}")
             : IdentifierName(FieldName);
 
@@ -49,9 +54,10 @@ internal class SpecInvocationReplacer(
     /// <param name="variableSymbols">The variables referenced by the expression.</param>
     /// <param name="logicalExpressionSyntax">The original logical expression.</param>
     /// <param name="root">The syntax root to transform.</param>
-    /// <param name="hasInstanceMethods">Whether the expression contains instance method calls.</param>
+    /// <param name="helpers">The methods of the containing type the spec is handed as delegates.</param>
     /// <param name="groupedExpression">The expression after and-chain grouping.</param>
     /// <param name="specTypeName">The spec class's name with any type arguments.</param>
+    /// <param name="holdsOwnInstance">Whether the spec holds its own instance, so the containing type needs no field.</param>
     /// <param name="modelTypeName">The model type name for the field type.</param>
     /// <returns>The updated syntax root.</returns>
     public SyntaxNode Replace(
@@ -59,13 +65,16 @@ internal class SpecInvocationReplacer(
         ImmutableArray<ISymbol> variableSymbols,
         ExpressionSyntax logicalExpressionSyntax,
         SyntaxNode root,
-        bool hasInstanceMethods,
+        HelperDelegates helpers,
         ExpressionSyntax groupedExpression,
         string specTypeName,
+        bool holdsOwnInstance,
         string? modelTypeName = null)
     {
-        _isFieldStatic = !hasInstanceMethods;
+        _constructorArguments = helpers.ConstructorArguments;
+        _isFieldStatic = !helpers.AnyInstance;
         _specTypeName = specTypeName;
+        _holdsOwnInstance = holdsOwnInstance;
         var containingType = syntaxContext.ContainingType
             ?? throw new InvalidOperationException("The expression is not inside a type declaration.");
         var lineFeed = syntaxContext.LineFeed;
@@ -75,7 +84,7 @@ internal class SpecInvocationReplacer(
         var comment = new EvaluationComment(groupedExpression, lineFeed);
 
         var newType = ReplaceExpression(containingType, expression, model, comment, lineFeed);
-        if (IsGeneric)
+        if (_holdsOwnInstance)
             return root.ReplaceNode(containingType, newType);
 
         var containingMember = ContainingMember(expression, containingType);
@@ -236,7 +245,7 @@ internal class SpecInvocationReplacer(
 
     private FieldDeclarationSyntax BuildFieldDeclaration(string? modelTypeName)
     {
-        var fieldType = fieldCustomizer.GetFieldType(propositionName, modelTypeName);
+        var fieldType = fieldCustomizer.GetFieldType(_specTypeName, modelTypeName);
         var declarator = VariableDeclarator(Identifier(FieldName));
 
         var modifiers = TokenList(Token(SyntaxKind.PrivateKeyword));
@@ -244,7 +253,7 @@ internal class SpecInvocationReplacer(
         // A static field initializes itself; an instance one is assigned by the constructor
         if (_isFieldStatic)
         {
-            declarator = declarator.WithInitializer(EqualsValueClause(fieldCustomizer.GetFieldInitializer(propositionName)));
+            declarator = declarator.WithInitializer(EqualsValueClause(fieldCustomizer.GetFieldInitializer(_specTypeName, _constructorArguments)));
             modifiers = modifiers.Add(Token(SyntaxKind.StaticKeyword));
         }
 
@@ -256,7 +265,7 @@ internal class SpecInvocationReplacer(
 
     private ConstructorDeclarationSyntax BuildConstructor(TypeDeclarationSyntax containingType)
     {
-        var assignment = fieldCustomizer.GetConstructorAssignment(propositionName);
+        var assignment = fieldCustomizer.GetConstructorAssignment(_specTypeName, _constructorArguments);
 
         var assignmentStatement = ExpressionStatement(
             AssignmentExpression(

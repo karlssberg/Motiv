@@ -17,19 +17,18 @@ internal class DefaultSpecFieldCustomizer : ISpecFieldCustomizer
         ParseTypeName(propositionName);
 
     /// <summary>
-    ///     Returns a target-typed <c>new()</c> expression.
+    ///     Returns a target-typed <c>new(arguments)</c> expression.
     /// </summary>
-    public ExpressionSyntax GetFieldInitializer(string propositionName) =>
+    public ExpressionSyntax GetFieldInitializer(string specTypeName, ArgumentListSyntax arguments) =>
         ImplicitObjectCreationExpression()
-            .WithArgumentList(ArgumentList());
+            .WithArgumentList(arguments);
 
     /// <summary>
-    ///     Returns <c>new PropositionName(this)</c>.
+    ///     Returns <c>new PropositionName(arguments)</c>.
     /// </summary>
-    public ExpressionSyntax GetConstructorAssignment(string propositionName) =>
-        ObjectCreationExpression(ParseTypeName(propositionName))
-            .WithArgumentList(ArgumentList(SingletonSeparatedList(
-                Argument(ThisExpression()))));
+    public ExpressionSyntax GetConstructorAssignment(string specTypeName, ArgumentListSyntax arguments) =>
+        ObjectCreationExpression(ParseTypeName(specTypeName))
+            .WithArgumentList(arguments);
 
     /// <summary>
     ///     Returns <c>field.Matches(model)</c>, the fast path that builds no result.

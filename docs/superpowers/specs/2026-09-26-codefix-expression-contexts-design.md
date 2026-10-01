@@ -151,6 +151,33 @@ are sound.
     A field's leading underscore no longer leaks into the name (`_countProposition`). A `return` in
     a method whose name is too generic to use keeps its old root-identifier name.
 
+13. **A called method reaches the spec as a delegate** (`codefix/helper-delegates`). The spec is a
+    class of its own, so it could call a method of the containing type only if that method was
+    accessible and, for an instance method, only through an `instance` constructor parameter typed as
+    the containing type; a private or protected method got no fix at all. Now the containing type,
+    which can see its own methods, passes each one as a method group, and the spec takes a
+    `Func<…>` per method: `new CanAddProposition(HasRoomFor)` and
+    `CanAddProposition(Func<int, bool> hasRoomFor)`. The spec no longer depends on the containing
+    type, so it can be built from any function in a test. One mechanism replaces two: instance and
+    static methods, of any accessibility, and methods inherited from a base type are all passed the
+    same way.
+    - The field stays `static` unless a delegate is bound to `this`, which then needs the constructor.
+    - A delegate takes its arguments in order and has no defaults, so named arguments are put in
+      parameter order and an omitted argument is written out — the value the compiler passes, which
+      for a caller-info parameter is the caller's name rather than the declared default.
+    - A generic method closed at the call (`IsDefault(b)` binding `IsDefault<int>`) passes as
+      `IsDefault<int>`; one closed over the containing class's type parameter makes the spec generic
+      and held in a field of the containing type. One closed over the enclosing method's own type
+      parameter gets no fix: that spec holds its own instance statically, where nothing can hand it a
+      delegate.
+    - Still no fix: `ref`, `out` or `in` parameters, a `params` array the call expands, an omitted
+      argument with no constant value or none a literal can write (`double.NaN`), named arguments
+      out of order when one of them makes a call (putting them in order would reorder the calls),
+      local functions, and calls that do not bind. A struct,
+      record or interface still gets no fix for an instance method: a struct would bind the
+      delegate to a boxed copy of itself, a record would lose its positional members to the
+      constructor the fix adds, and an interface cannot hold the instance field.
+
 ## Out of scope, left as skipped rows
 
 - **Constructors that `this`-capturing specs need** when the class already declares one. The old

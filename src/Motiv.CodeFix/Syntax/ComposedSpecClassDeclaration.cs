@@ -15,7 +15,7 @@ public class ComposedSpecClassDeclaration(
     string innerLambdaParameterName,
     ExpressionDecomposition decomposition,
     SpecTypeParameters typeParameters,
-    string? containingTypeName = null,
+    IReadOnlyCollection<ParameterSyntax> constructorParameters,
     string? nestedRecordName = null,
     ParameterListSyntax? nestedRecordParameterList = null,
     MemberDeclarationSyntax? instanceField = null)
@@ -29,7 +29,10 @@ public class ComposedSpecClassDeclaration(
     protected override ParenthesizedLambdaExpressionSyntax AttachLambdaBody(
         ParenthesizedLambdaExpressionSyntax lambda)
     {
-        var clauseSet = new ClauseSet(decomposition.Clauses);
+        // A clause variable may not reuse a constructor parameter's name, which the lambda can see
+        var clauseSet = new ClauseSet(
+            decomposition.Clauses,
+            constructorParameters.Select(parameter => parameter.Identifier.ValueText));
         var updatedComposition = clauseSet.ResolveComposition(decomposition.CompositionExpression);
 
         IEnumerable<StatementSyntax> statementSyntaxes =
@@ -42,11 +45,7 @@ public class ComposedSpecClassDeclaration(
     }
 
     protected override ParameterListSyntax BuildParameterList() =>
-        containingTypeName is not null
-            ? ParameterList(SingletonSeparatedList(
-                Parameter(Identifier("instance"))
-                    .WithType(ParseTypeName(containingTypeName))))
-            : ParameterList();
+        ParameterList(SeparatedList(constructorParameters));
 
     protected override ClassDeclarationSyntax AddClassBody(ClassDeclarationSyntax classDeclaration)
     {

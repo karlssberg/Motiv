@@ -23,23 +23,19 @@ internal class DebugTapSpecFieldCustomizer : ISpecFieldCustomizer
             })));
 
     /// <summary>
-    ///     Returns <c>new PropositionName().Tap((model, result) =&gt; Debug.WriteLine(...))</c>.
+    ///     Returns <c>new PropositionName(arguments).Tap((model, result) =&gt; Debug.WriteLine(...))</c>.
     /// </summary>
-    public ExpressionSyntax GetFieldInitializer(string propositionName) =>
+    public ExpressionSyntax GetFieldInitializer(string specTypeName, ArgumentListSyntax arguments) =>
         WrapWithTap(
-            ObjectCreationExpression(ParseTypeName(propositionName))
-                .WithArgumentList(ArgumentList()),
-            propositionName);
+            ObjectCreationExpression(ParseTypeName(specTypeName))
+                .WithArgumentList(arguments),
+            specTypeName);
 
     /// <summary>
-    ///     Returns <c>new PropositionName(this).Tap((model, result) =&gt; Debug.WriteLine(...))</c>.
+    ///     Returns <c>new PropositionName(arguments).Tap((model, result) =&gt; Debug.WriteLine(...))</c>.
     /// </summary>
-    public ExpressionSyntax GetConstructorAssignment(string propositionName) =>
-        WrapWithTap(
-            ObjectCreationExpression(ParseTypeName(propositionName))
-                .WithArgumentList(ArgumentList(SingletonSeparatedList(
-                    Argument(ThisExpression())))),
-            propositionName);
+    public ExpressionSyntax GetConstructorAssignment(string specTypeName, ArgumentListSyntax arguments) =>
+        GetFieldInitializer(specTypeName, arguments);
 
     /// <summary>
     ///     Returns <c>field.Evaluate(model).Satisfied</c>. <c>Matches</c> would skip the <c>Tap</c>

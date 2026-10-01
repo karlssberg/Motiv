@@ -42,7 +42,11 @@ internal static class SpecClassPlacer
     /// <param name="fieldCustomizer">The field customizer providing additional using directives.</param>
     /// <param name="lineFeed">The line ending used by the document.</param>
     /// <returns>The updated syntax root with using statements.</returns>
-    public static SyntaxNode AddUsingStatementsIfNeeded(SyntaxNode newRoot, ISpecFieldCustomizer fieldCustomizer, SyntaxTrivia lineFeed)
+    public static SyntaxNode AddUsingStatementsIfNeeded(
+        SyntaxNode newRoot,
+        ISpecFieldCustomizer fieldCustomizer,
+        SyntaxTrivia lineFeed,
+        bool needsSystemNamespace = false)
     {
         var compilationUnit = (CompilationUnitSyntax)newRoot;
         var existingUsings = new HashSet<string>(
@@ -50,7 +54,11 @@ internal static class SpecClassPlacer
                 .Select(u => u.Name?.ToString())
                 .Where(n => n is not null)!);
 
-        var usingsToAdd = fieldCustomizer.GetAdditionalUsings()
+        IEnumerable<UsingDirectiveSyntax> systemUsing = needsSystemNamespace
+            ? [UsingDirective(IdentifierName(nameof(System))).NormalizeWhitespace()]
+            : [];
+
+        var usingsToAdd = systemUsing.Concat(fieldCustomizer.GetAdditionalUsings())
             .Where(u => !existingUsings.Contains(u.Name?.ToString() ?? ""))
             .Select(u => u.WithTrailingTrivia(lineFeed))
             .ToList();
