@@ -52,7 +52,7 @@ internal static class ExpressionTransformer
     /// </summary>
     /// <param name="expression">The expression to transform.</param>
     /// <param name="staticMethodNames">The set of static method names to prefix.</param>
-    /// <param name="className">The class name to prefix with.</param>
+    /// <param name="className">The class name to prefix with, qualified as far as the spec's position needs.</param>
     /// <returns>The transformed expression.</returns>
     public static ExpressionSyntax PrefixStaticMethods(
         ExpressionSyntax expression,
@@ -76,7 +76,7 @@ internal static class ExpressionTransformer
                 var methodName = (IdentifierNameSyntax)original.Expression;
                 var qualifiedAccess = MemberAccessExpression(
                     SyntaxKind.SimpleMemberAccessExpression,
-                    IdentifierName(className),
+                    ParseName(className),
                     methodName);
                 return original.WithExpression(qualifiedAccess);
             });

@@ -36,6 +36,7 @@ public class MotivConvertToSpecTests
             public class MyClass
             {
                 private static readonly IsValidProposition IsValidProposition = new();
+
                 public bool IsValid(int value)
                 {
                     // {{booleanExpression}}
@@ -87,6 +88,7 @@ public class MotivConvertToSpecTests
             public class MyClass
             {
                 private static readonly IsValidProposition IsValidProposition = new();
+
                 public bool IsValid(int valueA, int valueB, bool valueC)
                 {
                     // {{booleanExpression}}
@@ -154,6 +156,7 @@ public class MotivConvertToSpecTests
             public class MyClass
             {
                 private static readonly IsSatisfiedProposition IsSatisfiedProposition = new();
+
                 public void IsValid(int valueA, int valueB, bool valueC)
                 {
                     // {{booleanExpression}}
@@ -222,10 +225,10 @@ public class MotivConvertToSpecTests
               public class MyClass
               {
                   private static readonly IsSatisfiedProposition IsSatisfiedProposition = new();
+
                   public void IsValid(int valueA, int valueB, int valueC)
                   {
-                      // {{clause1}} && ({{clause2}} ||
-                      //     !({{clause3}} ^ {{clause4}}))
+                      // {{clause1}} && ({{clause2}} || !({{clause3}} ^ {{clause4}}))
                       var isSatisfiedResult = IsSatisfiedProposition.Evaluate(new IsSatisfiedProposition.Model(valueA, valueB, valueC));
                       var isSatisfied = isSatisfiedResult.Satisfied;
                   }
@@ -305,6 +308,7 @@ public class MotivConvertToSpecTests
             public class MyClass
             {
                 private static readonly IsValidProposition IsValidProposition = new();
+
                 public bool IsValid(Order order)
                 {
                     // order.Total > 100
@@ -369,6 +373,7 @@ public class MotivConvertToSpecTests
             public class MyClass
             {
                 private static readonly IsValidProposition IsValidProposition = new();
+
                 public bool IsValid(Order order)
                 {
                     // {{booleanExpression}}
@@ -421,6 +426,7 @@ public class MotivConvertToSpecTests
             public class MyClass
             {
                 private static readonly IsValidProposition IsValidProposition = new();
+
                 public bool IsValid(object obj)
                 {
                     // {{booleanExpression}}
@@ -472,6 +478,7 @@ public class MotivConvertToSpecTests
               public class MyClass
               {
                   private static readonly IsValidProposition IsValidProposition = new();
+
                   public bool IsValid(int x, int y)
                   {
                       // {{booleanExpression}}
@@ -538,6 +545,7 @@ public class MotivConvertToSpecTests
             public class MyClass
             {
                 private static readonly IsSatisfiedProposition IsSatisfiedProposition = new();
+
                 public void IsValid(int age, bool name)
                 {
                     // {{booleanExpression}}
@@ -605,6 +613,7 @@ public class MotivConvertToSpecTests
               public class MyClass
               {
                   private static readonly IsSatisfiedProposition IsSatisfiedProposition = new();
+
                   public void IsValid(int valueA, int valueB, int valueC)
                   {
                       // ({{clause1}} && {{clause2}}) ||
@@ -676,6 +685,7 @@ public class MotivConvertToSpecTests
               public class MyClass
               {
                   private static readonly IsFeatureEnabledProposition IsFeatureEnabledProposition = new();
+
                   public bool IsFeatureEnabled(int valueA, int valueB, int valueC)
                   {
                       // ({{clause1}} && {{clause2}}) ||
@@ -746,6 +756,7 @@ public class MotivConvertToSpecTests
             public class MyClass
             {
                 private static readonly IsGreenProposition IsGreenProposition = new();
+
                 public bool IsGreen(string text)
                 {
                     // text == "green"
@@ -806,6 +817,7 @@ public class MotivConvertToSpecTests
                 {
                     private readonly IsFeatureEnabledProposition _isFeatureEnabledProposition;
                     private static readonly IsGreenProposition IsGreenProposition = new();
+
                     public Playground()
                     {
                         _isFeatureEnabledProposition = new IsFeatureEnabledProposition(this);
@@ -898,6 +910,7 @@ public class MotivConvertToSpecTests
             {
                 private readonly IsFeatureEnabledProposition _isFeatureEnabledProposition;
                 private static readonly IsGreenProposition IsGreenProposition = new();
+
                 public Playground()
                 {
                     _isFeatureEnabledProposition = new IsFeatureEnabledProposition(this);
@@ -993,6 +1006,7 @@ public class MotivConvertToSpecTests
                 {
                     private readonly IsFeatureEnabledProposition _isFeatureEnabledProposition;
                     private static readonly IsGreenProposition IsGreenProposition = new();
+
                     public Playground()
                     {
                         _isFeatureEnabledProposition = new IsFeatureEnabledProposition(this);
@@ -1094,6 +1108,7 @@ public class MotivConvertToSpecTests
                 {
                     private static readonly IsFeatureEnabledProposition IsFeatureEnabledProposition = new();
                     private static readonly IsGreenProposition IsGreenProposition = new();
+
                     public bool IsFeatureEnabled(int valueA, int valueB, int valueC, string text)
                     {
                         // (valueA >= 0 && 1 < valueC) ||

@@ -10,8 +10,6 @@ namespace Motiv.CodeFix.Tests;
 /// </summary>
 public class MotivConvertToSpecContextTests
 {
-    private const string MethodRewrite = "The fix rewrites the enclosing method instead of the expression";
-    private const string RequiresMethod = "The fix requires the expression to sit in a class method";
     private const string UncapturedSymbol = "The generated spec cannot see a symbol the expression uses";
 
     private static readonly Dictionary<string, string> ConvertibleContexts = new()
@@ -70,6 +68,30 @@ public class MotivConvertToSpecContextTests
                     var isInRange = [|n > 0 && n < 10|];
                     return prefix + (isInRange ? "in range" : "out of range"); // must survive
                 }
+            }
+            """,
+        ["ParenthesizedDeclaration"] =
+            """
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public bool Check(int n)
+                {
+                    var isInRange = ([|n > 0 && n < 10|]);
+                    return isInRange; // must survive
+                }
+            }
+            """,
+        ["PrimaryConstructorCallingInstanceMethod"] =
+            """
+            namespace MyNamespace;
+
+            public class MyClass()
+            {
+                public bool IsSmallEven(int n) => [|n < 10 && IsEven(n)|];
+
+                public bool IsEven(int n) => n % 2 == 0; // must survive
             }
             """,
         ["AnnotatedMethod"] =
@@ -550,29 +572,31 @@ public class MotivConvertToSpecContextTests
     [InlineData("OutParameterAssignment")]
     [InlineData("BlockNamespace")]
     [InlineData("NestedClass")]
-    [InlineData("MultiStatementMethod", Skip = MethodRewrite)]
-    [InlineData("AnnotatedMethod", Skip = MethodRewrite)]
-    [InlineData("IfCondition", Skip = MethodRewrite)]
-    [InlineData("WhileCondition", Skip = MethodRewrite)]
-    [InlineData("ForCondition", Skip = MethodRewrite)]
-    [InlineData("ConditionalOperator", Skip = MethodRewrite)]
-    [InlineData("MethodArgument", Skip = MethodRewrite)]
-    [InlineData("LambdaBody", Skip = MethodRewrite)]
-    [InlineData("SwitchExpressionArm", Skip = MethodRewrite)]
-    [InlineData("SwitchExpressionWhenClause", Skip = MethodRewrite)]
-    [InlineData("YieldReturn", Skip = MethodRewrite)]
-    [InlineData("AsyncMethod", Skip = MethodRewrite)]
-    [InlineData("LocalFunction", Skip = MethodRewrite)]
-    [InlineData("StaticLocalFunction", Skip = MethodRewrite)]
-    [InlineData("ExpressionBodiedProperty", Skip = RequiresMethod)]
-    [InlineData("PropertyGetter", Skip = RequiresMethod)]
-    [InlineData("InstanceFieldInitializer", Skip = RequiresMethod)]
-    [InlineData("StaticFieldInitializer", Skip = RequiresMethod)]
-    [InlineData("ConstructorBody", Skip = RequiresMethod)]
-    [InlineData("ConstructorInitializer", Skip = RequiresMethod)]
-    [InlineData("ConversionOperator", Skip = RequiresMethod)]
-    [InlineData("Record", Skip = RequiresMethod)]
-    [InlineData("Struct", Skip = RequiresMethod)]
+    [InlineData("MultiStatementMethod")]
+    [InlineData("ParenthesizedDeclaration")]
+    [InlineData("PrimaryConstructorCallingInstanceMethod")]
+    [InlineData("AnnotatedMethod")]
+    [InlineData("IfCondition")]
+    [InlineData("WhileCondition")]
+    [InlineData("ForCondition")]
+    [InlineData("ConditionalOperator")]
+    [InlineData("MethodArgument")]
+    [InlineData("LambdaBody")]
+    [InlineData("SwitchExpressionArm")]
+    [InlineData("SwitchExpressionWhenClause")]
+    [InlineData("YieldReturn")]
+    [InlineData("AsyncMethod")]
+    [InlineData("LocalFunction")]
+    [InlineData("StaticLocalFunction")]
+    [InlineData("ExpressionBodiedProperty")]
+    [InlineData("PropertyGetter")]
+    [InlineData("InstanceFieldInitializer")]
+    [InlineData("StaticFieldInitializer")]
+    [InlineData("ConstructorBody")]
+    [InlineData("ConstructorInitializer")]
+    [InlineData("ConversionOperator")]
+    [InlineData("Record")]
+    [InlineData("Struct")]
     [InlineData("QueryWhereClause", Skip = UncapturedSymbol)]
     [InlineData("SwitchStatementWhenClause", Skip = UncapturedSymbol)]
     [InlineData("GenericMethod", Skip = UncapturedSymbol)]
@@ -598,6 +622,19 @@ public class MotivConvertToSpecContextTests
         var spans = await CodeFixHarness.GetDiagnosticSpans(NonConvertibleContexts[context]);
 
         spans.ShouldBeEmpty();
+    }
+
+    public static TheoryData<string> AllConvertibleContexts => [..ConvertibleContexts.Keys];
+
+    [Theory]
+    [MemberData(nameof(AllConvertibleContexts))]
+    public async Task Should_keep_crlf_line_endings_when_converting_expression_in_context(string context)
+    {
+        var crlfSource = ConvertibleContexts[context].ReplaceLineEndings("\r\n");
+
+        var outcome = await CodeFixHarness.ApplyFix(crlfSource);
+
+        outcome.FixedSource.Replace("\r\n", "").ShouldNotContain('\n', outcome.FixedSource);
     }
 
     [Fact]
