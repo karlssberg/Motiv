@@ -5,18 +5,24 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 namespace Motiv.CodeFix.Syntax;
 
 /// <summary>
-///     Deduplicates clauses based on their transformed expression and resolves composition expressions
-///     to use camelCase variable names.
+///     Deduplicates clauses based on their transformed expression, names each distinct clause uniquely, and
+///     resolves composition expressions to use those camelCase variable names.
 /// </summary>
 public class ClauseSet
 {
-    private readonly Dictionary<int, string> _clauseNameMapping;
+    private readonly Dictionary<string, string> _placeholderReplacements;
+
+    /// <summary>
+    ///     The identifier standing for the <paramref name="position" />th clause (1-based) in a composition expression.
+    /// </summary>
+    public static string Placeholder(int position) => $"Clause{position}";
 
     public ClauseSet(
         IReadOnlyList<(string OriginalText, ExpressionSyntax TransformedExpression, ExpressionSyntax OriginalExpression)> clauses)
     {
         var uniqueClauses = new Dictionary<string, (string OriginalText, ExpressionSyntax TransformedExpression, ExpressionSyntax OriginalExpression, string DerivedName)>();
-        _clauseNameMapping = new Dictionary<int, string>();
+        var usedNames = new HashSet<string>();
+        _placeholderReplacements = new Dictionary<string, string>();
 
         for (var i = 0; i < clauses.Count; i++)
         {
@@ -25,17 +31,24 @@ public class ClauseSet
 
             if (!uniqueClauses.TryGetValue(transformedKey, out var clause))
             {
-                var derivedName = ClauseNameDeriver.DeriveName(originalExpression, uniqueClauses.Count + 1);
-                uniqueClauses[transformedKey] = (original, transformedExpression, originalExpression, derivedName);
-                _clauseNameMapping[i] = derivedName;
+                var derivedName = Unique(ClauseNameDeriver.DeriveName(originalExpression, uniqueClauses.Count + 1), usedNames);
+                clause = (original, transformedExpression, originalExpression, derivedName);
+                uniqueClauses[transformedKey] = clause;
             }
-            else
-            {
-                _clauseNameMapping[i] = clause.DerivedName;
-            }
+
+            // A repeated clause resolves to the name of its first occurrence
+            _placeholderReplacements[Placeholder(i + 1)] = clause.DerivedName.ToCamelCase();
         }
 
         UniqueClauses = uniqueClauses;
+    }
+
+    private static string Unique(string name, HashSet<string> usedNames)
+    {
+        var candidate = name;
+        for (var suffix = 2; !usedNames.Add(candidate); suffix++)
+            candidate = $"{name}{suffix}";
+        return candidate;
     }
 
     public IReadOnlyDictionary<string, (string OriginalText, ExpressionSyntax TransformedExpression, ExpressionSyntax OriginalExpression, string
@@ -46,20 +59,10 @@ public class ClauseSet
     /// </summary>
     public ExpressionSyntax ResolveComposition(ExpressionSyntax compositionExpression)
     {
-        var replacements = new Dictionary<string, string>();
-        for (var i = 0; i < _clauseNameMapping.Count; i++)
-        {
-            var originalClauseName = $"Clause{i + 1}";
-            var pascalCaseName = _clauseNameMapping[i];
-            var camelCaseName = pascalCaseName.ToCamelCase();
-            replacements[originalClauseName] = camelCaseName;
-            replacements[pascalCaseName] = camelCaseName;
-        }
-
         return compositionExpression.ReplaceNodes(
             compositionExpression.DescendantNodesAndSelf().OfType<IdentifierNameSyntax>(),
             (original, _) =>
-                replacements.TryGetValue(original.Identifier.Text, out var camelName)
+                _placeholderReplacements.TryGetValue(original.Identifier.Text, out var camelName)
                     ? IdentifierName(camelName)
                     : original);
     }

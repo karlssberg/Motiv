@@ -121,6 +121,22 @@ are sound.
     expression also calls instance methods there is no `this` to capture statically, so the fix is
     not offered.
 
+11. **The spec decides as the expression did** (`codefix/composition-correctness`).
+    `MotivConvertToSpecSemanticsTests` is the semantic oracle that "it compiles" cannot provide. It
+    compiles each expression before and after the fix into collectible assemblies and runs both over
+    every combination of inputs. It found that the composition used a negated or `^` operand as the
+    receiver of `.AndAlso`/`.OrElse` without parentheses. `!a && b` became `!a.AndAlso(b)`, which is
+    `!(a && b)`, and `a ^ b && c` changed meaning the same way. Both compiled. The composition now
+    parenthesizes by its own precedence rules instead of copying the source's parentheses. A
+    receiver is wrapped only when it is not a primary expression. `!` keeps parentheses around a
+    compound operand so it reads clearly. The source's redundant parentheses are dropped.
+    The oracle also found that two different clauses could derive the same variable name
+    (`isDefaultEquals` twice). This happened because `ClauseSet` matched composition identifiers to
+    clauses *by name*. Composition leaves are now positional placeholders, and a colliding name gets
+    a numeric suffix. Only the composition's outermost chain is broken across lines. A chain inside
+    one of its arguments stays on one line, so its indentation can't suggest it continues the outer
+    chain.
+
 ## Out of scope, left as skipped rows
 
 - **Constructors that `this`-capturing specs need** when the class already declares one. The old
@@ -129,5 +145,4 @@ are sound.
 - **Names for inline positions.** A condition or argument has no assignment target or return to
   name it after, so the name comes from the expression. `if (n > 0 && n < 10)` becomes
   `NProposition`. Naming by the enclosing member, or by the clause's meaning, is its own change.
-- **A corpus run** with Fix All over real repositories, and a semantic property test that the
-  original boolean equals `Satisfied`.
+- **A corpus run** with Fix All over real repositories.

@@ -563,7 +563,7 @@ public class MotivConvertToSpecInPlaceTests
                     .Build((Model m) => m.C)
                     .Create("c");
 
-                return isA.AndAlso((isB.OrElse(isC)));
+                return isA.AndAlso(isB.OrElse(isC));
             })
             {
                 public readonly record struct Model(bool A, bool B, bool C);

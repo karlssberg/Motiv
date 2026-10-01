@@ -469,7 +469,7 @@ public class MotivConvertToSpecEdgeCaseTests
                     .Build((Model m) => m.B < 10)
                     .Create("{{clause2}}");
 
-                return ((isAPositive)).AndAlso(((isBLessThan10)));
+                return isAPositive.AndAlso(isBLessThan10);
             })
             {
                 public readonly record struct Model(int A, int B);
