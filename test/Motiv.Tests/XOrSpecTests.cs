@@ -760,4 +760,56 @@ public class XOrSpecTests
 
         sut.Evaluate(-1).Reason.ShouldBe("!((a == false) | (b == false)) ^ (c == false)");
     }
+
+    // Mixed-metadata XOR lifts each operand to a string result before composing, so the bracketing must look
+    // through that lift and treat the operand exactly as same-metadata XOR does.
+    [Fact]
+    public void Should_not_parenthesise_a_negated_binary_result_operand_of_a_mixed_metadata_xor_reason()
+    {
+        var a = Spec.Build((int n) => n > 0).WhenTrue(1).WhenFalse(0).Create("a");
+        var b = Spec.Build((int n) => n > 0).WhenTrue(1).WhenFalse(0).Create("b");
+        var c = Spec.Build((int n) => n > 0).Create("c");
+
+        var sut = (!(a | b).Evaluate(-1)).XOr(c.Evaluate(-1));
+
+        sut.Reason.ShouldBe("!((a == false) | (b == false)) ^ (c == false)");
+    }
+
+    [Fact]
+    public void Should_parenthesise_a_binary_result_operand_of_a_mixed_metadata_xor_reason()
+    {
+        var a = Spec.Build((int n) => n > 0).WhenTrue(1).WhenFalse(0).Create("a");
+        var b = Spec.Build((int n) => n > 0).WhenTrue(1).WhenFalse(0).Create("b");
+        var c = Spec.Build((int n) => n > 0).Create("c");
+
+        var sut = (a | b).Evaluate(-1).XOr(c.Evaluate(-1));
+
+        sut.Reason.ShouldBe("((a == false) | (b == false)) ^ (c == false)");
+    }
+
+    // At the spec level the lift is an adapter that reports its operand as one statement (`a | b == false`), not
+    // as the operand's own reason, so XOR brackets it as an equality assertion and never sees the inner operator.
+    [Fact]
+    public void Should_parenthesise_a_negated_binary_spec_operand_of_a_mixed_metadata_xor_reason_as_one_assertion()
+    {
+        var a = Spec.Build((int n) => n > 0).WhenTrue(1).WhenFalse(0).Create("a");
+        var b = Spec.Build((int n) => n > 0).WhenTrue(1).WhenFalse(0).Create("b");
+        var c = Spec.Build((int n) => n > 0).Create("c");
+
+        var sut = (!(a | b)).XOr(c);
+
+        sut.Evaluate(-1).Reason.ShouldBe("(!(a | b) == true) ^ (c == false)");
+    }
+
+    [Fact]
+    public void Should_parenthesise_a_binary_spec_operand_of_a_mixed_metadata_xor_reason_as_one_assertion()
+    {
+        var a = Spec.Build((int n) => n > 0).WhenTrue(1).WhenFalse(0).Create("a");
+        var b = Spec.Build((int n) => n > 0).WhenTrue(1).WhenFalse(0).Create("b");
+        var c = Spec.Build((int n) => n > 0).Create("c");
+
+        var sut = (a | b).XOr(c);
+
+        sut.Evaluate(-1).Reason.ShouldBe("(a | b == false) ^ (c == false)");
+    }
 }

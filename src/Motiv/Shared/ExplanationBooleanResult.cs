@@ -2,6 +2,9 @@ namespace Motiv.Shared;
 
 internal sealed class ExplanationBooleanResult(BooleanResultBase booleanResult) : BooleanResultBase<string>
 {
+    /// <summary>The result being lifted to string metadata; its description and underlying results are this one's.</summary>
+    internal BooleanResultBase Operand => booleanResult;
+
     public override bool Satisfied => booleanResult.Satisfied;
 
     public override ResultDescriptionBase Description => booleanResult.Description;
