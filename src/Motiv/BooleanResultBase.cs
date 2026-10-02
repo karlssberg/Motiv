@@ -49,6 +49,10 @@ public abstract class BooleanResultBase
     public IEnumerable<string> UnderlyingReasons => field ??= UnderlyingExpressionResults.Select(result => result.Reason).ToArray();
 
     /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that represent the expression results.</summary>
+    // Stryker's `??=` -> `=` mutant is equivalent here: PostOrderFold.Fold returns read(root), which is this
+    // same field, before it folds anything, and writes the root's value back into it, so `=` only re-assigns
+    // the memo the field already holds (#294).
+    // Stryker disable once Assignment : equivalent — PostOrderFold reads this memo before folding
     public IEnumerable<BooleanResultBase> UnderlyingExpressionResults =>
         _underlyingExpressionResults ??= PostOrderFold.Fold(
             this,
@@ -95,6 +99,10 @@ public abstract class BooleanResultBase
 
     /// <summary>Gets all the assertions yielded by the current result, including those that are non-determinative.</summary>
     /// <remarks>This will yield assertions from both satisfied and unsatisfied operands. </remarks>
+    // Stryker's `??=` -> `=` mutant is equivalent here: PostOrderFold.Fold returns read(root), which is this
+    // same field, before it folds anything, and writes the root's value back into it, so `=` only re-assigns
+    // the memo the field already holds (#294).
+    // Stryker disable once Assignment : equivalent — PostOrderFold reads this memo before folding
     public IEnumerable<string> AllAssertions =>
         _allAssertions ??= PostOrderFold.Fold(
             this,
@@ -155,6 +163,10 @@ public abstract class BooleanResultBase
 
     /// <summary>Gets the underlying <see cref="BooleanResultBase" />s that are the sources of the <see cref="Assertions" />.</summary>
     /// <remarks>Empty for a result with no causes — a leaf has nothing underlying it.</remarks>
+    // Stryker's `??=` -> `=` mutant is equivalent here: PostOrderFold.Fold returns read(root), which is this
+    // same field, before it folds anything, and writes the root's value back into it, so `=` only re-assigns
+    // the memo the field already holds (#294).
+    // Stryker disable once Assignment : equivalent — PostOrderFold reads this memo before folding
     public IEnumerable<BooleanResultBase> UnderlyingAssertionSources =>
         _underlyingAssertionSources ??= PostOrderFold.Fold(
             this,
@@ -170,6 +182,10 @@ public abstract class BooleanResultBase
     /// did not determine the outcome are included too.
     /// </summary>
     /// <remarks>Empty for a result with no underlying results — a leaf has nothing underlying it.</remarks>
+    // Stryker's `??=` -> `=` mutant is equivalent here: PostOrderFold.Fold returns read(root), which is this
+    // same field, before it folds anything, and writes the root's value back into it, so `=` only re-assigns
+    // the memo the field already holds (#294).
+    // Stryker disable once Assignment : equivalent — PostOrderFold reads this memo before folding
     public IEnumerable<BooleanResultBase> UnderlyingAllAssertionSources =>
         _underlyingAllAssertionSources ??= PostOrderFold.Fold(
             this,
@@ -537,6 +553,10 @@ public abstract class BooleanResultBase<TMetadata>
     /// Empty for a result with no causal values — a leaf has nothing underlying it, so its own
     /// values are reached through <see cref="Values" />, not through this property.
     /// </remarks>
+    // Stryker's `??=` -> `=` mutant is equivalent here: PostOrderFold.Fold returns read(root), which is this
+    // same field, before it folds anything, and writes the root's value back into it, so `=` only re-assigns
+    // the memo the field already holds (#294).
+    // Stryker disable once Assignment : equivalent — PostOrderFold reads this memo before folding
     public IEnumerable<BooleanResultBase<TMetadata>> UnderlyingMetadataSources =>
         _underlyingMetadataSources ??= PostOrderFold.Fold(
             this,
