@@ -65,6 +65,7 @@ internal sealed class XOrBooleanResultDescription<TMetadata>(
                 case IBinaryBooleanOperationResult:
                     return true;
                 case NotBooleanOperationResult<TMetadata>:
+                case NotPolicyResult<TMetadata>:
                     continue;
                 case var other:
                     foreach (var underlying in other.Underlying)
