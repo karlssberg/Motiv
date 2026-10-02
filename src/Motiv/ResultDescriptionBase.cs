@@ -79,7 +79,8 @@ public abstract class ResultDescriptionBase
     /// </summary>
     /// <remarks>
     /// The memo is walk-local rather than a field on the node, because a description renders
-    /// differently in the two modes and both may be wanted — the same reason there are two methods.
+    /// differently in the two modes and both may be wanted — the same reason each <see cref="Rendering" />
+    /// carries its mode.
     /// </remarks>
     private protected string[] FoldedJustification(bool withoutCausalCount)
     {
