@@ -1,4 +1,4 @@
-using Motiv.Not;
+using Motiv.Shared;
 using Motiv.Traversal;
 
 namespace Motiv.XOr;
@@ -61,8 +61,10 @@ internal sealed class XOrBooleanResultDescription<TMetadata>(
             {
                 case IBinaryBooleanOperationResult:
                     return true;
-                case NotBooleanOperationResult<TMetadata>:
-                case NotPolicyResult<TMetadata>:
+                case IUnaryOperationResult:
+                    continue;
+                case ExplanationBooleanResult explanation:
+                    pending.Push(explanation.Operand);
                     continue;
                 case var other:
                     foreach (var underlying in other.Underlying)
