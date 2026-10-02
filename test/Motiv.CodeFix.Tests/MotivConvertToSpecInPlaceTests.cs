@@ -46,8 +46,17 @@ public class MotivConvertToSpecInPlaceTests
             }
 
             public class IsNPositiveAndLessThan10Proposition() : Spec<int>(() =>
-                Spec.Build((int n) => {{booleanExpression}})
-                    .Create("{{booleanExpression}}"));
+            {
+                var isNPositive = Spec
+                    .Build((int n) => n > 0)
+                    .Create("n > 0");
+
+                var isNLessThan10 = Spec
+                    .Build((int n) => n < 10)
+                    .Create("n < 10");
+
+                return isNPositive.AndAlso(isNLessThan10);
+            });
             """;
 
         await new VerifyCS.Test
@@ -97,8 +106,17 @@ public class MotivConvertToSpecInPlaceTests
             }
 
             public class IsIPositiveAndLessThan5Proposition() : Spec<int>(() =>
-                Spec.Build((int i) => {{booleanExpression}})
-                    .Create("{{booleanExpression}}"));
+            {
+                var isIPositive = Spec
+                    .Build((int i) => i > 0)
+                    .Create("i > 0");
+
+                var isILessThan5 = Spec
+                    .Build((int i) => i < 5)
+                    .Create("i < 5");
+
+                return isIPositive.AndAlso(isILessThan5);
+            });
             """;
 
         await new VerifyCS.Test
@@ -154,8 +172,17 @@ public class MotivConvertToSpecInPlaceTests
             }
 
             public class IsNPositiveAndLessThan10Proposition() : Spec<int>(() =>
-                Spec.Build((int n) => {{booleanExpression}})
-                    .Create("{{booleanExpression}}"));
+            {
+                var isNPositive = Spec
+                    .Build((int n) => n > 0)
+                    .Create("n > 0");
+
+                var isNLessThan10 = Spec
+                    .Build((int n) => n < 10)
+                    .Create("n < 10");
+
+                return isNPositive.AndAlso(isNLessThan10);
+            });
             """;
 
         await new VerifyCS.Test
@@ -211,8 +238,17 @@ public class MotivConvertToSpecInPlaceTests
             }
 
             public class IsInRangeProposition() : Spec<int>(() =>
-                Spec.Build((int n) => {{booleanExpression}})
-                    .Create("{{booleanExpression}}"));
+            {
+                var isNPositive = Spec
+                    .Build((int n) => n > 0)
+                    .Create("n > 0");
+
+                var isNLessThan10 = Spec
+                    .Build((int n) => n < 10)
+                    .Create("n < 10");
+
+                return isNPositive.AndAlso(isNLessThan10);
+            });
             """;
 
         await new VerifyCS.Test
@@ -271,8 +307,17 @@ public class MotivConvertToSpecInPlaceTests
             }
 
             public class IsNPositiveAndLessThan10Proposition() : Spec<int>(() =>
-                Spec.Build((int n) => {{booleanExpression}})
-                    .Create("{{booleanExpression}}"));
+            {
+                var isNPositive = Spec
+                    .Build((int n) => n > 0)
+                    .Create("n > 0");
+
+                var isNLessThan10 = Spec
+                    .Build((int n) => n < 10)
+                    .Create("n < 10");
+
+                return isNPositive.AndAlso(isNLessThan10);
+            });
             """;
 
         await new VerifyCS.Test
@@ -320,8 +365,17 @@ public class MotivConvertToSpecInPlaceTests
             }
 
             public class IsInRangeProposition() : Spec<int>(() =>
-                Spec.Build((int Limit) => {{booleanExpression}})
-                    .Create("{{booleanExpression}}"));
+            {
+                var isLimitPositive = Spec
+                    .Build((int Limit) => Limit > 0)
+                    .Create("Limit > 0");
+
+                var isLimitLessThan10 = Spec
+                    .Build((int Limit) => Limit < 10)
+                    .Create("Limit < 10");
+
+                return isLimitPositive.AndAlso(isLimitLessThan10);
+            });
             """;
 
         await new VerifyCS.Test

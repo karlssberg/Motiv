@@ -157,13 +157,21 @@ internal class LogicalExpressionToSpecConverter(
         HelperDelegates helpers)
     {
         if (modelValues.Length == 1 && helpers.IsEmpty)
-            return BuildSimpleSpec(syntaxContext, modelValues[0], logicalExpressionSyntax);
+            return CanDecompose(logicalExpressionSyntax)
+                ? BuildSingleVarComposedSpec(syntaxContext, modelValues[0], logicalExpressionSyntax, helpers)
+                : BuildSimpleSpec(syntaxContext, modelValues[0], logicalExpressionSyntax);
 
         if (modelValues.Length == 1)
             return BuildSingleVarComposedSpec(syntaxContext, modelValues[0], logicalExpressionSyntax, helpers);
 
         return BuildMultiVarComposedSpec(syntaxContext, modelValues, logicalExpressionSyntax, helpers);
     }
+
+    // A pattern variable (`obj is string s && s.Length > 0`) is scoped to the expression that declares it,
+    // so splitting its clauses into separate sub-specs would leave the later ones referring to nothing.
+    private static bool CanDecompose(ExpressionSyntax expression) =>
+        ExpressionDecomposer.IsComposite(expression)
+        && !expression.DescendantNodes().OfType<SingleVariableDesignationSyntax>().Any();
 
     private IEnumerable<MemberDeclarationSyntax> BuildSimpleSpec(
         SyntaxContext syntaxContext,

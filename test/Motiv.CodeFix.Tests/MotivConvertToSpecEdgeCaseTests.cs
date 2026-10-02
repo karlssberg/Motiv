@@ -45,8 +45,17 @@ public class MotivConvertToSpecEdgeCaseTests
             }
 
             public class IsValidProposition() : Spec<string>(() =>
-                Spec.Build((string text) => {{booleanExpression}})
-                    .Create("{{booleanExpression}}"));
+            {
+                var isTextNotNull = Spec
+                    .Build((string text) => text is not null)
+                    .Create("text is not null");
+
+                var isTextLengthPositive = Spec
+                    .Build((string text) => text.Length > 0)
+                    .Create("text.Length > 0");
+
+                return isTextNotNull.AndAlso(isTextLengthPositive);
+            });
             """;
 
         await new VerifyCS.Test
@@ -279,8 +288,17 @@ public class MotivConvertToSpecEdgeCaseTests
             }
 
             public class IsInRangeProposition() : Spec<int>(() =>
-                Spec.Build((int x) => {{booleanExpression}})
-                    .Create("{{booleanExpression}}"));
+            {
+                var isXNonNegative = Spec
+                    .Build((int x) => x >= 0)
+                    .Create("x >= 0");
+
+                var isXAtMost100 = Spec
+                    .Build((int x) => x <= 100)
+                    .Create("x <= 100");
+
+                return isXNonNegative.AndAlso(isXAtMost100);
+            });
             """;
 
         await new VerifyCS.Test
@@ -526,8 +544,17 @@ public class MotivConvertToSpecEdgeCaseTests
             }
 
             public class IsValidProposition() : Spec<object>(() =>
-                Spec.Build((object obj) => {{booleanExpression}})
-                    .Create("{{booleanExpression}}"));
+            {
+                var clause1 = Spec
+                    .Build((object obj) => obj is int)
+                    .Create("obj is int");
+
+                var clause2 = Spec
+                    .Build((object obj) => obj is string)
+                    .Create("obj is string");
+
+                return clause1.OrElse(clause2);
+            });
             """;
 
         await new VerifyCS.Test
