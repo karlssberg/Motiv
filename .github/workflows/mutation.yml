@@ -90,6 +90,12 @@ jobs:
       working-directory: ${{ matrix.dir }}
       env:
         GLOBS: ${{ toJSON(matrix.globs) }}
+        # Caps every .NET process this step starts, test hosts included, at 3 GiB of GC heap. A mutant
+        # that makes a deep-chain test allocate without bound then fails that test with an
+        # OutOfMemoryException (the mutant is killed) instead of exhausting the runner, which ends the
+        # job with "The runner has received a shutdown signal" and no report (#294). Hexadecimal, as the
+        # environment-variable form of System.GC.HeapHardLimit requires.
+        DOTNET_GCHeapHardLimit: "0xC0000000"
       run: |
         # Read into an array so the shell never expands the globs itself. An unsharded project has
         # none, and mutates everything.

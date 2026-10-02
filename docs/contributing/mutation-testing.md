@@ -83,6 +83,10 @@ has received a shutdown signal* just after *Retrying the test session*. Those tw
 and a small test pins each collapse, so the exclusion hides no gap. If a shard dies that way again,
 look for another mutant that makes deep-chain work super-linear.
 
+As a backstop, the Stryker steps in both workflows set `DOTNET_GCHeapHardLimit` to 3 GiB, so a
+runaway mutant fails its test with an `OutOfMemoryException` and counts as killed rather than taking
+the runner down. A local run has no such cap unless you set the same variable.
+
 ## CI
 
 `.github/workflows/mutation.yml` runs on demand (`workflow_dispatch`) and on pull requests that
