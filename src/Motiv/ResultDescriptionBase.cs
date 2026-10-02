@@ -34,8 +34,6 @@ public abstract class ResultDescriptionBase
     /// <returns>An enumerable collection of strings, each representing a line of detail.</returns>
     public abstract IEnumerable<string> GetJustificationAsLines();
 
-    internal virtual IEnumerable<string> GetJustificationAsLinesWithoutCausalCount() => GetJustificationAsLines();
-
     /// <summary>
     /// A composed reason, built from its operands' reasons iteratively. A description whose reason is
     /// a plain string does not need this; the three that compose one (binary, exclusive-or and
@@ -106,7 +104,7 @@ public abstract class ResultDescriptionBase
     private protected virtual string[] ComposeJustification(
         IReadOnlyList<string[]> operandLines,
         bool withoutCausalCount) =>
-        (withoutCausalCount ? GetJustificationAsLinesWithoutCausalCount() : GetJustificationAsLines()).ToArray();
+        GetJustificationAsLines().ToArray();
 
     /// <summary>Prefixes a conjunction heading to its operands' lines, indented beneath it.</summary>
     private protected static string[] BinaryJustification(string conjunction, IReadOnlyList<string[]> operandLines)

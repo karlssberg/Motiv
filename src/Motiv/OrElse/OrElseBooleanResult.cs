@@ -7,7 +7,8 @@ internal sealed class OrElseBooleanResult<TMetadata>(
     BooleanResultBase<TMetadata>? right = null)
     : BinaryBooleanResult<TMetadata>(left, right)
 {
-    public override bool Satisfied { get; } = left.Satisfied || (right?.Satisfied ?? false);
+    // right is null only when left was satisfied, and || never reads it then.
+    public override bool Satisfied { get; } = left.Satisfied || right!.Satisfied;
 
     public override ResultDescriptionBase Description =>
         field ??= new OrElseBooleanResultDescription<TMetadata>(CausalResults);
