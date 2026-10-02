@@ -1,5 +1,4 @@
 using System.Linq.Expressions;
-using Motiv.And;
 using Motiv.ExpressionTreeProposition;
 using Motiv.Shared;
 using Motiv.Traversal;
@@ -25,9 +24,7 @@ internal sealed class ExpressionAndAlsoPolicy<TModel, TMetadata>(
 
     public override ISpecDescription Description => field ??=
         new BinarySpecDescription<TModel, TMetadata>(left, right, "&&", Operator.AndAlso,
-            operand => operand is AndSpec<TModel, TMetadata> or AndAlsoPolicy<TModel, TMetadata>
-                or AndAlsoSpec<TModel, TMetadata> or ExpressionAndSpec<TModel, TMetadata>
-                or ExpressionAndAlsoSpec<TModel, TMetadata> or ExpressionAndAlsoPolicy<TModel, TMetadata>);
+            operand => operand is ExpressionAndAlsoPolicy<TModel, TMetadata>);
 
     public string Operation => Operator.AndAlso;
 

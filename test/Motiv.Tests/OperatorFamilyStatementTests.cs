@@ -8,9 +8,13 @@ namespace Motiv.Tests;
 /// them — any entry could be dropped from a list, or the check inverted, with the suite still green.
 /// </summary>
 /// <remarks>
-/// Each case nests the operand type the operator can actually receive. A family list also names types
-/// that cannot reach it — an <c>OrElsePolicy</c> is only ever given policies, so its <c>OrSpec</c> entry
-/// never matches — and no statement test can tell those entries apart.
+/// Each case nests an operand type the operator can actually receive, and each family list names only
+/// such types. A list once also named types that could never arrive — an <c>OrElsePolicy</c> is only
+/// ever given policies, so an <c>OrSpec</c> entry never matched — and since no statement test could tell
+/// those entries apart, they were trimmed rather than tested. Before adding an entry, check that some
+/// public composition can deliver that operand type: a policy combinator receives only policies (sync
+/// ones lifted through the async adapter included), and an expression-tree combinator receives only
+/// expression-backed operands.
 /// </remarks>
 public class OperatorFamilyStatementTests
 {
@@ -168,6 +172,54 @@ public class OperatorFamilyStatementTests
         var sut = AsyncPolicy("a").XOr(AsyncPolicy("b")).XOr(AsyncPolicy("c"));
 
         sut.Description.Statement.ShouldBe("a ^ b ^ c");
+    }
+
+    [Fact]
+    public void Should_write_an_expression_or_else_policy_operand_of_an_or_else_policy_bare()
+    {
+        var sut = IsPositive().OrElse(IsSmall()).OrElse(Policy("c"));
+
+        sut.Description.Statement.ShouldBe("n > 0 || n < 100 || c");
+    }
+
+    [Fact]
+    public void Should_write_an_expression_and_also_policy_operand_of_an_and_also_policy_bare()
+    {
+        var sut = IsPositive().AndAlso(IsSmall()).AndAlso(Policy("c"));
+
+        sut.Description.Statement.ShouldBe("n > 0 && n < 100 && c");
+    }
+
+    [Fact]
+    public void Should_write_a_lifted_or_else_policy_operand_of_an_async_or_else_policy_bare()
+    {
+        var sut = Policy("a").OrElse(Policy("b")).ToAsyncSpec().OrElse(AsyncPolicy("c"));
+
+        sut.Description.Statement.ShouldBe("a || b || c");
+    }
+
+    [Fact]
+    public void Should_write_a_lifted_expression_or_else_policy_operand_of_an_async_or_else_policy_bare()
+    {
+        var sut = IsPositive().OrElse(IsSmall()).ToAsyncSpec().OrElse(AsyncPolicy("c"));
+
+        sut.Description.Statement.ShouldBe("n > 0 || n < 100 || c");
+    }
+
+    [Fact]
+    public void Should_write_a_lifted_and_also_policy_operand_of_an_async_and_also_policy_bare()
+    {
+        var sut = Policy("a").AndAlso(Policy("b")).ToAsyncSpec().AndAlso(AsyncPolicy("c"));
+
+        sut.Description.Statement.ShouldBe("a && b && c");
+    }
+
+    [Fact]
+    public void Should_write_a_lifted_expression_and_also_policy_operand_of_an_async_and_also_policy_bare()
+    {
+        var sut = IsPositive().AndAlso(IsSmall()).ToAsyncSpec().AndAlso(AsyncPolicy("c"));
+
+        sut.Description.Statement.ShouldBe("n > 0 && n < 100 && c");
     }
 
     [Fact]

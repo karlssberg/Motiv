@@ -27,9 +27,8 @@ internal sealed class ExpressionOrElseSpec<TModel, TMetadata>(
 
     public override ISpecDescription Description => field ??=
         new BinarySpecDescription<TModel, TMetadata>(left, right, "||", Operator.OrElse,
-            operand => operand is OrSpec<TModel, TMetadata> or OrElsePolicy<TModel, TMetadata>
-                or OrElseSpec<TModel, TMetadata> or ExpressionOrSpec<TModel, TMetadata>
-                or ExpressionOrElseSpec<TModel, TMetadata> or ExpressionOrElsePolicy<TModel, TMetadata>);
+            operand => operand is ExpressionOrSpec<TModel, TMetadata> or ExpressionOrElseSpec<TModel, TMetadata>
+                or ExpressionOrElsePolicy<TModel, TMetadata>);
 
     public string Operation => Operator.OrElse;
 
