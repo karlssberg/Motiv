@@ -73,10 +73,7 @@ public class MetadataNode<TMetadata>
     }
 
     /// <summary>Gets the underlying metadata nodes.</summary>
-    // Stryker's `??=` -> `=` mutant is equivalent here: PostOrderFold.Fold returns read(root), which is this
-    // same field, before it folds anything, and writes the root's value back into it, so `=` only re-assigns
-    // the memo the field already holds (#294).
-    // Stryker disable once Assignment : equivalent — PostOrderFold reads this memo before folding
+    // Stryker disable once Assignment : equivalent — PostOrderFold returns this memo before folding, so = only re-assigns it (#294)
     public IEnumerable<MetadataNode<TMetadata>> Underlying =>
         _underlying ??= PostOrderFold.Fold(this, Descend, Combine, Read, Write);
 

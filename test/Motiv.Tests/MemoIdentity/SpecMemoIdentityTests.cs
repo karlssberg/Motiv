@@ -1,3 +1,5 @@
+using static Motiv.Tests.MemoIdentity.MemoIdentityPropositions;
+
 namespace Motiv.Tests.MemoIdentity;
 
 /// <summary>
@@ -6,21 +8,6 @@ namespace Motiv.Tests.MemoIdentity;
 /// </summary>
 public class SpecMemoIdentityTests
 {
-    private static PolicyBase<bool, string> Policy(string name) => Spec.Build((bool b) => b).Create(name);
-
-    private static SpecBase<bool, string> Proposition(string name) => Policy(name);
-
-    private static AsyncPolicyBase<bool, string> AsyncPolicy(string name) =>
-        Spec.BuildAsync((bool b) => new ValueTask<bool>(b)).Create(name);
-
-    private static AsyncSpecBase<bool, string> AsyncProposition(string name) => AsyncPolicy(name);
-
-    private static ExpressionSpecBase<int, string> ExpressionProposition(string name) =>
-        Spec.From((int n) => n > 0).Create(name);
-
-    private static ExpressionPolicyBase<int, string> ExpressionPolicy(string name) =>
-        Spec.From((int n) => n > 0).WhenTrue(name).WhenFalse($"not {name}").Create();
-
     private static readonly (string Name, string SpecType, Func<SpecBase> Create)[] OperatorSpecs =
     [
         ("and spec", "AndSpec", () => Proposition("left").And(Proposition("right"))),
@@ -61,17 +48,8 @@ public class SpecMemoIdentityTests
             () => ExpressionPolicy("left").OrElse(ExpressionPolicy("right"))),
     ];
 
-    public static TheoryData<string> OperatorSpecNames
-    {
-        get
-        {
-            var names = new TheoryData<string>();
-            foreach (var operatorSpec in OperatorSpecs)
-                names.Add(operatorSpec.Name);
-
-            return names;
-        }
-    }
+    public static TheoryData<string> OperatorSpecNames =>
+        OperatorSpecs.Select(operatorSpec => operatorSpec.Name).ToTheoryData();
 
     [Theory]
     [MemberData(nameof(OperatorSpecNames))]
@@ -81,7 +59,7 @@ public class SpecMemoIdentityTests
 
         var spec = create();
 
-        TypeNameOf(spec).ShouldBe(specType, $"'{name}' no longer builds {specType}; re-point it so that class stays covered");
+        spec.GetType().NameWithoutArity().ShouldBe(specType, $"'{name}' no longer builds {specType}; re-point it so that class stays covered");
         spec.Description.ShouldBeSameAs(spec.Description);
     }
 
@@ -110,13 +88,5 @@ public class SpecMemoIdentityTests
             .Create("is positive");
 
         spec.ToExplanationSpec().ShouldBeSameAs(spec.ToExplanationSpec());
-    }
-
-    private static string TypeNameOf(object instance)
-    {
-        var name = instance.GetType().Name;
-        var arity = name.IndexOf('`');
-
-        return arity < 0 ? name : name.Substring(0, arity);
     }
 }

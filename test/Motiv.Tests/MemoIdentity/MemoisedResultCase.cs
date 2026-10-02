@@ -53,14 +53,8 @@ public sealed class MemoisedResultCase
         Func<Task<BooleanResultBase<TMetadata>>> evaluate) =>
         new(name, resultType, async () => await evaluate(), TierOf<TMetadata>);
 
-    public static TheoryData<string> NamesOf(IEnumerable<MemoisedResultCase> cases)
-    {
-        var names = new TheoryData<string>();
-        foreach (var memoisedCase in cases)
-            names.Add(memoisedCase.Name);
-
-        return names;
-    }
+    public static TheoryData<string> NamesOf(IEnumerable<MemoisedResultCase> cases) =>
+        cases.Select(memoisedCase => memoisedCase.Name).ToTheoryData();
 
     public static MemoisedResultCase Named(IEnumerable<MemoisedResultCase> cases, string name) =>
         cases.Single(memoisedCase => memoisedCase.Name == name);
@@ -69,7 +63,7 @@ public sealed class MemoisedResultCase
     {
         var result = await _evaluate();
 
-        TypeNameOf(result).ShouldBe(
+        result.GetType().NameWithoutArity().ShouldBe(
             ResultType,
             $"'{Name}' no longer reaches {ResultType}; re-point the case so that class stays covered");
 
@@ -82,12 +76,4 @@ public sealed class MemoisedResultCase
 
     private static object TierOf<TMetadata>(BooleanResultBase result) =>
         ((BooleanResultBase<TMetadata>)result).MetadataTier;
-
-    private static string TypeNameOf(object instance)
-    {
-        var name = instance.GetType().Name;
-        var arity = name.IndexOf('`');
-
-        return arity < 0 ? name : name.Substring(0, arity);
-    }
 }

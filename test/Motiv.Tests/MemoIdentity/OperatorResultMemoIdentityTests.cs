@@ -1,3 +1,4 @@
+using static Motiv.Tests.MemoIdentity.MemoIdentityPropositions;
 using static Motiv.Tests.MemoIdentity.MemoisedResultCase;
 
 namespace Motiv.Tests.MemoIdentity;
@@ -8,23 +9,8 @@ namespace Motiv.Tests.MemoIdentity;
 /// </summary>
 public class OperatorResultMemoIdentityTests
 {
-    private static PolicyBase<bool, string> Policy(string name) => Spec.Build((bool b) => b).Create(name);
-
-    private static SpecBase<bool, string> Proposition(string name) => Policy(name);
-
     private static PolicyBase<bool, int> MetadataPolicy() =>
         Spec.Build((bool b) => b).WhenTrue(1).WhenFalse(0).Create("is true");
-
-    private static AsyncPolicyBase<bool, string> AsyncPolicy(string name) =>
-        Spec.BuildAsync((bool b) => new ValueTask<bool>(b)).Create(name);
-
-    private static AsyncSpecBase<bool, string> AsyncProposition(string name) => AsyncPolicy(name);
-
-    private static ExpressionSpecBase<int, string> ExpressionProposition(string name) =>
-        Spec.From((int n) => n > 0).Create(name);
-
-    private static ExpressionPolicyBase<int, string> ExpressionPolicy() =>
-        Spec.From((int n) => n > 0).WhenTrue("positive").WhenFalse("not positive").Create();
 
     private static readonly MemoisedResultCase[] Cases =
     [
@@ -82,11 +68,11 @@ public class OperatorResultMemoIdentityTests
         Of<string>("expression not spec", "NotBooleanOperationResult",
             () => ExpressionProposition("operand").Not().Evaluate(1)),
         Of<string>("expression not policy", "NotPolicyResult",
-            () => ExpressionPolicy().Not().Evaluate(1)),
+            () => ExpressionPolicy("positive").Not().Evaluate(1)),
         Of<string>("expression and-also policy", "AndAlsoPolicyResult",
-            () => ExpressionPolicy().AndAlso(ExpressionPolicy()).Evaluate(1)),
+            () => ExpressionPolicy("positive").AndAlso(ExpressionPolicy("positive")).Evaluate(1)),
         Of<string>("expression or-else policy", "OrElsePolicyResult",
-            () => ExpressionPolicy().OrElse(ExpressionPolicy()).Evaluate(-1)),
+            () => ExpressionPolicy("positive").OrElse(ExpressionPolicy("positive")).Evaluate(-1)),
 
         // Result-level operators.
         Of<string>("and result", "AndBooleanResult",

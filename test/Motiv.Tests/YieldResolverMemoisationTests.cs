@@ -18,103 +18,93 @@ public class YieldResolverMemoisationTests
 
     private static PolicyBase<int, string> UnderlyingPolicy => Spec.Build((int n) => n > 0).Create("is positive");
 
-    public sealed class CallCounter
-    {
-        public int Calls { get; private set; }
+    private static readonly (string ResultType, Func<CallCounter, SpecBase<int, string>> Build)[] WhenFalseYieldPaths =
+    [
+        (
+            "MultiAssertionExplanationPropositionBooleanResult",
+            counter => Spec.Build((int n) => n > 0)
+                .WhenTrue("is positive")
+                .WhenFalseYield(_ => counter.Pass(new[] { "is not positive", "is zero or less" }))
+                .Create()),
+        (
+            "ExpressionTreeMultiAssertionExplanationPropositionBooleanResult",
+            counter => Spec.From((int n) => n > 0)
+                .WhenTrue("is positive")
+                .WhenFalseYield((_, _) => counter.Pass(new[] { "is not positive", "is zero or less" }))
+                .Create()),
+        (
+            "ExpressionTreeMultiMetadataPropositionBooleanResult",
+            counter => Spec.From((int n) => n > 0)
+                .WhenTrue("is positive")
+                .WhenFalseYield((_, _) => counter.Pass(new[] { "is not positive", "is zero or less" }))
+                .Create("positive")),
+        (
+            "BooleanResultPredicateMultiAssertionExplanationBooleanResult",
+            counter => Spec.Build((int n) => UnderlyingSpec.Evaluate(n))
+                .WhenTrue("is positive")
+                .WhenFalseYield((_, _) => counter.Pass(new[] { "is not positive", "is zero or less" }))
+                .Create()),
+        (
+            "BooleanResultPredicateMultiValueBooleanResult",
+            counter => Spec.Build((int n) => UnderlyingSpec.Evaluate(n))
+                .WhenTrue("is positive")
+                .WhenFalseYield((_, _) => counter.Pass(new[] { "is not positive", "is zero or less" }))
+                .Create("positive")),
+        (
+            "PolicyResultPredicateMultiAssertionExplanationBooleanResult",
+            counter => Spec.Build((int n) => UnderlyingPolicy.Evaluate(n))
+                .WhenTrue("is positive")
+                .WhenFalseYield((_, _) => counter.Pass(new[] { "is not positive", "is zero or less" }))
+                .Create()),
+        (
+            "PolicyResultPredicateMultiValueBooleanResult",
+            counter => Spec.Build((int n) => UnderlyingPolicy.Evaluate(n))
+                .WhenTrue("is positive")
+                .WhenFalseYield((_, _) => counter.Pass(new[] { "is not positive", "is zero or less" }))
+                .Create("positive")),
+        (
+            "SpecDecoratorMultiMetadataBooleanResult",
+            counter => Spec.Build(UnderlyingSpec)
+                .WhenTrue("is positive")
+                .WhenFalseYield((_, _) => counter.Pass(new[] { "is not positive", "is zero or less" }))
+                .Create("positive")),
+        (
+            "PolicyDecoratorMultiMetadataBooleanResult",
+            counter => Spec.Build(UnderlyingPolicy)
+                .WhenTrue("is positive")
+                .WhenFalseYield((_, _) => counter.Pass(new[] { "is not positive", "is zero or less" }))
+                .Create("positive")),
+        (
+            "SpecDecoratorMultiAssertionExplanationBooleanResult",
+            counter => Spec.Build(UnderlyingSpec)
+                .WhenTrue("is positive")
+                .WhenFalseYield((_, _) => counter.Pass(new[] { "is not positive", "is zero or less" }))
+                .Create()),
+        (
+            "PolicyDecoratorMultiAssertionExplanationBooleanResult",
+            counter => Spec.Build(UnderlyingPolicy)
+                .WhenTrue("is positive")
+                .WhenFalseYield((_, _) => counter.Pass(new[] { "is not positive", "is zero or less" }))
+                .Create())
+    ];
 
-        public T Pass<T>(T value)
-        {
-            Calls++;
-            return value;
-        }
-    }
-
-    public static TheoryData<string, Func<CallCounter, SpecBase<int, string>>> WhenFalseYieldPaths() =>
-        new()
-        {
-            {
-                "MultiAssertionExplanationPropositionBooleanResult",
-                counter => Spec.Build((int n) => n > 0)
-                    .WhenTrue("is positive")
-                    .WhenFalseYield(_ => counter.Pass(new[] { "is not positive", "is zero or less" }))
-                    .Create()
-            },
-            {
-                "ExpressionTreeMultiAssertionExplanationPropositionBooleanResult",
-                counter => Spec.From((int n) => n > 0)
-                    .WhenTrue("is positive")
-                    .WhenFalseYield((_, _) => counter.Pass(new[] { "is not positive", "is zero or less" }))
-                    .Create()
-            },
-            {
-                "ExpressionTreeMultiMetadataPropositionBooleanResult",
-                counter => Spec.From((int n) => n > 0)
-                    .WhenTrue("is positive")
-                    .WhenFalseYield((_, _) => counter.Pass(new[] { "is not positive", "is zero or less" }))
-                    .Create("positive")
-            },
-            {
-                "BooleanResultPredicateMultiAssertionExplanationBooleanResult",
-                counter => Spec.Build((int n) => UnderlyingSpec.Evaluate(n))
-                    .WhenTrue("is positive")
-                    .WhenFalseYield((_, _) => counter.Pass(new[] { "is not positive", "is zero or less" }))
-                    .Create()
-            },
-            {
-                "BooleanResultPredicateMultiValueBooleanResult",
-                counter => Spec.Build((int n) => UnderlyingSpec.Evaluate(n))
-                    .WhenTrue("is positive")
-                    .WhenFalseYield((_, _) => counter.Pass(new[] { "is not positive", "is zero or less" }))
-                    .Create("positive")
-            },
-            {
-                "PolicyResultPredicateMultiAssertionExplanationBooleanResult",
-                counter => Spec.Build((int n) => UnderlyingPolicy.Evaluate(n))
-                    .WhenTrue("is positive")
-                    .WhenFalseYield((_, _) => counter.Pass(new[] { "is not positive", "is zero or less" }))
-                    .Create()
-            },
-            {
-                "PolicyResultPredicateMultiValueBooleanResult",
-                counter => Spec.Build((int n) => UnderlyingPolicy.Evaluate(n))
-                    .WhenTrue("is positive")
-                    .WhenFalseYield((_, _) => counter.Pass(new[] { "is not positive", "is zero or less" }))
-                    .Create("positive")
-            },
-            {
-                "SpecDecoratorMultiMetadataBooleanResult",
-                counter => Spec.Build(UnderlyingSpec)
-                    .WhenTrue("is positive")
-                    .WhenFalseYield((_, _) => counter.Pass(new[] { "is not positive", "is zero or less" }))
-                    .Create("positive")
-            },
-            {
-                "PolicyDecoratorMultiMetadataBooleanResult",
-                counter => Spec.Build(UnderlyingPolicy)
-                    .WhenTrue("is positive")
-                    .WhenFalseYield((_, _) => counter.Pass(new[] { "is not positive", "is zero or less" }))
-                    .Create("positive")
-            }
-        };
+    public static TheoryData<string> WhenFalseYieldResultTypes =>
+        WhenFalseYieldPaths.Select(path => path.ResultType).ToTheoryData();
 
     [Theory]
-    [MemberData(nameof(WhenFalseYieldPaths))]
-    public void WhenFalseYieldResolver_IsInvokedOnceAcrossRepeatedReads(
-        string resultType,
-        Func<CallCounter, SpecBase<int, string>> build)
+    [MemberData(nameof(WhenFalseYieldResultTypes))]
+    public void WhenFalseYieldResolver_IsInvokedOnceAcrossRepeatedReads(string resultType)
     {
+        var build = WhenFalseYieldPaths.Single(path => path.ResultType == resultType).Build;
         var counter = new CallCounter();
         var result = build(counter).Evaluate(NotPositive);
 
-        ResultTypeName(result).ShouldBe(resultType);
+        result.GetType().NameWithoutArity().ShouldBe(resultType);
         ReadEveryConsumerRepeatedly(result);
 
         result.Satisfied.ShouldBeFalse(resultType);
         counter.Calls.ShouldBe(1, resultType);
     }
-
-    /// <summary>The result's class name without its generic arity, so each row proves which class it reached.</summary>
-    private static string ResultTypeName(BooleanResultBase result) => result.GetType().Name.Split('`')[0];
 
     private static void ReadEveryConsumerRepeatedly(BooleanResultBase<string> result)
     {

@@ -98,20 +98,14 @@ public sealed class Explanation
     /// <summary>
     /// Gets the underlying explanations of the causes.
     /// </summary>
-    // Stryker's `??=` -> `=` mutant is equivalent here: PostOrderFold.Fold returns read(root), which is this
-    // same field, before it folds anything, and writes the root's value back into it, so `=` only re-assigns
-    // the memo the field already holds (#294).
-    // Stryker disable once Assignment : equivalent — PostOrderFold reads this memo before folding
+    // Stryker disable once Assignment : equivalent — PostOrderFold returns this memo before folding, so = only re-assigns it (#294)
     public IEnumerable<Explanation> Underlying =>
         _underlying ??= PostOrderFold.Fold(this, DescendCausal, CombineCausal, ReadUnderlying, WriteUnderlying);
 
     /// <summary>
     /// Gets the all underlying explanations, regardless of whether they determined the outcome.
     /// </summary>
-    // Stryker's `??=` -> `=` mutant is equivalent here: PostOrderFold.Fold returns read(root), which is this
-    // same field, before it folds anything, and writes the root's value back into it, so `=` only re-assigns
-    // the memo the field already holds (#294).
-    // Stryker disable once Assignment : equivalent — PostOrderFold reads this memo before folding
+    // Stryker disable once Assignment : equivalent — PostOrderFold returns this memo before folding, so = only re-assigns it (#294)
     public IEnumerable<Explanation> AllUnderlying =>
         _allUnderlying ??= PostOrderFold.Fold(this, DescendAll, CombineAll, ReadAllUnderlying, WriteAllUnderlying);
 

@@ -20,256 +20,223 @@ public class HigherOrderUserDelegateMemoisationTests
 
     private static PolicyBase<int, string> UnderlyingPolicy => Spec.Build((int n) => n > 0).Create("is positive");
 
-    public sealed class CallCounter
-    {
-        public int Calls { get; private set; }
+    private static readonly (string ResultType, Func<CallCounter, SpecBase<IEnumerable<int>, string>> Build)[]
+        CauseSelectorPaths =
+    [
+        // ---------- BooleanPredicate family: Spec.Build((int n) => n > 0) ----------
+        (
+            "HigherOrderFromBooleanPredicateExplanationPolicyResult",
+            counter => Spec.Build((int n) => n > 0)
+                .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
+                .WhenTrue("all positive")
+                .WhenFalse("not all positive")
+                .Create()),
+        (
+            "HigherOrderFromBooleanPredicateMetadataPolicyResult",
+            counter => Spec.Build((int n) => n > 0)
+                .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
+                .WhenTrue("all positive")
+                .WhenFalse("not all positive")
+                .Create("all are positive")),
+        (
+            "HigherOrderFromBooleanPredicateMultiAssertionExplanationBooleanResult",
+            counter => Spec.Build((int n) => n > 0)
+                .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
+                .WhenTrue("all positive")
+                .WhenFalseYield(_ => ["not all positive"])
+                .Create()),
+        (
+            "HigherOrderFromBooleanPredicateMultiMetadataBooleanResult",
+            counter => Spec.Build((int n) => n > 0)
+                .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
+                .WhenTrue("all positive")
+                .WhenFalseYield(_ => ["not all positive"])
+                .Create("all are positive")),
 
-        public T Pass<T>(T value)
-        {
-            Calls++;
-            return value;
-        }
-    }
+        // ---------- BooleanResultPredicate family: Spec.Build(SpecBase<int, string>) ----------
+        (
+            "HigherOrderFromBooleanResultExplanationPolicyResult",
+            counter => Spec.Build(UnderlyingSpec)
+                .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
+                .WhenTrue("all positive")
+                .WhenFalse("not all positive")
+                .Create()),
+        (
+            "HigherOrderFromBooleanResultPolicyResult",
+            counter => Spec.Build(UnderlyingSpec)
+                .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
+                .WhenTrue("all positive")
+                .WhenFalse("not all positive")
+                .Create("all are positive")),
+        (
+            "HigherOrderFromBooleanResultMultiAssertionExplanationBooleanResult",
+            counter => Spec.Build(UnderlyingSpec)
+                .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
+                .WhenTrue("all positive")
+                .WhenFalseYield(_ => ["not all positive"])
+                .Create()),
+        (
+            "HigherOrderFromBooleanResultMultiMetadataBooleanResult",
+            counter => Spec.Build(UnderlyingSpec)
+                .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
+                .WhenTrue("all positive")
+                .WhenFalseYield(_ => ["not all positive"])
+                .Create("all are positive")),
+        (
+            "MinimalHigherOrderFromBooleanResultBooleanResult",
+            counter => Spec.Build(UnderlyingSpec)
+                .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
+                .Create("all are positive")),
 
-    public static TheoryData<string, Func<CallCounter, SpecBase<IEnumerable<int>, string>>> CauseSelectorPaths() =>
-        new()
-        {
-            // ---------- BooleanPredicate family: Spec.Build((int n) => n > 0) ----------
-            {
-                "HigherOrderFromBooleanPredicateExplanationPolicyResult",
-                counter => Spec.Build((int n) => n > 0)
-                    .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
-                    .WhenTrue("all positive")
-                    .WhenFalse("not all positive")
-                    .Create()
-            },
-            {
-                "HigherOrderFromBooleanPredicateMetadataPolicyResult",
-                counter => Spec.Build((int n) => n > 0)
-                    .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
-                    .WhenTrue("all positive")
-                    .WhenFalse("not all positive")
-                    .Create("all are positive")
-            },
-            {
-                "HigherOrderFromBooleanPredicateMultiAssertionExplanationBooleanResult",
-                counter => Spec.Build((int n) => n > 0)
-                    .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
-                    .WhenTrue("all positive")
-                    .WhenFalseYield(_ => ["not all positive"])
-                    .Create()
-            },
-            {
-                "HigherOrderFromBooleanPredicateMultiMetadataBooleanResult",
-                counter => Spec.Build((int n) => n > 0)
-                    .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
-                    .WhenTrue("all positive")
-                    .WhenFalseYield(_ => ["not all positive"])
-                    .Create("all are positive")
-            },
+        // ---------- PolicyResultPredicate family: Spec.Build(PolicyBase<int, string>) ----------
+        (
+            "HigherOrderFromPolicyResultExplanationPolicyResult",
+            counter => Spec.Build(UnderlyingPolicy)
+                .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
+                .WhenTrue("all positive")
+                .WhenFalse("not all positive")
+                .Create()),
+        (
+            "HigherOrderFromPolicyResultMetadataPolicyResult",
+            counter => Spec.Build(UnderlyingPolicy)
+                .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
+                .WhenTrue("all positive")
+                .WhenFalse("not all positive")
+                .Create("all are positive")),
+        (
+            "HigherOrderFromPolicyResultMultiAssertionExplanationBooleanResult",
+            counter => Spec.Build(UnderlyingPolicy)
+                .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
+                .WhenTrue("all positive")
+                .WhenFalseYield(_ => ["not all positive"])
+                .Create()),
+        (
+            "HigherOrderFromPolicyResultMultiMetadataBooleanResult",
+            counter => Spec.Build(UnderlyingPolicy)
+                .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
+                .WhenTrue("all positive")
+                .WhenFalseYield(_ => ["not all positive"])
+                .Create("all are positive")),
+        (
+            "MinimalHigherOrderFromPolicyResultBooleanResult",
+            counter => Spec.Build(UnderlyingPolicy)
+                .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
+                .Create("all are positive")),
 
-            // ---------- BooleanResultPredicate family: Spec.Build(SpecBase<int, string>) ----------
-            {
-                "HigherOrderFromBooleanResultExplanationPolicyResult",
-                counter => Spec.Build(UnderlyingSpec)
-                    .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
-                    .WhenTrue("all positive")
-                    .WhenFalse("not all positive")
-                    .Create()
-            },
-            {
-                "HigherOrderFromBooleanResultPolicyResult",
-                counter => Spec.Build(UnderlyingSpec)
-                    .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
-                    .WhenTrue("all positive")
-                    .WhenFalse("not all positive")
-                    .Create("all are positive")
-            },
-            {
-                "HigherOrderFromBooleanResultMultiAssertionExplanationBooleanResult",
-                counter => Spec.Build(UnderlyingSpec)
-                    .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
-                    .WhenTrue("all positive")
-                    .WhenFalseYield(_ => ["not all positive"])
-                    .Create()
-            },
-            {
-                "HigherOrderFromBooleanResultMultiMetadataBooleanResult",
-                counter => Spec.Build(UnderlyingSpec)
-                    .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
-                    .WhenTrue("all positive")
-                    .WhenFalseYield(_ => ["not all positive"])
-                    .Create("all are positive")
-            },
-            {
-                "MinimalHigherOrderFromBooleanResultBooleanResult",
-                counter => Spec.Build(UnderlyingSpec)
-                    .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
-                    .Create("all are positive")
-            },
+        // ---------- ExpressionTree family: Spec.From((int n) => n > 0) ----------
+        (
+            "HigherOrderFromExpressionTreeExplanationPolicyResult",
+            counter => Spec.From((int n) => n > 0)
+                .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
+                .WhenTrue("all positive")
+                .WhenFalse("not all positive")
+                .Create()),
+        (
+            "HigherOrderFromExpressionTreeMetadataPolicyResult",
+            counter => Spec.From((int n) => n > 0)
+                .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
+                .WhenTrue("all positive")
+                .WhenFalse("not all positive")
+                .Create("all are positive")),
+        (
+            "HigherOrderFromExpressionTreeMultiAssertionExplanationBooleanResult",
+            counter => Spec.From((int n) => n > 0)
+                .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
+                .WhenTrue("all positive")
+                .WhenFalseYield(_ => ["not all positive"])
+                .Create()),
+        (
+            "HigherOrderFromExpressionTreeMultiMetadataBooleanResult",
+            counter => Spec.From((int n) => n > 0)
+                .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
+                .WhenTrue("all positive")
+                .WhenFalseYield(_ => ["not all positive"])
+                .Create("all are positive")),
+        (
+            "MinimalHigherOrderFromExpressionTreeBooleanResult",
+            counter => Spec.From((int n) => n > 0)
+                .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
+                .Create("all are positive"))
+    ];
 
-            // ---------- PolicyResultPredicate family: Spec.Build(PolicyBase<int, string>) ----------
-            {
-                "HigherOrderFromPolicyResultExplanationPolicyResult",
-                counter => Spec.Build(UnderlyingPolicy)
-                    .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
-                    .WhenTrue("all positive")
-                    .WhenFalse("not all positive")
-                    .Create()
-            },
-            {
-                "HigherOrderFromPolicyResultMetadataPolicyResult",
-                counter => Spec.Build(UnderlyingPolicy)
-                    .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
-                    .WhenTrue("all positive")
-                    .WhenFalse("not all positive")
-                    .Create("all are positive")
-            },
-            {
-                "HigherOrderFromPolicyResultMultiAssertionExplanationBooleanResult",
-                counter => Spec.Build(UnderlyingPolicy)
-                    .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
-                    .WhenTrue("all positive")
-                    .WhenFalseYield(_ => ["not all positive"])
-                    .Create()
-            },
-            {
-                "HigherOrderFromPolicyResultMultiMetadataBooleanResult",
-                counter => Spec.Build(UnderlyingPolicy)
-                    .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
-                    .WhenTrue("all positive")
-                    .WhenFalseYield(_ => ["not all positive"])
-                    .Create("all are positive")
-            },
-            {
-                "MinimalHigherOrderFromPolicyResultBooleanResult",
-                counter => Spec.Build(UnderlyingPolicy)
-                    .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
-                    .Create("all are positive")
-            },
+    private static readonly (string ResultType, Func<CallCounter, SpecBase<IEnumerable<int>, string>> Build)[]
+        YieldResolverPaths =
+    [
+        (
+            "HigherOrderFromBooleanPredicateMultiAssertionExplanationBooleanResult",
+            counter => Spec.Build((int n) => n > 0)
+                .AsAllSatisfied()
+                .WhenTrue("all positive")
+                .WhenFalseYield(_ => counter.Pass(new[] { "not all positive", "some are negative" }))
+                .Create()),
+        (
+            "HigherOrderFromBooleanPredicateMultiMetadataBooleanResult",
+            counter => Spec.Build((int n) => n > 0)
+                .AsAllSatisfied()
+                .WhenTrue("all positive")
+                .WhenFalseYield(_ => counter.Pass(new[] { "not all positive", "some are negative" }))
+                .Create("all are positive")),
+        (
+            "HigherOrderFromBooleanResultMultiAssertionExplanationBooleanResult",
+            counter => Spec.Build(UnderlyingSpec)
+                .AsAllSatisfied()
+                .WhenTrue("all positive")
+                .WhenFalseYield(_ => counter.Pass(new[] { "not all positive", "some are negative" }))
+                .Create()),
+        (
+            "HigherOrderFromBooleanResultMultiMetadataBooleanResult",
+            counter => Spec.Build(UnderlyingSpec)
+                .AsAllSatisfied()
+                .WhenTrue("all positive")
+                .WhenFalseYield(_ => counter.Pass(new[] { "not all positive", "some are negative" }))
+                .Create("all are positive")),
+        (
+            "HigherOrderFromPolicyResultMultiAssertionExplanationBooleanResult",
+            counter => Spec.Build(UnderlyingPolicy)
+                .AsAllSatisfied()
+                .WhenTrue("all positive")
+                .WhenFalseYield(_ => counter.Pass(new[] { "not all positive", "some are negative" }))
+                .Create()),
+        (
+            "HigherOrderFromPolicyResultMultiMetadataBooleanResult",
+            counter => Spec.Build(UnderlyingPolicy)
+                .AsAllSatisfied()
+                .WhenTrue("all positive")
+                .WhenFalseYield(_ => counter.Pass(new[] { "not all positive", "some are negative" }))
+                .Create("all are positive")),
+        (
+            "HigherOrderFromExpressionTreeMultiAssertionExplanationBooleanResult",
+            counter => Spec.From((int n) => n > 0)
+                .AsAllSatisfied()
+                .WhenTrue("all positive")
+                .WhenFalseYield(_ => counter.Pass(new[] { "not all positive", "some are negative" }))
+                .Create()),
+        (
+            "HigherOrderFromExpressionTreeMultiMetadataBooleanResult",
+            counter => Spec.From((int n) => n > 0)
+                .AsAllSatisfied()
+                .WhenTrue("all positive")
+                .WhenFalseYield(_ => counter.Pass(new[] { "not all positive", "some are negative" }))
+                .Create("all are positive"))
+    ];
 
-            // ---------- ExpressionTree family: Spec.From((int n) => n > 0) ----------
-            {
-                "HigherOrderFromExpressionTreeExplanationPolicyResult",
-                counter => Spec.From((int n) => n > 0)
-                    .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
-                    .WhenTrue("all positive")
-                    .WhenFalse("not all positive")
-                    .Create()
-            },
-            {
-                "HigherOrderFromExpressionTreeMetadataPolicyResult",
-                counter => Spec.From((int n) => n > 0)
-                    .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
-                    .WhenTrue("all positive")
-                    .WhenFalse("not all positive")
-                    .Create("all are positive")
-            },
-            {
-                "HigherOrderFromExpressionTreeMultiAssertionExplanationBooleanResult",
-                counter => Spec.From((int n) => n > 0)
-                    .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
-                    .WhenTrue("all positive")
-                    .WhenFalseYield(_ => ["not all positive"])
-                    .Create()
-            },
-            {
-                "HigherOrderFromExpressionTreeMultiMetadataBooleanResult",
-                counter => Spec.From((int n) => n > 0)
-                    .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
-                    .WhenTrue("all positive")
-                    .WhenFalseYield(_ => ["not all positive"])
-                    .Create("all are positive")
-            },
-            {
-                "MinimalHigherOrderFromExpressionTreeBooleanResult",
-                counter => Spec.From((int n) => n > 0)
-                    .As(results => results.All(r => r.Satisfied), (_, results) => counter.Pass(results))
-                    .Create("all are positive")
-            }
-        };
+    public static TheoryData<string> CauseSelectorResultTypes =>
+        CauseSelectorPaths.Select(path => path.ResultType).ToTheoryData();
 
-    public static TheoryData<string, Func<CallCounter, SpecBase<IEnumerable<int>, string>>> YieldResolverPaths() =>
-        new()
-        {
-            {
-                "HigherOrderFromBooleanPredicateMultiAssertionExplanationBooleanResult",
-                counter => Spec.Build((int n) => n > 0)
-                    .AsAllSatisfied()
-                    .WhenTrue("all positive")
-                    .WhenFalseYield(_ => counter.Pass(new[] { "not all positive", "some are negative" }))
-                    .Create()
-            },
-            {
-                "HigherOrderFromBooleanPredicateMultiMetadataBooleanResult",
-                counter => Spec.Build((int n) => n > 0)
-                    .AsAllSatisfied()
-                    .WhenTrue("all positive")
-                    .WhenFalseYield(_ => counter.Pass(new[] { "not all positive", "some are negative" }))
-                    .Create("all are positive")
-            },
-            {
-                "HigherOrderFromBooleanResultMultiAssertionExplanationBooleanResult",
-                counter => Spec.Build(UnderlyingSpec)
-                    .AsAllSatisfied()
-                    .WhenTrue("all positive")
-                    .WhenFalseYield(_ => counter.Pass(new[] { "not all positive", "some are negative" }))
-                    .Create()
-            },
-            {
-                "HigherOrderFromBooleanResultMultiMetadataBooleanResult",
-                counter => Spec.Build(UnderlyingSpec)
-                    .AsAllSatisfied()
-                    .WhenTrue("all positive")
-                    .WhenFalseYield(_ => counter.Pass(new[] { "not all positive", "some are negative" }))
-                    .Create("all are positive")
-            },
-            {
-                "HigherOrderFromPolicyResultMultiAssertionExplanationBooleanResult",
-                counter => Spec.Build(UnderlyingPolicy)
-                    .AsAllSatisfied()
-                    .WhenTrue("all positive")
-                    .WhenFalseYield(_ => counter.Pass(new[] { "not all positive", "some are negative" }))
-                    .Create()
-            },
-            {
-                "HigherOrderFromPolicyResultMultiMetadataBooleanResult",
-                counter => Spec.Build(UnderlyingPolicy)
-                    .AsAllSatisfied()
-                    .WhenTrue("all positive")
-                    .WhenFalseYield(_ => counter.Pass(new[] { "not all positive", "some are negative" }))
-                    .Create("all are positive")
-            },
-            {
-                "HigherOrderFromExpressionTreeMultiAssertionExplanationBooleanResult",
-                counter => Spec.From((int n) => n > 0)
-                    .AsAllSatisfied()
-                    .WhenTrue("all positive")
-                    .WhenFalseYield(_ => counter.Pass(new[] { "not all positive", "some are negative" }))
-                    .Create()
-            },
-            {
-                "HigherOrderFromExpressionTreeMultiMetadataBooleanResult",
-                counter => Spec.From((int n) => n > 0)
-                    .AsAllSatisfied()
-                    .WhenTrue("all positive")
-                    .WhenFalseYield(_ => counter.Pass(new[] { "not all positive", "some are negative" }))
-                    .Create("all are positive")
-            }
-        };
+    public static TheoryData<string> YieldResolverResultTypes =>
+        YieldResolverPaths.Select(path => path.ResultType).ToTheoryData();
 
     [Theory]
-    [MemberData(nameof(CauseSelectorPaths))]
-    public void CauseSelector_IsInvokedOnceAcrossRepeatedReads(
-        string resultType,
-        Func<CallCounter, SpecBase<IEnumerable<int>, string>> build)
+    [MemberData(nameof(CauseSelectorResultTypes))]
+    public void CauseSelector_IsInvokedOnceAcrossRepeatedReads(string resultType)
     {
+        var build = CauseSelectorPaths.Single(path => path.ResultType == resultType).Build;
         foreach (var models in new[] { AllPositive, SomeNegative })
         {
             var counter = new CallCounter();
             var result = build(counter).Evaluate(models);
 
-            ResultTypeName(result).ShouldBe(resultType);
+            result.GetType().NameWithoutArity().ShouldBe(resultType);
             ReadEveryConsumerRepeatedly(result);
 
             counter.Calls.ShouldBe(1, $"{resultType} over [{string.Join(", ", models)}]");
@@ -277,23 +244,19 @@ public class HigherOrderUserDelegateMemoisationTests
     }
 
     [Theory]
-    [MemberData(nameof(YieldResolverPaths))]
-    public void WhenFalseYieldResolver_IsInvokedOnceAcrossRepeatedReads(
-        string resultType,
-        Func<CallCounter, SpecBase<IEnumerable<int>, string>> build)
+    [MemberData(nameof(YieldResolverResultTypes))]
+    public void WhenFalseYieldResolver_IsInvokedOnceAcrossRepeatedReads(string resultType)
     {
+        var build = YieldResolverPaths.Single(path => path.ResultType == resultType).Build;
         var counter = new CallCounter();
         var result = build(counter).Evaluate(SomeNegative);
 
-        ResultTypeName(result).ShouldBe(resultType);
+        result.GetType().NameWithoutArity().ShouldBe(resultType);
         ReadEveryConsumerRepeatedly(result);
 
         result.Satisfied.ShouldBeFalse(resultType);
         counter.Calls.ShouldBe(1, resultType);
     }
-
-    /// <summary>The result's class name without its generic arity, so each row proves which class it reached.</summary>
-    private static string ResultTypeName(BooleanResultBase result) => result.GetType().Name.Split('`')[0];
 
     private static void ReadEveryConsumerRepeatedly(BooleanResultBase<string> result)
     {
