@@ -1,4 +1,3 @@
-using Motiv.Or;
 using Motiv.Shared;
 using Motiv.Traversal;
 
@@ -27,10 +26,7 @@ internal sealed class AsyncOrElsePolicy<TModel, TMetadata>(
     /// <inheritdoc />
     public override ISpecDescription Description => field ??=
         new AsyncBinarySpecDescription<TModel, TMetadata>(left, right, "||", Operator.OrElse,
-            operand => operand is AsyncOrSpec<TModel, TMetadata> or AsyncOrElseSpec<TModel, TMetadata>
-                or AsyncOrElsePolicy<TModel, TMetadata>
-                or OrSpec<TModel, TMetadata> or OrElseSpec<TModel, TMetadata> or OrElsePolicy<TModel, TMetadata>
-                or ExpressionOrSpec<TModel, TMetadata> or ExpressionOrElseSpec<TModel, TMetadata>
+            operand => operand is AsyncOrElsePolicy<TModel, TMetadata> or OrElsePolicy<TModel, TMetadata>
                 or ExpressionOrElsePolicy<TModel, TMetadata>);
 
     /// <inheritdoc />

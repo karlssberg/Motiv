@@ -1,0 +1,7 @@
+{
+  "propositions": ["Propositions"],
+  "rules": ["Rules"],
+  "governance": ["Governance"],
+  "expressions-printing": ["Expressions", "Printing"],
+  "decisions-diagnostics": ["Decisions", "Diagnostics"]
+}

@@ -8,9 +8,6 @@ internal sealed class BooleanResultDescriptionWithUnderlying(
 {
     public override IEnumerable<string> GetJustificationAsLines() => FoldedJustification(withoutCausalCount: false);
 
-    internal override IEnumerable<string> GetJustificationAsLinesWithoutCausalCount() =>
-        FoldedJustification(withoutCausalCount: true);
-
     private protected override IReadOnlyList<Rendering> JustificationOperands(bool withoutCausalCount) =>
         [new Rendering(BooleanResult.Description, withoutCausalCount)];
 

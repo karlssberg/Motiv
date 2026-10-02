@@ -436,6 +436,37 @@ public class OrElsePolicyTests
     }
 
     [Fact]
+    public void Should_collapse_OR_ELSE_operators_in_result_justification()
+    {
+        // Arrange
+        var first = Spec
+            .Build<bool>(_ => false)
+            .Create("first");
+
+        var second = Spec
+            .Build<bool>(_ => false)
+            .Create("second");
+
+        var third = Spec
+            .Build<bool>(_ => false)
+            .Create("third");
+
+        var spec = first.OrElse(second).OrElse(third);
+
+        // Act
+        var act = spec.Evaluate(false).Justification;
+
+        // Assert
+        act.ShouldBe(
+            """
+            OR ELSE
+                first == false
+                second == false
+                third == false
+            """);
+    }
+
+    [Fact]
     public void Should_populate_underlying_with_values_results_with_metadata()
     {
         // Arrange

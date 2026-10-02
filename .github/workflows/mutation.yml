@@ -1,0 +1,186 @@
+# Mutation testing, report-only (#294): Stryker.NET mutates src/Motiv and runs test/Motiv.Tests
+# against every mutant. Nothing here fails on a low score — `thresholds.break` in every
+# stryker-config.json is 0 until the baseline has been triaged.
+#
+# Sharded by directory (each test project's stryker-shards.json): a single job ran for 2.5 hours and
+# then lost its runner, and since Stryker writes its reports only at the end, it left nothing behind.
+# Each shard publishes its own report, so a lost shard costs that shard alone; `combine` scores the
+# union per project and names any shard that did not report.
+#
+# Not on every PR: a full run is far slower than the test suite it drives. On a PR it runs only when
+# the mutation setup itself changes, and then only the scripts' tests and the src/Motiv shards: that
+# proves the scripts, the src/Motiv config and the workflow wiring, not the other projects' configs —
+# dispatch the workflow on the branch for those.
+#
+# The scheduled full run (#294 step 4) adds src/Motiv.Serialization, src/Motiv.Analyzer,
+# src/Motiv.CodeFix and @motiv-rules/core (StrykerJS). Weekly, not nightly: src/Motiv alone is about
+# 150 runner-minutes and Motiv.Serialization is two-thirds its size, while the code these runs
+# measure changes over weeks, and survivors are triaged by hand — a nightly report would mostly
+# repeat the last one. A dispatch runs the same full set on demand.
+
+name: Mutation testing
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Sundays 03:17 UTC — off the hour, when scheduled runs queue behind everyone else's.
+    - cron: "17 3 * * 0"
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - ".config/dotnet-tools.json"
+      # Only the src/Motiv config: a PR runs the src/Motiv shards alone, which prove nothing about
+      # another project's config or the PR gate's baselines (mutation-pr.yml reads those).
+      - "test/Motiv.Tests/stryker-config.json"
+      - "test/Motiv.Tests/stryker-shards.json"
+      - "scripts/mutation/**"
+      - ".github/workflows/mutation.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  # Keyed on the event too, so a dispatch on main does not cancel the scheduled run, nor it the dispatch.
+  group: mutation-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scripts:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+    - name: Test the mutation scripts
+      run: bash scripts/mutation/tests/scripts.test.sh
+
+  plan:
+    needs: scripts
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+    - uses: actions/checkout@v5
+    - id: plan
+      env:
+        # A PR pays for src/Motiv alone; the schedule and a dispatch plan every project.
+        SCOPE: ${{ github.event_name != 'pull_request' && '--full' || '' }}
+      run: echo "matrix=$(scripts/mutation/plan.sh ${SCOPE:+"$SCOPE"})" >> "$GITHUB_OUTPUT"
+
+  dotnet:
+    needs: plan
+    name: ${{ matrix.project }} (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+    - uses: actions/checkout@v5
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        # 10.0 is both the mutated target framework and the runtime Stryker.NET 5 requires; 8.0 and
+        # 9.0 because Motiv.Tests and Motiv.Serialization.Tests restore for every framework they target.
+        dotnet-version: |
+          8.0.x
+          9.0.x
+          10.0.x
+    - name: Restore tools
+      run: dotnet tool restore
+    - name: Run Stryker.NET
+      working-directory: ${{ matrix.dir }}
+      env:
+        GLOBS: ${{ toJSON(matrix.globs) }}
+        # Caps every .NET process this step starts, test hosts included, at 3 GiB of GC heap. A mutant
+        # that makes a deep-chain test allocate without bound then fails that test with an
+        # OutOfMemoryException (the mutant is killed) instead of exhausting the runner, which ends the
+        # job with "The runner has received a shutdown signal" and no report (#294). Hexadecimal, as the
+        # environment-variable form of System.GC.HeapHardLimit requires.
+        DOTNET_GCHeapHardLimit: "0xC0000000"
+      run: |
+        # Read into an array so the shell never expands the globs itself. An unsharded project has
+        # none, and mutates everything.
+        mapfile -t globs < <(jq -r '.[]' <<< "$GLOBS")
+        mutate=()
+        for glob in "${globs[@]}"; do mutate+=(--mutate "$glob"); done
+        # Stryker refuses an --output directory that does not already exist.
+        mkdir -p "$RUNNER_TEMP/stryker"
+        dotnet tool run dotnet-stryker --output "$RUNNER_TEMP/stryker" "${mutate[@]}"
+    - name: Summarise score
+      if: always()
+      run: >-
+        scripts/mutation/summarise.sh "Mutation score — ${{ matrix.src }} (${{ matrix.name }})"
+        "$RUNNER_TEMP/stryker/reports/mutation-report.json" >> "$GITHUB_STEP_SUMMARY"
+    - name: List undetected mutants
+      if: always()
+      # --details prints the list to the log as well as the summary, so triage does not depend on
+      # downloading the artifact.
+      run: >-
+        scripts/mutation/survivors.sh --details "$RUNNER_TEMP/stryker/reports/mutation-report.json"
+        >> "$GITHUB_STEP_SUMMARY"
+    - name: Upload reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: mutation-report-${{ matrix.project }}-${{ matrix.name }}
+        path: ${{ runner.temp }}/stryker
+        if-no-files-found: warn
+
+  rules-core:
+    # The scheduled full run and a dispatch alone, like every project but src/Motiv: a PR to the
+    # mutation setup does not pay for it.
+    if: github.event_name != 'pull_request'
+    needs: scripts
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+    - uses: actions/checkout@v5
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 9
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: pnpm
+        cache-dependency-path: ui/pnpm-lock.yaml
+    - name: Install
+      working-directory: ui
+      run: pnpm install --frozen-lockfile
+    - name: Run StrykerJS
+      run: pnpm -C ui/packages/rules-core mutate
+    - name: Summarise score
+      if: always()
+      run: >-
+        scripts/mutation/summarise.sh "Mutation score — @motiv-rules/core"
+        ui/packages/rules-core/reports/mutation/mutation.json >> "$GITHUB_STEP_SUMMARY"
+    - name: List undetected mutants
+      if: always()
+      # StrykerJS keys files relative to the package; --prefix roots them at the repository.
+      run: >-
+        scripts/mutation/survivors.sh --prefix ui/packages/rules-core --details
+        ui/packages/rules-core/reports/mutation/mutation.json >> "$GITHUB_STEP_SUMMARY"
+    - name: Upload reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        # Not mutation-report-*: that prefix is the .NET shards', which combine downloads by pattern.
+        name: mutation-js-report-rules-core
+        path: ui/packages/rules-core/reports/mutation
+        if-no-files-found: warn
+
+  combine:
+    needs: [ plan, dotnet ]
+    if: always() && needs.plan.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+    - uses: actions/download-artifact@v4
+      with:
+        # The .NET shards' artifacts only; @motiv-rules/core uploads mutation-js-report-rules-core and
+        # summarises itself.
+        pattern: mutation-report-*
+        path: reports
+    - name: Summarise score
+      env:
+        MATRIX: ${{ needs.plan.outputs.matrix }}
+      # One section per Stryker.NET project, in plan order.
+      run: scripts/mutation/combine.sh "$MATRIX" reports >> "$GITHUB_STEP_SUMMARY"

@@ -78,9 +78,6 @@ internal abstract class BinaryBooleanResultDescription<TMetadata>(
 
     public override IEnumerable<string> GetJustificationAsLines() => FoldedJustification(withoutCausalCount: false);
 
-    internal override IEnumerable<string> GetJustificationAsLinesWithoutCausalCount() =>
-        FoldedJustification(withoutCausalCount: true);
-
     private protected override IReadOnlyList<Rendering> JustificationOperands(bool withoutCausalCount) =>
         Collapsed.Select(result => new Rendering(result.Description, withoutCausalCount)).ToArray();
 

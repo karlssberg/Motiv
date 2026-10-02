@@ -26,7 +26,7 @@ internal sealed class ExpressionXOrSpec<TModel, TMetadata>(
 
     public override ISpecDescription Description => field ??=
         new BinarySpecDescription<TModel, TMetadata>(left, right, "^", Operator.XOr,
-            operand => operand is XOrSpec<TModel, TMetadata> or ExpressionXOrSpec<TModel, TMetadata>);
+            operand => operand is ExpressionXOrSpec<TModel, TMetadata>);
 
     public string Operation => Operator.XOr;
 

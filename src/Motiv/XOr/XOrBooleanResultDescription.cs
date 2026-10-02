@@ -39,9 +39,6 @@ internal sealed class XOrBooleanResultDescription<TMetadata>(
 
     public override IEnumerable<string> GetJustificationAsLines() => FoldedJustification(withoutCausalCount: false);
 
-    internal override IEnumerable<string> GetJustificationAsLinesWithoutCausalCount() =>
-        FoldedJustification(withoutCausalCount: true);
-
     private protected override IReadOnlyList<Rendering> JustificationOperands(bool withoutCausalCount) =>
         Collapsed.Select(result => new Rendering(result.Description, withoutCausalCount)).ToArray();
 
@@ -65,6 +62,7 @@ internal sealed class XOrBooleanResultDescription<TMetadata>(
                 case IBinaryBooleanOperationResult:
                     return true;
                 case NotBooleanOperationResult<TMetadata>:
+                case NotPolicyResult<TMetadata>:
                     continue;
                 case var other:
                     foreach (var underlying in other.Underlying)

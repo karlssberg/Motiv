@@ -13,11 +13,10 @@ internal sealed class NotSpecDescription<TModel, TMetadata>(SpecBase<TModel, TMe
         var lines = operand.Description
             .GetDetailsAsLines()
             .ReplaceFirstLine(firstLine =>
-                ExpressionNegationMappings.Instance.TryGetValue(firstLine, out var mappedNegation)
-                    ? mappedNegation
-                    : firstLine.StartsWith("!")
-                        ? firstLine.Substring(1)
-                        : $"!{firstLine}");
+                OperatorNegation.Negate(firstLine)
+                ?? (firstLine.StartsWith("!")
+                    ? firstLine.Substring(1)
+                    : $"!{firstLine}"));
 
         foreach (var line in lines)
             yield return line;

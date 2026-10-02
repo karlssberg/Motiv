@@ -1,14 +1,26 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Ajv2020, { type ValidateFunction } from 'ajv/dist/2020.js';
 import type { RuleDocument } from '../src/document.js';
 import type { Catalog } from '../src/contracts.js';
 import { validateAgainstSchema, type JsonSchema } from '../src/schema.js';
 
-const schemaPath = fileURLToPath(
-  new URL('../../../../schemas/rule.v1.json', import.meta.url),
-);
+/**
+ * The repository's `schemas/rule.v1.json`, found by walking up from this file rather than by a
+ * fixed `../../../../`. StrykerJS runs this suite from a copy of the package two directories
+ * deeper (`.stryker-tmp/sandbox-*`), where a fixed path misses the file.
+ */
+function findSchema(): string {
+  for (let dir = dirname(fileURLToPath(import.meta.url)); ; dir = dirname(dir)) {
+    const candidate = join(dir, 'schemas', 'rule.v1.json');
+    if (existsSync(candidate)) return candidate;
+    if (dirname(dir) === dir) throw new Error('schemas/rule.v1.json not found above ' + import.meta.url);
+  }
+}
+
+const schemaPath = findSchema();
 
 let validate: ValidateFunction;
 

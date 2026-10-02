@@ -17,9 +17,6 @@ internal sealed class NotBooleanResultDescription<TMetadata>(BooleanResultBase o
 
     public override IEnumerable<string> GetJustificationAsLines() => FoldedJustification(withoutCausalCount: false);
 
-    internal override IEnumerable<string> GetJustificationAsLinesWithoutCausalCount() =>
-        FoldedJustification(withoutCausalCount: true);
-
     private protected override IReadOnlyList<Rendering> JustificationOperands(bool withoutCausalCount) =>
         [new Rendering(operand.Description, withoutCausalCount)];
 
@@ -29,10 +26,7 @@ internal sealed class NotBooleanResultDescription<TMetadata>(BooleanResultBase o
         NegateFirstLine(operandLines[0]).ToArray();
 
     private static IEnumerable<string> NegateFirstLine(IEnumerable<string> lines) =>
-        lines.ReplaceFirstLine(firstLine =>
-            JustificationNegationMappings.Instance.TryGetValue(firstLine, out var negated)
-                ? negated
-                : firstLine);
+        lines.ReplaceFirstLine(firstLine => OperatorNegation.Negate(firstLine) ?? firstLine);
 
     private static string FormatReason(BooleanResultBase result, string reason)
     {

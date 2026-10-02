@@ -734,5 +734,30 @@ public class XOrSpecTests
 
         result.Justification.ShouldBe(expected);
     }
-}
 
+    [Fact]
+    public void Should_not_parenthesise_a_negated_policy_operand_of_an_xor_reason()
+    {
+        // A negated policy result brackets itself with !( ... ), just as a negated spec result does, so XOR
+        // must not wrap it again (#294).
+        var a = Spec.Build((int n) => n > 0).Create("a");
+        var b = Spec.Build((int n) => n > 0).Create("b");
+        var c = Spec.Build((int n) => n > 0).Create("c");
+
+        var sut = a.OrElse(b).Not().XOr(c);
+
+        sut.Evaluate(-1).Reason.ShouldBe("!((a == false) || (b == false)) ^ (c == false)");
+    }
+
+    [Fact]
+    public void Should_not_parenthesise_a_negated_spec_operand_of_an_xor_reason()
+    {
+        var a = Spec.Build((int n) => n > 0).Create("a");
+        var b = Spec.Build((int n) => n > 0).Create("b");
+        var c = Spec.Build((int n) => n > 0).Create("c");
+
+        var sut = a.Or(b).Not().XOr(c);
+
+        sut.Evaluate(-1).Reason.ShouldBe("!((a == false) | (b == false)) ^ (c == false)");
+    }
+}
