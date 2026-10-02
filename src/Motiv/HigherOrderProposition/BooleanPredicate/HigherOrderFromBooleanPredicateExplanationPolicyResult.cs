@@ -28,7 +28,7 @@ internal sealed class HigherOrderFromBooleanPredicateExplanationPolicyResult<TMo
         }
     } = default!;
 
-    private HigherOrderBooleanEvaluation<TModel> Evaluation => field ??=
+    private HigherOrderBooleanEvaluation<TModel> Evaluation =>
         new HigherOrderBooleanEvaluation<TModel>(underlyingResults, HigherOrderResults.ResolveCauses(Satisfied, underlyingResults, causeSelector));
 
     private string Assertion => field ??= Value.ElseFallback(() => specDescription.ToReason(Satisfied));

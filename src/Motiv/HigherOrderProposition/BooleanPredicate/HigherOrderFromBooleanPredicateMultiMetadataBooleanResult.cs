@@ -16,11 +16,11 @@ internal sealed class HigherOrderFromBooleanPredicateMultiMetadataBooleanResult<
     Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>> causeSelector)
     : BooleanResultBase<TMetadata>
 {
-    private HigherOrderBooleanEvaluation<TModel> Evaluation => field ??=
+    private HigherOrderBooleanEvaluation<TModel> Evaluation =>
         new HigherOrderBooleanEvaluation<TModel>(underlyingResults, HigherOrderResults.ResolveCauses(Satisfied, underlyingResults, causeSelector));
 
     private IEnumerable<TMetadata> MetadataValues =>
-        field ??= HigherOrderResults.ResolveValues(Satisfied, Evaluation, whenTrue, whenFalse);
+        HigherOrderResults.ResolveValues(Satisfied, Evaluation, whenTrue, whenFalse);
 
     private IEnumerable<string> ResolvedAssertions => field ??= specDescription.ToReason(Satisfied).ToEnumerable();
 
