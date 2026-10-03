@@ -98,6 +98,19 @@ internal static class ExpressionDecomposer
         }
     }
 
+    /// <summary>
+    ///     Whether the expression combines more than one clause with a logical operator, and so decomposes
+    ///     into sub-specs rather than a single leaf.
+    /// </summary>
+    public static bool IsComposite(ExpressionSyntax expression) => expression switch
+    {
+        ParenthesizedExpressionSyntax paren => IsComposite(paren.Expression),
+        PrefixUnaryExpressionSyntax { OperatorToken.RawKind: (int)SyntaxKind.ExclamationToken } unary
+            => IsComposite(unary.Operand),
+        BinaryExpressionSyntax binary => GetLogicalOperator(binary) is not null,
+        _ => false
+    };
+
     private static (string Op, bool IsInfix)? GetLogicalOperator(BinaryExpressionSyntax binary) =>
         binary.OperatorToken.Kind() switch
         {

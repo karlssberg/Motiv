@@ -63,6 +63,132 @@ public class MotivConvertToSpecTests
         }.RunAsync();
     }
     [Fact]
+    public async Task Should_decompose_single_variable_logical_expression_into_sub_specs()
+    {
+        const string clause1 = "value > 0";
+        const string clause2 = "value < 10";
+        const string booleanExpression = $"{clause1} && {clause2}";
+
+        const string source =
+          $$"""
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public bool IsValid(int value)
+                {
+                    return {{booleanExpression}};
+                }
+            }
+            """;
+
+        const string expectedTransformedCode =
+          $$"""
+            using Motiv;
+
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                private static readonly IsValidProposition IsValidProposition = new();
+
+                public bool IsValid(int value)
+                {
+                    // value > 0 && value < 10
+                    var isValidResult = IsValidProposition.Evaluate(value);
+                    return isValidResult.Satisfied;
+                }
+            }
+
+            public class IsValidProposition() : Spec<int>(() =>
+            {
+                var isValuePositive = Spec
+                    .Build((int value) => value > 0)
+                    .Create("value > 0");
+
+                var isValueLessThan10 = Spec
+                    .Build((int value) => value < 10)
+                    .Create("value < 10");
+
+                return isValuePositive.AndAlso(isValueLessThan10);
+            });
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            FixedState = { Sources = { (Source, expectedTransformedCode) }},
+            ExpectedDiagnostics =
+            {
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                    .WithSpan(Source, 7, 16, 7, 16 + booleanExpression.Length)
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
+    public async Task Should_decompose_a_negated_parenthesized_single_variable_logical_expression()
+    {
+        const string booleanExpression = "!(value > 0 && value < 10)";
+
+        const string source =
+          $$"""
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                public bool IsOutOfRange(int value)
+                {
+                    return {{booleanExpression}};
+                }
+            }
+            """;
+
+        const string expectedTransformedCode =
+          $$"""
+            using Motiv;
+
+            namespace MyNamespace;
+
+            public class MyClass
+            {
+                private static readonly IsOutOfRangeProposition IsOutOfRangeProposition = new();
+
+                public bool IsOutOfRange(int value)
+                {
+                    // !(value > 0 && value < 10)
+                    var isOutOfRangeResult = IsOutOfRangeProposition.Evaluate(value);
+                    return isOutOfRangeResult.Satisfied;
+                }
+            }
+
+            public class IsOutOfRangeProposition() : Spec<int>(() =>
+            {
+                var isValuePositive = Spec
+                    .Build((int value) => value > 0)
+                    .Create("value > 0");
+
+                var isValueLessThan10 = Spec
+                    .Build((int value) => value < 10)
+                    .Create("value < 10");
+
+                return !(isValuePositive.AndAlso(isValueLessThan10));
+            });
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { (Source, source) } },
+            FixedState = { Sources = { (Source, expectedTransformedCode) }},
+            ExpectedDiagnostics =
+            {
+                new DiagnosticResult("MOTIV0001", Microsoft.CodeAnalysis.DiagnosticSeverity.Info)
+                    .WithSpan(Source, 7, 16, 7, 16 + booleanExpression.Length)
+            }
+        }.RunAsync();
+    }
+
+    [Fact]
     public async Task Should_convert_double_variable_boolean_return_expressions_that_can_be_converted_to_spec()
     {
         const string clause1 = "valueA > valueB";
@@ -383,8 +509,17 @@ public class MotivConvertToSpecTests
             }
 
             public class IsValidProposition() : Spec<Order>(() =>
-                Spec.Build((Order order) => {{booleanExpression}})
-                    .Create("{{booleanExpression}}"));
+            {
+                var isOrderTotalGreaterThan100 = Spec
+                    .Build((Order order) => order.Total > 100)
+                    .Create("order.Total > 100");
+
+                var isOrderIsActive = Spec
+                    .Build((Order order) => order.IsActive)
+                    .Create("order.IsActive");
+
+                return isOrderTotalGreaterThan100.AndAlso(isOrderIsActive);
+            });
             """;
 
         await new VerifyCS.Test
