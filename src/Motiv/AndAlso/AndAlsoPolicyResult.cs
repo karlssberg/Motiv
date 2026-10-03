@@ -12,7 +12,8 @@ internal sealed class AndAlsoPolicyResult<TMetadata>(
 
     PolicyResultBase<TMetadata> ISelectedValueResult<TMetadata>.Selected => Right ?? Left;
 
-    public override bool Satisfied { get; } = left.Satisfied && (right?.Satisfied ?? true);
+    // right is null only when left was unsatisfied, and && never reads it then.
+    public override bool Satisfied { get; } = left.Satisfied && right!.Satisfied;
 
     public override ResultDescriptionBase Description =>
         field ??= new AndAlsoBooleanResultDescription<TMetadata>(GetCauses());

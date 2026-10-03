@@ -28,7 +28,7 @@ internal sealed class HigherOrderFromBooleanPredicateMetadataPolicyResult<TModel
         }
     } = default!;
 
-    private HigherOrderBooleanEvaluation<TModel> Evaluation => field ??=
+    private HigherOrderBooleanEvaluation<TModel> Evaluation =>
         new HigherOrderBooleanEvaluation<TModel>(underlyingResults, HigherOrderResults.ResolveCauses(Satisfied, underlyingResults, causeSelector));
 
     private string Assertion => field ??= specDescription.ToReason(Satisfied);

@@ -10,9 +10,6 @@ internal sealed class HigherOrderResultDescription<TUnderlyingMetadata>(
 {
     public override IEnumerable<string> GetJustificationAsLines() => FoldedJustification(withoutCausalCount: false);
 
-    internal override IEnumerable<string> GetJustificationAsLinesWithoutCausalCount() =>
-        FoldedJustification(withoutCausalCount: true);
-
     private protected override string[] ComposeJustification(
         IReadOnlyList<string[]> operandLines,
         bool withoutCausalCount) =>

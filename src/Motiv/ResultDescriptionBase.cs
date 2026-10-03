@@ -34,13 +34,12 @@ public abstract class ResultDescriptionBase
     /// <returns>An enumerable collection of strings, each representing a line of detail.</returns>
     public abstract IEnumerable<string> GetJustificationAsLines();
 
-    internal virtual IEnumerable<string> GetJustificationAsLinesWithoutCausalCount() => GetJustificationAsLines();
-
     /// <summary>
     /// A composed reason, built from its operands' reasons iteratively. A description whose reason is
     /// a plain string does not need this; the three that compose one (binary, exclusive-or and
     /// negation) return it from their <see cref="Reason" />.
     /// </summary>
+    // Stryker disable once Assignment : equivalent — PostOrderFold returns this memo before folding, so = only re-assigns it (#294)
     private protected string FoldedReason =>
         _foldedReason ??= PostOrderFold.Fold(this, OperandsOf, Compose, ReadReason, WriteReason);
 
@@ -81,7 +80,8 @@ public abstract class ResultDescriptionBase
     /// </summary>
     /// <remarks>
     /// The memo is walk-local rather than a field on the node, because a description renders
-    /// differently in the two modes and both may be wanted — the same reason there are two methods.
+    /// differently in the two modes and both may be wanted — the same reason each <see cref="Rendering" />
+    /// carries its mode.
     /// </remarks>
     private protected string[] FoldedJustification(bool withoutCausalCount)
     {
@@ -106,7 +106,7 @@ public abstract class ResultDescriptionBase
     private protected virtual string[] ComposeJustification(
         IReadOnlyList<string[]> operandLines,
         bool withoutCausalCount) =>
-        (withoutCausalCount ? GetJustificationAsLinesWithoutCausalCount() : GetJustificationAsLines()).ToArray();
+        GetJustificationAsLines().ToArray();
 
     /// <summary>Prefixes a conjunction heading to its operands' lines, indented beneath it.</summary>
     private protected static string[] BinaryJustification(string conjunction, IReadOnlyList<string[]> operandLines)

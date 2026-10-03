@@ -98,12 +98,14 @@ public sealed class Explanation
     /// <summary>
     /// Gets the underlying explanations of the causes.
     /// </summary>
+    // Stryker disable once Assignment : equivalent — PostOrderFold returns this memo before folding, so = only re-assigns it (#294)
     public IEnumerable<Explanation> Underlying =>
         _underlying ??= PostOrderFold.Fold(this, DescendCausal, CombineCausal, ReadUnderlying, WriteUnderlying);
 
     /// <summary>
     /// Gets the all underlying explanations, regardless of whether they determined the outcome.
     /// </summary>
+    // Stryker disable once Assignment : equivalent — PostOrderFold returns this memo before folding, so = only re-assigns it (#294)
     public IEnumerable<Explanation> AllUnderlying =>
         _allUnderlying ??= PostOrderFold.Fold(this, DescendAll, CombineAll, ReadAllUnderlying, WriteAllUnderlying);
 

@@ -24,7 +24,7 @@ internal sealed class PolicyResultPredicateMultiValueBooleanResult<TModel, TMeta
 {
     private readonly PolicyResultBase<TUnderlyingMetadata>[] _underlyingResults = [underlyingResult];
 
-    private TMetadata[] Metadata => field ??= metadataResolver(model, underlyingResult).ToArray();
+    private TMetadata[] Metadata => metadataResolver(model, underlyingResult).ToArray();
 
     private string Assertion => field ??= specDescription.ToReason(Satisfied);
 

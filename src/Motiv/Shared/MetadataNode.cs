@@ -73,6 +73,7 @@ public class MetadataNode<TMetadata>
     }
 
     /// <summary>Gets the underlying metadata nodes.</summary>
+    // Stryker disable once Assignment : equivalent — PostOrderFold returns this memo before folding, so = only re-assigns it (#294)
     public IEnumerable<MetadataNode<TMetadata>> Underlying =>
         _underlying ??= PostOrderFold.Fold(this, Descend, Combine, Read, Write);
 

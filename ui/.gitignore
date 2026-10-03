@@ -5,3 +5,7 @@ dist/
 # Playwright
 test-results/
 playwright-report/
+
+# StrykerJS (`pnpm mutate`): the sandbox copy of the package and the reports are run output.
+.stryker-tmp/
+packages/rules-core/reports/

@@ -51,3 +51,6 @@ src/Motiv.Studio/motiv-store.db-*
 # The decision log is a separate database from the authoring store, deliberately — see Spec 3D.
 src/Motiv.Studio/motiv-decisions.db
 src/Motiv.Studio/motiv-decisions.db-*
+
+# Stryker.NET mutation-testing output (reports and logs), written under the directory it ran from.
+StrykerOutput/

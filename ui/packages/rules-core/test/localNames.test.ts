@@ -53,9 +53,17 @@ describe('finishLocalName', () => {
   it.each([
     ['is--active-', 'is-active'],
     ['---', ''],
-    ['a' + '-'.repeat(50_000), 'a'],
-    ['-'.repeat(50_000) + 'a', 'a'],
   ] as const)('finishLocalName(%j) is %j', (typed, expected) => {
+    expect(finishLocalName(typed)).toBe(expected);
+  });
+
+  // Named rather than printed with %j: a 50,000-character title makes StrykerJS's test-name
+  // filter a regular expression too large to compile, which ends every mutant it covers as a
+  // RuntimeError.
+  it.each([
+    ['a trailing', 'a' + '-'.repeat(50_000), 'a'],
+    ['a leading', '-'.repeat(50_000) + 'a', 'a'],
+  ] as const)('finishLocalName strips %s run of 50,000 dashes', (_, typed, expected) => {
     expect(finishLocalName(typed)).toBe(expected);
   });
 });

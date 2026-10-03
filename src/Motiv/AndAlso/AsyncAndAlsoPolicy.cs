@@ -1,4 +1,3 @@
-using Motiv.And;
 using Motiv.Shared;
 using Motiv.Traversal;
 
@@ -27,10 +26,7 @@ internal sealed class AsyncAndAlsoPolicy<TModel, TMetadata>(
     /// <inheritdoc />
     public override ISpecDescription Description => field ??=
         new AsyncBinarySpecDescription<TModel, TMetadata>(left, right, "&&", Operator.AndAlso,
-            operand => operand is AsyncAndSpec<TModel, TMetadata> or AsyncAndAlsoSpec<TModel, TMetadata>
-                or AsyncAndAlsoPolicy<TModel, TMetadata>
-                or AndSpec<TModel, TMetadata> or AndAlsoSpec<TModel, TMetadata> or AndAlsoPolicy<TModel, TMetadata>
-                or ExpressionAndSpec<TModel, TMetadata> or ExpressionAndAlsoSpec<TModel, TMetadata>
+            operand => operand is AsyncAndAlsoPolicy<TModel, TMetadata> or AndAlsoPolicy<TModel, TMetadata>
                 or ExpressionAndAlsoPolicy<TModel, TMetadata>);
 
     /// <inheritdoc />

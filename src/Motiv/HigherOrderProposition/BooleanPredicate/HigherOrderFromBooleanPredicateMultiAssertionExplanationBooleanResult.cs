@@ -16,7 +16,7 @@ internal sealed class HigherOrderFromBooleanPredicateMultiAssertionExplanationBo
     Func<bool, IEnumerable<ModelResult<TModel>>, IEnumerable<ModelResult<TModel>>> causeSelector)
     : BooleanResultBase<string>
 {
-    private HigherOrderBooleanEvaluation<TModel> Evaluation => field ??=
+    private HigherOrderBooleanEvaluation<TModel> Evaluation =>
         new HigherOrderBooleanEvaluation<TModel>(underlyingResults, HigherOrderResults.ResolveCauses(Satisfied, underlyingResults, causeSelector));
 
     private IEnumerable<string> MetadataValues =>

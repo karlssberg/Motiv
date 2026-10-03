@@ -54,9 +54,12 @@
     "build": "tsup",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
+    "mutate": "stryker run",
     "verify:isolated": "node scripts/isolated-consumer.mjs"
   },
   "devDependencies": {
+    "@stryker-mutator/core": "9.6.1",
+    "@stryker-mutator/vitest-runner": "9.6.1",
     "@types/node": "^26.1.1",
     "ajv": "^8.20.0",
     "tsup": "^8.5.1",

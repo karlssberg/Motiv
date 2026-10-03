@@ -1,0 +1,17 @@
+// Mutation testing for src/Motiv.Analyzer, killed by this project's tests (#294).
+// Run from this directory: `dotnet tool restore && dotnet tool run dotnet-stryker`.
+// See docs/contributing/mutation-testing.md.
+{
+  "stryker-config": {
+    // Named explicitly: this project also references src/Motiv, which test/Motiv.Tests owns.
+    "project": "Motiv.Analyzer.csproj",
+    // No target-framework: the analyzer builds netstandard2.0 alone and these tests run on net10.0
+    // alone, so there is no framework to choose between.
+    "coverage-analysis": "perTest",
+    "mutation-level": "Standard",
+    "reporters": [ "html", "json", "progress" ],
+    // Report-only: this project runs in the scheduled full run alone (#294 step 4), and nothing
+    // gates on its score yet.
+    "thresholds": { "high": 80, "low": 60, "break": 0 }
+  }
+}
