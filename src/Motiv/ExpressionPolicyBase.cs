@@ -47,11 +47,11 @@ public abstract class ExpressionPolicyBase<TModel, TMetadata> : PolicyBase<TMode
     /// <param name="spec">The expression-backed proposition to combine with this proposition.</param>
     /// <returns>An expression-backed proposition representing the logical AND of the two propositions.</returns>
     public ExpressionSpecBase<TModel, TMetadata> And(ExpressionSpecBase<TModel, TMetadata> spec) =>
-        new ExpressionAndSpec<TModel, TMetadata>(this, spec, this, spec);
+        new ExpressionAndSpec<TModel, TMetadata>(this, spec.ThrowIfNull(nameof(spec)), this, spec);
 
     /// <inheritdoc cref="And(ExpressionSpecBase{TModel, TMetadata})"/>
     public ExpressionSpecBase<TModel, TMetadata> And(ExpressionPolicyBase<TModel, TMetadata> spec) =>
-        new ExpressionAndSpec<TModel, TMetadata>(this, spec, this, spec);
+        new ExpressionAndSpec<TModel, TMetadata>(this, spec.ThrowIfNull(nameof(spec)), this, spec);
 
     /// <summary>
     /// Combines this proposition with a same-metadata proposition that is not itself expression-backed,
@@ -88,7 +88,7 @@ public abstract class ExpressionPolicyBase<TModel, TMetadata> : PolicyBase<TMode
     /// <returns>An expression-backed explanation proposition representing the logical AND.</returns>
     public ExpressionSpecBase<TModel, string> And<TSpec>(TSpec spec)
         where TSpec : SpecBase<TModel>, IExpressionSpec<TModel> =>
-        new ExpressionAndSpec<TModel, string>(ToExplanationSpec(), spec.ToExplanationSpec(), this, spec);
+        new ExpressionAndSpec<TModel, string>(ToExplanationSpec(), spec.ThrowIfNull(nameof(spec)).ToExplanationSpec(), this, spec);
 
     /// <summary>
     /// Combines this proposition with another expression-backed proposition using the conditional AND
@@ -99,7 +99,7 @@ public abstract class ExpressionPolicyBase<TModel, TMetadata> : PolicyBase<TMode
     /// <param name="spec">The expression-backed proposition to combine with this proposition.</param>
     /// <returns>An expression-backed proposition representing the conditional AND of the two propositions.</returns>
     public ExpressionSpecBase<TModel, TMetadata> AndAlso(ExpressionSpecBase<TModel, TMetadata> spec) =>
-        new ExpressionAndAlsoSpec<TModel, TMetadata>(this, spec, this, spec);
+        new ExpressionAndAlsoSpec<TModel, TMetadata>(this, spec.ThrowIfNull(nameof(spec)), this, spec);
 
     /// <summary>
     /// Creates a policy equivalent to a conditional "AND" of this policy and the other policy.
@@ -108,7 +108,7 @@ public abstract class ExpressionPolicyBase<TModel, TMetadata> : PolicyBase<TMode
     /// <param name="other">The policy to evaluate when this policy is satisfied.</param>
     /// <returns>An expression-backed policy representing the conditional AND of the two policies.</returns>
     public ExpressionPolicyBase<TModel, TMetadata> AndAlso(ExpressionPolicyBase<TModel, TMetadata> other) =>
-        new ExpressionAndAlsoPolicy<TModel, TMetadata>(this, other);
+        new ExpressionAndAlsoPolicy<TModel, TMetadata>(this, other.ThrowIfNull(nameof(other)));
 
     /// <summary>
     /// Combines this policy with an ordinary <see cref="PolicyBase{TModel,TMetadata}"/> operand using the
@@ -158,7 +158,7 @@ public abstract class ExpressionPolicyBase<TModel, TMetadata> : PolicyBase<TMode
     /// <returns>An expression-backed explanation proposition representing the conditional AND.</returns>
     public ExpressionSpecBase<TModel, string> AndAlso<TSpec>(TSpec spec)
         where TSpec : SpecBase<TModel>, IExpressionSpec<TModel> =>
-        new ExpressionAndAlsoSpec<TModel, string>(ToExplanationSpec(), spec.ToExplanationSpec(), this, spec);
+        new ExpressionAndAlsoSpec<TModel, string>(ToExplanationSpec(), spec.ThrowIfNull(nameof(spec)).ToExplanationSpec(), this, spec);
 
     /// <summary>
     /// Combines this proposition with another expression-backed proposition using the logical OR operator.
@@ -167,11 +167,11 @@ public abstract class ExpressionPolicyBase<TModel, TMetadata> : PolicyBase<TMode
     /// <param name="spec">The expression-backed proposition to combine with this proposition.</param>
     /// <returns>An expression-backed proposition representing the logical OR of the two propositions.</returns>
     public ExpressionSpecBase<TModel, TMetadata> Or(ExpressionSpecBase<TModel, TMetadata> spec) =>
-        new ExpressionOrSpec<TModel, TMetadata>(this, spec, this, spec);
+        new ExpressionOrSpec<TModel, TMetadata>(this, spec.ThrowIfNull(nameof(spec)), this, spec);
 
     /// <inheritdoc cref="Or(ExpressionSpecBase{TModel, TMetadata})"/>
     public ExpressionSpecBase<TModel, TMetadata> Or(ExpressionPolicyBase<TModel, TMetadata> spec) =>
-        new ExpressionOrSpec<TModel, TMetadata>(this, spec, this, spec);
+        new ExpressionOrSpec<TModel, TMetadata>(this, spec.ThrowIfNull(nameof(spec)), this, spec);
 
     /// <summary>
     /// Combines this proposition with a same-metadata proposition that is not itself expression-backed,
@@ -208,7 +208,7 @@ public abstract class ExpressionPolicyBase<TModel, TMetadata> : PolicyBase<TMode
     /// <returns>An expression-backed explanation proposition representing the logical OR.</returns>
     public ExpressionSpecBase<TModel, string> Or<TSpec>(TSpec spec)
         where TSpec : SpecBase<TModel>, IExpressionSpec<TModel> =>
-        new ExpressionOrSpec<TModel, string>(ToExplanationSpec(), spec.ToExplanationSpec(), this, spec);
+        new ExpressionOrSpec<TModel, string>(ToExplanationSpec(), spec.ThrowIfNull(nameof(spec)).ToExplanationSpec(), this, spec);
 
     /// <summary>
     /// Combines this proposition with another expression-backed proposition using the conditional OR
@@ -219,7 +219,7 @@ public abstract class ExpressionPolicyBase<TModel, TMetadata> : PolicyBase<TMode
     /// <param name="spec">The expression-backed proposition to combine with this proposition.</param>
     /// <returns>An expression-backed proposition representing the conditional OR of the two propositions.</returns>
     public ExpressionSpecBase<TModel, TMetadata> OrElse(ExpressionSpecBase<TModel, TMetadata> spec) =>
-        new ExpressionOrElseSpec<TModel, TMetadata>(this, spec, this, spec);
+        new ExpressionOrElseSpec<TModel, TMetadata>(this, spec.ThrowIfNull(nameof(spec)), this, spec);
 
     /// <summary>
     /// Creates a policy equivalent to a conditional "OR" of this policy and the alternative policy.
@@ -228,7 +228,7 @@ public abstract class ExpressionPolicyBase<TModel, TMetadata> : PolicyBase<TMode
     /// <param name="alternative">The policy to evaluate when this policy is unsatisfied.</param>
     /// <returns>An expression-backed policy representing the conditional OR of the two policies.</returns>
     public ExpressionPolicyBase<TModel, TMetadata> OrElse(ExpressionPolicyBase<TModel, TMetadata> alternative) =>
-        new ExpressionOrElsePolicy<TModel, TMetadata>(this, alternative);
+        new ExpressionOrElsePolicy<TModel, TMetadata>(this, alternative.ThrowIfNull(nameof(alternative)));
 
     /// <summary>
     /// Combines this policy with an ordinary <see cref="PolicyBase{TModel,TMetadata}"/> alternative using the
@@ -278,7 +278,7 @@ public abstract class ExpressionPolicyBase<TModel, TMetadata> : PolicyBase<TMode
     /// <returns>An expression-backed explanation proposition representing the conditional OR.</returns>
     public ExpressionSpecBase<TModel, string> OrElse<TSpec>(TSpec spec)
         where TSpec : SpecBase<TModel>, IExpressionSpec<TModel> =>
-        new ExpressionOrElseSpec<TModel, string>(ToExplanationSpec(), spec.ToExplanationSpec(), this, spec);
+        new ExpressionOrElseSpec<TModel, string>(ToExplanationSpec(), spec.ThrowIfNull(nameof(spec)).ToExplanationSpec(), this, spec);
 
     /// <summary>
     /// Combines this proposition with another expression-backed proposition using the logical XOR operator.
@@ -287,11 +287,11 @@ public abstract class ExpressionPolicyBase<TModel, TMetadata> : PolicyBase<TMode
     /// <param name="spec">The expression-backed proposition to combine with this proposition.</param>
     /// <returns>An expression-backed proposition representing the logical XOR of the two propositions.</returns>
     public ExpressionSpecBase<TModel, TMetadata> XOr(ExpressionSpecBase<TModel, TMetadata> spec) =>
-        new ExpressionXOrSpec<TModel, TMetadata>(this, spec, this, spec);
+        new ExpressionXOrSpec<TModel, TMetadata>(this, spec.ThrowIfNull(nameof(spec)), this, spec);
 
     /// <inheritdoc cref="XOr(ExpressionSpecBase{TModel, TMetadata})"/>
     public ExpressionSpecBase<TModel, TMetadata> XOr(ExpressionPolicyBase<TModel, TMetadata> spec) =>
-        new ExpressionXOrSpec<TModel, TMetadata>(this, spec, this, spec);
+        new ExpressionXOrSpec<TModel, TMetadata>(this, spec.ThrowIfNull(nameof(spec)), this, spec);
 
     /// <summary>
     /// Combines this proposition with a same-metadata proposition that is not itself expression-backed,
@@ -328,7 +328,7 @@ public abstract class ExpressionPolicyBase<TModel, TMetadata> : PolicyBase<TMode
     /// <returns>An expression-backed explanation proposition representing the logical XOR.</returns>
     public ExpressionSpecBase<TModel, string> XOr<TSpec>(TSpec spec)
         where TSpec : SpecBase<TModel>, IExpressionSpec<TModel> =>
-        new ExpressionXOrSpec<TModel, string>(ToExplanationSpec(), spec.ToExplanationSpec(), this, spec);
+        new ExpressionXOrSpec<TModel, string>(ToExplanationSpec(), spec.ThrowIfNull(nameof(spec)).ToExplanationSpec(), this, spec);
 
     /// <summary>Combines two expression-backed propositions using the logical AND operator.</summary>
     /// <param name="left">The left operand of the AND operation.</param>
@@ -337,7 +337,7 @@ public abstract class ExpressionPolicyBase<TModel, TMetadata> : PolicyBase<TMode
     public static ExpressionSpecBase<TModel, TMetadata> operator &(
         ExpressionPolicyBase<TModel, TMetadata> left,
         ExpressionPolicyBase<TModel, TMetadata> right) =>
-        new ExpressionAndSpec<TModel, TMetadata>(left, right, left, right);
+        new ExpressionAndSpec<TModel, TMetadata>(left.ThrowIfNull(nameof(left)), right.ThrowIfNull(nameof(right)), left, right);
 
     /// <summary>Combines two expression-backed propositions using the logical OR operator.</summary>
     /// <param name="left">The left operand of the OR operation.</param>
@@ -346,7 +346,7 @@ public abstract class ExpressionPolicyBase<TModel, TMetadata> : PolicyBase<TMode
     public static ExpressionSpecBase<TModel, TMetadata> operator |(
         ExpressionPolicyBase<TModel, TMetadata> left,
         ExpressionPolicyBase<TModel, TMetadata> right) =>
-        new ExpressionOrSpec<TModel, TMetadata>(left, right, left, right);
+        new ExpressionOrSpec<TModel, TMetadata>(left.ThrowIfNull(nameof(left)), right.ThrowIfNull(nameof(right)), left, right);
 
     /// <summary>Combines two expression-backed propositions using the logical XOR operator.</summary>
     /// <param name="left">The left operand of the XOR operation.</param>
@@ -355,7 +355,7 @@ public abstract class ExpressionPolicyBase<TModel, TMetadata> : PolicyBase<TMode
     public static ExpressionSpecBase<TModel, TMetadata> operator ^(
         ExpressionPolicyBase<TModel, TMetadata> left,
         ExpressionPolicyBase<TModel, TMetadata> right) =>
-        new ExpressionXOrSpec<TModel, TMetadata>(left, right, left, right);
+        new ExpressionXOrSpec<TModel, TMetadata>(left.ThrowIfNull(nameof(left)), right.ThrowIfNull(nameof(right)), left, right);
 
     /// <summary>Negates this policy. The result remains both a policy and expression-backed.</summary>
     /// <returns>An expression-backed policy representing the logical NOT of this policy.</returns>
@@ -367,5 +367,5 @@ public abstract class ExpressionPolicyBase<TModel, TMetadata> : PolicyBase<TMode
     /// <returns>An expression-backed policy representing the logical NOT of the policy.</returns>
     public static ExpressionPolicyBase<TModel, TMetadata> operator !(
         ExpressionPolicyBase<TModel, TMetadata> policy) =>
-        policy.Not();
+        policy.ThrowIfNull(nameof(policy)).Not();
 }
