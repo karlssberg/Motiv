@@ -1,6 +1,30 @@
 ---
 title: API
 ---
+## Why Motiv
+
+A boolean throws away its reasons. Once `canRefund(request)` returns `false`, nothing records *which* condition failed. This is the boolean blindness problem.
+
+It matters most when the reader of the result can't go and look at the code. An AI agent whose tool call is refused with a bare `false` has nothing to correct, so it guesses or gives up. Told `request.Amount > 500`, it knows exactly what to change. Agents need reasons, not booleans — and so do the people reading logs, building UIs or debugging rules.
+
+Motiv keeps those reasons. A proposition evaluates to a result that carries the outcome *and* the clauses that decided it:
+
+```csharp
+var canRefund = Spec
+    .From((RefundRequest request) =>
+        request.Amount <= 500 &
+        request.DaysSincePurchase <= 30 &
+        !request.IsFinalSale)
+    .Create("refund allowed");
+
+var result = canRefund.Evaluate(new RefundRequest(Amount: 750, DaysSincePurchase: 12, IsFinalSale: false));
+result.Satisfied;  // false
+result.Reason;     // "refund allowed == false"
+result.Assertions; // ["request.Amount > 500"]
+```
+
+Return `result.Assertions` from a tool and the model sees only the clause that failed. The same result can be logged, shown to a user or composed with other results. The library itself is general and has no AI dependency.
+
 This document provides an overview of the Motiv API, categorized by functionality.
 
 ## Builder
