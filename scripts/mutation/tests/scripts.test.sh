@@ -156,7 +156,7 @@ gate() {
   local scope=$1
   shift
   printf '%s' "$scope" > "$SANDBOX/scope.json"
-  "$GATE" "$SANDBOX/scope.json" "$@"
+  "$GATE" "$SANDBOX/scope.json" "$@" 2> "$SANDBOX/gate.err"
 }
 
 report "$SANDBOX/g-strong.json" "/w/src/Motiv/Strong.cs" Killed Killed Killed Survived
@@ -190,8 +190,9 @@ out="$(gate '{"thresholds":[{"file":"src/Motiv/A.cs","score":75,"survivors":null
 assert_equals "$?" "0" "passes a file with no valid mutants"
 assert_contains "$out" '| `src/Motiv/A.cs` | no valid mutants | 75% | not applied |' "says the gate was not applied to it"
 
-out="$(gate '{"thresholds":[{"file":"src/Motiv/Strong.cs","score":75,"survivors":null}]}' "$SANDBOX/missing.json" 2>&1)"
+gate '{"thresholds":[{"file":"src/Motiv/Strong.cs","score":75,"survivors":null}]}' "$SANDBOX/missing.json" > /dev/null
 assert_equals "$?" "1" "fails when there is no report to check"
+assert_contains "$(cat "$SANDBOX/gate.err")" "no mutation report to check" "says why it failed"
 
 echo "plan.sh"
 
