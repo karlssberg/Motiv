@@ -212,6 +212,8 @@ class Checker {
         if ('var' in other || (k && !k.nullable)) this.report(otherNode, 'ExpressionTypeMismatch', `'${printLeaf(otherNode)}' is never null`, true);
         return this.set(node, bool);
       }
+      // An unknown side already has its own error; anything said about the comparison would be a guess.
+      if ('unknown' in left || 'unknown' in right) { this.abandon(left, right); return this.set(node, bool); }
       const l = this.known(left); const r = this.known(right);
       if (l && r && l.kind !== 'numeric' && r.kind !== 'numeric') {
         if (l.kind !== r.kind) this.report(node, 'ExpressionTypeMismatch', `comparing ${describe(l)} with ${describe(r)}`);
@@ -253,18 +255,23 @@ class Checker {
     return this.set(node, result);
   }
 
+  /**
+   * Gives up on typing a binary whose error is already reported. The other side's var has no
+   * genuine anchor to blame, so it is marked errored and `finish` does not pile a "no model field
+   * fixes this" default on top of the real problem.
+   */
+  private abandon(left: LeafType, right: LeafType): LeafType {
+    if ('var' in left) this.errored.add(root(left.var));
+    if ('var' in right) this.errored.add(root(right.var));
+    return { unknown: true };
+  }
+
   private unify(node: Extract<LeafAst, { kind: 'binary' }>, left: LeafType, right: LeafType, arithmetic: boolean): LeafType {
-    if ('unknown' in left || 'unknown' in right) {
-      // The other side's var has no genuine anchor to blame — an unrelated error already fired
-      // on this expression, so don't also pile on a "no model field fixes this" default.
-      if ('var' in left) this.errored.add(root(left.var));
-      if ('var' in right) this.errored.add(root(right.var));
-      return { unknown: true };
-    }
+    if ('unknown' in left || 'unknown' in right) return this.abandon(left, right);
     const what = arithmetic ? `'${node.op}' needs numbers` : `'${node.op}' compares numbers`;
     for (const [side, type] of [[node.left, left], [node.right, right]] as const) {
       const k = 'known' in type ? type.known : undefined;
-      if (k && k.kind !== 'numeric') { this.report(side, 'ExpressionTypeMismatch', `${what}; this is ${describe(k)}`); return { unknown: true }; }
+      if (k && k.kind !== 'numeric') { this.report(side, 'ExpressionTypeMismatch', `${what}; this is ${describe(k)}`); return this.abandon(left, right); }
     }
     const nullable = ('known' in left && left.known.nullable) || ('known' in right && right.known.nullable);
 
@@ -311,6 +318,7 @@ class Checker {
       let have = 'this literal';
       if (v.resolved) have = kindName(v.resolved);
       else if (v.paramKind === 'number') have = 'a number parameter';
+      else if (v.paramKind === 'integer') have = 'an integer parameter';
       this.report(node, 'ExpressionTypeMismatch', `cannot use ${have} with ${kindName(concrete)} without losing precision`);
       this.errored.add(v);
       return { unknown: true };

@@ -214,8 +214,13 @@ public class CSharpPrinterTests
         var source = Body("""{ "definitions": { "a": { "rule": { "and": [ { "local": "b" }, { "spec": "x" } ] } }, "b": { "rule": { "spec": "y" } } }, "rule": { "local": "a" } }""",
             o => { o.Handles["x"] = "X"; o.Handles["y"] = "Y"; });
 
-        source.IndexOf("var b = ", StringComparison.Ordinal).ShouldBeLessThan(source.IndexOf("var a = ", StringComparison.Ordinal));
-        source.ShouldContain("""var a = Spec.Build((b & X)).Create("a");""");
+        source.ShouldBe(
+            "public static SpecBase<Customer, string> Build(SpecRegistry registry)\n" +
+            "{\n" +
+            "    var b = Spec.Build(Y).Create(\"b\");\n" +
+            "    var a = Spec.Build((b & X)).Create(\"a\");\n" +
+            "    return a;\n" +
+            "}\n");
     }
 
     [Fact]
@@ -233,5 +238,132 @@ public class CSharpPrinterTests
     public void Should_throw_the_parse_errors_for_a_document_that_does_not_parse()
     {
         Should.Throw<RuleSerializationException>(() => CSharpPrinter.Print("""{ "rule": { } }""", Options())).Errors.ShouldNotBeEmpty();
+    }
+
+    [Fact]
+    public void Should_name_the_null_argument()
+    {
+        Should.Throw<ArgumentNullException>(() => CSharpPrinter.Print((string)null!, Options())).ParamName!.ShouldBe("documentJson");
+        Should.Throw<ArgumentNullException>(() => CSharpPrinter.Print("""{ "rule": { "spec": "a" } }""", null!)).ParamName!.ShouldBe("options");
+    }
+
+    [Fact]
+    public void Should_omit_the_model_using_when_the_model_is_in_the_target_namespace_and_never_indent_a_blank_line()
+    {
+        var source = Body("""{ "rule": { "spec": "a" } }""", o => { o.ClassName = "Eligible"; o.Namespace = "Motiv.Serialization.Tests.Printing"; });
+
+        source.ShouldBe(
+            "using Motiv;\nusing Motiv.Serialization;\n\n" +
+            "namespace Motiv.Serialization.Tests.Printing;\n\n" +
+            "public static class Eligible\n{\n" +
+            "    public static SpecBase<Customer, string> Build(SpecRegistry registry)\n" +
+            "    {\n" +
+            "        return registry.Get<Customer>(\"a\");\n" +
+            "    }\n" +
+            "}\n");
+    }
+
+    [Fact]
+    public void Should_stay_async_when_more_than_one_reference_is_async()
+    {
+        var source = Body("""{ "rule": { "and": [ { "spec": "first-async" }, { "spec": "second-async" } ] } }""",
+            o => { o.Async.Add("first-async"); o.Async.Add("second-async"); });
+
+        source.ShouldContain("public static AsyncSpecBase<Customer, string> Build(SpecRegistry registry)");
+        source.ShouldContain("""(registry.GetAsync<Customer>("first-async") & registry.GetAsync<Customer>("second-async"))""");
+    }
+
+    [Fact]
+    public void Should_say_what_to_check_about_an_expression_leaf()
+    {
+        var printed = CSharpPrinter.Print("""{ "rule": { "expression": "m.Age > 18" } }""", Options());
+
+        printed.Warnings.ShouldBe(["$.rule: expression leaf printed verbatim and not re-parsed; check it compiles as a lambda over Customer"]);
+    }
+
+    [Fact]
+    public void Should_say_which_collection_has_no_handle_and_type_its_elements_as_object()
+    {
+        var printed = CSharpPrinter.Print("""{ "rule": { "asAnySatisfied": { "spec": "is-positive" }, "path": "orders" } }""",
+            Options(o => o.Handles["is-positive"] = "IsPositive"));
+
+        printed.Source.ShouldContain("""Spec.Build(IsPositive).AsAnySatisfied().WhenTrue("any satisfied").WhenFalse("none satisfied").Create().ChangeModelTo<Customer>(m => m.Orders /* TODO: the collection registered at 'orders' */)""");
+        printed.Warnings.ShouldBe(["$.rule: no handle for the collection at 'orders'; the element type and selector are placeholders"]);
+    }
+
+    [Fact]
+    public void Should_reference_an_inner_spec_over_object_when_the_collection_has_no_handle()
+    {
+        var source = Body("""{ "rule": { "asAllSatisfied": { "spec": "is-positive" }, "path": "orders" } }""");
+
+        source.ShouldContain("""Spec.Build(registry.Get<object>("is-positive")).AsAllSatisfied()""");
+    }
+
+    [Fact]
+    public void Should_say_when_a_collection_handle_has_no_selector()
+    {
+        var printed = CSharpPrinter.Print("""{ "rule": { "asNSatisfied": { "spec": "is-positive" }, "n": 2, "path": "orders" } }""",
+            Options(o => { o.Handles["is-positive"] = "IsPositive"; o.Collections["orders"] = new CSharpCollectionHandle("int", null); }));
+
+        printed.Source.ShouldContain("""Spec.Build(IsPositive).AsNSatisfied(2).WhenTrue("exactly 2 satisfied").WhenFalse("not exactly 2 satisfied").Create().ChangeModelTo<Customer>(m => m.Orders /* TODO: the collection registered at 'orders' */)""");
+        printed.Warnings.ShouldBe(["$.rule: no selector for the collection at 'orders'; the selector is a placeholder"]);
+    }
+
+    [Fact]
+    public void Should_print_the_at_most_quantifier_payloads()
+    {
+        var source = Body("""{ "rule": { "asAtMostNSatisfied": { "spec": "is-positive" }, "n": 3, "path": "orders" } }""",
+            o => { o.Handles["is-positive"] = "IsPositive"; o.Collections["orders"] = new CSharpCollectionHandle("int", "c => c.Orders"); });
+
+        source.ShouldContain("""Spec.Build(IsPositive).AsAtMostNSatisfied(3).WhenTrue("at most 3 satisfied").WhenFalse("more than 3 satisfied").Create().ChangeModelTo<Customer>(c => c.Orders)""");
+    }
+
+    [Fact]
+    public void Should_escape_quotes_backslashes_and_control_characters_in_payload_text()
+    {
+        var source = Body("""{ "rule": { "spec": "a", "whenTrue": "say \"hi\" \\ now\nthen\rback\ttab", "whenFalse": "no" } }""",
+            o => o.Handles["a"] = "A");
+
+        source.ShouldContain("""WhenTrue("say \"hi\" \\ now\nthen\rback\ttab")""");
+    }
+
+    [Fact]
+    public void Should_interpolate_a_hole_at_the_very_start_and_keep_escaped_braces_at_the_very_end()
+    {
+        var source = Body("""
+            { "parameters": { "limit": { "type": "integer" } },
+              "rule": { "spec": "a", "whenTrue": "{limit} and {{x}}", "whenFalse": "{{y}}" } }
+            """, o => o.Handles["a"] = "A");
+
+        source.ShouldContain("""WhenTrue($"{limit} and {{x}}").WhenFalse($"{{y}}")""");
+    }
+
+    [Fact]
+    public void Should_print_a_long_argument_with_its_suffix()
+    {
+        var source = Body("""{ "rule": { "spec": "customer.spent-over", "args": { "cents": 3000000000 } } }""");
+
+        source.ShouldContain("""["cents"] = 3000000000L""");
+    }
+
+    public static TheoryData<string> Keywords() =>
+    [
+        "abstract", "as", "base", "bool", "break", "byte", "case", "catch", "char", "checked", "class", "const",
+        "continue", "decimal", "default", "delegate", "do", "double", "else", "enum", "event", "explicit", "extern",
+        "false", "finally", "fixed", "float", "for", "foreach", "goto", "if", "implicit", "in", "int", "interface",
+        "internal", "is", "lock", "long", "namespace", "new", "null", "object", "operator", "out", "override",
+        "params", "private", "protected", "public", "readonly", "ref", "return", "sbyte", "sealed", "short",
+        "sizeof", "stackalloc", "static", "string", "struct", "switch", "this", "throw", "true", "try", "typeof",
+        "uint", "ulong", "unchecked", "unsafe", "ushort", "using", "virtual", "void", "volatile", "while",
+    ];
+
+    [Theory]
+    [MemberData(nameof(Keywords))]
+    public void Should_escape_every_reserved_keyword_used_as_a_parameter_name(string keyword)
+    {
+        var source = Body($$"""{ "parameters": { "{{keyword}}": { "type": "string" } }, "rule": { "spec": "a" } }""",
+            o => o.Handles["a"] = "A");
+
+        source.ShouldContain($"(SpecRegistry registry, string @{keyword})");
     }
 }
