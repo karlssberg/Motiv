@@ -122,6 +122,10 @@ the same fan-out — is deleted with them.
 
 ## Not done here — and the number it is filed with
 
+> **Since closed.** #227 was fixed by starting a boundary operand on a fresh stack once the current one
+> runs low, rather than by the scheduler below. See
+> [`2026-10-04-spec-227-alternating-composition-stack-probe-design.md`](2026-10-04-spec-227-alternating-composition-stack-probe-design.md).
+
 **Alternating concurrent and sequential operations** — [#227](https://github.com/karlssberg/Motiv/issues/227). A sequential operation at a region's boundary is
 handed to a fold of its own, so `x.AndConcurrently(y).And(z)` repeated costs a frame per alternation.
 Bisected out of process on the same 1 MB thread, that shape now returns to **298** layers.

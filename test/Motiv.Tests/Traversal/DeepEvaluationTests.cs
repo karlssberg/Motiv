@@ -18,6 +18,9 @@ public class DeepEvaluationTests
     /// <summary>Comfortably past both measured ceilings, and past twice the higher one.</summary>
     private const int Operands = 50_000;
 
+    /// <summary>Past the alternating shape's measured ceiling of 298 by more than thirty times.</summary>
+    private const int Alternations = 10_000;
+
     [Fact]
     public void Should_evaluate_a_deep_And_chain() =>
         OnASmallStack(() => Chain((left, right) => left.And(right)).Evaluate(2).Satisfied.ShouldBeTrue());
@@ -138,6 +141,46 @@ public class DeepEvaluationTests
         OnASmallStack(() => ConcurrentChain("and")
             .MatchesAsync(2).AsTask().GetAwaiter().GetResult().ShouldBeTrue());
 
+    /// <summary>
+    /// A composition that alternates the two operator families. The region fold absorbs an unbroken run
+    /// of concurrent operations, but an operand at its boundary that is itself sequential is handed to a
+    /// fold of its own, so before
+    /// <see href="https://github.com/karlssberg/Motiv/issues/227">#227</see> each alternation cost one
+    /// fold entry on the stack: the last depth that returned on this thread size was 298.
+    /// </summary>
+    [Theory]
+    [InlineData("and")]
+    [InlineData("or")]
+    [InlineData("xor")]
+    public void Should_evaluate_a_deep_alternating_concurrent_and_sequential_chain(string operation) =>
+        OnASmallStack(() => _ = AlternatingChain(operation)
+            .EvaluateAsync(2).AsTask().GetAwaiter().GetResult().Satisfied);
+
+    /// <summary>
+    /// The same shape over leaves that complete asynchronously, so the folds unwind through
+    /// continuations rather than returns — the direction the stack probe at the region's boundary does
+    /// not itself guard.
+    /// </summary>
+    [Fact]
+    public void Should_evaluate_a_deep_alternating_chain_of_asynchronously_completing_leaves() =>
+        OnASmallStack(() => Enumerable
+            .Range(0, Alternations)
+            .Select(i => Spec
+                .BuildAsync(async (int n) =>
+                {
+                    await Task.Yield();
+                    return n % 2 == 0;
+                })
+                .Create($"p{i} is even"))
+            .Aggregate((AsyncSpecBase<int, string> left, AsyncSpecBase<int, string> right) =>
+                left.AndConcurrently(right).And(right))
+            .EvaluateAsync(2).AsTask().GetAwaiter().GetResult().Satisfied.ShouldBeTrue());
+
+    [Fact]
+    public void Should_match_a_deep_alternating_concurrent_and_sequential_chain() =>
+        OnASmallStack(() => AlternatingChain("and")
+            .MatchesAsync(2).AsTask().GetAwaiter().GetResult().ShouldBeTrue());
+
     [Fact]
     public void Should_match_a_deep_async_And_chain() =>
         OnASmallStack(() => AsyncChain((left, right) => left.And(right))
@@ -185,6 +228,22 @@ public class DeepEvaluationTests
             "or" => left.OrConcurrently(right),
             _ => left.XOrConcurrently(right)
         });
+
+    /// <summary>
+    /// <c>spec.AndConcurrently(leaf).And(leaf)</c>, repeated — the shape #227 measured. Fewer operands
+    /// than the other chains, because each alternation charges the evaluation budget four times, and
+    /// <see cref="Alternations" /> is still more than thirty times the measured ceiling.
+    /// </summary>
+    private static AsyncSpecBase<int, string> AlternatingChain(string operation) =>
+        Operand()
+            .Take(Alternations)
+            .Select(spec => spec.ToAsyncSpec())
+            .Aggregate((left, right) => operation switch
+            {
+                "and" => left.AndConcurrently(right).And(right),
+                "or" => left.OrConcurrently(right).Or(right),
+                _ => left.XOrConcurrently(right).XOr(right)
+            });
 
     private static AsyncPolicyBase<int, string> AsyncPolicyChain(string operation) =>
         Enumerable
