@@ -106,7 +106,7 @@ To mutate one shard's files locally, pass the same globs, for example
 `.github/workflows/mutation-pr.yml` runs on every pull request to `main` that touches `src/Motiv`,
 `test/Motiv.Tests` or the mutation tooling. It mutates **only the `src/Motiv` C# files the pull
 request adds or modifies**, runs the whole of `Motiv.Tests` against those mutants, and fails when
-their score is below a break threshold. A full run takes about 150 runner-minutes. The gate's cost
+any of those files falls short of what it must reach. A full run takes about 150 runner-minutes. The gate's cost
 grows with the number of files changed.
 
 ### What it mutates
@@ -131,57 +131,56 @@ add nothing.
 A pull request that changes only tests has nothing to mutate, so the gate reports that and passes.
 Weakened tests show up in the full run, not here.
 
-### The break threshold
+### What each file must reach
 
-Each changed file has a threshold, and `--break-at` is the **lowest threshold among the changed
-files**, rounded down because Stryker takes a whole number. A file's threshold is the lower of two
-numbers:
+Stryker reports every mutant by file, and `scripts/mutation/gate.sh` checks **each changed file on
+its own**. Stryker itself never fails the run; the gate's verdict comes from its report. A file
+passes in one of two ways:
 
-- **Its area's baseline**, from `test/Motiv.Tests/stryker-baselines.json`. The areas are the shards
-  in `stryker-shards.json`, plus `rest`, assigned the same way `plan-shards.sh` assigns them.
-- **Its own last measured score**, from `test/Motiv.Tests/stryker-file-baselines.json`, when it has
-  one.
+- **It reaches its area's baseline**, from `test/Motiv.Tests/stryker-baselines.json`. The areas are
+  the shards in `stryker-shards.json`, plus `rest`, assigned the same way `plan-shards.sh` assigns
+  them. This is the only way for a new file, and for a file that already scored at or above its
+  area's baseline.
+- **It gains no undetected mutants.** This applies only to a file whose last measured score, in
+  `test/Motiv.Tests/stryker-file-baselines.json`, is below its area's baseline. It passes if it has
+  no more undetected (Survived or NoCoverage) mutants than were recorded for it.
 
-| Area | Baseline | Break |
-|---|---|---|
-| higher-order | 54.66% | 54 |
-| expression-tree | 58.30% | 58 |
-| decorator-result-predicate | 65.90% | 65 |
-| predicate-traversal-shared | 71.60% | 71 |
-| operators | 96.00% | 96 |
-| rest | 77.59% | 77 |
+| Area | Baseline |
+|---|---|
+| higher-order | 54.66% |
+| expression-tree | 58.30% |
+| decorator-result-predicate | 65.90% |
+| predicate-traversal-shared | 71.60% |
+| operators | 96.00% |
+| rest | 77.59% |
 
 Each area baseline is the area's score in the full run on `main` at `16b42fe` (2026-10-03) less one
-point. It is the bar for a new file, and the most asked of an existing file that already scores
-above it. The file baselines come from the same run, except the files `main` changed after it
-(#317, #318), which were re-measured on their own.
+point. The file baselines come from the same run, except the files `main` changed after it
+(#317, #318, #321), which were re-measured on their own.
 
-Why both: the gate scores a handful of files, not the area. An area's score is an average, and
-many files sit below it. In `operators`, which scores 97%, `NotSpecDescription.cs` scores 80%, so an
-area floor alone would fail any change to that file, however good, for debt it already had. Holding
-a weak file to its own score instead asks only that a change leave it no weaker. Stryker scores the
-changed files together, and a pooled score is never below the lowest file's, so a pull request that
-leaves every file at its measured score passes. The job summary lists the files held to their own
-score.
+Why a weak file is held to a count rather than its score: an area's score is an average, and many
+files sit below it. In `operators`, which scores 97%, `NotSpecDescription.cs` scores 80%, so the
+area's baseline alone would fail any change to that file, however good, for debt it already had. Its
+own score would not do as a floor either: 89 files score 0%, and no score is below 0%. Counting
+undetected mutants asks the same of all of them, a 0% file included: a change may not add code that
+the tests do not check. Bringing the file up to its area's baseline also passes, however many
+mutants the change added.
 
 What it does and does not promise:
 
-- It is a **ratchet per file**, not a before/after comparison of the same file. Mutants a pull
-  request adds count against the file's old score, so new code in a weak file must be at least as
-  well tested as the file already was.
-- The changed files are pooled, so a pull request that touches a weak file is held to that file's
-  score as a whole: a strong file it also touches can slip without failing the gate.
-- A file that scores 0% today puts no floor under a pull request that touches it. Bringing such a
-  file up is the triage the full run is for.
-- A new file is held to its area's baseline. In `operators` that means almost no survivors, and a
-  small file gives a coarse score: three mutants with one survivor is 67%.
-- The shared `stryker-config.json` keeps `break: 0`, so the full run stays report-only. The gate
-  also raises `--threshold-low` to the break for its own run, because Stryker requires
-  `break <= low`. That only changes the report's colours.
+- Each file is judged alone, so a file that passes does not carry one that fails.
+- Undetected mutants are counted, not identified. A change that removes one survivor and adds
+  another passes.
+- A file that loses tested code without gaining survivors passes, even though its score drops.
+- In `operators`, a new or strong file must reach 96%, which means almost no survivors. A small
+  file gives a coarse score: three mutants with one survivor is 67%.
+- The shared `stryker-config.json` keeps `break: 0`, so the full run stays report-only, and the gate
+  passes no break of its own.
 
 When a full run's scores rise, update both files in one pull request: raise the area's number in
 `stryker-baselines.json`, keeping the one-point margin, and regenerate the file baselines from that
-run's `src/Motiv` shard reports:
+run's `src/Motiv` shard reports. Regenerate them too after upgrading Stryker, because a new version
+can change which mutants it makes:
 
 ```bash
 scripts/mutation/file-scores.sh <shard report>.json... > test/Motiv.Tests/stryker-file-baselines.json
@@ -192,25 +191,24 @@ area it touches that has no baseline.
 
 ### When there is no score
 
-If the changed files produce no valid mutants (for example, every mutant is a compile error),
-Stryker's score is NaN and it never breaks on NaN. The job summary then says **Gate not applied**,
-so a green check is not mistaken for a pass. If Stryker exits 0 without writing a report, the job
-fails.
+A changed file that produces no valid mutants (for example, every mutant is a compile error) is
+marked **not applied** in the job summary rather than passed silently. If Stryker exits 0 without
+writing a report, the job fails.
 
 ### Reading the result
 
-The job summary shows the score, the break and the areas behind it, and the files mutated. It also
-lists each undetected mutant as `path:line:column  mutator  -> replacement`, and the same list is
-printed to the log. The HTML and JSON reports are uploaded as the `mutation-report-motiv-pr`
-artifact.
+The job summary shows the overall score of the changed files, then a table with one row per file:
+what it measured, what it needed and whether it passed. It also lists each undetected mutant as
+`path:line:column  mutator  -> replacement`, and the same list is printed to the log. The HTML and
+JSON reports are uploaded as the `mutation-report-motiv-pr` artifact.
 
-To reproduce a gate run locally, first work out the scope from the repository root. Then pass its
-globs and break to Stryker from `test/Motiv.Tests`:
+To reproduce a gate run locally, work out the scope from the repository root, pass its globs to
+Stryker from `test/Motiv.Tests`, then check the report:
 
 ```bash
-scripts/mutation/pr-scope.sh origin/main HEAD   # prints files, globs, areas, held files and break
-cd test/Motiv.Tests
-dotnet tool run dotnet-stryker --mutate "**/src/Motiv/Not/NotSpecDescription.cs" --break-at 80 --threshold-low 80
+scripts/mutation/pr-scope.sh origin/main HEAD > scope.json   # files, globs, areas and thresholds
+(cd test/Motiv.Tests && dotnet tool run dotnet-stryker --mutate "**/src/Motiv/Not/NotSpecDescription.cs")
+scripts/mutation/gate.sh scope.json test/Motiv.Tests/StrykerOutput/<run>/reports/mutation-report.json
 ```
 
 ## Scheduled full run
@@ -257,8 +255,8 @@ passes `survivors.sh --prefix ui/packages/rules-core` to print repository-relati
 report. `@motiv-rules/core` writes its own score in its job summary.
 
 `scripts/mutation/tests/scripts.test.sh` tests `plan.sh`, `survivors.sh`, `summarise.sh`,
-`file-scores.sh` and `combine.sh` against fake reports in both tools' formats, and `pr-scope.sh` against a throwaway git
-repository. It needs only `jq` and `git`, and the workflow runs it before planning.
+`file-scores.sh`, `gate.sh` and `combine.sh` against fake reports in both tools' formats, and
+`pr-scope.sh` against a throwaway git repository. It needs only `jq` and `git`, and the workflow runs it before planning.
 
 ## StrykerJS (@motiv-rules/core)
 

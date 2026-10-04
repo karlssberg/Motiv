@@ -1,7 +1,8 @@
 # Mutation testing PR gate (#294, rollout step 3): mutates only the src/Motiv C# files a pull
-# request changes, and fails when their score falls below the lowest of their thresholds: each file's
-# area baseline, or its own last measured score when that is lower. The full, report-only run stays
-# in mutation.yml; a full run is ~150 runner-minutes, this one scales with the diff.
+# request changes, and checks each of them on its own (scripts/mutation/gate.sh): a file fails when it
+# scores below its area's baseline, unless it already sat below that baseline and has gained no
+# undetected mutants. The full, report-only run stays in mutation.yml; a full run is
+# ~150 runner-minutes, this one scales with the diff.
 #
 # Scope is worked out from git by scripts/mutation/pr-scope.sh and passed to Stryker as --mutate
 # globs, rather than with Stryker's own --since. In Stryker.NET 5.0.0 --since marks every mutant as
@@ -10,8 +11,8 @@
 # covers — repo-wide — when a test .cs file changes. Either turns a PR into a full run.
 # See docs/contributing/mutation-testing.md, "PR gate".
 #
-# The break threshold is passed on the command line (--break-at), so stryker-config.json keeps
-# `break: 0` and the full run stays report-only.
+# Stryker itself never breaks here: stryker-config.json keeps `break: 0`, as the full run needs, and
+# the verdict is gate.sh's, from the report Stryker writes.
 
 name: Mutation gate
 
@@ -57,7 +58,6 @@ jobs:
           echo "count=$(jq '.files | length' "$RUNNER_TEMP/scope.json")"
           # Every later step keys on this; it is unset when this step fails, so they skip then too.
           echo "run=$(jq '.files | length > 0' "$RUNNER_TEMP/scope.json")"
-          echo "break=$(jq '.break // empty' "$RUNNER_TEMP/scope.json")"
         } >> "$GITHUB_OUTPUT"
     - name: Nothing to mutate
       if: steps.scope.outputs.run == 'false'
@@ -85,7 +85,6 @@ jobs:
       if: steps.scope.outputs.run == 'true'
       working-directory: test/Motiv.Tests
       env:
-        BREAK: ${{ steps.scope.outputs.break }}
         # Caps every .NET process this step starts, test hosts included, at 3 GiB of GC heap. A mutant
         # that makes a deep-chain test allocate without bound then fails that test with an
         # OutOfMemoryException (the mutant is killed) instead of exhausting the runner, which ends the
@@ -99,16 +98,9 @@ jobs:
         for glob in "${globs[@]}"; do mutate+=(--mutate "$glob"); done
         # Stryker refuses an --output directory that does not already exist.
         mkdir -p "$RUNNER_TEMP/stryker"
-        # Stryker requires break <= low, and the config's low (60) is below some areas' baselines,
-        # so low is raised to the break for this run. It only colours the report.
+        # With break 0 any non-zero exit is a failed run, not a verdict; the next step gives that.
         status=0
-        dotnet tool run dotnet-stryker --output "$RUNNER_TEMP/stryker" "${mutate[@]}" \
-          --break-at "$BREAK" --threshold-low "$BREAK" || status=$?
-        # Exit code 2 is Stryker's "score below the break threshold"; anything else non-zero is a
-        # failed run, not a verdict.
-        if [ "$status" -eq 2 ]; then
-          echo "::error::Mutation score of the changed files is below the gate's break threshold of $BREAK%. The undetected mutants are listed below and in the job summary."
-        fi
+        dotnet tool run dotnet-stryker --output "$RUNNER_TEMP/stryker" "${mutate[@]}" || status=$?
         # Stryker also exits 0 when it finds no test project, without writing a report; that is not
         # a pass.
         if [ "$status" -eq 0 ] && [ ! -f "$RUNNER_TEMP/stryker/reports/mutation-report.json" ]; then
@@ -116,30 +108,24 @@ jobs:
           exit 1
         fi
         exit "$status"
-    - name: Summarise score
-      if: always() && steps.scope.outputs.run == 'true'
-      env:
-        BREAK: ${{ steps.scope.outputs.break }}
-        COUNT: ${{ steps.scope.outputs.count }}
+    - name: Check each file
+      if: steps.scope.outputs.run == 'true'
       run: |
         report="$RUNNER_TEMP/stryker/reports/mutation-report.json"
+        # Not a pipe into tee: the gate's exit status must survive into this shell.
+        status=0
+        scripts/mutation/gate.sh "$RUNNER_TEMP/scope.json" "$report" > "$RUNNER_TEMP/gate.md" || status=$?
         {
           scripts/mutation/summarise.sh "Mutation gate — changed files in src/Motiv" "$report"
-          # With no valid mutants Stryker's score is NaN, and it never breaks on NaN. Say so, rather
-          # than let a green check read as a pass.
-          if [ -f "$report" ] && [ "$(scripts/mutation/summarise.sh --valid "$report")" -eq 0 ]; then
-            printf '\n**Gate not applied:** the changed files produced no valid mutants, so there is no score to hold to %s%%.\n' "$BREAK"
-          fi
-          printf '\n**Break threshold: %s%%** — the lowest threshold of the changed files. Area baselines:\n\n' "$BREAK"
-          jq -r '.areas[] | "- \(.name): \(.baseline)%"' "$RUNNER_TEMP/scope.json"
-          if [ "$(jq '.held | length' "$RUNNER_TEMP/scope.json")" -gt 0 ]; then
-            printf '\nHeld to their own last measured score, which is below their area baseline:\n\n'
-            jq -r '.held[] | "- `\(.file)`: \(.baseline)%"' "$RUNNER_TEMP/scope.json"
-          fi
-          printf '\n<details><summary>%s changed files mutated</summary>\n\n' "$COUNT"
-          jq -r '.files[] | "- `\(.)`"' "$RUNNER_TEMP/scope.json"
-          printf '\n</details>\n'
-        } >> "$GITHUB_STEP_SUMMARY"
+          printf '\n'
+          cat "$RUNNER_TEMP/gate.md"
+          printf '\n\nArea baselines: %s\n' \
+            "$(jq -r '[.areas[] | "\(.name) \(.baseline)%"] | join(", ")' "$RUNNER_TEMP/scope.json")"
+        } | tee -a "$GITHUB_STEP_SUMMARY"
+        if [ "$status" -ne 0 ]; then
+          echo "::error::A changed file is below its mutation threshold; see the table above and the undetected mutants below."
+        fi
+        exit "$status"
     - name: List undetected mutants
       if: always() && steps.scope.outputs.run == 'true'
       # --details prints the list to the log as well as the summary, so triage does not depend on
