@@ -130,9 +130,9 @@ public class StoreImportTests
     [Fact]
     public async Task Should_copy_the_propositions_before_the_rules()
     {
-        // Arrange — the refuse-check reads the rules first, so the rules must be the last thing to
-        // become non-empty: a crash between the two sides then leaves a target whose rule side is
-        // still empty
+        // Arrange — the proposition batch is all-or-nothing, so copying it first means a failure
+        // there leaves the target empty (see the proposition-conflict test below). The refuse-check
+        // reads both stores before either is written, so the order buys it nothing
         var sourceRules = new InMemoryRuleStore();
         await sourceRules.AppendAsync([Row("a", 1)], default);
 
