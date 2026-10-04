@@ -79,6 +79,8 @@ string IssueRefund(RefundRequest request)
 
 IssueRefund(new RefundRequest(Amount: 750, DaysSincePurchase: 12, IsFinalSale: false));
 // "Refused: request.Amount > 500"
+
+record RefundRequest(decimal Amount, int DaysSincePurchase, bool IsFinalSale);
 ```
 
 Only the failing clause comes back, so the agent knows the amount is the problem and the other conditions were met.
