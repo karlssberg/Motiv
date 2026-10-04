@@ -23,7 +23,12 @@ depth that returns on a 1 MB thread at **298**; past it the process aborts.
 3. **The budget across the hop.** `AsyncEvaluationBudgetTests` admits a 2,000-alternation composition
    at exactly its cost and refuses it one node short, on the 1 MB thread so that the hop happens.
    Mutation-checked: suppressing `ExecutionContext` flow into `Task.Run` makes the refusal case fail.
-4. **The unwinding direction.** One more case runs the shape over leaves that complete
+4. **The unwinding direction.** The first CI run aborted `net472` with a stack overflow while every
+   .NET Core leg passed: the folds resume inline on the way back out, and only .NET Core's task
+   machinery queues a continuation once the stack runs low. A region that resumes from its
+   `Task.WhenAll` with the stack low now yields before composing. The `net472` leg is the evidence;
+   .NET Core's own guard hides the defect there.
+5. **Asynchronous leaves.** One more case runs the shape over leaves that complete
    asynchronously, so the folds complete through continuations rather than returns.
-5. Full `Motiv.Tests`, `Motiv.Serialization.Tests`, `Motiv.Serialization.Snapshots.Tests` and the
+6. Full `Motiv.Tests`, `Motiv.Serialization.Tests`, `Motiv.Serialization.Snapshots.Tests` and the
    Poker, ECommerce and SmartHome example suites, `net10.0`.

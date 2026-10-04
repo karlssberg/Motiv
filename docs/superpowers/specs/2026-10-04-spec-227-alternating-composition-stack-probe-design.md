@@ -24,6 +24,19 @@ So the region starts each boundary operand inline, exactly as before, while
 not. The probe is a comparison against a limit the runtime keeps, so the common path — every
 composition that ever worked — pays one comparison per boundary operand and nothing else.
 
+### The way back out
+
+A fold started on a fresh stack completes there, and every fold awaiting it resumes inline on top of
+it, so the same nesting comes back on the way out: one region per alternation, on whichever thread
+finished the deepest operand. .NET Core's task machinery queues an inline continuation once the stack
+runs low; .NET Framework's does not, and the first CI run of this change aborted the `net472` test host
+with a `StackOverflowException` while every .NET Core leg passed. So a region that resumes from its
+`Task.WhenAll` with the stack low yields (`Task.Yield`) before composing, rather than relying on the
+runtime. The two probes are the same check, one on each side of the await.
+
+This half could not be reproduced on .NET Core, where the runtime's own guard masks it; the `net472` leg
+on Windows CI is its evidence.
+
 ### What it costs, and where
 
 - **Only past the point that used to abort.** Below it, a boundary operand starts on a thread-pool

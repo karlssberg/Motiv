@@ -195,6 +195,13 @@ internal static class AsyncEvaluationFold
 
         var boundaryValues = await Task.WhenAll(boundary).ConfigureAwait(false);
 
+        // The same nesting, unwinding. A fold started on a fresh stack completes there, and every fold
+        // awaiting it resumes inline on top of it — one region per alternation again, now on the way
+        // out. .NET Core queues an inline continuation once the stack runs low; .NET Framework does
+        // not, so this region yields to a fresh stack itself rather than rely on the runtime (#227).
+        if (!HasSufficientStack())
+            await Task.Yield();
+
         var composed = new TValue[region.Count];
         for (var node = region.Count - 1; node >= 0; node--)
         {
