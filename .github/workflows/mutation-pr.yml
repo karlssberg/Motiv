@@ -112,7 +112,7 @@ jobs:
       if: steps.scope.outputs.run == 'true'
       run: |
         report="$RUNNER_TEMP/stryker/reports/mutation-report.json"
-        # Not a pipe into tee: the gate's exit status must survive into this shell.
+        # gate.sh writes to a file, not a pipe, so its exit status is kept for the verdict below.
         status=0
         scripts/mutation/gate.sh "$RUNNER_TEMP/scope.json" "$report" > "$RUNNER_TEMP/gate.md" || status=$?
         {
@@ -121,7 +121,7 @@ jobs:
           cat "$RUNNER_TEMP/gate.md"
           printf '\n\nArea baselines: %s\n' \
             "$(jq -r '[.areas[] | "\(.name) \(.baseline)%"] | join(", ")' "$RUNNER_TEMP/scope.json")"
-        } | tee -a "$GITHUB_STEP_SUMMARY"
+        } | tee -a "$GITHUB_STEP_SUMMARY" || true
         if [ "$status" -ne 0 ]; then
           echo "::error::A changed file is below its mutation threshold; see the table above and the undetected mutants below."
         fi

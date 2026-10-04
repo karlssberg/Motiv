@@ -30,12 +30,11 @@ jq -r --argjson measured "$measured" '
         got: (if $m == null then "no valid mutants"
               else ($m.score | pct) + (if $t.survivors == null then "" else ", \($m.survivors) undetected" end)
               end),
-        result: (if $m == null then "not applied"
-                 elif $m.score >= $t.score or ($t.survivors != null and $m.survivors <= $t.survivors)
-                 then "pass"
-                 else "**fail**" end) } ] as $rows
+        failed: ($m != null and $m.score < $t.score
+                 and ($t.survivors == null or $m.survivors > $t.survivors)) }
+      | .result = (if $m == null then "not applied" elif .failed then "**fail**" else "pass" end) ] as $rows
   | "| File | Measured | Needed | Result |\n|---|---|---|---|\n"
     + ($rows | map("| `\(.file)` | \(.got) | \(.needed) | \(.result) |") | join("\n")),
-    (if any($rows[]; .result == "**fail**")
+    (if any($rows[]; .failed)
      then "gate.sh: a changed file is below its threshold.\n" | halt_error(1) else empty end)
 ' "$scope"
