@@ -82,28 +82,27 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
                 OutputText.Append("checked((");
                 OutputText.Append(node.Type.ToCSharpName());
                 OutputText.Append(')');
-                Visit(node.Operand);
+                VisitAndMaybeApplyParentheses(node, node.Operand);
                 OutputText.Append(')');
                 break;
             case ExpressionType.Convert
                 when CastHelper.IsExplicitNumericCast(node.Operand.Type, node.Type)
                     && node.Operand.Type != typeof(Delegate):
+            case ExpressionType.Unbox:
                 OutputText.Append('(');
                 OutputText.Append(node.Type.ToCSharpName());
                 OutputText.Append(')');
-                Visit(node.Operand);
+                VisitAndMaybeApplyParentheses(node, node.Operand);
                 break;
             case ExpressionType.ConvertChecked
                 or ExpressionType.Convert:
                 Visit(node.Operand);
                 break;
             case ExpressionType.Negate:
-                OutputText.Append('-');
-                VisitAndMaybeApplyParentheses(node, node.Operand);
+                VisitSignedOperand('-', node);
                 break;
             case ExpressionType.UnaryPlus:
-                OutputText.Append('+');
-                VisitAndMaybeApplyParentheses(node, node.Operand);
+                VisitSignedOperand('+', node);
                 break;
             case ExpressionType.NegateChecked:
                 OutputText.Append("checked(-");
@@ -149,10 +148,6 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
                 VisitAndMaybeApplyParentheses(node, node.Operand);
                 OutputText.Append("--");
                 break;
-            case ExpressionType.Unbox
-                or ExpressionType.IsTrue
-                or ExpressionType.IsFalse:
-                break;
             case ExpressionType.Throw:
                 OutputText.Append("throw ");
                 VisitAndMaybeApplyParentheses(node, node.Operand);
@@ -163,6 +158,22 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
         }
 
         return node;
+    }
+
+    /// <summary>
+    /// A sign followed by its operand, parenthesising an operand that itself opens with the same sign:
+    /// <c>-(-n)</c> rather than <c>--n</c>, which C# reads as a decrement.
+    /// </summary>
+    private void VisitSignedOperand(char sign, UnaryExpression node)
+    {
+        OutputText.Append(sign);
+        var operandStart = OutputText.Length;
+        VisitAndMaybeApplyParentheses(node, node.Operand);
+        if (OutputText.Length == operandStart || OutputText[operandStart] != sign)
+            return;
+
+        OutputText.Insert(operandStart, '(');
+        OutputText.Append(')');
     }
 
     protected override Expression VisitBinary(BinaryExpression binaryExpression)
@@ -233,17 +244,13 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
 
     protected override Expression VisitMember(MemberExpression node)
     {
-        if (node.Expression is not ConstantExpression
-            && !IsClosureLink(node.Expression)
-            && !ReferenceEquals(node.Expression, _elidedReceiver))
+        if (node.Expression is null)
+            OutputText.Append(node.Member.DeclaringType?.ToCSharpName()).Append('.');
+        else if (node.Expression is not ConstantExpression
+                 && !IsClosureLink(node.Expression)
+                 && !ReferenceEquals(node.Expression, _elidedReceiver))
         {
-            if (node.Expression is null)
-                OutputText.Append(node.Member.DeclaringType?.Name);
-            else
-            {
-                VisitAndMaybeApplyParentheses(node, node.Expression);
-            }
-
+            VisitAndMaybeApplyParentheses(node, node.Expression);
             OutputText.Append('.');
         }
 
@@ -295,9 +302,8 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
                     break;
                 case MemberMemberBinding memberMemberBinding:
                     OutputText.Append(memberMemberBinding.Member.Name);
-                    OutputText.Append(" = { ");
+                    OutputText.Append(" = ");
                     VisitMemberBindings(memberMemberBinding.Bindings);
-                    OutputText.Append(" }");
                     break;
             }
         }
@@ -316,8 +322,10 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
 
     protected override Expression VisitIndex(IndexExpression node)
     {
+        if (node.Object is not null)
+            VisitAndMaybeApplyParentheses(node, node.Object);
         OutputText.Append('[');
-        Visit(node.Object);
+        VisitSpreadOfExpressions(node.Arguments);
         OutputText.Append(']');
         return node;
     }
@@ -620,6 +628,10 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
         if (child is not BinaryExpression and not LambdaExpression and not ConditionalExpression)
             return false;
 
+        // A checked operation prints inside its own checked(...), so it never needs more parentheses.
+        if (child.NodeType is ExpressionType.AddChecked or ExpressionType.SubtractChecked or ExpressionType.MultiplyChecked)
+            return false;
+
         var parentPrecedence = GetOperatorPrecedence(parent.NodeType);
         var childPrecedence = GetOperatorPrecedence(child.NodeType);
 
@@ -779,7 +791,7 @@ internal class CSharpExpressionSerializer : ExpressionVisitor, IExpressionSerial
             false => "false",
             char ch => $"'{ch}'",
             string s => $"\"{s}\"",
-            Guid guid => $"Guid.Parse({guid})",
+            Guid guid => $"Guid.Parse(\"{guid}\")",
             DateTime dateTime => $"DateTime.Parse(\"{dateTime:O}\")",
             DateTimeOffset dateTimeOffset => $"DateTimeOffset.Parse(\"{dateTimeOffset:O}\")",
             TimeSpan timespan => $"TimeSpan.Parse(\"{timespan}\")",
