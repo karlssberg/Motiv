@@ -12,8 +12,12 @@ internal sealed class OrElsePolicyResult<TMetadata>(
 
     PolicyResultBase<TMetadata> ISelectedValueResult<TMetadata>.Selected => Right ?? Left;
 
-    // right is null only when left was satisfied, and || never reads it then.
-    public override bool Satisfied { get; } = left.Satisfied || right!.Satisfied;
+    // right may be omitted only when left is satisfied; otherwise it is required.
+    public override bool Satisfied { get; } =
+        left.Satisfied
+        || (right ?? throw new ArgumentNullException(
+            nameof(right),
+            "The right operand must be supplied when the left operand is unsatisfied.")).Satisfied;
 
     public override ResultDescriptionBase Description =>
         field ??= new OrElseBooleanResultDescription<TMetadata>(GetCauses());
