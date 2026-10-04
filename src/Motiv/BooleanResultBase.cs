@@ -296,15 +296,15 @@ public abstract class BooleanResultBase
     /// <param name="left">The first operand to compare.</param>
     /// <param name="right">The second operand to compare.</param>
     /// <returns><c>true</c> if the two objects are equal; otherwise, <c>false</c>.</returns>
-    public static bool operator ==(BooleanResultBase left, BooleanResultBase right) =>
-        left.Equals(right);
+    public static bool operator ==(BooleanResultBase? left, BooleanResultBase? right) =>
+        left is null ? right is null : left.Equals(right);
 
     /// <summary>Determines whether two <see cref="BooleanResultBase{TMetadata}" /> objects are equal.</summary>
     /// <param name="left">The first operand to compare.</param>
     /// <param name="right">The second operand to compare.</param>
     /// <returns><c>true</c> if the two objects are equal; otherwise, <c>false</c>.</returns>
-    public static bool operator ==(bool left, BooleanResultBase right) =>
-        left == right.Satisfied;
+    public static bool operator ==(bool left, BooleanResultBase? right) =>
+        right is not null && left == right.Satisfied;
 
     /// <summary>
     /// Determines whether two <see cref="BooleanResultBase{TMetadata}" /> objects are not equal.
@@ -312,14 +312,14 @@ public abstract class BooleanResultBase
     /// <param name="left">The first operand to compare.</param>
     /// <param name="right">The second operand to compare.</param>
     /// <returns><c>true</c> if the two objects are not equal; otherwise, <c>false</c>.</returns>
-    public static bool operator !=(bool left, BooleanResultBase right) => !(left == right);
+    public static bool operator !=(bool left, BooleanResultBase? right) => !(left == right);
 
     /// <summary>Determines whether two <see cref="BooleanResultBase{TMetadata}" /> objects are equal.</summary>
     /// <param name="left">The first operand to compare.</param>
     /// <param name="right">The second operand to compare.</param>
     /// <returns><c>true</c> if the two objects are equal; otherwise, <c>false</c>.</returns>
-    public static bool operator ==(BooleanResultBase left, bool right) =>
-        left.Satisfied == right;
+    public static bool operator ==(BooleanResultBase? left, bool right) =>
+        left is not null && left.Satisfied == right;
 
     /// <summary>
     /// Determines whether two <see cref="BooleanResultBase{TMetadata}" /> objects are not equal.
@@ -327,13 +327,13 @@ public abstract class BooleanResultBase
     /// <param name="left">The first operand to compare.</param>
     /// <param name="right">The second operand to compare.</param>
     /// <returns><c>true</c> if the two objects are not equal; otherwise, <c>false</c>.</returns>
-    public static bool operator !=(BooleanResultBase left, bool right) => !(left == right);
+    public static bool operator !=(BooleanResultBase? left, bool right) => !(left == right);
 
     /// <summary>Implements the inequality operator for comparing two instances of <see cref="BooleanResultBase{TMetadata}" />.</summary>
     /// <param name="left">The first operand to compare.</param>
     /// <param name="right">The second operand to compare.</param>
     /// <returns><c>true</c> if the two instances are not equal; otherwise, <c>false</c>.</returns>
-    public static bool operator !=(BooleanResultBase left, BooleanResultBase right) =>
+    public static bool operator !=(BooleanResultBase? left, BooleanResultBase? right) =>
         !(left == right);
 
     /// <summary>Defines an implicit conversion from <see cref="BooleanResultBase{TMetadata}" /> to <see cref="bool" />.</summary>
