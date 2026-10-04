@@ -351,8 +351,11 @@ public class ChangeRequestSetTests
         var rules = new RuleSet(new BindingScope(new SpecRegistry()));
 
         // Act / Assert
-        Should.Throw<InvalidOperationException>(
-            () => new ChangeRequestSet(new ApprovalGate(), rules, propositions));
+        Should.Throw<InvalidOperationException>(() => new ChangeRequestSet(new ApprovalGate(), rules, propositions))
+            .Message.ShouldBe(
+                "The RuleSet and PropositionSet given to a ChangeRequestSet must share one BindingScope, " +
+                "otherwise a change request spanning both could not publish atomically. Build the RuleSet " +
+                "from the PropositionSet.");
     }
 
     [Fact]
@@ -400,6 +403,8 @@ public class ChangeRequestSetTests
         created.Outcome.ShouldBe(ChangeRequestOutcome.Invalid);
         created.Change.ShouldBeNull();
         created.FailedTarget.ShouldBe(new ChangeTarget(ChangeTargetKind.Rule, "can-checkout"));
+        created.Errors.Select(error => error.ToString())
+            .ShouldBe(["InvalidNode at $: the change request targets rule 'can-checkout' more than once"]);
         host.Changes.All.ShouldBeEmpty();
         host.Rules.FindEntry("can-checkout")!.Version.ShouldBe(1);
     }
@@ -465,7 +470,8 @@ public class ChangeRequestSetTests
 
         // Assert
         published.Outcome.ShouldBe(ChangeRequestOutcome.Invalid);
-        published.Errors.ShouldContain(error => error.Message.Contains("can-checkout"));
+        published.Errors.Select(error => error.ToString())
+            .ShouldBe(["InvalidNode at $: 'customer.eligible' is still referenced by rule 'can-checkout'"]);
         host.Propositions.DocumentJsonOf("customer.eligible")!.ShouldBe(EligibleIsAdult);
     }
 
@@ -786,6 +792,154 @@ public class ChangeRequestSetTests
             published!.Outcome.ShouldBe(ChangeRequestOutcome.Ok);
             rejected.Outcome.ShouldBe(ChangeRequestOutcome.InvalidState);
         }
+    }
+
+    [Fact]
+    public void Should_refuse_an_empty_change_request_and_say_why()
+    {
+        // Arrange
+        var host = NewHost();
+
+        // Act
+        var created = host.Changes.Create("alice", "a note", []);
+
+        // Assert
+        created.Outcome.ShouldBe(ChangeRequestOutcome.Invalid);
+        created.Change.ShouldBeNull();
+        created.Errors.Select(error => error.ToString())
+            .ShouldBe(["InvalidNode at $: a change request must propose at least one change"]);
+    }
+
+    [Fact]
+    public async Task Should_refuse_creating_a_proposition_with_no_model_type_and_say_why()
+    {
+        // Arrange
+        var host = NewHost();
+        var created = host.Changes.Create("alice", "a note",
+        [
+            new(ChangeTargetKind.Proposition, "customer.eligible", EligibleIsAdult, BaseVersion: 0, RollbackOfVersion: null)
+        ]);
+
+        // Act
+        var published = await host.Changes.PublishAsync(created.Change!.Id, breakGlassActive: false);
+
+        // Assert
+        published.Outcome.ShouldBe(ChangeRequestOutcome.Invalid);
+        published.Errors.Select(error => error.ToString())
+            .ShouldBe(["ModelTypeMismatch at $: creating a proposition requires a model-type id"]);
+    }
+
+    [Fact]
+    public async Task Should_refuse_creating_a_proposition_that_appeared_after_the_request_was_drafted()
+    {
+        // Arrange — drafted as a creation, then the name was taken directly before publishing
+        var host = NewHost();
+        var created = host.Changes.Create("alice", "a note",
+        [
+            new(ChangeTargetKind.Proposition, "customer.eligible", EligibleIsAdult,
+                BaseVersion: 0, RollbackOfVersion: null, ModelTypeId: "customer")
+        ]);
+        await host.Propositions.CreateAsync("customer.eligible", "customer", EligibleIsAdult, null);
+
+        // Act
+        var published = await host.Changes.PublishAsync(created.Change!.Id, breakGlassActive: false);
+
+        // Assert
+        published.Outcome.ShouldBe(ChangeRequestOutcome.Invalid);
+        published.Errors.Select(error => error.ToString())
+            .ShouldBe(["InvalidNode at $: 'customer.eligible' already exists, so it cannot be created"]);
+    }
+
+    [Fact]
+    public async Task Should_refuse_a_proposition_change_on_a_host_with_no_proposition_set_and_say_why()
+    {
+        // Arrange
+        var rules = new RuleSet(new BindingScope(new SpecRegistry().Register("customer.is-active", IsActive)))
+            .Add(new CanCheckoutRule());
+        var changes = new ChangeRequestSet(new ApprovalGate(), rules, propositions: null);
+        var created = changes.Create("alice", "a note",
+        [
+            new(ChangeTargetKind.Proposition, "customer.eligible", EligibleIsAdult,
+                BaseVersion: 0, RollbackOfVersion: null, ModelTypeId: "customer")
+        ]);
+
+        // Act
+        var published = await changes.PublishAsync(created.Change!.Id, breakGlassActive: false);
+
+        // Assert
+        published.Outcome.ShouldBe(ChangeRequestOutcome.Invalid);
+        published.Errors.Select(error => error.ToString())
+            .ShouldBe(["InvalidNode at $: this host has no PropositionSet, so a proposition cannot be changed"]);
+    }
+
+    [Fact]
+    public async Task Should_refuse_a_direct_write_whose_change_names_the_wrong_kind_of_target()
+    {
+        // Arrange
+        var host = NewHost();
+        var change = new NewProposedChange(ChangeTargetKind.Proposition, "can-checkout", CheckoutUsesEligible,
+            BaseVersion: 1, RollbackOfVersion: null);
+
+        // Act
+        var thrown = await Should.ThrowAsync<ArgumentException>(
+            () => host.Changes.DirectWriteAsync("alice", DirectWriteOperation.RuleUpdate, change));
+
+        // Assert
+        thrown.ParamName!.ShouldBe("change");
+        thrown.Message.ShouldStartWith("A RuleUpdate write targets a rule, but the change names a proposition.");
+    }
+
+    [Fact]
+    public async Task Should_refuse_a_direct_proposition_write_on_a_host_with_no_proposition_set()
+    {
+        // Arrange
+        var rules = new RuleSet(new BindingScope(new SpecRegistry())).Add(new CanCheckoutRule());
+        var changes = new ChangeRequestSet(new ApprovalGate(), rules, propositions: null);
+        var change = new NewProposedChange(ChangeTargetKind.Proposition, "customer.eligible", EligibleIsAdult,
+            BaseVersion: 0, RollbackOfVersion: null, ModelTypeId: "customer");
+
+        // Act
+        var thrown = await Should.ThrowAsync<InvalidOperationException>(
+            () => changes.DirectWriteAsync("alice", DirectWriteOperation.PropositionCreate, change));
+
+        // Assert
+        thrown.Message.ShouldBe(
+            "This host has no PropositionSet, so a proposition cannot be written. The proposition endpoints " +
+            "are not mounted without one, so reaching here is a wiring bug.");
+    }
+
+    [Fact]
+    public async Task Should_note_a_direct_write_by_its_operation_and_target_when_the_caller_gives_no_reason()
+    {
+        // Arrange
+        var host = NewHost();
+        var change = new NewProposedChange(ChangeTargetKind.Proposition, "customer.eligible", EligibleIsAdult,
+            BaseVersion: 0, RollbackOfVersion: null, ModelTypeId: "customer");
+
+        // Act
+        var written = await host.Changes.DirectWriteAsync("alice", DirectWriteOperation.PropositionCreate, change);
+
+        // Assert
+        written.Proposition!.Outcome.ShouldBe(PropositionUpdateOutcome.Created);
+        var row = (await host.Store.HistoryAsync("customer.eligible", default)).ShouldHaveSingleItem();
+        row.Author.ShouldBe("alice");
+        row.ChangeNote!.ShouldBe("direct PropositionCreate of proposition 'customer.eligible'");
+    }
+
+    [Fact]
+    public async Task Should_note_a_direct_write_with_the_callers_own_reason_when_one_is_given()
+    {
+        // Arrange
+        var host = NewHost();
+        var change = new NewProposedChange(ChangeTargetKind.Proposition, "customer.eligible", EligibleIsAdult,
+            BaseVersion: 0, RollbackOfVersion: null, ModelTypeId: "customer", ChangeNote: "launch eligibility");
+
+        // Act
+        await host.Changes.DirectWriteAsync("alice", DirectWriteOperation.PropositionCreate, change);
+
+        // Assert
+        (await host.Store.HistoryAsync("customer.eligible", default)).ShouldHaveSingleItem()
+            .ChangeNote!.ShouldBe("launch eligibility");
     }
 
     private sealed record Customer(bool IsActive, int Age);

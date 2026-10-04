@@ -378,6 +378,11 @@ public class GovernedPublishOrderingTests
 
         // Assert — a distinct outcome, not a thrown exception and not an ordinary conflict
         result.Outcome.ShouldBe(ChangeRequestOutcome.PersistenceDesynced);
+        var error = result.Errors.ShouldHaveSingleItem();
+        error.Path.ShouldBe("$");
+        error.Message.ShouldStartWith(
+            "the proposition store failed after the rule half was already durably persisted: " +
+            "System.InvalidOperationException: simulated proposition store outage");
 
         // The rule row landed durably even though nothing is live — exactly the divergence a bare
         // retry would collide with.
@@ -443,6 +448,11 @@ public class GovernedPublishOrderingTests
 
         // Assert
         result.Outcome.ShouldBe(ChangeRequestOutcome.PersistenceDesynced);
+        result.Errors.Select(error => error.ToString()).ShouldBe(
+        [
+            "InvalidNode at $: the proposition store refused 'customer.p1' at version 7 after the rule half " +
+            "was already durably persisted"
+        ]);
 
         // The rule row landed durably even though nothing is live — the same divergence the
         // infrastructure-fault case leaves, reached by a refusal rather than a throw.
