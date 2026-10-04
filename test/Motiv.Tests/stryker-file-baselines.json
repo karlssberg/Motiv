@@ -532,8 +532,8 @@
     "survivors": 1
   },
   "src/Motiv/ExpressionTreeProposition/CSharpExpressionSerializer.cs": {
-    "score": 61.83,
-    "survivors": 166
+    "score": 79.27,
+    "survivors": 92
   },
   "src/Motiv/ExpressionTreeProposition/CapturedValueReader.cs": {
     "score": 50,
