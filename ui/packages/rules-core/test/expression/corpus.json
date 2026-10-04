@@ -321,6 +321,44 @@
       ]
     },
     {
+      "name": "enum named by registered converter",
+      "scope": "shipment",
+      "leaf": "channel == \"Wholesale\"",
+      "result": "bool"
+    },
+    {
+      "name": "enum named by registered converter refuses a number",
+      "scope": "shipment",
+      "leaf": "channel == 1",
+      "problems": [
+        {
+          "code": "ExpressionTypeMismatch",
+          "contains": [
+            "string"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "enum named under a naming policy",
+      "scope": "shipment",
+      "leaf": "priority == \"nextDay\"",
+      "result": "bool"
+    },
+    {
+      "name": "enum named under a naming policy refuses the CLR name",
+      "scope": "shipment",
+      "leaf": "priority == \"NextDay\"",
+      "problems": [
+        {
+          "code": "ExpressionTypeMismatch",
+          "contains": [
+            "\"nextDay\""
+          ]
+        }
+      ]
+    },
+    {
       "name": "long vs int literal",
       "scope": "customer",
       "leaf": "points > 1000",

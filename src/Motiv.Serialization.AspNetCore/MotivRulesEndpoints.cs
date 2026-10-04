@@ -82,7 +82,10 @@ public static class MotivRulesEndpoints
     /// <param name="options">The endpoint options, including evaluable model registrations.</param>
     /// <param name="rules">The live rule set to manage, or null to omit the rule endpoints.
     /// Construct it with the same registry and <see cref="MotivRulesOptions.SerializerOptions"/>
-    /// passed here, so validate/evaluate and rule updates agree on how documents bind.</param>
+    /// passed here, so validate/evaluate and rule updates agree on how documents bind. Give it
+    /// <see cref="RuleSerializerOptions.ModelJsonOptions"/> = <see cref="MotivRulesOptions.JsonSerializerOptions"/>
+    /// (the default the endpoints apply to their own serializer) so its expression leaves read enums
+    /// as the catalog publishes them.</param>
     /// <param name="configureEndpoints">Configures per-mount endpoint behavior. The mapped group
     /// is secure by default (<c>RequireAuthorization</c>); call
     /// <see cref="MotivRulesEndpointOptions.AllowAnonymous"/> here to open it to unauthenticated
@@ -103,7 +106,7 @@ public static class MotivRulesEndpoints
         // validate/evaluate rejecting, as UnknownSpec, the very names the rest of the surface
         // advertises and accepts.
         var specSource = propositions?.Scope.Source ?? registry;
-        var serializer = new RuleSerializer(specSource, options.SerializerOptions);
+        var serializer = new RuleSerializer(specSource, options.ResolvedSerializerOptions);
         var resultSerializer = new ResultSerializer();
         var json = options.JsonSerializerOptions;
         var group = endpoints.MapGroup(basePath);

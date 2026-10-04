@@ -28,14 +28,14 @@ internal sealed class TypeVar
 
 /// <summary>
 /// The type of a node during checking: a concrete CLR type, a type variable, or unknown (already
-/// reported). <paramref name="NamedEnum" /> carries the enum behind a member that reads as a
-/// string, so equality can check a literal against its member names.
+/// reported). <paramref name="EnumNames" /> carries the names of the enum behind a member that reads
+/// as a string, so equality can check a literal against them.
 /// </summary>
-internal readonly record struct LeafType(Type? Concrete, TypeVar? Var, Type? NamedEnum = null)
+internal readonly record struct LeafType(Type? Concrete, TypeVar? Var, LeafEnumNames? EnumNames = null)
 {
     public static readonly LeafType Unknown = new(null, null);
     public static LeafType Of(Type type) => new(type, null);
-    public static LeafType Of(Type type, Type? namedEnum) => new(type, null, namedEnum);
+    public static LeafType Of(Type type, LeafEnumNames? enumNames) => new(type, null, enumNames);
     public static LeafType OfVar(TypeVar var) => new(null, var);
     public bool IsUnknown => Concrete is null && Var is null;
     public bool IsNullable => Concrete is not null && (!Concrete.IsValueType || Nullable.GetUnderlyingType(Concrete) is not null);

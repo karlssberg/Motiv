@@ -200,7 +200,7 @@ internal sealed class RuleDocumentParser(RuleSerializerOptions options)
                 var expression = ReadNonEmptyString(property.Value, $"{path}.expression", errors);
                 return expression is null
                     ? null
-                    : new RuleNode(RuleOperator.Expression, path) { ExpressionText = expression };
+                    : new RuleNode(RuleOperator.Expression, path) { ExpressionText = expression, ModelJsonOptions = options.ModelJsonOptions };
             }
             case "not":
             {

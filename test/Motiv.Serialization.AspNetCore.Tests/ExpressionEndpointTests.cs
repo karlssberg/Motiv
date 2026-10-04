@@ -59,4 +59,58 @@ public class ExpressionEndpointTests
         errors[0].GetProperty("range").GetProperty("start").GetInt32().ShouldBe(0);
         errors[0].GetProperty("range").GetProperty("end").GetInt32().ShouldBe(19);
     }
+
+    public enum Channel { Retail, Wholesale }
+
+    public sealed record Shipment(Channel Channel);
+
+    [Fact]
+    public async Task Should_check_an_enum_the_way_the_catalog_publishes_it_when_the_options_name_it()
+    {
+        // No attribute on Channel: only MotivRulesOptions' default JsonStringEnumConverter names it.
+        var options = new MotivRulesOptions().AddModel<Shipment>("shipment");
+        await using var app = await TestApp.StartAsync(new SpecRegistry(), options);
+        var client = app.GetTestClient();
+
+        var catalog = await client.GetFromJsonAsync<JsonElement>("/api/rules/catalog");
+        var channel = catalog.GetProperty("modelTypes").GetProperty("shipment").GetProperty("properties").GetProperty("channel");
+        channel.GetProperty("enum").EnumerateArray().Select(e => e.GetString()).ShouldBe(["Retail", "Wholesale"]);
+
+        var byName = await client.PostAsJsonAsync("/api/rules/validate", new
+        {
+            modelType = "shipment",
+            document = JsonDocument.Parse("""{ "rule": { "expression": "channel == \"Retail\"" } }""").RootElement,
+        });
+        (await byName.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("errors").GetArrayLength().ShouldBe(0);
+
+        var byNumber = await client.PostAsJsonAsync("/api/rules/validate", new
+        {
+            modelType = "shipment",
+            document = JsonDocument.Parse("""{ "rule": { "expression": "channel == 0" } }""").RootElement,
+        });
+        var errors = (await byNumber.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("errors");
+        errors[0].GetProperty("code").GetString()!.ShouldBe("ExpressionTypeMismatch");
+    }
+
+    [Fact]
+    public void Should_keep_model_json_options_the_host_set_for_leaves()
+    {
+        var modelJson = new JsonSerializerOptions();
+        var options = new MotivRulesOptions { SerializerOptions = new RuleSerializerOptions { ModelJsonOptions = modelJson } };
+
+        options.ResolvedSerializerOptions.ModelJsonOptions.ShouldBeSameAs(modelJson);
+    }
+
+    [Fact]
+    public void Should_default_leaves_to_the_options_the_catalog_publishes_with()
+    {
+        var serializerOptions = new RuleSerializerOptions { MaxNodeCount = 7 };
+        var options = new MotivRulesOptions { SerializerOptions = serializerOptions };
+
+        var resolved = options.ResolvedSerializerOptions;
+
+        resolved.ModelJsonOptions.ShouldBeSameAs(options.JsonSerializerOptions);
+        resolved.MaxNodeCount.ShouldBe(7);
+        serializerOptions.ModelJsonOptions.ShouldBeNull();
+    }
 }

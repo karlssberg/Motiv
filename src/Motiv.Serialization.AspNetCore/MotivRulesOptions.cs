@@ -20,6 +20,18 @@ public sealed class MotivRulesOptions
     /// <summary>Options forwarded to the underlying <see cref="RuleSerializer"/>, or <c>null</c> for defaults.</summary>
     public RuleSerializerOptions? SerializerOptions { get; set; }
 
+    /// <summary>
+    /// <see cref="SerializerOptions" /> as every serializer, proposition set and rule set the
+    /// endpoints build is given it: unless the host set <see cref="RuleSerializerOptions.ModelJsonOptions" />
+    /// itself, expression leaves read models through <see cref="JsonSerializerOptions" />, the options
+    /// the catalog's model schemas are exported with — so the editor and the server type an enum
+    /// the same way. The host's own instance is never modified.
+    /// </summary>
+    internal RuleSerializerOptions ResolvedSerializerOptions =>
+        SerializerOptions is { ModelJsonOptions: not null } own
+            ? own
+            : (SerializerOptions ?? new RuleSerializerOptions()).WithModelJsonOptions(JsonSerializerOptions);
+
     /// <summary>Registers a model type as evaluable under a stable id used by the endpoints and catalog.</summary>
     /// <typeparam name="TModel">The model type documents evaluate against.</typeparam>
     /// <param name="id">The stable id clients pass as <c>modelType</c>.</param>

@@ -3,8 +3,9 @@ using System.Globalization;
 
 namespace Motiv.Serialization.Expressions;
 
-internal sealed class LeafAnalysis(IReadOnlyList<LeafProblem> problems, IReadOnlyDictionary<LeafNode, Type> types, IReadOnlyList<LeafFact> facts, IReadOnlyDictionary<LeafNode, LeafScope> lambdaScopes)
+internal sealed class LeafAnalysis(IReadOnlyList<LeafProblem> problems, IReadOnlyDictionary<LeafNode, Type> types, IReadOnlyList<LeafFact> facts, IReadOnlyDictionary<LeafNode, LeafScope> lambdaScopes, LeafScope scope)
 {
+    public LeafScope Scope { get; } = scope;
     public IReadOnlyList<LeafProblem> Problems { get; } = problems;
     public IReadOnlyDictionary<LeafNode, Type> Types { get; } = types;
     public IReadOnlyList<LeafFact> Facts { get; } = facts;
@@ -57,7 +58,7 @@ internal sealed class LeafChecker
         }
         if (types.TryGetValue(root, out var rootType))
             facts.Add(new LeafFact(root, rootType, null));
-        return new LeafAnalysis(_problems, types, facts, _lambdaScopes);
+        return new LeafAnalysis(_problems, types, facts, _lambdaScopes, _root);
     }
 
     private Type? Resolve(LeafType type)
@@ -150,7 +151,7 @@ internal sealed class LeafChecker
         var member = LeafScope.FindMember(scope.ModelType, i.Name);
         if (member is null)
             return Fail(i, RuleErrorCode.UnknownField, $"'{i.Name}' is not a field of {scope.ModelType.Name}");
-        return Set(i, LeafType.Of(LeafScope.LeafMemberType(member), LeafScope.NamedEnumType(member)));
+        return Set(i, LeafType.Of(scope.LeafMemberType(member), scope.EnumNames(member)));
     }
 
     private LeafType VisitMember(MemberAccess m, LeafScope scope)
@@ -174,7 +175,7 @@ internal sealed class LeafChecker
             Report(m.NameStart, m.NameEnd, RuleErrorCode.UnknownField, $"'{m.Name}' is not a field of {targetType.Name}");
             return Set(m, LeafType.Unknown);
         }
-        return Set(m, LeafType.Of(Lift(LeafScope.LeafMemberType(member), target.IsNullable), LeafScope.NamedEnumType(member)));
+        return Set(m, LeafType.Of(Lift(scope.LeafMemberType(member), target.IsNullable), scope.EnumNames(member)));
     }
 
     /// <summary>A value reached through a nullable path is itself nullable.</summary>
@@ -336,9 +337,9 @@ internal sealed class LeafChecker
         {
             if (l != r)
                 Report(b, RuleErrorCode.ExpressionTypeMismatch, $"comparing {Describe(l)} with {Describe(r)}");
-            else if (left.NamedEnum is { } named && b.Right is StringLiteral literal && Array.IndexOf(Enum.GetNames(named), literal.Value) < 0)
+            else if (left.EnumNames is { } named && b.Right is StringLiteral literal && !named.Names.Contains(literal.Value))
                 Report(b.Right, RuleErrorCode.ExpressionTypeMismatch,
-                    $"not one of {string.Join(", ", Enum.GetNames(named).Select(name => $"\"{name}\""))}");
+                    $"not one of {string.Join(", ", named.Names.Select(name => $"\"{name}\""))}");
             return LeafType.Of(typeof(bool));
         }
         if ((l is not null && NumericLattice.KindOf(l) is null) || (r is not null && NumericLattice.KindOf(r) is null))

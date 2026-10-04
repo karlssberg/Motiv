@@ -1,14 +1,14 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
-import { CUSTOMER, ORDER } from './expression/fixture-schema.js';
+import { CUSTOMER, ORDER, SHIPMENT } from './expression/fixture-schema.js';
 import { analyseLeaf, printLeaf, type LeafScope } from '../src/expression/index.js';
 
 interface CorpusProblem { code: string; contains?: string[]; range?: [number, number] }
 interface CorpusFact { text: string; type: string; from?: string }
 interface CorpusCase {
   name: string;
-  scope: 'customer' | 'order';
+  scope: 'customer' | 'order' | 'shipment';
   leaf: string;
   problems?: CorpusProblem[];
   warnings?: number;
@@ -29,6 +29,7 @@ const parameters = Object.fromEntries(
 const scopes: Record<string, LeafScope> = {
   customer: { modelName: 'customer', model: CUSTOMER, parameters, vars: {} },
   order: { modelName: 'each of orders', model: ORDER, parameters, vars: {} },
+  shipment: { modelName: 'shipment', model: SHIPMENT, parameters, vars: {} },
 };
 
 describe('expression corpus', () => {

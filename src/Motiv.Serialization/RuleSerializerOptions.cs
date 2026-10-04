@@ -112,4 +112,24 @@ public sealed class RuleSerializerOptions
     /// payloads into the metadata type of a metadata load. <c>null</c> uses System.Text.Json defaults.
     /// </summary>
     public JsonSerializerOptions? MetadataJsonOptions { get; set; }
+
+    /// <summary>
+    /// The <see cref="JsonSerializerOptions" /> the host serializes its models with, so an
+    /// expression leaf reads each enum member the way that JSON does: by the names a string-enum
+    /// converter writes — registered here or carried as an attribute, naming policy included — and
+    /// otherwise by number. <c>null</c> uses System.Text.Json defaults, where only a
+    /// <c>[JsonConverter]</c> attribute makes an enum read by name. Set it to the options the
+    /// catalog's model schemas are exported with, or the editor and the server type the same leaf
+    /// differently. Like any options System.Text.Json serializes with, they become read-only once
+    /// a leaf has been checked against them.
+    /// </summary>
+    public JsonSerializerOptions? ModelJsonOptions { get; set; }
+
+    /// <summary>A copy of these options reading models through <paramref name="modelJson" />.</summary>
+    internal RuleSerializerOptions WithModelJsonOptions(JsonSerializerOptions modelJson)
+    {
+        var copy = (RuleSerializerOptions)MemberwiseClone();
+        copy.ModelJsonOptions = modelJson;
+        return copy;
+    }
 }
