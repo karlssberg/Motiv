@@ -24,9 +24,14 @@ public abstract class PolicyResultBase<TMetadata> : BooleanResultBase<TMetadata>
     /// </summary>
     /// <param name="right">The other policy result instance to perform the AND operation with.</param>
     /// <returns>A new policy result instance representing the result of the AND operation.</returns>
-    public PolicyResultBase<TMetadata> AndAlso(PolicyResultBase<TMetadata> right) => Satisfied
-        ? new AndAlsoPolicyResult<TMetadata>(this, right)
-        : new AndAlsoPolicyResult<TMetadata>(this);
+    public PolicyResultBase<TMetadata> AndAlso(PolicyResultBase<TMetadata> right)
+    {
+        right.ThrowIfNull(nameof(right));
+
+        return Satisfied
+            ? new AndAlsoPolicyResult<TMetadata>(this, right)
+            : new AndAlsoPolicyResult<TMetadata>(this);
+    }
 
     /// <summary>
     /// Performs a conditional OR operation between the current PolicyResultBase instance and another PolicyResultBase
@@ -34,9 +39,14 @@ public abstract class PolicyResultBase<TMetadata> : BooleanResultBase<TMetadata>
     /// </summary>
     /// <param name="right">The other policy result instance to perform the OR operation with.</param>
     /// <returns>A new policy result instance representing the result of the OR operation.</returns>
-    public PolicyResultBase<TMetadata> OrElse(PolicyResultBase<TMetadata> right) => Satisfied
-        ? new OrElsePolicyResult<TMetadata>(this)
-        : new OrElsePolicyResult<TMetadata>(this, right);
+    public PolicyResultBase<TMetadata> OrElse(PolicyResultBase<TMetadata> right)
+    {
+        right.ThrowIfNull(nameof(right));
+
+        return Satisfied
+            ? new OrElsePolicyResult<TMetadata>(this)
+            : new OrElsePolicyResult<TMetadata>(this, right);
+    }
 
     /// <summary>
     /// Returns a new instance of <see cref="NotPolicyResult{TMetadata}" /> that represents the logical negation of

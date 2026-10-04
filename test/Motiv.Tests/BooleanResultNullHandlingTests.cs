@@ -179,7 +179,9 @@ public class BooleanResultNullHandlingTests
         var act = () => new AndAlsoBooleanResult<string>(left);
 
         // Assert
-        act.ShouldThrow<ArgumentNullException>().ParamName.ShouldBe<string?>("right");
+        var exception = act.ShouldThrow<ArgumentNullException>();
+        exception.ParamName.ShouldBe<string?>("right");
+        exception.Message.ShouldContain("The right operand must be supplied when the left operand is satisfied.");
     }
 
     [Fact]
@@ -192,7 +194,9 @@ public class BooleanResultNullHandlingTests
         var act = () => new OrElseBooleanResult<string>(left);
 
         // Assert
-        act.ShouldThrow<ArgumentNullException>().ParamName.ShouldBe<string?>("right");
+        var exception = act.ShouldThrow<ArgumentNullException>();
+        exception.ParamName.ShouldBe<string?>("right");
+        exception.Message.ShouldContain("The right operand must be supplied when the left operand is unsatisfied.");
     }
 
     [Fact]
@@ -205,7 +209,9 @@ public class BooleanResultNullHandlingTests
         var act = () => new AndAlsoPolicyResult<string>(left);
 
         // Assert
-        act.ShouldThrow<ArgumentNullException>().ParamName.ShouldBe<string?>("right");
+        var exception = act.ShouldThrow<ArgumentNullException>();
+        exception.ParamName.ShouldBe<string?>("right");
+        exception.Message.ShouldContain("The right operand must be supplied when the left operand is satisfied.");
     }
 
     [Fact]
@@ -218,6 +224,82 @@ public class BooleanResultNullHandlingTests
         var act = () => new OrElsePolicyResult<string>(left);
 
         // Assert
-        act.ShouldThrow<ArgumentNullException>().ParamName.ShouldBe<string?>("right");
+        var exception = act.ShouldThrow<ArgumentNullException>();
+        exception.ParamName.ShouldBe<string?>("right");
+        exception.Message.ShouldContain("The right operand must be supplied when the left operand is unsatisfied.");
+    }
+
+    private static readonly Dictionary<string, Action<bool>> CombinatorsWithNullRight = new()
+    {
+        ["untyped And"] = satisfied => ((BooleanResultBase)CreateResult(satisfied)).And(null!),
+        ["untyped AndAlso"] = satisfied => ((BooleanResultBase)CreateResult(satisfied)).AndAlso(null!),
+        ["untyped Or"] = satisfied => ((BooleanResultBase)CreateResult(satisfied)).Or(null!),
+        ["untyped OrElse"] = satisfied => ((BooleanResultBase)CreateResult(satisfied)).OrElse(null!),
+        ["untyped XOr"] = satisfied => ((BooleanResultBase)CreateResult(satisfied)).XOr(null!),
+        ["untyped &"] = satisfied => _ = (BooleanResultBase)CreateResult(satisfied) & (BooleanResultBase)null!,
+        ["untyped |"] = satisfied => _ = (BooleanResultBase)CreateResult(satisfied) | (BooleanResultBase)null!,
+        ["untyped ^"] = satisfied => _ = (BooleanResultBase)CreateResult(satisfied) ^ (BooleanResultBase)null!,
+        ["typed And"] = satisfied => CreateResult(satisfied).And(null!),
+        ["typed AndAlso"] = satisfied => CreateResult(satisfied).AndAlso(null!),
+        ["typed Or"] = satisfied => CreateResult(satisfied).Or(null!),
+        ["typed OrElse"] = satisfied => CreateResult(satisfied).OrElse(null!),
+        ["typed XOr"] = satisfied => CreateResult(satisfied).XOr(null!),
+        ["typed &"] = satisfied => _ = CreateResult(satisfied) & (BooleanResultBase<string>)null!,
+        ["typed |"] = satisfied => _ = CreateResult(satisfied) | (BooleanResultBase<string>)null!,
+        ["typed ^"] = satisfied => _ = CreateResult(satisfied) ^ (BooleanResultBase<string>)null!,
+        ["policy AndAlso"] = satisfied => CreatePolicyResult(satisfied).AndAlso(null!),
+        ["policy OrElse"] = satisfied => CreatePolicyResult(satisfied).OrElse(null!),
+    };
+
+    private static readonly Dictionary<string, Action<bool>> CombinatorsWithNullLeft = new()
+    {
+        ["untyped &"] = satisfied => _ = (BooleanResultBase)null! & (BooleanResultBase)CreateResult(satisfied),
+        ["untyped |"] = satisfied => _ = (BooleanResultBase)null! | (BooleanResultBase)CreateResult(satisfied),
+        ["untyped ^"] = satisfied => _ = (BooleanResultBase)null! ^ (BooleanResultBase)CreateResult(satisfied),
+        ["typed &"] = satisfied => _ = (BooleanResultBase<string>)null! & CreateResult(satisfied),
+        ["typed |"] = satisfied => _ = (BooleanResultBase<string>)null! | CreateResult(satisfied),
+        ["typed ^"] = satisfied => _ = (BooleanResultBase<string>)null! ^ CreateResult(satisfied),
+    };
+
+    public static TheoryData<string, bool> NullRightCases() => CasesFor(CombinatorsWithNullRight);
+
+    public static TheoryData<string, bool> NullLeftCases() => CasesFor(CombinatorsWithNullLeft);
+
+    private static TheoryData<string, bool> CasesFor(Dictionary<string, Action<bool>> combinators)
+    {
+        var data = new TheoryData<string, bool>();
+        foreach (var name in combinators.Keys)
+        {
+            data.Add(name, true);
+            data.Add(name, false);
+        }
+
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(NullRightCases))]
+    public void Should_reject_a_null_right_operand_whatever_the_left_operand(string combinator, bool satisfied)
+    {
+        // Act
+        var act = () => CombinatorsWithNullRight[combinator](satisfied);
+
+        // Assert
+        var exception = act.ShouldThrow<ArgumentNullException>();
+        exception.ParamName.ShouldBe<string?>("right");
+        exception.Message.ShouldContain("'right' cannot be null");
+    }
+
+    [Theory]
+    [MemberData(nameof(NullLeftCases))]
+    public void Should_reject_a_null_left_operand(string combinator, bool satisfied)
+    {
+        // Act
+        var act = () => CombinatorsWithNullLeft[combinator](satisfied);
+
+        // Assert
+        var exception = act.ShouldThrow<ArgumentNullException>();
+        exception.ParamName.ShouldBe<string?>("left");
+        exception.Message.ShouldContain("'left' cannot be null");
     }
 }
