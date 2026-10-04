@@ -302,4 +302,56 @@ public class BooleanResultNullHandlingTests
         exception.ParamName.ShouldBe<string?>("left");
         exception.Message.ShouldContain("'left' cannot be null");
     }
+
+    private static BooleanResultBase CreateUntypedResult(string name, bool satisfied) =>
+        Spec
+            .Build((bool model) => model)
+            .Create(name)
+            .Evaluate(satisfied);
+
+    [Theory]
+    [InlineData(true, true, true, new[] { "left == true", "right == true" })]
+    [InlineData(true, false, false, new[] { "right == false" })]
+    [InlineData(false, true, false, new[] { "left == false" })]
+    [InlineData(false, false, false, new[] { "left == false" })]
+    public void Should_short_circuit_an_untyped_AND_ALSO_with_a_non_null_right_operand(
+        bool leftSatisfied,
+        bool rightSatisfied,
+        bool expectedSatisfied,
+        string[] expectedAssertions)
+    {
+        // Arrange
+        var left = CreateUntypedResult("left", leftSatisfied);
+        var right = CreateUntypedResult("right", rightSatisfied);
+
+        // Act
+        var result = left.AndAlso(right);
+
+        // Assert
+        result.Satisfied.ShouldBe(expectedSatisfied);
+        result.Assertions.ShouldBe(expectedAssertions);
+    }
+
+    [Theory]
+    [InlineData(true, true, true, new[] { "left == true" })]
+    [InlineData(true, false, true, new[] { "left == true" })]
+    [InlineData(false, true, true, new[] { "right == true" })]
+    [InlineData(false, false, false, new[] { "left == false", "right == false" })]
+    public void Should_short_circuit_an_untyped_OR_ELSE_with_a_non_null_right_operand(
+        bool leftSatisfied,
+        bool rightSatisfied,
+        bool expectedSatisfied,
+        string[] expectedAssertions)
+    {
+        // Arrange
+        var left = CreateUntypedResult("left", leftSatisfied);
+        var right = CreateUntypedResult("right", rightSatisfied);
+
+        // Act
+        var result = left.OrElse(right);
+
+        // Assert
+        result.Satisfied.ShouldBe(expectedSatisfied);
+        result.Assertions.ShouldBe(expectedAssertions);
+    }
 }
