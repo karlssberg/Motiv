@@ -103,8 +103,11 @@ public class ConcurrentOperatorTests
         result.Satisfied.ShouldBeTrue();
     }
 
-    [Fact]
-    public async Task Should_evaluate_both_operands_concurrently()
+    [Theory]
+    [InlineData("and", true)]
+    [InlineData("or", true)]
+    [InlineData("xor", false)]
+    public async Task Should_evaluate_both_operands_concurrently(string operation, bool expected)
     {
         // Arrange — right's completion unblocks left; deadlocks unless both start before either finishes
         var leftStarted = new TaskCompletionSource<bool>();
@@ -142,11 +145,18 @@ public class ConcurrentOperatorTests
             return true;
         }).Create("right");
 
+        var spec = operation switch
+        {
+            "and" => left.AndConcurrently(right),
+            "or" => left.OrConcurrently(right),
+            _ => left.XOrConcurrently(right)
+        };
+
         // Act
-        var result = await left.AndConcurrently(right).EvaluateAsync(new object());
+        var result = await spec.EvaluateAsync(new object());
 
         // Assert
-        result.Satisfied.ShouldBeTrue();
+        result.Satisfied.ShouldBe(expected);
     }
 
     [Theory]
