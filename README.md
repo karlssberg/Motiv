@@ -6,6 +6,11 @@
 
 Motiv is a .NET library for building composable, explainable boolean logic — so you never lose the _why_ behind a true or false.
 
+A `false` tells a person very little, and it tells an AI agent even less.
+An agent whose tool call comes back refused can't correct itself from a bare boolean.
+Told `request.Amount > 500`, it can.
+**Agents need reasons, not booleans** — and so does everyone else who reads your logic.
+
 The boolean type has a problem: once evaluated,
 you lose all context about _why_ the value is true or false.
 
@@ -47,6 +52,40 @@ Motiv overloads `&`, `|`, `^`, and `!` so the same operators compose proposition
 The short-circuiting `&&` / `||` are reserved for evaluated results — use `.AndAlso()` / `.OrElse()` on propositions.
 Notice too that each failing clause is rendered in its own terms — `user.Age < 18` for the comparison,
 `user.HasValidId == false` for the boolean — and passing clauses are dropped from the result.
+
+## Reasons an agent can act on
+
+The same explanation can go straight back to a language model.
+Guard a tool with a proposition, and a refusal tells the agent what to change instead of just saying no:
+
+```csharp
+var canRefund = Spec
+    .From((RefundRequest request) =>
+        request.Amount <= 500 &
+        request.DaysSincePurchase <= 30 &
+        !request.IsFinalSale)
+    .Create("refund allowed");
+
+// a tool the agent can call
+string IssueRefund(RefundRequest request)
+{
+    var result = canRefund.Evaluate(request);
+    if (!result.Satisfied)
+        return $"Refused: {string.Join("; ", result.Assertions)}";
+
+    // ...issue the refund...
+    return "Refund issued";
+}
+
+IssueRefund(new RefundRequest(Amount: 750, DaysSincePurchase: 12, IsFinalSale: false));
+// "Refused: request.Amount > 500"
+
+record RefundRequest(decimal Amount, int DaysSincePurchase, bool IsFinalSale);
+```
+
+Only the failing clause comes back, so the agent knows the amount is the problem and the other conditions were met.
+It can retry within the limit or hand the request to a person, rather than guessing.
+This uses nothing but core Motiv; the library itself has no AI dependency.
 
 ## Core Features
 
