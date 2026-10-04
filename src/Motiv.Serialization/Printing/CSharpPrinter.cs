@@ -273,7 +273,7 @@ public static class CSharpPrinter
                 _ => ($"AsAtMostNSatisfied({n})", $"at most {count} satisfied", $"more than {count} satisfied"),
             };
 
-            return $"Spec.Build({inner}).{quantifier}.WhenTrue({Text(whenTrue)}).WhenFalse({Text(whenFalse)}).Create().ChangeModelTo<{_model}>({selector})";
+            return $"Spec.Build({inner}).{quantifier}.WhenTrue({Text($"{node.Path}.whenTrue", whenTrue)}).WhenFalse({Text($"{node.Path}.whenFalse", whenFalse)}).Create().ChangeModelTo<{_model}>({selector})";
         }
 
         private string Decorate(RuleNode node, string core)
@@ -290,7 +290,7 @@ public static class CSharpPrinter
             }
 
             if (node.WhenTrueText is not null)
-                return $"Spec.Build({core}).WhenTrue({Text(node.WhenTrueText)}).WhenFalse({Text(node.WhenFalseText!)}).Create({name})";
+                return $"Spec.Build({core}).WhenTrue({Text($"{node.Path}.whenTrue", node.WhenTrueText)}).WhenFalse({Text($"{node.Path}.whenFalse", node.WhenFalseText!)}).Create({name})";
 
             return node.Name is null ? core : $"Spec.Build({core}).Create({name})";
         }
@@ -300,9 +300,11 @@ public static class CSharpPrinter
         /// when it has no brace, otherwise an interpolated literal whose holes name the printed
         /// arguments and format as <c>RuleParameterSubstituter</c> does — <c>true</c>/<c>false</c>
         /// for a boolean, the invariant culture for a number. A hole naming no parameter is kept as
-        /// written; the document would not bind either.
+        /// written; the document would not bind either. An unmatched brace is printed as a literal
+        /// brace, so the print still compiles, with a warning: the document does not bind until it
+        /// is escaped.
         /// </summary>
-        private string Text(string text)
+        private string Text(string path, string text)
         {
             if (text.IndexOf('{') < 0 && text.IndexOf('}') < 0)
                 return Literal(text);
@@ -325,6 +327,11 @@ public static class CSharpPrinter
                 {
                     literal.Append('{').Append(Hole(text.Substring(index + 1, end - index - 1))).Append('}');
                     index = end;
+                }
+                else if (character is '{' or '}')
+                {
+                    _warnings.Add($"{path}: unmatched '{character}' printed as a literal brace; the document does not bind until it is escaped as '{character}{character}'");
+                    literal.Append(character).Append(character);
                 }
                 else
                 {
