@@ -53,7 +53,7 @@
   "src/Motiv/BooleanPredicateProposition/PropositionBuilders/Overloads/WhenTrueOverloads.cs": 100,
   "src/Motiv/BooleanPredicateProposition/PropositionBuilders/Overloads/WhenTrueYieldOverloads.cs": 100,
   "src/Motiv/BooleanPredicateProposition/PropositionResultDescription.cs": 100,
-  "src/Motiv/BooleanResultBase.cs": 52,
+  "src/Motiv/BooleanResultBase.cs": 87.09,
   "src/Motiv/BooleanResultExtensions.cs": 90.62,
   "src/Motiv/BooleanResultPredicateProposition/BooleanResultPredicateMultiAssertionExplanationBooleanResult.cs": 72.72,
   "src/Motiv/BooleanResultPredicateProposition/BooleanResultPredicateMultiAssertionExplanationProposition.cs": 100,

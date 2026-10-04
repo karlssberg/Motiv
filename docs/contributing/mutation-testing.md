@@ -153,7 +153,8 @@ numbers:
 
 Each area baseline is the area's score in the full run on `main` at `16b42fe` (2026-10-03) less one
 point. It is the bar for a new file, and the most asked of an existing file that already scores
-above it. The file baselines come from the same run.
+above it. The file baselines come from the same run, except the files `main` changed after it
+(#317, #318), which were re-measured on their own.
 
 Why both: the gate scores a handful of files, not the area. An area's score is an average, and
 many files sit below it. In `operators`, which scores 97%, `NotSpecDescription.cs` scores 80%, so an
