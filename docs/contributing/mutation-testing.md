@@ -140,17 +140,20 @@ assigns them. The value is rounded down, because Stryker takes a whole number. T
 
 | Area | Baseline | Break |
 |---|---|---|
-| higher-order | 39.85% | 39 |
-| expression-tree | 57.08% | 57 |
-| decorator-result-predicate | 45.33% | 45 |
-| predicate-traversal-shared | 68.98% | 68 |
-| operators | 72.46% | 72 |
-| rest | 75.70% | 75 |
+| higher-order | 54.66% | 54 |
+| expression-tree | 58.30% | 58 |
+| decorator-result-predicate | 65.90% | 65 |
+| predicate-traversal-shared | 71.60% | 71 |
+| operators | 96.00% | 96 |
+| rest | 77.59% | 77 |
+
+Each baseline is the area's score in the full run on `main` at `16b42fe` (2026-10-03) less one
+point, so run-to-run noise in that measurement does not fail a pull request on its own.
 
 Why a threshold per area rather than one number: the gate scores a handful of files, and areas
-differ by more than 35 points. One global number set to the overall score (~56%) would fail every
+differ by more than 35 points. One global number set to the overall score (~69%) would fail every
 change to `higher-order` for debt that is already there. Set to the lowest area, it would let an
-`operators` file fall to 40%. When a pull request spans several areas, their mutants are scored
+`operators` file fall to 54%. When a pull request spans several areas, their mutants are scored
 together against the lowest of their baselines, so the gate stays lenient across areas.
 
 What it does and does not promise:
@@ -164,8 +167,8 @@ What it does and does not promise:
   `break <= low`. That only changes the report's colours.
 
 When the full run's area score rises, raise that area's number in `stryker-baselines.json` in the
-same pull request. Adding a shard to `stryker-shards.json` needs a baseline entry too: the gate
-fails and names any area it touches that has no baseline.
+same pull request, keeping the one-point margin. Adding a shard to `stryker-shards.json` needs a
+baseline entry too: the gate fails and names any area it touches that has no baseline.
 
 ### When there is no score
 
