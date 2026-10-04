@@ -332,6 +332,13 @@ internal sealed class LeafChecker
             return LeafType.Of(typeof(bool));
         }
 
+        // An unknown side already has its own error; anything said about the comparison would be a guess.
+        if (left.IsUnknown || right.IsUnknown)
+        {
+            Abandon(left, right);
+            return LeafType.Of(typeof(bool));
+        }
+
         var l = left.Underlying; var r = right.Underlying;
         if (l is not null && r is not null && NumericLattice.KindOf(l) is null && NumericLattice.KindOf(r) is null)
         {
@@ -358,6 +365,18 @@ internal sealed class LeafChecker
     }
 
     /// <summary>
+    /// Gives up on typing a binary whose error is already reported. The other side's var has no
+    /// genuine anchor to blame, so it is marked errored and <c>DefaultUnresolved()</c> does not pile
+    /// a "no model field fixes this" default on top of the real problem.
+    /// </summary>
+    private LeafType Abandon(LeafType left, LeafType right)
+    {
+        if (left.Var is not null) _errored.Add(left.Var.Root);
+        if (right.Var is not null) _errored.Add(right.Var.Root);
+        return LeafType.Unknown;
+    }
+
+    /// <summary>
     /// Gives two numeric operands one type. Returns the operands' common type (for arithmetic,
     /// the result type). Non-numeric concrete operands are reported here for arithmetic and
     /// ordering; equality handles its own.
@@ -365,20 +384,14 @@ internal sealed class LeafChecker
     private LeafType Unify(Binary b, LeafType left, LeafType right, bool arithmetic)
     {
         if (left.IsUnknown || right.IsUnknown)
-        {
-            // The other side's var has no genuine anchor to blame — an unrelated error already
-            // fired on this expression, so don't also pile on a "no model field fixes this" default.
-            if (left.Var is not null) _errored.Add(left.Var.Root);
-            if (right.Var is not null) _errored.Add(right.Var.Root);
-            return LeafType.Unknown;
-        }
+            return Abandon(left, right);
         var what = arithmetic ? $"'{b.Operator}' needs numbers" : $"'{b.Operator}' compares numbers";
 
         foreach (var (side, type) in new[] { (b.Left, left), (b.Right, right) })
             if (type.Underlying is { } t && NumericLattice.KindOf(t) is null)
             {
                 Report(side, RuleErrorCode.ExpressionTypeMismatch, $"{what}; this is {Describe(t)}");
-                return LeafType.Unknown;
+                return Abandon(left, right);
             }
 
         var nullable = left.IsNullable || right.IsNullable;
@@ -435,6 +448,7 @@ internal sealed class LeafChecker
             {
                 ({ } h, _) => Describe(NumericLattice.ClrType(h)),
                 (null, RuleParameterType.Number) => "a number parameter",
+                (null, RuleParameterType.Integer) => "an integer parameter",
                 _ => "this literal",
             };
             Report(b, RuleErrorCode.ExpressionTypeMismatch, $"cannot use {have} with {Describe(concrete)} without losing precision");

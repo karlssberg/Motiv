@@ -430,6 +430,30 @@
         { "text": "@vip", "type": "decimal" }
       ],
       "result": "bool"
+    },
+    {
+      "name": "unknown field compared with a string reports only the unknown field",
+      "scope": "customer",
+      "leaf": "nope.x == \"a\"",
+      "problems": [
+        { "code": "UnknownField", "contains": ["nope"], "range": [0, 4] }
+      ]
+    },
+    {
+      "name": "non-number in a comparison does not also default the literal",
+      "scope": "customer",
+      "leaf": "isActive >= 1",
+      "problems": [
+        { "code": "ExpressionTypeMismatch", "contains": ["'>=' compares numbers", "a condition"], "range": [0, 8] }
+      ]
+    },
+    {
+      "name": "integer parameter vs fractional anchor refused as a parameter",
+      "scope": "customer",
+      "leaf": "@minAge > score",
+      "problems": [
+        { "code": "ExpressionTypeMismatch", "contains": ["cannot use an integer parameter with double"], "range": [0, 15] }
+      ]
     }
   ]
 }
