@@ -1,7 +1,7 @@
 # Mutation testing PR gate (#294, rollout step 3): mutates only the src/Motiv C# files a pull
-# request changes, and fails when their score falls below the post-triage baseline of the area they
-# sit in. The full, report-only run stays in mutation.yml; a full run is ~150 runner-minutes, this
-# one scales with the diff.
+# request changes, and fails when their score falls below the lowest of their thresholds: each file's
+# area baseline, or its own last measured score when that is lower. The full, report-only run stays
+# in mutation.yml; a full run is ~150 runner-minutes, this one scales with the diff.
 #
 # Scope is worked out from git by scripts/mutation/pr-scope.sh and passed to Stryker as --mutate
 # globs, rather than with Stryker's own --since. In Stryker.NET 5.0.0 --since marks every mutant as
@@ -130,8 +130,12 @@ jobs:
           if [ -f "$report" ] && [ "$(scripts/mutation/summarise.sh --valid "$report")" -eq 0 ]; then
             printf '\n**Gate not applied:** the changed files produced no valid mutants, so there is no score to hold to %s%%.\n' "$BREAK"
           fi
-          printf '\n**Break threshold: %s%%** — the lowest post-triage baseline of the areas touched:\n\n' "$BREAK"
+          printf '\n**Break threshold: %s%%** — the lowest threshold of the changed files. Area baselines:\n\n' "$BREAK"
           jq -r '.areas[] | "- \(.name): \(.baseline)%"' "$RUNNER_TEMP/scope.json"
+          if [ "$(jq '.held | length' "$RUNNER_TEMP/scope.json")" -gt 0 ]; then
+            printf '\nHeld to their own last measured score, which is below their area baseline:\n\n'
+            jq -r '.held[] | "- `\(.file)`: \(.baseline)%"' "$RUNNER_TEMP/scope.json"
+          fi
           printf '\n<details><summary>%s changed files mutated</summary>\n\n' "$COUNT"
           jq -r '.files[] | "- `\(.)`"' "$RUNNER_TEMP/scope.json"
           printf '\n</details>\n'

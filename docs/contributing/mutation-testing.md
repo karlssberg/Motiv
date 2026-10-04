@@ -133,10 +133,14 @@ Weakened tests show up in the full run, not here.
 
 ### The break threshold
 
-`--break-at` is the **lowest post-triage baseline among the areas the changed files sit in**. The
-areas are the shards in `stryker-shards.json`, plus `rest`, assigned the same way `plan-shards.sh`
-assigns them. The value is rounded down, because Stryker takes a whole number. The baselines live in
-`test/Motiv.Tests/stryker-baselines.json`:
+Each changed file has a threshold, and `--break-at` is the **lowest threshold among the changed
+files**, rounded down because Stryker takes a whole number. A file's threshold is the lower of two
+numbers:
+
+- **Its area's baseline**, from `test/Motiv.Tests/stryker-baselines.json`. The areas are the shards
+  in `stryker-shards.json`, plus `rest`, assigned the same way `plan-shards.sh` assigns them.
+- **Its own last measured score**, from `test/Motiv.Tests/stryker-file-baselines.json`, when it has
+  one.
 
 | Area | Baseline | Break |
 |---|---|---|
@@ -147,28 +151,43 @@ assigns them. The value is rounded down, because Stryker takes a whole number. T
 | operators | 96.00% | 96 |
 | rest | 77.59% | 77 |
 
-Each baseline is the area's score in the full run on `main` at `16b42fe` (2026-10-03) less one
-point, so run-to-run noise in that measurement does not fail a pull request on its own.
+Each area baseline is the area's score in the full run on `main` at `16b42fe` (2026-10-03) less one
+point. It is the bar for a new file, and the most asked of an existing file that already scores
+above it. The file baselines come from the same run.
 
-Why a threshold per area rather than one number: the gate scores a handful of files, and areas
-differ by more than 35 points. One global number set to the overall score (~69%) would fail every
-change to `higher-order` for debt that is already there. Set to the lowest area, it would let an
-`operators` file fall to 54%. When a pull request spans several areas, their mutants are scored
-together against the lowest of their baselines, so the gate stays lenient across areas.
+Why both: the gate scores a handful of files, not the area. An area's score is an average, and
+many files sit below it. In `operators`, which scores 97%, `NotSpecDescription.cs` scores 80%, so an
+area floor alone would fail any change to that file, however good, for debt it already had. Holding
+a weak file to its own score instead asks only that a change leave it no weaker. Stryker scores the
+changed files together, and a pooled score is never below the lowest file's, so a pull request that
+leaves every file at its measured score passes. The job summary lists the files held to their own
+score.
 
 What it does and does not promise:
 
-- It is a **floor per area**, not a per-file before/after comparison. A file that already scores
-  below its area's baseline fails the gate the first time it is touched, until tests bring it up.
-  That is the intended ratchet, but it can land on a small, unrelated fix.
-- A small file gives a coarse score. Three mutants with one survivor is 67%.
+- It is a **ratchet per file**, not a before/after comparison of the same file. Mutants a pull
+  request adds count against the file's old score, so new code in a weak file must be at least as
+  well tested as the file already was.
+- The changed files are pooled, so a pull request that touches a weak file is held to that file's
+  score as a whole: a strong file it also touches can slip without failing the gate.
+- A file that scores 0% today puts no floor under a pull request that touches it. Bringing such a
+  file up is the triage the full run is for.
+- A new file is held to its area's baseline. In `operators` that means almost no survivors, and a
+  small file gives a coarse score: three mutants with one survivor is 67%.
 - The shared `stryker-config.json` keeps `break: 0`, so the full run stays report-only. The gate
   also raises `--threshold-low` to the break for its own run, because Stryker requires
   `break <= low`. That only changes the report's colours.
 
-When the full run's area score rises, raise that area's number in `stryker-baselines.json` in the
-same pull request, keeping the one-point margin. Adding a shard to `stryker-shards.json` needs a
-baseline entry too: the gate fails and names any area it touches that has no baseline.
+When a full run's scores rise, update both files in one pull request: raise the area's number in
+`stryker-baselines.json`, keeping the one-point margin, and regenerate the file baselines from that
+run's `src/Motiv` shard reports:
+
+```bash
+scripts/mutation/file-scores.sh <shard report>.json... > test/Motiv.Tests/stryker-file-baselines.json
+```
+
+Adding a shard to `stryker-shards.json` needs a baseline entry too: the gate fails and names any
+area it touches that has no baseline.
 
 ### When there is no score
 
@@ -188,9 +207,9 @@ To reproduce a gate run locally, first work out the scope from the repository ro
 globs and break to Stryker from `test/Motiv.Tests`:
 
 ```bash
-scripts/mutation/pr-scope.sh origin/main HEAD   # prints files, globs, areas and break
+scripts/mutation/pr-scope.sh origin/main HEAD   # prints files, globs, areas, held files and break
 cd test/Motiv.Tests
-dotnet tool run dotnet-stryker --mutate "**/src/Motiv/Not/NotPolicy.cs" --break-at 72 --threshold-low 72
+dotnet tool run dotnet-stryker --mutate "**/src/Motiv/Not/NotSpecDescription.cs" --break-at 80 --threshold-low 80
 ```
 
 ## Scheduled full run
@@ -236,8 +255,8 @@ passes `survivors.sh --prefix ui/packages/rules-core` to print repository-relati
 (`scripts/mutation/combine.sh`) writes one score per .NET project and names any shard that sent no
 report. `@motiv-rules/core` writes its own score in its job summary.
 
-`scripts/mutation/tests/scripts.test.sh` tests `plan.sh`, `survivors.sh`, `summarise.sh` and
-`combine.sh` against fake reports in both tools' formats, and `pr-scope.sh` against a throwaway git
+`scripts/mutation/tests/scripts.test.sh` tests `plan.sh`, `survivors.sh`, `summarise.sh`,
+`file-scores.sh` and `combine.sh` against fake reports in both tools' formats, and `pr-scope.sh` against a throwaway git
 repository. It needs only `jq` and `git`, and the workflow runs it before planning.
 
 ## StrykerJS (@motiv-rules/core)
