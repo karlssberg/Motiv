@@ -29,7 +29,7 @@ public readonly struct MetadataFromBooleanHigherOrderPropositionFactory<TModel, 
     /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public PolicyBase<IEnumerable<TModel>, TMetadata> Create(string statement)
     {
-        resultResolver.ThrowIfNull(nameof(resultResolver));
+        resultResolver.ThrowIfNull();
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromBooleanPredicateProposition<TModel,TMetadata>(
             resultResolver,

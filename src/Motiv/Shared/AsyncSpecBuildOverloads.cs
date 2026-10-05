@@ -15,17 +15,17 @@ internal static class AsyncSpecBuildOverloads
 {
     [FluentMethodTemplate]
     internal static AsyncSpecBase<TModel, TMetadata> Build<TModel, TMetadata>(AsyncSpecBase<TModel, TMetadata> spec) =>
-        spec.ThrowIfNull(nameof(spec));
+        spec.ThrowIfNull();
 
     [FluentMethodTemplate]
     internal static AsyncSpecBase<TModel, TMetadata> Build<TModel, TMetadata>(Func<AsyncSpecBase<TModel, TMetadata>> specFactory) =>
-        specFactory.ThrowIfNull(nameof(specFactory)).Invoke();
+        specFactory.ThrowIfNull().Invoke();
 
     [FluentMethodTemplate]
     internal static AsyncSpecBase<TModel, string> Build<TModel>(AsyncSpecBase<TModel, string> spec) =>
-        spec.ThrowIfNull(nameof(spec));
+        spec.ThrowIfNull();
 
     [FluentMethodTemplate]
     internal static AsyncSpecBase<TModel, string> Build<TModel>(Func<AsyncSpecBase<TModel, string>> specFactory) =>
-        specFactory.ThrowIfNull(nameof(specFactory)).Invoke();
+        specFactory.ThrowIfNull().Invoke();
 }

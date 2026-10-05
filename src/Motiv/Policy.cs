@@ -29,7 +29,7 @@ public class Policy<TModel, TMetadata> : PolicyBase<TModel, TMetadata>
     /// <inheritdoc/>
     public Policy(PolicyBase<TModel, TMetadata> policy)
     {
-        policy.ThrowIfNull(nameof(policy));
+        policy.ThrowIfNull();
 
         _policy = policy;
         Description = policy.Description;
@@ -38,7 +38,7 @@ public class Policy<TModel, TMetadata> : PolicyBase<TModel, TMetadata>
     /// <inheritdoc/>
     public Policy(Func<PolicyBase<TModel, TMetadata>> policyFactory)
     {
-        policyFactory.ThrowIfNull(nameof(policyFactory));
+        policyFactory.ThrowIfNull();
 
         _policy = policyFactory().ThrowIfFactoryOutputIsNull(nameof(policyFactory));
         Description = _policy.Description;

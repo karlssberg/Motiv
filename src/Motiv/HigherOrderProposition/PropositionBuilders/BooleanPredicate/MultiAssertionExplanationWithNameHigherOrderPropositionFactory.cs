@@ -33,7 +33,7 @@ public readonly struct MultiAssertionExplanationWithNameHigherOrderPropositionFa
     /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public SpecBase<IEnumerable<TModel>, string> Create(string statement)
     {
-        resultResolver.ThrowIfNull(nameof(resultResolver));
+        resultResolver.ThrowIfNull();
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new HigherOrderFromBooleanPredicateMultiMetadataProposition<TModel, string>(
             resultResolver,
@@ -53,7 +53,7 @@ public readonly struct MultiAssertionExplanationWithNameHigherOrderPropositionFa
     /// <exception cref="ArgumentException">Thrown when the WhenTrue assertion is null, empty or whitespace (it doubles as the propositional statement).</exception>
     public SpecBase<IEnumerable<TModel>, string> Create()
     {
-        resultResolver.ThrowIfNull(nameof(resultResolver));
+        resultResolver.ThrowIfNull();
         trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
         return new HigherOrderFromBooleanPredicateMultiAssertionExplanationProposition<TModel>(
             resultResolver,
