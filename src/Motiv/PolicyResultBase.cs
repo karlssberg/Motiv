@@ -26,7 +26,7 @@ public abstract class PolicyResultBase<TMetadata> : BooleanResultBase<TMetadata>
     /// <returns>A new policy result instance representing the result of the AND operation.</returns>
     public PolicyResultBase<TMetadata> AndAlso(PolicyResultBase<TMetadata> right)
     {
-        right.ThrowIfNull(nameof(right));
+        right.ThrowIfNull();
 
         return Satisfied
             ? new AndAlsoPolicyResult<TMetadata>(this, right)
@@ -41,7 +41,7 @@ public abstract class PolicyResultBase<TMetadata> : BooleanResultBase<TMetadata>
     /// <returns>A new policy result instance representing the result of the OR operation.</returns>
     public PolicyResultBase<TMetadata> OrElse(PolicyResultBase<TMetadata> right)
     {
-        right.ThrowIfNull(nameof(right));
+        right.ThrowIfNull();
 
         return Satisfied
             ? new OrElsePolicyResult<TMetadata>(this)

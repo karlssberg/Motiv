@@ -27,7 +27,7 @@ public readonly struct AsyncMetadataPropositionFactory<TModel, TMetadata>(
     /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public AsyncPolicyBase<TModel, TMetadata> Create(string statement)
     {
-        predicate.ThrowIfNull(nameof(predicate));
+        predicate.ThrowIfNull();
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new AsyncProposition<TModel, TMetadata>(
             predicate,

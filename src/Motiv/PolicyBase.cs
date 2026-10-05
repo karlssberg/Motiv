@@ -96,7 +96,7 @@ public abstract class PolicyBase<TModel, TMetadata> : SpecBase<TModel, TMetadata
         Func<TNewModel, TModel> childModelSelector) =>
         new ChangeModelTypePolicy<TNewModel, TModel, TMetadata>(
             this,
-            childModelSelector.ThrowIfNull(nameof(childModelSelector)));
+            childModelSelector.ThrowIfNull());
 
     /// <summary>Changes the <typeparamref name="TModel" /> <see cref="Type" /> of the policy.</summary>
     /// <typeparam name="TDerivedModel">
@@ -122,7 +122,7 @@ public abstract class PolicyBase<TModel, TMetadata> : SpecBase<TModel, TMetadata
     /// between <c>this</c> and <paramref name="other" /> when the policy is eventually evaluated.
     /// </returns>
     public PolicyBase<TModel, TMetadata> AndAlso(PolicyBase<TModel, TMetadata> other) =>
-        new AndAlsoPolicy<TModel, TMetadata>(this, other.ThrowIfNull(nameof(other)));
+        new AndAlsoPolicy<TModel, TMetadata>(this, other.ThrowIfNull());
 
     /// <summary>
     /// Creates a new policy that is equivalent to a conditional "OR" of the current policy and the alternative
@@ -135,7 +135,7 @@ public abstract class PolicyBase<TModel, TMetadata> : SpecBase<TModel, TMetadata
     /// and <paramref name="alternative" /> when the policy is eventually evaluated.
     /// </returns>
     public PolicyBase<TModel, TMetadata> OrElse(PolicyBase<TModel, TMetadata> alternative) =>
-        new OrElsePolicy<TModel, TMetadata>(this, alternative.ThrowIfNull(nameof(alternative)));
+        new OrElsePolicy<TModel, TMetadata>(this, alternative.ThrowIfNull());
 
     /// <summary>
     /// Creates a new asynchronous policy that is equivalent to a conditional "AND" of the current policy and
@@ -173,7 +173,7 @@ public abstract class PolicyBase<TModel, TMetadata> : SpecBase<TModel, TMetadata
     /// <summary>Creates a new policy that is equivalent to a logical "NOT" of the current policy.</summary>
     /// <param name="policy">The policy to negate</param>
     /// <returns>A new <see cref="PolicyBase{TModel,TMetadata}" /> that will perform the "Not" operation when evaluated.</returns>
-    public static PolicyBase<TModel, TMetadata> operator !(PolicyBase<TModel, TMetadata> policy) => policy.ThrowIfNull(nameof(policy)).Not();
+    public static PolicyBase<TModel, TMetadata> operator !(PolicyBase<TModel, TMetadata> policy) => policy.ThrowIfNull().Not();
 
     /// <summary>
     /// Lifts this synchronous policy into the asynchronous hierarchy, preserving the single-value policy

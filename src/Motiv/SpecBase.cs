@@ -88,7 +88,7 @@ public abstract class SpecBase<TModel> : SpecBase
     /// <param name="spec">The specification to combine with this specification.</param>
     /// <returns>A new specification that represents the logical AND of this specification and the other specification.</returns>
     public SpecBase<TModel, string> And(SpecBase<TModel> spec) =>
-        new AndSpec<TModel, string>(ToExplanationSpec(), spec.ThrowIfNull(nameof(spec)).ToExplanationSpec());
+        new AndSpec<TModel, string>(ToExplanationSpec(), spec.ThrowIfNull().ToExplanationSpec());
 
     /// <summary>
     /// Combines this specification with another specification using the conditional AND operator. The right operand
@@ -98,13 +98,13 @@ public abstract class SpecBase<TModel> : SpecBase
     /// <param name="spec">The specification to combine with this specification.</param>
     /// <returns>A new specification that represents the conditional AND of this specification and the other specification.</returns>
     public SpecBase<TModel, string> AndAlso(SpecBase<TModel> spec) =>
-        new AndAlsoSpec<TModel, string>(ToExplanationSpec(), spec.ThrowIfNull(nameof(spec)).ToExplanationSpec());
+        new AndAlsoSpec<TModel, string>(ToExplanationSpec(), spec.ThrowIfNull().ToExplanationSpec());
 
     /// <summary>Combines this specification with another specification using the logical OR operator.</summary>
     /// <param name="spec">The specification to combine with this specification.</param>
     /// <returns>A new specification that represents the logical OR of this specification and the other specification.</returns>
     public SpecBase<TModel, string> Or(SpecBase<TModel> spec) =>
-        new OrSpec<TModel, string>(ToExplanationSpec(), spec.ThrowIfNull(nameof(spec)).ToExplanationSpec());
+        new OrSpec<TModel, string>(ToExplanationSpec(), spec.ThrowIfNull().ToExplanationSpec());
 
     /// <summary>
     /// Combines this specification with another specification using the conditional OR operator. The right operand
@@ -114,13 +114,13 @@ public abstract class SpecBase<TModel> : SpecBase
     /// <param name="spec">The specification to combine with this specification.</param>
     /// <returns>A new specification that represents the conditional OR of this specification and the other specification.</returns>
     public SpecBase<TModel, string> OrElse(SpecBase<TModel> spec) =>
-        new OrElseSpec<TModel, string>(ToExplanationSpec(), spec.ThrowIfNull(nameof(spec)).ToExplanationSpec());
+        new OrElseSpec<TModel, string>(ToExplanationSpec(), spec.ThrowIfNull().ToExplanationSpec());
 
     /// <summary>Combines this specification with another specification using the logical XOR operator.</summary>
     /// <param name="spec">The specification to combine with this specification.</param>
     /// <returns>A new specification that represents the logical XOR of this specification and the other specification.</returns>
     public SpecBase<TModel, string> XOr(SpecBase<TModel> spec) =>
-        new XOrSpec<TModel, string>(ToExplanationSpec(), spec.ThrowIfNull(nameof(spec)).ToExplanationSpec());
+        new XOrSpec<TModel, string>(ToExplanationSpec(), spec.ThrowIfNull().ToExplanationSpec());
 
     /// <summary>Negates this specification.</summary>
     /// <returns>A new specification that represents the logical NOT of this specification.</returns>
@@ -138,7 +138,7 @@ public abstract class SpecBase<TModel> : SpecBase
     public static SpecBase<TModel, string> operator &(
         SpecBase<TModel> left,
         SpecBase<TModel> right) =>
-        left.ThrowIfNull(nameof(left)).And(right.ThrowIfNull(nameof(right)));
+        left.ThrowIfNull().And(right.ThrowIfNull());
 
     /// <summary>Combines two specifications using the logical OR operator.</summary>
     /// <param name="left">The left operand of the OR operation.</param>
@@ -147,7 +147,7 @@ public abstract class SpecBase<TModel> : SpecBase
     public static SpecBase<TModel, string> operator |(
         SpecBase<TModel> left,
         SpecBase<TModel> right) =>
-        left.ThrowIfNull(nameof(left)).Or(right.ThrowIfNull(nameof(right)));
+        left.ThrowIfNull().Or(right.ThrowIfNull());
 
     /// <summary>Combines two specifications using the logical XOR operator.</summary>
     /// <param name="left">The left operand of the XOR operation.</param>
@@ -156,14 +156,14 @@ public abstract class SpecBase<TModel> : SpecBase
     public static SpecBase<TModel, string> operator ^(
         SpecBase<TModel> left,
         SpecBase<TModel> right) =>
-        left.ThrowIfNull(nameof(left)).XOr(right.ThrowIfNull(nameof(right)));
+        left.ThrowIfNull().XOr(right.ThrowIfNull());
 
     /// <summary>Negates a specification.</summary>
     /// <param name="spec">The specification to negate.</param>
     /// <returns>A new specification that represents the logical NOT of the specification.</returns>
     public static SpecBase<TModel> operator !(
         SpecBase<TModel> spec) =>
-        spec.ThrowIfNull(nameof(spec)).Not();
+        spec.ThrowIfNull().Not();
 
     /// <summary>
     /// Converts the expression into a predicate function that can be used to evaluate the proposition against a model.
@@ -259,7 +259,7 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
     /// <param name="spec">The specification to combine with this specification.</param>
     /// <returns>A new specification that represents the logical AND of this specification and the other specification.</returns>
     public SpecBase<TModel, TMetadata> And(SpecBase<TModel, TMetadata> spec) =>
-        new AndSpec<TModel, TMetadata>(this, spec.ThrowIfNull(nameof(spec)));
+        new AndSpec<TModel, TMetadata>(this, spec.ThrowIfNull());
 
     /// <summary>
     /// Combines this specification with another specification using the conditional AND operator. The right operand
@@ -269,13 +269,13 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
     /// <param name="spec">The specification to combine with this specification.</param>
     /// <returns>A new specification that represents the conditional AND of this specification and the other specification.</returns>
     public SpecBase<TModel, TMetadata> AndAlso(SpecBase<TModel, TMetadata> spec) =>
-        new AndAlsoSpec<TModel, TMetadata>(this, spec.ThrowIfNull(nameof(spec)));
+        new AndAlsoSpec<TModel, TMetadata>(this, spec.ThrowIfNull());
 
     /// <summary>Combines this specification with another specification using the logical OR operator.</summary>
     /// <param name="spec">The specification to combine with this specification.</param>
     /// <returns>A new specification that represents the logical OR of this specification and the other specification.</returns>
     public SpecBase<TModel, TMetadata> Or(SpecBase<TModel, TMetadata> spec) =>
-        new OrSpec<TModel, TMetadata>(this, spec.ThrowIfNull(nameof(spec)));
+        new OrSpec<TModel, TMetadata>(this, spec.ThrowIfNull());
 
     /// <summary>
     /// Combines this specification with another specification using the conditional OR operator. The right operand
@@ -285,13 +285,13 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
     /// <param name="spec">The right operand.</param>
     /// <returns>A new specification that represents the conditional OR of this specification and the other specification.</returns>
     public SpecBase<TModel, TMetadata> OrElse(SpecBase<TModel, TMetadata> spec) =>
-        new OrElseSpec<TModel, TMetadata>(this, spec.ThrowIfNull(nameof(spec)));
+        new OrElseSpec<TModel, TMetadata>(this, spec.ThrowIfNull());
 
     /// <summary>Combines this specification with another specification using the logical XOR operator.</summary>
     /// <param name="spec">The specification to combine with this specification.</param>
     /// <returns>A new specification that represents the logical XOR of this specification and the other specification.</returns>
     public SpecBase<TModel, TMetadata> XOr(SpecBase<TModel, TMetadata> spec) =>
-        new XOrSpec<TModel, TMetadata>(this, spec.ThrowIfNull(nameof(spec)));
+        new XOrSpec<TModel, TMetadata>(this, spec.ThrowIfNull());
 
     /// <summary>Negates this specification.</summary>
     /// <returns>A new specification that represents the logical NOT of this specification.</returns>
@@ -312,7 +312,7 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
         Func<TNewModel, TModel> childModelSelector) =>
         new ChangeModelTypeSpec<TNewModel, TModel, TMetadata>(
             this,
-            childModelSelector.ThrowIfNull(nameof(childModelSelector)));
+            childModelSelector.ThrowIfNull());
 
     /// <summary>Changes the <typeparamref name="TModel" /> <see cref="Type" /> of the specification.</summary>
     /// <typeparam name="TDerivedModel">
@@ -447,7 +447,7 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
     public static SpecBase<TModel, TMetadata> operator &(
         SpecBase<TModel, TMetadata> left,
         SpecBase<TModel, TMetadata> right) =>
-        left.ThrowIfNull(nameof(left)).And(right.ThrowIfNull(nameof(right)));
+        left.ThrowIfNull().And(right.ThrowIfNull());
 
     /// <summary>Combines two specifications using the logical OR operator.</summary>
     /// <param name="left">The left operand of the OR operation.</param>
@@ -456,7 +456,7 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
     public static SpecBase<TModel, TMetadata> operator |(
         SpecBase<TModel, TMetadata> left,
         SpecBase<TModel, TMetadata> right) =>
-        left.ThrowIfNull(nameof(left)).Or(right.ThrowIfNull(nameof(right)));
+        left.ThrowIfNull().Or(right.ThrowIfNull());
 
     /// <summary>Combines two specifications using the logical XOR operator.</summary>
     /// <param name="left">The left operand of the XOR operation.</param>
@@ -465,14 +465,14 @@ public abstract class SpecBase<TModel, TMetadata> : SpecBase<TModel>
     public static SpecBase<TModel, TMetadata> operator ^(
         SpecBase<TModel, TMetadata> left,
         SpecBase<TModel, TMetadata> right) =>
-        left.ThrowIfNull(nameof(left)).XOr(right.ThrowIfNull(nameof(right)));
+        left.ThrowIfNull().XOr(right.ThrowIfNull());
 
     /// <summary>Negates a specification.</summary>
     /// <param name="spec">The specification to negate.</param>
     /// <returns>A new specification that represents the logical NOT of the specification.</returns>
     public static SpecBase<TModel, TMetadata> operator !(
         SpecBase<TModel, TMetadata> spec) =>
-        spec.ThrowIfNull(nameof(spec)).Not();
+        spec.ThrowIfNull().Not();
 
     /// <summary>
     /// Evaluates the specification against the model and returns a result that contains the Boolean result of the
