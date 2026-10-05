@@ -52,7 +52,8 @@ internal static class ExplainEligibility
     {
         if (method.MethodKind == MethodKind.LocalFunction)
             return "it is a local function";
-        if (method.ContainingType.TypeKind is not TypeKind.Class)
+        // The generated code reopens every enclosing type as a partial class
+        if (ContainingTypes(method).Any(type => type.TypeKind is not TypeKind.Class))
             return "it is declared in a struct or interface";
         if (method.IsExtensionMethod)
             return "extension methods aren't supported";
@@ -71,8 +72,13 @@ internal static class ExplainEligibility
         var body = FindBody(declaration);
         if (body is null)
             return "its body isn't a single expression";
+        if (body is ThrowExpressionSyntax)
+            return "its body only throws";
         if (body.DescendantNodesAndSelf().OfType<BaseExpressionSyntax>().Any())
             return "it uses base";
+        // The clauses run in a nested class, which can't capture the type's primary constructor parameters
+        if (ReadsPrimaryConstructorParameter(body, compilation.GetSemanticModel(body.SyntaxTree)))
+            return "it reads a primary constructor parameter";
 
         // The generated code sits outside the type, so everything in the signature must be reachable from there
         if (!compilation.IsSymbolAccessibleWithin(method.ContainingType, compilation.Assembly))
@@ -82,6 +88,11 @@ internal static class ExplainEligibility
 
         return null;
     }
+
+    private static bool ReadsPrimaryConstructorParameter(ExpressionSyntax body, SemanticModel model) =>
+        body.DescendantNodesAndSelf()
+            .OfType<IdentifierNameSyntax>()
+            .Any(name => model.GetSymbolInfo(name).Symbol is IParameterSymbol { ContainingSymbol: IMethodSymbol { MethodKind: MethodKind.Constructor } });
 
     // A call that binds to this method could dispatch to an override at run time, which an interceptor would skip
     private static bool CanBeOverridden(IMethodSymbol method) =>

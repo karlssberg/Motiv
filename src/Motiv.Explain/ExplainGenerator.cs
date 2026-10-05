@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Operations;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Motiv.Explain;
@@ -16,8 +17,13 @@ public sealed class ExplainGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
+        // Every type the generator adds is [Embedded], so a project that sees this one's internals through
+        // InternalsVisibleTo doesn't import a second copy of each and warn that they conflict (CS0436)
         context.RegisterPostInitializationOutput(output =>
-            output.AddSource("ExplainAttribute.g.cs", ExplainAttribute.Source));
+        {
+            output.AddEmbeddedAttributeDefinition();
+            output.AddSource("ExplainAttribute.g.cs", ExplainAttribute.Source);
+        });
 
         var enabled = context.AnalyzerConfigOptionsProvider.Select((options, _) =>
             options.GlobalOptions.TryGetValue("build_property.MotivExplain", out var value) &&
@@ -77,13 +83,18 @@ public sealed class ExplainGenerator : IIncrementalGenerator
 
     private static Candidate? Accept(Compilation compilation, (SyntaxTree Tree, TextSpan Span) location, CancellationToken cancellationToken)
     {
-        if (location.Tree.GetRoot(cancellationToken).FindNode(location.Span) is not MethodDeclarationSyntax declaration)
+        if (location.Tree.GetRoot(cancellationToken).FindNode(location.Span) is not MethodDeclarationSyntax marked ||
+            compilation.GetSemanticModel(location.Tree).GetDeclaredSymbol(marked, cancellationToken) is not { } symbol)
             return null;
-        var model = compilation.GetSemanticModel(location.Tree);
-        if (model.GetDeclaredSymbol(declaration, cancellationToken) is not { } symbol)
+
+        // A partial method's body is on its implementing half, wherever the attribute was put
+        var implementation = symbol.PartialImplementationPart ?? symbol;
+        if (implementation.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax(cancellationToken) is not MethodDeclarationSyntax declaration)
             return null;
-        return ExplainEligibility.Accept(symbol, declaration, compilation) is { } body
-            ? new Candidate(symbol, declaration, body, model)
+
+        // Calls bind to the defining half, so that is the symbol they are matched against
+        return ExplainEligibility.Accept(implementation, declaration, compilation) is { } body
+            ? new Candidate(implementation.PartialDefinitionPart ?? implementation, declaration, body, compilation.GetSemanticModel(declaration.SyntaxTree))
             : null;
     }
 
@@ -105,6 +116,7 @@ public sealed class ExplainGenerator : IIncrementalGenerator
             {
                 if (model.GetSymbolInfo(invocation, cancellationToken).Symbol is not IMethodSymbol called ||
                     !targets.Contains(called) ||
+                    IsInExpressionTree(invocation, model, cancellationToken) ||
                     model.GetInterceptableLocation(invocation, cancellationToken) is not { } location)
                     continue;
 
@@ -115,6 +127,28 @@ public sealed class ExplainGenerator : IIncrementalGenerator
         }
 
         return calls;
+    }
+
+    // An expression tree records the method it calls, and code that reads the tree (EF Core, a visitor)
+    // would find the interceptor there instead of the user's method
+    private static bool IsInExpressionTree(InvocationExpressionSyntax invocation, SemanticModel model, CancellationToken cancellationToken)
+    {
+        for (var operation = model.GetOperation(invocation, cancellationToken); operation is not null; operation = operation.Parent)
+        {
+            if (operation is IAnonymousFunctionOperation && IsExpressionType(operation.Parent?.Type))
+                return true;
+        }
+        return false;
+    }
+
+    private static bool IsExpressionType(ITypeSymbol? type)
+    {
+        for (; type is not null; type = type.BaseType)
+        {
+            if (type.Name == "LambdaExpression" && type.ContainingNamespace.ToDisplayString() == "System.Linq.Expressions")
+                return true;
+        }
+        return false;
     }
 
     private static string? InvokedName(InvocationExpressionSyntax invocation) => invocation.Expression switch

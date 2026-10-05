@@ -38,7 +38,9 @@ public sealed class ExplainAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeDeclaration(SyntaxNodeAnalysisContext context)
     {
         if (context.SemanticModel.GetDeclaredSymbol(context.Node, context.CancellationToken) is not IMethodSymbol method ||
-            !ExplainAttribute.IsOn(method))
+            !ExplainAttribute.IsOn(method) ||
+            // A partial method is judged on its implementing half, which has the body
+            method.PartialImplementationPart is not null)
             return;
 
         if (ExplainEligibility.Check(method, context.Node, context.Compilation) is { } rejection)

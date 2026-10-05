@@ -133,6 +133,7 @@ public class ExplainAnalyzerTests
     [InlineData("public virtual bool {|#0:IsBig|}(int n) => n > 10;", "Rules.IsBig(int)", "it can be overridden, so a call might not run this body")]
     [InlineData("public bool {|#0:IsBig|}(int n) => base.Equals(n);", "Rules.IsBig(int)", "it uses base")]
     [InlineData("public static bool {|#0:IsEmpty|}(System.ReadOnlySpan<int> values) => values.Length == 0;", "Rules.IsEmpty(System.ReadOnlySpan<int>)", "a parameter is a ref struct or pointer")]
+    [InlineData("public static bool {|#0:Fails|}(int n) => throw new System.InvalidOperationException();", "Rules.Fails(int)", "its body only throws")]
     [InlineData("private static bool {|#0:IsSecret|}(Secret s) => s != null; private class Secret { }", "Rules.IsSecret(Rules.Secret)", "a parameter's type isn't visible to the rest of the assembly")]
     public async Task A_method_that_cannot_be_explained_says_why(string member, string method, string reason)
     {
@@ -217,6 +218,60 @@ public class ExplainAnalyzerTests
             {
                 [Explain]
                 public override bool Applies(int n) => n > 10;
+            }
+            """);
+    }
+
+    [Fact]
+    public async Task A_method_reading_a_primary_constructor_parameter_cannot_be_explained()
+    {
+        await Verify(
+            """
+            using Motiv.Explain;
+
+            public partial class Rules(int limit)
+            {
+                [Explain]
+                public bool {|#0:IsBig|}(int n) => n > 0 && n > limit;
+            }
+            """,
+            Diagnostic("MOTIV1004").WithLocation(0).WithArguments("Rules.IsBig(int)", "it reads a primary constructor parameter"));
+    }
+
+    [Fact]
+    public async Task A_class_nested_in_a_struct_cannot_be_explained()
+    {
+        await Verify(
+            """
+            using Motiv.Explain;
+
+            public partial struct Outer
+            {
+                public static partial class Inner
+                {
+                    [Explain]
+                    public static bool {|#0:IsBig|}(int n) => n > 10;
+                }
+            }
+            """,
+            Diagnostic("MOTIV1004").WithLocation(0).WithArguments("Outer.Inner.IsBig(int)", "it is declared in a struct or interface"));
+    }
+
+    [Fact]
+    public async Task Neither_half_of_an_explainable_partial_method_is_reported()
+    {
+        await Verify(
+            """
+            using Motiv.Explain;
+
+            public static partial class Rules
+            {
+                public static partial bool IsBig(int n);
+
+                [Explain]
+                public static partial bool IsBig(int n) => n > 10;
+
+                public static bool Check(int n) => IsBig(n);
             }
             """);
     }

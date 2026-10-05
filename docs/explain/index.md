@@ -67,8 +67,9 @@ in a test environment. When it is `true`, the package's targets also:
 - add `Motiv.Explain.Generated`, the one namespace its interceptors live in, to `InterceptorsNamespaces`;
 - define `MOTIV_EXPLAIN`, so code that configures logging can sit under `#if MOTIV_EXPLAIN`.
 
-Interceptors are a compiler feature with stable support from the .NET 9.0.2xx SDK. The generator targets
-Roslyn 5, which ships with the .NET 10 SDK.
+The package needs the .NET 10 SDK, in every build. Interceptors themselves are stable from the .NET 9.0.2xx
+SDK, but the generator is built against Roslyn 5, which ships with .NET 10. An older SDK can't load it, and since
+the generator is what supplies `[Explain]`, a prod build fails too.
 
 ## Where the explanations go
 
@@ -92,13 +93,16 @@ subscribes to the `Motiv` source.
 A method can be explained when it:
 
 - returns `bool` from a single expression, either as an expression body or a single `return` statement;
-- is declared in a class (or record class) that is `partial`, along with every type around it;
+- is declared in a class (or record class) that is `partial`, along with every type around it, and every
+  type around it is a class too;
 - isn't generic, isn't an extension method, has no `ref`, `out` or `in` parameters and no ref struct or pointer
   parameters, can't be overridden, and doesn't use `base`;
+- doesn't read a primary constructor parameter, which the generated code can't reach, and doesn't only throw;
 - has a signature the rest of the assembly can see, since the generated code sits outside the type.
 
-The type has to be partial because the decomposed specification is generated inside it, so its clauses can
-read the same private fields and methods the method does. The analyzer reports any `[Explain]` method that
+A partial method is explained whichever half carries the attribute. The type has to be partial because the
+decomposed specification is generated inside it, so its clauses can read the same private fields and methods the
+method does. The analyzer reports any `[Explain]` method that
 breaks these rules; see [Diagnostics](diagnostics.md).
 
 ## How the expression is split
@@ -120,7 +124,9 @@ log nothing:
 - a call through a delegate or method group, such as `orders.Where(Rules.IsEligible)` (reported as MOTIV1001);
 - a call from another project (reported as MOTIV1002);
 - a call through an interface or a base-class reference, which binds to a different method;
-- a call made from inside another explained method's clauses, which run as generated code.
+- a call made from inside another explained method's clauses, which run as generated code;
+- a call inside an expression tree, including a query over `IQueryable`, so a provider that reads the tree
+  (EF Core, for example) still finds the original method there.
 
 ## How prod stays untouched
 

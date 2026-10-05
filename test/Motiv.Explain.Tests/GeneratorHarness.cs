@@ -24,18 +24,25 @@ internal static class GeneratorHarness
     private static readonly MetadataReference MotivReference =
         MetadataReference.CreateFromFile(typeof(Spec).Assembly.Location);
 
-    public static GeneratorRun Run(string source, bool explain, bool referenceMotiv = true)
+    public static GeneratorRun Run(
+        string source,
+        bool explain,
+        bool referenceMotiv = true,
+        bool allowUnsafe = false,
+        string? assemblyName = null,
+        params MetadataReference[] references)
     {
         var parseOptions = new CSharpParseOptions(LanguageVersion.Latest)
             .WithPreprocessorSymbols(explain ? new[] { "MOTIV_EXPLAIN" } : [])
             .WithFeatures(explain ? [new("InterceptorsNamespaces", "Motiv.Explain.Generated")] : []);
 
         var compilation = CSharpCompilation.Create(
-            "ExplainTest" + Guid.NewGuid().ToString("N"),
+            assemblyName ?? "ExplainTest" + Guid.NewGuid().ToString("N"),
             [CSharpSyntaxTree.ParseText(source, parseOptions, path: "Program.cs")],
-            referenceMotiv ? [.. FrameworkReferences, MotivReference] : FrameworkReferences,
+            [.. FrameworkReferences, .. referenceMotiv ? [MotivReference] : Array.Empty<MetadataReference>(), .. references],
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable)
-                .WithGeneralDiagnosticOption(ReportDiagnostic.Error));
+                .WithGeneralDiagnosticOption(ReportDiagnostic.Error)
+                .WithAllowUnsafe(allowUnsafe));
 
         var driver = CSharpGeneratorDriver.Create(
             [new ExplainGenerator().AsSourceGenerator()],
@@ -77,6 +84,15 @@ internal sealed record GeneratorRun(
             .Concat(Output.GetDiagnostics())
             .Where(d => d.Severity >= DiagnosticSeverity.Warning)
             .ToList();
+
+    /// <summary>The compiled assembly, for another test compilation to reference.</summary>
+    public MetadataReference ToReference()
+    {
+        Problems.ShouldBeEmpty(string.Join(Environment.NewLine, Problems));
+        using var stream = new MemoryStream();
+        Output.Emit(stream).Success.ShouldBeTrue();
+        return MetadataReference.CreateFromImage(stream.ToArray());
+    }
 
     /// <summary>
     ///     Emits the compilation, loads it in its own context and invokes <c>Probe.Run()</c>, which the test

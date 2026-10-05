@@ -102,7 +102,8 @@ public class ExplainGeneratorTests
         var run = GeneratorHarness.Run(source, explain: false, referenceMotiv: false);
         var loaded = run.Load();
 
-        run.GeneratedSources.ShouldHaveSingleItem().ShouldContain("class ExplainAttribute");
+        run.Result.GeneratedTrees.Select(tree => Path.GetFileName(tree.FilePath))
+            .ShouldBe(["Microsoft.CodeAnalysis.EmbeddedAttribute.cs", "ExplainAttribute.g.cs"], ignoreOrder: true);
         loaded.Run().ShouldBe(["result: True"]);
         loaded.ReferencedAssemblyNames.ShouldNotContain("Motiv");
     }

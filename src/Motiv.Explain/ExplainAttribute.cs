@@ -24,6 +24,7 @@ internal static class ExplainAttribute
             /// </summary>
             [global::System.AttributeUsage(global::System.AttributeTargets.Method, Inherited = false)]
             [global::System.Diagnostics.Conditional("MOTIV_EXPLAIN")]
+            [global::Microsoft.CodeAnalysis.Embedded]
             internal sealed class ExplainAttribute : global::System.Attribute
             {
             }
