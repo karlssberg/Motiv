@@ -17,6 +17,7 @@ SUMMARISE="$HERE/../summarise.sh"
 PLAN="$HERE/../plan.sh"
 COMBINE="$HERE/../combine.sh"
 PR_SCOPE="$HERE/../pr-scope.sh"
+FILE_SCORES="$HERE/../file-scores.sh"
 
 PASS=0
 FAIL=0
@@ -135,6 +136,18 @@ report "$SANDBOX/invalid.json" "/w/src/Motiv/A.cs" CompileError Ignored
 assert_equals "$("$SUMMARISE" --valid "$SANDBOX/invalid.json")" "0" \
   "--valid counts no CompileError or Ignored mutant as valid"
 
+echo "file-scores.sh"
+
+report "$SANDBOX/thirds.json" "/home/runner/work/Motiv/Motiv/src/Motiv/Not/NotSpec.cs" Killed Timeout Survived NoCoverage CompileError Ignored
+assert_equals "$("$FILE_SCORES" "$SANDBOX/thirds.json" | jq -c .)" '{"src/Motiv/Not/NotSpec.cs":50}' \
+  "scores a file as detected over valid mutants, keyed by its path from src/"
+assert_equals "$("$FILE_SCORES" "$SANDBOX/net.json" "$SANDBOX/invalid.json" "$SANDBOX/missing.json" | jq -c .)" \
+  '{"src/Motiv/OrElse/OrElsePolicy.cs":50}' \
+  "leaves out files with no valid mutant, and reports that do not exist"
+report "$SANDBOX/two-thirds.json" "/w/src/Motiv/A.cs" Killed Killed Survived
+assert_equals "$("$FILE_SCORES" "$SANDBOX/two-thirds.json" | jq -c .)" '{"src/Motiv/A.cs":66.66}' \
+  "rounds a score down to two decimals, so a file at that score never falls below it"
+
 echo "plan.sh"
 
 # plan.sh reads the checked-in shard files by repository-relative path, as the workflow runs it.
@@ -216,10 +229,13 @@ BASE_SHA="$(git -C "$REPO" rev-parse HEAD)"
 echo '{ "operators": ["Not", "OrElse"], "higher-order": ["HigherOrderProposition"] }' > "$SANDBOX/shards.json"
 echo '{ "operators": 72.46, "higher-order": 39.85, "rest": 75.7 }' > "$SANDBOX/baselines.json"
 echo '{ "operators": 72.46, "higher-order": 39.85 }' > "$SANDBOX/no-rest.json"
+echo '{ "src/Motiv/Not/NotPolicy.cs": 61.5, "src/Motiv/OrElse/Nested/Deep.cs": 100 }' > "$SANDBOX/file-baselines.json"
 
-# scope <head> [baselines]: pr-scope.sh from base to <head>, against the sandbox shard files.
+# scope <head> [baselines]: pr-scope.sh from base to <head>, against the sandbox shard and
+# file-baseline files.
 scope() {
-  (cd "$REPO" && "$PR_SCOPE" "$BASE_SHA" "$1" "$SANDBOX/shards.json" "${2:-$SANDBOX/baselines.json}")
+  (cd "$REPO" && "$PR_SCOPE" "$BASE_SHA" "$1" "$SANDBOX/shards.json" "${2:-$SANDBOX/baselines.json}" \
+    "$SANDBOX/file-baselines.json")
 }
 
 # commit <message> <command>...: runs the commands in the repository, then commits from the base.
@@ -234,25 +250,38 @@ commit() {
 }
 
 empty="$(commit empty touch README.md)"
-assert_equals "$(scope "$empty" | jq -c .)" '{"files":[],"globs":[],"areas":[],"break":null}' \
+assert_equals "$(scope "$empty" | jq -c .)" '{"files":[],"globs":[],"areas":[],"held":[],"break":null}' \
   "no changed src/Motiv C# file gives nothing to mutate and break: null"
 
 rest="$(commit rest sh -c 'echo "// v2" >> src/Motiv/Spec.cs')"
 assert_equals "$(scope "$rest" | jq -c .)" \
-  '{"files":["src/Motiv/Spec.cs"],"globs":["**/src/Motiv/Spec.cs"],"areas":[{"name":"rest","baseline":75.7}],"break":75}' \
+  '{"files":["src/Motiv/Spec.cs"],"globs":["**/src/Motiv/Spec.cs"],"areas":[{"name":"rest","baseline":75.7}],"held":[],"break":75}' \
   "a file under no shard directory falls in rest"
 
 nested="$(commit nested sh -c 'echo "// v2" >> src/Motiv/OrElse/Nested/Deep.cs')"
 assert_equals "$(scope "$nested" | jq -c '[.areas, .break]')" '[[{"name":"operators","baseline":72.46}],72]' \
   "a file anywhere beneath a shard directory is in that shard"
+assert_equals "$(scope "$nested" | jq -c .held)" '[]' \
+  "a file scoring above its area's baseline is held to the area's baseline"
+
+lowfile="$(commit lowfile sh -c 'echo "// v2" >> src/Motiv/Not/NotPolicy.cs')"
+assert_equals "$(scope "$lowfile" | jq -c '[.held, .break]')" \
+  '[[{"file":"src/Motiv/Not/NotPolicy.cs","baseline":61.5}],61]' \
+  "a file scoring below its area's baseline is held to its own score, rounded down"
 
 several="$(commit several sh -c 'echo "// v2" | tee -a src/Motiv/Not/NotPolicy.cs src/Motiv/HigherOrderProposition/All.cs src/Motiv/Spec.cs > /dev/null')"
 assert_equals "$(scope "$several" | jq -c '[[.areas[].name], .break]')" '[["higher-order","operators","rest"],39]' \
   "several areas break at the lowest of their baselines, rounded down"
 
+mixed="$(commit mixed sh -c 'echo "// v2" | tee -a src/Motiv/Not/NotPolicy.cs src/Motiv/Spec.cs > /dev/null')"
+assert_equals "$(scope "$mixed" | jq -c .break)" '61' \
+  "several files break at the lowest of their own and their areas' baselines"
+
 deleted="$(commit deleted sh -c 'git rm -q src/Motiv/Gone.cs && echo x > src/Motiv/Not/notes.txt && echo "// new" > src/Motiv/Not/Added.cs')"
 assert_equals "$(scope "$deleted" | jq -c .files)" '["src/Motiv/Not/Added.cs"]' \
   "mutates added C# files, not deleted ones or other file types"
+assert_equals "$(scope "$deleted" | jq -c '[.held, .break]')" '[[],72]' \
+  "a new file, with no score of its own, is held to its area's baseline"
 
 out="$(scope "$rest" "$SANDBOX/no-rest.json" 2>&1)"
 status=$?

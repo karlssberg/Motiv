@@ -1,8 +1,8 @@
 {
-  "higher-order": 39.85,
-  "expression-tree": 57.08,
-  "decorator-result-predicate": 45.33,
-  "predicate-traversal-shared": 68.98,
-  "operators": 72.46,
-  "rest": 75.70
+  "higher-order": 54.66,
+  "expression-tree": 58.30,
+  "decorator-result-predicate": 65.90,
+  "predicate-traversal-shared": 71.60,
+  "operators": 96.00,
+  "rest": 77.59
 }
