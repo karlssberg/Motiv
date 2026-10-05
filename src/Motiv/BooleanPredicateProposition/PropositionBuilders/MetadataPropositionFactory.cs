@@ -27,7 +27,7 @@ public readonly struct MetadataPropositionFactory<TModel, TMetadata>(
     /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public PolicyBase<TModel, TMetadata> Create(string statement)
     {
-        predicate.ThrowIfNull(nameof(predicate));
+        predicate.ThrowIfNull();
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new Proposition<TModel, TMetadata>(
             predicate,

@@ -22,7 +22,7 @@ public readonly struct MultiAssertionExplanationWithNamePropositionFactory<TMode
     /// <exception cref="ArgumentException">Thrown when the WhenTrue assertion is null, empty or whitespace (it doubles as the propositional statement).</exception>
     public SpecBase<TModel, string> Create()
     {
-        predicate.ThrowIfNull(nameof(predicate));
+        predicate.ThrowIfNull();
         trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
         return new MultiAssertionExplanationProposition<TModel>(
             predicate,
@@ -41,7 +41,7 @@ public readonly struct MultiAssertionExplanationWithNamePropositionFactory<TMode
     /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public SpecBase<TModel, string> Create(string statement)
     {
-        predicate.ThrowIfNull(nameof(predicate));
+        predicate.ThrowIfNull();
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new MultiValueProposition<TModel, string>(
             predicate,
