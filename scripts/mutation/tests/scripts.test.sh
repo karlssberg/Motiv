@@ -7,7 +7,7 @@
 # path, StrykerJS by a path relative to the package it ran in. These tests pin how each is shortened,
 # so a survivor line names a repository-relative path whichever tool wrote the report. plan.sh is
 # checked against the shard files it reads, combine.sh against a fabricated artifact tree, and
-# pr-scope.sh against a throwaway git repository. No Stryker needed — only jq and git.
+# pr-scope.sh against a throwaway git repository, gate.sh against fabricated scopes and reports. No Stryker needed — only jq and git.
 
 set -uo pipefail
 
@@ -18,6 +18,7 @@ PLAN="$HERE/../plan.sh"
 COMBINE="$HERE/../combine.sh"
 PR_SCOPE="$HERE/../pr-scope.sh"
 FILE_SCORES="$HERE/../file-scores.sh"
+GATE="$HERE/../gate.sh"
 
 PASS=0
 FAIL=0
@@ -139,14 +140,59 @@ assert_equals "$("$SUMMARISE" --valid "$SANDBOX/invalid.json")" "0" \
 echo "file-scores.sh"
 
 report "$SANDBOX/thirds.json" "/home/runner/work/Motiv/Motiv/src/Motiv/Not/NotSpec.cs" Killed Timeout Survived NoCoverage CompileError Ignored
-assert_equals "$("$FILE_SCORES" "$SANDBOX/thirds.json" | jq -c .)" '{"src/Motiv/Not/NotSpec.cs":50}' \
-  "scores a file as detected over valid mutants, keyed by its path from src/"
+assert_equals "$("$FILE_SCORES" "$SANDBOX/thirds.json" | jq -c .)" '{"src/Motiv/Not/NotSpec.cs":{"score":50,"survivors":2}}' \
+  "scores a file and counts its undetected mutants, keyed by its path from src/"
 assert_equals "$("$FILE_SCORES" "$SANDBOX/net.json" "$SANDBOX/invalid.json" "$SANDBOX/missing.json" | jq -c .)" \
-  '{"src/Motiv/OrElse/OrElsePolicy.cs":50}' \
+  '{"src/Motiv/OrElse/OrElsePolicy.cs":{"score":50,"survivors":1}}' \
   "leaves out files with no valid mutant, and reports that do not exist"
 report "$SANDBOX/two-thirds.json" "/w/src/Motiv/A.cs" Killed Killed Survived
-assert_equals "$("$FILE_SCORES" "$SANDBOX/two-thirds.json" | jq -c .)" '{"src/Motiv/A.cs":66.66}' \
+assert_equals "$("$FILE_SCORES" "$SANDBOX/two-thirds.json" | jq -c '.["src/Motiv/A.cs"].score')" '66.66' \
   "rounds a score down to two decimals, so a file at that score never falls below it"
+
+echo "gate.sh"
+
+# gate <scope> <report>...: gate.sh against a scope written inline.
+gate() {
+  local scope=$1
+  shift
+  printf '%s' "$scope" > "$SANDBOX/scope.json"
+  "$GATE" "$SANDBOX/scope.json" "$@" 2> "$SANDBOX/gate.err"
+}
+
+report "$SANDBOX/g-strong.json" "/w/src/Motiv/Strong.cs" Killed Killed Killed Survived
+report "$SANDBOX/g-weak.json" "/w/src/Motiv/Weak.cs" Killed Survived Survived
+report "$SANDBOX/g-weaker.json" "/w/src/Motiv/Weak.cs" Killed Killed Survived Survived Survived
+
+out="$(gate '{"thresholds":[{"file":"src/Motiv/Strong.cs","score":75,"survivors":null}]}' "$SANDBOX/g-strong.json")"
+assert_equals "$?" "0" "passes a file that reaches its area's baseline"
+assert_contains "$out" '| `src/Motiv/Strong.cs` | 75% | 75% | pass |' "says what the file scored against what it needed"
+
+out="$(gate '{"thresholds":[{"file":"src/Motiv/Strong.cs","score":80,"survivors":null}]}' "$SANDBOX/g-strong.json")"
+assert_equals "$?" "1" "fails a file below its area's baseline"
+assert_contains "$out" '| `src/Motiv/Strong.cs` | 75% | 80% | **fail** |' "marks the failing file"
+
+out="$(gate '{"thresholds":[{"file":"src/Motiv/Weak.cs","score":75,"survivors":2}]}' "$SANDBOX/g-weak.json")"
+assert_equals "$?" "0" "passes a weak file that gains no undetected mutants, though it is below its area's baseline"
+assert_contains "$out" '| `src/Motiv/Weak.cs` | 33.33%, 2 undetected | 75%, or at most 2 undetected | pass |' \
+  "names both ways a weak file can pass"
+
+out="$(gate '{"thresholds":[{"file":"src/Motiv/Weak.cs","score":75,"survivors":2}]}' "$SANDBOX/g-weaker.json")"
+assert_equals "$?" "1" "fails a weak file that gains an undetected mutant, even at a higher score"
+
+out="$(gate '{"thresholds":[{"file":"src/Motiv/Weak.cs","score":30,"survivors":0}]}' "$SANDBOX/g-weaker.json")"
+assert_equals "$?" "0" "passes a weak file brought up to its area's baseline, however many mutants it gained"
+
+out="$(gate '{"thresholds":[{"file":"src/Motiv/Strong.cs","score":75,"survivors":null},{"file":"src/Motiv/Weak.cs","score":75,"survivors":2}]}' \
+  "$SANDBOX/g-strong.json" "$SANDBOX/g-weaker.json")"
+assert_equals "$?" "1" "scores each file on its own, so a passing file does not carry a failing one"
+
+out="$(gate '{"thresholds":[{"file":"src/Motiv/A.cs","score":75,"survivors":null}]}' "$SANDBOX/invalid.json")"
+assert_equals "$?" "0" "passes a file with no valid mutants"
+assert_contains "$out" '| `src/Motiv/A.cs` | no valid mutants | 75% | not applied |' "says the gate was not applied to it"
+
+gate '{"thresholds":[{"file":"src/Motiv/Strong.cs","score":75,"survivors":null}]}' "$SANDBOX/missing.json" > /dev/null
+assert_equals "$?" "1" "fails when there is no report to check"
+assert_contains "$(cat "$SANDBOX/gate.err")" "no mutation report to check" "says why it failed"
 
 echo "plan.sh"
 
@@ -229,7 +275,8 @@ BASE_SHA="$(git -C "$REPO" rev-parse HEAD)"
 echo '{ "operators": ["Not", "OrElse"], "higher-order": ["HigherOrderProposition"] }' > "$SANDBOX/shards.json"
 echo '{ "operators": 72.46, "higher-order": 39.85, "rest": 75.7 }' > "$SANDBOX/baselines.json"
 echo '{ "operators": 72.46, "higher-order": 39.85 }' > "$SANDBOX/no-rest.json"
-echo '{ "src/Motiv/Not/NotPolicy.cs": 61.5, "src/Motiv/OrElse/Nested/Deep.cs": 100 }' > "$SANDBOX/file-baselines.json"
+echo '{ "src/Motiv/Not/NotPolicy.cs": { "score": 61.5, "survivors": 5 },
+        "src/Motiv/OrElse/Nested/Deep.cs": { "score": 100, "survivors": 0 } }' > "$SANDBOX/file-baselines.json"
 
 # scope <head> [baselines]: pr-scope.sh from base to <head>, against the sandbox shard and
 # file-baseline files.
@@ -250,38 +297,35 @@ commit() {
 }
 
 empty="$(commit empty touch README.md)"
-assert_equals "$(scope "$empty" | jq -c .)" '{"files":[],"globs":[],"areas":[],"held":[],"break":null}' \
-  "no changed src/Motiv C# file gives nothing to mutate and break: null"
+assert_equals "$(scope "$empty" | jq -c .)" '{"files":[],"globs":[],"areas":[],"thresholds":[]}' \
+  "no changed src/Motiv C# file gives nothing to mutate and no thresholds"
 
 rest="$(commit rest sh -c 'echo "// v2" >> src/Motiv/Spec.cs')"
 assert_equals "$(scope "$rest" | jq -c .)" \
-  '{"files":["src/Motiv/Spec.cs"],"globs":["**/src/Motiv/Spec.cs"],"areas":[{"name":"rest","baseline":75.7}],"held":[],"break":75}' \
+  '{"files":["src/Motiv/Spec.cs"],"globs":["**/src/Motiv/Spec.cs"],"areas":[{"name":"rest","baseline":75.7}],"thresholds":[{"file":"src/Motiv/Spec.cs","score":75.7,"survivors":null}]}' \
   "a file under no shard directory falls in rest"
 
 nested="$(commit nested sh -c 'echo "// v2" >> src/Motiv/OrElse/Nested/Deep.cs')"
-assert_equals "$(scope "$nested" | jq -c '[.areas, .break]')" '[[{"name":"operators","baseline":72.46}],72]' \
+assert_equals "$(scope "$nested" | jq -c .areas)" '[{"name":"operators","baseline":72.46}]' \
   "a file anywhere beneath a shard directory is in that shard"
-assert_equals "$(scope "$nested" | jq -c .held)" '[]' \
-  "a file scoring above its area's baseline is held to the area's baseline"
+assert_equals "$(scope "$nested" | jq -c .thresholds)" '[{"file":"src/Motiv/OrElse/Nested/Deep.cs","score":72.46,"survivors":null}]' \
+  "a file scoring above its area's baseline is held to the area's baseline alone"
 
 lowfile="$(commit lowfile sh -c 'echo "// v2" >> src/Motiv/Not/NotPolicy.cs')"
-assert_equals "$(scope "$lowfile" | jq -c '[.held, .break]')" \
-  '[[{"file":"src/Motiv/Not/NotPolicy.cs","baseline":61.5}],61]' \
-  "a file scoring below its area's baseline is held to its own score, rounded down"
+assert_equals "$(scope "$lowfile" | jq -c .thresholds)" \
+  '[{"file":"src/Motiv/Not/NotPolicy.cs","score":72.46,"survivors":5}]' \
+  "a file scoring below its area's baseline may instead keep to its recorded undetected mutants"
 
 several="$(commit several sh -c 'echo "// v2" | tee -a src/Motiv/Not/NotPolicy.cs src/Motiv/HigherOrderProposition/All.cs src/Motiv/Spec.cs > /dev/null')"
-assert_equals "$(scope "$several" | jq -c '[[.areas[].name], .break]')" '[["higher-order","operators","rest"],39]' \
-  "several areas break at the lowest of their baselines, rounded down"
-
-mixed="$(commit mixed sh -c 'echo "// v2" | tee -a src/Motiv/Not/NotPolicy.cs src/Motiv/Spec.cs > /dev/null')"
-assert_equals "$(scope "$mixed" | jq -c .break)" '61' \
-  "several files break at the lowest of their own and their areas' baselines"
+assert_equals "$(scope "$several" | jq -c '[.thresholds[] | [.file, .score]]')" \
+  '[["src/Motiv/HigherOrderProposition/All.cs",39.85],["src/Motiv/Not/NotPolicy.cs",72.46],["src/Motiv/Spec.cs",75.7]]' \
+  "each file is held to its own area's baseline, not the lowest of the areas touched"
 
 deleted="$(commit deleted sh -c 'git rm -q src/Motiv/Gone.cs && echo x > src/Motiv/Not/notes.txt && echo "// new" > src/Motiv/Not/Added.cs')"
 assert_equals "$(scope "$deleted" | jq -c .files)" '["src/Motiv/Not/Added.cs"]' \
   "mutates added C# files, not deleted ones or other file types"
-assert_equals "$(scope "$deleted" | jq -c '[.held, .break]')" '[[],72]' \
-  "a new file, with no score of its own, is held to its area's baseline"
+assert_equals "$(scope "$deleted" | jq -c .thresholds)" '[{"file":"src/Motiv/Not/Added.cs","score":72.46,"survivors":null}]' \
+  "a new file, with no record of its own, is held to its area's baseline"
 
 out="$(scope "$rest" "$SANDBOX/no-rest.json" 2>&1)"
 status=$?
