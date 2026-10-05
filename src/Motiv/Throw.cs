@@ -1,8 +1,12 @@
+using System.Runtime.CompilerServices;
+
 namespace Motiv;
 
 internal static class Throw
 {
-    internal static T ThrowIfNull<T>(this T? value, string paramName)
+    internal static T ThrowIfNull<T>(
+        this T? value,
+        [CallerArgumentExpression(nameof(value))] string paramName = "")
     {
         if (value is null)
             throw new ArgumentNullException(paramName, $"'{paramName}' cannot be null");
