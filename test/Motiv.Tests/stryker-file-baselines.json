@@ -1,348 +1,1386 @@
 {
-  "src/Motiv/And/AndBooleanResult.cs": 100,
-  "src/Motiv/And/AndBooleanResultDescription.cs": 100,
-  "src/Motiv/And/AndSpec.cs": 100,
-  "src/Motiv/And/AsyncAndSpec.cs": 100,
-  "src/Motiv/And/ExpressionAndSpec.cs": 100,
-  "src/Motiv/AndAlso/AndAlsoBooleanResult.cs": 100,
-  "src/Motiv/AndAlso/AndAlsoBooleanResultDescription.cs": 100,
-  "src/Motiv/AndAlso/AndAlsoPolicy.cs": 100,
-  "src/Motiv/AndAlso/AndAlsoPolicyResult.cs": 100,
-  "src/Motiv/AndAlso/AndAlsoSpec.cs": 100,
-  "src/Motiv/AndAlso/AsyncAndAlsoPolicy.cs": 100,
-  "src/Motiv/AndAlso/AsyncAndAlsoSpec.cs": 100,
-  "src/Motiv/AndAlso/ExpressionAndAlsoPolicy.cs": 100,
-  "src/Motiv/AndAlso/ExpressionAndAlsoSpec.cs": 100,
-  "src/Motiv/AssertionExtensions.cs": 90.47,
-  "src/Motiv/AsyncPolicyBase.cs": 66.66,
-  "src/Motiv/AsyncSpec.cs": 50,
-  "src/Motiv/AsyncSpecBase.cs": 50,
-  "src/Motiv/AsyncSpecExtensions.cs": 100,
-  "src/Motiv/BooleanPredicateProposition/AsyncExplanationProposition.cs": 0,
-  "src/Motiv/BooleanPredicateProposition/AsyncMinimalProposition.cs": 40,
-  "src/Motiv/BooleanPredicateProposition/AsyncMultiAssertionExplanationProposition.cs": 0,
-  "src/Motiv/BooleanPredicateProposition/AsyncMultiValueProposition.cs": 0,
-  "src/Motiv/BooleanPredicateProposition/AsyncProposition.cs": 0,
-  "src/Motiv/BooleanPredicateProposition/ExplanationProposition.cs": 100,
-  "src/Motiv/BooleanPredicateProposition/ExplanationPropositionPolicyResult.cs": 66.66,
-  "src/Motiv/BooleanPredicateProposition/MetadataPropositionPolicyResult.cs": 83.33,
-  "src/Motiv/BooleanPredicateProposition/MinimalProposition.cs": 100,
-  "src/Motiv/BooleanPredicateProposition/MinimalPropositionPolicyResult.cs": 100,
-  "src/Motiv/BooleanPredicateProposition/MultiAssertionExplanationProposition.cs": 100,
-  "src/Motiv/BooleanPredicateProposition/MultiAssertionExplanationPropositionBooleanResult.cs": 75,
-  "src/Motiv/BooleanPredicateProposition/MultiValueProposition.cs": 100,
-  "src/Motiv/BooleanPredicateProposition/MultiValuePropositionBooleanResult.cs": 75,
-  "src/Motiv/BooleanPredicateProposition/Proposition.cs": 100,
-  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/AsyncExplanationWithNamePropositionFactory.cs": 25,
-  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/AsyncMetadataPropositionFactory.cs": 0,
-  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/AsyncMinimalBooleanPredicatePropositionFactory.cs": 0,
-  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/AsyncMultiAssertionExplanationPropositionFactory.cs": 0,
-  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/AsyncMultiAssertionExplanationWithNamePropositionFactory.cs": 0,
-  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/AsyncMultiMetadataPropositionFactory.cs": 0,
-  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/AsyncMultiMetadataWithSingularWhenTruePropositionFactory.cs": 0,
-  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/ExplanationWithNamePropositionFactory.cs": 50,
-  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/MetadataPropositionFactory.cs": 0,
-  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/MinimalBooleanPredicatePropositionFactory.cs": 0,
-  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/MultiAssertionExplanationPropositionFactory.cs": 0,
-  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/MultiAssertionExplanationWithNamePropositionFactory.cs": 0,
-  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/MultiMetadataPropositionFactory.cs": 0,
-  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/MultiMetadataWithSingularWhenTruePropositionFactory.cs": 0,
-  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/Overloads/BuildAsyncOverloads.cs": 100,
-  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/Overloads/WhenFalseOverloads.cs": 100,
-  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/Overloads/WhenFalseYieldOverloads.cs": 100,
-  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/Overloads/WhenTrueOverloads.cs": 100,
-  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/Overloads/WhenTrueYieldOverloads.cs": 100,
-  "src/Motiv/BooleanPredicateProposition/PropositionResultDescription.cs": 100,
-  "src/Motiv/BooleanResultBase.cs": 87.09,
-  "src/Motiv/BooleanResultExtensions.cs": 90.62,
-  "src/Motiv/BooleanResultPredicateProposition/BooleanResultPredicateMultiAssertionExplanationBooleanResult.cs": 72.72,
-  "src/Motiv/BooleanResultPredicateProposition/BooleanResultPredicateMultiAssertionExplanationProposition.cs": 100,
-  "src/Motiv/BooleanResultPredicateProposition/BooleanResultPredicateMultiValueBooleanResult.cs": 70,
-  "src/Motiv/BooleanResultPredicateProposition/BooleanResultPredicateMultiValueProposition.cs": 100,
-  "src/Motiv/BooleanResultPredicateProposition/BooleanResultPredicatePolicyResult.cs": 66.66,
-  "src/Motiv/BooleanResultPredicateProposition/BooleanResultPredicateProposition.cs": 100,
-  "src/Motiv/BooleanResultPredicateProposition/BooleanResultPredicateWithSingleAssertionPolicyResult.cs": 66.66,
-  "src/Motiv/BooleanResultPredicateProposition/BooleanResultPredicateWithSingleAssertionProposition.cs": 100,
-  "src/Motiv/BooleanResultPredicateProposition/MinimalBooleanResultPredicateBooleanResult.cs": 45.45,
-  "src/Motiv/BooleanResultPredicateProposition/MinimalBooleanResultPredicateProposition.cs": 100,
-  "src/Motiv/BooleanResultPredicateProposition/MinimalPolicyResultPredicatePolicyResult.cs": 50,
-  "src/Motiv/BooleanResultPredicateProposition/MinimalPolicyResultPredicateProposition.cs": 100,
-  "src/Motiv/BooleanResultPredicateProposition/PolicyResultPredicateMultiAssertionExplanationBooleanResult.cs": 72.72,
-  "src/Motiv/BooleanResultPredicateProposition/PolicyResultPredicateMultiAssertionExplanationProposition.cs": 100,
-  "src/Motiv/BooleanResultPredicateProposition/PolicyResultPredicateMultiValueBooleanResult.cs": 70,
-  "src/Motiv/BooleanResultPredicateProposition/PolicyResultPredicateMultiValueProposition.cs": 100,
-  "src/Motiv/BooleanResultPredicateProposition/PolicyResultPredicatePolicyResult.cs": 66.66,
-  "src/Motiv/BooleanResultPredicateProposition/PolicyResultPredicateProposition.cs": 100,
-  "src/Motiv/BooleanResultPredicateProposition/PolicyResultPredicateWithSingleAssertionPolicyResult.cs": 66.66,
-  "src/Motiv/BooleanResultPredicateProposition/PolicyResultPredicateWithSingleAssertionProposition.cs": 100,
-  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Overloads/WhenFalseOverloads.cs": 100,
-  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Overloads/WhenFalseYieldOverloads.cs": 80,
-  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Overloads/WhenTrueOverloads.cs": 100,
-  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Overloads/WhenTrueYieldOverloads.cs": 50,
-  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Policy/ExplanationFromPolicyResultWithNamePropositionFactory.cs": 50,
-  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Policy/MetadataFromPolicyResultPropositionFactory.cs": 0,
-  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Policy/MinimalPolicyResultPredicatePropositionFactory.cs": 0,
-  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Policy/MultiAssertionPolicyPropositionFactory.cs": 0,
-  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Policy/MultiMetadataFromPolicyResultPropositionFactory.cs": 0,
-  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Policy/MultiMetadataFromPolicyResultWithSingularWhenTruePropositionFactory.cs": 0,
-  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Policy/NamedMultiAssertionPolicyPropositionFactory.cs": 0,
-  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Spec/MetadataPropositionFactory.cs": 0,
-  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Spec/MinimalBooleanResultPredicatePropositionFactory.cs": 0,
-  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Spec/MultiAssertionExplanationPropositionFactory.cs": 0,
-  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Spec/MultiMetadataPropositionFactory.cs": 0,
-  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Spec/MultiMetadataWithSingularWhenTruePropositionFactory.cs": 0,
-  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Spec/NamedMultiAssertionPropositionFactory.cs": 0,
-  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Spec/NamedPropositionFactory.cs": 50,
-  "src/Motiv/BooleanResultsCollection.cs": 55.55,
-  "src/Motiv/DecoratorProposition/AsyncMinimalSpecDecoratorProposition.cs": 0,
-  "src/Motiv/DecoratorProposition/AsyncSpecDecoratorProposition.cs": 0,
-  "src/Motiv/DecoratorProposition/AsyncSpecDecoratorWithSingleTrueAssertionProposition.cs": 0,
-  "src/Motiv/DecoratorProposition/MinimalPolicyDecoratorPolicyResult.cs": 66.66,
-  "src/Motiv/DecoratorProposition/MinimalPolicyDecoratorProposition.cs": 100,
-  "src/Motiv/DecoratorProposition/MinimalSpecDecoratorBooleanResult.cs": 66.66,
-  "src/Motiv/DecoratorProposition/MinimalSpecDecoratorProposition.cs": 100,
-  "src/Motiv/DecoratorProposition/PolicyDecoratorMultiAssertionExplanationBooleanResult.cs": 75,
-  "src/Motiv/DecoratorProposition/PolicyDecoratorMultiAssertionExplanationProposition.cs": 100,
-  "src/Motiv/DecoratorProposition/PolicyDecoratorMultiMetadataBooleanResult.cs": 70,
-  "src/Motiv/DecoratorProposition/PolicyDecoratorMultiMetadataProposition.cs": 100,
-  "src/Motiv/DecoratorProposition/PolicyDecoratorPolicyResult.cs": 66.66,
-  "src/Motiv/DecoratorProposition/PolicyDecoratorProposition.cs": 100,
-  "src/Motiv/DecoratorProposition/PolicyDecoratorWithSingleTrueAssertionPolicyResult.cs": 71.42,
-  "src/Motiv/DecoratorProposition/PolicyDecoratorWithSingleTrueAssertionProposition.cs": 100,
-  "src/Motiv/DecoratorProposition/PropositionBuilders/AsyncSpec/AsyncNamedPolicyPropositionFactory.cs": 100,
-  "src/Motiv/DecoratorProposition/PropositionBuilders/Overloads/WhenFalseOverloads.cs": 100,
-  "src/Motiv/DecoratorProposition/PropositionBuilders/Overloads/WhenFalseYieldOverloads.cs": 50,
-  "src/Motiv/DecoratorProposition/PropositionBuilders/Overloads/WhenTrueOverloads.cs": 100,
-  "src/Motiv/DecoratorProposition/PropositionBuilders/Overloads/WhenTrueYieldOverloads.cs": 100,
-  "src/Motiv/DecoratorProposition/PropositionBuilders/Policy/MultiAssertionPolicyExplanationWithNamePropositionFactory.cs": 0,
-  "src/Motiv/DecoratorProposition/PropositionBuilders/Policy/NamedSpecPropositionFactory.cs": 100,
-  "src/Motiv/DecoratorProposition/PropositionBuilders/Spec/MultiAssertionSpecExplanationWithNamePropositionFactory.cs": 0,
-  "src/Motiv/DecoratorProposition/PropositionBuilders/Spec/NamedPolicyPropositionFactory.cs": 100,
-  "src/Motiv/DecoratorProposition/SpecDecoratorMultiAssertionExplanationBooleanResult.cs": 75,
-  "src/Motiv/DecoratorProposition/SpecDecoratorMultiAssertionExplanationProposition.cs": 100,
-  "src/Motiv/DecoratorProposition/SpecDecoratorMultiMetadataBooleanResult.cs": 70,
-  "src/Motiv/DecoratorProposition/SpecDecoratorMultiMetadataProposition.cs": 100,
-  "src/Motiv/DecoratorProposition/SpecDecoratorPolicyResult.cs": 66.66,
-  "src/Motiv/DecoratorProposition/SpecDecoratorProposition.cs": 100,
-  "src/Motiv/DecoratorProposition/SpecDecoratorWithSingleTrueAssertionPolicyResult.cs": 71.42,
-  "src/Motiv/DecoratorProposition/SpecDecoratorWithSingleTrueAssertionProposition.cs": 100,
-  "src/Motiv/Diagnostics/EvaluationScope.cs": 89.47,
-  "src/Motiv/Diagnostics/MotivTelemetry.cs": 50,
-  "src/Motiv/Display.cs": 100,
-  "src/Motiv/EnumerableExtensions.cs": 88.88,
-  "src/Motiv/ExpressionPolicyBase.cs": 50,
-  "src/Motiv/ExpressionSpecBase.cs": 50,
-  "src/Motiv/ExpressionTreeProposition/CSharpExpressionSerializer.cs": 61.83,
-  "src/Motiv/ExpressionTreeProposition/CapturedValueReader.cs": 50,
-  "src/Motiv/ExpressionTreeProposition/CastHelper.cs": 38.46,
-  "src/Motiv/ExpressionTreeProposition/ExpressionAnalyzer.cs": 0,
-  "src/Motiv/ExpressionTreeProposition/ExpressionAsStatementDescription.cs": 44.44,
-  "src/Motiv/ExpressionTreeProposition/ExpressionComposer.cs": 100,
-  "src/Motiv/ExpressionTreeProposition/ExpressionExtensions.cs": 75,
-  "src/Motiv/ExpressionTreeProposition/ExpressionPredicate.cs": 0,
-  "src/Motiv/ExpressionTreeProposition/ExpressionTreeBooleanResultDescription.cs": 50,
-  "src/Motiv/ExpressionTreeProposition/ExpressionTreeDescription.cs": 0,
-  "src/Motiv/ExpressionTreeProposition/ExpressionTreeExplanationProposition.cs": 100,
-  "src/Motiv/ExpressionTreeProposition/ExpressionTreeExplanationPropositionPolicyResult.cs": 57.14,
-  "src/Motiv/ExpressionTreeProposition/ExpressionTreeMetadataProposition.cs": 100,
-  "src/Motiv/ExpressionTreeProposition/ExpressionTreeMetadataPropositionPolicyResult.cs": 50,
-  "src/Motiv/ExpressionTreeProposition/ExpressionTreeMultiAssertionExplanationProposition.cs": 100,
-  "src/Motiv/ExpressionTreeProposition/ExpressionTreeMultiAssertionExplanationPropositionBooleanResult.cs": 57.14,
-  "src/Motiv/ExpressionTreeProposition/ExpressionTreeMultiMetadataProposition.cs": 100,
-  "src/Motiv/ExpressionTreeProposition/ExpressionTreeMultiMetadataPropositionBooleanResult.cs": 62.5,
-  "src/Motiv/ExpressionTreeProposition/ExpressionTreeTransformer.cs": 72.34,
-  "src/Motiv/ExpressionTreeProposition/ExpressionTreeWithSingleTrueAssertionProposition.cs": 100,
-  "src/Motiv/ExpressionTreeProposition/ExpressionTreeWithSingleTrueAssertionPropositionPolicyResult.cs": 66.66,
-  "src/Motiv/ExpressionTreeProposition/FreeParameterDetector.cs": 0,
-  "src/Motiv/ExpressionTreeProposition/MinimalExpressionTreeProposition.cs": 100,
-  "src/Motiv/ExpressionTreeProposition/MinimalExpressionTreePropositionBooleanResult.cs": 42.85,
-  "src/Motiv/ExpressionTreeProposition/NullConditionalExpression.cs": 57.14,
-  "src/Motiv/ExpressionTreeProposition/ParameterReplacementVisitor.cs": 66.66,
-  "src/Motiv/ExpressionTreeProposition/PropositionBuilders/Overloads/WhenFalseOverloads.cs": 100,
-  "src/Motiv/ExpressionTreeProposition/PropositionBuilders/Overloads/WhenFalseYieldOverloads.cs": 100,
-  "src/Motiv/ExpressionTreeProposition/PropositionBuilders/Overloads/WhenTrueLambdaOverloads.cs": 100,
-  "src/Motiv/ExpressionTreeProposition/PropositionBuilders/Overloads/WhenTrueOverloads.cs": 100,
-  "src/Motiv/ExpressionTreeProposition/PropositionBuilders/Overloads/WhenTrueYieldOverloads.cs": 100,
-  "src/Motiv/ExpressionTreeProposition/TypeExtensions.cs": 72.3,
-  "src/Motiv/HigherOrderProposition/BooleanPredicate/HigherOrderFromBooleanPredicateExplanationPolicyResult.cs": 83.33,
-  "src/Motiv/HigherOrderProposition/BooleanPredicate/HigherOrderFromBooleanPredicateExplanationProposition.cs": 100,
-  "src/Motiv/HigherOrderProposition/BooleanPredicate/HigherOrderFromBooleanPredicateMetadataPolicyResult.cs": 83.33,
-  "src/Motiv/HigherOrderProposition/BooleanPredicate/HigherOrderFromBooleanPredicateMultiAssertionExplanationBooleanResult.cs": 80,
-  "src/Motiv/HigherOrderProposition/BooleanPredicate/HigherOrderFromBooleanPredicateMultiAssertionExplanationProposition.cs": 100,
-  "src/Motiv/HigherOrderProposition/BooleanPredicate/HigherOrderFromBooleanPredicateMultiMetadataBooleanResult.cs": 75,
-  "src/Motiv/HigherOrderProposition/BooleanPredicate/HigherOrderFromBooleanPredicateMultiMetadataProposition.cs": 100,
-  "src/Motiv/HigherOrderProposition/BooleanPredicate/HigherOrderFromBooleanPredicateProposition.cs": 100,
-  "src/Motiv/HigherOrderProposition/BooleanResult.cs": 100,
-  "src/Motiv/HigherOrderProposition/BooleanResultPredicate/HigherOrderFromBooleanResultExplanationPolicyResult.cs": 57.14,
-  "src/Motiv/HigherOrderProposition/BooleanResultPredicate/HigherOrderFromBooleanResultExplanationProposition.cs": 100,
-  "src/Motiv/HigherOrderProposition/BooleanResultPredicate/HigherOrderFromBooleanResultMultiAssertionExplanationBooleanResult.cs": 58.33,
-  "src/Motiv/HigherOrderProposition/BooleanResultPredicate/HigherOrderFromBooleanResultMultiAssertionExplanationProposition.cs": 100,
-  "src/Motiv/HigherOrderProposition/BooleanResultPredicate/HigherOrderFromBooleanResultMultiMetadataBooleanResult.cs": 50,
-  "src/Motiv/HigherOrderProposition/BooleanResultPredicate/HigherOrderFromBooleanResultMultiMetadataProposition.cs": 100,
-  "src/Motiv/HigherOrderProposition/BooleanResultPredicate/HigherOrderFromBooleanResultPolicyResult.cs": 57.14,
-  "src/Motiv/HigherOrderProposition/BooleanResultPredicate/HigherOrderFromBooleanResultProposition.cs": 100,
-  "src/Motiv/HigherOrderProposition/BooleanResultPredicate/MinimalHigherOrderFromBooleanResultBooleanResult.cs": 46.15,
-  "src/Motiv/HigherOrderProposition/BooleanResultPredicate/MinimalHigherOrderFromBooleanResultProposition.cs": 100,
-  "src/Motiv/HigherOrderProposition/Causes.cs": 0,
-  "src/Motiv/HigherOrderProposition/ExpressionTree/HigherOrderFromExpressionTreeExplanationPolicyResult.cs": 50,
-  "src/Motiv/HigherOrderProposition/ExpressionTree/HigherOrderFromExpressionTreeExplanationProposition.cs": 100,
-  "src/Motiv/HigherOrderProposition/ExpressionTree/HigherOrderFromExpressionTreeMetadataPolicyResult.cs": 57.14,
-  "src/Motiv/HigherOrderProposition/ExpressionTree/HigherOrderFromExpressionTreeMetadataProposition.cs": 100,
-  "src/Motiv/HigherOrderProposition/ExpressionTree/HigherOrderFromExpressionTreeMultiAssertionExplanationBooleanResult.cs": 58.33,
-  "src/Motiv/HigherOrderProposition/ExpressionTree/HigherOrderFromExpressionTreeMultiAssertionExplanationProposition.cs": 100,
-  "src/Motiv/HigherOrderProposition/ExpressionTree/HigherOrderFromExpressionTreeMultiMetadataBooleanResult.cs": 54.54,
-  "src/Motiv/HigherOrderProposition/ExpressionTree/HigherOrderFromExpressionTreeMultiMetadataProposition.cs": 100,
-  "src/Motiv/HigherOrderProposition/ExpressionTree/MinimalHigherOrderFromExpressionTreeBooleanResult.cs": 54.54,
-  "src/Motiv/HigherOrderProposition/ExpressionTree/MinimalHigherOrderFromExpressionTreeProposition.cs": 100,
-  "src/Motiv/HigherOrderProposition/HigherOrderBooleanEvaluation.cs": 55.55,
-  "src/Motiv/HigherOrderProposition/HigherOrderBooleanResultEvaluation.cs": 23.52,
-  "src/Motiv/HigherOrderProposition/HigherOrderExpressionTreeResultDescription.cs": 87.5,
-  "src/Motiv/HigherOrderProposition/HigherOrderPolicyResultEvaluation.cs": 22.22,
-  "src/Motiv/HigherOrderProposition/HigherOrderResultDescription.cs": 100,
-  "src/Motiv/HigherOrderProposition/HigherOrderResultDescriptionBase.cs": 71.42,
-  "src/Motiv/HigherOrderProposition/HigherOrderResults.cs": 100,
-  "src/Motiv/HigherOrderProposition/HigherOrderShortCircuit.cs": 95.55,
-  "src/Motiv/HigherOrderProposition/PolicyResult.cs": 100,
-  "src/Motiv/HigherOrderProposition/PolicyResultPredicate/HigherOrderFromPolicyResultExplanationPolicyResult.cs": 50,
-  "src/Motiv/HigherOrderProposition/PolicyResultPredicate/HigherOrderFromPolicyResultExplanationProposition.cs": 100,
-  "src/Motiv/HigherOrderProposition/PolicyResultPredicate/HigherOrderFromPolicyResultMetadataPolicyResult.cs": 57.14,
-  "src/Motiv/HigherOrderProposition/PolicyResultPredicate/HigherOrderFromPolicyResultMetadataProposition.cs": 100,
-  "src/Motiv/HigherOrderProposition/PolicyResultPredicate/HigherOrderFromPolicyResultMultiAssertionExplanationBooleanResult.cs": 58.33,
-  "src/Motiv/HigherOrderProposition/PolicyResultPredicate/HigherOrderFromPolicyResultMultiAssertionExplanationProposition.cs": 100,
-  "src/Motiv/HigherOrderProposition/PolicyResultPredicate/HigherOrderFromPolicyResultMultiMetadataBooleanResult.cs": 50,
-  "src/Motiv/HigherOrderProposition/PolicyResultPredicate/HigherOrderFromPolicyResultMultiMetadataProposition.cs": 100,
-  "src/Motiv/HigherOrderProposition/PolicyResultPredicate/MinimalHigherOrderFromPolicyResultBooleanResult.cs": 50,
-  "src/Motiv/HigherOrderProposition/PolicyResultPredicate/MinimalHigherOrderFromPolicyResultProposition.cs": 100,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanPredicate/ExplanationFromBooleanPredicateWithNameHigherOrderPropositionFactory.cs": 25,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanPredicate/MetadataFromBooleanHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanPredicate/MinimalHigherOrderFromBooleanPredicatePropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanPredicate/MultiAssertionExplanationHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanPredicate/MultiAssertionExplanationWithNameHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanPredicate/MultiMetadataFromBooleanHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanPredicate/MultiMetadataFromBooleanHigherOrderWithSingularWhenTruePropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanResultPredicate/ExplanationFromBooleanResultWithNameHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanResultPredicate/MetadataFromBooleanResultHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanResultPredicate/MinimalHigherOrderFromBooleanResultPredicatePropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanResultPredicate/MultiAssertionExplanationFromBooleanResultHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanResultPredicate/MultiAssertionExplanationFromBooleanResultWithNameHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanResultPredicate/MultiMetadataFromBooleanResultHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanResultPredicate/MultiMetadataFromBooleanResultHigherOrderWithSingularWhenTruePropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/ExpressionTree/BooleanExplanationHigherOrderExpressionTreePropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/ExpressionTree/BooleanExplanationWithNameHigherOrderExpressionTreePropositionFactory.cs": 50,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/ExpressionTree/BooleanMultiAssertionExplanationFromBooleanResultHigherOrderExpressionTreePropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/ExpressionTree/BooleanMultiAssertionExplanationFromBooleanResultWithNameHigherOrderExpressionTreePropositionFactory.cs": 50,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/ExpressionTree/ExplanationHigherOrderExpressionTreePropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/ExpressionTree/ExplanationWithNameHigherOrderExpressionTreePropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/ExpressionTree/MultiAssertionExplanationFromBooleanResultHigherOrderExpressionTreePropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/ExpressionTree/MultiAssertionExplanationFromBooleanResultWithNameHigherOrderExpressionTreePropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/Policy/ExplanationFromPolicyHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/Policy/ExplanationFromPolicyWithNameHigherOrderPropositionFactory.cs": 50,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/Policy/MultiAssertionFromPolicyHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/Policy/MultiAssertionFromPolicyHigherOrderWithSingularWhenTruePropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/Policy/MultiAssertionFromPolicyWithNameHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/PolicyResultPredicate/ExplanationFromPolicyResultHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/PolicyResultPredicate/MultiAssertionExplanationFromPolicyResultHigherOrderWithSingularWhenTruePropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/PolicyResultPredicate/MultiAssertionFromPolicyResultExplanationHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/PolicyResultPredicateWithName/ExplanationFromPolicyResultWithNameHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/PolicyResultPredicateWithName/MultiAssertionExplanationFromPolicyResultWithNameHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/Spec/ExplanationFromSpecHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/Spec/ExplanationFromSpecWithNameHigherOrderPropositionFactory.cs": 50,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/Spec/MultiAssertionFromSpecHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/Spec/MultiAssertionFromSpecHigherOrderWithSingularWhenTruePropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/Spec/MultiAssertionFromSpecWithNameHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/HigherOrderBooleanPredicateSpecMethods.cs": 66.66,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/HigherOrderPredicatePolicyMethods.cs": 83.33,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/HigherOrderPredicateSpecMethods.cs": 83.33,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/ExpressionTree/BooleanMetadataHigherOrderExpressionTreePropositionFactory.cs": 50,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/ExpressionTree/BooleanMultiMetadataFromSpecHigherOrderExpressionTreePropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/ExpressionTree/BooleanMultiMetadataFromSpecHigherOrderWithSingularWhenTrueExpressionTreePropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/ExpressionTree/MetadataHigherOrderExpressionTreePropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/ExpressionTree/MultiMetadataFromSpecHigherOrderExpressionTreePropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/ExpressionTree/MultiMetadataFromSpecHigherOrderWithSingularWhenTrueExpressionTreePropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/Policy/MetadataFromPolicyHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/Policy/MultiMetadataFromPolicyHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/Policy/MultiMetadataFromPolicyHigherOrderWithSingularWhenTruePropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/PolicyResultPredicate/MetadataFromPolicyResultHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/PolicyResultPredicate/MultiMetadataFromPolicyResultHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/PolicyResultPredicate/MultiMetadataFromPolicyResultHigherOrderWithSingularWhenTruePropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/PolicyResultPredicate/TrueHigherOrderFromPolicyResultPredicatePropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/Spec/MetadataHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/Spec/MultiMetadataFromSpecHigherOrderPropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/Spec/MultiMetadataFromSpecHigherOrderWithSingularWhenTruePropositionFactory.cs": 0,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/WhenFalseOverloads.cs": 100,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/WhenFalseYieldOverloads.cs": 100,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/WhenTrueOverloads.cs": 100,
-  "src/Motiv/HigherOrderProposition/PropositionBuilders/WhenTrueYieldOverloads.cs": 100,
-  "src/Motiv/MetadataExtensions.cs": 100,
-  "src/Motiv/MetadataToExplanationAdapter/AsyncMetadataToExplanationAdapterSpec.cs": 0,
-  "src/Motiv/MetadataToExplanationAdapter/MetadataToExplanationAdapterBooleanResult.cs": 66.66,
-  "src/Motiv/MetadataToExplanationAdapter/MetadataToExplanationAdapterSpec.cs": 100,
-  "src/Motiv/ModelResultExtensions.cs": 100,
-  "src/Motiv/MotivLimits.cs": 60,
-  "src/Motiv/Not/AsyncNotPolicy.cs": 100,
-  "src/Motiv/Not/AsyncNotSpec.cs": 100,
-  "src/Motiv/Not/AsyncNotSpecDescription.cs": 83.33,
-  "src/Motiv/Not/ExpressionNotPolicy.cs": 100,
-  "src/Motiv/Not/ExpressionNotSpec.cs": 100,
-  "src/Motiv/Not/NotBooleanResult.cs": 100,
-  "src/Motiv/Not/NotBooleanResultDescription.cs": 84.61,
-  "src/Motiv/Not/NotPolicy.cs": 100,
-  "src/Motiv/Not/NotPolicyResult.cs": 100,
-  "src/Motiv/Not/NotSpec.cs": 100,
-  "src/Motiv/Not/NotSpecDescription.cs": 80,
-  "src/Motiv/Not/OperatorNegation.cs": 100,
-  "src/Motiv/Or/AsyncOrSpec.cs": 100,
-  "src/Motiv/Or/ExpressionOrSpec.cs": 100,
-  "src/Motiv/Or/OrBooleanResult.cs": 100,
-  "src/Motiv/Or/OrBooleanResultDescription.cs": 100,
-  "src/Motiv/Or/OrSpec.cs": 100,
-  "src/Motiv/OrElse/AsyncOrElsePolicy.cs": 100,
-  "src/Motiv/OrElse/AsyncOrElseSpec.cs": 100,
-  "src/Motiv/OrElse/ExpressionOrElsePolicy.cs": 100,
-  "src/Motiv/OrElse/ExpressionOrElseSpec.cs": 100,
-  "src/Motiv/OrElse/OrElseBooleanResult.cs": 100,
-  "src/Motiv/OrElse/OrElseBooleanResultDescription.cs": 100,
-  "src/Motiv/OrElse/OrElsePolicy.cs": 100,
-  "src/Motiv/OrElse/OrElsePolicyResult.cs": 100,
-  "src/Motiv/OrElse/OrElseSpec.cs": 100,
-  "src/Motiv/Policy.cs": 0,
-  "src/Motiv/PolicyBase.cs": 100,
-  "src/Motiv/PolicyResultBase.cs": 100,
-  "src/Motiv/PropositionExtensions.cs": 100,
-  "src/Motiv/ResultDescriptionBase.cs": 41.66,
-  "src/Motiv/Shared/AssertionFallbackExtensions.cs": 100,
-  "src/Motiv/Shared/AsyncBinarySpecDescription.cs": 66.66,
-  "src/Motiv/Shared/BinaryBooleanResult.cs": 84.61,
-  "src/Motiv/Shared/BinaryBooleanResultDescription.cs": 83.33,
-  "src/Motiv/Shared/BinarySpecDescription.cs": 60,
-  "src/Motiv/Shared/BooleanResultDescription.cs": 25,
-  "src/Motiv/Shared/BooleanResultDescriptionWithUnderlying.cs": 66.66,
-  "src/Motiv/Shared/Explanation.cs": 46.87,
-  "src/Motiv/Shared/ExplanationBooleanResult.cs": 100,
-  "src/Motiv/Shared/ExpressionDescription.cs": 36.36,
-  "src/Motiv/Shared/IndentStringExtensions.cs": 0,
-  "src/Motiv/Shared/MetadataNode.cs": 80,
-  "src/Motiv/Shared/ResultDescriptionWithUnderlying.cs": 100,
-  "src/Motiv/Shared/SpecDescription.cs": 72.72,
-  "src/Motiv/Spec.cs": 0,
-  "src/Motiv/SpecBase.cs": 100,
-  "src/Motiv/SpecExtensions.cs": 66.66,
-  "src/Motiv/StringExtensions.cs": 100,
-  "src/Motiv/SyncToAsyncAdapter/SyncPolicyAsyncAdapter.cs": 100,
-  "src/Motiv/SyncToAsyncAdapter/SyncSpecAsyncAdapter.cs": 100,
-  "src/Motiv/Tap/TapSpec.cs": 100,
-  "src/Motiv/Tap/TapSpecBase.cs": 100,
-  "src/Motiv/Tap/TapWhenFalseSpec.cs": 100,
-  "src/Motiv/Throw.cs": 70.58,
-  "src/Motiv/Traversal/AsyncEvaluationFold.cs": 84.37,
-  "src/Motiv/Traversal/EvaluationBudget.cs": 80,
-  "src/Motiv/Traversal/EvaluationFold.cs": 90.19,
-  "src/Motiv/Traversal/PostOrderFold.cs": 100,
-  "src/Motiv/Traversal/RunFlattener.cs": 100,
-  "src/Motiv/Traversal/SelectedValue.cs": 100,
-  "src/Motiv/XOr/AsyncXOrSpec.cs": 100,
-  "src/Motiv/XOr/ExpressionXOrSpec.cs": 100,
-  "src/Motiv/XOr/XOrBooleanResult.cs": 100,
-  "src/Motiv/XOr/XOrBooleanResultDescription.cs": 82.35,
-  "src/Motiv/XOr/XOrSpec.cs": 100
+  "src/Motiv/And/AndBooleanResult.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/And/AndBooleanResultDescription.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/And/AndSpec.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/And/AsyncAndSpec.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/And/ExpressionAndSpec.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/AndAlso/AndAlsoBooleanResult.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/AndAlso/AndAlsoBooleanResultDescription.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/AndAlso/AndAlsoPolicy.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/AndAlso/AndAlsoPolicyResult.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/AndAlso/AndAlsoSpec.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/AndAlso/AsyncAndAlsoPolicy.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/AndAlso/AsyncAndAlsoSpec.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/AndAlso/ExpressionAndAlsoPolicy.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/AndAlso/ExpressionAndAlsoSpec.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/AssertionExtensions.cs": {
+    "score": 90.47,
+    "survivors": 2
+  },
+  "src/Motiv/AsyncPolicyBase.cs": {
+    "score": 66.66,
+    "survivors": 1
+  },
+  "src/Motiv/AsyncSpec.cs": {
+    "score": 50,
+    "survivors": 2
+  },
+  "src/Motiv/AsyncSpecBase.cs": {
+    "score": 50,
+    "survivors": 4
+  },
+  "src/Motiv/AsyncSpecExtensions.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanPredicateProposition/AsyncExplanationProposition.cs": {
+    "score": 0,
+    "survivors": 2
+  },
+  "src/Motiv/BooleanPredicateProposition/AsyncMinimalProposition.cs": {
+    "score": 40,
+    "survivors": 6
+  },
+  "src/Motiv/BooleanPredicateProposition/AsyncMultiAssertionExplanationProposition.cs": {
+    "score": 0,
+    "survivors": 2
+  },
+  "src/Motiv/BooleanPredicateProposition/AsyncMultiValueProposition.cs": {
+    "score": 0,
+    "survivors": 2
+  },
+  "src/Motiv/BooleanPredicateProposition/AsyncProposition.cs": {
+    "score": 0,
+    "survivors": 2
+  },
+  "src/Motiv/BooleanPredicateProposition/ExplanationProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanPredicateProposition/ExplanationPropositionPolicyResult.cs": {
+    "score": 66.66,
+    "survivors": 2
+  },
+  "src/Motiv/BooleanPredicateProposition/MetadataPropositionPolicyResult.cs": {
+    "score": 83.33,
+    "survivors": 1
+  },
+  "src/Motiv/BooleanPredicateProposition/MinimalProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanPredicateProposition/MinimalPropositionPolicyResult.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanPredicateProposition/MultiAssertionExplanationProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanPredicateProposition/MultiAssertionExplanationPropositionBooleanResult.cs": {
+    "score": 75,
+    "survivors": 1
+  },
+  "src/Motiv/BooleanPredicateProposition/MultiValueProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanPredicateProposition/MultiValuePropositionBooleanResult.cs": {
+    "score": 75,
+    "survivors": 1
+  },
+  "src/Motiv/BooleanPredicateProposition/Proposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/AsyncExplanationWithNamePropositionFactory.cs": {
+    "score": 25,
+    "survivors": 3
+  },
+  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/AsyncMetadataPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 2
+  },
+  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/AsyncMinimalBooleanPredicatePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/AsyncMultiAssertionExplanationPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 2
+  },
+  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/AsyncMultiAssertionExplanationWithNamePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 4
+  },
+  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/AsyncMultiMetadataPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/AsyncMultiMetadataWithSingularWhenTruePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/ExplanationWithNamePropositionFactory.cs": {
+    "score": 50,
+    "survivors": 2
+  },
+  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/MetadataPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 2
+  },
+  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/MinimalBooleanPredicatePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/MultiAssertionExplanationPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 2
+  },
+  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/MultiAssertionExplanationWithNamePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 4
+  },
+  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/MultiMetadataPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/MultiMetadataWithSingularWhenTruePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/Overloads/BuildAsyncOverloads.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/Overloads/WhenFalseOverloads.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/Overloads/WhenFalseYieldOverloads.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/Overloads/WhenTrueOverloads.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanPredicateProposition/PropositionBuilders/Overloads/WhenTrueYieldOverloads.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanPredicateProposition/PropositionResultDescription.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanResultBase.cs": {
+    "score": 87.09,
+    "survivors": 8
+  },
+  "src/Motiv/BooleanResultExtensions.cs": {
+    "score": 90.62,
+    "survivors": 3
+  },
+  "src/Motiv/BooleanResultPredicateProposition/BooleanResultPredicateMultiAssertionExplanationBooleanResult.cs": {
+    "score": 72.72,
+    "survivors": 3
+  },
+  "src/Motiv/BooleanResultPredicateProposition/BooleanResultPredicateMultiAssertionExplanationProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanResultPredicateProposition/BooleanResultPredicateMultiValueBooleanResult.cs": {
+    "score": 70,
+    "survivors": 3
+  },
+  "src/Motiv/BooleanResultPredicateProposition/BooleanResultPredicateMultiValueProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanResultPredicateProposition/BooleanResultPredicatePolicyResult.cs": {
+    "score": 66.66,
+    "survivors": 4
+  },
+  "src/Motiv/BooleanResultPredicateProposition/BooleanResultPredicateProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanResultPredicateProposition/BooleanResultPredicateWithSingleAssertionPolicyResult.cs": {
+    "score": 66.66,
+    "survivors": 4
+  },
+  "src/Motiv/BooleanResultPredicateProposition/BooleanResultPredicateWithSingleAssertionProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanResultPredicateProposition/MinimalBooleanResultPredicateBooleanResult.cs": {
+    "score": 45.45,
+    "survivors": 6
+  },
+  "src/Motiv/BooleanResultPredicateProposition/MinimalBooleanResultPredicateProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanResultPredicateProposition/MinimalPolicyResultPredicatePolicyResult.cs": {
+    "score": 50,
+    "survivors": 6
+  },
+  "src/Motiv/BooleanResultPredicateProposition/MinimalPolicyResultPredicateProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PolicyResultPredicateMultiAssertionExplanationBooleanResult.cs": {
+    "score": 72.72,
+    "survivors": 3
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PolicyResultPredicateMultiAssertionExplanationProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PolicyResultPredicateMultiValueBooleanResult.cs": {
+    "score": 70,
+    "survivors": 3
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PolicyResultPredicateMultiValueProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PolicyResultPredicatePolicyResult.cs": {
+    "score": 66.66,
+    "survivors": 4
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PolicyResultPredicateProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PolicyResultPredicateWithSingleAssertionPolicyResult.cs": {
+    "score": 66.66,
+    "survivors": 4
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PolicyResultPredicateWithSingleAssertionProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Overloads/WhenFalseOverloads.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Overloads/WhenFalseYieldOverloads.cs": {
+    "score": 80,
+    "survivors": 1
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Overloads/WhenTrueOverloads.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Overloads/WhenTrueYieldOverloads.cs": {
+    "score": 50,
+    "survivors": 1
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Policy/ExplanationFromPolicyResultWithNamePropositionFactory.cs": {
+    "score": 50,
+    "survivors": 1
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Policy/MetadataFromPolicyResultPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Policy/MinimalPolicyResultPredicatePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Policy/MultiAssertionPolicyPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Policy/MultiMetadataFromPolicyResultPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Policy/MultiMetadataFromPolicyResultWithSingularWhenTruePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Policy/NamedMultiAssertionPolicyPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 2
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Spec/MetadataPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Spec/MinimalBooleanResultPredicatePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Spec/MultiAssertionExplanationPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Spec/MultiMetadataPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Spec/MultiMetadataWithSingularWhenTruePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Spec/NamedMultiAssertionPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 2
+  },
+  "src/Motiv/BooleanResultPredicateProposition/PropositionBuilders/Spec/NamedPropositionFactory.cs": {
+    "score": 50,
+    "survivors": 1
+  },
+  "src/Motiv/BooleanResultsCollection.cs": {
+    "score": 55.55,
+    "survivors": 4
+  },
+  "src/Motiv/DecoratorProposition/AsyncMinimalSpecDecoratorProposition.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/DecoratorProposition/AsyncSpecDecoratorProposition.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/DecoratorProposition/AsyncSpecDecoratorWithSingleTrueAssertionProposition.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/DecoratorProposition/MinimalPolicyDecoratorPolicyResult.cs": {
+    "score": 66.66,
+    "survivors": 1
+  },
+  "src/Motiv/DecoratorProposition/MinimalPolicyDecoratorProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/DecoratorProposition/MinimalSpecDecoratorBooleanResult.cs": {
+    "score": 66.66,
+    "survivors": 1
+  },
+  "src/Motiv/DecoratorProposition/MinimalSpecDecoratorProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/DecoratorProposition/PolicyDecoratorMultiAssertionExplanationBooleanResult.cs": {
+    "score": 75,
+    "survivors": 3
+  },
+  "src/Motiv/DecoratorProposition/PolicyDecoratorMultiAssertionExplanationProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/DecoratorProposition/PolicyDecoratorMultiMetadataBooleanResult.cs": {
+    "score": 70,
+    "survivors": 3
+  },
+  "src/Motiv/DecoratorProposition/PolicyDecoratorMultiMetadataProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/DecoratorProposition/PolicyDecoratorPolicyResult.cs": {
+    "score": 66.66,
+    "survivors": 4
+  },
+  "src/Motiv/DecoratorProposition/PolicyDecoratorProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/DecoratorProposition/PolicyDecoratorWithSingleTrueAssertionPolicyResult.cs": {
+    "score": 71.42,
+    "survivors": 4
+  },
+  "src/Motiv/DecoratorProposition/PolicyDecoratorWithSingleTrueAssertionProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/DecoratorProposition/PropositionBuilders/AsyncSpec/AsyncNamedPolicyPropositionFactory.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/DecoratorProposition/PropositionBuilders/Overloads/WhenFalseOverloads.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/DecoratorProposition/PropositionBuilders/Overloads/WhenFalseYieldOverloads.cs": {
+    "score": 50,
+    "survivors": 2
+  },
+  "src/Motiv/DecoratorProposition/PropositionBuilders/Overloads/WhenTrueOverloads.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/DecoratorProposition/PropositionBuilders/Overloads/WhenTrueYieldOverloads.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/DecoratorProposition/PropositionBuilders/Policy/MultiAssertionPolicyExplanationWithNamePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/DecoratorProposition/PropositionBuilders/Policy/NamedSpecPropositionFactory.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/DecoratorProposition/PropositionBuilders/Spec/MultiAssertionSpecExplanationWithNamePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/DecoratorProposition/PropositionBuilders/Spec/NamedPolicyPropositionFactory.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/DecoratorProposition/SpecDecoratorMultiAssertionExplanationBooleanResult.cs": {
+    "score": 75,
+    "survivors": 3
+  },
+  "src/Motiv/DecoratorProposition/SpecDecoratorMultiAssertionExplanationProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/DecoratorProposition/SpecDecoratorMultiMetadataBooleanResult.cs": {
+    "score": 70,
+    "survivors": 3
+  },
+  "src/Motiv/DecoratorProposition/SpecDecoratorMultiMetadataProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/DecoratorProposition/SpecDecoratorPolicyResult.cs": {
+    "score": 66.66,
+    "survivors": 4
+  },
+  "src/Motiv/DecoratorProposition/SpecDecoratorProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/DecoratorProposition/SpecDecoratorWithSingleTrueAssertionPolicyResult.cs": {
+    "score": 71.42,
+    "survivors": 4
+  },
+  "src/Motiv/DecoratorProposition/SpecDecoratorWithSingleTrueAssertionProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Diagnostics/EvaluationScope.cs": {
+    "score": 89.47,
+    "survivors": 6
+  },
+  "src/Motiv/Diagnostics/MotivTelemetry.cs": {
+    "score": 50,
+    "survivors": 4
+  },
+  "src/Motiv/Display.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/EnumerableExtensions.cs": {
+    "score": 88.88,
+    "survivors": 4
+  },
+  "src/Motiv/ExpressionPolicyBase.cs": {
+    "score": 50,
+    "survivors": 1
+  },
+  "src/Motiv/ExpressionSpecBase.cs": {
+    "score": 50,
+    "survivors": 1
+  },
+  "src/Motiv/ExpressionTreeProposition/CSharpExpressionSerializer.cs": {
+    "score": 79.27,
+    "survivors": 92
+  },
+  "src/Motiv/ExpressionTreeProposition/CapturedValueReader.cs": {
+    "score": 50,
+    "survivors": 9
+  },
+  "src/Motiv/ExpressionTreeProposition/CastHelper.cs": {
+    "score": 38.46,
+    "survivors": 72
+  },
+  "src/Motiv/ExpressionTreeProposition/ExpressionAnalyzer.cs": {
+    "score": 0,
+    "survivors": 6
+  },
+  "src/Motiv/ExpressionTreeProposition/ExpressionAsStatementDescription.cs": {
+    "score": 44.44,
+    "survivors": 5
+  },
+  "src/Motiv/ExpressionTreeProposition/ExpressionComposer.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/ExpressionTreeProposition/ExpressionExtensions.cs": {
+    "score": 75,
+    "survivors": 1
+  },
+  "src/Motiv/ExpressionTreeProposition/ExpressionPredicate.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/ExpressionTreeProposition/ExpressionTreeBooleanResultDescription.cs": {
+    "score": 50,
+    "survivors": 5
+  },
+  "src/Motiv/ExpressionTreeProposition/ExpressionTreeDescription.cs": {
+    "score": 0,
+    "survivors": 5
+  },
+  "src/Motiv/ExpressionTreeProposition/ExpressionTreeExplanationProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/ExpressionTreeProposition/ExpressionTreeExplanationPropositionPolicyResult.cs": {
+    "score": 57.14,
+    "survivors": 3
+  },
+  "src/Motiv/ExpressionTreeProposition/ExpressionTreeMetadataProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/ExpressionTreeProposition/ExpressionTreeMetadataPropositionPolicyResult.cs": {
+    "score": 50,
+    "survivors": 4
+  },
+  "src/Motiv/ExpressionTreeProposition/ExpressionTreeMultiAssertionExplanationProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/ExpressionTreeProposition/ExpressionTreeMultiAssertionExplanationPropositionBooleanResult.cs": {
+    "score": 57.14,
+    "survivors": 3
+  },
+  "src/Motiv/ExpressionTreeProposition/ExpressionTreeMultiMetadataProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/ExpressionTreeProposition/ExpressionTreeMultiMetadataPropositionBooleanResult.cs": {
+    "score": 62.5,
+    "survivors": 3
+  },
+  "src/Motiv/ExpressionTreeProposition/ExpressionTreeTransformer.cs": {
+    "score": 72.34,
+    "survivors": 26
+  },
+  "src/Motiv/ExpressionTreeProposition/ExpressionTreeWithSingleTrueAssertionProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/ExpressionTreeProposition/ExpressionTreeWithSingleTrueAssertionPropositionPolicyResult.cs": {
+    "score": 66.66,
+    "survivors": 3
+  },
+  "src/Motiv/ExpressionTreeProposition/FreeParameterDetector.cs": {
+    "score": 0,
+    "survivors": 7
+  },
+  "src/Motiv/ExpressionTreeProposition/MinimalExpressionTreeProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/ExpressionTreeProposition/MinimalExpressionTreePropositionBooleanResult.cs": {
+    "score": 42.85,
+    "survivors": 4
+  },
+  "src/Motiv/ExpressionTreeProposition/NullConditionalExpression.cs": {
+    "score": 57.14,
+    "survivors": 6
+  },
+  "src/Motiv/ExpressionTreeProposition/ParameterReplacementVisitor.cs": {
+    "score": 66.66,
+    "survivors": 1
+  },
+  "src/Motiv/ExpressionTreeProposition/PropositionBuilders/Overloads/WhenFalseOverloads.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/ExpressionTreeProposition/PropositionBuilders/Overloads/WhenFalseYieldOverloads.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/ExpressionTreeProposition/PropositionBuilders/Overloads/WhenTrueLambdaOverloads.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/ExpressionTreeProposition/PropositionBuilders/Overloads/WhenTrueOverloads.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/ExpressionTreeProposition/PropositionBuilders/Overloads/WhenTrueYieldOverloads.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/ExpressionTreeProposition/TypeExtensions.cs": {
+    "score": 72.3,
+    "survivors": 18
+  },
+  "src/Motiv/HigherOrderProposition/BooleanPredicate/HigherOrderFromBooleanPredicateExplanationPolicyResult.cs": {
+    "score": 83.33,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/BooleanPredicate/HigherOrderFromBooleanPredicateExplanationProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/BooleanPredicate/HigherOrderFromBooleanPredicateMetadataPolicyResult.cs": {
+    "score": 83.33,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/BooleanPredicate/HigherOrderFromBooleanPredicateMultiAssertionExplanationBooleanResult.cs": {
+    "score": 80,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/BooleanPredicate/HigherOrderFromBooleanPredicateMultiAssertionExplanationProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/BooleanPredicate/HigherOrderFromBooleanPredicateMultiMetadataBooleanResult.cs": {
+    "score": 75,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/BooleanPredicate/HigherOrderFromBooleanPredicateMultiMetadataProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/BooleanPredicate/HigherOrderFromBooleanPredicateProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/BooleanResult.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/BooleanResultPredicate/HigherOrderFromBooleanResultExplanationPolicyResult.cs": {
+    "score": 57.14,
+    "survivors": 6
+  },
+  "src/Motiv/HigherOrderProposition/BooleanResultPredicate/HigherOrderFromBooleanResultExplanationProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/BooleanResultPredicate/HigherOrderFromBooleanResultMultiAssertionExplanationBooleanResult.cs": {
+    "score": 58.33,
+    "survivors": 5
+  },
+  "src/Motiv/HigherOrderProposition/BooleanResultPredicate/HigherOrderFromBooleanResultMultiAssertionExplanationProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/BooleanResultPredicate/HigherOrderFromBooleanResultMultiMetadataBooleanResult.cs": {
+    "score": 50,
+    "survivors": 6
+  },
+  "src/Motiv/HigherOrderProposition/BooleanResultPredicate/HigherOrderFromBooleanResultMultiMetadataProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/BooleanResultPredicate/HigherOrderFromBooleanResultPolicyResult.cs": {
+    "score": 57.14,
+    "survivors": 6
+  },
+  "src/Motiv/HigherOrderProposition/BooleanResultPredicate/HigherOrderFromBooleanResultProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/BooleanResultPredicate/MinimalHigherOrderFromBooleanResultBooleanResult.cs": {
+    "score": 46.15,
+    "survivors": 7
+  },
+  "src/Motiv/HigherOrderProposition/BooleanResultPredicate/MinimalHigherOrderFromBooleanResultProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/Causes.cs": {
+    "score": 0,
+    "survivors": 17
+  },
+  "src/Motiv/HigherOrderProposition/ExpressionTree/HigherOrderFromExpressionTreeExplanationPolicyResult.cs": {
+    "score": 50,
+    "survivors": 7
+  },
+  "src/Motiv/HigherOrderProposition/ExpressionTree/HigherOrderFromExpressionTreeExplanationProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/ExpressionTree/HigherOrderFromExpressionTreeMetadataPolicyResult.cs": {
+    "score": 57.14,
+    "survivors": 6
+  },
+  "src/Motiv/HigherOrderProposition/ExpressionTree/HigherOrderFromExpressionTreeMetadataProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/ExpressionTree/HigherOrderFromExpressionTreeMultiAssertionExplanationBooleanResult.cs": {
+    "score": 58.33,
+    "survivors": 5
+  },
+  "src/Motiv/HigherOrderProposition/ExpressionTree/HigherOrderFromExpressionTreeMultiAssertionExplanationProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/ExpressionTree/HigherOrderFromExpressionTreeMultiMetadataBooleanResult.cs": {
+    "score": 54.54,
+    "survivors": 5
+  },
+  "src/Motiv/HigherOrderProposition/ExpressionTree/HigherOrderFromExpressionTreeMultiMetadataProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/ExpressionTree/MinimalHigherOrderFromExpressionTreeBooleanResult.cs": {
+    "score": 54.54,
+    "survivors": 5
+  },
+  "src/Motiv/HigherOrderProposition/ExpressionTree/MinimalHigherOrderFromExpressionTreeProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/HigherOrderBooleanEvaluation.cs": {
+    "score": 55.55,
+    "survivors": 4
+  },
+  "src/Motiv/HigherOrderProposition/HigherOrderBooleanResultEvaluation.cs": {
+    "score": 23.52,
+    "survivors": 13
+  },
+  "src/Motiv/HigherOrderProposition/HigherOrderExpressionTreeResultDescription.cs": {
+    "score": 87.5,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/HigherOrderPolicyResultEvaluation.cs": {
+    "score": 22.22,
+    "survivors": 14
+  },
+  "src/Motiv/HigherOrderProposition/HigherOrderResultDescription.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/HigherOrderResultDescriptionBase.cs": {
+    "score": 71.42,
+    "survivors": 2
+  },
+  "src/Motiv/HigherOrderProposition/HigherOrderResults.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/HigherOrderShortCircuit.cs": {
+    "score": 95.55,
+    "survivors": 2
+  },
+  "src/Motiv/HigherOrderProposition/PolicyResult.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/PolicyResultPredicate/HigherOrderFromPolicyResultExplanationPolicyResult.cs": {
+    "score": 50,
+    "survivors": 7
+  },
+  "src/Motiv/HigherOrderProposition/PolicyResultPredicate/HigherOrderFromPolicyResultExplanationProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/PolicyResultPredicate/HigherOrderFromPolicyResultMetadataPolicyResult.cs": {
+    "score": 57.14,
+    "survivors": 6
+  },
+  "src/Motiv/HigherOrderProposition/PolicyResultPredicate/HigherOrderFromPolicyResultMetadataProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/PolicyResultPredicate/HigherOrderFromPolicyResultMultiAssertionExplanationBooleanResult.cs": {
+    "score": 58.33,
+    "survivors": 5
+  },
+  "src/Motiv/HigherOrderProposition/PolicyResultPredicate/HigherOrderFromPolicyResultMultiAssertionExplanationProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/PolicyResultPredicate/HigherOrderFromPolicyResultMultiMetadataBooleanResult.cs": {
+    "score": 50,
+    "survivors": 6
+  },
+  "src/Motiv/HigherOrderProposition/PolicyResultPredicate/HigherOrderFromPolicyResultMultiMetadataProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/PolicyResultPredicate/MinimalHigherOrderFromPolicyResultBooleanResult.cs": {
+    "score": 50,
+    "survivors": 6
+  },
+  "src/Motiv/HigherOrderProposition/PolicyResultPredicate/MinimalHigherOrderFromPolicyResultProposition.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanPredicate/ExplanationFromBooleanPredicateWithNameHigherOrderPropositionFactory.cs": {
+    "score": 25,
+    "survivors": 3
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanPredicate/MetadataFromBooleanHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 2
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanPredicate/MinimalHigherOrderFromBooleanPredicatePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 2
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanPredicate/MultiAssertionExplanationHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 2
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanPredicate/MultiAssertionExplanationWithNameHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 4
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanPredicate/MultiMetadataFromBooleanHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanPredicate/MultiMetadataFromBooleanHigherOrderWithSingularWhenTruePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanResultPredicate/ExplanationFromBooleanResultWithNameHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 2
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanResultPredicate/MetadataFromBooleanResultHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanResultPredicate/MinimalHigherOrderFromBooleanResultPredicatePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanResultPredicate/MultiAssertionExplanationFromBooleanResultHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanResultPredicate/MultiAssertionExplanationFromBooleanResultWithNameHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 2
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanResultPredicate/MultiMetadataFromBooleanResultHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/BooleanResultPredicate/MultiMetadataFromBooleanResultHigherOrderWithSingularWhenTruePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/ExpressionTree/BooleanExplanationHigherOrderExpressionTreePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/ExpressionTree/BooleanExplanationWithNameHigherOrderExpressionTreePropositionFactory.cs": {
+    "score": 50,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/ExpressionTree/BooleanMultiAssertionExplanationFromBooleanResultHigherOrderExpressionTreePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/ExpressionTree/BooleanMultiAssertionExplanationFromBooleanResultWithNameHigherOrderExpressionTreePropositionFactory.cs": {
+    "score": 50,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/ExpressionTree/ExplanationHigherOrderExpressionTreePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/ExpressionTree/ExplanationWithNameHigherOrderExpressionTreePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 2
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/ExpressionTree/MultiAssertionExplanationFromBooleanResultHigherOrderExpressionTreePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/ExpressionTree/MultiAssertionExplanationFromBooleanResultWithNameHigherOrderExpressionTreePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 2
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/Policy/ExplanationFromPolicyHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/Policy/ExplanationFromPolicyWithNameHigherOrderPropositionFactory.cs": {
+    "score": 50,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/Policy/MultiAssertionFromPolicyHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/Policy/MultiAssertionFromPolicyHigherOrderWithSingularWhenTruePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/Policy/MultiAssertionFromPolicyWithNameHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 2
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/PolicyResultPredicate/ExplanationFromPolicyResultHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/PolicyResultPredicate/MultiAssertionExplanationFromPolicyResultHigherOrderWithSingularWhenTruePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/PolicyResultPredicate/MultiAssertionFromPolicyResultExplanationHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/PolicyResultPredicateWithName/ExplanationFromPolicyResultWithNameHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 2
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/PolicyResultPredicateWithName/MultiAssertionExplanationFromPolicyResultWithNameHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 2
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/Spec/ExplanationFromSpecHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/Spec/ExplanationFromSpecWithNameHigherOrderPropositionFactory.cs": {
+    "score": 50,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/Spec/MultiAssertionFromSpecHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/Spec/MultiAssertionFromSpecHigherOrderWithSingularWhenTruePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Explanation/Spec/MultiAssertionFromSpecWithNameHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 2
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/HigherOrderBooleanPredicateSpecMethods.cs": {
+    "score": 66.66,
+    "survivors": 6
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/HigherOrderPredicatePolicyMethods.cs": {
+    "score": 83.33,
+    "survivors": 3
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/HigherOrderPredicateSpecMethods.cs": {
+    "score": 83.33,
+    "survivors": 3
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/ExpressionTree/BooleanMetadataHigherOrderExpressionTreePropositionFactory.cs": {
+    "score": 50,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/ExpressionTree/BooleanMultiMetadataFromSpecHigherOrderExpressionTreePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/ExpressionTree/BooleanMultiMetadataFromSpecHigherOrderWithSingularWhenTrueExpressionTreePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/ExpressionTree/MetadataHigherOrderExpressionTreePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 2
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/ExpressionTree/MultiMetadataFromSpecHigherOrderExpressionTreePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/ExpressionTree/MultiMetadataFromSpecHigherOrderWithSingularWhenTrueExpressionTreePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/Policy/MetadataFromPolicyHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/Policy/MultiMetadataFromPolicyHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/Policy/MultiMetadataFromPolicyHigherOrderWithSingularWhenTruePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/PolicyResultPredicate/MetadataFromPolicyResultHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/PolicyResultPredicate/MultiMetadataFromPolicyResultHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/PolicyResultPredicate/MultiMetadataFromPolicyResultHigherOrderWithSingularWhenTruePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/PolicyResultPredicate/TrueHigherOrderFromPolicyResultPredicatePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/Spec/MetadataHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/Spec/MultiMetadataFromSpecHigherOrderPropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/Metadata/Spec/MultiMetadataFromSpecHigherOrderWithSingularWhenTruePropositionFactory.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/WhenFalseOverloads.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/WhenFalseYieldOverloads.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/WhenTrueOverloads.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/HigherOrderProposition/PropositionBuilders/WhenTrueYieldOverloads.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/MetadataExtensions.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/MetadataToExplanationAdapter/AsyncMetadataToExplanationAdapterSpec.cs": {
+    "score": 0,
+    "survivors": 1
+  },
+  "src/Motiv/MetadataToExplanationAdapter/MetadataToExplanationAdapterBooleanResult.cs": {
+    "score": 66.66,
+    "survivors": 3
+  },
+  "src/Motiv/MetadataToExplanationAdapter/MetadataToExplanationAdapterSpec.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/ModelResultExtensions.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/MotivLimits.cs": {
+    "score": 60,
+    "survivors": 2
+  },
+  "src/Motiv/Not/AsyncNotPolicy.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Not/AsyncNotSpec.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Not/AsyncNotSpecDescription.cs": {
+    "score": 83.33,
+    "survivors": 3
+  },
+  "src/Motiv/Not/ExpressionNotPolicy.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Not/ExpressionNotSpec.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Not/NotBooleanResult.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Not/NotBooleanResultDescription.cs": {
+    "score": 84.61,
+    "survivors": 2
+  },
+  "src/Motiv/Not/NotPolicy.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Not/NotPolicyResult.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Not/NotSpec.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Not/NotSpecDescription.cs": {
+    "score": 80,
+    "survivors": 3
+  },
+  "src/Motiv/Not/OperatorNegation.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Or/AsyncOrSpec.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Or/ExpressionOrSpec.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Or/OrBooleanResult.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Or/OrBooleanResultDescription.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Or/OrSpec.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/OrElse/AsyncOrElsePolicy.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/OrElse/AsyncOrElseSpec.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/OrElse/ExpressionOrElsePolicy.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/OrElse/ExpressionOrElseSpec.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/OrElse/OrElseBooleanResult.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/OrElse/OrElseBooleanResultDescription.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/OrElse/OrElsePolicy.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/OrElse/OrElsePolicyResult.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/OrElse/OrElseSpec.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Policy.cs": {
+    "score": 0,
+    "survivors": 2
+  },
+  "src/Motiv/PolicyBase.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/PolicyResultBase.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/PropositionExtensions.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/ResultDescriptionBase.cs": {
+    "score": 41.66,
+    "survivors": 7
+  },
+  "src/Motiv/Shared/AssertionFallbackExtensions.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Shared/AsyncBinarySpecDescription.cs": {
+    "score": 66.66,
+    "survivors": 2
+  },
+  "src/Motiv/Shared/BinaryBooleanResult.cs": {
+    "score": 84.61,
+    "survivors": 2
+  },
+  "src/Motiv/Shared/BinaryBooleanResultDescription.cs": {
+    "score": 83.33,
+    "survivors": 2
+  },
+  "src/Motiv/Shared/BinarySpecDescription.cs": {
+    "score": 60,
+    "survivors": 2
+  },
+  "src/Motiv/Shared/BooleanResultDescription.cs": {
+    "score": 25,
+    "survivors": 3
+  },
+  "src/Motiv/Shared/BooleanResultDescriptionWithUnderlying.cs": {
+    "score": 66.66,
+    "survivors": 2
+  },
+  "src/Motiv/Shared/Explanation.cs": {
+    "score": 46.87,
+    "survivors": 17
+  },
+  "src/Motiv/Shared/ExplanationBooleanResult.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Shared/ExpressionDescription.cs": {
+    "score": 36.36,
+    "survivors": 7
+  },
+  "src/Motiv/Shared/IndentStringExtensions.cs": {
+    "score": 0,
+    "survivors": 4
+  },
+  "src/Motiv/Shared/MetadataNode.cs": {
+    "score": 80,
+    "survivors": 6
+  },
+  "src/Motiv/Shared/ResultDescriptionWithUnderlying.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Shared/SpecDescription.cs": {
+    "score": 72.72,
+    "survivors": 3
+  },
+  "src/Motiv/Spec.cs": {
+    "score": 0,
+    "survivors": 4
+  },
+  "src/Motiv/SpecBase.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/SpecExtensions.cs": {
+    "score": 66.66,
+    "survivors": 2
+  },
+  "src/Motiv/StringExtensions.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/SyncToAsyncAdapter/SyncPolicyAsyncAdapter.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/SyncToAsyncAdapter/SyncSpecAsyncAdapter.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Tap/TapSpec.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Tap/TapSpecBase.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Tap/TapWhenFalseSpec.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Throw.cs": {
+    "score": 70.58,
+    "survivors": 5
+  },
+  "src/Motiv/Traversal/AsyncEvaluationFold.cs": {
+    "score": 84.37,
+    "survivors": 10
+  },
+  "src/Motiv/Traversal/EvaluationBudget.cs": {
+    "score": 80,
+    "survivors": 6
+  },
+  "src/Motiv/Traversal/EvaluationFold.cs": {
+    "score": 90.19,
+    "survivors": 5
+  },
+  "src/Motiv/Traversal/PostOrderFold.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Traversal/RunFlattener.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/Traversal/SelectedValue.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/XOr/AsyncXOrSpec.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/XOr/ExpressionXOrSpec.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/XOr/XOrBooleanResult.cs": {
+    "score": 100,
+    "survivors": 0
+  },
+  "src/Motiv/XOr/XOrBooleanResultDescription.cs": {
+    "score": 82.35,
+    "survivors": 3
+  },
+  "src/Motiv/XOr/XOrSpec.cs": {
+    "score": 100,
+    "survivors": 0
+  }
 }

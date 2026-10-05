@@ -1,16 +1,14 @@
 #!/usr/bin/env bash
-# Works out what the mutation PR gate mutates, and the score it must reach, from the src/Motiv C#
-# files that differ between <base> and <head>. Prints one JSON object:
+# Works out what the mutation PR gate mutates, and what each changed file must reach, from the
+# src/Motiv C# files that differ between <base> and <head>. Prints one JSON object:
 #   { files: [path...], globs: [--mutate glob...], areas: [{name, baseline}...],
-#     held: [{file, baseline}...], break: int|null }
+#     thresholds: [{file, score, survivors}...] }
 # Each file is placed in the shard (area) of test/Motiv.Tests/stryker-shards.json whose directory it
-# sits under — the same rule plan-shards.sh uses — or in "rest". A file is held to its area's
-# baseline (test/Motiv.Tests/stryker-baselines.json), or to its own last measured score
-# (test/Motiv.Tests/stryker-file-baselines.json) when that is lower, so a change that leaves a weak
-# file no weaker passes; `held` lists those files. `break` is the lowest of the changed files'
-# thresholds, rounded down because Stryker's --break-at takes a whole number. Stryker scores the
-# changed files together, and a pooled score is never below the lowest file's, so every file at its
-# threshold passes. No changed files gives `break: null`.
+# sits under — the same rule plan-shards.sh uses — or in "rest". gate.sh then checks each file on its
+# own: it passes when it scores at least `score`, its area's baseline
+# (test/Motiv.Tests/stryker-baselines.json). A file whose last measured score
+# (test/Motiv.Tests/stryker-file-baselines.json) is below that baseline may pass instead by having no
+# more undetected mutants than were recorded, `survivors`; for every other file `survivors` is null.
 # Usage: pr-scope.sh <base> <head> [shards.json] [baselines.json] [file-baselines.json]
 set -euo pipefail
 
@@ -47,14 +45,11 @@ jq -n --slurpfile shards "$shards" --slurpfile baselines "$baselines" \
   | if ($unknown | length) > 0 then
       error("no baseline in stryker-baselines.json for area(s): \($unknown | join(", "))")
     else . end
-  # A file with a score of its own below every area it sits in is held to that score instead.
-  | [ $files[] | ([ areas[] | $baselines[.] ] | min) as $area
-      | { file: ., area: $area, threshold: ([ $area, $file_baselines[.] // empty ] | min) } ]
-    as $thresholds
+  # A file already below its area may instead keep to the undetected mutants it was recorded with.
   | { files: $files,
       globs: [ $files[] | "**/\(.)" ],
       areas: [ $touched[] | { name: ., baseline: $baselines[.] } ],
-      held: [ $thresholds[] | select(.threshold < .area) | { file, baseline: .threshold } ],
-      break: (if ($files | length) == 0 then null
-              else [ $thresholds[].threshold ] | min | floor end) }
+      thresholds: [ $files[] | ([ areas[] | $baselines[.] ] | min) as $area | $file_baselines[.] as $own
+        | { file: ., score: $area,
+            survivors: (if $own != null and $own.score < $area then $own.survivors else null end) } ] }
 ' --args "${files[@]}"
