@@ -89,4 +89,20 @@ public class SpecMemoIdentityTests
 
         spec.ToExplanationSpec().ShouldBeSameAs(spec.ToExplanationSpec());
     }
+
+    [Fact]
+    public void An_explanation_expression_policy_is_its_own_explanation_spec()
+    {
+        var policy = Spec.From((int n) => n > 0).WhenTrue("is positive").WhenFalse("is not positive").Create();
+
+        policy.ToExplanationSpec().ShouldBeSameAs(policy);
+    }
+
+    [Fact]
+    public void An_explanation_expression_spec_is_its_own_explanation_spec()
+    {
+        var spec = Spec.From((int n) => n > 0).Create("is positive");
+
+        spec.ToExplanationSpec().ShouldBeSameAs(spec);
+    }
 }

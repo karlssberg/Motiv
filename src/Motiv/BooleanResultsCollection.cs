@@ -29,7 +29,7 @@ public class BooleanResultsCollection<TModel, TMetadata>
     /// <param name="results">The boolean results for the models.</param>
     public BooleanResultsCollection(IEnumerable<BooleanResult<TModel, TMetadata>> results)
     {
-        _resultsSource = results.ThrowIfNull(nameof(results));
+        _resultsSource = results.ThrowIfNull();
     }
 
     // Each projection below streams a single evaluation pass and retains only the projected data, so
