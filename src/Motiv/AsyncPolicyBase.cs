@@ -111,7 +111,7 @@ public abstract class AsyncPolicyBase<TModel, TMetadata> : AsyncSpecBase<TModel,
     /// operation between <c>this</c> and <paramref name="other" /> when the policy is eventually evaluated.
     /// </returns>
     public AsyncPolicyBase<TModel, TMetadata> AndAlso(AsyncPolicyBase<TModel, TMetadata> other) =>
-        new AsyncAndAlsoPolicy<TModel, TMetadata>(this, other);
+        new AsyncAndAlsoPolicy<TModel, TMetadata>(this, other.ThrowIfNull());
 
     /// <summary>
     /// Combines this policy with a synchronous policy using the conditional AND operator, preserving the
@@ -122,7 +122,7 @@ public abstract class AsyncPolicyBase<TModel, TMetadata> : AsyncSpecBase<TModel,
     /// <param name="other">The synchronous policy to evaluate in the event that <c>this</c> policy is satisfied.</param>
     /// <returns>A new policy that represents the conditional AND of this policy and <paramref name="other" />.</returns>
     public AsyncPolicyBase<TModel, TMetadata> AndAlso(PolicyBase<TModel, TMetadata> other) =>
-        AndAlso(other.ToAsyncSpec());
+        AndAlso(other.ThrowIfNull().ToAsyncSpec());
 
     /// <summary>
     /// Combines this policy with another policy using the conditional OR operator, preserving the policy
@@ -131,7 +131,7 @@ public abstract class AsyncPolicyBase<TModel, TMetadata> : AsyncSpecBase<TModel,
     /// <param name="alternative">The fallback policy.</param>
     /// <returns>A new policy that represents the conditional OR of this policy and the alternative.</returns>
     public AsyncPolicyBase<TModel, TMetadata> OrElse(AsyncPolicyBase<TModel, TMetadata> alternative) =>
-        new AsyncOrElsePolicy<TModel, TMetadata>(this, alternative);
+        new AsyncOrElsePolicy<TModel, TMetadata>(this, alternative.ThrowIfNull());
 
     /// <summary>
     /// Combines this policy with a synchronous policy using the conditional OR operator, preserving the
@@ -142,7 +142,7 @@ public abstract class AsyncPolicyBase<TModel, TMetadata> : AsyncSpecBase<TModel,
     /// <param name="alternative">The synchronous fallback policy.</param>
     /// <returns>A new policy that represents the conditional OR of this policy and the alternative.</returns>
     public AsyncPolicyBase<TModel, TMetadata> OrElse(PolicyBase<TModel, TMetadata> alternative) =>
-        OrElse(alternative.ToAsyncSpec());
+        OrElse(alternative.ThrowIfNull().ToAsyncSpec());
 
     /// <summary>Negates this policy.</summary>
     /// <returns>A new policy that represents the logical NOT of this policy.</returns>
@@ -152,5 +152,5 @@ public abstract class AsyncPolicyBase<TModel, TMetadata> : AsyncSpecBase<TModel,
     /// <param name="policy">The policy to negate.</param>
     /// <returns>A new policy that represents the logical NOT of the policy.</returns>
     public static AsyncPolicyBase<TModel, TMetadata> operator !(AsyncPolicyBase<TModel, TMetadata> policy) =>
-        policy.Not();
+        policy.ThrowIfNull().Not();
 }
