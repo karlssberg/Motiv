@@ -1,0 +1,12 @@
+<Project>
+    <!--
+      Read after the project body, so a MotivExplain set in the .csproj (or on the command line) is
+      seen. Explain builds allow the generator's one interceptor namespace and define MOTIV_EXPLAIN,
+      which keeps [Explain] in metadata (so other projects' analyzers can see it) and lets code
+      configure MotivExplainLog under #if MOTIV_EXPLAIN. Prod builds get neither.
+    -->
+    <PropertyGroup Condition="'$(MotivExplain)' == 'true'">
+        <InterceptorsNamespaces>$(InterceptorsNamespaces);Motiv.Explain.Generated</InterceptorsNamespaces>
+        <DefineConstants>$(DefineConstants);MOTIV_EXPLAIN</DefineConstants>
+    </PropertyGroup>
+</Project>

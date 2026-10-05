@@ -1,0 +1,6 @@
+<Project>
+    <!-- Lets the generator read the switch. The switch itself is off unless the project sets it. -->
+    <ItemGroup>
+        <CompilerVisibleProperty Include="MotivExplain" />
+    </ItemGroup>
+</Project>

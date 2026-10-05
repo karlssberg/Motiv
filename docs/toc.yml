@@ -18,6 +18,8 @@ items:
     href: async/toc.yml
   - name: Observability
     href: observability/toc.yml
+  - name: Compile-Time Explain
+    href: explain/toc.yml
   - name: Live Rules
     href: live-rules/toc.yml
   - name: Runtime Propositions

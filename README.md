@@ -239,6 +239,30 @@ bind failures, publish conflicts, store latency, replica lag, decision-queue dep
 carrying which rule ran at which version. Stating a decision-log capture posture also sets the PII posture for
 traces, so it is stated once.
 
+### Compile-Time Explain
+
+The opt-in `Motiv.Explain` package makes a boolean method explain itself only in the builds you choose. Mark
+it with `[Explain]` and set `MotivExplain=true` for debug or test builds:
+
+```csharp
+public static partial class Rules
+{
+    [Explain]
+    public static bool IsEligible(Order o) =>
+        o.Total > 100 && (o.Customer.IsActive || o.Customer.Age >= 65);
+}
+
+// In an explain build, each direct call logs:
+// [motiv-explain] Shop.Rules.IsEligible(Shop.Order) => True
+// AND ALSO
+//     o.Total > 100 == true
+//     OR ELSE
+//         o.Customer.Age >= 65 == true
+```
+
+The generator uses C# interceptors, so other builds compile the method exactly as written and don't
+reference Motiv. See [Compile-Time Explain](docs/explain/index.md).
+
 ### Collection Logic
 
 Make assertions about collections of items (also known as higher-order logic):

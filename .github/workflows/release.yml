@@ -3,7 +3,7 @@
 # Steps: test the tagged commit, pack, push to NuGet, create a GitHub Release.
 #
 # Scope: this tag prefix releases Motiv only. Motiv.Serialization,
-# Motiv.Serialization.AspNetCore, Motiv.Analyzer and Motiv.CodeFix are deliberately
+# Motiv.Serialization.AspNetCore, Motiv.Analyzer, Motiv.CodeFix and Motiv.Explain are deliberately
 # unpublished — they are on their own maturity curve and are due a series of
 # intentional breaking changes (a rule store, an async publish path, a refresh
 # contract). Publishing them on this prefix would both number a first release after

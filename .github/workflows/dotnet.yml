@@ -36,6 +36,7 @@ jobs:
       run: |
         dotnet pack src/Motiv/Motiv.csproj --configuration Release --output ./nupkgs
         dotnet pack src/Motiv.Serialization/Motiv.Serialization.csproj --configuration Release --output ./nupkgs
+        dotnet pack src/Motiv.Explain/Motiv.Explain.csproj --configuration Release --output ./nupkgs
     - name: List NuGet Packages
       run: Get-ChildItem -Path .\nupkgs\ -Recurse -Name
     - name: Upload coverage reports to Codecov

@@ -124,6 +124,10 @@ Motiv reports every top-level evaluation via OpenTelemetry &mdash; a `motiv.eval
 
 The rules stack reports on itself on its own source and meter: bind failures, publish conflicts, store latency, replica lag, decision-queue depth and break-glass, plus a span carrying which rule ran at which version. See [Rules-Stack Telemetry](./observability/rules-stack.md), which also covers how stating a decision-log capture posture sets the PII posture for traces too.
 
+## Compile-Time Explain
+
+`Motiv.Explain` is an opt-in package. Mark a boolean method with `[Explain]`, and builds that set `MotivExplain=true` replace each direct call with a decomposed Motiv specification that logs why it returned what it did. Other builds generate nothing and don't reference Motiv, so production pays nothing for it. See [Compile-Time Explain](./explain/index.md) and its [diagnostics](./explain/diagnostics.md).
+
 ## Live Rules
 
 Live rules (in the `Motiv.Serialization` and `Motiv.Serialization.AspNetCore` packages) wrap serialized rule documents in typed, hot-swappable handles: declare a rule as a sealed class, inject the concrete type wherever the decision is made, and replace the implementation at runtime &mdash; through HTTP endpoints with optimistic concurrency, or directly through a `RuleSet` &mdash; without a restart and without tearing in-flight evaluations. Registering a store makes every publish durable, in an append-only version log a rule set can be restored from. See [Live Rules](./live-rules/index.md) for the four rule flavours, the concurrency model, and the async loading boundary.
