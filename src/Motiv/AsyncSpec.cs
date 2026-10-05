@@ -11,7 +11,7 @@ public class AsyncSpec<TModel, TMetadata> : AsyncSpecBase<TModel, TMetadata>
     /// <param name="spec">The base proposition associated with the AsyncSpec instance.</param>
     protected AsyncSpec(AsyncSpecBase<TModel, TMetadata> spec)
     {
-        spec.ThrowIfNull(nameof(spec));
+        spec.ThrowIfNull();
 
         _spec = spec;
         Description = spec.Description;
@@ -21,7 +21,7 @@ public class AsyncSpec<TModel, TMetadata> : AsyncSpecBase<TModel, TMetadata>
     /// <param name="specificationFactory">The specification factory to create the AsyncSpec instance.</param>
     protected AsyncSpec(Func<AsyncSpecBase<TModel, TMetadata>> specificationFactory)
     {
-        specificationFactory.ThrowIfNull(nameof(specificationFactory));
+        specificationFactory.ThrowIfNull();
 
         _spec = specificationFactory().ThrowIfFactoryOutputIsNull(nameof(specificationFactory));
         Description = _spec.Description;
@@ -58,7 +58,7 @@ public class AsyncSpec<TModel> : AsyncSpecBase<TModel, string>
     /// <param name="spec">The base proposition associated with the AsyncSpec instance.</param>
     protected AsyncSpec(AsyncSpecBase<TModel, string> spec)
     {
-        spec.ThrowIfNull(nameof(spec));
+        spec.ThrowIfNull();
 
         _spec = spec;
         Description = spec.Description;
@@ -68,7 +68,7 @@ public class AsyncSpec<TModel> : AsyncSpecBase<TModel, string>
     /// <param name="specFactory">The specification factory to create the AsyncSpec instance.</param>
     protected AsyncSpec(Func<AsyncSpecBase<TModel, string>> specFactory)
     {
-        specFactory.ThrowIfNull(nameof(specFactory));
+        specFactory.ThrowIfNull();
 
         _spec = specFactory().ThrowIfFactoryOutputIsNull(nameof(specFactory));
         Description = _spec.Description;

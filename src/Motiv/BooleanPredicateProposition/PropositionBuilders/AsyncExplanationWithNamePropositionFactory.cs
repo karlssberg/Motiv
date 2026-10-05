@@ -23,7 +23,7 @@ public readonly struct AsyncExplanationWithNamePropositionFactory<TModel>(
     /// <exception cref="ArgumentException">Thrown when the WhenTrue assertion is null, empty or whitespace (it doubles as the propositional statement).</exception>
     public AsyncPolicyBase<TModel, string> Create()
     {
-        predicate.ThrowIfNull(nameof(predicate));
+        predicate.ThrowIfNull();
         trueBecause.ThrowIfNullOrWhitespace(nameof(trueBecause));
         return new AsyncExplanationProposition<TModel>(
             predicate,
@@ -42,7 +42,7 @@ public readonly struct AsyncExplanationWithNamePropositionFactory<TModel>(
     /// <exception cref="ArgumentException">Thrown when <paramref name="statement"/> is null, empty or whitespace.</exception>
     public AsyncPolicyBase<TModel, string> Create(string statement)
     {
-        predicate.ThrowIfNull(nameof(predicate));
+        predicate.ThrowIfNull();
         statement.ThrowIfNullOrWhitespace(nameof(statement));
         return new AsyncProposition<TModel, string>(
             predicate,

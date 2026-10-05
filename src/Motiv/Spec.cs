@@ -13,7 +13,7 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
     /// <param name="spec">The base proposition associated with the Spec instance.</param>
     protected Spec(SpecBase<TModel, TMetadata> spec)
     {
-        spec.ThrowIfNull(nameof(spec));
+        spec.ThrowIfNull();
 
         _spec = spec;
         Description = spec.Description;
@@ -23,7 +23,7 @@ public class Spec<TModel, TMetadata> : SpecBase<TModel, TMetadata>
     /// <param name="specificationFactory">The specification factory to create the Spec instance.</param>
     protected Spec(Func<SpecBase<TModel, TMetadata>> specificationFactory)
     {
-        specificationFactory.ThrowIfNull(nameof(specificationFactory));
+        specificationFactory.ThrowIfNull();
 
         _spec = specificationFactory().ThrowIfFactoryOutputIsNull(nameof(specificationFactory));
         Description = _spec.Description;
@@ -58,7 +58,7 @@ public class Spec<TModel> : SpecBase<TModel, string>
     /// <param name="spec">The base proposition associated with the Spec instance.</param>
     protected Spec(SpecBase<TModel, string> spec)
     {
-        spec.ThrowIfNull(nameof(spec));
+        spec.ThrowIfNull();
 
         _spec = spec;
         Description = spec.Description;
@@ -68,7 +68,7 @@ public class Spec<TModel> : SpecBase<TModel, string>
     /// <param name="specFactory">The specification factory to create the Spec instance.</param>
     protected Spec(Func<SpecBase<TModel, string>> specFactory)
     {
-        specFactory.ThrowIfNull(nameof(specFactory));
+        specFactory.ThrowIfNull();
 
         _spec = specFactory().ThrowIfFactoryOutputIsNull(nameof(specFactory));
         Description = _spec.Description;

@@ -33,7 +33,7 @@ public readonly struct MultiAssertionExplanationHigherOrderPropositionFactory<TM
         [MultipleFluentMethods(typeof(WhenTrueYieldOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> whenTrue,
         [MultipleFluentMethods(typeof(WhenFalseYieldOverloads))]Func<HigherOrderBooleanEvaluation<TModel>, IEnumerable<string>> whenFalse)
     {
-        resultResolver.ThrowIfNull(nameof(resultResolver));
+        resultResolver.ThrowIfNull();
         _resultResolver = resultResolver;
         _higherOrderOperation = higherOrderOperation;
         _whenTrue = whenTrue;
