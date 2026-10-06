@@ -31,9 +31,11 @@ internal sealed class HigherOrderFromPolicyResultExplanationPolicyResult<TModel,
     private PolicyResult<TModel, TUnderlyingMetadata>[] CausesInternal =>
         field ??= HigherOrderResults.ResolveCauses(Satisfied, underlyingResults, causeSelector);
 
+    // Stryker disable once Assignment : equivalent — read only by Value, which resolves once, so it is built once either way (#294)
     private HigherOrderPolicyResultEvaluation<TModel, TUnderlyingMetadata> Evaluation =>
         field ??= new HigherOrderPolicyResultEvaluation<TModel, TUnderlyingMetadata>(underlyingResults, CausesInternal);
 
+    // Stryker disable once Assignment : equivalent — read only by the memoised Explanation and Description, so a rebuild only gives the second an equal copy (#294)
     private string Assertion => field ??= Value.ElseFallback(() => specDescription.ToReason(Satisfied));
 
     /// <inheritdoc />

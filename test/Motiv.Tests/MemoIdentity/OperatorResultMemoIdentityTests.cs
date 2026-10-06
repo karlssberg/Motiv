@@ -12,6 +12,9 @@ public class OperatorResultMemoIdentityTests
     private static PolicyBase<bool, int> MetadataPolicy() =>
         Spec.Build((bool b) => b).WhenTrue(1).WhenFalse(0).Create("is true");
 
+    // AndAlso/OrElse policy results re-derive their causes and operands on every read.
+    private static readonly string[] ShortCircuitPolicyRebuilds = ["Causes", "Underlying"];
+
     private static readonly MemoisedResultCase[] Cases =
     [
         // Sync specs and policies.
@@ -30,9 +33,11 @@ public class OperatorResultMemoIdentityTests
         Of<string>("not policy", "NotPolicyResult",
             () => Policy("operand").Not().Evaluate(true)),
         Of<string>("and-also policy", "AndAlsoPolicyResult",
-            () => Policy("left").AndAlso(Policy("right")).Evaluate(true)),
+            () => Policy("left").AndAlso(Policy("right")).Evaluate(true),
+            ShortCircuitPolicyRebuilds),
         Of<string>("or-else policy", "OrElsePolicyResult",
-            () => Policy("left").OrElse(Policy("right")).Evaluate(false)),
+            () => Policy("left").OrElse(Policy("right")).Evaluate(false),
+            ShortCircuitPolicyRebuilds),
 
         // Async specs and policies.
         OfAsync<string>("async and spec", "AndBooleanResult",
@@ -50,9 +55,11 @@ public class OperatorResultMemoIdentityTests
         OfAsync<string>("async not policy", "NotPolicyResult",
             async () => await AsyncPolicy("operand").Not().EvaluateAsync(true)),
         OfAsync<string>("async and-also policy", "AndAlsoPolicyResult",
-            async () => await AsyncPolicy("left").AndAlso(AsyncPolicy("right")).EvaluateAsync(true)),
+            async () => await AsyncPolicy("left").AndAlso(AsyncPolicy("right")).EvaluateAsync(true),
+            ShortCircuitPolicyRebuilds),
         OfAsync<string>("async or-else policy", "OrElsePolicyResult",
-            async () => await AsyncPolicy("left").OrElse(AsyncPolicy("right")).EvaluateAsync(false)),
+            async () => await AsyncPolicy("left").OrElse(AsyncPolicy("right")).EvaluateAsync(false),
+            ShortCircuitPolicyRebuilds),
 
         // Expression-tree specs and policies.
         Of<string>("expression and spec", "AndBooleanResult",
@@ -70,9 +77,11 @@ public class OperatorResultMemoIdentityTests
         Of<string>("expression not policy", "NotPolicyResult",
             () => ExpressionPolicy("positive").Not().Evaluate(1)),
         Of<string>("expression and-also policy", "AndAlsoPolicyResult",
-            () => ExpressionPolicy("positive").AndAlso(ExpressionPolicy("positive")).Evaluate(1)),
+            () => ExpressionPolicy("positive").AndAlso(ExpressionPolicy("positive")).Evaluate(1),
+            ShortCircuitPolicyRebuilds),
         Of<string>("expression or-else policy", "OrElsePolicyResult",
-            () => ExpressionPolicy("positive").OrElse(ExpressionPolicy("positive")).Evaluate(-1)),
+            () => ExpressionPolicy("positive").OrElse(ExpressionPolicy("positive")).Evaluate(-1),
+            ShortCircuitPolicyRebuilds),
 
         // Result-level operators.
         Of<string>("and result", "AndBooleanResult",
@@ -90,9 +99,11 @@ public class OperatorResultMemoIdentityTests
         Of<string>("not policy result", "NotPolicyResult",
             () => !Policy("operand").Evaluate(true)),
         Of<string>("and-also policy result", "AndAlsoPolicyResult",
-            () => Policy("left").Evaluate(true).AndAlso(Policy("right").Evaluate(false))),
+            () => Policy("left").Evaluate(true).AndAlso(Policy("right").Evaluate(false)),
+            ShortCircuitPolicyRebuilds),
         Of<string>("or-else policy result", "OrElsePolicyResult",
-            () => Policy("left").Evaluate(false).OrElse(Policy("right").Evaluate(true))),
+            () => Policy("left").Evaluate(false).OrElse(Policy("right").Evaluate(true)),
+            ShortCircuitPolicyRebuilds),
 
         // Mixing metadata types wraps each operand in an explanation result.
         Of<string>("explanation operand of a mixed-metadata and", "ExplanationBooleanResult",

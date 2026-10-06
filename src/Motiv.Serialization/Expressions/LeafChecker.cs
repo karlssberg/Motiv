@@ -421,7 +421,9 @@ internal sealed class LeafChecker
                 }
                 else
                 {
+                    // Stryker disable once Assignment : equivalent — a variable is resolved only where it meets a concrete type, which returns a concrete type, so both roots reaching here are unresolved and null
                     a.Resolved ??= c.Resolved;
+                    // Stryker disable once Assignment : equivalent — as above, ResolvedBy is set only alongside Resolved, so it is null on both roots here
                     a.ResolvedBy ??= c.ResolvedBy;
                 }
                 a.Fractional |= c.Fractional;
@@ -456,6 +458,7 @@ internal sealed class LeafChecker
             return LeafType.Unknown;
         }
         var.Resolved = var.Resolved is { } prior ? NumericLattice.Join(prior, target) : target;
+        // Stryker disable once Assignment : equivalent — a variable reaching this join is unresolved (see the variable merge above), so ResolvedBy is still null
         var.ResolvedBy ??= Print(anchor);
         return LeafType.Of(Lift(NumericLattice.ClrType(var.Resolved!.Value), nullable));
     }
