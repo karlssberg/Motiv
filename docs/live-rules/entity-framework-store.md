@@ -258,9 +258,10 @@ if (builder.Configuration.GetValue("Motiv:Store:ImportFromJson", false))
   import as a whole is *not* atomic and cannot be: the two stores are
   [never written in the same transaction](durability.md#remarks), and the rule side is one call per
   name.
-- **A failure part-way through throws, and says so.** Propositions are copied first, then the rules
-  one name at a time, so the rule store &mdash; the side the refuse-check reads first &mdash; is the
-  last thing to become non-empty. If anything fails after the first write, `CopyAsync` throws an
+- **A failure part-way through throws, and says so.** Propositions are copied first, as one batch,
+  then the rules one name at a time. The proposition batch is all-or-nothing, so putting it first
+  means a failure there leaves the target empty and a rerun clean; copied last, the same failure
+  would land after every rule. If anything fails after the first write, `CopyAsync` throws an
   `InvalidOperationException` naming how much landed and saying the target is now *partially
   imported*. That is not a state a retry repairs: the target is no longer empty, so the next run is
   refused and reports `Imported: false`, which is indistinguishable from the benign already-done
