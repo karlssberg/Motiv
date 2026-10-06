@@ -32,6 +32,7 @@ internal sealed class ExplanationPropositionPolicyResult<TModel>(
         }
     } = default!;
 
+    // Stryker disable once Assignment : equivalent — read only by the memoised Explanation and Description, so a rebuild only gives the second an equal copy (#294)
     private string Assertion => field ??= Value.ElseFallback(() => specDescription.ToReason(Satisfied));
 
     /// <summary>

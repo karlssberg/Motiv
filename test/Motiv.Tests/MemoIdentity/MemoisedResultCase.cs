@@ -3,7 +3,8 @@ namespace Motiv.Tests.MemoIdentity;
 /// <summary>
 /// One public-API route to a result class, and the check that the result's memoised
 /// <see cref="BooleanResultBase.Description" />, <see cref="BooleanResultBase.Explanation" /> and
-/// <see cref="BooleanResultBase{TMetadata}.MetadataTier" /> are the same instance on every read (#294).
+/// <see cref="BooleanResultBase{TMetadata}.MetadataTier" /> — and what is read through them, its causes,
+/// assertions, reasons and values — are the same instance on every read (#294).
 /// </summary>
 /// <remarks>
 /// <para>
@@ -20,19 +21,42 @@ namespace Motiv.Tests.MemoIdentity;
 /// </remarks>
 public sealed class MemoisedResultCase
 {
+    private static readonly (string Member, Func<BooleanResultBase, object> Read)[] Readers =
+    [
+        ("Description", r => r.Description),
+        ("Explanation", r => r.Explanation),
+        ("Causes", r => r.Causes),
+        ("Underlying", r => r.Underlying),
+        ("Assertions", r => r.Assertions),
+        ("SubAssertions", r => r.SubAssertions),
+        ("AllSubAssertions", r => r.AllSubAssertions),
+        ("UnderlyingReasons", r => r.UnderlyingReasons),
+        ("Reason", r => r.Reason),
+        ("Justification", r => r.Justification),
+        ("Explanation.Assertions", r => r.Explanation.Assertions),
+        ("Explanation.ToString()", r => r.Explanation.ToString()),
+        ("Explanation.Underlying", r => r.Explanation.Underlying),
+        ("Explanation.AllUnderlying", r => r.Explanation.AllUnderlying),
+        ("Description.Reason", r => r.Description.Reason),
+        ("Description.Justification", r => r.Description.Justification),
+    ];
+
     private readonly Func<Task<BooleanResultBase>> _evaluate;
-    private readonly Func<BooleanResultBase, object> _metadataTier;
+    private readonly (string Member, Func<BooleanResultBase, object> Read)[] _metadataReaders;
+    private readonly string[] _notMemoised;
 
     private MemoisedResultCase(
         string name,
         string resultType,
         Func<Task<BooleanResultBase>> evaluate,
-        Func<BooleanResultBase, object> metadataTier)
+        (string Member, Func<BooleanResultBase, object> Read)[] metadataReaders,
+        string[]? notMemoised)
     {
         Name = name;
         ResultType = resultType;
         _evaluate = evaluate;
-        _metadataTier = metadataTier;
+        _metadataReaders = metadataReaders;
+        _notMemoised = notMemoised ?? [];
     }
 
     /// <summary>The theory-data key; unique within a test class.</summary>
@@ -41,17 +65,21 @@ public sealed class MemoisedResultCase
     /// <summary>The result class the case must reach, without its generic arity.</summary>
     public string ResultType { get; }
 
+    /// <param name="notMemoised">Members the result class deliberately rebuilds on each read.</param>
     public static MemoisedResultCase Of<TMetadata>(
         string name,
         string resultType,
-        Func<BooleanResultBase<TMetadata>> evaluate) =>
-        new(name, resultType, () => Task.FromResult<BooleanResultBase>(evaluate()), TierOf<TMetadata>);
+        Func<BooleanResultBase<TMetadata>> evaluate,
+        string[]? notMemoised = null) =>
+        new(name, resultType, () => Task.FromResult<BooleanResultBase>(evaluate()), MetadataReadersOf<TMetadata>(), notMemoised);
 
+    /// <param name="notMemoised">Members the result class deliberately rebuilds on each read.</param>
     public static MemoisedResultCase OfAsync<TMetadata>(
         string name,
         string resultType,
-        Func<Task<BooleanResultBase<TMetadata>>> evaluate) =>
-        new(name, resultType, async () => await evaluate(), TierOf<TMetadata>);
+        Func<Task<BooleanResultBase<TMetadata>>> evaluate,
+        string[]? notMemoised = null) =>
+        new(name, resultType, async () => await evaluate(), MetadataReadersOf<TMetadata>(), notMemoised);
 
     public static TheoryData<string> NamesOf(IEnumerable<MemoisedResultCase> cases) =>
         cases.Select(memoisedCase => memoisedCase.Name).ToTheoryData();
@@ -67,13 +95,18 @@ public sealed class MemoisedResultCase
             ResultType,
             $"'{Name}' no longer reaches {ResultType}; re-point the case so that class stays covered");
 
-        result.Description.ShouldBeSameAs(result.Description);
-        result.Explanation.ShouldBeSameAs(result.Explanation);
-        _metadataTier(result).ShouldBeSameAs(_metadataTier(result));
+        result.ShouldRebuildNothingOnASecondRead(
+            Readers.Concat(_metadataReaders).Where(reader => !_notMemoised.Contains(reader.Member)),
+            Name);
     }
 
     public override string ToString() => Name;
 
-    private static object TierOf<TMetadata>(BooleanResultBase result) =>
-        ((BooleanResultBase<TMetadata>)result).MetadataTier;
+    private static (string Member, Func<BooleanResultBase, object> Read)[] MetadataReadersOf<TMetadata>() =>
+    [
+        ("MetadataTier", r => ((BooleanResultBase<TMetadata>)r).MetadataTier),
+        ("MetadataTier.Metadata", r => ((BooleanResultBase<TMetadata>)r).MetadataTier.Metadata),
+        ("MetadataTier.Underlying", r => ((BooleanResultBase<TMetadata>)r).MetadataTier.Underlying),
+        ("Values", r => ((BooleanResultBase<TMetadata>)r).Values),
+    ];
 }

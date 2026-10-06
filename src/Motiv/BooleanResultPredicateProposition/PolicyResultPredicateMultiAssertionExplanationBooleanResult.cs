@@ -26,6 +26,7 @@ internal sealed class PolicyResultPredicateMultiAssertionExplanationBooleanResul
 
     private string[] Metadata => field ??= assertionsResolver(model, underlyingResult).ToArray();
 
+    // Stryker disable once Assignment : equivalent — read only by the memoised Explanation, so it is built once either way (#294)
     private string[] ResolvedAssertions =>
         field ??= Metadata.ElseFallback(() => specDescription.ToReason(Satisfied)).ToArray();
 

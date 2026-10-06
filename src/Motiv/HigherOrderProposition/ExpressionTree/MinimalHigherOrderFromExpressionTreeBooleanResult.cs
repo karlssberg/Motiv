@@ -19,6 +19,7 @@ internal sealed class MinimalHigherOrderFromExpressionTreeBooleanResult<TModel>(
     private BooleanResult<TModel, string>[] CausesInternal =>
         field ??= HigherOrderResults.ResolveCauses(Satisfied, underlyingResults, causeSelector);
 
+    // Stryker disable once Assignment : equivalent — read only by the memoised MetadataTier and Explanation, so a rebuild only gives the second an equal copy (#294)
     private IEnumerable<string> MetadataValues =>
         field ??= CausesInternal.SelectMany(result => result.MetadataTier.Metadata);
 
