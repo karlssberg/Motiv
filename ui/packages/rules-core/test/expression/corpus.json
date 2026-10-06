@@ -416,6 +416,47 @@
       "problems": [
         { "code": "ExpressionTypeMismatch", "contains": ["cannot use an integer parameter with double"], "range": [0, 15] }
       ]
+    },
+    {
+      "name": "unknown field compared with a literal does not also default the literal",
+      "scope": "customer",
+      "leaf": "nope == 1",
+      "problems": [
+        { "code": "UnknownField", "contains": ["nope"], "range": [0, 4] }
+      ]
+    },
+    {
+      "name": "unknown field on the right of an equality reports only the unknown field",
+      "scope": "customer",
+      "leaf": "isActive == nope",
+      "problems": [
+        { "code": "UnknownField", "contains": ["nope"], "range": [12, 16] }
+      ]
+    },
+    {
+      "name": "unknown field on the right of an ordering reports only the unknown field",
+      "scope": "customer",
+      "leaf": "age < nope",
+      "problems": [
+        { "code": "UnknownField", "contains": ["nope"], "range": [6, 10] }
+      ]
+    },
+    {
+      "name": "condition equated with a number names the whole comparison",
+      "scope": "customer",
+      "leaf": "isActive == 1",
+      "problems": [
+        { "code": "ExpressionTypeMismatch", "contains": ["comparing a condition with a number"], "range": [0, 13] }
+      ]
+    },
+    {
+      "name": "literal on the left of an equality is typed by the field",
+      "scope": "customer",
+      "leaf": "1 == age",
+      "facts": [
+        { "text": "1", "type": "int", "from": "age" }
+      ],
+      "result": "bool"
     }
   ]
 }

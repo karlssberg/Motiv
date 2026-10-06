@@ -11,9 +11,9 @@ public class CSharpPrinterBraceTests
 {
     public sealed record Customer(bool IsActive);
 
-    private static CSharpPrintedRule Print(string whenTrue) =>
+    private static CSharpPrintedRule Print(string whenTrue, string whenFalse = "no") =>
         CSharpPrinter.Print(
-            $$"""{ "rule": { "spec": "a", "whenTrue": {{System.Text.Json.JsonSerializer.Serialize(whenTrue)}}, "whenFalse": "no" } }""",
+            $$"""{ "rule": { "spec": "a", "whenTrue": {{System.Text.Json.JsonSerializer.Serialize(whenTrue)}}, "whenFalse": {{System.Text.Json.JsonSerializer.Serialize(whenFalse)}} } }""",
             new CSharpPrintOptions { ModelType = typeof(Customer), SpecHandles = new Dictionary<string, string> { ["a"] = "A" } });
 
     [Theory]
@@ -32,5 +32,12 @@ public class CSharpPrinterBraceTests
             ["$.rule.whenTrue: unmatched '}' printed as a literal brace; the document does not bind until it is escaped as '}}'"]);
         Print("a { b").Warnings.ShouldBe(
             ["$.rule.whenTrue: unmatched '{' printed as a literal brace; the document does not bind until it is escaped as '{{'"]);
+    }
+
+    [Fact]
+    public void Should_name_the_whenFalse_path_when_the_unmatched_brace_is_in_whenFalse()
+    {
+        Print("yes", whenFalse: "a } b").Warnings.ShouldBe(
+            ["$.rule.whenFalse: unmatched '}' printed as a literal brace; the document does not bind until it is escaped as '}}'"]);
     }
 }
