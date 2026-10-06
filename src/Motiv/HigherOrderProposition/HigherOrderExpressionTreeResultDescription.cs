@@ -12,6 +12,7 @@ internal sealed class HigherOrderExpressionTreeResultDescription<TUnderlyingMeta
     string propositionStatement)
     : HigherOrderResultDescriptionBase<TUnderlyingMetadata>(reason, causes, propositionStatement)
 {
+    // Stryker disable once Assignment : equivalent — read only while rendering the justification, so a rebuild changes its cost, not its lines (#294)
     private string Assertion => field ??= expression.ToAssertion(satisfied);
 
     public override IEnumerable<string> GetJustificationAsLines() => FoldedJustification(withoutCausalCount: false);

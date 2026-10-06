@@ -75,6 +75,14 @@ Stryker.NET's `docs/mutations.md`.
 Prefer a test over a comment. An exclusion is right only when you can say why no test could tell
 the difference.
 
+Memos (`field ??= …`) are the common case. Stryker turns `??=` into `=`, which rebuilds the value on
+every read. When the memoised value is public, or reachable through something public, a rebuild hands
+back a new instance, and the tests under `test/Motiv.Tests/MemoIdentity/` catch it by reading twice and
+comparing references. When the only readers are themselves memoised (`Explanation`, `Description`,
+`MetadataTier`, or a `Value` that resolves once), each reader builds it at most once and every copy is
+equal, so no test can tell. Those lines carry `// Stryker disable once Assignment : equivalent — read
+only by …` naming the readers. If you add a reader, check that reason still holds.
+
 The one other reason to exclude a mutant is that it takes the runner down with it. Turning
 `IsCollapsable` off on `AndBooleanResult` or `OrElseBooleanResult` makes the 3,000- and 50,000-deep
 chains in `Traversal/` build a justification whose memory grows with the cube of its depth. It fills

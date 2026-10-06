@@ -25,6 +25,8 @@ public class DecisionAnchorTests
 
     private sealed class CanCheckoutRule() : Rule<Customer, string>("can-checkout", IsActive);
 
+    private sealed class CanCheckoutAsyncRule() : AsyncRule<Customer, string>("can-checkout-async", IsActive.ToAsyncSpec());
+
     private static readonly Customer Alice = new("cust-42", isActive: true, age: 30);
 
     /// <summary>
@@ -55,13 +57,16 @@ public class DecisionAnchorTests
         options.Capture.ReferenceOnly<Customer>(c => c.Id);
         var log = new DecisionLog(sink, options);
 
-        var rules = new RuleSet(propositions, decisionLog: log).Add(new CanCheckoutRule());
-        (await rules.UpdateAsync(
-            "can-checkout",
-            """{ "audited": true, "rule": { "spec": "pricing.eligible" } }""",
-            expectedVersion: 1,
-            new RuleChangeProvenance("alice")))
-            .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
+        var rules = new RuleSet(propositions, decisionLog: log).Add(new CanCheckoutRule()).Add(new CanCheckoutAsyncRule());
+        foreach (var rule in new[] { "can-checkout", "can-checkout-async" })
+        {
+            (await rules.UpdateAsync(
+                rule,
+                """{ "audited": true, "rule": { "spec": "pricing.eligible" } }""",
+                expectedVersion: 1,
+                new RuleChangeProvenance("alice")))
+                .Outcome.ShouldBe(RuleUpdateOutcome.Updated);
+        }
 
         return (propositions, rules, sink, log);
     }
@@ -117,6 +122,44 @@ public class DecisionAnchorTests
 
         // ...and the rule's own version did not move, which is why one anchor could never do the job
         sink.Records[0].RuleVersion.ShouldBe(sink.Records[1].RuleVersion);
+    }
+
+    [Fact]
+    public async Task Should_resolve_the_pin_once_per_bound_state_not_once_per_evaluation()
+    {
+        // Arrange
+        var (_, rules, sink, log) = await ATwoHopHostAsync();
+        await using var _log = log;
+        var rule = (CanCheckoutRule)rules.Find("can-checkout")!;
+
+        // Act
+        rule.Evaluate(Alice);
+        rule.Evaluate(Alice);
+        await log.DisposeAsync();
+
+        // Assert — the second record carries the very list the first resolved
+        sink.Records.Count.ShouldBe(2);
+        sink.Records[1].ReferencedPropositionVersions.ShouldNotBeEmpty();
+        sink.Records[1].ReferencedPropositionVersions.ShouldBeSameAs(sink.Records[0].ReferencedPropositionVersions);
+    }
+
+    [Fact]
+    public async Task Should_resolve_an_async_rule_pin_once_per_bound_state_not_once_per_evaluation()
+    {
+        // Arrange
+        var (_, rules, sink, log) = await ATwoHopHostAsync();
+        await using var _log = log;
+        var rule = (CanCheckoutAsyncRule)rules.Find("can-checkout-async")!;
+
+        // Act
+        await rule.EvaluateAsync(Alice);
+        await rule.EvaluateAsync(Alice);
+        await log.DisposeAsync();
+
+        // Assert
+        sink.Records.Count.ShouldBe(2);
+        sink.Records[1].ReferencedPropositionVersions.ShouldNotBeEmpty();
+        sink.Records[1].ReferencedPropositionVersions.ShouldBeSameAs(sink.Records[0].ReferencedPropositionVersions);
     }
 
     [Fact]
