@@ -55,11 +55,13 @@ public static class StoreImport
     /// version log or not at all, and the propositions arrive as one batch or not at all.
     /// </para>
     /// <para>
-    /// Propositions are copied first, so the rule store — the side <see cref="CopyAsync"/> checks
-    /// first when deciding whether the target is empty — is the last thing to become non-empty. Any
+    /// Propositions are copied first because they are the all-or-nothing side: one batch, so a
+    /// failure there leaves the target exactly as empty as it was and a rerun is still clean.
+    /// Copied last, the same failure would land after every rule had been written. The order does
+    /// nothing for the emptiness check, which reads both stores before either is written. Any
     /// failure after the first write throws <see cref="InvalidOperationException"/> naming the
-    /// partial state, because a partially imported target is not something a retry can fix: it must
-    /// be emptied first.
+    /// partial state, because a partially imported target is not something a retry can fix: it
+    /// must be emptied first.
     /// </para>
     /// <para>
     /// Cancellation is the one exception to that wrapping. It is not a failure the caller needs
