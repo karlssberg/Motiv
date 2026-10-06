@@ -111,11 +111,26 @@ To mutate one shard's files locally, pass the same globs, for example
 
 ## PR gate
 
-`.github/workflows/mutation-pr.yml` runs on every pull request to `main` that touches `src/Motiv`,
-`test/Motiv.Tests` or the mutation tooling. It mutates **only the `src/Motiv` C# files the pull
-request adds or modifies**, runs the whole of `Motiv.Tests` against those mutants, and fails when
-any of those files falls short of what it must reach. A full run takes about 150 runner-minutes. The gate's cost
-grows with the number of files changed.
+`.github/workflows/mutation-pr.yml` runs on every pull request to `main`. It mutates **only the
+`src/Motiv` C# files the pull request adds or modifies**, runs the whole of `Motiv.Tests` against
+those mutants, and fails when any of those files falls short of what it must reach. The full run
+(`mutation.yml`) takes about 150 runner-minutes; the gate's cost grows with the number of files
+changed.
+
+### Blocking a merge
+
+The gate's check, `motiv (changed files)`, is a required status check in `main`'s branch protection,
+so a pull request cannot merge until it passes. It fails, and so blocks the merge, whenever any step
+fails or the run is cancelled or times out. Most often, a changed file falls short of what it must
+reach (below).
+
+The workflow has no `paths:` filter for this reason. GitHub leaves a required check pending when a
+path filter skips its workflow, and a pending required check blocks the merge for good. Instead the
+job runs on every pull request, and one with no `src/Motiv` C# change passes in seconds.
+
+Branch protection matches the check by the job's `name:` (`motiv (changed files)`), so changing it
+means updating branch protection in the same change. The full run's shards (`mutation.yml`) are report-only and are not
+required.
 
 ### What it mutates
 
