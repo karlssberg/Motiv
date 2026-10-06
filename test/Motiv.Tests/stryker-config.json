@@ -11,7 +11,7 @@
     "mutation-level": "Standard",
     "reporters": [ "html", "json", "progress" ],
     // The full run is report-only: `break` stays 0 so a low score never fails it. The PR gate
-    // (mutation-pr.yml) passes its own break on the command line, from stryker-baselines.json.
+    // (mutation-pr.yml) also keeps `break` at 0, and checks each changed file with scripts/mutation/gate.sh.
     "thresholds": { "high": 80, "low": 60, "break": 0 }
   }
 }

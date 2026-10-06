@@ -13,18 +13,17 @@
 #
 # Stryker itself never breaks here: stryker-config.json keeps `break: 0`, as the full run needs, and
 # the verdict is gate.sh's, from the report Stryker writes.
+#
+# The job is a required status check on main, so it runs on every pull request, with no `paths:`
+# filter: a required check whose workflow is skipped by a path filter stays pending, and the pull
+# request can never merge. A pull request with no src/Motiv C# change finishes in seconds, at
+# "Nothing to mutate".
 
 name: Mutation gate
 
 on:
   pull_request:
     branches: [ "main" ]
-    paths:
-      - "src/Motiv/**"
-      - "test/Motiv.Tests/**"
-      - ".config/dotnet-tools.json"
-      - "scripts/mutation/**"
-      - ".github/workflows/mutation-pr.yml"
 
 permissions:
   contents: read
@@ -35,6 +34,7 @@ concurrency:
 
 jobs:
   changed:
+    # Branch protection on main requires this check by its `name:`; changing it means updating it there.
     name: motiv (changed files)
     runs-on: ubuntu-latest
     # Scales with the diff, but a refactor touching many files is still a long run.
