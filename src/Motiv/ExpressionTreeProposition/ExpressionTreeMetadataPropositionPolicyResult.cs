@@ -30,6 +30,7 @@ internal sealed class ExpressionTreeMetadataPropositionPolicyResult<TModel, TMet
 {
     private bool _hasValue;
 
+    // Stryker disable once Assignment : equivalent — read only by the memoised MetadataTier and Explanation, so a rebuild only gives the second an equal copy (#294)
     private BooleanResultBase<string>[] ResultArray => field ??= [result];
 
     /// <inheritdoc />
