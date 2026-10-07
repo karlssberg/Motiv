@@ -22,10 +22,10 @@ internal sealed class MinimalBooleanResultPredicateBooleanResult<TModel, TMetada
 {
     private readonly BooleanResultBase<TMetadata>[] _underlyingResults = [underlyingResult];
 
-    // Stryker disable once Assignment : equivalent — read only by the memoised ResolvedAssertions and MetadataTier, so a rebuild only gives the second an equal copy (#294)
+    // Stryker disable once Assignment : no output change, performance only — read only by the memoised ResolvedAssertions and MetadataTier, so a rebuild only gives the second an equal copy (#294)
     private TMetadata[] Metadata => field ??= metadataResolver(model, underlyingResult).ToArray();
 
-    // Stryker disable once Assignment : equivalent — read only by the memoised Explanation, so it is built once either way (#294)
+    // Stryker disable once Assignment : no output or cost change — read only by the memoised Explanation, so it is built once either way (#294)
     private string[] ResolvedAssertions =>
         field ??= Metadata switch
         {

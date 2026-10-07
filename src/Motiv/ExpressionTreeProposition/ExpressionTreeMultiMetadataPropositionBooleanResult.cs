@@ -27,7 +27,7 @@ internal sealed class ExpressionTreeMultiMetadataPropositionBooleanResult<TModel
     ISpecDescription specDescription)
     : BooleanResultBase<TMetadata>
 {
-    // Stryker disable once Assignment : equivalent — read only by the memoised MetadataTier, so it is built once either way (#294)
+    // Stryker disable once Assignment : no output or cost change — read only by the memoised MetadataTier, so it is built once either way (#294)
     private BooleanResultBase<string>[] ResultArray => field ??= [result];
 
     private IEnumerable<TMetadata> MetadataResults => field ??= metadataResolver(model, result).ToArray();

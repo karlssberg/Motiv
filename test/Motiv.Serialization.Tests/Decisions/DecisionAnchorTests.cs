@@ -124,6 +124,8 @@ public class DecisionAnchorTests
         sink.Records[0].RuleVersion.ShouldBe(sink.Records[1].RuleVersion);
     }
 
+    // A performance guard: re-resolving the pin repeats the reference-closure walk on every audited
+    // evaluation but records the same versions, so it pins the cost of an evaluation, not its record.
     [Fact]
     public async Task Should_resolve_the_pin_once_per_bound_state_not_once_per_evaluation()
     {
@@ -143,6 +145,8 @@ public class DecisionAnchorTests
         sink.Records[1].ReferencedPropositionVersions.ShouldBeSameAs(sink.Records[0].ReferencedPropositionVersions);
     }
 
+    // A performance guard: re-resolving the pin repeats the reference-closure walk on every audited
+    // evaluation but records the same versions, so it pins the cost of an evaluation, not its record.
     [Fact]
     public async Task Should_resolve_an_async_rule_pin_once_per_bound_state_not_once_per_evaluation()
     {
