@@ -18,9 +18,18 @@ internal static class GeneratedBuilderFixtures
             .Create("is positive");
 }
 
-/// <summary>Non-string metadata, so the metadata overloads are chosen over the string ones.</summary>
-internal sealed record Marker(string Name)
+/// <summary>
+/// Non-string metadata, so the metadata overloads are chosen over the string ones. A class rather than
+/// a record because records need <c>IsExternalInit</c>, which net472 does not have.
+/// </summary>
+internal sealed class Marker
 {
     public static readonly Marker True = new("T");
     public static readonly Marker False = new("F");
+
+    private readonly string _name;
+
+    private Marker(string name) => _name = name;
+
+    public override string ToString() => _name;
 }
