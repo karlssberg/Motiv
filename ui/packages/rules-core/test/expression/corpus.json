@@ -457,6 +457,14 @@
         { "text": "1", "type": "int", "from": "age" }
       ],
       "result": "bool"
+    },
+    {
+      "name": "an integer parameter keeps its kind when a literal joins it",
+      "scope": "customer",
+      "leaf": "@minAge + 1 > score",
+      "problems": [
+        { "code": "ExpressionTypeMismatch", "contains": ["cannot use an integer parameter with double"], "range": [0, 19] }
+      ]
     }
   ]
 }

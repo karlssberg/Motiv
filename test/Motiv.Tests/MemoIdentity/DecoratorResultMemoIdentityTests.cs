@@ -53,6 +53,10 @@ public class DecoratorResultMemoIdentityTests
                 .WhenFalseYield((_, _) => ["no", "not at all"])
                 .Create("is accepted")
                 .Evaluate(false)),
+
+        // Decorating an operator, so the result has underlying expression results and reasons to read.
+        Of<string>("minimal decorator over an operator", "MinimalSpecDecoratorBooleanResult",
+            () => Spec.Build(UnderlyingSpec.And(UnderlyingSpec.Not())).Create("is contradictory").Evaluate(true)),
     ];
 
     public static TheoryData<string> CaseNames => NamesOf(Cases);
