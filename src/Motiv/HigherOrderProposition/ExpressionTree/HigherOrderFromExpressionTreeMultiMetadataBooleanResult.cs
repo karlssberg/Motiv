@@ -21,7 +21,7 @@ internal sealed class HigherOrderFromExpressionTreeMultiMetadataBooleanResult<TM
     private BooleanResult<TModel, string>[] CausesInternal =>
         field ??= HigherOrderResults.ResolveCauses(Satisfied, underlyingResults, causeSelector);
 
-    // Stryker disable once Assignment : equivalent — read only through MetadataValues by the memoised MetadataTier, so it is built once either way (#294)
+    // Stryker disable once Assignment : no output or cost change — read only through MetadataValues by the memoised MetadataTier, so it is built once either way (#294)
     private HigherOrderBooleanResultEvaluation<TModel, string> Evaluation =>
         field ??= new HigherOrderBooleanResultEvaluation<TModel, string>(underlyingResults, CausesInternal);
 

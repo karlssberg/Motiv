@@ -5,6 +5,10 @@ namespace Motiv.Tests.MemoIdentity;
 /// <summary>
 /// The expression-tree results — <c>Spec.From(expression)</c> without a higher-order operation — keep
 /// their memoised description, explanation and metadata tier across reads.
+/// <para>
+/// A performance guard, like every test in this folder: a rebuild is an equal value, so these pin the cost
+/// of a re-read, not its output (see <see cref="MemoisedResultCase" />).
+/// </para>
 /// </summary>
 public class ExpressionTreeResultMemoIdentityTests
 {

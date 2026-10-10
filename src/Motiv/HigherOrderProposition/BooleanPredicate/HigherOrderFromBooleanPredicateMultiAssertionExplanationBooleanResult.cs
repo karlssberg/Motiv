@@ -22,7 +22,7 @@ internal sealed class HigherOrderFromBooleanPredicateMultiAssertionExplanationBo
     private IEnumerable<string> MetadataValues =>
         field ??= HigherOrderResults.ResolveValues(Satisfied, Evaluation, whenTrue, whenFalse);
 
-    // Stryker disable once Assignment : equivalent — read only by the memoised Explanation and Description, so a rebuild only gives the second an equal copy (#294)
+    // Stryker disable once Assignment : no output change, performance only — read only by the memoised Explanation and Description, so a rebuild only gives the second an equal copy (#294)
     private IEnumerable<string> ResolvedAssertions =>
         field ??= MetadataValues.ElseFallback(() => specDescription.ToReason(Satisfied));
 

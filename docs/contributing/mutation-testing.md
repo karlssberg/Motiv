@@ -76,12 +76,22 @@ Prefer a test over a comment. An exclusion is right only when you can say why no
 the difference.
 
 Memos (`field ??= …`) are the common case. Stryker turns `??=` into `=`, which rebuilds the value on
-every read. When the memoised value is public, or reachable through something public, a rebuild hands
-back a new instance, and the tests under `test/Motiv.Tests/MemoIdentity/` catch it by reading twice and
-comparing references. When the only readers are themselves memoised (`Explanation`, `Description`,
-`MetadataTier`, or a `Value` that resolves once), each reader builds it at most once and every copy is
-equal, so no test can tell. Those lines carry `// Stryker disable once Assignment : equivalent — read
-only by …` naming the readers. If you add a reader, check that reason still holds.
+every read. Motiv's values are deterministic, so a rebuild is equal to the memo, and only two things
+can differ: the caller's own delegates run again, or the read costs more.
+
+- **Caller code running again is behaviour.** `YieldResolverMemoisationTests` and
+  `HigherOrderUserDelegateMemoisationTests` pin it by counting calls. A memo in front of a `WhenTrue`,
+  `WhenFalse`, yield or cause-selector delegate needs a test like those.
+- **Cost is performance.** When the memoised value is public, or reachable through something public, a
+  rebuild hands back a new instance, and the tests under `test/Motiv.Tests/MemoIdentity/` catch it by
+  reading twice and comparing references. They are performance and allocation guards: a failure there
+  means a re-read got more expensive, not that a result says something different.
+- **Some memos change neither.** When the only readers are themselves memoised (`Explanation`,
+  `Description`, `MetadataTier`, or a `Value` that resolves once), each reader builds the value at most
+  once, so dropping the memo costs nothing either. Those lines carry `// Stryker disable once Assignment
+  : no output or cost change — read only by …`. Where a rebuild does cost something but no test pins
+  it, the line says `no output change, performance only`. Both name the readers. If you add a reader,
+  check that the reason still holds.
 
 The one other reason to exclude a mutant is that it takes the runner down with it. Turning
 `IsCollapsable` off on `AndBooleanResult` or `OrElseBooleanResult` makes the 3,000- and 50,000-deep

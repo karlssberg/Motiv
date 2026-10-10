@@ -33,11 +33,11 @@ internal sealed class HigherOrderFromExpressionTreeExplanationPolicyResult<TMode
     private BooleanResult<TModel, string>[] CausesInternal =>
         field ??= HigherOrderResults.ResolveCauses(Satisfied, underlyingResults, causeSelector);
 
-    // Stryker disable once Assignment : equivalent — read only by Value, which resolves once, so it is built once either way (#294)
+    // Stryker disable once Assignment : no output or cost change — read only by Value, which resolves once, so it is built once either way (#294)
     private HigherOrderBooleanResultEvaluation<TModel, string> Evaluation =>
         field ??= new HigherOrderBooleanResultEvaluation<TModel, string>(underlyingResults, CausesInternal);
 
-    // Stryker disable once Assignment : equivalent — read only by the memoised Explanation and Description, so a rebuild only gives the second an equal copy (#294)
+    // Stryker disable once Assignment : no output change, performance only — read only by the memoised Explanation and Description, so a rebuild only gives the second an equal copy (#294)
     private string Assertion => field ??= Value.ElseFallback(() => description.ToReason(Satisfied));
 
     /// <inheritdoc />
