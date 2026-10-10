@@ -5,6 +5,10 @@ namespace Motiv.Tests.MemoIdentity;
 /// <summary>
 /// The spec-level memos whose identity is externally visible: an operator spec's description, which the
 /// telemetry path reads once per evaluation, and the explanation spec a metadata spec is adapted to.
+/// <para>
+/// A performance guard, like every test in this folder: a rebuild is an equal value, so these pin the cost
+/// of a re-read, not its output (see <see cref="MemoisedResultCase" />).
+/// </para>
 /// </summary>
 public class SpecMemoIdentityTests
 {

@@ -17,7 +17,7 @@ internal abstract class HigherOrderResultDescriptionBase<TUnderlyingMetadata>(
 
     public override string Reason => reason;
 
-    // Stryker disable once Assignment : equivalent — read only while rendering the justification, so a rebuild changes its cost, not its lines (#294)
+    // Stryker disable once Assignment : no output change, performance only — read only while rendering the justification, so a rebuild changes its cost, not its lines (#294)
     private BooleanResultBase<TUnderlyingMetadata>[] DistinctCauses =>
         field ??= _causes
             .DistinctWithOrderPreserved(result => result.Justification)

@@ -17,11 +17,11 @@ internal sealed class MinimalHigherOrderFromPolicyResultBooleanResult<TModel, TM
     private PolicyResult<TModel, TMetadata>[] CausesInternal =>
         field ??= HigherOrderResults.ResolveCauses(Satisfied, underlyingResults, causeSelector);
 
-    // Stryker disable once Assignment : equivalent — read only by the memoised ResolvedAssertions and MetadataTier, so a rebuild only gives the second an equal copy (#294)
+    // Stryker disable once Assignment : no output change, performance only — read only by the memoised ResolvedAssertions and MetadataTier, so a rebuild only gives the second an equal copy (#294)
     private IEnumerable<TMetadata> MetadataValues =>
         field ??= CausesInternal.Select(result => result.Value).ToArray();
 
-    // Stryker disable once Assignment : equivalent — read only by the memoised Explanation, so it is built once either way (#294)
+    // Stryker disable once Assignment : no output or cost change — read only by the memoised Explanation, so it is built once either way (#294)
     private IEnumerable<string> ResolvedAssertions => field ??= MetadataValues switch
     {
         IEnumerable<string> reasons => reasons,

@@ -34,7 +34,7 @@ internal sealed class MinimalPolicyResultPredicatePolicyResult<TModel, TMetadata
         }
     } = default!;
 
-    // Stryker disable once Assignment : equivalent — read only by the memoised Explanation, so it is built once either way (#294)
+    // Stryker disable once Assignment : no output or cost change — read only by the memoised Explanation, so it is built once either way (#294)
     private string Assertion =>
         field ??= Value switch
         {

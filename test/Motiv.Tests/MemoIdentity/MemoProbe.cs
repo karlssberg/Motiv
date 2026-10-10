@@ -1,6 +1,9 @@
 namespace Motiv.Tests.MemoIdentity;
 
-/// <summary>The memo-identity check: read each member twice and name those that came back as a new instance.</summary>
+/// <summary>
+/// The memo-identity check: read each member twice and name those that came back as a new instance. A
+/// performance guard: a new instance is an equal value, built again (see <see cref="MemoisedResultCase" />).
+/// </summary>
 internal static class MemoProbe
 {
     public static void ShouldRebuildNothingOnASecondRead<TSubject>(

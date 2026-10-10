@@ -27,10 +27,10 @@ internal sealed class MinimalExpressionTreePropositionBooleanResult<TModel, TPre
     ISpecDescription specDescription)
     : BooleanResultBase<string>
 {
-    // Stryker disable once Assignment : equivalent — read only by the memoised MetadataTier, so it is built once either way (#294)
+    // Stryker disable once Assignment : no output or cost change — read only by the memoised MetadataTier, so it is built once either way (#294)
     private BooleanResultBase<string>[] ResultArray => field ??= [result];
 
-    // Stryker disable once Assignment : equivalent — read only by the memoised MetadataTier and (through ResolveAssertions) Explanation, so a rebuild only gives the second an equal copy (#294)
+    // Stryker disable once Assignment : no output change, performance only — read only by the memoised MetadataTier and (through ResolveAssertions) Explanation, so a rebuild only gives the second an equal copy (#294)
     private IEnumerable<string> MetadataResults => field ??= assertionsResolver(model, result)?.ToArray()!;
 
     /// <summary>
