@@ -18,6 +18,9 @@
     <File Path="README.md" />
   </Folder>
   <Project Path="test/Motiv.Analyzer.Tests/Motiv.Analyzer.Tests.csproj" />
+  <Project Path="src/Motiv.Explain/Motiv.Explain.csproj" />
+  <Project Path="test/Motiv.Explain.Tests/Motiv.Explain.Tests.csproj" />
+  <Project Path="test/Motiv.Explain.IntegrationTests/Motiv.Explain.IntegrationTests.csproj" />
   <Project Path="src/Motiv.Analyzer/Motiv.Analyzer.csproj" />
   <Project Path="test/Motiv.CodeFix.Tests/Motiv.CodeFix.Tests.csproj" />
   <Project Path="src/Motiv.CodeFix/Motiv.CodeFix.csproj" />

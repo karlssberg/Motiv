@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!--
+      Consumes Motiv.Explain the way its package does: the build/ props and targets are imported here
+      by hand, since a ProjectReference doesn't bring them in. This proves the MSBuild wiring that the
+      generator tests can only simulate: CompilerVisibleProperty, InterceptorsNamespaces, MOTIV_EXPLAIN.
+    -->
+    <Import Project="..\..\src\Motiv.Explain\build\Motiv.Explain.props" />
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <IsPackable>false</IsPackable>
+        <MotivExplain>true</MotivExplain>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="Shouldly" />
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.runner.visualstudio">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="Xunit" />
+        <Using Include="Shouldly" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\Motiv.Explain\Motiv.Explain.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <ProjectReference Include="..\..\src\Motiv\Motiv.csproj" />
+    </ItemGroup>
+
+    <Import Project="..\..\src\Motiv.Explain\build\Motiv.Explain.targets" />
+
+</Project>

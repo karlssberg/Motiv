@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!--
+      An opt-in, development-only package. The generator turns calls to [Explain] methods into calls
+      that evaluate a decomposed Motiv spec and log its justification, but only when the consuming
+      project sets MotivExplain=true. Otherwise it emits nothing beyond the attribute, so a prod build
+      neither runs nor references Motiv. See docs/explain/index.md.
+    -->
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <IsPackable>true</IsPackable>
+        <PackageId>Motiv.Explain</PackageId>
+        <Title>Motiv.Explain</Title>
+        <Description>Opt-in, compile-time decision logging for boolean methods marked [Explain]. Non-prod builds replace each call with a decomposed Motiv specification that logs why it was true or false; prod builds are left untouched.</Description>
+        <PackageTags>Boolean Logic, Explainability, Debugging, Source Generator, Interceptors, Specification Pattern</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIcon>icon.png</PackageIcon>
+        <!-- Its own train, like the other unpublished packages: a v* tag releases Motiv only (see release.yml). -->
+        <MinVerTagPrefix>motiv-explain-v</MinVerTagPrefix>
+        <DevelopmentDependency>true</DevelopmentDependency>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+        <IncludeSymbols>false</IncludeSymbols>
+        <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+        <IsRoslynComponent>true</IsRoslynComponent>
+        <AnalyzerLanguage>cs</AnalyzerLanguage>
+        <NoPackageAnalysis>true</NoPackageAnalysis>
+        <!-- GetInterceptableLocation is marked experimental by Roslyn, though interceptors are stable. -->
+        <NoWarn>$(NoWarn);RS1038;RSEXPERIMENTAL002</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="$(AssemblyName).Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="MinVer" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="build\Motiv.Explain.props" Pack="true" PackagePath="build" />
+        <None Include="build\Motiv.Explain.targets" Pack="true" PackagePath="build" />
+        <None Include="README.md" Pack="true" PackagePath="\" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+        <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
+    </ItemGroup>
+
+</Project>
