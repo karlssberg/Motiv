@@ -68,7 +68,7 @@ public class BooleanResultsCollection<TModel, TMetadata>
     /// <inheritdoc cref="IEnumerable{T}.GetEnumerator" />
     public IEnumerator<TModel> GetEnumerator()
     {
-        // Stryker disable once Assignment : equivalent — read only to enumerate, and a rebuilt array enumerates the same models (#294)
+        // Stryker disable once Assignment : no output change, performance only — read only to enumerate, and a rebuilt array enumerates the same models (#294)
         var models = _satisfiedModels ??= Source.Where(r => r.Satisfied).Select(r => r.Model).ToArray();
         return ((IEnumerable<TModel>)models).GetEnumerator();
     }

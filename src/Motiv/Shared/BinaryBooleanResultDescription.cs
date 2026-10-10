@@ -12,7 +12,7 @@ internal abstract class BinaryBooleanResultDescription<TMetadata>(
 
     public override string Reason => FoldedReason;
 
-    // Stryker disable once Assignment : equivalent — read only by the reason fold, whose result FoldedReason memoises (#294)
+    // Stryker disable once Assignment : no output or cost change — read only by the reason fold, whose result FoldedReason memoises (#294)
     private protected override IReadOnlyList<ResultDescriptionBase> ReasonOperands =>
         field ??= ReasonRun.Select(result => result.Description).ToArray();
 
@@ -91,7 +91,7 @@ internal abstract class BinaryBooleanResultDescription<TMetadata>(
     /// The causal results as they are rendered: a run of nested same-operation compositions collapses
     /// into one group beneath a single conjunction heading.
     /// </summary>
-    // Stryker disable once Assignment : equivalent — read only while rendering the justification, so a rebuild changes its cost, not its lines (#294)
+    // Stryker disable once Assignment : no output change, performance only — read only while rendering the justification, so a rebuild changes its cost, not its lines (#294)
     private IReadOnlyList<BooleanResultBase> Collapsed => field ??= _causalResults.FlattenCollapsible(Statement);
 
     protected abstract string Separator { get; }

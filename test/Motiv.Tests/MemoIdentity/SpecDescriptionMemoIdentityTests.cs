@@ -11,6 +11,10 @@ namespace Motiv.Tests.MemoIdentity;
 /// description, or is an operator over two operands, so its detail runs to more than one line —
 /// <see cref="string.Join(string, IEnumerable{string})" /> hands back a lone line as-is, which would make a
 /// rebuilt one-line detail indistinguishable from a memoised one.
+/// <para>
+/// A performance guard, like every test in this folder: a rebuild is an equal value, so these pin the cost
+/// of a re-read, not its output (see <see cref="MemoisedResultCase" />).
+/// </para>
 /// </summary>
 public class SpecDescriptionMemoIdentityTests
 {

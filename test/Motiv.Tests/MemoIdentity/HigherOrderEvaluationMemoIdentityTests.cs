@@ -10,6 +10,10 @@ namespace Motiv.Tests.MemoIdentity;
 /// false), so each test reads the results first, then the members that share their memo, then the results
 /// again: a member that refiltered instead of reusing the memo would replace the list the first read returned.
 /// </para>
+/// <para>
+/// A performance guard, like every test in this folder: a rebuild is an equal value, so these pin the cost
+/// of a re-read, not its output (see <see cref="MemoisedResultCase" />).
+/// </para>
 /// </summary>
 public class HigherOrderEvaluationMemoIdentityTests
 {

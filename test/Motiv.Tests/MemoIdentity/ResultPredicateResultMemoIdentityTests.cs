@@ -5,6 +5,10 @@ namespace Motiv.Tests.MemoIdentity;
 /// <summary>
 /// The result-predicate results — a proposition built over a <c>model =&gt; spec.Evaluate(model)</c>
 /// delegate — keep their memoised description, explanation and metadata tier across reads.
+/// <para>
+/// A performance guard, like every test in this folder: a rebuild is an equal value, so these pin the cost
+/// of a re-read, not its output (see <see cref="MemoisedResultCase" />).
+/// </para>
 /// </summary>
 public class ResultPredicateResultMemoIdentityTests
 {

@@ -10,7 +10,7 @@ internal sealed class ExpressionTreeBooleanResultDescription(
     string propositionalStatement)
     : ResultDescriptionWithUnderlying(booleanResult, reason, propositionalStatement)
 {
-    // Stryker disable once Assignment : equivalent — read only while rendering the justification, so a rebuild changes its cost, not its lines (#294)
+    // Stryker disable once Assignment : no output change, performance only — read only while rendering the justification, so a rebuild changes its cost, not its lines (#294)
     private string Assertion => field ??= expression.ToAssertion(BooleanResult.Satisfied);
 
     public override IEnumerable<string> GetJustificationAsLines() => FoldedJustification(withoutCausalCount: false);
