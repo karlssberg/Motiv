@@ -60,4 +60,11 @@ internal sealed class RuleNode(RuleOperator @operator, string path)
     /// by the substituter so the leaf binder can type <c>@name</c> references.
     /// </summary>
     public IReadOnlyList<RuleParameterDeclaration>? ParameterDeclarations { get; set; }
+
+    /// <summary>
+    /// The options the host serializes models with, set on an <see cref="RuleOperator.Expression" />
+    /// node by the parser from <see cref="RuleSerializerOptions.ModelJsonOptions" /> so the leaf binder
+    /// reads enums the way the catalog publishes them.
+    /// </summary>
+    public JsonSerializerOptions? ModelJsonOptions { get; set; }
 }

@@ -36,15 +36,23 @@ public class LeafCorpusTests
             .Select(p => new RuleParameterDeclaration(p.Name, ParseParameterType(p.Value.GetString()!), false, null))
             .ToArray();
 
+    /// <summary>The model a corpus scope names, and the options its host serializes it with.</summary>
+    private static (Type Model, JsonSerializerOptions? Json) Scope(JsonElement c) => c.GetProperty("scope").GetString() switch
+    {
+        "order" => (typeof(CorpusFixtures.Order), null),
+        "shipment" => (typeof(CorpusFixtures.Shipment), CorpusFixtures.ShipmentJson),
+        _ => (typeof(CorpusFixtures.Customer), null),
+    };
+
     [Theory]
     [MemberData(nameof(Cases))]
     public void Should_agree_with_the_corpus(string name)
     {
         var c = Corpus.RootElement.GetProperty("cases").EnumerateArray().Single(x => x.GetProperty("name").GetString() == name);
-        var modelType = c.GetProperty("scope").GetString() == "order" ? typeof(CorpusFixtures.Order) : typeof(CorpusFixtures.Customer);
+        var (modelType, json) = Scope(c);
         var problems = new List<LeafProblem>();
         var root = LeafParser.Parse(c.GetProperty("leaf").GetString()!, problems);
-        var analysis = root is null ? null : LeafChecker.Check(root, LeafScope.For(modelType, Parameters()));
+        var analysis = root is null ? null : LeafChecker.Check(root, LeafScope.For(modelType, Parameters(), json));
         var all = analysis?.Problems ?? problems;
         var errors = all.Where(p => !p.IsWarning).ToList();
         var warnings = all.Where(p => p.IsWarning).ToList();
@@ -96,13 +104,13 @@ public class LeafCorpusTests
         if (!c.TryGetProperty("facts", out _) && !c.TryGetProperty("result", out _)) return;
 
         var text = c.GetProperty("leaf").GetString()!;
-        var isOrder = c.GetProperty("scope").GetString() == "order";
-        var modelType = isOrder ? typeof(CorpusFixtures.Order) : typeof(CorpusFixtures.Customer);
+        var (modelType, json) = Scope(c);
         var root = LeafParser.Parse(text, [])!;
-        var analysis = LeafChecker.Check(root, LeafScope.For(modelType, Parameters()));
+        var analysis = LeafChecker.Check(root, LeafScope.For(modelType, Parameters(), json));
         analysis.IsValid.ShouldBeTrue(string.Join("; ", analysis.Problems.Select(p => p.Message)));
 
-        if (isOrder) Evaluate(root, analysis, text, CorpusFixtures.SampleOrder);
+        if (modelType == typeof(CorpusFixtures.Order)) Evaluate(root, analysis, text, CorpusFixtures.SampleOrder);
+        else if (modelType == typeof(CorpusFixtures.Shipment)) Evaluate(root, analysis, text, CorpusFixtures.SampleShipment);
         else Evaluate(root, analysis, text, CorpusFixtures.SampleCustomer);
     }
 

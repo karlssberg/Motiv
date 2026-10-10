@@ -237,7 +237,7 @@ public sealed class MotivRulesBuilder
             var propositions = new PropositionSet(
                 provider.GetRequiredService<BindingScope>(),
                 provider.GetRequiredService<IPropositionStore>(),
-                options.SerializerOptions);
+                options.ResolvedSerializerOptions);
 
             foreach (var register in options.PropositionModelRegistrations)
                 register(propositions);
@@ -431,7 +431,7 @@ public static class MotivRulesServiceCollectionExtensions
             var rules = new RuleSet(
                 provider.GetRequiredService<BindingScope>(),
                 store,
-                options: resolvedOptions.SerializerOptions,
+                options: resolvedOptions.ResolvedSerializerOptions,
                 // Optional: with no log registered, an audited document simply does not bind, and
                 // says so. Resolved here rather than closed over so AddDecisionLog can be called
                 // either side of AddMotivRules.

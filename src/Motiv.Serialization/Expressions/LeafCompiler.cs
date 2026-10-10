@@ -91,21 +91,29 @@ internal sealed class LeafCompiler
     }
 
     /// <summary>
-    /// Presents a member as the leaf language typed it: an enum serialized by name compares as its
-    /// <c>ToString()</c>, any other enum as the integral kind behind it. Everything else is already
-    /// the type the checker gave it.
+    /// Presents a member as the leaf language typed it: an enum serialized by name compares as the
+    /// name it is written with — its <c>ToString()</c> when that is the CLR name, which keeps the clause
+    /// the one a developer would write, else <c>ToJsonName()</c> — and any other
+    /// enum as the integral kind behind it. Everything else is already the type the checker gave it.
     /// </summary>
-    private static Expression Present(MemberInfo member, Expression access)
+    private Expression Present(MemberInfo member, Expression access)
     {
         if (LeafScope.EnumType(LeafScope.MemberType(member)) is null) return access;
-        var presented = LeafScope.LeafMemberType(member);
-        var target = Nullable.GetUnderlyingType(presented) ?? presented;
-        Func<Expression, Expression> convert = target == typeof(string)
-            ? value => Expression.Call(value, nameof(ToString), Type.EmptyTypes)
-            : value => Expression.Convert(value, target);
+        Func<Expression, Expression> convert = _analysis.Scope.EnumNames(member) switch
+        {
+            null => value => Expression.Convert(value, Integral(member)),
+            { AreClrNames: true } => value => Expression.Call(value, nameof(ToString), Type.EmptyTypes),
+            var names => value => Expression.Call(typeof(LeafEnumNameExtensions), nameof(LeafEnumNameExtensions.ToJsonName), [value.Type], value, Expression.Constant(names)),
+        };
         return Nullable.GetUnderlyingType(access.Type) is null
             ? convert(access)
             : NullConditionalExpression.Create(access, t => convert(Unwrap(t)));
+    }
+
+    private Type Integral(MemberInfo member)
+    {
+        var presented = _analysis.Scope.LeafMemberType(member);
+        return Nullable.GetUnderlyingType(presented) ?? presented;
     }
 
     private Expression Call(MethodCall c)

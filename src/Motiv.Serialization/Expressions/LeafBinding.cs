@@ -23,7 +23,7 @@ internal static class LeafBinding
             return null;
         }
 
-        var scope = LeafScope.For(typeof(TModel), node.ParameterDeclarations ?? []);
+        var scope = LeafScope.For(typeof(TModel), node.ParameterDeclarations ?? [], node.ModelJsonOptions);
         var analysis = LeafChecker.Check(root, scope);
         Report(node, analysis.Problems, errors);
         return analysis.IsValid ? analysis : null;

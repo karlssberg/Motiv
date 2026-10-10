@@ -11,26 +11,46 @@ namespace Motiv.Serialization.Expressions;
 /// </summary>
 internal sealed class LeafScope
 {
-    private LeafScope(Type modelType, IReadOnlyDictionary<string, RuleParameterDeclaration> parameters, IReadOnlyDictionary<string, Type> variables)
+    private readonly JsonSerializerOptions _json;
+    private readonly Dictionary<MemberInfo, LeafEnumNames?> _enumNames;
+
+    private LeafScope(
+        Type modelType,
+        IReadOnlyDictionary<string, RuleParameterDeclaration> parameters,
+        IReadOnlyDictionary<string, Type> variables,
+        JsonSerializerOptions json,
+        Dictionary<MemberInfo, LeafEnumNames?> enumNames)
     {
         ModelType = modelType;
         Parameters = parameters;
         Variables = variables;
+        _json = json;
+        _enumNames = enumNames;
     }
 
     public Type ModelType { get; }
     public IReadOnlyDictionary<string, RuleParameterDeclaration> Parameters { get; }
     public IReadOnlyDictionary<string, Type> Variables { get; }
 
-    public static LeafScope For(Type modelType, IReadOnlyList<RuleParameterDeclaration> parameters) =>
-        new(modelType, parameters.ToDictionary(p => p.Name, p => p, StringComparer.Ordinal), new Dictionary<string, Type>(StringComparer.Ordinal));
+    /// <param name="modelType">The type unqualified names resolve against.</param>
+    /// <param name="parameters">The document's parameter declarations.</param>
+    /// <param name="modelJson">
+    /// The options the host serializes models with, deciding which enums read by name; <c>null</c>
+    /// uses System.Text.Json's defaults, where only a <c>[JsonConverter]</c> attribute does.
+    /// </param>
+    public static LeafScope For(Type modelType, IReadOnlyList<RuleParameterDeclaration> parameters, JsonSerializerOptions? modelJson = null) =>
+        new(modelType,
+            parameters.ToDictionary(p => p.Name, p => p, StringComparer.Ordinal),
+            new Dictionary<string, Type>(StringComparer.Ordinal),
+            modelJson ?? JsonSerializerOptions.Default,
+            new Dictionary<MemberInfo, LeafEnumNames?>());
 
     public LeafScope WithVariable(string name, Type type)
     {
         // No IEnumerable<KeyValuePair<,>> constructor on netstandard2.0, so copy through LINQ.
         var variables = Variables.ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.Ordinal);
         variables[name] = type;
-        return new LeafScope(ModelType, Parameters, variables);
+        return new LeafScope(ModelType, Parameters, variables, _json, _enumNames);
     }
 
     /// <summary>
@@ -80,19 +100,18 @@ internal sealed class LeafScope
     }
 
     /// <summary>
-    /// Whether a <see cref="JsonConverterAttribute" /> on the member or on the enum itself makes it
-    /// serialize by name. Matched structurally rather than by <c>typeof</c>, because the generic
-    /// <c>JsonStringEnumConverter&lt;T&gt;</c> exists only on .NET 8 and later while this type is
-    /// compiled for <c>netstandard2.0</c> too.
+    /// The names a member's enum is written with, or <c>null</c> when the member is no enum or is
+    /// written as a number. Cached per member for the life of the scope and every scope derived from it.
     /// </summary>
-    private static bool SerializesByName(MemberInfo member, Type enumType) =>
-        IsStringEnumConverter(member.GetCustomAttribute<JsonConverterAttribute>()?.ConverterType)
-        || IsStringEnumConverter(enumType.GetCustomAttribute<JsonConverterAttribute>()?.ConverterType);
-
-    private static bool IsStringEnumConverter(Type? converter) =>
-        converter is not null
-        && converter.Namespace == "System.Text.Json.Serialization"
-        && (converter.Name == "JsonStringEnumConverter" || converter.Name == "JsonStringEnumConverter`1");
+    public LeafEnumNames? EnumNames(MemberInfo member)
+    {
+        if (_enumNames.TryGetValue(member, out var cached))
+            return cached;
+        var enumType = EnumType(MemberType(member));
+        var names = enumType is null ? null : LeafEnumNames.For(member, enumType, _json);
+        _enumNames[member] = names;
+        return names;
+    }
 
     /// <summary>
     /// The type a member presents to the leaf language: an enum serialized by name reads as a
@@ -100,22 +119,15 @@ internal sealed class LeafScope
     /// everything else as itself — so a leaf types against the JSON the catalog publishes rather
     /// than against the CLR member behind it.
     /// </summary>
-    public static Type LeafMemberType(MemberInfo member)
+    public Type LeafMemberType(MemberInfo member)
     {
         var declared = MemberType(member);
         var enumType = EnumType(declared);
         if (enumType is null) return declared;
-        if (SerializesByName(member, enumType)) return typeof(string);
+        if (EnumNames(member) is not null) return typeof(string);
         var backing = Enum.GetUnderlyingType(enumType);
         var integral = backing == typeof(long) || backing == typeof(ulong) ? typeof(long) : typeof(int);
         return Nullable.GetUnderlyingType(declared) is null ? integral : typeof(Nullable<>).MakeGenericType(integral);
-    }
-
-    /// <summary>The enum a member reads as a string for, so a literal can be checked for membership.</summary>
-    public static Type? NamedEnumType(MemberInfo member)
-    {
-        var enumType = EnumType(MemberType(member));
-        return enumType is not null && SerializesByName(member, enumType) ? enumType : null;
     }
 
     /// <summary>The element type of anything enumerable except <see cref="string" />; null otherwise.</summary>

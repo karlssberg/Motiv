@@ -1,11 +1,12 @@
 #if NET8_0_OR_GREATER && !MOTIV_NETSTANDARD_ASSET
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Motiv.Serialization.Expressions;
 
 namespace Motiv.Serialization.Tests.Expressions;
 
 /// <summary>
-/// The two model shapes the conformance corpus (<c>ui/packages/rules-core/test/expression/corpus.json</c>)
+/// The model shapes the conformance corpus (<c>ui/packages/rules-core/test/expression/corpus.json</c>)
 /// checks against, and the type-name mapping ("int", "long", "decimal?", …) it compares corpus
 /// case expectations to. Mirrors <c>ui/packages/rules-core/test/expression/fixture-schema.ts</c>
 /// and the TypeScript checker's <c>typeString</c> in <c>check.ts</c> — both sides must agree on
@@ -23,6 +24,26 @@ public static class CorpusFixtures
     public sealed record Customer(
         int Age, long Points, double Score, bool IsActive, decimal CreditLimit,
         string? Country, IReadOnlyList<Order>? Orders, DateTime? ShippedAt);
+
+    /// <summary>Carries no attribute: only <see cref="ShipmentJson" />'s registered converter names it.</summary>
+    public enum Channel { Retail, Wholesale }
+
+    /// <summary>Named through <see cref="ShipmentJson" /> with a camel-case naming policy.</summary>
+    public enum Priority { Standard, NextDay }
+
+    public sealed record Shipment(Channel Channel, Priority Priority);
+
+    /// <summary>
+    /// The options a host serializes <see cref="Shipment" /> with — and so the options its catalog
+    /// schema is exported over. Mirrors the fixture schema's <c>channel</c>/<c>priority</c>.
+    /// </summary>
+    public static readonly JsonSerializerOptions ShipmentJson = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter<Priority>(JsonNamingPolicy.CamelCase), new JsonStringEnumConverter() },
+    };
+
+    /// <summary>The shipment a corpus case with <c>"scope": "shipment"</c> is evaluated against.</summary>
+    public static readonly Shipment SampleShipment = new(Channel.Wholesale, Priority.NextDay);
 
     /// <summary>The order a corpus case with <c>"scope": "order"</c> is evaluated against.</summary>
     public static readonly Order SampleOrder = new("paid", 620m, 12, OrderKind.Retail);

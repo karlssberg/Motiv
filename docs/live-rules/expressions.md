@@ -78,12 +78,21 @@ assertion.
   a method on a null collection yields null, and any other operator with a null operand yields
   `false`. A leaf never throws on a shape the schema already said was possible, which a
   hand-written `Spec.From` lambda would.
-- **Enums** read as the catalog publishes them, not as the CLR declares them. An enum whose member
-  or whose type carries `[JsonConverter(typeof(JsonStringEnumConverter))]` serializes by name, so a
-  leaf compares it as a `string` &mdash; ordinally, against the member names; a string literal that
-  is not one of them is an `ExpressionTypeMismatch` naming the ones that are, e.g.
-  `not one of "Retail", "Wholesale"`. Every other enum compares **by number**, as the integral kind
-  behind it, so `` `tier > 1` `` is the way to write a comparison against one.
+- **Enums** read as the catalog publishes them, not as the CLR declares them. An enum the host
+  serializes by name &mdash; through a `JsonStringEnumConverter` registered on the model's
+  `JsonSerializerOptions`, or one carried as a `[JsonConverter]` attribute on the member or the enum
+  &mdash; is compared as a `string`, ordinally, against the names that JSON is written with, so a
+  naming policy counts: under `JsonStringEnumConverter(JsonNamingPolicy.CamelCase)` the leaf is
+  `` `priority == "nextDay"` ``, not `"NextDay"`. A string literal that is not one of the names is an
+  `ExpressionTypeMismatch` naming the ones that are, e.g. `not one of "Retail", "Wholesale"`. Every
+  other enum compares **by number**, as the integral kind behind it, so `` `tier > 1` `` is the way
+  to write a comparison against one.
+
+  The options are `RuleSerializerOptions.ModelJsonOptions`. The ASP.NET Core endpoints default it
+  to `MotivRulesOptions.JsonSerializerOptions` &mdash; the options the catalog's model schemas are
+  exported with, which name every enum by default &mdash; so Studio and the server type the same leaf
+  the same way. A `RuleSerializer` or `RuleSet` you construct yourself reads enums by name only
+  through attributes until you set it.
 - **Numerics** align with C# where C# is exact, and refuse where C# would be lossy. Literals and
   parameters are untyped until solved; model fields and fixed-type methods (`count()` is always
   `int`; `sum(o => o.total)` is whatever `total` is) are anchors. An untyped subtree takes the join
