@@ -36,7 +36,7 @@ internal sealed class BooleanResultPredicatePolicyResult<TModel, TMetadata, TUnd
         }
     } = default!;
 
-    // Stryker disable once Assignment : equivalent — read only by the memoised Explanation and Description, so a rebuild only gives the second an equal copy (#294)
+    // Stryker disable once Assignment : no output change, performance only — read only by the memoised Explanation and Description, so a rebuild only gives the second an equal copy (#294)
     private string Assertion => field ??= specDescription.ToReason(Satisfied);
 
     /// <summary>Gets the metadata tier of the result.</summary>

@@ -16,7 +16,7 @@ internal sealed class XOrBooleanResultDescription<TMetadata>(
 
     public override string Reason => FoldedReason;
 
-    // Stryker disable once Assignment : equivalent — read only by the reason fold, whose result FoldedReason memoises (#294)
+    // Stryker disable once Assignment : no output or cost change — read only by the reason fold, whose result FoldedReason memoises (#294)
     private protected override IReadOnlyList<ResultDescriptionBase> ReasonOperands =>
         field ??= Array.ConvertAll(_results, result => result.Description);
 
@@ -48,7 +48,7 @@ internal sealed class XOrBooleanResultDescription<TMetadata>(
         bool withoutCausalCount) =>
         BinaryJustification(Statement, operandLines);
 
-    // Stryker disable once Assignment : equivalent — read only while rendering the justification, so a rebuild changes its cost, not its lines (#294)
+    // Stryker disable once Assignment : no output change, performance only — read only while rendering the justification, so a rebuild changes its cost, not its lines (#294)
     private IReadOnlyList<BooleanResultBase> Collapsed => field ??= _results.FlattenCollapsible(Statement);
 
     /// <remarks>Iterative: the result tree it searches is unbounded in depth (Spec 3A / ticket 19).</remarks>

@@ -34,7 +34,7 @@ internal sealed class PolicyDecoratorMultiAssertionExplanationBooleanResult<TMod
         }
     } = default!;
 
-    // Stryker disable once Assignment : equivalent — read only by the memoised Explanation and Description, so a rebuild only gives the second an equal copy (#294)
+    // Stryker disable once Assignment : no output change, performance only — read only by the memoised Explanation and Description, so a rebuild only gives the second an equal copy (#294)
     private string Assertion => field ??= description.ToReason(Satisfied);
 
     /// <summary>Gets a value indicating whether the result is satisfied.</summary>

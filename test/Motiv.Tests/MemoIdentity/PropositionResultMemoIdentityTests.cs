@@ -6,6 +6,10 @@ namespace Motiv.Tests.MemoIdentity;
 /// The boolean-predicate leaf results — minimal, explanation and metadata propositions, and the adapter
 /// that presents a metadata result as an explanation — keep their memoised description, explanation and
 /// metadata tier across reads.
+/// <para>
+/// A performance guard, like every test in this folder: a rebuild is an equal value, so these pin the cost
+/// of a re-read, not its output (see <see cref="MemoisedResultCase" />).
+/// </para>
 /// </summary>
 public class PropositionResultMemoIdentityTests
 {

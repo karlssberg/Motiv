@@ -8,11 +8,22 @@ namespace Motiv.Tests.MemoIdentity;
 /// </summary>
 /// <remarks>
 /// <para>
-/// The identity is load-bearing rather than cosmetic. The folds memoise on these objects themselves —
+/// These are performance and allocation guards, not correctness tests. A rebuilt value equals the
+/// memoised one, so a failure here means a re-read got more expensive, not that a result says
+/// something different. A memo pinned only here has no effect a caller can read: a 2026-10-07 probe that
+/// read every public property of composed results through the public API saw no difference without it.
+/// </para>
+/// <para>
+/// The cost is real. The folds memoise on these objects themselves —
 /// a description's folded reason, an explanation's underlying explanations and a metadata node's
 /// underlying nodes live on the node instance — and the justification and root-values walks key their
 /// memos by reference. A property that built a fresh node per read would re-fold on every read and
 /// expand a sub-result shared across a composition once per path to it.
+/// </para>
+/// <para>
+/// The memos whose loss a caller <em>can</em> see are those in front of the caller's own delegates, which
+/// would run again. <see cref="YieldResolverMemoisationTests" /> and
+/// <see cref="HigherOrderProposition.HigherOrderUserDelegateMemoisationTests" /> pin those by counting calls.
 /// </para>
 /// <para>
 /// Each case also pins the class it reaches by name, so a builder change that silently re-routes a

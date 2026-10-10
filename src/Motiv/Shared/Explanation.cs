@@ -134,7 +134,7 @@ public sealed class Explanation
             cause => cause.UnderlyingAssertionSources,
             explanation => explanation.Assertions);
 
-    // Stryker disable once Assignment : equivalent — read only by the AllUnderlying fold, which memoises its result (#294)
+    // Stryker disable once Assignment : no output or cost change — read only by the AllUnderlying fold, which memoises its result (#294)
     private Resolution<Explanation> AllResolution =>
         field ??= Resolve(
             Assertions,

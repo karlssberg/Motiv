@@ -10,7 +10,7 @@ internal sealed class NotBooleanResultDescription<TMetadata>(BooleanResultBase o
 
     public override string Reason => FoldedReason;
 
-    // Stryker disable once Assignment : equivalent — read only by the reason fold, whose result FoldedReason memoises (#294)
+    // Stryker disable once Assignment : no output or cost change — read only by the reason fold, whose result FoldedReason memoises (#294)
     private protected override IReadOnlyList<ResultDescriptionBase> ReasonOperands => field ??= [operand.Description];
 
     private protected override string ComposeReason(IReadOnlyList<string> operandReasons) =>
