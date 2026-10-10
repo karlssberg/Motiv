@@ -265,6 +265,48 @@ public class AsyncEvaluationBudgetTests : IDisposable
         (await spec.EvaluateAsync(2)).Satisfied.ShouldBeTrue();
     }
 
+    /// <summary>
+    /// A composition alternating concurrent and sequential operators deeply enough that the region fold
+    /// starts some of its sequential operands on a fresh stack
+    /// (<see href="https://github.com/karlssberg/Motiv/issues/227">#227</see>). The folds that run there
+    /// must charge the evaluation's one counter, not a fresh one each: were the hop to drop the
+    /// counter, every stretch between hops would start with its whole budget, and a limit of one node
+    /// short would admit the whole composition.
+    /// </summary>
+    /// <remarks>
+    /// Each alternation is four nodes — the sequential operation, the concurrent operation under it,
+    /// and the leaf each of them takes as its second operand — over the first leaf's one.
+    /// </remarks>
+    [Fact]
+    public void Should_abandon_a_deep_alternating_composition_one_node_past_the_limit()
+    {
+        MotivLimits.MaxEvaluationSize = AlternatingCost - 1;
+
+        SmallStack.OnASmallStack(() =>
+            Should.Throw<SpecException>(() => AlternatingChain().EvaluateAsync(2).AsTask().GetAwaiter().GetResult()));
+    }
+
+    /// <summary>The companion, so the case above cannot pass on a limit that was simply mean.</summary>
+    [Fact]
+    public void Should_admit_a_deep_alternating_composition_of_exactly_the_limit()
+    {
+        MotivLimits.MaxEvaluationSize = AlternatingCost;
+
+        SmallStack.OnASmallStack(() =>
+            AlternatingChain().EvaluateAsync(2).AsTask().GetAwaiter().GetResult().Satisfied.ShouldBeTrue());
+    }
+
+    /// <summary>Several times the depth at which the alternating shape used to overflow a 1 MB stack.</summary>
+    private const int Alternations = 2_000;
+
+    private const int AlternatingCost = 4 * Alternations + 1;
+
+    private static AsyncSpecBase<int, string> AlternatingChain() =>
+        Enumerable
+            .Range(0, Alternations + 1)
+            .Select(Leaf)
+            .Aggregate((left, right) => left.AndConcurrently(right).And(right));
+
     private static AsyncSpecBase<int, string> Leaf(int index) =>
         Spec.BuildAsync((int n) => new ValueTask<bool>(n % 2 == 0)).Create($"p{index} is even");
 

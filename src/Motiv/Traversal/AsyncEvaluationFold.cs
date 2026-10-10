@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace Motiv.Traversal;
 
 /// <summary>
@@ -193,6 +195,13 @@ internal static class AsyncEvaluationFold
 
         var boundaryValues = await Task.WhenAll(boundary).ConfigureAwait(false);
 
+        // The same nesting, unwinding. A fold started on a fresh stack completes there, and every fold
+        // awaiting it resumes inline on top of it — one region per alternation again, now on the way
+        // out. .NET Core queues an inline continuation once the stack runs low; .NET Framework does
+        // not, so this region yields to a fresh stack itself rather than rely on the runtime (#227).
+        if (!HasSufficientStack())
+            await Task.Yield();
+
         var composed = new TValue[region.Count];
         for (var node = region.Count - 1; node >= 0; node--)
         {
@@ -226,12 +235,45 @@ internal static class AsyncEvaluationFold
                     break;
             }
 
-            boundary.Add(driver.LeafAsync(operand, model, cancellationToken).AsTask());
+            boundary.Add(Start(operand));
             return ~(boundary.Count - 1);
         }
 
+        // An operand that is itself a sequential operation is answered by a fold of its own, entered
+        // on this stack — so a composition alternating the two families nests one fold per
+        // alternation. Rather than run that on the stack until it overflows, the operand is started on
+        // a fresh one once this one runs low (#227). Above that point nothing changes, and below it the
+        // operand starts on a thread-pool thread rather than the caller's, which is the price of an
+        // answer where there was a process abort.
+        Task<TValue> Start(AsyncSpecBase<TModel, TMetadata> operand) =>
+            HasSufficientStack()
+                ? driver.LeafAsync(operand, model, cancellationToken).AsTask()
+                : Task.Run(() => driver.LeafAsync(operand, model, cancellationToken).AsTask());
+
         TValue Value(int placement) =>
             placement >= 0 ? composed[placement] : boundaryValues[~placement];
+    }
+
+    /// <summary>
+    /// Whether the current thread has stack enough to start another operand, which may enter a fold of
+    /// its own. The probe compares the stack pointer against a limit the runtime keeps, so the answer
+    /// costs next to nothing while it is yes.
+    /// </summary>
+    private static bool HasSufficientStack()
+    {
+#if NETSTANDARD2_0
+        try
+        {
+            RuntimeHelpers.EnsureSufficientExecutionStack();
+            return true;
+        }
+        catch (InsufficientExecutionStackException)
+        {
+            return false;
+        }
+#else
+        return RuntimeHelpers.TryEnsureSufficientExecutionStack();
+#endif
     }
 
     /// <summary>
